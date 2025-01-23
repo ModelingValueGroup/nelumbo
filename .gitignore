@@ -44,6 +44,7 @@ out/
 *~.nib
 .apt_generated/
 .apt_generated_test/
+.classpath
 .externalToolBuilders/
 .factorypath
 .gradle
