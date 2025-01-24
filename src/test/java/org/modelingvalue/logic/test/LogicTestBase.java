@@ -6,7 +6,6 @@ import static org.modelingvalue.logic.Logic.getBindings;
 import static org.modelingvalue.logic.Logic.getIncomplete;
 
 import org.modelingvalue.collections.Entry;
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.KnowledgeBase;
@@ -45,7 +44,7 @@ public class LogicTestBase {
     }
 
     public static void hasIncomplete(Predicate query, Predicate... predicates) {
-        assertEquals(Set.of(List.of(predicates)), getIncomplete(query));
+        assertEquals(Set.of(predicates), getIncomplete(query));
     }
 
     public static void print(KnowledgeBase db) {

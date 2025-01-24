@@ -25,7 +25,6 @@ import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 
 import org.modelingvalue.collections.Entry;
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.LambdaReflection;
@@ -187,11 +186,11 @@ public final class Logic {
     }
 
     public static Set<Predicate> getInstances(Predicate pred) {
-        return infer(pred).facts().addAll(null).replaceAll(StructureImpl::proxy);
+        return infer(pred).facts().replaceAll(StructureImpl::proxy);
     }
 
-    public static Set<List<Predicate>> getIncomplete(Predicate pred) {
-        return infer(pred).incomplete().replaceAll(l -> l.replaceAll(StructureImpl::proxy));
+    public static Set<Predicate> getIncomplete(Predicate pred) {
+        return infer(pred).incomplete().replaceAll(StructureImpl::proxy);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -312,14 +311,16 @@ public final class Logic {
         StructureImpl constant1 = predicate.getVal(1);
         StructureImpl constant2 = predicate.getVal(2);
         if (constant1 == null && constant2 == null) {
-            return InferResult.of(context.stack(predicate));
+            return InferResult.incomplete(predicate);
         } else if (constant1 == null) {
-            return InferResult.of(Set.of(predicate.set(1, constant2)), Set.of());
+            return InferResult.trueFalse(Set.of(predicate.set(1, constant2)), Set.of());
         } else if (constant2 == null) {
-            return InferResult.of(Set.of(predicate.set(2, constant1)), Set.of());
+            return InferResult.trueFalse(Set.of(predicate.set(2, constant1)), Set.of());
         } else {
             StructureImpl eq = constant1.eq(constant2);
-            return eq != null ? InferResult.of(Set.of(predicate.set(1, eq, eq)), Set.of()) : InferResult.of(Set.of(predicate), context.stack(predicate));
+            return eq != null ? //
+                    InferResult.trueFalse(Set.of(predicate.set(1, eq, eq)), Set.of()) : //
+                    InferResult.falseIncomplete(Set.of(predicate), predicate);
         }
     }
 

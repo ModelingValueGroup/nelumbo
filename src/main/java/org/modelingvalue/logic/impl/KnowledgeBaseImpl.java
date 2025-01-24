@@ -58,7 +58,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     @SuppressWarnings("rawtypes")
     private static final TriFunction<InferResult, PredicateImpl, PredicateImpl, InferResult> ADD_FACT            = (r, p, f) -> {
                                                                                                                      InferResult m = InferResult.of(Set.of(f), Set.of(), Set.of(),   //
-                                                                                                                             p.isFullyBound() ? Set.of() : Set.of(List.of(p)));
+                                                                                                                             p.isFullyBound() ? Set.of() : Set.of(p), Set.of());
                                                                                                                      return r == null ? m : r.add(m);
                                                                                                                  };
     @SuppressWarnings("unchecked")
@@ -177,7 +177,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferResult getFacts(PredicateImpl pred) {
         InferResult result = facts.get().get(pred);
-        return result != null ? result : pred.isFullyBound() ? InferResult.EMPTY : InferResult.of(Set.of(), List.of(pred));
+        return result != null ? result : pred.isFullyBound() ? InferResult.EMPTY : InferResult.falseIncomplete(Set.of(), pred);
     }
 
     public List<RuleImpl> getRules(PredicateImpl pred) {
@@ -230,7 +230,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                     array = array.clone();
                     array[0] = array[0].put(new Inference(predicate, result));
                     for (PredicateImpl p : result.facts()) {
-                        array[0] = array[0].put(new Inference(p, InferResult.of(Set.of(p), Set.of())));
+                        array[0] = array[0].put(new Inference(p, InferResult.trueFalse(Set.of(p), Set.of())));
                     }
                     if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
                         array[2] = array[2].putAll(array[1]);

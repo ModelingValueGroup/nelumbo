@@ -55,7 +55,7 @@ public interface InferContext {
     }
 
     default InferContext putCycleConclusion(PredicateImpl predicate, Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods) {
-        return of(knowledgebase(), stack(), cycleConclusion().put(predicate, InferResult.of(facts, falsehoods)));
+        return of(knowledgebase(), stack(), cycleConclusion().put(predicate, InferResult.trueFalse(facts, falsehoods)));
     }
 
     default List<PredicateImpl> stack(PredicateImpl predicate) {

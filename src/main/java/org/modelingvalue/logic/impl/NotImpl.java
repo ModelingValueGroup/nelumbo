@@ -55,6 +55,9 @@ public final class NotImpl extends PredicateImpl {
     public InferResult infer(PredicateImpl declaration, InferContext context) {
         PredicateImpl declPred = ((NotImpl) declaration).predicate();
         InferResult result = predicate().infer(declPred, context);
+        if (result.hasStackOverflow()) {
+            return result;
+        }
         return result.bind(declPred, this, declaration).not();
     }
 

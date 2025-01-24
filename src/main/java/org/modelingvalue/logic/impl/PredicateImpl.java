@@ -89,7 +89,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         }
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return InferResult.of(context.stack(this));
+            return InferResult.incomplete(this);
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         List<RuleImpl> rules = knowledgebase.getRules(this);
@@ -104,8 +104,11 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 return result;
             }
             List<PredicateImpl> stack = context.stack();
-            if (stack.size() >= MAX_LOGIC_DEPTH || stack.lastIndexOf(this) >= 0) {
-                return InferResult.of(stack.append(this));
+            if (stack.size() >= MAX_LOGIC_DEPTH) {
+                return InferResult.overflow(stack.append(this));
+            }
+            if (stack.lastIndexOf(this) >= 0) {
+                return InferResult.cycle(this);
             }
             result = fixpoint(rules, context.pushOnStack(this));
             if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
@@ -157,7 +160,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             addedFalsehoods = ruleResult.falsehoods().removeAll(result.falsehoods());
             cycle |= result == InferResult.EMPTY && !(addedFacts.isEmpty() && addedFalsehoods.isEmpty()) && ruleResult.hasCycleWith(this);
             if (cycle && result == InferResult.EMPTY) {
-                result = InferResult.of(addedFacts, addedFalsehoods);
+                result = InferResult.trueFalse(addedFacts, addedFalsehoods);
             } else {
                 result = result.add(ruleResult);
             }

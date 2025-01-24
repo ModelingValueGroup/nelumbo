@@ -29,9 +29,9 @@ import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.LogicLambda;
 import org.modelingvalue.logic.Logic.Predicate;
 import org.modelingvalue.logic.Logic.Structure;
-import org.modelingvalue.logic.impl.InferResult;
 import org.modelingvalue.logic.impl.FunctorImpl;
 import org.modelingvalue.logic.impl.InferContext;
+import org.modelingvalue.logic.impl.InferResult;
 import org.modelingvalue.logic.impl.ListImpl;
 import org.modelingvalue.logic.impl.PredicateImpl;
 import org.modelingvalue.logic.impl.StructureImpl;
@@ -104,19 +104,19 @@ public final class Lists {
         org.modelingvalue.collections.List<StructureImpl<Structure>> superlist = superListImpl != null ? superListImpl.list() : null;
         if (element != null && sublist != null && superlist != null) {
             boolean eq = addOrdered(sublist, element).equals(superlist);
-            return InferResult.of(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
+            return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
         } else if (element != null && sublist != null && superlist == null) {
-            return InferResult.of(Set.of(predicate.set(3, ListImpl.of(addOrdered(sublist, element)))), Set.of());
+            return InferResult.trueFalse(Set.of(predicate.set(3, ListImpl.of(addOrdered(sublist, element)))), Set.of());
         } else if (element != null && sublist == null && superlist != null) {
-            return InferResult.of(permRemove(superlist, element).replaceAll(l -> predicate.set(2, ListImpl.of(l))), Set.of());
+            return InferResult.trueFalse(permRemove(superlist, element).replaceAll(l -> predicate.set(2, ListImpl.of(l))), Set.of());
         } else if (element == null && sublist != null && superlist != null) {
             if (sublist.anyMatch(superlist::notContains)) {
                 return InferResult.EMPTY;
             } else {
-                return InferResult.of(superlist.asSet().removeAll(sublist).replaceAll(r -> predicate.set(1, r)), Set.of());
+                return InferResult.trueFalse(superlist.asSet().removeAll(sublist).replaceAll(r -> predicate.set(1, r)), Set.of());
             }
         } else {
-            return InferResult.of(context.stack(predicate));
+            return InferResult.incomplete(predicate);
         }
     }
 

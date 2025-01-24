@@ -32,7 +32,7 @@ public final class FalseImpl extends PredicateImpl {
 
     public static final FalseImpl              FALSE            = new FalseImpl();
 
-    private final InferResult                   FALSE_CONCLUSION = InferResult.of(Set.of(), Set.of(TrueImpl.TRUE));
+    private final InferResult                  FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(TrueImpl.TRUE));
 
     private FalseImpl() {
         super(FALSE_FUNCTOR);

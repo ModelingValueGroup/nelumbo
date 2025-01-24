@@ -32,7 +32,7 @@ public final class TrueImpl extends PredicateImpl {
 
     public static final TrueImpl                TRUE             = new TrueImpl();
 
-    private static final InferResult             TRUE_CONCLUSION  = InferResult.of(Set.of(TRUE), Set.of());
+    private static final InferResult            TRUE_CONCLUSION  = InferResult.trueFalse(Set.of(TRUE), Set.of());
 
     private TrueImpl() {
         super(TRUE_FUNCTOR);

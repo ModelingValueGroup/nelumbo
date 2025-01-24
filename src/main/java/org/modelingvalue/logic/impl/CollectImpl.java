@@ -20,7 +20,6 @@
 
 package org.modelingvalue.logic.impl;
 
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic;
@@ -136,8 +135,9 @@ public final class CollectImpl extends PredicateImpl {
         if (result.hasStackOverflow()) {
             return result;
         }
-        Set<List<PredicateImpl>> incomplete = result.incomplete();
-        Set<List<PredicateImpl>> falseIncomplete = result.falseIncomplete();
+        Set<PredicateImpl> incomplete = result.incomplete();
+        Set<PredicateImpl> falseIncomplete = result.falseIncomplete();
+        Set<PredicateImpl> cycles = result.cycles();
         Set<StructureImpl> facts = Set.of(identity);
         for (PredicateImpl element : result.facts()) {
             Map<VariableImpl, Object> binding = goalColl.getBinding(element, Map.of());
@@ -153,10 +153,11 @@ public final class CollectImpl extends PredicateImpl {
                 }
                 incomplete = incomplete.addAll(result.incomplete());
                 falseIncomplete = falseIncomplete.addAll(result.falseIncomplete());
+                cycles = cycles.addAll(result.cycles());
             }
             facts = res;
         }
-        return InferResult.of(facts.replaceAll(r -> set(2, accum.set(resultIndex, r))), Set.of(), incomplete, falseIncomplete);
+        return InferResult.of(facts.replaceAll(r -> set(2, accum.set(resultIndex, r))), Set.of(), incomplete, falseIncomplete, cycles);
     }
 
     @SuppressWarnings("rawtypes")

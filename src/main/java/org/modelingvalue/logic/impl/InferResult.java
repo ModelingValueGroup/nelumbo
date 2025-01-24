@@ -30,9 +30,13 @@ public interface InferResult {
 
     Set<PredicateImpl> falsehoods();
 
-    Set<List<PredicateImpl>> incomplete();
+    Set<PredicateImpl> incomplete();
 
-    Set<List<PredicateImpl>> falseIncomplete();
+    Set<PredicateImpl> falseIncomplete();
+
+    Set<PredicateImpl> cycles();
+
+    List<PredicateImpl> stackOverflow();
 
     InferResult EMPTY = new InferResult() {
         @Override
@@ -46,17 +50,27 @@ public interface InferResult {
         }
 
         @Override
-        public Set<List<PredicateImpl>> incomplete() {
+        public Set<PredicateImpl> incomplete() {
             return Set.of();
         }
 
         @Override
-        public Set<List<PredicateImpl>> falseIncomplete() {
+        public Set<PredicateImpl> falseIncomplete() {
             return Set.of();
+        }
+
+        @Override
+        public Set<PredicateImpl> cycles() {
+            return Set.of();
+        }
+
+        @Override
+        public List<PredicateImpl> stackOverflow() {
+            return null;
         }
     };
 
-    static InferResult of(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods) {
+    static InferResult of(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods, Set<PredicateImpl> incomplete, Set<PredicateImpl> falseIncomplete, Set<PredicateImpl> cycles) {
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
@@ -69,68 +83,98 @@ public interface InferResult {
             }
 
             @Override
-            public Set<List<PredicateImpl>> incomplete() {
-                return Set.of();
-            }
-
-            @Override
-            public Set<List<PredicateImpl>> falseIncomplete() {
-                return Set.of();
-            }
-        };
-    }
-
-    static InferResult of(Set<PredicateImpl> falsehoods, List<PredicateImpl> falseIncomplete) {
-        Set<List<PredicateImpl>> falseIncompletes = Set.of(falseIncomplete);
-        return new InferResult() {
-            @Override
-            public Set<PredicateImpl> facts() {
-                return Set.of();
-            }
-
-            @Override
-            public Set<PredicateImpl> falsehoods() {
-                return falsehoods;
-            }
-
-            @Override
-            public Set<List<PredicateImpl>> incomplete() {
-                return Set.of();
-            }
-
-            @Override
-            public Set<List<PredicateImpl>> falseIncomplete() {
-                return falseIncompletes;
-            }
-        };
-    }
-
-    static InferResult of(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods, Set<List<PredicateImpl>> incomplete, Set<List<PredicateImpl>> falseIncomplete) {
-        return new InferResult() {
-            @Override
-            public Set<PredicateImpl> facts() {
-                return facts;
-            }
-
-            @Override
-            public Set<PredicateImpl> falsehoods() {
-                return falsehoods;
-            }
-
-            @Override
-            public Set<List<PredicateImpl>> incomplete() {
+            public Set<PredicateImpl> incomplete() {
                 return incomplete;
             }
 
             @Override
-            public Set<List<PredicateImpl>> falseIncomplete() {
+            public Set<PredicateImpl> falseIncomplete() {
                 return falseIncomplete;
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return cycles;
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
             }
         };
     }
 
-    static InferResult of(List<PredicateImpl> incomplete) {
-        Set<List<PredicateImpl>> incompletes = Set.of(incomplete);
+    static InferResult trueFalse(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods) {
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl> facts() {
+                return facts;
+            }
+
+            @Override
+            public Set<PredicateImpl> falsehoods() {
+                return falsehoods;
+            }
+
+            @Override
+            public Set<PredicateImpl> incomplete() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> falseIncomplete() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
+            }
+        };
+    }
+
+    static InferResult falseIncomplete(Set<PredicateImpl> falsehoods, PredicateImpl falseIncomplete) {
+        Set<PredicateImpl> falseIncompletes = Set.of(falseIncomplete);
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> falsehoods() {
+                return falsehoods;
+            }
+
+            @Override
+            public Set<PredicateImpl> incomplete() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> falseIncomplete() {
+                return falseIncompletes;
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
+            }
+        };
+    }
+
+    static InferResult incomplete(PredicateImpl incomplete) {
+        Set<PredicateImpl> incompletes = Set.of(incomplete);
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
@@ -143,44 +187,122 @@ public interface InferResult {
             }
 
             @Override
-            public Set<List<PredicateImpl>> incomplete() {
+            public Set<PredicateImpl> incomplete() {
                 return incompletes;
             }
 
             @Override
-            public Set<List<PredicateImpl>> falseIncomplete() {
+            public Set<PredicateImpl> falseIncomplete() {
                 return incompletes;
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
+            }
+        };
+    }
+
+    static InferResult cycle(PredicateImpl cycle) {
+        Set<PredicateImpl> cycles = Set.of(cycle);
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> falsehoods() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> incomplete() {
+                return cycles;
+            }
+
+            @Override
+            public Set<PredicateImpl> falseIncomplete() {
+                return cycles;
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return cycles;
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
+            }
+        };
+    }
+
+    static InferResult overflow(List<PredicateImpl> overflow) {
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> falsehoods() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> incomplete() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> falseIncomplete() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return overflow;
             }
         };
     }
 
     default InferResult add(InferResult result) {
-        return of(facts().addAll(result.facts()), falsehoods().addAll(result.falsehoods()), //
-                incomplete().addAll(result.incomplete()), falseIncomplete().addAll(result.falseIncomplete()));
+        return of(facts().addAll(result.facts()), //
+                falsehoods().addAll(result.falsehoods()), //
+                incomplete().addAll(result.incomplete()), //
+                falseIncomplete().addAll(result.falseIncomplete()), //
+                cycles().addAll(result.cycles()));
     }
 
     default InferResult bind(PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
         boolean complete = to.isFullyBound();
-        Set<List<PredicateImpl>> incomplete = complete ? incomplete().retainAll(falseIncomplete()) : incomplete();
-        Set<List<PredicateImpl>> falseIncomplete = complete ? incomplete : falseIncomplete();
+        Set<PredicateImpl> incomplete = complete ? incomplete().retainAll(falseIncomplete()) : incomplete();
+        Set<PredicateImpl> falseIncomplete = complete ? incomplete : falseIncomplete();
         return of(facts().replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of()))), //
                 falsehoods().replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of()))), //
-                incomplete, falseIncomplete);
+                incomplete, falseIncomplete, cycles());
     }
 
     default InferResult not() {
-        return of(falsehoods(), facts(), falseIncomplete(), incomplete());
+        return of(falsehoods(), facts(), falseIncomplete(), incomplete(), cycles());
     }
 
     default boolean hasCycleWith(PredicateImpl predicate) {
-        return incomplete().anyMatch(l -> l.last().equals(predicate));
-    }
-
-    default List<PredicateImpl> stackOverflow() {
-        return incomplete().findAny(l -> l.size() >= PredicateImpl.MAX_LOGIC_DEPTH).orElse(null);
+        return cycles().contains(predicate);
     }
 
     default boolean hasStackOverflow() {
-        return incomplete().anyMatch(l -> l.size() >= PredicateImpl.MAX_LOGIC_DEPTH);
+        return stackOverflow() != null;
     }
 }
