@@ -177,7 +177,7 @@ public final class Logic {
 
     public static boolean isFalse(Predicate pred) {
         InferResult result = infer(pred);
-        return result.facts().isEmpty() && result.incomplete().isEmpty();
+        return result.facts().isEmpty() && result.incomplete().isEmpty() && result.cycles().isEmpty();
     }
 
     public static boolean isIncomplete(Predicate pred) {
@@ -185,7 +185,7 @@ public final class Logic {
         return !result.incomplete().isEmpty();
     }
 
-    public static Set<Predicate> getInstances(Predicate pred) {
+    public static Set<Predicate> getFacts(Predicate pred) {
         return infer(pred).facts().replaceAll(StructureImpl::proxy);
     }
 

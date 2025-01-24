@@ -280,7 +280,7 @@ public interface InferResult {
     default InferResult add(InferResult result) {
         return of(facts().addAll(result.facts()), //
                 falsehoods().addAll(result.falsehoods()), //
-                incomplete().addAll(result.incomplete()), //
+                incomplete().retainAll(result.incomplete()), //
                 falseIncomplete().addAll(result.falseIncomplete()), //
                 cycles().addAll(result.cycles()));
     }

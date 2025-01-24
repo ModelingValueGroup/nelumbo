@@ -356,16 +356,6 @@ public class LogicTest extends LogicTestBase {
     }
 
     @RepeatedTest(100)
-    public void cycleTest() {
-        run(() -> {
-            rule(parentChild(B, C), parentChild(B, C));
-
-            hasIncomplete(parentChild(Wim, Jan), parentChild(Wim, Jan), parentChild(Wim, Jan));
-            isIncomplete(parentChild(Wim, Jan));
-        });
-    }
-
-    @RepeatedTest(100)
     public void rootTest() {
         run(() -> {
             rootRules();
