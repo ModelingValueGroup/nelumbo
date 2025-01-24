@@ -287,11 +287,19 @@ public interface InferResult {
 
     default InferResult bind(PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
         boolean complete = to.isFullyBound();
-        Set<PredicateImpl> incomplete = complete ? incomplete().retainAll(falseIncomplete()) : incomplete();
-        Set<PredicateImpl> falseIncomplete = complete ? incomplete : falseIncomplete();
-        return of(facts().replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of()))), //
-                falsehoods().replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of()))), //
+        Set<PredicateImpl> incomplete = complete ? //
+                bind(incomplete().retainAll(falseIncomplete()), fromDecl, to, toDecl) : //
+                bind(incomplete(), fromDecl, to, toDecl);
+        Set<PredicateImpl> falseIncomplete = complete ? //
+                incomplete : //
+                bind(falseIncomplete(), fromDecl, to, toDecl);
+        return of(bind(facts(), fromDecl, to, toDecl), //
+                bind(falsehoods(), fromDecl, to, toDecl), //
                 incomplete, falseIncomplete, cycles());
+    }
+
+    static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
+        return set.replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of())));
     }
 
     default InferResult not() {
