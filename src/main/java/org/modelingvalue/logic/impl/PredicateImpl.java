@@ -157,8 +157,6 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 return ruleResult;
             } else if (first) {
                 if (ruleResult.hasCycleWith(this)) {
-                    result = InferResult.of(ruleResult.facts(), ruleResult.falsehoods(), //
-                            ruleResult.incomplete(), ruleResult.falseIncomplete(), ruleResult.cycles().remove(this));
                     addedFacts = ruleResult.facts();
                     addedFalsehoods = ruleResult.falsehoods();
                     first = false;
