@@ -24,7 +24,6 @@ import java.util.Objects;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.LogicLambda;
 import org.modelingvalue.logic.Logic.Predicate;
@@ -148,26 +147,24 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private InferResult fixpoint(List<RuleImpl> rules, InferContext context) {
-        InferResult result = InferResult.EMPTY, ruleResult, facts = context.knowledgebase().getFacts(this);
-        Set<PredicateImpl> addedFacts = null, addedFalsehoods = null;
+        InferResult result = InferResult.EMPTY, ruleResult, cycleResult = null, facts = context.knowledgebase().getFacts(this);
         boolean first = true;
         do {
-            ruleResult = inferRules(rules, first ? context : context.putCycleConclusion(this, addedFacts, addedFalsehoods), facts);
+            ruleResult = inferRules(rules, first ? context : context.putCycleResult(this, cycleResult), facts);
             if (ruleResult.hasStackOverflow()) {
                 return ruleResult;
             } else if (first) {
                 if (ruleResult.hasCycleWith(this)) {
-                    addedFacts = ruleResult.facts();
-                    addedFalsehoods = ruleResult.falsehoods();
+                    cycleResult = InferResult.trueFalse(ruleResult.facts(), ruleResult.falsehoods());
                     first = false;
                 } else {
                     return ruleResult;
                 }
             } else {
-                addedFacts = ruleResult.facts().removeAll(result.facts());
-                addedFalsehoods = ruleResult.falsehoods().removeAll(result.falsehoods());
+                cycleResult = InferResult.trueFalse(ruleResult.facts().removeAll(result.facts()), //
+                        ruleResult.falsehoods().removeAll(result.falsehoods()));
                 result = result.add(ruleResult);
-                if (addedFacts.isEmpty() && addedFalsehoods.isEmpty()) {
+                if (cycleResult.facts().isEmpty() && cycleResult.falsehoods().isEmpty()) {
                     return result;
                 }
             }

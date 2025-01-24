@@ -22,7 +22,6 @@ package org.modelingvalue.logic.impl;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 
 public interface InferContext {
     KnowledgeBaseImpl knowledgebase();
@@ -54,8 +53,8 @@ public interface InferContext {
         return of(knowledgebase(), stack().append(predicate), cycleConclusion());
     }
 
-    default InferContext putCycleConclusion(PredicateImpl predicate, Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods) {
-        return of(knowledgebase(), stack(), cycleConclusion().put(predicate, InferResult.trueFalse(facts, falsehoods)));
+    default InferContext putCycleResult(PredicateImpl predicate, InferResult result) {
+        return of(knowledgebase(), stack(), cycleConclusion().put(predicate, result));
     }
 
     default List<PredicateImpl> stack(PredicateImpl predicate) {
