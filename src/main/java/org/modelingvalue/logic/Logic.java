@@ -177,7 +177,7 @@ public final class Logic {
 
     public static boolean isFalse(Predicate pred) {
         InferResult result = infer(pred);
-        return result.facts().isEmpty() && result.incomplete().isEmpty() && result.cycles().isEmpty();
+        return result.facts().isEmpty() && result.incomplete().isEmpty();
     }
 
     public static boolean isIncomplete(Predicate pred) {

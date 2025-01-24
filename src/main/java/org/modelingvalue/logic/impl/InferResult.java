@@ -223,12 +223,12 @@ public interface InferResult {
 
             @Override
             public Set<PredicateImpl> incomplete() {
-                return cycles;
+                return Set.of();
             }
 
             @Override
             public Set<PredicateImpl> falseIncomplete() {
-                return cycles;
+                return Set.of();
             }
 
             @Override
@@ -280,7 +280,7 @@ public interface InferResult {
     default InferResult add(InferResult result) {
         return of(facts().addAll(result.facts()), //
                 falsehoods().addAll(result.falsehoods()), //
-                incomplete().retainAll(result.incomplete()), //
+                incomplete().addAll(result.incomplete()), //
                 falseIncomplete().addAll(result.falseIncomplete()), //
                 cycles().addAll(result.cycles()));
     }
