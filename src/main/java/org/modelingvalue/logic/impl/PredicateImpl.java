@@ -92,11 +92,8 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             return InferResult.of(context.stack(this));
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
-        InferResult result = knowledgebase.getFacts(this);
-        if (result != null) {
-            return result;
-        }
         List<RuleImpl> rules = knowledgebase.getRules(this);
+        InferResult result;
         if (rules != null) {
             result = context.cycleConclusion().get(this);
             if (result != null) {
@@ -121,9 +118,10 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 }
             }
             knowledgebase.memoization(this, result);
-            return result;
+        } else {
+            result = knowledgebase.getFacts(this);
         }
-        return InferResult.EMPTY;
+        return result;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -147,11 +145,11 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private InferResult fixpoint(List<RuleImpl> rules, InferContext context) {
-        InferResult result = InferResult.EMPTY, ruleResult;
+        InferResult result = InferResult.EMPTY, ruleResult, facts = context.knowledgebase().getFacts(this);
         Set<PredicateImpl> addedFacts = Set.of(), addedFalsehoods = Set.of();
         boolean cycle = false;
         do {
-            ruleResult = inferRules(rules, addedFacts.isEmpty() && addedFalsehoods.isEmpty() ? context : context.putCycleConclusion(this, addedFacts, addedFalsehoods));
+            ruleResult = inferRules(rules, addedFacts.isEmpty() && addedFalsehoods.isEmpty() ? context : context.putCycleConclusion(this, addedFacts, addedFalsehoods), facts);
             if (ruleResult.hasStackOverflow()) {
                 return ruleResult;
             }
@@ -168,8 +166,8 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     @SuppressWarnings("rawtypes")
-    private InferResult inferRules(List<RuleImpl> rules, InferContext context) {
-        InferResult result = InferResult.EMPTY, ruleResult;
+    private InferResult inferRules(List<RuleImpl> rules, InferContext context, InferResult result) {
+        InferResult ruleResult;
         for (RuleImpl rule : rules) {
             ruleResult = rule.infer(this, context);
             if (ruleResult.hasStackOverflow()) {

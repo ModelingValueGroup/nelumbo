@@ -371,6 +371,10 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         return tv;
     }
 
+    protected boolean isFullyBound() {
+        return nrOfUnbound() == 0;
+    }
+
     @SuppressWarnings("rawtypes")
     protected final int nrOfUnbound() {
         int nr = 0;

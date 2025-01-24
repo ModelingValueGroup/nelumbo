@@ -35,6 +35,7 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
+import org.modelingvalue.collections.util.TriFunction;
 import org.modelingvalue.logic.KnowledgeBase;
 import org.modelingvalue.logic.Logic.Predicate;
 import org.modelingvalue.logic.Logic.Relation;
@@ -44,41 +45,42 @@ import org.modelingvalue.logic.Logic.Structure;
 @SuppressWarnings("rawtypes")
 public final class KnowledgeBaseImpl implements KnowledgeBase {
 
-    public static final Context<KnowledgeBaseImpl>                            CURRENT             = Context.of();
+    public static final Context<KnowledgeBaseImpl>                                           CURRENT             = Context.of();
 
-    private static final ContextPool                                          POOL                = ContextThread.createPool();
+    private static final ContextPool                                                         POOL                = ContextThread.createPool();
     @SuppressWarnings("rawtypes")
-    private static final AtomicReference<Map<Class, Set<Class>>>              SPECIALIZATIONS     = new AtomicReference<>(Map.of());
+    private static final AtomicReference<Map<Class, Set<Class>>>                             SPECIALIZATIONS     = new AtomicReference<>(Map.of());
     @SuppressWarnings("rawtypes")
-    private static final QualifiedSet<PredicateImpl, Inference>               EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
-    private static final int                                                  MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
-    private static final int                                                  MAX_LOGIC_MEMOIZ_D4 = KnowledgeBaseImpl.MAX_LOGIC_MEMOIZ / 4;
-    private static final int                                                  INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
+    private static final QualifiedSet<PredicateImpl, Inference>                              EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
+    private static final int                                                                 MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
+    private static final int                                                                 MAX_LOGIC_MEMOIZ_D4 = KnowledgeBaseImpl.MAX_LOGIC_MEMOIZ / 4;
+    private static final int                                                                 INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
     @SuppressWarnings("rawtypes")
-    private static final BiFunction<InferResult, PredicateImpl, InferResult>  ADD_FACT            = (s, p) -> {
-                                                                                                      InferResult m = InferResult.of(Set.of(p), Set.of());
-                                                                                                      return s == null ? m : s.add(m);
-                                                                                                  };
+    private static final TriFunction<InferResult, PredicateImpl, PredicateImpl, InferResult> ADD_FACT            = (r, p, f) -> {
+                                                                                                                     InferResult m = InferResult.of(Set.of(f), Set.of(), Set.of(),   //
+                                                                                                                             p.isFullyBound() ? Set.of() : Set.of(List.of(p)));
+                                                                                                                     return r == null ? m : r.add(m);
+                                                                                                                 };
     @SuppressWarnings("unchecked")
-    private static final BiFunction<List<RuleImpl>, RuleImpl, List<RuleImpl>> ADD_RULE            = (l, e) -> {
-                                                                                                      if (l == null) {
-                                                                                                          return List.of(e);
-                                                                                                      } else {
-                                                                                                          int p = e.rulePrio();
-                                                                                                          for (int i = 0; i < l.size(); i++) {
-                                                                                                              RuleImpl r = l.get(i);
-                                                                                                              if (r.equals(e)) {
-                                                                                                                  return l;
-                                                                                                              } else if (r.consequence().equals(e.consequence()) &&   //
-                                                                                                                      r.condition().contains(e.condition())) {
-                                                                                                                  return l;
-                                                                                                              } else if (r.rulePrio() > p) {
-                                                                                                                  return l.insert(i, e);
-                                                                                                              }
-                                                                                                          }
-                                                                                                          return l.append(e);
-                                                                                                      }
-                                                                                                  };
+    private static final BiFunction<List<RuleImpl>, RuleImpl, List<RuleImpl>>                ADD_RULE            = (l, e) -> {
+                                                                                                                     if (l == null) {
+                                                                                                                         return List.of(e);
+                                                                                                                     } else {
+                                                                                                                         int p = e.rulePrio();
+                                                                                                                         for (int i = 0; i < l.size(); i++) {
+                                                                                                                             RuleImpl r = l.get(i);
+                                                                                                                             if (r.equals(e)) {
+                                                                                                                                 return l;
+                                                                                                                             } else if (r.consequence().equals(e.consequence()) &&   //
+                                                                                                                                     r.condition().contains(e.condition())) {
+                                                                                                                                 return l;
+                                                                                                                             } else if (r.rulePrio() > p) {
+                                                                                                                                 return l.insert(i, e);
+                                                                                                                             }
+                                                                                                                         }
+                                                                                                                         return l.append(e);
+                                                                                                                     }
+                                                                                                                 };
 
     @SuppressWarnings("rawtypes")
     private static class Inference extends Struct2Impl<PredicateImpl, InferResult> {
@@ -174,7 +176,8 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     public InferResult getFacts(PredicateImpl pred) {
-        return facts.get().get(pred);
+        InferResult result = facts.get().get(pred);
+        return result != null ? result : pred.isFullyBound() ? InferResult.EMPTY : InferResult.of(Set.of(), List.of(pred));
     }
 
     public List<RuleImpl> getRules(PredicateImpl pred) {
@@ -218,7 +221,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                 facts.updateAndGet(map -> {
                     map = map.put(predicate, result);
                     for (PredicateImpl p : result.facts()) {
-                        map = map.put(p, ADD_FACT.apply(map.get(p), p));
+                        map = map.put(p, ADD_FACT.apply(map.get(p), p, p));
                     }
                     return map;
                 });
@@ -285,36 +288,36 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public final void addFact(PredicateImpl predicate) {
-        FunctorImpl<Predicate> functor = predicate.functor();
+    public final void addFact(PredicateImpl fact) {
+        FunctorImpl<Predicate> functor = fact.functor();
         if (functor.logic() != null) {
             throw new IllegalArgumentException("No facts of a functor with a logic lambda allowed. " + this);
         }
-        if (getRules(predicate.signature()) != null) {
+        if (getRules(fact.signature()) != null) {
             throw new IllegalArgumentException("No facts of a functor with rules allowed. " + this);
         }
         facts.updateAndGet(map -> {
             List<Class> args = functor.args();
-            map = map.put(predicate, ADD_FACT.apply(map.get(predicate), predicate));
-            for (int i = 1; i < predicate.length(); i++) {
-                map = addFact(map, predicate, predicate.set(i, predicate.getType(i)), i, args.get(i - 1));
+            map = map.put(fact, ADD_FACT.apply(map.get(fact), fact, fact));
+            for (int i = 1; i < fact.length(); i++) {
+                map = addFact(map, fact, fact.set(i, fact.getType(i)), i, args.get(i - 1));
             }
             return map;
         });
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Map<PredicateImpl, InferResult> addFact(Map<PredicateImpl, InferResult> map, PredicateImpl predicate, PredicateImpl pattern, int i, Class cls) {
-        Class type = pattern.getType(i);
+    private static Map<PredicateImpl, InferResult> addFact(Map<PredicateImpl, InferResult> map, PredicateImpl fact, PredicateImpl predicate, int i, Class cls) {
+        Class type = predicate.getType(i);
         if (cls.isAssignableFrom(type)) {
-            map = map.put(pattern, ADD_FACT.apply(map.get(pattern), predicate));
+            map = map.put(predicate, ADD_FACT.apply(map.get(predicate), predicate, fact));
             if (!cls.equals(type)) {
                 for (Type gen : type.getGenericInterfaces()) {
                     while (gen instanceof ParameterizedType) {
                         gen = ((ParameterizedType) gen).getRawType();
                     }
                     if (gen instanceof Class) {
-                        map = addFact(map, predicate, pattern.set(i, gen), i, cls);
+                        map = addFact(map, fact, predicate.set(i, gen), i, cls);
                     }
                 }
             }
