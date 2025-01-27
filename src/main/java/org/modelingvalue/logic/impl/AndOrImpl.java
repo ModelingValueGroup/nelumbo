@@ -125,7 +125,7 @@ public abstract class AndOrImpl extends PredicateImpl {
                 }
             }
         } while (!nextAnds.isEmpty());
-        return flip(InferResult.of(facts, result.falsehoods(), result.incomplete(), result.falseIncomplete(), result.cycles()));
+        return flip(InferResult.of(facts, result.falsehoods(), result.incomplete(), result.cycles()));
     }
 
     protected abstract boolean equalClass(PredicateImpl predicate);

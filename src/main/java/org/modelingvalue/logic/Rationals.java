@@ -117,14 +117,11 @@ public final class Rationals {
             } else {
                 return InferResult.trueFalse(Set.of(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT)), Set.of());
             }
-        } else if (result != null) {
-            boolean zero = BigInteger.ZERO.equals(result);
+        } else if (BigInteger.ZERO.equals(result)) {
             if (numComp1 != null) {
-                Set<PredicateImpl> facts = Set.of(predicate.set(2, (StructureImpl) predicate.getVal(1)));
-                return zero ? InferResult.trueFalse(facts, Set.of()) : InferResult.falseIncomplete(facts, predicate);
+                return InferResult.trueFalse(Set.of(predicate.set(2, (StructureImpl) predicate.getVal(1))), Set.of());
             } else if (numComp2 != null) {
-                Set<PredicateImpl> facts = Set.of(predicate.set(1, (StructureImpl) predicate.getVal(2)));
-                return zero ? InferResult.trueFalse(facts, Set.of()) : InferResult.falseIncomplete(facts, predicate);
+                return InferResult.trueFalse(Set.of(predicate.set(1, (StructureImpl) predicate.getVal(2))), Set.of());
             }
         }
         return InferResult.incomplete(predicate);

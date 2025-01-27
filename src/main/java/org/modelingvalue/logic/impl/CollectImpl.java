@@ -136,7 +136,6 @@ public final class CollectImpl extends PredicateImpl {
             return result;
         }
         Set<PredicateImpl> incomplete = result.incomplete();
-        Set<PredicateImpl> falseIncomplete = result.falseIncomplete();
         Set<PredicateImpl> cycles = result.cycles();
         Set<StructureImpl> facts = Set.of(identity);
         for (PredicateImpl element : result.facts()) {
@@ -152,12 +151,11 @@ public final class CollectImpl extends PredicateImpl {
                     res = res.add(am.getVal(resultIndex));
                 }
                 incomplete = incomplete.addAll(result.incomplete());
-                falseIncomplete = falseIncomplete.addAll(result.falseIncomplete());
                 cycles = cycles.addAll(result.cycles());
             }
             facts = res;
         }
-        return InferResult.of(facts.replaceAll(r -> set(2, accum.set(resultIndex, r))), Set.of(), incomplete, falseIncomplete, cycles);
+        return InferResult.of(facts.replaceAll(r -> set(2, accum.set(resultIndex, r))), Set.of(), incomplete, cycles);
     }
 
     @SuppressWarnings("rawtypes")

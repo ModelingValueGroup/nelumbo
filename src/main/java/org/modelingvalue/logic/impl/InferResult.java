@@ -32,8 +32,6 @@ public interface InferResult {
 
     Set<PredicateImpl> incomplete();
 
-    Set<PredicateImpl> falseIncomplete();
-
     Set<PredicateImpl> cycles();
 
     List<PredicateImpl> stackOverflow();
@@ -55,11 +53,6 @@ public interface InferResult {
         }
 
         @Override
-        public Set<PredicateImpl> falseIncomplete() {
-            return Set.of();
-        }
-
-        @Override
         public Set<PredicateImpl> cycles() {
             return Set.of();
         }
@@ -70,7 +63,7 @@ public interface InferResult {
         }
     };
 
-    static InferResult of(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods, Set<PredicateImpl> incomplete, Set<PredicateImpl> falseIncomplete, Set<PredicateImpl> cycles) {
+    static InferResult of(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods, Set<PredicateImpl> incomplete, Set<PredicateImpl> cycles) {
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
@@ -85,11 +78,6 @@ public interface InferResult {
             @Override
             public Set<PredicateImpl> incomplete() {
                 return incomplete;
-            }
-
-            @Override
-            public Set<PredicateImpl> falseIncomplete() {
-                return falseIncomplete;
             }
 
             @Override
@@ -122,46 +110,6 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> falseIncomplete() {
-                return Set.of();
-            }
-
-            @Override
-            public Set<PredicateImpl> cycles() {
-                return Set.of();
-            }
-
-            @Override
-            public List<PredicateImpl> stackOverflow() {
-                return null;
-            }
-        };
-    }
-
-    static InferResult falseIncomplete(Set<PredicateImpl> falsehoods, PredicateImpl falseIncomplete) {
-        Set<PredicateImpl> falseIncompletes = Set.of(falseIncomplete);
-        return new InferResult() {
-            @Override
-            public Set<PredicateImpl> facts() {
-                return Set.of();
-            }
-
-            @Override
-            public Set<PredicateImpl> falsehoods() {
-                return falsehoods;
-            }
-
-            @Override
-            public Set<PredicateImpl> incomplete() {
-                return Set.of();
-            }
-
-            @Override
-            public Set<PredicateImpl> falseIncomplete() {
-                return falseIncompletes;
-            }
-
-            @Override
             public Set<PredicateImpl> cycles() {
                 return Set.of();
             }
@@ -188,11 +136,6 @@ public interface InferResult {
 
             @Override
             public Set<PredicateImpl> incomplete() {
-                return incompletes;
-            }
-
-            @Override
-            public Set<PredicateImpl> falseIncomplete() {
                 return incompletes;
             }
 
@@ -227,11 +170,6 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> falseIncomplete() {
-                return Set.of();
-            }
-
-            @Override
             public Set<PredicateImpl> cycles() {
                 return cycles;
             }
@@ -261,11 +199,6 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> falseIncomplete() {
-                return Set.of();
-            }
-
-            @Override
             public Set<PredicateImpl> cycles() {
                 return Set.of();
             }
@@ -281,21 +214,14 @@ public interface InferResult {
         return of(facts().addAll(result.facts()), //
                 falsehoods().addAll(result.falsehoods()), //
                 incomplete().addAll(result.incomplete()), //
-                falseIncomplete().addAll(result.falseIncomplete()), //
                 cycles().addAll(result.cycles()));
     }
 
     default InferResult bind(PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
-        boolean complete = to.isFullyBound();
-        Set<PredicateImpl> incomplete = complete ? //
-                bind(incomplete().retainAll(falseIncomplete()), fromDecl, to, toDecl) : //
-                bind(incomplete(), fromDecl, to, toDecl);
-        Set<PredicateImpl> falseIncomplete = complete ? //
-                incomplete : //
-                bind(falseIncomplete(), fromDecl, to, toDecl);
         return of(bind(facts(), fromDecl, to, toDecl), //
                 bind(falsehoods(), fromDecl, to, toDecl), //
-                incomplete, falseIncomplete, cycles());
+                bind(incomplete(), fromDecl, to, toDecl), //
+                cycles());
     }
 
     static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
@@ -303,7 +229,7 @@ public interface InferResult {
     }
 
     default InferResult not() {
-        return of(falsehoods(), facts(), falseIncomplete(), incomplete(), cycles());
+        return of(falsehoods(), facts(), incomplete(), cycles());
     }
 
     default boolean hasCycleWith(PredicateImpl predicate) {

@@ -57,8 +57,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     private static final int                                                                 INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
     @SuppressWarnings("rawtypes")
     private static final TriFunction<InferResult, PredicateImpl, PredicateImpl, InferResult> ADD_FACT            = (r, p, f) -> {
-                                                                                                                     InferResult m = InferResult.of(Set.of(f), Set.of(), Set.of(),   //
-                                                                                                                             p.isFullyBound() ? Set.of() : Set.of(p), Set.of());
+                                                                                                                     InferResult m = InferResult.trueFalse(Set.of(f), Set.of());
                                                                                                                      return r == null ? m : r.add(m);
                                                                                                                  };
     @SuppressWarnings("unchecked")
@@ -177,7 +176,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferResult getFacts(PredicateImpl pred) {
         InferResult result = facts.get().get(pred);
-        return result != null ? result : pred.isFullyBound() ? InferResult.EMPTY : InferResult.falseIncomplete(Set.of(), pred);
+        return result != null ? result : InferResult.EMPTY;
     }
 
     public List<RuleImpl> getRules(PredicateImpl pred) {

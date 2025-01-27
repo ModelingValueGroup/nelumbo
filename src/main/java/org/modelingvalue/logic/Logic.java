@@ -320,7 +320,7 @@ public final class Logic {
             StructureImpl eq = constant1.eq(constant2);
             return eq != null ? //
                     InferResult.trueFalse(Set.of(predicate.set(1, eq, eq)), Set.of()) : //
-                    InferResult.falseIncomplete(Set.of(predicate), predicate);
+                    InferResult.trueFalse(Set.of(), Set.of(predicate));
         }
     }
 
