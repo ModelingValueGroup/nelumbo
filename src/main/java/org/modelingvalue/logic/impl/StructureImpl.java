@@ -291,43 +291,43 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Map<VariableImpl, Object> getBinding(Object v, Object tv, Map<VariableImpl, Object> vars) {
-        Class tt = typeOf(tv);
-        tv = tv instanceof Class ? null : tv;
-        if (v instanceof VariableImpl) {
-            VariableImpl var = (VariableImpl) v;
-            Object vv = vars.get(var);
-            Class vt = typeOf(vv);
-            vv = vv instanceof Class ? null : vv;
-            if (vv != null) {
-                if (tv != null && !tv.equals(vv)) {
+    private static Map<VariableImpl, Object> getBinding(Object thisVal, Object structVal, Map<VariableImpl, Object> vars) {
+        Class structType = typeOf(structVal);
+        structVal = structVal instanceof Class ? null : structVal;
+        if (thisVal instanceof VariableImpl) {
+            VariableImpl var = (VariableImpl) thisVal;
+            Object varVal = vars.get(var);
+            Class varType = typeOf(varVal);
+            varVal = varVal instanceof Class ? null : varVal;
+            if (varVal != null) {
+                if (structVal != null && !structVal.equals(varVal)) {
                     return null;
                 }
-            } else if (tv != null) {
-                if (var.type().isAssignableFrom(tt)) {
-                    vars = vars.put(var, tv);
+            } else if (structVal != null) {
+                if (var.type().isAssignableFrom(structType)) {
+                    vars = vars.put(var, structVal);
                 } else {
                     return null;
                 }
-            } else if (tt == null || !var.type().isAssignableFrom(tt)) {
+            } else if (structType == null || !var.type().isAssignableFrom(structType)) {
                 return null;
-            } else if (vt != null && !vt.equals(tt)) {
+            } else if (varType != null && !varType.equals(structType)) {
                 return null;
             } else {
-                vars = vars.put(var, tt);
+                vars = vars.put(var, structType);
             }
-        } else if (v instanceof StructureImpl) {
-            StructureImpl t = (StructureImpl) v;
-            if (tv != null) {
-                if (tv instanceof StructureImpl) {
-                    vars = t.getBinding((StructureImpl) tv, vars);
+        } else if (thisVal instanceof StructureImpl) {
+            StructureImpl t = (StructureImpl) thisVal;
+            if (structVal != null) {
+                if (structVal instanceof StructureImpl) {
+                    vars = t.getBinding((StructureImpl) structVal, vars);
                 } else {
                     return null;
                 }
-            } else if (tt == null || !t.type().isAssignableFrom(tt)) {
+            } else if (structType == null || !t.type().isAssignableFrom(structType)) {
                 return null;
             }
-        } else if (tv != null && !tv.equals(v)) {
+        } else if (structVal != null && !structVal.equals(thisVal)) {
             return null;
         }
         return vars;
@@ -342,33 +342,33 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     protected StructureImpl setBinding(StructureImpl<F> struct, Map<VariableImpl, Object> vars) {
         Object[] array = null;
         for (int i = 1; i < struct.length(); i++) {
-            Object tv = struct.get(i);
-            Object b = setBinding(get(i), tv, vars);
-            if (!Objects.equals(b, tv)) {
+            Object structVal = struct.get(i);
+            Object bound = setBinding(get(i), structVal, vars);
+            if (!Objects.equals(bound, structVal)) {
                 if (array == null) {
                     array = struct.toArray();
                 }
-                array[i] = b;
+                array[i] = bound;
             }
         }
         return array != null ? struct.struct(array) : struct;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Object setBinding(Object v, Object tv, Map<VariableImpl, Object> vars) {
-        if (v instanceof VariableImpl) {
-            Object vv = vars.get((VariableImpl) v);
-            if (vv != null) {
-                return vv;
+    private static Object setBinding(Object thisVal, Object structVal, Map<VariableImpl, Object> vars) {
+        if (thisVal instanceof VariableImpl) {
+            Object varVal = vars.get((VariableImpl) thisVal);
+            if (varVal != null) {
+                return varVal;
             }
-        } else if (v instanceof StructureImpl) {
-            if (tv instanceof StructureImpl) {
-                return ((StructureImpl) v).setBinding((StructureImpl) tv, vars);
-            } else if (tv instanceof Class && ((Class) tv).isAssignableFrom((((StructureImpl) v).type()))) {
-                return ((StructureImpl) v).setBinding((StructureImpl) v, vars);
+        } else if (thisVal instanceof StructureImpl) {
+            if (structVal instanceof StructureImpl) {
+                return ((StructureImpl) thisVal).setBinding((StructureImpl) structVal, vars);
+            } else if (structVal instanceof Class && ((Class) structVal).isAssignableFrom((((StructureImpl) thisVal).type()))) {
+                return ((StructureImpl) thisVal).setBinding((StructureImpl) thisVal, vars);
             }
         }
-        return tv;
+        return structVal;
     }
 
     protected boolean isFullyBound() {
