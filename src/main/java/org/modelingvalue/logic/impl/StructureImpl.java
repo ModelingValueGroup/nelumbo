@@ -189,11 +189,11 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         }
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
-            Object tv = get(i);
-            Object eq = eq(tv, other.get(i));
+            Object thisVal = get(i);
+            Object eq = eq(thisVal, other.get(i));
             if (eq == null) {
                 return null;
-            } else if (!Objects.equals(eq, tv)) {
+            } else if (!Objects.equals(eq, thisVal)) {
                 if (array == null) {
                     array = toArray();
                 }
@@ -204,34 +204,34 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Object eq(Object tv, Object ov) {
-        if (tv != ov) {
-            if (tv instanceof StructureImpl && ov instanceof StructureImpl) {
-                return ((StructureImpl) tv).eq((StructureImpl) ov);
-            } else if (tv instanceof StructureImpl && ov instanceof Class) {
-                return ((Class) ov).isAssignableFrom(((StructureImpl) tv).type()) ? tv : null;
-            } else if (tv instanceof Class && ov instanceof StructureImpl) {
-                return ((Class) tv).isAssignableFrom(((StructureImpl) ov).type()) ? ov : null;
-            } else if (!(tv instanceof Class) && ov instanceof Class) {
-                return ((Class) ov).isAssignableFrom(tv.getClass()) ? tv : null;
-            } else if (tv instanceof Class && !(ov instanceof Class)) {
-                return ((Class) tv).isAssignableFrom(ov.getClass()) ? ov : null;
-            } else if (!Objects.equals(tv, ov)) {
+    private static Object eq(Object thisVal, Object otherVal) {
+        if (thisVal != otherVal) {
+            if (thisVal instanceof StructureImpl && otherVal instanceof StructureImpl) {
+                return ((StructureImpl) thisVal).eq((StructureImpl) otherVal);
+            } else if (thisVal instanceof StructureImpl && otherVal instanceof Class) {
+                return ((Class) otherVal).isAssignableFrom(((StructureImpl) thisVal).type()) ? thisVal : null;
+            } else if (thisVal instanceof Class && otherVal instanceof StructureImpl) {
+                return ((Class) thisVal).isAssignableFrom(((StructureImpl) otherVal).type()) ? otherVal : null;
+            } else if (!(thisVal instanceof Class) && otherVal instanceof Class) {
+                return ((Class) otherVal).isAssignableFrom(thisVal.getClass()) ? thisVal : null;
+            } else if (thisVal instanceof Class && !(otherVal instanceof Class)) {
+                return ((Class) thisVal).isAssignableFrom(otherVal.getClass()) ? otherVal : null;
+            } else if (!Objects.equals(thisVal, otherVal)) {
                 return null;
             }
         }
-        return tv;
+        return thisVal;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public Map<VariableImpl, Object> variables() {
         Map<VariableImpl, Object> vars = Map.of();
         for (int i = 1; i < length(); i++) {
-            Object v = get(i);
-            if (v instanceof VariableImpl) {
-                vars = vars.put((VariableImpl) v, ((VariableImpl) v).type());
-            } else if (v instanceof StructureImpl) {
-                vars = vars.putAll(((StructureImpl) v).variables());
+            Object val = get(i);
+            if (val instanceof VariableImpl) {
+                vars = vars.put((VariableImpl) val, ((VariableImpl) val).type());
+            } else if (val instanceof StructureImpl) {
+                vars = vars.putAll(((StructureImpl) val).variables());
             }
         }
         return vars;
@@ -239,14 +239,14 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
 
     @SuppressWarnings("unchecked")
     public <V> V getVal(int... is) {
-        Object v = this;
+        Object val = this;
         for (int i : is) {
-            v = ((StructureImpl<?>) v).get(i);
-            if (v instanceof Class || v instanceof VariableImpl) {
+            val = ((StructureImpl<?>) val).get(i);
+            if (val instanceof Class || val instanceof VariableImpl) {
                 return null;
             }
         }
-        return (V) v;
+        return (V) val;
     }
 
     public StructureImpl<F> set(int f, Object... a) {
@@ -379,11 +379,11 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     protected final int nrOfUnbound() {
         int nr = 0;
         for (int i = 1; i < length(); i++) {
-            Object v = get(i);
-            if (v instanceof Class) {
+            Object val = get(i);
+            if (val instanceof Class) {
                 nr++;
-            } else if (v instanceof StructureImpl) {
-                nr += ((StructureImpl) v).nrOfUnbound();
+            } else if (val instanceof StructureImpl) {
+                nr += ((StructureImpl) val).nrOfUnbound();
             }
         }
         return nr;
@@ -393,11 +393,11 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     protected final int nrOfVariables() {
         int nr = 0;
         for (int i = 1; i < length(); i++) {
-            Object v = get(i);
-            if (v instanceof VariableImpl) {
+            Object val = get(i);
+            if (val instanceof VariableImpl) {
                 nr++;
-            } else if (v instanceof StructureImpl) {
-                nr += ((StructureImpl) v).nrOfVariables();
+            } else if (val instanceof StructureImpl) {
+                nr += ((StructureImpl) val).nrOfVariables();
             }
         }
         return nr;
