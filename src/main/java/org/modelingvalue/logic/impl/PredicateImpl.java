@@ -216,7 +216,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     public final InferResult reduce(PredicateImpl declaration, InferContext context) {
         relations = declaration.relations();
         Set<PredicateImpl> previous, next = Set.of(this), facts, falsehoods;
-        InferResult result = InferResult.EMPTY, relationResult, bindResult;
+        InferResult result = InferResult.INCOMPLETE, relationResult, bindResult;
         PredicateImpl relation, relationDecl;
         do {
             previous = next;
@@ -232,6 +232,9 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                         relationResult = relation.infer(relationDecl, context);
                         if (relationResult.hasStackOverflow()) {
                             return relationResult;
+                        }
+                        if (!relationResult.cycles().isEmpty()) {
+                            result = result.add(InferResult.cycles(relationResult.cycles()));
                         }
                         if (!relationResult.isIncomplete()) {
                             bindResult = relationResult.bind(relationDecl, pred, declaration);

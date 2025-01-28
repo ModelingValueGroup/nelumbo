@@ -29,7 +29,6 @@ import org.modelingvalue.logic.Logic.Constant;
 import org.modelingvalue.logic.Logic.Function;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.LogicLambda;
-import org.modelingvalue.logic.Logic.Predicate;
 import org.modelingvalue.logic.Logic.Relation;
 import org.modelingvalue.logic.Logic.Structure;
 import org.modelingvalue.logic.impl.FunctorImpl;
@@ -86,7 +85,7 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Predicate> COMPARE_FUNCTOR = Logic.<Predicate, IntegerCons, IntegerCons, IntegerCons> functor(Integers::compare, (LogicLambda) Integers::compareLogic);
+    private static Functor<Relation> COMPARE_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::compare, (LogicLambda) Integers::compareLogic);
 
     @SuppressWarnings("rawtypes")
     private static InferResult compareLogic(PredicateImpl predicate, InferContext context) {
@@ -111,12 +110,12 @@ public final class Integers {
         return InferResult.INCOMPLETE;
     }
 
-    public static Predicate compare(IntegerCons compared1, IntegerCons compared2, IntegerCons result) {
+    public static Relation compare(IntegerCons compared1, IntegerCons compared2, IntegerCons result) {
         return pred(COMPARE_FUNCTOR, compared1, compared2, result);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Predicate> PLUS_PRED_FUNCTOR = Logic.<Predicate, IntegerCons, IntegerCons, IntegerCons> functor(Integers::plus, (LogicLambda) Integers::plusLogic);
+    private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::plus, (LogicLambda) Integers::plusLogic);
 
     private static InferResult plusLogic(PredicateImpl predicate, InferContext context) {
         BigInteger addend1 = predicate.getVal(1, 1);
@@ -139,12 +138,12 @@ public final class Integers {
         }
     }
 
-    public static Predicate plus(IntegerCons addend1, IntegerCons addend2, IntegerCons sum) {
+    public static Relation plus(IntegerCons addend1, IntegerCons addend2, IntegerCons sum) {
         return pred(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Predicate> MULTIPLY_PRED_FUNCTOR = Logic.<Predicate, IntegerCons, IntegerCons, IntegerCons> functor(Integers::multiply, (LogicLambda) Integers::multiplyLogic);
+    private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::multiply, (LogicLambda) Integers::multiplyLogic);
 
     private static InferResult multiplyLogic(PredicateImpl predicate, InferContext context) {
         BigInteger factor1 = predicate.getVal(1, 1);
@@ -167,12 +166,12 @@ public final class Integers {
         }
     }
 
-    public static Predicate multiply(IntegerCons factor1, IntegerCons factor2, IntegerCons product) {
+    public static Relation multiply(IntegerCons factor1, IntegerCons factor2, IntegerCons product) {
         return pred(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Predicate> SQUARE_PRED_FUNCTOR = Logic.<Predicate, IntegerCons, IntegerCons> functor(Integers::square, (LogicLambda) Integers::squareLogic);
+    private static Functor<Relation> SQUARE_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::square, (LogicLambda) Integers::squareLogic);
 
     private static InferResult squareLogic(PredicateImpl predicate, InferContext context) {
         BigInteger root = predicate.getVal(1, 1);
@@ -190,7 +189,7 @@ public final class Integers {
         }
     }
 
-    public static Predicate square(IntegerCons root, IntegerCons square) {
+    public static Relation square(IntegerCons root, IntegerCons square) {
         return pred(SQUARE_PRED_FUNCTOR, root, square);
     }
 

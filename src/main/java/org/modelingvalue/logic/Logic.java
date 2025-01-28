@@ -297,7 +297,7 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static Functor<Predicate> EQ_FUNCTOR = Logic.<Predicate, Constant, Constant> functor(Logic::eq, (LogicLambda) Logic::eqLogic);
+    private static Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::eq, (LogicLambda) Logic::eqLogic);
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult eqLogic(PredicateImpl predicate, InferContext context) {
@@ -318,7 +318,7 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    public static <T extends Structure> Predicate eq(Constant<T> a, Constant<T> b) {
+    public static <T extends Structure> Relation eq(Constant<T> a, Constant<T> b) {
         return pred(EQ_FUNCTOR, a, b);
     }
 

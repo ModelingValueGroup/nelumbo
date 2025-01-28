@@ -27,7 +27,7 @@ import org.modelingvalue.logic.Logic.Constant;
 import org.modelingvalue.logic.Logic.Function;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.LogicLambda;
-import org.modelingvalue.logic.Logic.Predicate;
+import org.modelingvalue.logic.Logic.Relation;
 import org.modelingvalue.logic.Logic.Structure;
 import org.modelingvalue.logic.impl.FunctorImpl;
 import org.modelingvalue.logic.impl.InferContext;
@@ -94,7 +94,7 @@ public final class Lists {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static final FunctorImpl<Predicate> ADD_FUNCTOR = FunctorImpl.<Predicate, Structure, ListCons, ListCons> of(Lists::add, (LogicLambda) Lists::addLogic);
+    private static final FunctorImpl<Relation> ADD_FUNCTOR = FunctorImpl.<Relation, Structure, ListCons, ListCons> of(Lists::add, (LogicLambda) Lists::addLogic);
 
     private static InferResult addLogic(PredicateImpl predicate, InferContext context) {
         StructureImpl<Structure> element = predicate.getVal(1);
@@ -121,9 +121,9 @@ public final class Lists {
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Functor<Predicate> ADD_FUNCTOR_PROXY = ADD_FUNCTOR.proxy();
+    private static final Functor<Relation> ADD_FUNCTOR_PROXY = ADD_FUNCTOR.proxy();
 
-    public static <E extends Structure> Predicate add(E e, ListCons<E> i, ListCons<E> o) {
+    public static <E extends Structure> Relation add(E e, ListCons<E> i, ListCons<E> o) {
         return pred(ADD_FUNCTOR_PROXY, e, i, o);
     }
 

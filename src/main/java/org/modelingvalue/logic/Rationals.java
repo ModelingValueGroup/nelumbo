@@ -28,7 +28,13 @@ import java.math.BigInteger;
 
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Integers.IntegerCons;
-import org.modelingvalue.logic.Logic.*;
+import org.modelingvalue.logic.Logic.Constant;
+import org.modelingvalue.logic.Logic.Function;
+import org.modelingvalue.logic.Logic.Functor;
+import org.modelingvalue.logic.Logic.LogicLambda;
+import org.modelingvalue.logic.Logic.NormalizeLambda;
+import org.modelingvalue.logic.Logic.Relation;
+import org.modelingvalue.logic.Logic.Structure;
 import org.modelingvalue.logic.impl.InferContext;
 import org.modelingvalue.logic.impl.InferResult;
 import org.modelingvalue.logic.impl.PredicateImpl;
@@ -100,7 +106,7 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Predicate> compare = Logic.<Predicate, RationalCons, RationalCons, IntegerCons> functor(Rationals::compare, (LogicLambda) Rationals::compareLogic);
+    private static Functor<Relation> compare = Logic.<Relation, RationalCons, RationalCons, IntegerCons> functor(Rationals::compare, (LogicLambda) Rationals::compareLogic);
 
     @SuppressWarnings("rawtypes")
     private static InferResult compareLogic(PredicateImpl predicate, InferContext context) {
@@ -127,12 +133,12 @@ public final class Rationals {
         return InferResult.INCOMPLETE;
     }
 
-    public static Predicate compare(RationalCons compared1, RationalCons compared2, IntegerCons result) {
+    public static Relation compare(RationalCons compared1, RationalCons compared2, IntegerCons result) {
         return pred(compare, compared1, compared2, result);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Predicate> PLUS_PRED_FUNCTOR = Logic.<Predicate, RationalCons, RationalCons, RationalCons> functor(Rationals::plus, (LogicLambda) Rationals::plusLogic);
+    private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::plus, (LogicLambda) Rationals::plusLogic);
 
     private static InferResult plusLogic(PredicateImpl predicate, InferContext context) {
         BigInteger numAddend1 = predicate.getVal(1, 1);
@@ -164,12 +170,12 @@ public final class Rationals {
         }
     }
 
-    public static Predicate plus(RationalCons addend1, RationalCons addend2, RationalCons sum) {
+    public static Relation plus(RationalCons addend1, RationalCons addend2, RationalCons sum) {
         return pred(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Predicate> MULTIPLY_PRED_FUNCTOR = Logic.<Predicate, RationalCons, RationalCons, RationalCons> functor(Rationals::multiply, (LogicLambda) Rationals::multiplyLogic);
+    private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::multiply, (LogicLambda) Rationals::multiplyLogic);
 
     private static InferResult multiplyLogic(PredicateImpl predicate, InferContext context) {
         BigInteger numFactor1 = predicate.getVal(1, 1);
@@ -195,12 +201,12 @@ public final class Rationals {
         }
     }
 
-    public static Predicate multiply(RationalCons factor1, RationalCons factor2, RationalCons product) {
+    public static Relation multiply(RationalCons factor1, RationalCons factor2, RationalCons product) {
         return pred(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Predicate> SQUARE_PRED_FUNCTOR = Logic.<Predicate, RationalCons, RationalCons> functor(Rationals::square, (LogicLambda) Rationals::squareLogic);
+    private static Functor<Relation> SQUARE_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::square, (LogicLambda) Rationals::squareLogic);
 
     private static InferResult squareLogic(PredicateImpl predicate, InferContext context) {
         BigInteger numRoot = predicate.getVal(1, 1);
@@ -224,7 +230,7 @@ public final class Rationals {
         }
     }
 
-    public static Predicate square(RationalCons root, RationalCons square) {
+    public static Relation square(RationalCons root, RationalCons square) {
         return pred(SQUARE_PRED_FUNCTOR, root, square);
     }
 
