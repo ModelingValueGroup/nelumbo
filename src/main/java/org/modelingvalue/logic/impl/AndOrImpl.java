@@ -20,31 +20,11 @@
 
 package org.modelingvalue.logic.impl;
 
-import java.util.function.UnaryOperator;
-
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic.Predicate;
 
 public abstract class AndOrImpl extends PredicateImpl {
-    private static final long                 serialVersionUID = -928776822979604743L;
-
-    private static final int[]                ONE_ARRAY        = new int[]{1};
-    private static final int[]                TWO_ARRAY        = new int[]{2};
-    private static final UnaryOperator<int[]> ADD_ONE          = a -> {
-                                                                   int[] r = new int[a.length + 1];
-                                                                   System.arraycopy(a, 0, r, 1, a.length);
-                                                                   r[0] = 1;
-                                                                   return r;
-                                                               };
-    private static final UnaryOperator<int[]> ADD_TWO          = a -> {
-                                                                   int[] r = new int[a.length + 1];
-                                                                   System.arraycopy(a, 0, r, 1, a.length);
-                                                                   r[0] = 2;
-                                                                   return r;
-                                                               };
-
-    private List<int[]>                       idxList;
+    private static final long serialVersionUID = -928776822979604743L;
 
     protected AndOrImpl(FunctorImpl<Predicate> functor, PredicateImpl predicate1, PredicateImpl predicate2) {
         super(functor, predicate1, predicate2);
@@ -52,27 +32,6 @@ public abstract class AndOrImpl extends PredicateImpl {
 
     protected AndOrImpl(Object[] args) {
         super(args);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private List<int[]> idxList() {
-        if (idxList == null) {
-            List<int[]> l = List.of();
-            PredicateImpl predicate1 = predicate1();
-            if (equalClass(predicate1)) {
-                l = l.prependList(((AndOrImpl) predicate1).idxList().replaceAll(ADD_ONE));
-            } else {
-                l = l.append(ONE_ARRAY);
-            }
-            PredicateImpl predicate2 = predicate2();
-            if (equalClass(predicate2)) {
-                l = l.appendList(((AndOrImpl) predicate2).idxList().replaceAll(ADD_TWO));
-            } else {
-                l = l.append(TWO_ARRAY);
-            }
-            idxList = l;
-        }
-        return idxList;
     }
 
     @SuppressWarnings("rawtypes")
@@ -88,47 +47,26 @@ public abstract class AndOrImpl extends PredicateImpl {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public final InferResult infer(PredicateImpl declaration, InferContext context) {
-        idxList = ((AndOrImpl) declaration).idxList();
-        Set<PredicateImpl> facts = Set.of();
-        InferResult result = InferResult.EMPTY, tmpResult, andResult;
-        Set<AndOrImpl> nextAnds = Set.of(this), prevAnds;
-        do {
-            prevAnds = nextAnds;
-            nextAnds = Set.of();
-            outer:
-            for (AndOrImpl and : prevAnds) {
-                List<int[]> idxl = and.idxList;
-                if (idxl.isEmpty()) {
-                    facts = facts.add(and);
-                } else {
-                    tmpResult = InferResult.EMPTY;
-                    for (int ii = 0; ii < idxl.size(); ii++) {
-                        int[] i = idxl.get(ii);
-                        PredicateImpl declPred = declaration.getVal(i);
-                        PredicateImpl pred = and.getVal(i);
-                        InferResult predResult = flip(pred.infer(declPred, context));
-                        if (predResult.hasStackOverflow()) {
-                            return predResult;
-                        }
-                        andResult = predResult.bind(declPred, and, declaration);
-                        if (andResult.incomplete().isEmpty()) {
-                            List<int[]> iil = idxl.removeIndex(ii);
-                            andResult.facts().forEach(f -> ((AndOrImpl) f).idxList = iil);
-                            nextAnds = nextAnds.addAll((Set) andResult.facts());
-                            result = result.add(andResult);
-                            continue outer;
-                        } else {
-                            tmpResult = tmpResult.add(andResult);
-                        }
-                    }
-                    result = result.add(tmpResult);
-                }
-            }
-        } while (!nextAnds.isEmpty());
-        return flip(InferResult.of(facts, result.falsehoods(), result.incomplete(), result.cycles()));
+        PredicateImpl pred1 = predicate1();
+        PredicateImpl pred1Decl = ((AndOrImpl) declaration).predicate1();
+        InferResult pred1Result = pred1.infer(pred1Decl, context);
+        if (pred1Result.hasStackOverflow()) {
+            return pred1Result;
+        }
+        PredicateImpl pred2 = predicate2();
+        PredicateImpl pred2Decl = ((AndOrImpl) declaration).predicate2();
+        InferResult pred2Result = pred2.infer(pred2Decl, context);
+        if (pred2Result.hasStackOverflow()) {
+            return pred2Result;
+        }
+        pred1Result = flip(pred1Result.bind(pred1Decl, this, declaration));
+        pred2Result = flip(pred2Result.bind(pred2Decl, this, declaration));
+        Set<PredicateImpl> andFacts = pred1Result.facts().retainAll(pred2Result.facts());
+        Set<PredicateImpl> exOrFacts = pred1Result.facts().addAll(pred2Result.facts()).removeAll(andFacts);
+        Set<PredicateImpl> falsehoods = pred1Result.falsehoods().addAll(pred2Result.falsehoods()).addAll(exOrFacts);
+        Set<PredicateImpl> cycles = pred1Result.cycles().addAll(pred2Result.cycles());
+        return flip(InferResult.of(andFacts, falsehoods, cycles));
     }
-
-    protected abstract boolean equalClass(PredicateImpl predicate);
 
     protected abstract InferResult flip(InferResult result);
 }

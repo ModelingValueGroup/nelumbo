@@ -51,11 +51,6 @@ public final class AndImpl extends AndOrImpl {
     }
 
     @Override
-    protected boolean equalClass(PredicateImpl predicate) {
-        return predicate instanceof AndImpl;
-    }
-
-    @Override
     protected InferResult flip(InferResult result) {
         return result;
     }

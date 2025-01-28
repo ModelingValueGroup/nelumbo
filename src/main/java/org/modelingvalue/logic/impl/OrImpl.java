@@ -57,11 +57,6 @@ public final class OrImpl extends AndOrImpl {
     }
 
     @Override
-    protected boolean equalClass(PredicateImpl predicate) {
-        return predicate instanceof OrImpl;
-    }
-
-    @Override
     protected InferResult flip(InferResult result) {
         return result.not();
     }

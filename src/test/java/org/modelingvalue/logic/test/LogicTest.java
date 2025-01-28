@@ -355,6 +355,16 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
+    @RepeatedTest(1)
+    public void famTest3() {
+        run(() -> {
+            fact(parentChild(Carel, Jan));
+            fact(parentChild(Jan, Wim));
+            fact(parentChild(Wim, Marijn));
+            isTrue(and(parentChild(Carel, A), parentChild(A, B), parentChild(B, Marijn)));
+        });
+    }
+
     @RepeatedTest(100)
     public void rootTest() {
         run(() -> {

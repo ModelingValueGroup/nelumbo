@@ -106,17 +106,17 @@ public final class Lists {
             boolean eq = addOrdered(sublist, element).equals(superlist);
             return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
         } else if (element != null && sublist != null && superlist == null) {
-            return InferResult.trueFalse(Set.of(predicate.set(3, ListImpl.of(addOrdered(sublist, element)))), Set.of());
+            return InferResult.trueFalse(Set.of(predicate.set(3, ListImpl.of(addOrdered(sublist, element)))), null);
         } else if (element != null && sublist == null && superlist != null) {
-            return InferResult.trueFalse(permRemove(superlist, element).replaceAll(l -> predicate.set(2, ListImpl.of(l))), Set.of());
+            return InferResult.trueFalse(permRemove(superlist, element).replaceAll(l -> predicate.set(2, ListImpl.of(l))), null);
         } else if (element == null && sublist != null && superlist != null) {
             if (sublist.anyMatch(superlist::notContains)) {
                 return InferResult.EMPTY;
             } else {
-                return InferResult.trueFalse(superlist.asSet().removeAll(sublist).replaceAll(r -> predicate.set(1, r)), Set.of());
+                return InferResult.trueFalse(superlist.asSet().removeAll(sublist).replaceAll(r -> predicate.set(1, r)), null);
             }
         } else {
-            return InferResult.incomplete(predicate);
+            return InferResult.INCOMPLETE;
         }
     }
 

@@ -3,7 +3,6 @@ package org.modelingvalue.logic.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.modelingvalue.logic.Logic.getBindings;
-import static org.modelingvalue.logic.Logic.getIncomplete;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
@@ -34,17 +33,9 @@ public class LogicTestBase {
         assertTrue(Logic.isFalse(query));
     }
 
-    public static void isIncomplete(Predicate query) {
-        assertTrue(Logic.isIncomplete(query));
-    }
-
     @SafeVarargs
     public static void hasBindings(Predicate query, Map<Variable, Object>... bindings) {
         assertEquals(Set.of(bindings), getBindings(query));
-    }
-
-    public static void hasIncomplete(Predicate query, Predicate... predicates) {
-        assertEquals(Set.of(predicates), getIncomplete(query));
     }
 
     public static void print(KnowledgeBase db) {

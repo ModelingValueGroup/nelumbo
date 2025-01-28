@@ -172,25 +172,18 @@ public final class Logic {
 
     public static boolean isTrue(Predicate pred) {
         InferResult result = infer(pred);
-        return !result.facts().isEmpty();
+        Set<PredicateImpl> facts = result.facts();
+        return facts != null && !facts.isEmpty();
     }
 
     public static boolean isFalse(Predicate pred) {
         InferResult result = infer(pred);
-        return result.facts().isEmpty() && result.incomplete().isEmpty();
-    }
-
-    public static boolean isIncomplete(Predicate pred) {
-        InferResult result = infer(pred);
-        return !result.incomplete().isEmpty();
+        Set<PredicateImpl> facts = result.facts();
+        return facts != null && facts.isEmpty();
     }
 
     public static Set<Predicate> getFacts(Predicate pred) {
         return infer(pred).facts().replaceAll(StructureImpl::proxy);
-    }
-
-    public static Set<Predicate> getIncomplete(Predicate pred) {
-        return infer(pred).incomplete().replaceAll(StructureImpl::proxy);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -212,7 +205,7 @@ public final class Logic {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult infer(PredicateImpl impl) {
-        return impl.setBinding(impl, impl.variables()).infer(impl, KnowledgeBaseImpl.CURRENT.get().context());
+        return impl.setBinding(impl, impl.variables()).reduce(impl, KnowledgeBaseImpl.CURRENT.get().context());
     }
 
     @SuppressWarnings("rawtypes")
@@ -228,8 +221,8 @@ public final class Logic {
     // Collect
 
     @SuppressWarnings("unchecked")
-    public static Predicate collect(Predicate pred, Predicate accum) {
-        return new CollectImpl(pred, accum).proxy();
+    public static Relation collect(Predicate pred, Predicate accum) {
+        return (Relation) new CollectImpl(pred, accum).proxy();
     }
 
     // True
@@ -311,11 +304,11 @@ public final class Logic {
         StructureImpl constant1 = predicate.getVal(1);
         StructureImpl constant2 = predicate.getVal(2);
         if (constant1 == null && constant2 == null) {
-            return InferResult.incomplete(predicate);
+            return InferResult.INCOMPLETE;
         } else if (constant1 == null) {
-            return InferResult.trueFalse(Set.of(predicate.set(1, constant2)), Set.of());
+            return InferResult.trueFalse(Set.of(predicate.set(1, constant2)), null);
         } else if (constant2 == null) {
-            return InferResult.trueFalse(Set.of(predicate.set(2, constant1)), Set.of());
+            return InferResult.trueFalse(Set.of(predicate.set(2, constant1)), null);
         } else {
             StructureImpl eq = constant1.eq(constant2);
             return eq != null ? //

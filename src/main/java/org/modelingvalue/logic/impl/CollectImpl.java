@@ -25,17 +25,19 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.Predicate;
+import org.modelingvalue.logic.Logic.Relation;
 
 public final class CollectImpl extends PredicateImpl {
-    private static final long                   serialVersionUID      = -2799691054715131197L;
+    private static final long                  serialVersionUID      = -2799691054715131197L;
 
-    private static final FunctorImpl<Predicate> COLLECT_FUNCTOR       = FunctorImpl.<Predicate, Predicate, Predicate> of(Logic::collect);
-    private static final Functor<Predicate>     COLLECT_FUNCTOR_PROXY = COLLECT_FUNCTOR.proxy();
+    private static final FunctorImpl<Relation> COLLECT_FUNCTOR       = FunctorImpl.<Relation, Predicate, Predicate> of(Logic::collect);
+    private static final Functor<Relation>     COLLECT_FUNCTOR_PROXY = COLLECT_FUNCTOR.proxy();
 
-    private int                                 resultIndex           = -1;
+    private int                                resultIndex           = -1;
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public CollectImpl(Predicate pred, Predicate accum) {
-        super(COLLECT_FUNCTOR_PROXY, pred, accum);
+        super((Functor) COLLECT_FUNCTOR_PROXY, pred, accum);
     }
 
     private CollectImpl(Object[] args) {
@@ -135,7 +137,6 @@ public final class CollectImpl extends PredicateImpl {
         if (result.hasStackOverflow()) {
             return result;
         }
-        Set<PredicateImpl> incomplete = result.incomplete();
         Set<PredicateImpl> cycles = result.cycles();
         Set<StructureImpl> facts = Set.of(identity);
         for (PredicateImpl element : result.facts()) {
@@ -150,12 +151,11 @@ public final class CollectImpl extends PredicateImpl {
                 for (PredicateImpl am : result.facts()) {
                     res = res.add(am.getVal(resultIndex));
                 }
-                incomplete = incomplete.addAll(result.incomplete());
                 cycles = cycles.addAll(result.cycles());
             }
             facts = res;
         }
-        return InferResult.of(facts.replaceAll(r -> set(2, accum.set(resultIndex, r))), Set.of(), incomplete, cycles);
+        return InferResult.of(facts.replaceAll(r -> set(2, accum.set(resultIndex, r))), null, cycles);
     }
 
     @SuppressWarnings("rawtypes")

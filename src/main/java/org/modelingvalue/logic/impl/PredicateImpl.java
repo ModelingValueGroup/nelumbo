@@ -20,13 +20,16 @@
 
 package org.modelingvalue.logic.impl;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.LogicLambda;
 import org.modelingvalue.logic.Logic.Predicate;
+import org.modelingvalue.logic.Logic.Relation;
 
 public class PredicateImpl extends StructureImpl<Predicate> {
     private static final long serialVersionUID   = -1605559565948158856L;
@@ -88,7 +91,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         }
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return InferResult.incomplete(this);
+            return InferResult.INCOMPLETE;
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         List<RuleImpl> rules = knowledgebase.getRules(this);
@@ -107,7 +110,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 return InferResult.overflow(stack.append(this));
             }
             if (stack.lastIndexOf(this) >= 0) {
-                return InferResult.cycle(this);
+                return InferResult.cycles(Set.of(this));
             }
             result = fixpoint(rules, context.pushOnStack(this));
             if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
@@ -119,7 +122,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     return result;
                 }
             }
-            knowledgebase.memoization(this, result);
+            knowledgebase.memoization(this, result, context);
         } else {
             result = knowledgebase.getFacts(this);
         }
@@ -138,7 +141,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             if (overflow != null) {
                 todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
             } else {
-                knowledgebase.memoization(predicate, result);
+                knowledgebase.memoization(predicate, result, context);
                 todo = todo.removeLast();
             }
         }
@@ -183,6 +186,80 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             }
         }
         return result;
+    }
+
+    private List<int[]> relations = null;
+
+    @SuppressWarnings("rawtypes")
+    private List<int[]> relations() {
+        if (relations == null) {
+            relations = relations(List.of(), new int[0]);
+        }
+        return relations;
+    }
+
+    private List<int[]> relations(List<int[]> list, int[] idx1) {
+        if (Relation.class.isAssignableFrom(type())) {
+            return list.add(idx1);
+        }
+        for (int i = 1; i < length(); i++) {
+            Object val = get(i);
+            if (val instanceof PredicateImpl) {
+                int[] idx2 = Arrays.copyOf(idx1, idx1.length + 1);
+                idx2[idx1.length] = i;
+                list = ((PredicateImpl) val).relations(list, idx2);
+            }
+        }
+        return list;
+    }
+
+    public final InferResult reduce(PredicateImpl declaration, InferContext context) {
+        relations = declaration.relations();
+        Set<PredicateImpl> previous, next = Set.of(this), facts, falsehoods;
+        InferResult result = InferResult.EMPTY, relationResult, bindResult;
+        PredicateImpl relation, relationDecl;
+        do {
+            previous = next;
+            next = Set.of();
+            for (PredicateImpl pred : previous) {
+                if (pred.relations.isEmpty()) {
+                    result = result.add(pred.infer(declaration, context));
+                } else {
+                    for (int i = 0; i < pred.relations.size(); i++) {
+                        int[] ii = pred.relations.get(i);
+                        relationDecl = declaration.getVal(ii);
+                        relation = pred.getVal(ii);
+                        relationResult = relation.infer(relationDecl, context);
+                        if (relationResult.hasStackOverflow()) {
+                            return relationResult;
+                        }
+                        if (!relationResult.isIncomplete()) {
+                            bindResult = relationResult.bind(relationDecl, pred, declaration);
+                            List<int[]> l = pred.relations.removeIndex(i);
+                            facts = bindResult.facts();
+                            if (facts != null) {
+                                for (PredicateImpl fact : facts) {
+                                    fact.relations = l;
+                                    next = next.add(fact);
+                                }
+                            }
+                            falsehoods = bindResult.falsehoods();
+                            if (falsehoods != null) {
+                                for (PredicateImpl falsehood : falsehoods) {
+                                    falsehood.relations = l;
+                                    next = next.add(falsehood);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } while (!next.isEmpty());
+        return result;
+    }
+
+    protected final PredicateImpl eq(PredicateImpl other) {
+        return (PredicateImpl) super.eq(other);
     }
 
     @SuppressWarnings("rawtypes")
