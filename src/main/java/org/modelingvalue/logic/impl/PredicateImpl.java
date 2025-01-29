@@ -176,15 +176,19 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     private InferResult inferRules(List<RuleImpl> rules, InferContext context, InferResult result) {
         for (RuleImpl rule : rules) {
             InferResult ruleResult = rule.infer(this, context);
-            if (ruleResult.hasStackOverflow()) {
-                return ruleResult;
-            } else {
-                Set<PredicateImpl> facts = result.facts().addAll(ruleResult.facts());
-                if ((!result.facts().contains(this) || !ruleResult.facts().contains(this)) && !isFullyBound()) {
-                    facts = facts.remove(this);
+            if (ruleResult != null) {
+                if (ruleResult.hasStackOverflow()) {
+                    return ruleResult;
+                } else {
+                    Set<PredicateImpl> facts;
+                    if (result.facts().contains(this) || ruleResult.facts().contains(this)) {
+                        facts = Set.of(this);
+                    } else {
+                        facts = result.facts().addAll(ruleResult.facts());
+                    }
+                    Set<PredicateImpl> falsehoods = result.falsehoods().retainAll(ruleResult.falsehoods());
+                    result = InferResult.of(facts, falsehoods, result.cycles().addAll(ruleResult.cycles()));
                 }
-                Set<PredicateImpl> falsehoods = result.falsehoods().retainAll(ruleResult.falsehoods());
-                result = InferResult.of(facts, falsehoods, result.cycles().addAll(ruleResult.cycles()));
             }
         }
         return result;

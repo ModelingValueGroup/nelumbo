@@ -170,7 +170,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferResult getFacts(PredicateImpl pred) {
         InferResult result = facts.get().get(pred);
-        return result != null ? result : InferResult.trueFalse(Set.of(pred), Set.of(pred));
+        return result != null ? result : InferResult.trueFalse(Set.of(), Set.of(pred));
     }
 
     public List<RuleImpl> getRules(PredicateImpl pred) {

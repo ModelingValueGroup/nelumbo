@@ -21,7 +21,6 @@
 package org.modelingvalue.logic.impl;
 
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.Predicate;
@@ -75,7 +74,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl conseqDecl = consequence();
         Map<VariableImpl, Object> binding = conseqDecl.getBinding(consequence, Map.of());
         if (binding == null) {
-            return InferResult.trueFalse(Set.of(consequence), Set.of(consequence));
+            return null;
         }
         PredicateImpl condDecl = condition();
         PredicateImpl condition = condDecl.setBinding(condDecl, variables().putAll(binding));
