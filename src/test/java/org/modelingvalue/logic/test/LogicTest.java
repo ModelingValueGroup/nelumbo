@@ -486,7 +486,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    // @RepeatedTest(10)
+    @RepeatedTest(10)
     public void fibonacciTest1() {
         run(() -> {
             fibonacciRules();
@@ -498,7 +498,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    //  @RepeatedTest(10)
+    @RepeatedTest(10)
     public void fibonacciTest2() {
         run(() -> {
             fibonacciRules();

@@ -21,6 +21,7 @@
 package org.modelingvalue.logic.impl;
 
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.Predicate;
@@ -82,7 +83,11 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (condResult.hasStackOverflow()) {
             return condResult;
         }
-        InferResult conseqResult = condResult.bind(condDecl, consequence, conseqDecl);
+        Set<PredicateImpl> fullFacts = InferResult.bind(condResult.facts().filter(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl);
+        Set<PredicateImpl> fullFalsehoods = InferResult.bind(condResult.falsehoods().filter(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl);
+        Set<PredicateImpl> incFacts = InferResult.bind(condResult.facts().exclude(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl).removeAll(fullFalsehoods);
+        Set<PredicateImpl> incFalsehoods = InferResult.bind(condResult.falsehoods().exclude(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl).removeAll(fullFacts);
+        InferResult conseqResult = InferResult.of(fullFacts.addAll(incFacts), fullFalsehoods.addAll(incFalsehoods), condResult.cycles());
         if (TRACE_LOGIC) {
             System.err.println("LOGIC " + "  ".repeat(context.stack().size()) + //
                     condDecl.setBinding(condDecl, binding) + " -> " + //
