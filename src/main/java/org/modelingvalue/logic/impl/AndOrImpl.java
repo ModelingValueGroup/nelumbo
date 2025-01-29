@@ -64,18 +64,14 @@ public abstract class AndOrImpl extends PredicateImpl {
                 }
                 cycles = cycles.addAll(pred1Result.cycles());
                 andOr1Result = flip(pred1Result).bind(pred1Decl, andOr, declaration);
-                if (andOr1Result.facts().isEmpty()) {
-                    andOr2Result = andOr1Result;
-                } else {
-                    // Predicate 2
-                    PredicateImpl pred2 = andOr.predicate2();
-                    pred2Result = pred2.infer(pred2Decl, context);
-                    if (pred2Result.hasStackOverflow()) {
-                        return pred2Result;
-                    }
-                    cycles = cycles.addAll(pred2Result.cycles());
-                    andOr2Result = flip(pred2Result).bind(pred2Decl, andOr, declaration);
+                // Predicate 2
+                PredicateImpl pred2 = andOr.predicate2();
+                pred2Result = pred2.infer(pred2Decl, context);
+                if (pred2Result.hasStackOverflow()) {
+                    return pred2Result;
                 }
+                cycles = cycles.addAll(pred2Result.cycles());
+                andOr2Result = flip(pred2Result).bind(pred2Decl, andOr, declaration);
                 // Combine
                 if (falsehoods == null) {
                     if (andOr1Result.falsehoods().contains(andOr) || andOr2Result.falsehoods().contains(andOr)) {
