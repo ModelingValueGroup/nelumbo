@@ -30,6 +30,8 @@ import static org.modelingvalue.logic.Integers.minus;
 import static org.modelingvalue.logic.Integers.multiply;
 import static org.modelingvalue.logic.Integers.plus;
 import static org.modelingvalue.logic.Integers.sqrt;
+import static org.modelingvalue.logic.Lists.add;
+import static org.modelingvalue.logic.Lists.l;
 import static org.modelingvalue.logic.Logic.*;
 import static org.modelingvalue.logic.Rationals.*;
 import static org.modelingvalue.logic.Rationals.divide;
@@ -338,7 +340,7 @@ public class LogicTest extends LogicTestBase {
             isFalse(ancestorDescendent(Joppe, Carel));
             isFalse(ancestorDescendent(Carel, Carel));
 
-            // hasBindings(collect(parentChild(Wim, C), add(C, l(), PL)), binding(PL, l(Joppe, Marijn)));
+            hasBindings(collect(parentChild(Wim, C), add(C, l(), PL)), binding(PL, l(Joppe, Marijn)));
         });
     }
 
@@ -400,7 +402,7 @@ public class LogicTest extends LogicTestBase {
 
             hasBindings(and(is(sqrt(i(49)), P), not(lt(P, i(0)))), binding(P, i(7)));
 
-            // hasBindings(collect(is(sqrt(i(49)), P), plus(P, i(0), Q)), binding(Q, i(0)));
+            hasBindings(collect(is(sqrt(i(49)), P), plus(P, i(0), Q)), binding(Q, i(0)));
         });
     }
 
@@ -442,7 +444,7 @@ public class LogicTest extends LogicTestBase {
 
             hasBindings(and(is(sqrt(r(49)), T), not(lt(T, r(0)))), binding(T, r(7)));
 
-            //  hasBindings(collect(is(sqrt(r(49)), T), plus(T, r(0), U)), binding(U, r(0)));
+            hasBindings(collect(is(sqrt(r(49)), T), plus(T, r(0), U)), binding(U, r(0)));
         });
     }
 
