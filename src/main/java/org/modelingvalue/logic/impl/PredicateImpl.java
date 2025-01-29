@@ -20,7 +20,6 @@
 
 package org.modelingvalue.logic.impl;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import org.modelingvalue.collections.List;
@@ -29,7 +28,6 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.LogicLambda;
 import org.modelingvalue.logic.Logic.Predicate;
-import org.modelingvalue.logic.Logic.Relation;
 
 public class PredicateImpl extends StructureImpl<Predicate> {
     private static final long serialVersionUID   = -1605559565948158856L;
@@ -91,7 +89,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         }
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return InferResult.INCOMPLETE;
+            return InferResult.trueFalse(Set.of(this), Set.of(this));
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         List<RuleImpl> rules = knowledgebase.getRules(this);
@@ -186,101 +184,6 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             }
         }
         return result;
-    }
-
-    private List<int[]> relations = null;
-
-    @SuppressWarnings("rawtypes")
-    private List<int[]> relations() {
-        if (relations == null) {
-            relations = relations(List.of(), new int[0]);
-        }
-        return relations;
-    }
-
-    private List<int[]> relations(List<int[]> list, int[] idx1) {
-        if (Relation.class.isAssignableFrom(type())) {
-            return list.add(idx1);
-        }
-        for (int i = 1; i < length(); i++) {
-            Object val = get(i);
-            if (val instanceof PredicateImpl) {
-                int[] idx2 = Arrays.copyOf(idx1, idx1.length + 1);
-                idx2[idx1.length] = i;
-                list = ((PredicateImpl) val).relations(list, idx2);
-            }
-        }
-        return list;
-    }
-
-    public final InferResult reduce(PredicateImpl declaration, InferContext context) {
-        relations = declaration.relations();
-        Set<PredicateImpl> previous, next = Set.of(this), facts, falsehoods;
-        InferResult result = InferResult.INCOMPLETE, relationResult, bindResult, predResult;
-        PredicateImpl relation, relationDecl;
-        do {
-            previous = next;
-            next = Set.of();
-            for (PredicateImpl pred : previous) {
-                if (pred.relations.isEmpty() || pred.isFullyBound()) {
-                    predResult = pred.infer(declaration, context);
-                    if (predResult.hasStackOverflow()) {
-                        return predResult;
-                    }
-                    result = result.add(predResult);
-                } else {
-                    for (int i = 0; i < pred.relations.size(); i++) {
-                        int[] ii = pred.relations.get(i);
-                        relationDecl = declaration.getVal(ii);
-                        relation = pred.getVal(ii);
-                        relationResult = relation.infer(relationDecl, context);
-                        if (relationResult.hasStackOverflow()) {
-                            return relationResult;
-                        }
-                        if (!relationResult.cycles().isEmpty()) {
-                            result = result.add(InferResult.cycles(relationResult.cycles()));
-                        }
-                        if (!relationResult.isIncomplete()) {
-                            bindResult = relationResult.bind(relationDecl, pred, declaration);
-                            List<int[]> l = pred.relations.removeIndex(i);
-                            facts = bindResult.facts();
-                            if (facts != null) {
-                                for (PredicateImpl fact : facts) {
-                                    fact.relations = l;
-                                    // fact = fact.setPred(ii, TrueImpl.TRUE);
-                                    next = next.add(fact);
-                                }
-                            }
-                            falsehoods = bindResult.falsehoods();
-                            if (falsehoods != null) {
-                                for (PredicateImpl falsehood : falsehoods) {
-                                    falsehood.relations = l;
-                                    // falsehood = falsehood.setPred(ii, FalseImpl.FALSE);
-                                    // next = next.add(falsehood);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } while (!next.isEmpty());
-        return result;
-    }
-
-    //    @SuppressWarnings("unchecked")
-    //    private PredicateImpl setPred(int[] is, PredicateImpl val) {
-    //        if (is.length == 0) {
-    //            return val;
-    //        }
-    //        PredicateImpl p = this;
-    //        for (int i = 0; i < is.length; i++) {
-    //            p = set(is[0], p.setPred(Arrays.copyOfRange(is, 1, is.length), val));
-    //        }
-    //        return p;
-    //    }
-
-    protected final PredicateImpl eq(PredicateImpl other) {
-        return (PredicateImpl) super.eq(other);
     }
 
     @SuppressWarnings("rawtypes")

@@ -121,16 +121,16 @@ public final class Rationals {
                 boolean eq = r == result.intValue();
                 return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT)), null);
+                return InferResult.trueFalse(Set.of(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT)), Set.of(predicate));
             }
         } else if (BigInteger.ZERO.equals(result)) {
             if (numComp1 != null) {
-                return InferResult.trueFalse(Set.of(predicate.set(2, (StructureImpl) predicate.getVal(1))), null);
+                return InferResult.trueFalse(Set.of(predicate.set(2, (StructureImpl) predicate.getVal(1))), Set.of(predicate));
             } else if (numComp2 != null) {
-                return InferResult.trueFalse(Set.of(predicate.set(1, (StructureImpl) predicate.getVal(2))), null);
+                return InferResult.trueFalse(Set.of(predicate.set(1, (StructureImpl) predicate.getVal(2))), Set.of(predicate));
             }
         }
-        return InferResult.INCOMPLETE;
+        return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
     }
 
     public static Relation compare(RationalCons compared1, RationalCons compared2, IntegerCons result) {
@@ -155,18 +155,18 @@ public final class Rationals {
                 boolean eq = s.equals(predicate.getVal(3));
                 return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, s)), null);
+                return InferResult.trueFalse(Set.of(predicate.set(3, s)), Set.of(predicate));
             }
         } else if (numAddend1 != null && numSum != null) {
             BigInteger a = numAddend1.multiply(denSum);
             BigInteger c = numSum.multiply(denAddend1);
-            return InferResult.trueFalse(Set.of(predicate.set(2, struct(c.subtract(a), denSum.multiply(denAddend1)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(2, struct(c.subtract(a), denSum.multiply(denAddend1)))), Set.of(predicate));
         } else if (numAddend2 != null && numSum != null) {
             BigInteger b = numAddend2.multiply(denSum);
             BigInteger c = numSum.multiply(denAddend2);
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(c.subtract(b), denSum.multiply(denAddend2)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(1, struct(c.subtract(b), denSum.multiply(denAddend2)))), Set.of(predicate));
         } else {
-            return InferResult.INCOMPLETE;
+            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
         }
     }
 
@@ -190,14 +190,14 @@ public final class Rationals {
                 boolean eq = p.equals(predicate.getVal(3));
                 return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, p)), null);
+                return InferResult.trueFalse(Set.of(predicate.set(3, p)), Set.of(predicate));
             }
         } else if (numFactor1 != null && numProduct != null) {
-            return InferResult.trueFalse(Set.of(predicate.set(2, struct(numProduct.multiply(denFactor1), denProduct.multiply(numFactor1)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(2, struct(numProduct.multiply(denFactor1), denProduct.multiply(numFactor1)))), Set.of(predicate));
         } else if (numFactor2 != null && numProduct != null) {
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(numProduct.multiply(denFactor2), denProduct.multiply(numFactor2)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(1, struct(numProduct.multiply(denFactor2), denProduct.multiply(numFactor2)))), Set.of(predicate));
         } else {
-            return InferResult.INCOMPLETE;
+            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
         }
     }
 
@@ -219,14 +219,14 @@ public final class Rationals {
                 boolean eq = s.equals(predicate.getVal(2));
                 return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(2, s)), null);
+                return InferResult.trueFalse(Set.of(predicate.set(2, s)), Set.of(predicate));
             }
         } else if (numSquare != null) {
             BigInteger sqrt = numSquare.multiply(denSquare).sqrt();
             BigInteger abs = denSquare.abs();
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sqrt, abs)), predicate.set(1, struct(sqrt.negate(), abs))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sqrt, abs)), predicate.set(1, struct(sqrt.negate(), abs))), Set.of(predicate));
         } else {
-            return InferResult.INCOMPLETE;
+            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
         }
     }
 

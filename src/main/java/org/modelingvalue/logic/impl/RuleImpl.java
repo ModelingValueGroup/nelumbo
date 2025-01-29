@@ -78,7 +78,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         }
         PredicateImpl condDecl = condition();
         PredicateImpl condition = condDecl.setBinding(condDecl, variables().putAll(binding));
-        InferResult condResult = condition.reduce(condDecl, context);
+        InferResult condResult = condition.infer(condDecl, context);
         if (condResult.hasStackOverflow()) {
             return condResult;
         }

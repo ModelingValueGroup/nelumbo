@@ -47,24 +47,38 @@ public abstract class AndOrImpl extends PredicateImpl {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public final InferResult infer(PredicateImpl declaration, InferContext context) {
-        PredicateImpl pred1 = predicate1();
         PredicateImpl pred1Decl = ((AndOrImpl) declaration).predicate1();
-        InferResult pred1Result = pred1.infer(pred1Decl, context);
-        if (pred1Result.hasStackOverflow()) {
-            return pred1Result;
-        }
-        PredicateImpl pred2 = predicate2();
         PredicateImpl pred2Decl = ((AndOrImpl) declaration).predicate2();
-        InferResult pred2Result = pred2.infer(pred2Decl, context);
-        if (pred2Result.hasStackOverflow()) {
-            return pred2Result;
-        }
-        Set<PredicateImpl> cycles = pred1Result.cycles().addAll(pred2Result.cycles());
-        pred1Result = flip(pred1Result).bind(pred1Decl, this, declaration);
-        pred2Result = flip(pred2Result).bind(pred2Decl, this, declaration);
-        Set<PredicateImpl> andFacts = InferResult.retain(pred1Result.facts(), pred2Result.facts());
-        Set<PredicateImpl> orFalsehoods = InferResult.add(pred1Result.falsehoods(), pred2Result.falsehoods());
-        return flip(InferResult.of(andFacts, orFalsehoods, cycles));
+        InferResult pred1Result, pred2Result, andOr1Result, andOr2Result;
+        Set<AndOrImpl> now, next = Set.of(this);
+        Set<PredicateImpl> facts = Set.of(), falsehoods = null, cycles = Set.of();
+        do {
+            now = next;
+            next = Set.of();
+            for (AndOrImpl andOr : now) {
+                PredicateImpl pred1 = andOr.predicate1();
+                PredicateImpl pred2 = andOr.predicate2();
+                pred1Result = pred1.infer(pred1Decl, context);
+                if (pred1Result.hasStackOverflow()) {
+                    return pred1Result;
+                }
+                pred2Result = pred2.infer(pred2Decl, context);
+                if (pred2Result.hasStackOverflow()) {
+                    return pred2Result;
+                }
+                cycles = cycles.addAll(pred1Result.cycles()).addAll(pred2Result.cycles());
+                andOr1Result = flip(pred1Result).bind(pred1Decl, andOr, declaration);
+                andOr2Result = flip(pred2Result).bind(pred2Decl, andOr, declaration);
+                if (falsehoods == null) {
+                    falsehoods = andOr1Result.falsehoods().addAll(andOr2Result.falsehoods());
+                }
+                facts = facts.addAll(andOr1Result.facts().retainAll(andOr2Result.facts()));
+                next = next.addAll((Set) andOr1Result.facts()).addAll((Set) andOr2Result.facts()).removeAll(now).removeAll(facts);
+            }
+            if (next.isEmpty()) {
+                return flip(InferResult.of(facts, falsehoods, cycles));
+            }
+        } while (true);
     }
 
     protected abstract InferResult flip(InferResult result);

@@ -307,7 +307,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     private static Map<PredicateImpl, InferResult> addFact(Map<PredicateImpl, InferResult> map, PredicateImpl fact, PredicateImpl predicate, int i, Class cls) {
         Class type = predicate.getType(i);
         if (cls.isAssignableFrom(type)) {
-            map = map.put(predicate, ADD_FACT.apply(map.get(predicate), InferResult.trueFalse(Set.of(fact), null)));
+            map = map.put(predicate, ADD_FACT.apply(map.get(predicate), InferResult.trueFalse(Set.of(fact), Set.of(predicate))));
             if (!cls.equals(type)) {
                 for (Type gen : type.getGenericInterfaces()) {
                     while (gen instanceof ParameterizedType) {

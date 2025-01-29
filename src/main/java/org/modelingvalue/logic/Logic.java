@@ -205,7 +205,7 @@ public final class Logic {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult infer(PredicateImpl impl) {
-        return impl.setBinding(impl, impl.variables()).reduce(impl, KnowledgeBaseImpl.CURRENT.get().context());
+        return impl.setBinding(impl, impl.variables()).infer(impl, KnowledgeBaseImpl.CURRENT.get().context());
     }
 
     @SuppressWarnings("rawtypes")
@@ -304,11 +304,11 @@ public final class Logic {
         StructureImpl constant1 = predicate.getVal(1);
         StructureImpl constant2 = predicate.getVal(2);
         if (constant1 == null && constant2 == null) {
-            return InferResult.INCOMPLETE;
+            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
         } else if (constant1 == null) {
-            return InferResult.trueFalse(Set.of(predicate.set(1, constant2)), null);
+            return InferResult.trueFalse(Set.of(predicate.set(1, constant2)), Set.of(predicate));
         } else if (constant2 == null) {
-            return InferResult.trueFalse(Set.of(predicate.set(2, constant1)), null);
+            return InferResult.trueFalse(Set.of(predicate.set(2, constant1)), Set.of(predicate));
         } else {
             StructureImpl eq = constant1.eq(constant2);
             return eq != null ? //

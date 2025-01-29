@@ -98,16 +98,16 @@ public final class Integers {
                 boolean eq = r == result.intValue();
                 return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT)), null);
+                return InferResult.trueFalse(Set.of(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT)), Set.of(predicate));
             }
         } else if (BigInteger.ZERO.equals(result)) {
             if (compared1 != null) {
-                return InferResult.trueFalse(Set.of(predicate.set(2, (StructureImpl) predicate.getVal(1))), null);
+                return InferResult.trueFalse(Set.of(predicate.set(2, (StructureImpl) predicate.getVal(1))), Set.of(predicate));
             } else if (compared2 != null) {
-                return InferResult.trueFalse(Set.of(predicate.set(1, (StructureImpl) predicate.getVal(2))), null);
+                return InferResult.trueFalse(Set.of(predicate.set(1, (StructureImpl) predicate.getVal(2))), Set.of(predicate));
             }
         }
-        return InferResult.INCOMPLETE;
+        return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
     }
 
     public static Relation compare(IntegerCons compared1, IntegerCons compared2, IntegerCons result) {
@@ -127,14 +127,14 @@ public final class Integers {
                 boolean eq = s.equals(sum);
                 return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, struct(s))), null);
+                return InferResult.trueFalse(Set.of(predicate.set(3, struct(s))), Set.of(predicate));
             }
         } else if (addend1 != null && sum != null) {
-            return InferResult.trueFalse(Set.of(predicate.set(2, struct(sum.subtract(addend1)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(2, struct(sum.subtract(addend1)))), Set.of(predicate));
         } else if (addend2 != null && sum != null) {
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sum.subtract(addend2)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sum.subtract(addend2)))), Set.of(predicate));
         } else {
-            return InferResult.INCOMPLETE;
+            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
         }
     }
 
@@ -155,14 +155,14 @@ public final class Integers {
                 boolean eq = p.equals(product);
                 return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, struct(p))), null);
+                return InferResult.trueFalse(Set.of(predicate.set(3, struct(p))), Set.of(predicate));
             }
         } else if (factor1 != null && product != null) {
-            return InferResult.trueFalse(Set.of(predicate.set(2, struct(product.divide(factor1)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(2, struct(product.divide(factor1)))), Set.of(predicate));
         } else if (factor2 != null && product != null) {
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(product.divide(factor2)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(1, struct(product.divide(factor2)))), Set.of(predicate));
         } else {
-            return InferResult.INCOMPLETE;
+            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
         }
     }
 
@@ -180,12 +180,12 @@ public final class Integers {
             boolean eq = root.multiply(root).equals(square);
             return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
         } else if (root != null && square == null) {
-            return InferResult.trueFalse(Set.of(predicate.set(2, struct(root.multiply(root)))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(2, struct(root.multiply(root)))), Set.of(predicate));
         } else if (root == null && square != null) {
             BigInteger sqrt = square.sqrt();
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sqrt)), predicate.set(1, struct(sqrt.negate()))), null);
+            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sqrt)), predicate.set(1, struct(sqrt.negate()))), Set.of(predicate));
         } else {
-            return InferResult.INCOMPLETE;
+            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
         }
     }
 

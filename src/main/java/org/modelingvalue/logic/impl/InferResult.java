@@ -34,59 +34,32 @@ public interface InferResult {
 
     List<PredicateImpl> stackOverflow();
 
-    InferResult EMPTY      = new InferResult() {
-                               @Override
-                               public Set<PredicateImpl> facts() {
-                                   return Set.of();
-                               }
+    InferResult EMPTY = new InferResult() {
+        @Override
+        public Set<PredicateImpl> facts() {
+            return Set.of();
+        }
 
-                               @Override
-                               public Set<PredicateImpl> falsehoods() {
-                                   return Set.of();
-                               }
+        @Override
+        public Set<PredicateImpl> falsehoods() {
+            return Set.of();
+        }
 
-                               @Override
-                               public Set<PredicateImpl> cycles() {
-                                   return Set.of();
-                               }
+        @Override
+        public Set<PredicateImpl> cycles() {
+            return Set.of();
+        }
 
-                               @Override
-                               public List<PredicateImpl> stackOverflow() {
-                                   return null;
-                               }
+        @Override
+        public List<PredicateImpl> stackOverflow() {
+            return null;
+        }
 
-                               @Override
-                               public String toString() {
-                                   return asString();
-                               }
-                           };
-
-    InferResult INCOMPLETE = new InferResult() {
-                               @Override
-                               public Set<PredicateImpl> facts() {
-                                   return null;
-                               }
-
-                               @Override
-                               public Set<PredicateImpl> falsehoods() {
-                                   return null;
-                               }
-
-                               @Override
-                               public Set<PredicateImpl> cycles() {
-                                   return Set.of();
-                               }
-
-                               @Override
-                               public List<PredicateImpl> stackOverflow() {
-                                   return null;
-                               }
-
-                               @Override
-                               public String toString() {
-                                   return asString();
-                               }
-                           };
+        @Override
+        public String toString() {
+            return asString();
+        }
+    };
 
     static InferResult of(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods, Set<PredicateImpl> cycles) {
         return new InferResult() {
@@ -150,12 +123,12 @@ public interface InferResult {
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
-                return null;
+                return cycles;
             }
 
             @Override
             public Set<PredicateImpl> falsehoods() {
-                return null;
+                return cycles;
             }
 
             @Override
@@ -205,18 +178,10 @@ public interface InferResult {
     }
 
     default InferResult add(InferResult result) {
-        Set<PredicateImpl> facts = add(facts(), result.facts());
-        Set<PredicateImpl> falsehoods = add(falsehoods(), result.falsehoods());
-        Set<PredicateImpl> cycles = add(cycles(), result.cycles());
+        Set<PredicateImpl> facts = facts().addAll(result.facts());
+        Set<PredicateImpl> falsehoods = falsehoods().addAll(result.falsehoods());
+        Set<PredicateImpl> cycles = cycles().addAll(result.cycles());
         return of(facts, falsehoods, cycles);
-    }
-
-    static Set<PredicateImpl> add(Set<PredicateImpl> a, Set<PredicateImpl> b) {
-        return a == null ? b : b == null ? a : a.addAll(b);
-    }
-
-    static Set<PredicateImpl> retain(Set<PredicateImpl> a, Set<PredicateImpl> b) {
-        return a == null || b == null ? null : a.retainAll(b);
     }
 
     default InferResult bind(PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
@@ -226,7 +191,7 @@ public interface InferResult {
     }
 
     static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
-        return set != null ? set.replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of()))) : null;
+        return set.replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of())));
     }
 
     default InferResult not() {
@@ -241,10 +206,6 @@ public interface InferResult {
         return stackOverflow() != null;
     }
 
-    default boolean isIncomplete() {
-        return facts() == null && falsehoods() == null;
-    }
-
     default String asString() {
         List<PredicateImpl> overflow = stackOverflow();
         if (overflow != null) {
@@ -255,6 +216,6 @@ public interface InferResult {
     }
 
     default String toString(Set<PredicateImpl> set) {
-        return set != null ? set.toString().substring(3) : "?";
+        return set.toString().substring(3);
     }
 }
