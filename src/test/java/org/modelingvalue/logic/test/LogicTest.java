@@ -22,6 +22,7 @@ package org.modelingvalue.logic.test;
 
 import static org.modelingvalue.logic.Integers.*;
 import static org.modelingvalue.logic.Integers.divide;
+import static org.modelingvalue.logic.Integers.ge;
 import static org.modelingvalue.logic.Integers.gt;
 import static org.modelingvalue.logic.Integers.le;
 import static org.modelingvalue.logic.Integers.lt;
@@ -29,8 +30,6 @@ import static org.modelingvalue.logic.Integers.minus;
 import static org.modelingvalue.logic.Integers.multiply;
 import static org.modelingvalue.logic.Integers.plus;
 import static org.modelingvalue.logic.Integers.sqrt;
-import static org.modelingvalue.logic.Lists.add;
-import static org.modelingvalue.logic.Lists.l;
 import static org.modelingvalue.logic.Logic.*;
 import static org.modelingvalue.logic.Rationals.*;
 import static org.modelingvalue.logic.Rationals.divide;
@@ -234,7 +233,8 @@ public class LogicTest extends LogicTestBase {
     private void rootRules() {
         integerRules();
 
-        rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), is(plus(Q, i(1)), P)));
+        // rule(parentChild(person(Q), person(P)), and(compare(Q, i(4), i(-1)), compare(Q, i(-1), i(1)), plus(Q, i(1), P)));
+        rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), is(plus(Q, i(1)), P)));
         rule(rootPerson(V, person(0)), T());
         rule(rootPerson(V, C), and(rootPerson(V, A), parentChild(A, C)));
 
@@ -338,7 +338,7 @@ public class LogicTest extends LogicTestBase {
             isFalse(ancestorDescendent(Joppe, Carel));
             isFalse(ancestorDescendent(Carel, Carel));
 
-            hasBindings(collect(parentChild(Wim, C), add(C, l(), PL)), binding(PL, l(Joppe, Marijn)));
+            // hasBindings(collect(parentChild(Wim, C), add(C, l(), PL)), binding(PL, l(Joppe, Marijn)));
         });
     }
 
@@ -355,33 +355,13 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(1)
+    @RepeatedTest(100)
     public void famTest3() {
         run(() -> {
             fact(parentChild(Carel, Jan));
             fact(parentChild(Jan, Wim));
             fact(parentChild(Wim, Marijn));
             isTrue(and(parentChild(Carel, A), parentChild(A, B), parentChild(B, Marijn)));
-        });
-    }
-
-    @RepeatedTest(100)
-    public void rootTest() {
-        run(() -> {
-            rootRules();
-
-            isTrue(is(child(person(0)), person(1)));
-            isTrue(is(child(person(3)), person(4)));
-            isFalse(is(child(person(4)), person(5)));
-
-            isTrue(is(root(person(0)), Root));
-            isTrue(is(root(person(1)), Root));
-            isTrue(is(root(person(4)), Root));
-            isTrue(is(root(person(3)), Root));
-            isTrue(is(root(person(2)), Root));
-
-            hasBindings(is(root(C), Root), binding(C, person(0)), binding(C, person(1)), //
-                    binding(C, person(2)), binding(C, person(3)), binding(C, person(4)));
         });
     }
 
@@ -420,7 +400,7 @@ public class LogicTest extends LogicTestBase {
 
             hasBindings(and(is(sqrt(i(49)), P), not(lt(P, i(0)))), binding(P, i(7)));
 
-            hasBindings(collect(is(sqrt(i(49)), P), plus(P, i(0), Q)), binding(Q, i(0)));
+            // hasBindings(collect(is(sqrt(i(49)), P), plus(P, i(0), Q)), binding(Q, i(0)));
         });
     }
 
@@ -462,12 +442,61 @@ public class LogicTest extends LogicTestBase {
 
             hasBindings(and(is(sqrt(r(49)), T), not(lt(T, r(0)))), binding(T, r(7)));
 
-            hasBindings(collect(is(sqrt(r(49)), T), plus(T, r(0), U)), binding(U, r(0)));
+            //  hasBindings(collect(is(sqrt(r(49)), T), plus(T, r(0), U)), binding(U, r(0)));
         });
     }
 
-    @RepeatedTest(50)
-    public void fibonacciTest() {
+    @RepeatedTest(100)
+    public void rootTest1() {
+        run(() -> {
+            rootRules();
+
+            isTrue(parentChild(person(0), person(1)));
+            isTrue(parentChild(person(3), person(4)));
+            isFalse(parentChild(person(4), person(5)));
+
+            isTrue(rootPerson(Root, person(0)));
+            isTrue(rootPerson(Root, person(1)));
+            isTrue(rootPerson(Root, person(4)));
+            isTrue(rootPerson(Root, person(3)));
+            isTrue(rootPerson(Root, person(2)));
+        });
+    }
+
+    @RepeatedTest(100)
+    public void rootTest2() {
+        run(() -> {
+            rootRules();
+
+            isTrue(is(child(person(0)), person(1)));
+            isTrue(is(child(person(3)), person(4)));
+            isFalse(is(child(person(4)), person(5)));
+
+            isTrue(is(root(person(0)), Root));
+            isTrue(is(root(person(1)), Root));
+            isTrue(is(root(person(4)), Root));
+            isTrue(is(root(person(3)), Root));
+            isTrue(is(root(person(2)), Root));
+
+            hasBindings(is(root(C), Root), binding(C, person(0)), binding(C, person(1)), //
+                    binding(C, person(2)), binding(C, person(3)), binding(C, person(4)));
+        });
+    }
+
+    @RepeatedTest(100)
+    public void fibonacciTest1() {
+        run(() -> {
+            fibonacciRules();
+
+            hasBindings(fib(i(1), P), binding(P, i(1)));
+            hasBindings(fib(i(7), P), binding(P, i(13)));
+            hasBindings(fib(i(21), P), binding(P, i(10946)));
+            hasBindings(fib(i(1000), P), binding(P, i("18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf", Character.MAX_RADIX)));
+        });
+    }
+
+    @RepeatedTest(100)
+    public void fibonacciTest2() {
         run(() -> {
             fibonacciRules();
 

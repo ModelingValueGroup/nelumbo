@@ -216,14 +216,18 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     public final InferResult reduce(PredicateImpl declaration, InferContext context) {
         relations = declaration.relations();
         Set<PredicateImpl> previous, next = Set.of(this), facts, falsehoods;
-        InferResult result = InferResult.INCOMPLETE, relationResult, bindResult;
+        InferResult result = InferResult.INCOMPLETE, relationResult, bindResult, predResult;
         PredicateImpl relation, relationDecl;
         do {
             previous = next;
             next = Set.of();
             for (PredicateImpl pred : previous) {
-                if (pred.relations.isEmpty()) {
-                    result = result.add(pred.infer(declaration, context));
+                if (pred.relations.isEmpty() || pred.isFullyBound()) {
+                    predResult = pred.infer(declaration, context);
+                    if (predResult.hasStackOverflow()) {
+                        return predResult;
+                    }
+                    result = result.add(predResult);
                 } else {
                     for (int i = 0; i < pred.relations.size(); i++) {
                         int[] ii = pred.relations.get(i);
@@ -243,6 +247,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                             if (facts != null) {
                                 for (PredicateImpl fact : facts) {
                                     fact.relations = l;
+                                    // fact = fact.setPred(ii, TrueImpl.TRUE);
                                     next = next.add(fact);
                                 }
                             }
@@ -250,7 +255,8 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                             if (falsehoods != null) {
                                 for (PredicateImpl falsehood : falsehoods) {
                                     falsehood.relations = l;
-                                    next = next.add(falsehood);
+                                    // falsehood = falsehood.setPred(ii, FalseImpl.FALSE);
+                                    // next = next.add(falsehood);
                                 }
                             }
                         }
@@ -260,6 +266,18 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         } while (!next.isEmpty());
         return result;
     }
+
+    //    @SuppressWarnings("unchecked")
+    //    private PredicateImpl setPred(int[] is, PredicateImpl val) {
+    //        if (is.length == 0) {
+    //            return val;
+    //        }
+    //        PredicateImpl p = this;
+    //        for (int i = 0; i < is.length; i++) {
+    //            p = set(is[0], p.setPred(Arrays.copyOfRange(is, 1, is.length), val));
+    //        }
+    //        return p;
+    //    }
 
     protected final PredicateImpl eq(PredicateImpl other) {
         return (PredicateImpl) super.eq(other);

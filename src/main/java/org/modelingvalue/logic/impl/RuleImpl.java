@@ -79,6 +79,9 @@ public final class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl condDecl = condition();
         PredicateImpl condition = condDecl.setBinding(condDecl, variables().putAll(binding));
         InferResult condResult = condition.reduce(condDecl, context);
+        if (condResult.hasStackOverflow()) {
+            return condResult;
+        }
         InferResult conseqResult = condResult.bind(condDecl, consequence, conseqDecl);
         if (TRACE_LOGIC) {
             System.err.println("LOGIC " + "  ".repeat(context.stack().size()) + //

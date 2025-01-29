@@ -215,6 +215,10 @@ public interface InferResult {
         return a == null ? b : b == null ? a : a.addAll(b);
     }
 
+    static Set<PredicateImpl> retain(Set<PredicateImpl> a, Set<PredicateImpl> b) {
+        return a == null || b == null ? null : a.retainAll(b);
+    }
+
     default InferResult bind(PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
         Set<PredicateImpl> facts = bind(facts(), fromDecl, to, toDecl);
         Set<PredicateImpl> falsehoods = bind(falsehoods(), fromDecl, to, toDecl);
