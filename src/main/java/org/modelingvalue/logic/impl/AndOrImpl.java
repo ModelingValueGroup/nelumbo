@@ -70,7 +70,11 @@ public abstract class AndOrImpl extends PredicateImpl {
                 andOr1Result = flip(pred1Result).bind(pred1Decl, andOr, declaration);
                 andOr2Result = flip(pred2Result).bind(pred2Decl, andOr, declaration);
                 if (falsehoods == null) {
-                    falsehoods = andOr1Result.falsehoods().addAll(andOr2Result.falsehoods());
+                    if (andOr1Result.falsehoods().contains(andOr) || andOr2Result.falsehoods().contains(andOr)) {
+                        falsehoods = Set.of(andOr);
+                    } else {
+                        falsehoods = andOr1Result.falsehoods().addAll(andOr2Result.falsehoods());
+                    }
                 }
                 facts = facts.addAll(andOr1Result.facts().retainAll(andOr2Result.facts()));
                 next = next.addAll((Set) andOr1Result.facts()).addAll((Set) andOr2Result.facts()).removeAll(now).removeAll(facts);

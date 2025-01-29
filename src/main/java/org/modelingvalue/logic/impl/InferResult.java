@@ -119,11 +119,12 @@ public interface InferResult {
         };
     }
 
-    static InferResult cycles(Set<PredicateImpl> cycles) {
+    static InferResult cycle(PredicateImpl cycle) {
+        Set<PredicateImpl> cycles = Set.of(cycle);
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
-                return cycles;
+                return Set.of();
             }
 
             @Override

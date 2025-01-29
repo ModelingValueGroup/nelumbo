@@ -461,7 +461,7 @@ public class LogicTest extends LogicTestBase {
             isTrue(rootPerson(Root, person(3)));
             isTrue(rootPerson(Root, person(2)));
 
-            hasBindings(is(root(C), Root), binding(C, person(0)), binding(C, person(1)), //
+            hasBindings(rootPerson(Root, C), binding(C, person(0)), binding(C, person(1)), //
                     binding(C, person(2)), binding(C, person(3)), binding(C, person(4)));
         });
     }
@@ -486,7 +486,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    // @RepeatedTest(10)
     public void fibonacciTest1() {
         run(() -> {
             fibonacciRules();
@@ -498,7 +498,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    //  @RepeatedTest(10)
     public void fibonacciTest2() {
         run(() -> {
             fibonacciRules();

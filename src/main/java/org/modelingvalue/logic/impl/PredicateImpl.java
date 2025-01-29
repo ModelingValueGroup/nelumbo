@@ -108,7 +108,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 return InferResult.overflow(stack.append(this));
             }
             if (stack.lastIndexOf(this) >= 0) {
-                return InferResult.cycles(Set.of(this));
+                return InferResult.cycle(this);
             }
             result = fixpoint(rules, context.pushOnStack(this));
             if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
@@ -174,13 +174,17 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     @SuppressWarnings("rawtypes")
     private InferResult inferRules(List<RuleImpl> rules, InferContext context, InferResult result) {
-        InferResult ruleResult;
         for (RuleImpl rule : rules) {
-            ruleResult = rule.infer(this, context);
+            InferResult ruleResult = rule.infer(this, context);
             if (ruleResult.hasStackOverflow()) {
                 return ruleResult;
             } else {
-                result = result.add(ruleResult);
+                Set<PredicateImpl> facts = result.facts().addAll(ruleResult.facts());
+                if ((!result.facts().contains(this) || !ruleResult.facts().contains(this)) && !isFullyBound()) {
+                    facts = facts.remove(this);
+                }
+                Set<PredicateImpl> falsehoods = result.falsehoods().retainAll(ruleResult.falsehoods());
+                result = InferResult.of(facts, falsehoods, result.cycles().addAll(ruleResult.cycles()));
             }
         }
         return result;

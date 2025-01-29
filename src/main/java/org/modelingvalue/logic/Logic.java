@@ -172,14 +172,12 @@ public final class Logic {
 
     public static boolean isTrue(Predicate pred) {
         InferResult result = infer(pred);
-        Set<PredicateImpl> facts = result.facts();
-        return facts != null && !facts.isEmpty();
+        return !result.facts().isEmpty();
     }
 
     public static boolean isFalse(Predicate pred) {
         InferResult result = infer(pred);
-        Set<PredicateImpl> facts = result.facts();
-        return facts != null && facts.isEmpty();
+        return result.facts().isEmpty();
     }
 
     public static Set<Predicate> getFacts(Predicate pred) {

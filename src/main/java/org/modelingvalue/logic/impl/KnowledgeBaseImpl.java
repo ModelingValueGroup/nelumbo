@@ -174,7 +174,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferResult getFacts(PredicateImpl pred) {
         InferResult result = facts.get().get(pred);
-        return result != null ? result : InferResult.EMPTY;
+        return result != null ? result : InferResult.trueFalse(Set.of(), Set.of(pred));
     }
 
     public List<RuleImpl> getRules(PredicateImpl pred) {
@@ -212,15 +212,19 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void memoization(PredicateImpl predicate, InferResult result) {
-        if (result.facts().anyMatch(PredicateImpl::isIncomplete)) {
-            System.err.println("!!!!!!!!!!!!! " + predicate + " = " + result);
-        }
         FunctorImpl<Predicate> functor = predicate.functor();
         if (functor.factual()) {
             facts.updateAndGet(map -> {
                 map = map.put(predicate, result);
-                for (PredicateImpl p : result.facts()) {
-                    map = map.put(p, ADD_FACT.apply(map.get(p), InferResult.trueFalse(Set.of(p), Set.of())));
+                for (PredicateImpl fact : result.facts()) {
+                    if (fact.isFullyBound()) {
+                        map = map.put(fact, ADD_FACT.apply(map.get(fact), InferResult.trueFalse(Set.of(fact), Set.of())));
+                    }
+                }
+                for (PredicateImpl falsehood : result.falsehoods()) {
+                    if (falsehood.isFullyBound()) {
+                        map = map.put(falsehood, ADD_FACT.apply(map.get(falsehood), InferResult.trueFalse(Set.of(), Set.of(falsehood))));
+                    }
                 }
                 return map;
             });
@@ -228,8 +232,15 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
                 array = array.clone();
                 array[0] = array[0].put(new Inference(predicate, result));
-                for (PredicateImpl p : result.facts()) {
-                    array[0] = array[0].put(new Inference(p, InferResult.trueFalse(Set.of(p), Set.of())));
+                for (PredicateImpl fact : result.facts()) {
+                    if (fact.isFullyBound()) {
+                        array[0] = array[0].put(new Inference(fact, InferResult.trueFalse(Set.of(fact), Set.of())));
+                    }
+                }
+                for (PredicateImpl falsehood : result.falsehoods()) {
+                    if (falsehood.isFullyBound()) {
+                        array[0] = array[0].put(new Inference(falsehood, InferResult.trueFalse(Set.of(), Set.of(falsehood))));
+                    }
                 }
                 if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
                     array[2] = array[2].putAll(array[1]);
