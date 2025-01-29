@@ -23,6 +23,7 @@ package org.modelingvalue.logic.test;
 import static org.modelingvalue.logic.Integers.*;
 import static org.modelingvalue.logic.Integers.compare;
 import static org.modelingvalue.logic.Integers.divide;
+import static org.modelingvalue.logic.Integers.ge;
 import static org.modelingvalue.logic.Integers.gt;
 import static org.modelingvalue.logic.Integers.le;
 import static org.modelingvalue.logic.Integers.lt;
@@ -224,7 +225,7 @@ public class LogicTest extends LogicTestBase {
     private void fibonacciRules() {
         integerRules();
 
-        rule(fib(P, Q), and(le(P, i(1)), eq(Q, P)));
+        rule(fib(P, Q), and(ge(P, i(0)), le(P, i(1)), eq(Q, P)));
         rule(fib(P, Q), and(gt(P, i(1)), is(plus(fib(minus(P, i(1))), fib(minus(P, i(2)))), Q)));
 
         rule(is(fib(R), Q), and(is(R, P), fib(P, Q)));
