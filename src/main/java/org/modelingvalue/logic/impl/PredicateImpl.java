@@ -120,7 +120,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     return result;
                 }
             }
-            knowledgebase.memoization(this, result, context);
+            knowledgebase.memoization(this, result);
         } else {
             result = knowledgebase.getFacts(this);
         }
@@ -139,7 +139,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             if (overflow != null) {
                 todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
             } else {
-                knowledgebase.memoization(predicate, result, context);
+                knowledgebase.memoization(predicate, result);
                 todo = todo.removeLast();
             }
         }
@@ -156,7 +156,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 return ruleResult;
             } else if (first) {
                 if (ruleResult.hasCycleWith(this)) {
-                    cycleResult = InferResult.trueFalse(ruleResult.facts(), ruleResult.falsehoods());
+                    cycleResult = InferResult.trueFalse(ruleResult.facts().remove(this), ruleResult.falsehoods().remove(this));
                     first = false;
                 } else {
                     return ruleResult;

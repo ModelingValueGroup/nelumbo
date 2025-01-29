@@ -211,34 +211,35 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void memoization(PredicateImpl predicate, InferResult result, InferContext context) {
-        if (result.cycles().isEmpty() && context.cycleConclusion().isEmpty()) {
-            FunctorImpl<Predicate> functor = predicate.functor();
-            if (functor.factual()) {
-                facts.updateAndGet(map -> {
-                    map = map.put(predicate, result);
-                    for (PredicateImpl p : result.facts()) {
-                        map = map.put(p, ADD_FACT.apply(map.get(p), InferResult.trueFalse(Set.of(p), Set.of())));
-                    }
-                    return map;
-                });
-            } else if (!functor.derived()) {
-                QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
-                    array = array.clone();
-                    array[0] = array[0].put(new Inference(predicate, result));
-                    for (PredicateImpl p : result.facts()) {
-                        array[0] = array[0].put(new Inference(p, InferResult.trueFalse(Set.of(p), Set.of())));
-                    }
-                    if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
-                        array[2] = array[2].putAll(array[1]);
-                        array[1] = array[0];
-                        array[0] = EMPTY_MEMOIZ;
-                    }
-                    return array;
-                });
-                if (mem[2].size() > MAX_LOGIC_MEMOIZ) {
-                    POOL.execute(this::cleanup);
+    public void memoization(PredicateImpl predicate, InferResult result) {
+        if (result.facts().anyMatch(PredicateImpl::isIncomplete)) {
+            System.err.println("!!!!!!!!!!!!! " + predicate + " = " + result);
+        }
+        FunctorImpl<Predicate> functor = predicate.functor();
+        if (functor.factual()) {
+            facts.updateAndGet(map -> {
+                map = map.put(predicate, result);
+                for (PredicateImpl p : result.facts()) {
+                    map = map.put(p, ADD_FACT.apply(map.get(p), InferResult.trueFalse(Set.of(p), Set.of())));
                 }
+                return map;
+            });
+        } else if (!functor.derived()) {
+            QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
+                array = array.clone();
+                array[0] = array[0].put(new Inference(predicate, result));
+                for (PredicateImpl p : result.facts()) {
+                    array[0] = array[0].put(new Inference(p, InferResult.trueFalse(Set.of(p), Set.of())));
+                }
+                if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
+                    array[2] = array[2].putAll(array[1]);
+                    array[1] = array[0];
+                    array[0] = EMPTY_MEMOIZ;
+                }
+                return array;
+            });
+            if (mem[2].size() > MAX_LOGIC_MEMOIZ) {
+                POOL.execute(this::cleanup);
             }
         }
     }

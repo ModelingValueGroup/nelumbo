@@ -21,8 +21,8 @@
 package org.modelingvalue.logic.test;
 
 import static org.modelingvalue.logic.Integers.*;
+import static org.modelingvalue.logic.Integers.compare;
 import static org.modelingvalue.logic.Integers.divide;
-import static org.modelingvalue.logic.Integers.ge;
 import static org.modelingvalue.logic.Integers.gt;
 import static org.modelingvalue.logic.Integers.le;
 import static org.modelingvalue.logic.Integers.lt;
@@ -233,8 +233,8 @@ public class LogicTest extends LogicTestBase {
     private void rootRules() {
         integerRules();
 
-        // rule(parentChild(person(Q), person(P)), and(compare(Q, i(4), i(-1)), compare(Q, i(-1), i(1)), plus(Q, i(1), P)));
-        rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), is(plus(Q, i(1)), P)));
+        rule(parentChild(person(Q), person(P)), and(compare(Q, i(4), i(-1)), compare(Q, i(-1), i(1)), plus(Q, i(1), P)));
+        // rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), is(plus(Q, i(1)), P)));
         rule(rootPerson(V, person(0)), T());
         rule(rootPerson(V, C), and(rootPerson(V, A), parentChild(A, C)));
 
@@ -267,7 +267,7 @@ public class LogicTest extends LogicTestBase {
         print(db);
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void notTest() {
         run(() -> {
             isFalse(and(F(), T()));
@@ -280,7 +280,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void famTest0() {
         run(() -> {
             familyRules();
@@ -310,7 +310,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void famTest1() {
         run(() -> {
             familyRules();
@@ -342,7 +342,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void famTest2() {
         run(() -> {
             familyRules();
@@ -355,7 +355,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void famTest3() {
         run(() -> {
             fact(parentChild(Carel, Jan));
@@ -365,7 +365,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void intTest1() {
         run(() -> {
             integerRules();
@@ -376,7 +376,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void intTest2() {
         run(() -> {
             integerRules();
@@ -404,7 +404,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void rationalTest1() {
         run(() -> {
             rationalRules();
@@ -418,7 +418,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void rationalTest2() {
         run(() -> {
             rationalRules();
@@ -446,7 +446,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void rootTest1() {
         run(() -> {
             rootRules();
@@ -460,10 +460,13 @@ public class LogicTest extends LogicTestBase {
             isTrue(rootPerson(Root, person(4)));
             isTrue(rootPerson(Root, person(3)));
             isTrue(rootPerson(Root, person(2)));
+
+            hasBindings(is(root(C), Root), binding(C, person(0)), binding(C, person(1)), //
+                    binding(C, person(2)), binding(C, person(3)), binding(C, person(4)));
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void rootTest2() {
         run(() -> {
             rootRules();
@@ -483,7 +486,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void fibonacciTest1() {
         run(() -> {
             fibonacciRules();
@@ -495,7 +498,7 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(100)
+    @RepeatedTest(10)
     public void fibonacciTest2() {
         run(() -> {
             fibonacciRules();

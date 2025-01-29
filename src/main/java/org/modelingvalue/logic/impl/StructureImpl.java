@@ -375,6 +375,10 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         return nrOfUnbound() == 0;
     }
 
+    protected boolean isIncomplete() {
+        return nrOfUnbound() > 0;
+    }
+
     @SuppressWarnings("rawtypes")
     protected final int nrOfUnbound() {
         int nr = 0;
