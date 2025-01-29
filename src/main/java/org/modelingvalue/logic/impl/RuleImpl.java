@@ -75,7 +75,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl conseqDecl = consequence();
         Map<VariableImpl, Object> binding = conseqDecl.getBinding(consequence, Map.of());
         if (binding == null) {
-            return InferResult.trueFalse(Set.of(), Set.of(consequence));
+            return InferResult.trueFalse(Set.of(consequence), Set.of(consequence));
         }
         PredicateImpl condDecl = condition();
         PredicateImpl condition = condDecl.setBinding(condDecl, variables().putAll(binding));

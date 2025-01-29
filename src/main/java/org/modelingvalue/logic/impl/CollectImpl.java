@@ -139,23 +139,30 @@ public final class CollectImpl extends PredicateImpl {
         }
         Set<PredicateImpl> cycles = result.cycles();
         Set<StructureImpl> facts = Set.of(identity);
+        Set<StructureImpl> falsehoods = Set.of();
         for (PredicateImpl element : result.facts()) {
             Map<VariableImpl, Object> binding = goalColl.getBinding(element, Map.of());
-            Set<StructureImpl> res = Set.of();
+            Set<StructureImpl> elemFacts = Set.of();
+            Set<StructureImpl> elemFalsehoods = Set.of();
             for (StructureImpl r : facts) {
                 PredicateImpl s = goalAccum.setBinding(accum, binding).set(identityIndex, r);
                 result = s.infer(goalAccum, context);
                 if (result.hasStackOverflow()) {
                     return result;
                 }
-                for (PredicateImpl am : result.facts()) {
-                    res = res.add(am.getVal(resultIndex));
+                for (PredicateImpl t : result.facts()) {
+                    elemFacts = elemFacts.add(t.getVal(resultIndex));
+                }
+                for (PredicateImpl f : result.falsehoods()) {
+                    elemFalsehoods = elemFalsehoods.add(f.getVal(resultIndex));
                 }
                 cycles = cycles.addAll(result.cycles());
             }
-            facts = res;
+            facts = elemFacts;
+            falsehoods = elemFalsehoods;
         }
-        return InferResult.of(facts.replaceAll(r -> set(2, accum.set(resultIndex, r))), null, cycles);
+        return InferResult.of(facts.replaceAll(t -> set(2, accum.set(resultIndex, t))), //
+                falsehoods.replaceAll(f -> set(2, accum.set(resultIndex, f))), cycles);
     }
 
     @SuppressWarnings("rawtypes")

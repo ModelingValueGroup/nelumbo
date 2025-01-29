@@ -54,10 +54,6 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     private static final int                                                  MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
     private static final int                                                  MAX_LOGIC_MEMOIZ_D4 = KnowledgeBaseImpl.MAX_LOGIC_MEMOIZ / 4;
     private static final int                                                  INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
-    @SuppressWarnings("rawtypes")
-    private static final BiFunction<InferResult, InferResult, InferResult>    ADD_FACT            = (r, a) -> {
-                                                                                                      return r == null ? a : r.add(a);
-                                                                                                  };
     @SuppressWarnings("unchecked")
     private static final BiFunction<List<RuleImpl>, RuleImpl, List<RuleImpl>> ADD_RULE            = (l, e) -> {
                                                                                                       if (l == null) {
@@ -174,7 +170,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferResult getFacts(PredicateImpl pred) {
         InferResult result = facts.get().get(pred);
-        return result != null ? result : InferResult.trueFalse(Set.of(), Set.of(pred));
+        return result != null ? result : InferResult.trueFalse(Set.of(pred), Set.of(pred));
     }
 
     public List<RuleImpl> getRules(PredicateImpl pred) {
@@ -218,12 +214,12 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                 map = map.put(predicate, result);
                 for (PredicateImpl fact : result.facts()) {
                     if (fact.isFullyBound()) {
-                        map = map.put(fact, ADD_FACT.apply(map.get(fact), InferResult.trueFalse(Set.of(fact), Set.of())));
+                        map = map.put(fact, InferResult.trueFalse(Set.of(fact), Set.of()));
                     }
                 }
                 for (PredicateImpl falsehood : result.falsehoods()) {
                     if (falsehood.isFullyBound()) {
-                        map = map.put(falsehood, ADD_FACT.apply(map.get(falsehood), InferResult.trueFalse(Set.of(), Set.of(falsehood))));
+                        map = map.put(falsehood, InferResult.trueFalse(Set.of(), Set.of(falsehood)));
                     }
                 }
                 return map;
@@ -307,7 +303,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         }
         facts.updateAndGet(map -> {
             List<Class> args = functor.args();
-            map = map.put(fact, ADD_FACT.apply(map.get(fact), InferResult.trueFalse(Set.of(fact), Set.of())));
+            map = map.put(fact, InferResult.trueFalse(Set.of(fact), Set.of()));
             for (int i = 1; i < fact.length(); i++) {
                 map = addFact(map, fact, fact.set(i, fact.getType(i)), i, args.get(i - 1));
             }
@@ -319,7 +315,8 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     private static Map<PredicateImpl, InferResult> addFact(Map<PredicateImpl, InferResult> map, PredicateImpl fact, PredicateImpl predicate, int i, Class cls) {
         Class type = predicate.getType(i);
         if (cls.isAssignableFrom(type)) {
-            map = map.put(predicate, ADD_FACT.apply(map.get(predicate), InferResult.trueFalse(Set.of(fact), Set.of(predicate))));
+            InferResult pre = map.get(predicate);
+            map = map.put(predicate, InferResult.trueFalse(pre != null ? pre.facts().add(fact) : Set.of(fact), Set.of(predicate)));
             if (!cls.equals(type)) {
                 for (Type gen : type.getGenericInterfaces()) {
                     while (gen instanceof ParameterizedType) {

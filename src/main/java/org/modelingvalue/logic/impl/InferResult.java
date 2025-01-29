@@ -124,7 +124,7 @@ public interface InferResult {
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
-                return Set.of();
+                return cycles;
             }
 
             @Override
