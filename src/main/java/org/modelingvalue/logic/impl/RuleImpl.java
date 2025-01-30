@@ -31,7 +31,7 @@ import org.modelingvalue.logic.Logic.Rule;
 public final class RuleImpl extends StructureImpl<Rule> {
     private static final long              serialVersionUID   = -4602043866952049391L;
 
-    private static final boolean           TRACE_LOGIC        = Boolean.getBoolean("TRACE_LOGIC");
+    private static final boolean           TRACE_NELUMBO      = Boolean.getBoolean("TRACE_NELUMBO");
     private static final FunctorImpl<Rule> RULE_FUNCTOR       = FunctorImpl.<Rule, Relation, Predicate> of(Logic::rule);
     private static final Functor<Rule>     RULE_FUNCTOR_PROXY = RULE_FUNCTOR.proxy();
 
@@ -78,6 +78,9 @@ public final class RuleImpl extends StructureImpl<Rule> {
             return null;
         }
         PredicateImpl condDecl = condition();
+        if (TRACE_NELUMBO) {
+            System.err.println(context.prefix() + condDecl.setBinding(condDecl, binding) + " { ");
+        }
         PredicateImpl condition = condDecl.setBinding(condDecl, variables().putAll(binding));
         InferResult condResult = condition.infer(condDecl, context);
         if (condResult.hasStackOverflow()) {
@@ -88,10 +91,8 @@ public final class RuleImpl extends StructureImpl<Rule> {
         Set<PredicateImpl> incFacts = InferResult.bind(condResult.facts().exclude(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl).removeAll(fullFalsehoods);
         Set<PredicateImpl> incFalsehoods = InferResult.bind(condResult.falsehoods().exclude(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl).removeAll(fullFacts);
         InferResult conseqResult = InferResult.of(fullFacts.addAll(incFacts), fullFalsehoods.addAll(incFalsehoods), condResult.cycles());
-        if (TRACE_LOGIC) {
-            System.err.println("LOGIC " + "  ".repeat(context.stack().size()) + //
-                    condDecl.setBinding(condDecl, binding) + " -> " + //
-                    conseqResult.facts().toString().substring(3));
+        if (TRACE_NELUMBO) {
+            System.err.println(context.prefix() + "} -> " + conseqResult.facts().toString().substring(3));
         }
         return conseqResult;
     }

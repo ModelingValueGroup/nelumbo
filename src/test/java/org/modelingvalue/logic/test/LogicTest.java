@@ -60,7 +60,7 @@ import org.modelingvalue.logic.Rationals.RationalCons;
 public class LogicTest extends LogicTestBase {
 
     static {
-        // System.setProperty("TRACE_LOGIC", "true");
+        System.setProperty("TRACE_NELUMBO", "true");
     }
 
     // Root

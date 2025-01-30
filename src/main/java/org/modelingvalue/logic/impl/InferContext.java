@@ -75,4 +75,8 @@ public interface InferContext {
         return of(knowledgebase(), stack(), cycleConclusion(), deep, shallow);
     }
 
+    default String prefix() {
+        return "NELUMBO " + "  ".repeat(stack().size());
+    }
+
 }
