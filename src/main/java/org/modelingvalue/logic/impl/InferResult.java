@@ -219,4 +219,11 @@ public interface InferResult {
     default String toString(Set<PredicateImpl> set) {
         return set.toString().substring(3);
     }
+
+    default InferResult setVariableNames(PredicateImpl declaration) {
+        Set<PredicateImpl> facts = facts().replaceAll(p -> p.setVariableNames(declaration));
+        Set<PredicateImpl> falsehoods = falsehoods().replaceAll(p -> p.setVariableNames(declaration));
+        return of(facts, falsehoods, cycles());
+    }
+
 }

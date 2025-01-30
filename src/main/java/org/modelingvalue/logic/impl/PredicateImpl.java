@@ -22,6 +22,7 @@ package org.modelingvalue.logic.impl;
 
 import java.util.Objects;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
@@ -88,7 +89,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         }
         InferResult result = setBinding(this, variables()).infer(this, context);
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + this + " -> " + result.toString());
+            System.err.println(context.prefix() + this + " -> " + result);
         }
         return result;
     }
@@ -223,5 +224,12 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     @SuppressWarnings("unchecked")
     public static <P extends Predicate> PredicateImpl of(FunctorImpl<P> functor, Object... args) {
         return new PredicateImpl((FunctorImpl<Predicate>) functor, args);
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected PredicateImpl setVariableNames(PredicateImpl declaration) {
+        Map<VariableImpl, Object> vars = declaration.getBinding(this, Map.of());
+        vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
+        return declaration.setBinding(this, vars);
     }
 }
