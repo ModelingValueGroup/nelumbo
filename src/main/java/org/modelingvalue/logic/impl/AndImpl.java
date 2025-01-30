@@ -54,4 +54,15 @@ public final class AndImpl extends AndOrImpl {
     protected InferResult flip(InferResult result) {
         return result;
     }
+
+    @Override
+    public String toString(StructureImpl<?> parent) {
+        return parent instanceof AndImpl ? predicate1().toString(this) + " & " + predicate2().toString(this) : toString();
+    }
+
+    @Override
+    public String toString() {
+        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + " & " + predicate2().toString(this) + ")" : super.toString();
+    }
+
 }

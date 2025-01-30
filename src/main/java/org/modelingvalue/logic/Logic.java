@@ -152,6 +152,30 @@ public final class Logic {
         }
     }
 
+    @SuppressWarnings("rawtypes")
+    @FunctionalInterface
+    public interface ToStringLambda extends java.util.function.Function<StructureImpl<Structure>, String>, LambdaReflection, FunctorModifier {
+
+        @Override
+        default ToStringLambdaImpl of() {
+            return this instanceof ToStringLambdaImpl ? (ToStringLambdaImpl) this : new ToStringLambdaImpl(this);
+        }
+
+        class ToStringLambdaImpl extends LambdaImpl<ToStringLambda> implements ToStringLambda {
+            private static final long serialVersionUID = -9099528018203410620L;
+
+            public ToStringLambdaImpl(ToStringLambda f) {
+                super(f);
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public final String apply(StructureImpl<Structure> structure) {
+                return f.apply(structure);
+            }
+        }
+    }
+
     // Variables
 
     public interface Variable extends Constant<Variable> {
@@ -290,7 +314,8 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::eq, (LogicLambda) Logic::eqLogic);
+    private static Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::eq, (LogicLambda) Logic::eqLogic, //
+            (ToStringLambda) s -> s.toString(1) + "=" + s.toString(2));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult eqLogic(PredicateImpl predicate, InferContext context) {
@@ -321,7 +346,8 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Functor<Relation> IS_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::is);
+    private static final Functor<Relation> IS_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::is, //
+            (ToStringLambda) s -> s.toString(1) + "=" + s.toString(2));
 
     private static <T extends Structure> Relation is(T a, T b) {
         return pred(IS_FUNCTOR, a, b);

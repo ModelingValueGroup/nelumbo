@@ -28,13 +28,7 @@ import java.math.BigInteger;
 
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Integers.IntegerCons;
-import org.modelingvalue.logic.Logic.Constant;
-import org.modelingvalue.logic.Logic.Function;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.LogicLambda;
-import org.modelingvalue.logic.Logic.NormalizeLambda;
-import org.modelingvalue.logic.Logic.Relation;
-import org.modelingvalue.logic.Logic.Structure;
+import org.modelingvalue.logic.Logic.*;
 import org.modelingvalue.logic.impl.InferContext;
 import org.modelingvalue.logic.impl.InferResult;
 import org.modelingvalue.logic.impl.PredicateImpl;
@@ -59,7 +53,7 @@ public final class Rationals {
         BigInteger denominator = r.getVal(2);
         BigInteger gcd = numerator.gcd(denominator);
         return r.set(1, numerator.divide(gcd), denominator.divide(gcd));
-    });
+    }, (ToStringLambda) s -> s.toString(1) + "/" + s.toString(2));
 
     public static RationalCons r(BigInteger numerator, BigInteger denominator) {
         return constant(R_FUNCTOR, numerator, denominator);

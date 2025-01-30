@@ -31,11 +31,14 @@ import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.NormalizeLambda;
 import org.modelingvalue.logic.Logic.Structure;
+import org.modelingvalue.logic.Logic.ToStringLambda;
 
 public class StructureImpl<F extends Structure> extends org.modelingvalue.collections.struct.impl.StructImpl implements InvocationHandler, Comparable<StructureImpl<F>> {
     private static final long      serialVersionUID = 7315776001191198132L;
 
     protected static final boolean TRACE_NELUMBO    = Boolean.getBoolean("TRACE_NELUMBO");
+    protected static final boolean PRETTY_NELUMBO   = Boolean.getBoolean("PRETTY_NELUMBO");
+
     private static final Method    EQUALS;
     private static final Method    HASHCODE;
     private static final Method    TO_STRING;
@@ -110,6 +113,11 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public String toString() {
+        FunctorImpl<F> f = PRETTY_NELUMBO ? functor() : null;
+        ToStringLambda tsl = f != null ? f.toStringLambda() : null;
+        if (tsl != null) {
+            return tsl.apply((StructureImpl) this);
+        }
         String string = super.toString();
         string = string.substring(1, string.length() - 1);
         int i = string.indexOf(',');
@@ -153,6 +161,14 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     public FunctorImpl<F> functor() {
         Object t = get(0);
         return t instanceof FunctorImpl ? (FunctorImpl<F>) t : null;
+    }
+
+    public String toString(StructureImpl<?> parent) {
+        return toString();
+    }
+
+    public final String toString(int i) {
+        return StringUtil.toString(get(i));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -267,7 +283,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings("unchecked")
     public final StructureImpl<F> normal() {
         FunctorImpl<F> f = functor();
-        NormalizeLambda n = f != null ? f.functNormal() : null;
+        NormalizeLambda n = f != null ? f.normalizeLambda() : null;
         return n != null ? (StructureImpl<F>) n.apply((StructureImpl<Structure>) this) : this;
     }
 

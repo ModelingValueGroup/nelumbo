@@ -95,7 +95,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     public InferResult infer(PredicateImpl declaration, InferContext context) {
         FunctorImpl<Predicate> functor = functor();
-        LogicLambda logic = functor.logic();
+        LogicLambda logic = functor.logicLambda();
         if (logic != null) {
             return logic.apply((PredicateImpl) this, context);
         }

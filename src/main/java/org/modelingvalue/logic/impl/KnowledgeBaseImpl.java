@@ -295,7 +295,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public final void addFact(PredicateImpl fact) {
         FunctorImpl<Predicate> functor = fact.functor();
-        if (functor.logic() != null) {
+        if (functor.logicLambda() != null) {
             throw new IllegalArgumentException("No facts of a functor with a logic lambda allowed. " + this);
         }
         if (getRules(fact.signature()) != null) {

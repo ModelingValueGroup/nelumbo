@@ -37,12 +37,14 @@ import org.modelingvalue.logic.Logic.FunctorModifierEnum;
 import org.modelingvalue.logic.Logic.LogicLambda;
 import org.modelingvalue.logic.Logic.NormalizeLambda;
 import org.modelingvalue.logic.Logic.Structure;
+import org.modelingvalue.logic.Logic.ToStringLambda;
 
 public final class FunctorImpl<T extends Structure> extends StructureImpl<Functor<T>> {
     private static final long     serialVersionUID = 285147889847599160L;
 
-    private final LogicLambda     logic;
-    private final NormalizeLambda normal;
+    private final LogicLambda     logicLambda;
+    private final NormalizeLambda normalizeLambda;
+    private final ToStringLambda  toStringLambda;
     private final boolean         factual;
     private final boolean         derived;
 
@@ -53,10 +55,16 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
         for (Class arg : args) {
             KnowledgeBaseImpl.updateSpecializations(arg);
         }
-        this.logic = logic(modifiers);
-        this.normal = normal(modifiers);
+        this.logicLambda = logic(modifiers);
+        this.normalizeLambda = normal(modifiers);
+        this.toStringLambda = toString(modifiers);
         this.factual = has(FunctorModifierEnum.factual, modifiers);
         this.derived = has(FunctorModifierEnum.derived, modifiers);
+    }
+
+    private ToStringLambda toString(FunctorModifier[] modifiers) {
+        ToStringLambda lambda = get(ToStringLambda.class, modifiers);
+        return lambda != null ? lambda.of() : null;
     }
 
     private static LogicLambda logic(FunctorModifier... modifiers) {
@@ -116,12 +124,16 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
         return (List<Class>) get(3);
     }
 
-    public LogicLambda logic() {
-        return logic;
+    public LogicLambda logicLambda() {
+        return logicLambda;
     }
 
-    public NormalizeLambda functNormal() {
-        return normal;
+    public NormalizeLambda normalizeLambda() {
+        return normalizeLambda;
+    }
+
+    public ToStringLambda toStringLambda() {
+        return toStringLambda;
     }
 
     public boolean factual() {

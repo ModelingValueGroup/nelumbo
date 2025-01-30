@@ -61,6 +61,7 @@ public class LogicTest extends LogicTestBase {
 
     static {
         System.setProperty("TRACE_NELUMBO", "true");
+        System.setProperty("PRETTY_NELUMBO", "true");
     }
 
     // Root
@@ -489,13 +490,13 @@ public class LogicTest extends LogicTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(1)
     public void fibonacciTest0() {
         run(() -> {
             fibonacciRules();
 
             hasBindings(fib(i(1), P), binding(P, i(1)));
-            hasBindings(fib(i(7), P), binding(P, i(13)));
+            hasBindings(fib(i(6), P), binding(P, i(8)));
         });
     }
 

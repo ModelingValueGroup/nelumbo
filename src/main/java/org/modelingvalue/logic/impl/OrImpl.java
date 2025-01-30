@@ -60,4 +60,14 @@ public final class OrImpl extends AndOrImpl {
     protected InferResult flip(InferResult result) {
         return result.not();
     }
+
+    @Override
+    public String toString(StructureImpl<?> parent) {
+        return parent instanceof OrImpl ? predicate1().toString(this) + " | " + predicate2().toString(this) + ")" : toString();
+    }
+
+    @Override
+    public String toString() {
+        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + " | " + predicate2().toString(this) + ")" : super.toString();
+    }
 }
