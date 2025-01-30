@@ -89,7 +89,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         }
         InferResult result = setBinding(this, variables()).infer(this, context);
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + this + " -> " + result);
+            System.err.println(context.prefix() + this + " -> " + result.setVariableNames(this));
         }
         return result;
     }
