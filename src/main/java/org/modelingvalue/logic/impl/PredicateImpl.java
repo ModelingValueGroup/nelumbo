@@ -103,6 +103,9 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             if (result != null) {
                 return result;
             }
+            if (context.shallow()) {
+                return InferResult.trueFalse(Set.of(this), Set.of(this));
+            }
             List<PredicateImpl> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
                 return InferResult.overflow(stack.append(this));

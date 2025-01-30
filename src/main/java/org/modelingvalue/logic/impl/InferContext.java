@@ -30,7 +30,11 @@ public interface InferContext {
 
     Map<PredicateImpl, InferResult> cycleConclusion();
 
-    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic) {
+    boolean deep();
+
+    boolean shallow();
+
+    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic, boolean deep, boolean shallow) {
         return new InferContext() {
             @Override
             public KnowledgeBaseImpl knowledgebase() {
@@ -46,19 +50,29 @@ public interface InferContext {
             public Map<PredicateImpl, InferResult> cycleConclusion() {
                 return cyclic;
             }
+
+            @Override
+            public boolean deep() {
+                return deep;
+            }
+
+            @Override
+            public boolean shallow() {
+                return shallow;
+            }
         };
     }
 
     default InferContext pushOnStack(PredicateImpl predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleConclusion());
+        return of(knowledgebase(), stack().append(predicate), cycleConclusion(), false, false);
     }
 
     default InferContext putCycleResult(PredicateImpl predicate, InferResult result) {
-        return of(knowledgebase(), stack(), cycleConclusion().put(predicate, result));
+        return of(knowledgebase(), stack(), cycleConclusion().put(predicate, result), false, false);
     }
 
-    default List<PredicateImpl> stack(PredicateImpl predicate) {
-        return stack().append(predicate);
+    default InferContext deepShallow(boolean deep, boolean shallow) {
+        return of(knowledgebase(), stack(), cycleConclusion(), deep, shallow);
     }
 
 }
