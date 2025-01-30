@@ -92,7 +92,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         Set<PredicateImpl> incFalsehoods = InferResult.bind(condResult.falsehoods().exclude(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl).removeAll(fullFacts);
         InferResult conseqResult = InferResult.of(fullFacts.addAll(incFacts), fullFalsehoods.addAll(incFalsehoods), condResult.cycles());
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + "} -> " + conseqResult.facts().toString().substring(3));
+            System.err.println(context.prefix() + "} -> " + conseqResult.toString());
         }
         return conseqResult;
     }
