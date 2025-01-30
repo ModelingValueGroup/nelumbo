@@ -61,7 +61,6 @@ public abstract class AndOrImpl extends PredicateImpl {
                     if (!context.deep() && !context.shallow()) {
                         ctx = ctx == context ? context.deepShallow(false, true) : context.deepShallow(true, false);
                     }
-                    ctx = context.deepShallow(true, false);
                     // Predicate 1
                     pred1Result = andOr.predicate1().infer(pred1Decl, ctx);
                     if (pred1Result.hasStackOverflow()) {
