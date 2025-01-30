@@ -63,7 +63,7 @@ public final class OrImpl extends AndOrImpl {
 
     @Override
     public String toString(StructureImpl<?> parent) {
-        return parent instanceof OrImpl ? predicate1().toString(this) + " | " + predicate2().toString(this) + ")" : toString();
+        return parent instanceof OrImpl ? predicate1().toString(this) + " | " + predicate2().toString(this) : toString();
     }
 
     @Override
