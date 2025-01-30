@@ -198,12 +198,7 @@ public final class Logic {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult infer(Predicate pred) {
-        return infer(StructureImpl.<Predicate, PredicateImpl> unproxy(pred));
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static InferResult infer(PredicateImpl impl) {
-        return impl.setBinding(impl, impl.variables()).infer(impl, KnowledgeBaseImpl.CURRENT.get().context());
+        return StructureImpl.<Predicate, PredicateImpl> unproxy(pred).infer();
     }
 
     @SuppressWarnings("rawtypes")

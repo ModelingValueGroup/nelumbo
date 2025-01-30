@@ -33,11 +33,12 @@ import org.modelingvalue.logic.Logic.NormalizeLambda;
 import org.modelingvalue.logic.Logic.Structure;
 
 public class StructureImpl<F extends Structure> extends org.modelingvalue.collections.struct.impl.StructImpl implements InvocationHandler, Comparable<StructureImpl<F>> {
-    private static final long   serialVersionUID = 7315776001191198132L;
+    private static final long      serialVersionUID = 7315776001191198132L;
 
-    private static final Method EQUALS;
-    private static final Method HASHCODE;
-    private static final Method TO_STRING;
+    protected static final boolean TRACE_NELUMBO    = Boolean.getBoolean("TRACE_NELUMBO");
+    private static final Method    EQUALS;
+    private static final Method    HASHCODE;
+    private static final Method    TO_STRING;
     static {
         try {
             EQUALS = Object.class.getMethod("equals", Object.class);

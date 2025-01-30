@@ -81,6 +81,18 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         return v instanceof Class ? (Class) v : v instanceof StructureImpl ? ((StructureImpl) v).type() : null;
     }
 
+    public InferResult infer() {
+        InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
+        if (TRACE_NELUMBO) {
+            System.err.println(context.prefix() + this);
+        }
+        InferResult result = setBinding(this, variables()).infer(this, context);
+        if (TRACE_NELUMBO) {
+            System.err.println(context.prefix() + this + " -> " + result.toString());
+        }
+        return result;
+    }
+
     public InferResult infer(PredicateImpl declaration, InferContext context) {
         FunctorImpl<Predicate> functor = functor();
         LogicLambda logic = functor.logic();

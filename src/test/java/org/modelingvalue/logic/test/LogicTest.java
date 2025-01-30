@@ -490,6 +490,16 @@ public class LogicTest extends LogicTestBase {
     }
 
     @RepeatedTest(10)
+    public void fibonacciTest0() {
+        run(() -> {
+            fibonacciRules();
+
+            hasBindings(fib(i(1), P), binding(P, i(1)));
+            hasBindings(fib(i(7), P), binding(P, i(13)));
+        });
+    }
+
+    @RepeatedTest(10)
     public void fibonacciTest1() {
         run(() -> {
             fibonacciRules();
