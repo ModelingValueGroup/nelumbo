@@ -78,10 +78,10 @@ public final class RuleImpl extends StructureImpl<Rule> {
             return null;
         }
         PredicateImpl condDecl = condition();
-        if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + condDecl.setBinding(condDecl, binding) + " { ");
-        }
         PredicateImpl condition = condDecl.setBinding(condDecl, variables().putAll(binding));
+        if (TRACE_NELUMBO) {
+            System.err.println(context.prefix() + consequence + " <= " + condDecl.setBinding(condDecl, binding));
+        }
         InferResult condResult = condition.infer(condDecl, context);
         if (condResult.hasStackOverflow()) {
             return condResult;
@@ -92,7 +92,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         Set<PredicateImpl> incFalsehoods = InferResult.bind(condResult.falsehoods().exclude(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl).removeAll(fullFacts);
         InferResult conseqResult = InferResult.of(fullFacts.addAll(incFacts), fullFalsehoods.addAll(incFalsehoods), condResult.cycles());
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + "} -> " + conseqResult.toString());
+            System.err.println(context.prefix() + consequence + " -> " + conseqResult.toString());
         }
         return conseqResult;
     }
