@@ -18,25 +18,25 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic;
+package org.modelingvalue.nelumbo;
 
-import static org.modelingvalue.logic.Logic.*;
+import static org.modelingvalue.nelumbo.Logic.*;
 
 import java.math.BigInteger;
 
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.Logic.Constant;
-import org.modelingvalue.logic.Logic.Function;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.LogicLambda;
-import org.modelingvalue.logic.Logic.Relation;
-import org.modelingvalue.logic.Logic.Structure;
-import org.modelingvalue.logic.Logic.ToStringLambda;
-import org.modelingvalue.logic.impl.FunctorImpl;
-import org.modelingvalue.logic.impl.InferContext;
-import org.modelingvalue.logic.impl.InferResult;
-import org.modelingvalue.logic.impl.PredicateImpl;
-import org.modelingvalue.logic.impl.StructureImpl;
+import org.modelingvalue.nelumbo.Logic.Constant;
+import org.modelingvalue.nelumbo.Logic.Function;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.LogicLambda;
+import org.modelingvalue.nelumbo.Logic.Relation;
+import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.ToStringLambda;
+import org.modelingvalue.nelumbo.impl.FunctorImpl;
+import org.modelingvalue.nelumbo.impl.InferContext;
+import org.modelingvalue.nelumbo.impl.InferResult;
+import org.modelingvalue.nelumbo.impl.PredicateImpl;
+import org.modelingvalue.nelumbo.impl.StructureImpl;
 
 public final class Integers {
 

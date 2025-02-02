@@ -18,13 +18,13 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic;
+package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.Logic.Relation;
-import org.modelingvalue.logic.Logic.Rule;
+import org.modelingvalue.nelumbo.Logic.Relation;
+import org.modelingvalue.nelumbo.Logic.Rule;
 
 public interface KnowledgeBase {
 

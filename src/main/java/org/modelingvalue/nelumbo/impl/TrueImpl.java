@@ -18,50 +18,56 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
-import java.lang.reflect.Proxy;
+import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.Logic;
+import org.modelingvalue.nelumbo.Logic.Predicate;
 
-import org.modelingvalue.logic.Logic.Structure;
-import org.modelingvalue.logic.Logic.Variable;
+public final class TrueImpl extends PredicateImpl {
+    private static final long                   serialVersionUID = -8515171118744898263L;
 
-public final class VariableImpl<F extends Structure> extends StructureImpl<F> {
-    private static final long serialVersionUID = -8998368070388908726L;
+    private static final FunctorImpl<Predicate> TRUE_FUNCTOR     = FunctorImpl.<Predicate> of(Logic::T);
 
-    public VariableImpl(Class<F> type, String name) {
-        super(type, name);
-        KnowledgeBaseImpl.updateSpecializations(type);
+    public static final TrueImpl                TRUE             = new TrueImpl();
+
+    private static final InferResult            TRUE_CONCLUSION  = InferResult.trueFalse(Set.of(TRUE), Set.of());
+
+    private TrueImpl() {
+        super(TRUE_FUNCTOR);
     }
 
-    private VariableImpl(Object[] args) {
+    private TrueImpl(Object[] args) {
         super(args);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public final F proxy() {
-        return (F) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Variable.class}, this);
+    public Predicate proxy() {
+        return Logic.T();
     }
 
     @Override
-    public String toString() {
-        return get(1).toString();
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected TrueImpl struct(Object[] array) {
+        return new TrueImpl(array);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Override
+    public InferResult infer(PredicateImpl declaration, InferContext context) {
+        return TRUE_CONCLUSION;
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Map<VariableImpl, Object> getBinding(StructureImpl<Predicate> pred, Map<VariableImpl, Object> vars) {
+        return vars;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected VariableImpl<F> struct(Object[] array) {
-        return new VariableImpl<F>(array);
-    }
-
-    @Override
-    public VariableImpl<F> set(int i, Object... a) {
-        return (VariableImpl<F>) super.set(i, a);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public Class<F> type() {
-        return (Class<F>) get(0);
+    public TrueImpl set(int i, Object... a) {
+        return (TrueImpl) super.set(i, a);
     }
 }

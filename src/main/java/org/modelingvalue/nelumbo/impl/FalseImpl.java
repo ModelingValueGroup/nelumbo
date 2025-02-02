@@ -18,63 +18,46 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.Logic;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic;
+import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public final class NotImpl extends PredicateImpl {
-    private static final long                   serialVersionUID  = -4543178470298951866L;
+public final class FalseImpl extends PredicateImpl {
+    private static final long                  serialVersionUID = -8515171118744898263L;
 
-    private static final FunctorImpl<Predicate> NOT_FUNCTOR       = FunctorImpl.<Predicate, Predicate> of(Logic::not);
-    private static final Functor<Predicate>     NOT_FUNCTOR_PROXY = NOT_FUNCTOR.proxy();
+    public static final FunctorImpl<Predicate> FALSE_FUNCTOR    = FunctorImpl.<Predicate> of(Logic::F);
 
-    public NotImpl(Predicate pred) {
-        super(NOT_FUNCTOR_PROXY, pred);
+    public static final FalseImpl              FALSE            = new FalseImpl();
+
+    private final InferResult                  FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
+
+    private FalseImpl() {
+        super(FALSE_FUNCTOR);
     }
 
-    private NotImpl(Object[] args) {
+    private FalseImpl(Object[] args) {
         super(args);
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected NotImpl struct(Object[] array) {
-        return new NotImpl(array);
+    @SuppressWarnings("unchecked")
+    public Predicate proxy() {
+        return Logic.F();
     }
 
-    @SuppressWarnings("rawtypes")
-    public final PredicateImpl predicate() {
-        return (PredicateImpl) get(1);
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected FalseImpl struct(Object[] array) {
+        return new FalseImpl(array);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public InferResult infer(PredicateImpl declaration, InferContext context) {
-        PredicateImpl predDecl = ((NotImpl) declaration).predicate();
-        PredicateImpl predicate = predicate();
-        InferResult result = predicate.infer(predDecl, context);
-        if (result.hasStackOverflow()) {
-            return result;
-        }
-        if (result == predicate.incomplete()) {
-            return incomplete();
-        }
-        Set<PredicateImpl> facts, falsehoods;
-        if (result.falsehoods().equals(predicate.singleton())) {
-            facts = singleton();
-        } else {
-            facts = result.falsehoods().replaceAll(f -> set(1, f));
-        }
-        if (result.facts().equals(predicate.singleton())) {
-            falsehoods = singleton();
-        } else {
-            falsehoods = result.facts().replaceAll(f -> set(1, f));
-        }
-        return InferResult.of(facts, falsehoods, result.cycles());
+        return FALSE_CONCLUSION;
     }
 
     @SuppressWarnings("rawtypes")
@@ -84,7 +67,7 @@ public final class NotImpl extends PredicateImpl {
     }
 
     @Override
-    public NotImpl set(int i, Object... a) {
-        return (NotImpl) super.set(i, a);
+    public FalseImpl set(int i, Object... a) {
+        return (FalseImpl) super.set(i, a);
     }
 }

@@ -18,7 +18,7 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic;
+package org.modelingvalue.nelumbo;
 
 import java.lang.reflect.Proxy;
 import java.util.function.BiFunction;
@@ -33,7 +33,7 @@ import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.collections.util.SerializableQuadFunction;
 import org.modelingvalue.collections.util.SerializableSupplier;
 import org.modelingvalue.collections.util.SerializableTriFunction;
-import org.modelingvalue.logic.impl.*;
+import org.modelingvalue.nelumbo.impl.*;
 
 public final class Logic {
 

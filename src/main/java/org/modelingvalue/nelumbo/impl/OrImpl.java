@@ -18,46 +18,51 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
-import org.modelingvalue.logic.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public final class AndImpl extends AndOrImpl {
-    private static final long                   serialVersionUID = -7248491569810098948L;
+public final class OrImpl extends AndOrImpl {
+    private static final long                   serialVersionUID = -1732549494864415986L;
 
-    private static final FunctorImpl<Predicate> AND_FUNCTOR      = FunctorImpl.<Predicate, Predicate, Predicate> of(AndImpl::and);
+    private static final FunctorImpl<Predicate> OR_FUNCTOR       = FunctorImpl.<Predicate, Predicate, Predicate> of(OrImpl::or);
 
-    private static Predicate and(Predicate p1, Predicate p2) {
-        return new AndImpl(StructureImpl.unproxy(p1), StructureImpl.unproxy(p2)).proxy();
+    private static Predicate or(Predicate predicate1, Predicate predicate2) {
+        return new OrImpl(StructureImpl.unproxy(predicate1), StructureImpl.unproxy(predicate2)).proxy();
     }
 
-    public AndImpl(PredicateImpl predicate1, PredicateImpl predicate2) {
-        super(AND_FUNCTOR, predicate1, predicate2);
+    public OrImpl(PredicateImpl predicate1, PredicateImpl predicate2) {
+        super(OR_FUNCTOR, predicate1, predicate2);
     }
 
-    private AndImpl(Object[] args) {
+    private OrImpl(Object[] args) {
         super(args);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected AndImpl struct(Object[] array) {
-        return new AndImpl(array);
+    protected OrImpl struct(Object[] array) {
+        return new OrImpl(array);
     }
 
     @Override
-    public AndImpl set(int i, Object... a) {
-        return (AndImpl) super.set(i, a);
+    public OrImpl set(int i, Object... a) {
+        return (OrImpl) super.set(i, a);
+    }
+
+    @Override
+    @SuppressWarnings("rawtypes")
+    public boolean contains(PredicateImpl cond) {
+        return super.contains(cond) || predicate1().contains(cond) || predicate2().contains(cond);
     }
 
     @Override
     public String toString(StructureImpl<?> parent) {
-        return parent instanceof AndImpl ? predicate1().toString(this) + " & " + predicate2().toString(this) : toString();
+        return parent instanceof OrImpl ? predicate1().toString(this) + " | " + predicate2().toString(this) : toString();
     }
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + " & " + predicate2().toString(this) + ")" : super.toString();
+        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + " | " + predicate2().toString(this) + ")" : super.toString();
     }
-
 }

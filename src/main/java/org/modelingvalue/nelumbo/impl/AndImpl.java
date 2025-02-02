@@ -18,56 +18,46 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
-import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.Logic;
-import org.modelingvalue.logic.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public final class FalseImpl extends PredicateImpl {
-    private static final long                  serialVersionUID = -8515171118744898263L;
+public final class AndImpl extends AndOrImpl {
+    private static final long                   serialVersionUID = -7248491569810098948L;
 
-    public static final FunctorImpl<Predicate> FALSE_FUNCTOR    = FunctorImpl.<Predicate> of(Logic::F);
+    private static final FunctorImpl<Predicate> AND_FUNCTOR      = FunctorImpl.<Predicate, Predicate, Predicate> of(AndImpl::and);
 
-    public static final FalseImpl              FALSE            = new FalseImpl();
-
-    private final InferResult                  FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
-
-    private FalseImpl() {
-        super(FALSE_FUNCTOR);
+    private static Predicate and(Predicate p1, Predicate p2) {
+        return new AndImpl(StructureImpl.unproxy(p1), StructureImpl.unproxy(p2)).proxy();
     }
 
-    private FalseImpl(Object[] args) {
+    public AndImpl(PredicateImpl predicate1, PredicateImpl predicate2) {
+        super(AND_FUNCTOR, predicate1, predicate2);
+    }
+
+    private AndImpl(Object[] args) {
         super(args);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Predicate proxy() {
-        return Logic.F();
-    }
-
-    @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected FalseImpl struct(Object[] array) {
-        return new FalseImpl(array);
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    @Override
-    public InferResult infer(PredicateImpl declaration, InferContext context) {
-        return FALSE_CONCLUSION;
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Map<VariableImpl, Object> getBinding(StructureImpl<Predicate> pred, Map<VariableImpl, Object> vars) {
-        return vars;
+    protected AndImpl struct(Object[] array) {
+        return new AndImpl(array);
     }
 
     @Override
-    public FalseImpl set(int i, Object... a) {
-        return (FalseImpl) super.set(i, a);
+    public AndImpl set(int i, Object... a) {
+        return (AndImpl) super.set(i, a);
     }
+
+    @Override
+    public String toString(StructureImpl<?> parent) {
+        return parent instanceof AndImpl ? predicate1().toString(this) + " & " + predicate2().toString(this) : toString();
+    }
+
+    @Override
+    public String toString() {
+        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + " & " + predicate2().toString(this) + ")" : super.toString();
+    }
+
 }

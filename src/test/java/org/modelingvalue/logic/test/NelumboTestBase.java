@@ -2,17 +2,17 @@ package org.modelingvalue.logic.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.modelingvalue.logic.Logic.getBindings;
+import static org.modelingvalue.nelumbo.Logic.getBindings;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.KnowledgeBase;
-import org.modelingvalue.logic.Logic;
-import org.modelingvalue.logic.Logic.Predicate;
-import org.modelingvalue.logic.Logic.Relation;
-import org.modelingvalue.logic.Logic.Rule;
-import org.modelingvalue.logic.Logic.Variable;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Logic;
+import org.modelingvalue.nelumbo.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Relation;
+import org.modelingvalue.nelumbo.Logic.Rule;
+import org.modelingvalue.nelumbo.Logic.Variable;
 
 public class NelumboTestBase {
     // Utilities

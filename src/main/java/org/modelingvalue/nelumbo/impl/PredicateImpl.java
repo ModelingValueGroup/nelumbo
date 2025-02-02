@@ -18,7 +18,7 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
 import java.util.Objects;
 
@@ -26,9 +26,9 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.LogicLambda;
-import org.modelingvalue.logic.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.LogicLambda;
+import org.modelingvalue.nelumbo.Logic.Predicate;
 
 public class PredicateImpl extends StructureImpl<Predicate> {
     private static final long serialVersionUID   = -1605559565948158856L;
@@ -113,10 +113,6 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         List<RuleImpl> rules = knowledgebase.getRules(this);
         InferResult result;
         if (rules != null) {
-            result = context.cycleConclusion().get(this);
-            if (result != null) {
-                return result;
-            }
             result = knowledgebase.getMemoiz(this);
             if (result != null) {
                 return result;
@@ -124,12 +120,13 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             if (context.shallow()) {
                 return incomplete();
             }
+            result = context.cycleResult().get(this);
+            if (result != null) {
+                return InferResult.of(result.facts(), result.falsehoods(), Set.of(this));
+            }
             List<PredicateImpl> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
                 return InferResult.overflow(stack.append(this));
-            }
-            if (stack.lastIndexOf(this) >= 0) {
-                return InferResult.cycle(this);
             }
             result = fixpoint(rules, context.pushOnStack(this));
             if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
@@ -141,7 +138,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     return result;
                 }
             }
-            knowledgebase.memoization(this, result);
+            knowledgebase.memoization(this, result, context);
         } else {
             result = knowledgebase.getFacts(this);
         }
@@ -160,7 +157,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             if (overflow != null) {
                 todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
             } else {
-                knowledgebase.memoization(predicate, result);
+                knowledgebase.memoization(predicate, result, context);
                 todo = todo.removeLast();
             }
         }
@@ -169,27 +166,24 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private InferResult fixpoint(List<RuleImpl> rules, InferContext context) {
-        InferResult result = InferResult.EMPTY, ruleResult, cycleResult = null, facts = context.knowledgebase().getFacts(this);
-        boolean first = true;
+        InferResult result = InferResult.EMPTY, ruleResult, factsResult = context.knowledgebase().getFacts(this), deltaResult = factsResult;
         do {
-            ruleResult = inferRules(rules, first ? context : context.putCycleResult(this, cycleResult), facts);
+            ruleResult = inferRules(rules, context.putCycleResult(this, deltaResult), factsResult);
             if (ruleResult.hasStackOverflow()) {
                 return ruleResult;
-            } else if (first) {
-                if (ruleResult.hasCycleWith(this)) {
-                    cycleResult = InferResult.trueFalse(ruleResult.facts().remove(this), ruleResult.falsehoods().remove(this));
-                    first = false;
-                } else {
-                    return ruleResult;
-                }
-            } else {
-                cycleResult = InferResult.trueFalse(ruleResult.facts().removeAll(result.facts()), //
+            }
+            if (ruleResult.hasCycleWith(this)) {
+                ruleResult = InferResult.of(ruleResult.facts(), ruleResult.falsehoods(), ruleResult.cycles().remove(this));
+                deltaResult = InferResult.trueFalse(ruleResult.facts().removeAll(result.facts()), //
                         ruleResult.falsehoods().removeAll(result.falsehoods()));
                 result = result.add(ruleResult);
-                if (cycleResult.facts().isEmpty() && cycleResult.falsehoods().isEmpty()) {
-                    return result;
+                if (!deltaResult.facts().isEmpty() || !deltaResult.falsehoods().isEmpty()) {
+                    continue;
                 }
+            } else {
+                result = result.add(ruleResult);
             }
+            return result;
         } while (true);
     }
 

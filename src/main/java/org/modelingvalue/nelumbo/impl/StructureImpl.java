@@ -18,7 +18,7 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -28,10 +28,10 @@ import java.util.Objects;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.StringUtil;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.NormalizeLambda;
-import org.modelingvalue.logic.Logic.Structure;
-import org.modelingvalue.logic.Logic.ToStringLambda;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
+import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.ToStringLambda;
 
 public class StructureImpl<F extends Structure> extends org.modelingvalue.collections.struct.impl.StructImpl implements InvocationHandler, Comparable<StructureImpl<F>> {
     private static final long      serialVersionUID = 7315776001191198132L;

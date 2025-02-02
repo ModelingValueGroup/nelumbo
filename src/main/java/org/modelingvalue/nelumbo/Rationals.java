@@ -18,21 +18,21 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic;
+package org.modelingvalue.nelumbo;
 
-import static org.modelingvalue.logic.Integers.i;
-import static org.modelingvalue.logic.Integers.iConsVar;
-import static org.modelingvalue.logic.Logic.*;
+import static org.modelingvalue.nelumbo.Integers.i;
+import static org.modelingvalue.nelumbo.Integers.iConsVar;
+import static org.modelingvalue.nelumbo.Logic.*;
 
 import java.math.BigInteger;
 
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.Integers.IntegerCons;
-import org.modelingvalue.logic.Logic.*;
-import org.modelingvalue.logic.impl.InferContext;
-import org.modelingvalue.logic.impl.InferResult;
-import org.modelingvalue.logic.impl.PredicateImpl;
-import org.modelingvalue.logic.impl.StructureImpl;
+import org.modelingvalue.nelumbo.Integers.IntegerCons;
+import org.modelingvalue.nelumbo.Logic.*;
+import org.modelingvalue.nelumbo.impl.InferContext;
+import org.modelingvalue.nelumbo.impl.InferResult;
+import org.modelingvalue.nelumbo.impl.PredicateImpl;
+import org.modelingvalue.nelumbo.impl.StructureImpl;
 
 public final class Rationals {
 

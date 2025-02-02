@@ -18,7 +18,9 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
+
+import static org.modelingvalue.nelumbo.impl.StructureImpl.TRACE_NELUMBO;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -35,11 +37,11 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
-import org.modelingvalue.logic.KnowledgeBase;
-import org.modelingvalue.logic.Logic.Predicate;
-import org.modelingvalue.logic.Logic.Relation;
-import org.modelingvalue.logic.Logic.Rule;
-import org.modelingvalue.logic.Logic.Structure;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Relation;
+import org.modelingvalue.nelumbo.Logic.Rule;
+import org.modelingvalue.nelumbo.Logic.Structure;
 
 @SuppressWarnings("rawtypes")
 public final class KnowledgeBaseImpl implements KnowledgeBase {
@@ -207,46 +209,51 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void memoization(PredicateImpl predicate, InferResult result) {
-        FunctorImpl<Predicate> functor = predicate.functor();
-        if (functor.factual()) {
-            facts.updateAndGet(map -> {
-                map = map.put(predicate, result);
-                for (PredicateImpl fact : result.facts()) {
-                    if (fact.isFullyBound()) {
-                        map = map.put(fact, InferResult.trueFalse(fact.singleton(), Set.of()));
+    public void memoization(PredicateImpl predicate, InferResult result, InferContext context) {
+        if (result.cycles().isEmpty()) {
+            if (TRACE_NELUMBO) {
+                System.err.println(context.prefix() + predicate + " --> " + result);
+            }
+            FunctorImpl<Predicate> functor = predicate.functor();
+            if (functor.factual()) {
+                facts.updateAndGet(map -> {
+                    map = map.put(predicate, result);
+                    for (PredicateImpl fact : result.facts()) {
+                        if (fact.isFullyBound()) {
+                            map = map.put(fact, InferResult.trueFalse(fact.singleton(), Set.of()));
+                        }
                     }
-                }
-                for (PredicateImpl falsehood : result.falsehoods()) {
-                    if (falsehood.isFullyBound()) {
-                        map = map.put(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton()));
+                    for (PredicateImpl falsehood : result.falsehoods()) {
+                        if (falsehood.isFullyBound()) {
+                            map = map.put(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton()));
+                        }
                     }
-                }
-                return map;
-            });
-        } else if (!functor.derived()) {
-            QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
-                array = array.clone();
-                array[0] = array[0].put(new Inference(predicate, result));
-                for (PredicateImpl fact : result.facts()) {
-                    if (fact.isFullyBound()) {
-                        array[0] = array[0].put(new Inference(fact, InferResult.trueFalse(fact.singleton(), Set.of())));
+                    return map;
+                });
+            } else if (!functor.derived()) {
+                QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
+                    array = array.clone();
+                    array[0] = array[0].put(new Inference(predicate, result));
+                    for (PredicateImpl fact : result.facts()) {
+                        if (fact.isFullyBound()) {
+                            array[0] = array[0].put(new Inference(fact, InferResult.trueFalse(fact.singleton(), Set.of())));
+                        }
                     }
-                }
-                for (PredicateImpl falsehood : result.falsehoods()) {
-                    if (falsehood.isFullyBound()) {
-                        array[0] = array[0].put(new Inference(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton())));
+                    for (PredicateImpl falsehood : result.falsehoods()) {
+                        if (falsehood.isFullyBound()) {
+                            array[0] = array[0].put(new Inference(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton())));
+                        }
                     }
+                    if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
+                        array[2] = array[2].putAll(array[1]);
+                        array[1] = array[0];
+                        array[0] = EMPTY_MEMOIZ;
+                    }
+                    return array;
+                });
+                if (mem[2].size() > MAX_LOGIC_MEMOIZ) {
+                    POOL.execute(this::cleanup);
                 }
-                if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
-                    array[2] = array[2].putAll(array[1]);
-                    array[1] = array[0];
-                    array[0] = EMPTY_MEMOIZ;
-                }
-                return array;
-            });
-            if (mem[2].size() > MAX_LOGIC_MEMOIZ) {
-                POOL.execute(this::cleanup);
             }
         }
     }

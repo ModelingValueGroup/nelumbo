@@ -18,15 +18,15 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.Logic;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.Predicate;
-import org.modelingvalue.logic.Logic.Relation;
-import org.modelingvalue.logic.Logic.Rule;
+import org.modelingvalue.nelumbo.Logic;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Relation;
+import org.modelingvalue.nelumbo.Logic.Rule;
 
 public final class RuleImpl extends StructureImpl<Rule> {
     private static final long              serialVersionUID   = -4602043866952049391L;
@@ -88,11 +88,9 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (condResult.hasStackOverflow()) {
             return condResult;
         }
-        Set<PredicateImpl> fullFacts = InferResult.bind(condResult.facts().filter(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl);
-        Set<PredicateImpl> fullFalsehoods = InferResult.bind(condResult.falsehoods().filter(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl);
-        Set<PredicateImpl> incFacts = InferResult.bind(condResult.facts().exclude(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl).removeAll(fullFalsehoods);
-        Set<PredicateImpl> incFalsehoods = InferResult.bind(condResult.falsehoods().exclude(PredicateImpl::isFullyBound).asSet(), condDecl, consequence, conseqDecl).removeAll(fullFacts);
-        InferResult conseqResult = InferResult.of(fullFacts.addAll(incFacts), fullFalsehoods.addAll(incFalsehoods), condResult.cycles());
+        Set<PredicateImpl> facts = InferResult.bind(condResult.facts(), condDecl, consequence, conseqDecl);
+        Set<PredicateImpl> falsehoods = InferResult.bind(condResult.falsehoods(), condDecl, consequence, conseqDecl);
+        InferResult conseqResult = InferResult.of(facts, falsehoods.removeAll(facts), condResult.cycles());
         if (TRACE_NELUMBO) {
             System.err.println(context.prefix() + consequence.setVariableNames(conseqDecl) + " -> " + conseqResult.setVariableNames(conseqDecl));
         }

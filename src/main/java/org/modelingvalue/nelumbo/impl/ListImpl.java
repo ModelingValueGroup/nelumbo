@@ -18,12 +18,12 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
-import org.modelingvalue.logic.Lists;
-import org.modelingvalue.logic.Lists.ListCons;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.Structure;
+import org.modelingvalue.nelumbo.Lists;
+import org.modelingvalue.nelumbo.Lists.ListCons;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Structure;
 
 public final class ListImpl<E extends Structure> extends StructureImpl<ListCons<E>> {
     private static final long                  serialVersionUID     = -916406585584150604L;

@@ -18,14 +18,14 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.logic.Logic;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.Predicate;
-import org.modelingvalue.logic.Logic.Relation;
+import org.modelingvalue.nelumbo.Logic;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Relation;
 
 public final class CollectImpl extends PredicateImpl {
     private static final long                  serialVersionUID      = -2799691054715131197L;

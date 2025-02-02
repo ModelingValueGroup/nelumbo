@@ -18,7 +18,7 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -135,35 +135,6 @@ public interface InferResult {
             @Override
             public Set<PredicateImpl> cycles() {
                 return Set.of();
-            }
-
-            @Override
-            public List<PredicateImpl> stackOverflow() {
-                return null;
-            }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
-        };
-    }
-
-    static InferResult cycle(PredicateImpl cycle) {
-        return new InferResult() {
-            @Override
-            public Set<PredicateImpl> facts() {
-                return cycle.singleton();
-            }
-
-            @Override
-            public Set<PredicateImpl> falsehoods() {
-                return cycle.singleton();
-            }
-
-            @Override
-            public Set<PredicateImpl> cycles() {
-                return cycle.singleton();
             }
 
             @Override

@@ -20,47 +20,47 @@
 
 package org.modelingvalue.logic.test;
 
-import static org.modelingvalue.logic.Integers.*;
-import static org.modelingvalue.logic.Integers.compare;
-import static org.modelingvalue.logic.Integers.divide;
-import static org.modelingvalue.logic.Integers.ge;
-import static org.modelingvalue.logic.Integers.gt;
-import static org.modelingvalue.logic.Integers.le;
-import static org.modelingvalue.logic.Integers.lt;
-import static org.modelingvalue.logic.Integers.minus;
-import static org.modelingvalue.logic.Integers.multiply;
-import static org.modelingvalue.logic.Integers.plus;
-import static org.modelingvalue.logic.Integers.sqrt;
-import static org.modelingvalue.logic.Lists.add;
-import static org.modelingvalue.logic.Lists.l;
-import static org.modelingvalue.logic.Logic.*;
-import static org.modelingvalue.logic.Rationals.*;
-import static org.modelingvalue.logic.Rationals.divide;
-import static org.modelingvalue.logic.Rationals.lt;
-import static org.modelingvalue.logic.Rationals.minus;
-import static org.modelingvalue.logic.Rationals.multiply;
-import static org.modelingvalue.logic.Rationals.plus;
-import static org.modelingvalue.logic.Rationals.sqrt;
+import static org.modelingvalue.nelumbo.Integers.*;
+import static org.modelingvalue.nelumbo.Integers.compare;
+import static org.modelingvalue.nelumbo.Integers.divide;
+import static org.modelingvalue.nelumbo.Integers.ge;
+import static org.modelingvalue.nelumbo.Integers.gt;
+import static org.modelingvalue.nelumbo.Integers.le;
+import static org.modelingvalue.nelumbo.Integers.lt;
+import static org.modelingvalue.nelumbo.Integers.minus;
+import static org.modelingvalue.nelumbo.Integers.multiply;
+import static org.modelingvalue.nelumbo.Integers.plus;
+import static org.modelingvalue.nelumbo.Integers.sqrt;
+import static org.modelingvalue.nelumbo.Lists.add;
+import static org.modelingvalue.nelumbo.Lists.l;
+import static org.modelingvalue.nelumbo.Logic.*;
+import static org.modelingvalue.nelumbo.Rationals.*;
+import static org.modelingvalue.nelumbo.Rationals.divide;
+import static org.modelingvalue.nelumbo.Rationals.lt;
+import static org.modelingvalue.nelumbo.Rationals.minus;
+import static org.modelingvalue.nelumbo.Rationals.multiply;
+import static org.modelingvalue.nelumbo.Rationals.plus;
+import static org.modelingvalue.nelumbo.Rationals.sqrt;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.modelingvalue.collections.util.SerializableBiFunction;
 import org.modelingvalue.collections.util.SerializableFunction;
-import org.modelingvalue.logic.Integers.Integer;
-import org.modelingvalue.logic.Integers.IntegerCons;
-import org.modelingvalue.logic.Integers.IntegerFunc;
-import org.modelingvalue.logic.KnowledgeBase;
-import org.modelingvalue.logic.Lists.ListCons;
-import org.modelingvalue.logic.Logic.Constant;
-import org.modelingvalue.logic.Logic.Function;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.Relation;
-import org.modelingvalue.logic.Logic.Structure;
-import org.modelingvalue.logic.Rationals.RationalCons;
+import org.modelingvalue.nelumbo.Integers.Integer;
+import org.modelingvalue.nelumbo.Integers.IntegerCons;
+import org.modelingvalue.nelumbo.Integers.IntegerFunc;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Lists.ListCons;
+import org.modelingvalue.nelumbo.Logic.Constant;
+import org.modelingvalue.nelumbo.Logic.Function;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Relation;
+import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Rationals.RationalCons;
 
 public class NelumboTest extends NelumboTestBase {
 
     static {
-        System.setProperty("TRACE_NELUMBO", "true");
+        System.setProperty("TRACE_NELUMBO", "false");
         System.setProperty("PRETTY_NELUMBO", "true");
     }
 

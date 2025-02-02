@@ -18,7 +18,7 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.util.SerializableBiFunction;
@@ -31,13 +31,13 @@ import org.modelingvalue.collections.util.SerializableSupplier;
 import org.modelingvalue.collections.util.SerializableSupplier.SerializableSupplierImpl;
 import org.modelingvalue.collections.util.SerializableTriFunction;
 import org.modelingvalue.collections.util.SerializableTriFunction.SerializableTriFunctionImpl;
-import org.modelingvalue.logic.Logic.Functor;
-import org.modelingvalue.logic.Logic.FunctorModifier;
-import org.modelingvalue.logic.Logic.FunctorModifierEnum;
-import org.modelingvalue.logic.Logic.LogicLambda;
-import org.modelingvalue.logic.Logic.NormalizeLambda;
-import org.modelingvalue.logic.Logic.Structure;
-import org.modelingvalue.logic.Logic.ToStringLambda;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.FunctorModifier;
+import org.modelingvalue.nelumbo.Logic.FunctorModifierEnum;
+import org.modelingvalue.nelumbo.Logic.LogicLambda;
+import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
+import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.ToStringLambda;
 
 public final class FunctorImpl<T extends Structure> extends StructureImpl<Functor<T>> {
     private static final long     serialVersionUID = 285147889847599160L;

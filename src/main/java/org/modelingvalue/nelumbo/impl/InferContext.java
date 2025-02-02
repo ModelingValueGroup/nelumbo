@@ -18,7 +18,7 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.logic.impl;
+package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -28,7 +28,7 @@ public interface InferContext {
 
     List<PredicateImpl> stack();
 
-    Map<PredicateImpl, InferResult> cycleConclusion();
+    Map<PredicateImpl, InferResult> cycleResult();
 
     boolean deep();
 
@@ -47,7 +47,7 @@ public interface InferContext {
             }
 
             @Override
-            public Map<PredicateImpl, InferResult> cycleConclusion() {
+            public Map<PredicateImpl, InferResult> cycleResult() {
                 return cyclic;
             }
 
@@ -64,19 +64,19 @@ public interface InferContext {
     }
 
     default InferContext pushOnStack(PredicateImpl predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleConclusion(), false, false);
+        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false);
     }
 
     default InferContext putCycleResult(PredicateImpl predicate, InferResult result) {
-        return of(knowledgebase(), stack(), cycleConclusion().put(predicate, result), false, false);
+        return of(knowledgebase(), stack(), cycleResult().put(predicate, result), false, false);
     }
 
     default InferContext deepShallow(boolean deep, boolean shallow) {
-        return of(knowledgebase(), stack(), cycleConclusion(), deep, shallow);
+        return of(knowledgebase(), stack(), cycleResult(), deep, shallow);
     }
 
     default String prefix() {
-        return "NELUMBO " + "  ".repeat(stack().size());
+        return "NELUMBO: " + "  ".repeat(stack().size());
     }
 
 }
