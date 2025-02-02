@@ -21,6 +21,7 @@
 package org.modelingvalue.logic.impl;
 
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.logic.Logic;
 import org.modelingvalue.logic.Logic.Functor;
 import org.modelingvalue.logic.Logic.Predicate;
@@ -53,12 +54,27 @@ public final class NotImpl extends PredicateImpl {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public InferResult infer(PredicateImpl declaration, InferContext context) {
-        PredicateImpl declPred = ((NotImpl) declaration).predicate();
-        InferResult result = predicate().infer(declPred, context);
+        PredicateImpl predDecl = ((NotImpl) declaration).predicate();
+        PredicateImpl predicate = predicate();
+        InferResult result = predicate.infer(predDecl, context);
         if (result.hasStackOverflow()) {
             return result;
         }
-        return result.bind(declPred, this, declaration).not();
+        if (result == predicate.incomplete()) {
+            return incomplete();
+        }
+        Set<PredicateImpl> facts, falsehoods;
+        if (result.falsehoods().equals(predicate.singleton())) {
+            facts = singleton();
+        } else {
+            facts = result.falsehoods().replaceAll(f -> set(1, f));
+        }
+        if (result.facts().equals(predicate.singleton())) {
+            falsehoods = singleton();
+        } else {
+            falsehoods = result.facts().replaceAll(f -> set(1, f));
+        }
+        return InferResult.of(facts, falsehoods, result.cycles());
     }
 
     @SuppressWarnings("rawtypes")

@@ -322,16 +322,16 @@ public final class Logic {
         StructureImpl constant1 = predicate.getVal(1);
         StructureImpl constant2 = predicate.getVal(2);
         if (constant1 == null && constant2 == null) {
-            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
+            return predicate.incomplete();
         } else if (constant1 == null) {
-            return InferResult.trueFalse(Set.of(predicate.set(1, constant2)), Set.of(predicate));
+            return InferResult.trueFalse(predicate.set(1, constant2).singleton(), predicate.singleton());
         } else if (constant2 == null) {
-            return InferResult.trueFalse(Set.of(predicate.set(2, constant1)), Set.of(predicate));
+            return InferResult.trueFalse(predicate.set(2, constant1).singleton(), predicate.singleton());
         } else {
             StructureImpl eq = constant1.eq(constant2);
             return eq != null ? //
-                    InferResult.trueFalse(Set.of(predicate.set(1, eq, eq)), Set.of()) : //
-                    InferResult.trueFalse(Set.of(), Set.of(predicate));
+                    InferResult.trueFalse(predicate.set(1, eq, eq).singleton(), Set.of()) : //
+                    InferResult.trueFalse(Set.of(), predicate.singleton());
         }
     }
 

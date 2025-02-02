@@ -57,7 +57,7 @@ import org.modelingvalue.logic.Logic.Relation;
 import org.modelingvalue.logic.Logic.Structure;
 import org.modelingvalue.logic.Rationals.RationalCons;
 
-public class LogicTest extends LogicTestBase {
+public class NelumboTest extends NelumboTestBase {
 
     static {
         System.setProperty("TRACE_NELUMBO", "true");
@@ -75,7 +75,7 @@ public class LogicTest extends LogicTestBase {
     interface RootFunc extends Root, Function<Root> {
     }
 
-    static Functor<RootCons> ROOT = functor((SerializableFunction<String, RootCons>) LogicTest::root);
+    static Functor<RootCons> ROOT = functor((SerializableFunction<String, RootCons>) NelumboTest::root);
 
     static RootCons root(String name) {
         return constant(ROOT, name);
@@ -89,13 +89,13 @@ public class LogicTest extends LogicTestBase {
         return variable(Root.class, name);
     }
 
-    static Functor<Relation> ROOT_PERSON = functor(LogicTest::rootPerson);
+    static Functor<Relation> ROOT_PERSON = functor(NelumboTest::rootPerson);
 
     static Relation rootPerson(RootCons root, PersonCons person) {
         return pred(ROOT_PERSON, root, person);
     }
 
-    static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) LogicTest::root);
+    static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) NelumboTest::root);
 
     static RootFunc root(Person person) {
         return function(ROOT_FUNC, person);
@@ -112,13 +112,13 @@ public class LogicTest extends LogicTestBase {
     interface PersonFunc extends Person, Function<Person> {
     }
 
-    static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) LogicTest::person);
+    static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) NelumboTest::person);
 
     static PersonCons person(String name) {
         return constant(STRING_PERSON, name);
     }
 
-    static Functor<PersonCons> INTEGER_PERSON = functor((SerializableFunction<IntegerCons, PersonCons>) LogicTest::person);
+    static Functor<PersonCons> INTEGER_PERSON = functor((SerializableFunction<IntegerCons, PersonCons>) NelumboTest::person);
 
     static PersonCons person(IntegerCons i) {
         return constant(INTEGER_PERSON, i);
@@ -136,37 +136,37 @@ public class LogicTest extends LogicTestBase {
         return variable(Person.class, name);
     }
 
-    static Functor<Relation> PARENT_CHILD = functor(LogicTest::parentChild);
+    static Functor<Relation> PARENT_CHILD = functor(NelumboTest::parentChild);
 
     static Relation parentChild(PersonCons parent, PersonCons child) {
         return pred(PARENT_CHILD, parent, child);
     }
 
-    static Functor<PersonFunc> PARENT = functor(LogicTest::parent);
+    static Functor<PersonFunc> PARENT = functor(NelumboTest::parent);
 
     static PersonFunc parent(Person child) {
         return function(PARENT, child);
     }
 
-    static Functor<PersonFunc> CHILD = functor(LogicTest::child);
+    static Functor<PersonFunc> CHILD = functor(NelumboTest::child);
 
     static PersonFunc child(Person parent) {
         return function(CHILD, parent);
     }
 
-    static Functor<Relation> ANCESTOR_DESCENTENT = functor(LogicTest::ancestorDescendent);
+    static Functor<Relation> ANCESTOR_DESCENTENT = functor(NelumboTest::ancestorDescendent);
 
     static Relation ancestorDescendent(PersonCons ancestor, PersonCons descendent) {
         return pred(ANCESTOR_DESCENTENT, ancestor, descendent);
     }
 
-    static Functor<PersonFunc> ANCESTOR = functor(LogicTest::ancestor);
+    static Functor<PersonFunc> ANCESTOR = functor(NelumboTest::ancestor);
 
     static PersonFunc ancestor(Person descendent) {
         return function(ANCESTOR, descendent);
     }
 
-    static Functor<PersonFunc> DESCENDENT = functor(LogicTest::descendent);
+    static Functor<PersonFunc> DESCENDENT = functor(NelumboTest::descendent);
 
     static PersonFunc descendent(Person ancestor) {
         return function(DESCENDENT, ancestor);
@@ -211,13 +211,13 @@ public class LogicTest extends LogicTestBase {
 
     // Fibonacci
 
-    static Functor<Relation> fib2   = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) LogicTest::fib);
+    static Functor<Relation> fib2   = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) NelumboTest::fib);
 
     static Relation fib(IntegerCons i, IntegerCons f) {
         return pred(fib2, i, f);
     }
 
-    static Functor<IntegerFunc> fib1 = functor((SerializableFunction<Integer, IntegerFunc>) LogicTest::fib);
+    static Functor<IntegerFunc> fib1 = functor((SerializableFunction<Integer, IntegerFunc>) NelumboTest::fib);
 
     static IntegerFunc fib(Integer i) {
         return function(fib1, i);

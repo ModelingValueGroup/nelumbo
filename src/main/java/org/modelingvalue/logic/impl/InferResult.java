@@ -119,22 +119,51 @@ public interface InferResult {
         };
     }
 
-    static InferResult cycle(PredicateImpl cycle) {
-        Set<PredicateImpl> cycles = Set.of(cycle);
+    static InferResult incomplete(PredicateImpl predicate) {
+        Set<PredicateImpl> set = Set.of(predicate);
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
-                return cycles;
+                return set;
             }
 
             @Override
             public Set<PredicateImpl> falsehoods() {
-                return cycles;
+                return set;
             }
 
             @Override
             public Set<PredicateImpl> cycles() {
-                return cycles;
+                return Set.of();
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return asString();
+            }
+        };
+    }
+
+    static InferResult cycle(PredicateImpl cycle) {
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl> facts() {
+                return cycle.singleton();
+            }
+
+            @Override
+            public Set<PredicateImpl> falsehoods() {
+                return cycle.singleton();
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return cycle.singleton();
             }
 
             @Override
@@ -191,8 +220,8 @@ public interface InferResult {
         return of(facts, falsehoods, cycles());
     }
 
-    static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
-        return set.replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of())));
+    static Set<PredicateImpl> bind(Set<PredicateImpl> from, PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
+        return from.replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of())));
     }
 
     default InferResult not() {

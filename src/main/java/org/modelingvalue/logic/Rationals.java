@@ -113,18 +113,18 @@ public final class Rationals {
             int r = numComp1.multiply(denComp2).compareTo(numComp2.multiply(denComp1));
             if (result != null) {
                 boolean eq = r == result.intValue();
-                return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
+                return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT)), Set.of(predicate));
+                return InferResult.trueFalse(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT).singleton(), predicate.singleton());
             }
         } else if (BigInteger.ZERO.equals(result)) {
             if (numComp1 != null) {
-                return InferResult.trueFalse(Set.of(predicate.set(2, (StructureImpl) predicate.getVal(1))), Set.of(predicate));
+                return InferResult.trueFalse(predicate.set(2, (StructureImpl) predicate.getVal(1)).singleton(), predicate.singleton());
             } else if (numComp2 != null) {
-                return InferResult.trueFalse(Set.of(predicate.set(1, (StructureImpl) predicate.getVal(2))), Set.of(predicate));
+                return InferResult.trueFalse(predicate.set(1, (StructureImpl) predicate.getVal(2)).singleton(), predicate.singleton());
             }
         }
-        return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
+        return predicate.incomplete();
     }
 
     public static Relation compare(RationalCons compared1, RationalCons compared2, IntegerCons result) {
@@ -147,20 +147,20 @@ public final class Rationals {
             StructureImpl<RationalCons> s = struct(a.add(b), denAddend1.multiply(denAddend2));
             if (numSum != null) {
                 boolean eq = s.equals(predicate.getVal(3));
-                return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
+                return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, s)), Set.of(predicate));
+                return InferResult.trueFalse(predicate.set(3, s).singleton(), predicate.singleton());
             }
         } else if (numAddend1 != null && numSum != null) {
             BigInteger a = numAddend1.multiply(denSum);
             BigInteger c = numSum.multiply(denAddend1);
-            return InferResult.trueFalse(Set.of(predicate.set(2, struct(c.subtract(a), denSum.multiply(denAddend1)))), Set.of(predicate));
+            return InferResult.trueFalse(predicate.set(2, struct(c.subtract(a), denSum.multiply(denAddend1))).singleton(), predicate.singleton());
         } else if (numAddend2 != null && numSum != null) {
             BigInteger b = numAddend2.multiply(denSum);
             BigInteger c = numSum.multiply(denAddend2);
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(c.subtract(b), denSum.multiply(denAddend2)))), Set.of(predicate));
+            return InferResult.trueFalse(predicate.set(1, struct(c.subtract(b), denSum.multiply(denAddend2))).singleton(), predicate.singleton());
         } else {
-            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
+            return predicate.incomplete();
         }
     }
 
@@ -182,16 +182,16 @@ public final class Rationals {
             StructureImpl<RationalCons> p = struct(numFactor1.multiply(numFactor2), denFactor1.multiply(denFactor2));
             if (numProduct != null) {
                 boolean eq = p.equals(predicate.getVal(3));
-                return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
+                return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(3, p)), Set.of(predicate));
+                return InferResult.trueFalse(Set.of(predicate.set(3, p)), predicate.singleton());
             }
         } else if (numFactor1 != null && numProduct != null) {
-            return InferResult.trueFalse(Set.of(predicate.set(2, struct(numProduct.multiply(denFactor1), denProduct.multiply(numFactor1)))), Set.of(predicate));
+            return InferResult.trueFalse(predicate.set(2, struct(numProduct.multiply(denFactor1), denProduct.multiply(numFactor1))).singleton(), predicate.singleton());
         } else if (numFactor2 != null && numProduct != null) {
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(numProduct.multiply(denFactor2), denProduct.multiply(numFactor2)))), Set.of(predicate));
+            return InferResult.trueFalse(predicate.set(1, struct(numProduct.multiply(denFactor2), denProduct.multiply(numFactor2))).singleton(), predicate.singleton());
         } else {
-            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
+            return predicate.incomplete();
         }
     }
 
@@ -211,16 +211,16 @@ public final class Rationals {
             StructureImpl<RationalCons> s = struct(numRoot.multiply(numRoot), denRoot.multiply(denRoot));
             if (numSquare != null) {
                 boolean eq = s.equals(predicate.getVal(2));
-                return InferResult.trueFalse(eq ? Set.of(predicate) : Set.of(), eq ? Set.of() : Set.of(predicate));
+                return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
             } else {
-                return InferResult.trueFalse(Set.of(predicate.set(2, s)), Set.of(predicate));
+                return InferResult.trueFalse(predicate.set(2, s).singleton(), predicate.singleton());
             }
         } else if (numSquare != null) {
             BigInteger sqrt = numSquare.multiply(denSquare).sqrt();
             BigInteger abs = denSquare.abs();
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sqrt, abs)), predicate.set(1, struct(sqrt.negate(), abs))), Set.of(predicate));
+            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sqrt, abs)), predicate.set(1, struct(sqrt.negate(), abs))), predicate.singleton());
         } else {
-            return InferResult.trueFalse(Set.of(predicate), Set.of(predicate));
+            return predicate.incomplete();
         }
     }
 

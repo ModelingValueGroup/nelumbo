@@ -82,6 +82,9 @@ public final class RuleImpl extends StructureImpl<Rule> {
             System.err.println(context.prefix() + consequence.setVariableNames(conseqDecl) + " <= " + condition.setVariableNames(condDecl));
         }
         InferResult condResult = condition.infer(condDecl, context);
+        if (condResult == condition.incomplete()) {
+            return consequence.incomplete();
+        }
         if (condResult.hasStackOverflow()) {
             return condResult;
         }

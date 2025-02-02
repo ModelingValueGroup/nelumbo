@@ -14,7 +14,7 @@ import org.modelingvalue.logic.Logic.Relation;
 import org.modelingvalue.logic.Logic.Rule;
 import org.modelingvalue.logic.Logic.Variable;
 
-public class LogicTestBase {
+public class NelumboTestBase {
     // Utilities
 
     public KnowledgeBase run(Runnable test) {

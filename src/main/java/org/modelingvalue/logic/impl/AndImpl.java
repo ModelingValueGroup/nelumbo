@@ -51,11 +51,6 @@ public final class AndImpl extends AndOrImpl {
     }
 
     @Override
-    protected InferResult flip(InferResult result) {
-        return result;
-    }
-
-    @Override
     public String toString(StructureImpl<?> parent) {
         return parent instanceof AndImpl ? predicate1().toString(this) + " & " + predicate2().toString(this) : toString();
     }

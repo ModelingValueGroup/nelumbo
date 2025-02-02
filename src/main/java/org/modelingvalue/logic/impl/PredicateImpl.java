@@ -36,16 +36,21 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     static final int          MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
     private static final int  MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
+    private final InferResult incomplete;
+
     public PredicateImpl(Functor<Predicate> functor, Object... args) {
         super(functor, args);
+        incomplete = InferResult.incomplete(this);
     }
 
     public PredicateImpl(FunctorImpl<Predicate> functor, Object... args) {
         super(functor, args);
+        incomplete = InferResult.incomplete(this);
     }
 
     protected PredicateImpl(Object[] args) {
         super(args);
+        incomplete = InferResult.incomplete(this);
     }
 
     @Override
@@ -102,7 +107,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         }
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return InferResult.trueFalse(Set.of(this), Set.of(this));
+            return incomplete();
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         List<RuleImpl> rules = knowledgebase.getRules(this);
@@ -117,7 +122,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 return result;
             }
             if (context.shallow()) {
-                return InferResult.trueFalse(Set.of(this), Set.of(this));
+                return incomplete();
             }
             List<PredicateImpl> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
@@ -198,7 +203,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 } else {
                     Set<PredicateImpl> facts;
                     if (result.facts().contains(this) || ruleResult.facts().contains(this)) {
-                        facts = Set.of(this);
+                        facts = singleton();
                     } else {
                         facts = result.facts().addAll(ruleResult.facts());
                     }
@@ -231,5 +236,13 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         Map<VariableImpl, Object> vars = declaration.getBinding(this, Map.of());
         vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
         return declaration.setBinding(this, vars);
+    }
+
+    public InferResult incomplete() {
+        return incomplete;
+    }
+
+    public Set<PredicateImpl> singleton() {
+        return incomplete.facts();
     }
 }
