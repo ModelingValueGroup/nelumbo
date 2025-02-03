@@ -21,7 +21,6 @@
 package org.modelingvalue.logic.test;
 
 import static org.modelingvalue.nelumbo.Integers.*;
-import static org.modelingvalue.nelumbo.Integers.compare;
 import static org.modelingvalue.nelumbo.Integers.divide;
 import static org.modelingvalue.nelumbo.Integers.ge;
 import static org.modelingvalue.nelumbo.Integers.gt;
@@ -237,8 +236,7 @@ public class NelumboTest extends NelumboTestBase {
     private void rootRules() {
         integerRules();
 
-        rule(parentChild(person(Q), person(P)), and(compare(Q, i(4), i(-1)), compare(Q, i(-1), i(1)), plus(Q, i(1), P)));
-        // rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), is(plus(Q, i(1)), P)));
+        rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), is(plus(Q, i(1)), P)));
         rule(rootPerson(V, person(0)), T());
         rule(rootPerson(V, C), and(rootPerson(V, A), parentChild(A, C)));
 
