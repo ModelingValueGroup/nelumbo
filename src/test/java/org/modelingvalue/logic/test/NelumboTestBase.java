@@ -40,10 +40,10 @@ public class NelumboTestBase {
 
     public static void print(KnowledgeBase db) {
         for (Entry<Relation, org.modelingvalue.collections.List<Rule>> e : db.rules()) {
-            System.err.println(e.getKey() + " " + e.getValue());
+            System.err.println(e.getKey() + " " + e.getValue().toString().substring(4));
         }
         for (Entry<Relation, Set<Relation>> e : db.facts()) {
-            System.err.println(e.getKey() + " " + e.getValue());
+            System.err.println(e.getKey() + " " + e.getValue().toString().substring(3));
         }
     }
 
