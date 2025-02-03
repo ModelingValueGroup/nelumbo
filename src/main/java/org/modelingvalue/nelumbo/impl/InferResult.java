@@ -149,6 +149,36 @@ public interface InferResult {
         };
     }
 
+    static InferResult cycle(PredicateImpl predicate) {
+        Set<PredicateImpl> set = Set.of(predicate);
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl> facts() {
+                return set;
+            }
+
+            @Override
+            public Set<PredicateImpl> falsehoods() {
+                return set;
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return set;
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return asString();
+            }
+        };
+    }
+
     static InferResult overflow(List<PredicateImpl> overflow) {
         return new InferResult() {
             @Override

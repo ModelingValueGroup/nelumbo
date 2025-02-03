@@ -79,7 +79,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl condDecl = condition();
         PredicateImpl condition = condDecl.setBinding(condDecl, variables().putAll(binding));
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + consequence.setVariableNames(conseqDecl) + " <= " + condition.setVariableNames(condDecl));
+            System.err.println(context.prefix() + condition.setVariableNames(condDecl) + " => " + consequence.setVariableNames(conseqDecl));
         }
         InferResult condResult = condition.infer(condDecl, context);
         if (condResult == condition.incomplete()) {
@@ -90,9 +90,10 @@ public final class RuleImpl extends StructureImpl<Rule> {
         }
         Set<PredicateImpl> facts = InferResult.bind(condResult.facts(), condDecl, consequence, conseqDecl);
         Set<PredicateImpl> falsehoods = InferResult.bind(condResult.falsehoods(), condDecl, consequence, conseqDecl);
-        InferResult conseqResult = InferResult.of(facts, falsehoods.removeAll(facts), condResult.cycles());
+        falsehoods = falsehoods.removeAll(f -> facts.contains(f) && f.isFullyBound());
+        InferResult conseqResult = InferResult.of(facts, falsehoods, condResult.cycles());
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + consequence.setVariableNames(conseqDecl) + " -> " + conseqResult.setVariableNames(conseqDecl));
+            System.err.println(context.prefix() + condition.setVariableNames(condDecl) + " -> " + conseqResult.setVariableNames(conseqDecl));
         }
         return conseqResult;
     }
@@ -110,5 +111,10 @@ public final class RuleImpl extends StructureImpl<Rule> {
     @Override
     public Class<Rule> type() {
         return Rule.class;
+    }
+
+    @Override
+    public String toString() {
+        return PRETTY_NELUMBO ? condition() + " => " + consequence() : super.toString();
     }
 }

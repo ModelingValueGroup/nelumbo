@@ -110,9 +110,8 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             return incomplete();
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
-        List<RuleImpl> rules = knowledgebase.getRules(this);
         InferResult result;
-        if (rules != null) {
+        if (knowledgebase.getRules(this) != null) {
             result = knowledgebase.getMemoiz(this);
             if (result != null) {
                 return result;
@@ -122,13 +121,13 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             }
             result = context.cycleResult().get(this);
             if (result != null) {
-                return InferResult.of(result.facts(), result.falsehoods(), Set.of(this));
+                return result;
             }
             List<PredicateImpl> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
                 return InferResult.overflow(stack.append(this));
             }
-            result = fixpoint(rules, context.pushOnStack(this));
+            result = fixpoint(context.pushOnStack(this));
             if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
                 List<PredicateImpl> overflow = result.stackOverflow();
                 if (overflow != null) {
@@ -149,15 +148,14 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     private static InferResult flatten(InferResult result, List<PredicateImpl> overflow, InferContext context) {
         int stackSize = context.stack().size();
         List<PredicateImpl> todo = overflow.sublist(stackSize, overflow.size());
-        KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         while (todo.size() > 0) {
             PredicateImpl predicate = todo.last();
-            result = predicate.fixpoint(knowledgebase.getRules(predicate), context.pushOnStack(predicate));
+            result = predicate.fixpoint(context.pushOnStack(predicate));
             overflow = result.stackOverflow();
             if (overflow != null) {
                 todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
             } else {
-                knowledgebase.memoization(predicate, result, context);
+                context.knowledgebase().memoization(predicate, result, context);
                 todo = todo.removeLast();
             }
         }
@@ -165,44 +163,46 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private InferResult fixpoint(List<RuleImpl> rules, InferContext context) {
-        InferResult result = InferResult.EMPTY, ruleResult, factsResult = context.knowledgebase().getFacts(this), deltaResult = factsResult;
+    private InferResult fixpoint(InferContext context) {
+        InferResult result = InferResult.EMPTY, rulesResult, cycleResult = InferResult.cycle(this);
         do {
-            ruleResult = inferRules(rules, context.putCycleResult(this, deltaResult), factsResult);
-            if (ruleResult.hasStackOverflow()) {
-                return ruleResult;
+            rulesResult = inferRules(context.putCycleResult(this, cycleResult));
+            if (rulesResult.hasStackOverflow()) {
+                return rulesResult;
             }
-            if (ruleResult.hasCycleWith(this)) {
-                ruleResult = InferResult.of(ruleResult.facts(), ruleResult.falsehoods(), ruleResult.cycles().remove(this));
-                deltaResult = InferResult.trueFalse(ruleResult.facts().removeAll(result.facts()), //
-                        ruleResult.falsehoods().removeAll(result.falsehoods()));
-                result = result.add(ruleResult);
-                if (!deltaResult.facts().isEmpty() || !deltaResult.falsehoods().isEmpty()) {
+            if (rulesResult.hasCycleWith(this)) {
+                cycleResult = InferResult.trueFalse(rulesResult.facts().removeAll(result.facts()), //
+                        rulesResult.falsehoods().removeAll(result.falsehoods()));
+                rulesResult = InferResult.of(rulesResult.facts().remove(this), rulesResult.falsehoods().remove(this), //
+                        rulesResult.cycles().remove(this));
+                result = result.add(rulesResult);
+                if (!cycleResult.facts().isEmpty() || !cycleResult.falsehoods().isEmpty()) {
                     continue;
                 }
             } else {
-                result = result.add(ruleResult);
+                result = result.add(rulesResult);
             }
             return result;
         } while (true);
     }
 
     @SuppressWarnings("rawtypes")
-    private InferResult inferRules(List<RuleImpl> rules, InferContext context, InferResult result) {
+    private InferResult inferRules(InferContext context) {
+        KnowledgeBaseImpl knowledgebase = context.knowledgebase();
+        List<RuleImpl> rules = knowledgebase.getRules(this);
+        InferResult result = knowledgebase.getFacts(this), ruleResult;
+        if (result.falsehoods().isEmpty()) {
+            return result;
+        }
         for (RuleImpl rule : rules) {
-            InferResult ruleResult = rule.infer(this, context);
+            ruleResult = rule.infer(this, context);
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
+                } else if (ruleResult.falsehoods().isEmpty()) {
+                    return ruleResult;
                 } else {
-                    Set<PredicateImpl> facts;
-                    if (result.facts().contains(this) || ruleResult.facts().contains(this)) {
-                        facts = singleton();
-                    } else {
-                        facts = result.facts().addAll(ruleResult.facts());
-                    }
-                    Set<PredicateImpl> falsehoods = result.falsehoods().retainAll(ruleResult.falsehoods());
-                    result = InferResult.of(facts, falsehoods, result.cycles().addAll(ruleResult.cycles()));
+                    result = result.add(ruleResult);
                 }
             }
         }
