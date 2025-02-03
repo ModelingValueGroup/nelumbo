@@ -164,15 +164,9 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private InferResult fixpoint(InferContext context) {
-        Map<PredicateImpl, InferResult> cycleResultMap = context.cycleResult();
-        for (Entry<PredicateImpl, InferResult> e : cycleResultMap) {
-            if (e.getKey().eq(this) != null && e.getKey().nrOfUnbound() < nrOfUnbound()) {
-                cycleResultMap = cycleResultMap.removeKey(e.getKey());
-            }
-        }
         InferResult previousResult = InferResult.cycle(this), nextResult;
         do {
-            nextResult = inferRules(context.setCycleResult(cycleResultMap.put(this, previousResult)));
+            nextResult = inferRules(context.putCycleResult(this, previousResult));
             if (nextResult.hasStackOverflow()) {
                 return nextResult;
             }

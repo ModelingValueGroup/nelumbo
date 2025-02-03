@@ -67,8 +67,8 @@ public interface InferContext {
         return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false);
     }
 
-    default InferContext setCycleResult(Map<PredicateImpl, InferResult> cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult, false, false);
+    default InferContext putCycleResult(PredicateImpl predicate, InferResult cycleResult) {
+        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false);
     }
 
     default InferContext deepShallow(boolean deep, boolean shallow) {
