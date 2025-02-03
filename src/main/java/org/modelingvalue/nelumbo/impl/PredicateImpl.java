@@ -164,25 +164,27 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private InferResult fixpoint(InferContext context) {
-        InferResult result = InferResult.EMPTY, rulesResult, cycleResult = InferResult.cycle(this);
+        Map<PredicateImpl, InferResult> cycleResultMap = context.cycleResult();
+        for (Entry<PredicateImpl, InferResult> e : cycleResultMap) {
+            if (e.getKey().eq(this) != null && e.getKey().nrOfUnbound() < nrOfUnbound()) {
+                cycleResultMap = cycleResultMap.removeKey(e.getKey());
+            }
+        }
+        InferResult previousResult = InferResult.cycle(this), nextResult;
         do {
-            rulesResult = inferRules(context.putCycleResult(this, cycleResult));
-            if (rulesResult.hasStackOverflow()) {
-                return rulesResult;
+            nextResult = inferRules(context.setCycleResult(cycleResultMap.put(this, previousResult)));
+            if (nextResult.hasStackOverflow()) {
+                return nextResult;
             }
-            if (rulesResult.hasCycleWith(this)) {
-                cycleResult = InferResult.trueFalse(rulesResult.facts().removeAll(result.facts()), //
-                        rulesResult.falsehoods().removeAll(result.falsehoods()));
-                rulesResult = InferResult.of(rulesResult.facts().remove(this), rulesResult.falsehoods().remove(this), //
-                        rulesResult.cycles().remove(this));
-                result = result.add(rulesResult);
-                if (!cycleResult.facts().isEmpty() || !cycleResult.falsehoods().isEmpty()) {
+            if (nextResult.hasCycleWith(this)) {
+                if (!nextResult.equals(previousResult)) {
+                    previousResult = nextResult;
                     continue;
+                } else {
+                    return InferResult.of(nextResult.facts(), nextResult.falsehoods(), nextResult.cycles().remove(this));
                 }
-            } else {
-                result = result.add(rulesResult);
             }
-            return result;
+            return nextResult;
         } while (true);
     }
 

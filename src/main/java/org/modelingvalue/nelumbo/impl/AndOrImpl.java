@@ -50,7 +50,7 @@ public abstract class AndOrImpl extends PredicateImpl {
         PredicateImpl pred1Decl = ((AndOrImpl) declaration).predicate1(), predicate1;
         PredicateImpl pred2Decl = ((AndOrImpl) declaration).predicate2(), predicate2;
         Set<AndOrImpl> now, next = (Set) singleton();
-        Set<PredicateImpl> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
+        Set<PredicateImpl> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of(), bound;
         InferResult pred1Result, pred2Result;
         do {
             now = next;
@@ -62,9 +62,9 @@ public abstract class AndOrImpl extends PredicateImpl {
                 if (pred1Result.hasStackOverflow()) {
                     return pred1Result;
                 }
-                next = next.addAll((Set) InferResult.bind(pred1Result.facts().remove(predicate1), pred1Decl, andOr, declaration));
-                next = next.addAll((Set) InferResult.bind(pred1Result.falsehoods().remove(predicate1), pred1Decl, andOr, declaration));
-                if (next.isEmpty()) {
+                bound = InferResult.bind(pred1Result.facts(), pred1Decl, andOr, declaration).addAll(//
+                        InferResult.bind(pred1Result.falsehoods(), pred1Decl, andOr, declaration)).remove(andOr);
+                if (bound.isEmpty()) {
                     if (this instanceof AndImpl && pred1Result.facts().isEmpty()) {
                         falsehoods = falsehoods.add(andOr);
                         cycles = cycles.addAll(pred1Result.cycles());
@@ -75,12 +75,16 @@ public abstract class AndOrImpl extends PredicateImpl {
                         continue;
                     }
                 } else {
-                    if (this instanceof AndImpl) {
-                        falsehoods = falsehoods.add(andOr);
-                    } else if (this instanceof OrImpl) {
-                        facts = facts.add(andOr);
+                    bound = bound.removeAll(now);
+                    if (!bound.isEmpty()) {
+                        next = next.addAll((Set) bound);
+                        if (this instanceof AndImpl) {
+                            falsehoods = falsehoods.add(andOr);
+                        } else if (this instanceof OrImpl) {
+                            facts = facts.add(andOr);
+                        }
+                        cycles = cycles.addAll(pred1Result.cycles());
                     }
-                    cycles = cycles.addAll(pred1Result.cycles());
                     continue;
                 }
                 // Predicate 2
@@ -92,9 +96,9 @@ public abstract class AndOrImpl extends PredicateImpl {
                 if (andOr.equals(this) && pred1Result == predicate1.incomplete() && pred2Result == predicate2.incomplete()) {
                     return incomplete();
                 }
-                next = next.addAll((Set) InferResult.bind(pred2Result.facts().remove(predicate2), pred2Decl, andOr, declaration));
-                next = next.addAll((Set) InferResult.bind(pred2Result.falsehoods().remove(predicate2), pred2Decl, andOr, declaration));
-                if (next.isEmpty()) {
+                bound = InferResult.bind(pred2Result.facts(), pred2Decl, andOr, declaration).addAll(//
+                        InferResult.bind(pred2Result.falsehoods(), pred2Decl, andOr, declaration)).remove(andOr);
+                if (bound.isEmpty()) {
                     if (this instanceof AndImpl && pred2Result.facts().isEmpty()) {
                         falsehoods = falsehoods.add(andOr);
                         cycles = cycles.addAll(pred2Result.cycles());
@@ -105,12 +109,16 @@ public abstract class AndOrImpl extends PredicateImpl {
                         continue;
                     }
                 } else {
-                    if (this instanceof AndImpl) {
-                        falsehoods = falsehoods.add(andOr);
-                    } else if (this instanceof OrImpl) {
-                        facts = facts.add(andOr);
+                    bound = bound.removeAll(now);
+                    if (!bound.isEmpty()) {
+                        next = next.addAll((Set) bound);
+                        if (this instanceof AndImpl) {
+                            falsehoods = falsehoods.add(andOr);
+                        } else if (this instanceof OrImpl) {
+                            facts = facts.add(andOr);
+                        }
+                        cycles = cycles.addAll(pred2Result.cycles());
                     }
-                    cycles = cycles.addAll(pred2Result.cycles());
                     continue;
                 }
                 cycles = cycles.addAll(pred1Result.cycles()).addAll(pred2Result.cycles());

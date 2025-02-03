@@ -76,8 +76,15 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (binding == null) {
             return null;
         }
+        binding = variables().putAll(binding);
+        PredicateImpl bindConsequence = conseqDecl.setBinding(consequence, binding);
+        Set<PredicateImpl> falsehoods = Set.of();
+        if (!consequence.equals(bindConsequence)) {
+            falsehoods = falsehoods.add(consequence);
+            consequence = bindConsequence;
+        }
         PredicateImpl condDecl = condition();
-        PredicateImpl condition = condDecl.setBinding(condDecl, variables().putAll(binding));
+        PredicateImpl condition = condDecl.setBinding(condDecl, binding);
         if (TRACE_NELUMBO) {
             System.err.println(context.prefix() + condition.setVariableNames(condDecl) + " => " + consequence.setVariableNames(conseqDecl));
         }
@@ -89,7 +96,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
             return condResult;
         }
         Set<PredicateImpl> facts = InferResult.bind(condResult.facts(), condDecl, consequence, conseqDecl);
-        Set<PredicateImpl> falsehoods = InferResult.bind(condResult.falsehoods(), condDecl, consequence, conseqDecl);
+        falsehoods = falsehoods.addAll(InferResult.bind(condResult.falsehoods(), condDecl, consequence, conseqDecl));
         falsehoods = falsehoods.removeAll(f -> facts.contains(f) && f.isFullyBound());
         InferResult conseqResult = InferResult.of(facts, falsehoods, condResult.cycles());
         if (TRACE_NELUMBO) {

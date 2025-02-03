@@ -256,4 +256,8 @@ public interface InferResult {
         return of(facts, falsehoods, cycles());
     }
 
+    default boolean equals(InferResult other) {
+        return facts().equals(other.facts()) && falsehoods().equals(other.falsehoods()) && cycles().equals(other.cycles());
+    }
+
 }
