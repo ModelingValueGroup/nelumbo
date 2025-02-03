@@ -209,8 +209,10 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void memoization(PredicateImpl predicate, InferResult result, InferContext context) {
-        if (result.cycles().isEmpty()) {
+    public void memoization(PredicateImpl predicate, InferResult fullResult, InferContext context) {
+        if (!fullResult.cycles().contains(predicate)) {
+            InferResult result = fullResult.cycles().isEmpty() ? fullResult : //
+                    InferResult.of(fullResult.facts(), fullResult.falsehoods(), Set.of());
             if (TRACE_NELUMBO) {
                 System.err.println(context.prefix() + predicate + " --> " + result);
             }
