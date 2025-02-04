@@ -63,8 +63,8 @@ public abstract class AndOrImpl extends PredicateImpl {
                     if (predResult[i].hasStackOverflow()) {
                         return predResult[i];
                     }
-                    bound = InferResult.bind(predResult[i].facts().remove(predicate), predDecl[i], andOr, declaration).addAll(//
-                            InferResult.bind(predResult[i].falsehoods().remove(predicate), predDecl[i], andOr, declaration));
+                    bound = InferResult.bind(predResult[i].facts().addAll(predResult[i].falsehoods()).remove(predicate), //
+                            predDecl[i], andOr, declaration);
                     if (bound.isEmpty()) {
                         if (this instanceof AndImpl && predResult[i].facts().isEmpty()) {
                             falsehoods = falsehoods.add(andOr);
