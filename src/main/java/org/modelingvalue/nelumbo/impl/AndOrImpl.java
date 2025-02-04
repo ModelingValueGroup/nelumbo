@@ -93,10 +93,10 @@ public abstract class AndOrImpl extends PredicateImpl {
                         falsehoods = falsehoods.add(andOr);
                     }
                 } else if (this instanceof OrImpl) {
+                    falsehoods = falsehoods.add(andOr);
                     if (!predResult[0].facts().isEmpty() || !predResult[1].facts().isEmpty()) {
                         facts = facts.add(andOr);
                     }
-                    falsehoods = falsehoods.add(andOr);
                 }
             }
             if (next.isEmpty()) {
