@@ -171,12 +171,12 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 return nextResult;
             }
             if (nextResult.hasCycleWith(this)) {
-                if (!nextResult.equals(previousResult)) {
+                if (!nextResult.equals(previousResult) && !nextResult.equals(cycleResult)) {
                     previousResult = nextResult;
                     cycleResult = InferResult.of(nextResult.facts().add(this), nextResult.falsehoods().add(this), singleton());
                     continue;
                 } else {
-                    return InferResult.of(nextResult.facts(), nextResult.falsehoods(), nextResult.cycles().remove(this));
+                    return InferResult.of(nextResult.facts().remove(this), nextResult.falsehoods(), nextResult.cycles().remove(this));
                 }
             }
             return nextResult;
