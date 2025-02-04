@@ -217,11 +217,6 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         return (PredicateImpl) super.set(i, a);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <P extends Predicate> PredicateImpl of(FunctorImpl<P> functor, Object... args) {
-        return new PredicateImpl((FunctorImpl<Predicate>) functor, args);
-    }
-
     @SuppressWarnings("rawtypes")
     protected PredicateImpl setVariableNames(PredicateImpl declaration) {
         Map<VariableImpl, Object> vars = declaration.getBinding(this, Map.of());
