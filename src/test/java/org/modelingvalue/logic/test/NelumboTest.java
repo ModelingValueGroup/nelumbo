@@ -59,7 +59,7 @@ import org.modelingvalue.nelumbo.Rationals.RationalCons;
 public class NelumboTest extends NelumboTestBase {
 
     static {
-        System.setProperty("TRACE_NELUMBO", "false");
+        System.setProperty("TRACE_NELUMBO", "true");
         System.setProperty("PRETTY_NELUMBO", "true");
     }
 

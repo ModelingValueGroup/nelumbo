@@ -87,4 +87,9 @@ public final class NotImpl extends PredicateImpl {
     public NotImpl set(int i, Object... a) {
         return (NotImpl) super.set(i, a);
     }
+
+    @Override
+    public String toString() {
+        return PRETTY_NELUMBO ? "\u00AC(" + predicate() + ")" : super.toString();
+    }
 }

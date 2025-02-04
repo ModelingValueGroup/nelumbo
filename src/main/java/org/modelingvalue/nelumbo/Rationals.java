@@ -132,7 +132,8 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::plus, (LogicLambda) Rationals::plusLogic);
+    private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::plus, (LogicLambda) Rationals::plusLogic, //
+            (ToStringLambda) s -> s.toString(1) + "+" + s.toString(2) + "=" + s.toString(3));
 
     private static InferResult plusLogic(PredicateImpl predicate, InferContext context) {
         BigInteger numAddend1 = predicate.getVal(1, 1);
@@ -169,7 +170,8 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::multiply, (LogicLambda) Rationals::multiplyLogic);
+    private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::multiply, (LogicLambda) Rationals::multiplyLogic, //
+            (ToStringLambda) s -> s.toString(1) + "\u00B7" + s.toString(2) + "=" + s.toString(3));
 
     private static InferResult multiplyLogic(PredicateImpl predicate, InferContext context) {
         BigInteger numFactor1 = predicate.getVal(1, 1);
@@ -254,25 +256,29 @@ public final class Rationals {
         return pred(LE_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> PLUS_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::plus);
+    private static Functor<RationalFunc> PLUS_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::plus, //
+            (ToStringLambda) s -> s.toString(1) + "+" + s.toString(2));
 
     public static RationalFunc plus(Rational a, Rational b) {
         return function(PLUS_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> MINUS_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::minus);
+    private static Functor<RationalFunc> MINUS_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::minus, //
+            (ToStringLambda) s -> s.toString(1) + "-" + s.toString(2));
 
     public static RationalFunc minus(Rational a, Rational b) {
         return function(MINUS_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> MULTIPLY_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::multiply);
+    private static Functor<RationalFunc> MULTIPLY_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::multiply, //
+            (ToStringLambda) s -> s.toString(1) + "\u00B7" + s.toString(2));
 
     public static RationalFunc multiply(Rational a, Rational b) {
         return function(MULTIPLY_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> DIVIDE_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::divide);
+    private static Functor<RationalFunc> DIVIDE_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::divide, //
+            (ToStringLambda) s -> s.toString(1) + "/" + s.toString(2));
 
     public static RationalFunc divide(Rational a, Rational b) {
         return function(DIVIDE_FUNC_FUNCTOR, a, b);

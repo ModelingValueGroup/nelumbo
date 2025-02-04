@@ -23,6 +23,7 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
 
@@ -30,6 +31,6 @@ public interface KnowledgeBase {
 
     Map<Relation, List<Rule>> rules();
 
-    Map<Relation, Set<Relation>> facts();
+    Map<Relation, Pair<Set<Relation>, Set<Relation>>> facts();
 
 }

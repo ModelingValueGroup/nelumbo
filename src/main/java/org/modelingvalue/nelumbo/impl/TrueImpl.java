@@ -24,18 +24,20 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Relation;
 
 public final class TrueImpl extends PredicateImpl {
-    private static final long                   serialVersionUID = -8515171118744898263L;
+    private static final long                  serialVersionUID = -8515171118744898263L;
 
-    private static final FunctorImpl<Predicate> TRUE_FUNCTOR     = FunctorImpl.<Predicate> of(Logic::T);
+    private static final FunctorImpl<Relation> TRUE_FUNCTOR     = FunctorImpl.<Relation> of(Logic::T);
 
-    public static final TrueImpl                TRUE             = new TrueImpl();
+    public static final TrueImpl               TRUE             = new TrueImpl();
 
-    private static final InferResult            TRUE_CONCLUSION  = InferResult.trueFalse(Set.of(TRUE), Set.of());
+    private static final InferResult           TRUE_CONCLUSION  = InferResult.trueFalse(Set.of(TRUE), Set.of());
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private TrueImpl() {
-        super(TRUE_FUNCTOR);
+        super((FunctorImpl) TRUE_FUNCTOR);
     }
 
     private TrueImpl(Object[] args) {
@@ -44,7 +46,7 @@ public final class TrueImpl extends PredicateImpl {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Predicate proxy() {
+    public Relation proxy() {
         return Logic.T();
     }
 
@@ -69,5 +71,10 @@ public final class TrueImpl extends PredicateImpl {
     @Override
     public TrueImpl set(int i, Object... a) {
         return (TrueImpl) super.set(i, a);
+    }
+
+    @Override
+    public String toString() {
+        return PRETTY_NELUMBO ? "\u22A4" : super.toString();
     }
 }

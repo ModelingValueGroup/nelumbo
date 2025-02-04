@@ -37,6 +37,7 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
@@ -200,11 +201,12 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @Override
-    public Map<Relation, Set<Relation>> facts() {
+    public Map<Relation, Pair<Set<Relation>, Set<Relation>>> facts() {
         return facts.get().replaceAll(e -> {
             Relation k = (Relation) e.getKey().proxy();
-            Set<Relation> v = e.getValue().facts().replaceAll(p -> (Relation) p.proxy());
-            return Entry.of(k, v);
+            Set<Relation> facts = e.getValue().facts().replaceAll(p -> (Relation) p.proxy());
+            Set<Relation> falsehoods = e.getValue().falsehoods().replaceAll(p -> (Relation) p.proxy());
+            return Entry.of(k, Pair.of(facts, falsehoods));
         });
     }
 
@@ -213,7 +215,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         if (!fullResult.cycles().contains(predicate)) {
             InferResult result = InferResult.trueFalse(fullResult.facts(), fullResult.falsehoods());
             if (TRACE_NELUMBO) {
-                System.err.println(context.prefix() + predicate + " --> " + result);
+                System.err.println(context.prefix() + "  " + predicate + "\u21D2" + result);
             }
             FunctorImpl<Predicate> functor = predicate.functor();
             if (functor.factual()) {

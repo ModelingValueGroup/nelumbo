@@ -147,7 +147,7 @@ public final class Integers {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::multiply, (LogicLambda) Integers::multiplyLogic, //
-            (ToStringLambda) s -> s.toString(1) + "*" + s.toString(2) + "=" + s.toString(3));
+            (ToStringLambda) s -> s.toString(1) + "\u00B7" + s.toString(2) + "=" + s.toString(3));
 
     private static InferResult multiplyLogic(PredicateImpl predicate, InferContext context) {
         BigInteger factor1 = predicate.getVal(1, 1);
@@ -242,7 +242,7 @@ public final class Integers {
     }
 
     private static Functor<IntegerFunc> MULTIPLY_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::multiply, //
-            (ToStringLambda) s -> s.toString(1) + "*" + s.toString(2));
+            (ToStringLambda) s -> s.toString(1) + "\u00B7" + s.toString(2));
 
     public static IntegerFunc multiply(Integer a, Integer b) {
         return function(MULTIPLY_FUNC_FUNCTOR, a, b);

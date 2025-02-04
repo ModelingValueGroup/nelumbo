@@ -86,7 +86,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl condDecl = condition();
         PredicateImpl condition = condDecl.setBinding(condDecl, binding);
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + condition.setVariableNames(condDecl) + " => " + consequence.setVariableNames(conseqDecl));
+            System.err.println(context.prefix() + condition.setVariableNames(condDecl) + "\u21D2" + consequence.setVariableNames(conseqDecl));
         }
         InferResult condResult = condition.infer(condDecl, context);
         if (condResult == condition.incomplete()) {
@@ -100,7 +100,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         falsehoods = falsehoods.removeAll(f -> facts.contains(f) && f.isFullyBound());
         InferResult conseqResult = InferResult.of(facts, falsehoods, condResult.cycles());
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + condition.setVariableNames(condDecl) + " -> " + conseqResult.setVariableNames(conseqDecl));
+            System.err.println(context.prefix() + condition.setVariableNames(condDecl) + "\u2192" + conseqResult.setVariableNames(conseqDecl));
         }
         return conseqResult;
     }
@@ -122,6 +122,6 @@ public final class RuleImpl extends StructureImpl<Rule> {
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? condition() + " => " + consequence() : super.toString();
+        return PRETTY_NELUMBO ? condition() + "\u21D2" + consequence() : super.toString();
     }
 }

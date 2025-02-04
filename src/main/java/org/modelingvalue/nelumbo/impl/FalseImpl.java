@@ -24,18 +24,20 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.Relation;
 
 public final class FalseImpl extends PredicateImpl {
-    private static final long                  serialVersionUID = -8515171118744898263L;
+    private static final long                 serialVersionUID = -8515171118744898263L;
 
-    public static final FunctorImpl<Predicate> FALSE_FUNCTOR    = FunctorImpl.<Predicate> of(Logic::F);
+    public static final FunctorImpl<Relation> FALSE_FUNCTOR    = FunctorImpl.<Relation> of(Logic::F);
 
-    public static final FalseImpl              FALSE            = new FalseImpl();
+    public static final FalseImpl             FALSE            = new FalseImpl();
 
-    private final InferResult                  FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
+    private final InferResult                 FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private FalseImpl() {
-        super(FALSE_FUNCTOR);
+        super((FunctorImpl) FALSE_FUNCTOR);
     }
 
     private FalseImpl(Object[] args) {
@@ -44,7 +46,7 @@ public final class FalseImpl extends PredicateImpl {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Predicate proxy() {
+    public Relation proxy() {
         return Logic.F();
     }
 
@@ -69,5 +71,10 @@ public final class FalseImpl extends PredicateImpl {
     @Override
     public FalseImpl set(int i, Object... a) {
         return (FalseImpl) super.set(i, a);
+    }
+
+    @Override
+    public String toString() {
+        return PRETTY_NELUMBO ? "\u22A5" : super.toString();
     }
 }

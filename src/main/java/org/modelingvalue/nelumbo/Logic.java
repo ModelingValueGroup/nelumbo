@@ -244,19 +244,19 @@ public final class Logic {
 
     // True
 
-    private static final Predicate TRUE_PROXY = (Predicate) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Predicate.class}, TrueImpl.TRUE);
+    private static final Relation TRUE_PROXY = (Relation) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Relation.class}, TrueImpl.TRUE);
 
     @SuppressWarnings("unchecked")
-    public static Predicate T() {
+    public static Relation T() {
         return TRUE_PROXY;
     }
 
     // False
 
-    private static final Predicate FALSE_PROXY = (Predicate) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Predicate.class}, FalseImpl.FALSE);
+    private static final Relation FALSE_PROXY = (Relation) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Relation.class}, FalseImpl.FALSE);
 
     @SuppressWarnings("unchecked")
-    public static Predicate F() {
+    public static Relation F() {
         return FALSE_PROXY;
     }
 

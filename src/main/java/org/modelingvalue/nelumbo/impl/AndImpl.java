@@ -52,12 +52,12 @@ public final class AndImpl extends AndOrImpl {
 
     @Override
     public String toString(StructureImpl<?> parent) {
-        return parent instanceof AndImpl ? predicate1().toString(this) + " & " + predicate2().toString(this) : toString();
+        return parent instanceof AndImpl ? predicate1().toString(this) + "\u2227" + predicate2().toString(this) : toString();
     }
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + " & " + predicate2().toString(this) + ")" : super.toString();
+        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + "\u2227" + predicate2().toString(this) + ")" : super.toString();
     }
 
 }
