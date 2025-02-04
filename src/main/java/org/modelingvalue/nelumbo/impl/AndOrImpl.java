@@ -76,12 +76,12 @@ public abstract class AndOrImpl extends PredicateImpl {
                         andOrAll = (Set) InferResult.bind(predAll, predDecl[i], andOr, declaration).removeAll(now);
                         if (!andOrAll.isEmpty()) {
                             next = next.addAll(andOrAll);
-                            if (this instanceof AndImpl) {
+                            cycles = cycles.addAll(predResult[i].cycles());
+                            if (this instanceof AndImpl && !predResult[i].falsehoods().isEmpty()) {
                                 falsehoods = falsehoods.add(andOr);
-                            } else if (this instanceof OrImpl) {
+                            } else if (this instanceof OrImpl && !predResult[i].facts().isEmpty()) {
                                 facts = facts.add(andOr);
                             }
-                            cycles = cycles.addAll(predResult[i].cycles());
                         }
                         continue andor;
                     }
