@@ -20,7 +20,6 @@
 
 package org.modelingvalue.nelumbo.impl;
 
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Functor;
@@ -75,12 +74,6 @@ public final class NotImpl extends PredicateImpl {
             falsehoods = result.facts().replaceAll(f -> set(1, f));
         }
         return InferResult.of(facts, falsehoods, result.cycles());
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Map<VariableImpl, Object> getBinding(StructureImpl<Predicate> pred, Map<VariableImpl, Object> vars) {
-        return vars;
     }
 
     @Override

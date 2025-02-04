@@ -364,6 +364,7 @@ public class NelumboTest extends NelumboTestBase {
             fact(parentChild(Jan, Wim));
             fact(parentChild(Wim, Marijn));
             isTrue(and(parentChild(Carel, A), parentChild(A, B), parentChild(B, Marijn)));
+            isTrue(not(or(not(parentChild(Carel, A)), not(parentChild(A, B)), not(parentChild(B, Marijn)))));
         });
     }
 
