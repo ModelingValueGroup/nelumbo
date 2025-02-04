@@ -57,7 +57,6 @@ public abstract class AndOrImpl extends PredicateImpl {
             next = Set.of();
             andor:
             for (AndOrImpl andOr : now) {
-                // Predicate 1
                 for (int i = 0; i < 2; i++) {
                     predicate = i == 0 ? andOr.predicate1() : andOr.predicate2();
                     predResult[i] = predicate.infer(predDecl[i], context);
