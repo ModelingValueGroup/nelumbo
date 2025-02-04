@@ -232,25 +232,29 @@ public final class Rationals {
 
     // Functions
 
-    private static Functor<Relation> GT_FUNCTOR = functor(Rationals::gt);
+    private static Functor<Relation> GT_FUNCTOR = functor(Rationals::gt, //
+            (ToStringLambda) s -> s.toString(1) + ">" + s.toString(2));
 
     public static Relation gt(Rational a, Rational b) {
         return pred(GT_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> LT_FUNCTOR = functor(Rationals::lt);
+    private static Functor<Relation> LT_FUNCTOR = functor(Rationals::lt, //
+            (ToStringLambda) s -> s.toString(1) + "<" + s.toString(2));
 
     public static Relation lt(Rational a, Rational b) {
         return pred(LT_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> GE_FUNCTOR = functor(Rationals::ge);
+    private static Functor<Relation> GE_FUNCTOR = functor(Rationals::ge, //
+            (ToStringLambda) s -> s.toString(1) + ">=" + s.toString(2));
 
     public static Relation ge(Rational a, Rational b) {
         return pred(GE_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> LE_FUNCTOR = functor(Rationals::le);
+    private static Functor<Relation> LE_FUNCTOR = functor(Rationals::le, //
+            (ToStringLambda) s -> s.toString(1) + "<=" + s.toString(2));
 
     public static Relation le(Rational a, Rational b) {
         return pred(LE_FUNCTOR, a, b);

@@ -215,7 +215,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         if (!fullResult.cycles().contains(predicate)) {
             InferResult result = InferResult.trueFalse(fullResult.facts(), fullResult.falsehoods());
             if (TRACE_NELUMBO) {
-                System.err.println(context.prefix() + "  " + predicate + "\u21D2" + result);
+                System.err.println(context.prefix() + "  " + predicate.toString(null) + "\u21C9" + result);
             }
             FunctorImpl<Predicate> functor = predicate.functor();
             if (functor.factual()) {

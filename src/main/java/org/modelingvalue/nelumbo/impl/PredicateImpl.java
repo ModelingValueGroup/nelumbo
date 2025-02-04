@@ -90,11 +90,11 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     public InferResult infer() {
         InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + this);
+            System.err.println(context.prefix() + toString(null));
         }
         InferResult result = setBinding(this, variables()).infer(this, context);
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + this + "\u2192" + result.setVariableNames(this));
+            System.err.println(context.prefix() + toString(null) + "\u2192" + result.setVariableNames(this));
         }
         return result;
     }
