@@ -78,9 +78,9 @@ public abstract class AndOrImpl extends PredicateImpl {
                             next = next.addAll(andOrAll);
                             cycles = cycles.addAll(predResult[i].cycles());
                             if (this instanceof AndImpl && !predResult[i].falsehoods().isEmpty()) {
-                                falsehoods = falsehoods.add(andOr);
+                                falsehoods = falsehoods.add(this);
                             } else if (this instanceof OrImpl && !predResult[i].facts().isEmpty()) {
-                                facts = facts.add(andOr);
+                                facts = facts.add(this);
                             }
                         }
                         continue andor;
@@ -90,12 +90,12 @@ public abstract class AndOrImpl extends PredicateImpl {
                 if (this instanceof AndImpl) {
                     facts = facts.add(andOr);
                     if (!predResult[0].falsehoods().isEmpty() || !predResult[1].falsehoods().isEmpty()) {
-                        falsehoods = falsehoods.add(andOr);
+                        falsehoods = falsehoods.add(this);
                     }
                 } else if (this instanceof OrImpl) {
                     falsehoods = falsehoods.add(andOr);
                     if (!predResult[0].facts().isEmpty() || !predResult[1].facts().isEmpty()) {
-                        facts = facts.add(andOr);
+                        facts = facts.add(this);
                     }
                 }
             }
