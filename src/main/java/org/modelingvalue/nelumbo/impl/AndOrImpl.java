@@ -47,9 +47,8 @@ public abstract class AndOrImpl extends PredicateImpl {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public final InferResult infer(PredicateImpl declaration, InferContext context) {
-        PredicateImpl[] predDecl = new PredicateImpl[]{
-                ((AndOrImpl) declaration).predicate1(), //
-                ((AndOrImpl) declaration).predicate2()}, predicate = new PredicateImpl[2];
+        PredicateImpl[] predDecl = new PredicateImpl[]{((AndOrImpl) declaration).predicate1(), ((AndOrImpl) declaration).predicate2()};
+        PredicateImpl predicate;
         InferResult[] predResult = new InferResult[2];
         Set<AndOrImpl> now, next = (Set) singleton();
         Set<PredicateImpl> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of(), bound;
@@ -60,8 +59,8 @@ public abstract class AndOrImpl extends PredicateImpl {
             for (AndOrImpl andOr : now) {
                 // Predicate 1
                 for (int i = 0; i < 2; i++) {
-                    predicate[i] = i == 0 ? andOr.predicate1() : andOr.predicate2();
-                    predResult[i] = predicate[i].infer(predDecl[i], context);
+                    predicate = i == 0 ? andOr.predicate1() : andOr.predicate2();
+                    predResult[i] = predicate.infer(predDecl[i], context);
                     if (predResult[i].hasStackOverflow()) {
                         return predResult[i];
                     }
