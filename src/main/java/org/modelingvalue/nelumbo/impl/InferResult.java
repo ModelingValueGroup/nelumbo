@@ -215,14 +215,8 @@ public interface InferResult {
         return of(facts, falsehoods, cycles);
     }
 
-    default InferResult bind(PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
-        Set<PredicateImpl> facts = bind(facts(), fromDecl, to, toDecl);
-        Set<PredicateImpl> falsehoods = bind(falsehoods(), fromDecl, to, toDecl);
-        return of(facts, falsehoods, cycles());
-    }
-
-    static Set<PredicateImpl> bind(Set<PredicateImpl> from, PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
-        return from.replaceAll(p -> toDecl.setBinding(to, fromDecl.getBinding(p, Map.of())));
+    static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl from, PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
+        return set.replaceAll(p -> p.equals(from) ? to : toDecl.setBinding(to, fromDecl.getBinding(p, Map.of())));
     }
 
     default InferResult not() {

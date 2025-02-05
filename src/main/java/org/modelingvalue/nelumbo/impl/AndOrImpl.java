@@ -73,7 +73,7 @@ public abstract class AndOrImpl extends PredicateImpl {
                             continue andor;
                         }
                     } else {
-                        andOrAll = (Set) InferResult.bind(predAll, predDecl[i], andOr, declaration).removeAll(now);
+                        andOrAll = (Set) InferResult.bind(predAll, predicate, predDecl[i], andOr, declaration).removeAll(now);
                         if (!andOrAll.isEmpty()) {
                             next = next.addAll(andOrAll);
                             cycles = cycles.addAll(predResult[i].cycles());

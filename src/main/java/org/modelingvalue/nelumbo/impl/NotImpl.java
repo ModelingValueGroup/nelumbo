@@ -66,12 +66,12 @@ public final class NotImpl extends PredicateImpl {
         if (result.falsehoods().equals(predicate.singleton())) {
             facts = singleton();
         } else {
-            facts = result.falsehoods().replaceAll(f -> set(1, f));
+            facts = result.falsehoods().replaceAll(f -> f.equals(predicate) ? this : set(1, f));
         }
         if (result.facts().equals(predicate.singleton())) {
             falsehoods = singleton();
         } else {
-            falsehoods = result.facts().replaceAll(f -> set(1, f));
+            falsehoods = result.facts().replaceAll(f -> f.equals(predicate) ? this : set(1, f));
         }
         return InferResult.of(facts, falsehoods, result.cycles());
     }

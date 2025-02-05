@@ -95,8 +95,8 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (condResult.hasStackOverflow()) {
             return condResult;
         }
-        Set<PredicateImpl> facts = InferResult.bind(condResult.facts(), condDecl, consequence, conseqDecl);
-        falsehoods = falsehoods.addAll(InferResult.bind(condResult.falsehoods(), condDecl, consequence, conseqDecl));
+        Set<PredicateImpl> facts = InferResult.bind(condResult.facts(), condition, condDecl, consequence, conseqDecl);
+        falsehoods = falsehoods.addAll(InferResult.bind(condResult.falsehoods(), condition, condDecl, consequence, conseqDecl));
         falsehoods = falsehoods.removeAll(f -> facts.contains(f) && f.isFullyBound());
         InferResult conseqResult = InferResult.of(facts, falsehoods, condResult.cycles());
         if (TRACE_NELUMBO) {
