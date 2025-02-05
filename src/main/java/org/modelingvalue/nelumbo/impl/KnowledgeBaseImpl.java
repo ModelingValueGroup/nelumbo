@@ -212,7 +212,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void memoization(PredicateImpl predicate, InferResult fullResult, InferContext context) {
-        if (!fullResult.cycles().contains(predicate)) {
+        if (fullResult.facts().retainAll(fullResult.falsehoods()).isEmpty()) {
             InferResult result = InferResult.trueFalse(fullResult.facts(), fullResult.falsehoods());
             if (TRACE_NELUMBO) {
                 System.err.println(context.prefix() + "  " + predicate.toString(null) + "\u21C9" + result);
