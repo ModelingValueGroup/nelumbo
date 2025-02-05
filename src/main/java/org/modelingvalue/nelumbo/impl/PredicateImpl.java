@@ -176,7 +176,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     cycleResult = InferResult.of(nextResult.facts().add(this), nextResult.falsehoods().add(this), singleton());
                     continue;
                 } else {
-                    return InferResult.of(nextResult.facts().remove(this), nextResult.falsehoods(), nextResult.cycles().remove(this));
+                    return InferResult.of(nextResult.facts().remove(this), nextResult.falsehoods().remove(this), nextResult.cycles().remove(this));
                 }
             }
             return nextResult;
