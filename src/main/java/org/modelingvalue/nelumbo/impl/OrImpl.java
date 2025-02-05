@@ -58,7 +58,7 @@ public final class OrImpl extends AndOrImpl {
 
     @Override
     public String toString(StructureImpl<?> parent) {
-        return parent == null || parent instanceof OrImpl ? predicate1().toString(this) + "\u2228" + predicate2().toString(this) : toString();
+        return PRETTY_NELUMBO && (parent == null || parent instanceof OrImpl) ? predicate1().toString(this) + "\u2228" + predicate2().toString(this) : toString();
     }
 
     @Override
