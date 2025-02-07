@@ -95,6 +95,10 @@ public final class Logic {
         return FunctorImpl.of(method, modifiers).proxy();
     }
 
+    public enum RuleModifier {
+        trace;
+    }
+
     public interface FunctorModifier {
     }
 
@@ -311,8 +315,8 @@ public final class Logic {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static Rule rule(Relation consequence, Predicate condition) {
-        RuleImpl ruleImpl = new RuleImpl(consequence, condition);
+    public static Rule rule(Relation consequence, Predicate condition, RuleModifier... modifiers) {
+        RuleImpl ruleImpl = new RuleImpl(consequence, condition, modifiers);
         KnowledgeBaseImpl.CURRENT.get().addRule(ruleImpl);
         return ruleImpl.proxy();
     }

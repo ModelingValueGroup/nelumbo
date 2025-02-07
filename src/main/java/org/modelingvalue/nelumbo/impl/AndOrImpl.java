@@ -86,9 +86,9 @@ public abstract class AndOrImpl extends PredicateImpl {
                         if (!andOrAll.isEmpty()) {
                             next = next.addAll(andOrAll);
                             cycles = cycles.addAll(predResult[i].cycles());
-                            if (this instanceof AndImpl && !predResult[i].falsehoods().isEmpty()) {
+                            if (this instanceof AndImpl && !predResult[i].falsehoods().isEmpty() && !isFullyBound()) {
                                 falsehoods = falsehoods.add(this);
-                            } else if (this instanceof OrImpl && !predResult[i].facts().isEmpty()) {
+                            } else if (this instanceof OrImpl && !predResult[i].facts().isEmpty() && !isFullyBound()) {
                                 facts = facts.add(this);
                             }
                         }

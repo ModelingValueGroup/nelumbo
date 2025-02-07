@@ -27,6 +27,7 @@ import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
+import org.modelingvalue.nelumbo.Logic.RuleModifier;
 
 public final class RuleImpl extends StructureImpl<Rule> {
     private static final long              serialVersionUID   = -4602043866952049391L;
@@ -36,13 +37,25 @@ public final class RuleImpl extends StructureImpl<Rule> {
 
     @SuppressWarnings("rawtypes")
     private Map<VariableImpl, Object>      variables;
+    private final boolean                  trace;
 
-    public RuleImpl(Relation pred, Predicate decl) {
+    public RuleImpl(Relation pred, Predicate decl, RuleModifier[] modifiers) {
         super(RULE_FUNCTOR_PROXY, pred, decl);
+        trace = has(RuleModifier.trace, modifiers);
+    }
+
+    private static boolean has(RuleModifier e, RuleModifier[] modifiers) {
+        for (RuleModifier m : modifiers) {
+            if (m == e) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private RuleImpl(Object[] args) {
         super(args);
+        trace = false;
     }
 
     @Override
@@ -71,6 +84,9 @@ public final class RuleImpl extends StructureImpl<Rule> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected InferResult infer(PredicateImpl consequence, InferContext context) {
+        if (!TRACE_NELUMBO && trace()) {
+            context = context.trace(true);
+        }
         PredicateImpl conseqDecl = consequence();
         Map<VariableImpl, Object> binding = conseqDecl.getBinding(consequence, Map.of());
         if (binding == null) {
@@ -80,7 +96,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl bindConsequence = conseqDecl.setBinding(consequence, binding);
         PredicateImpl condDecl = condition();
         PredicateImpl condition = condDecl.setBinding(condDecl, binding);
-        if (TRACE_NELUMBO) {
+        if (context.trace()) {
             System.err.println(context.prefix() + condition.setVariableNames(condDecl).toString(null) + "\u21D2" + bindConsequence.setVariableNames(conseqDecl));
         }
         InferResult condResult = condition.infer(condDecl, context);
@@ -96,7 +112,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
             falsehoods = falsehoods.add(consequence);
         }
         InferResult conseqResult = InferResult.of(facts, falsehoods, condResult.cycles());
-        if (TRACE_NELUMBO) {
+        if (context.trace()) {
             System.err.println(context.prefix() + condition.setVariableNames(condDecl).toString(null) + "\u2192" + conseqResult.setVariableNames(conseqDecl));
         }
         return conseqResult;
@@ -120,5 +136,9 @@ public final class RuleImpl extends StructureImpl<Rule> {
     @Override
     public String toString() {
         return PRETTY_NELUMBO ? condition().toString(null) + "\u21D2" + consequence() : super.toString();
+    }
+
+    public boolean trace() {
+        return trace;
     }
 }

@@ -34,7 +34,9 @@ public interface InferContext {
 
     boolean shallow();
 
-    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic, boolean deep, boolean shallow) {
+    boolean trace();
+
+    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic, boolean deep, boolean shallow, boolean trace) {
         return new InferContext() {
             @Override
             public KnowledgeBaseImpl knowledgebase() {
@@ -60,19 +62,28 @@ public interface InferContext {
             public boolean shallow() {
                 return shallow;
             }
+
+            @Override
+            public boolean trace() {
+                return trace;
+            }
         };
     }
 
     default InferContext pushOnStack(PredicateImpl predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false);
+        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false, trace());
     }
 
     default InferContext putCycleResult(PredicateImpl predicate, InferResult cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false);
+        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false, trace());
     }
 
     default InferContext deepShallow(boolean deep, boolean shallow) {
-        return of(knowledgebase(), stack(), cycleResult(), deep, shallow);
+        return of(knowledgebase(), stack(), cycleResult(), deep, shallow, trace());
+    }
+
+    default InferContext trace(boolean trace) {
+        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), deep(), shallow(), trace);
     }
 
     default String prefix() {

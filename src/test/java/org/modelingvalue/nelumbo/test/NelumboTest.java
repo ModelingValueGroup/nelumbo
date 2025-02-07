@@ -54,6 +54,7 @@ import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.ToStringLambda;
 import org.modelingvalue.nelumbo.Rationals.RationalCons;
 
 public class NelumboTest extends NelumboTestBase {
@@ -112,7 +113,9 @@ public class NelumboTest extends NelumboTestBase {
     interface PersonFunc extends Person, Function<Person> {
     }
 
-    static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) NelumboTest::person);
+    static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) NelumboTest::person, (ToStringLambda) p -> {
+        return p.get(1).toString();
+    });
 
     static PersonCons person(String name) {
         return constant(STRING_PERSON, name);

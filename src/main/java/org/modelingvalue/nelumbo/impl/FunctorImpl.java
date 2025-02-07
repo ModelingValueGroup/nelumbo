@@ -49,7 +49,7 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
     private final boolean         derived;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public FunctorImpl(Class<T> type, String name, List<Class<?>> args, FunctorModifier... modifiers) {
+    public FunctorImpl(Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
         super((Class) Functor.class, type, name, args);
         KnowledgeBaseImpl.updateSpecializations(type);
         for (Class arg : args) {
@@ -67,12 +67,12 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
         return lambda != null ? lambda.of() : null;
     }
 
-    private static LogicLambda logic(FunctorModifier... modifiers) {
+    private static LogicLambda logic(FunctorModifier[] modifiers) {
         LogicLambda lambda = get(LogicLambda.class, modifiers);
         return lambda != null ? lambda.of() : null;
     }
 
-    private static NormalizeLambda normal(FunctorModifier... modifiers) {
+    private static NormalizeLambda normal(FunctorModifier[] modifiers) {
         NormalizeLambda lambda = get(NormalizeLambda.class, modifiers);
         return lambda != null ? lambda.of() : null;
     }

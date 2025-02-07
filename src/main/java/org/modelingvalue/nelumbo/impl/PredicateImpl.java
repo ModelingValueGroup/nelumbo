@@ -89,11 +89,11 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     public InferResult infer() {
         InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
-        if (TRACE_NELUMBO) {
+        if (context.trace()) {
             System.err.println(context.prefix() + toString(null));
         }
         InferResult result = setBinding(this, variables()).infer(this, context);
-        if (TRACE_NELUMBO) {
+        if (context.trace()) {
             System.err.println(context.prefix() + toString(null) + "\u2192" + result.setVariableNames(this));
         }
         return result;
@@ -104,30 +104,30 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         FunctorImpl<Predicate> functor = functor();
         LogicLambda logic = functor.logicLambda();
         if (logic != null) {
-            return result(declaration, logic.apply((PredicateImpl) this, context));
+            return result(declaration, logic.apply((PredicateImpl) this, context), context);
         }
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return result(declaration, incomplete());
+            return result(declaration, incomplete(), context);
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         if (knowledgebase.getRules(this) != null) {
             InferResult result = knowledgebase.getMemoiz(this);
             if (result != null) {
-                return result(declaration, result);
+                return result(declaration, result, context);
             }
             if (context.shallow()) {
-                return result(declaration, incomplete());
+                return result(declaration, incomplete(), context);
             }
             result = context.cycleResult().get(this);
             if (result != null) {
-                return result(declaration, result);
+                return result(declaration, result, context);
             }
             List<PredicateImpl> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return result(declaration, InferResult.overflow(stack.append(this)));
+                return result(declaration, InferResult.overflow(stack.append(this)), context);
             }
-            if (TRACE_NELUMBO) {
+            if (context.trace()) {
                 System.err.println();
             }
             result = fixpoint(context.pushOnStack(this));
@@ -138,25 +138,25 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                         result = flatten(result, overflow, context);
                     }
                     prefix(declaration, context);
-                    return result(declaration, result);
+                    return result(declaration, result, context);
                 }
             }
             knowledgebase.memoization(this, result);
             prefix(declaration, context);
-            return result(declaration, result);
+            return result(declaration, result, context);
         } else {
-            return result(declaration, knowledgebase.getFacts(this));
+            return result(declaration, knowledgebase.getFacts(this), context);
         }
     }
 
     private void prefix(PredicateImpl declaration, InferContext context) {
-        if (TRACE_NELUMBO) {
+        if (context.trace()) {
             System.err.print(context.prefix() + "  " + setVariableNames(declaration).toString(null));
         }
     }
 
-    private InferResult result(PredicateImpl declaration, InferResult result) {
-        if (TRACE_NELUMBO) {
+    private InferResult result(PredicateImpl declaration, InferResult result, InferContext context) {
+        if (context.trace()) {
             System.err.println("\u2192" + result.setVariableNames(declaration));
         }
         return result;
