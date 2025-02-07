@@ -143,7 +143,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     private void prefix(PredicateImpl declaration, InferContext context) {
         if (TRACE_NELUMBO) {
-            System.err.print(context.prefix() + setVariableNames(declaration).toString(null));
+            System.err.print(context.prefix() + "  " + setVariableNames(declaration).toString(null));
         }
     }
 

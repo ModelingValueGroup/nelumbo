@@ -81,7 +81,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl condDecl = condition();
         PredicateImpl condition = condDecl.setBinding(condDecl, binding);
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + "  " + condition.setVariableNames(condDecl).toString(null) + "\u21D2" + bindConsequence.setVariableNames(conseqDecl));
+            System.err.println(context.prefix() + condition.setVariableNames(condDecl).toString(null) + "\u21D2" + bindConsequence.setVariableNames(conseqDecl));
         }
         InferResult condResult = condition.infer(condDecl, context);
         if (condResult == condition.incomplete()) {
@@ -97,7 +97,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         }
         InferResult conseqResult = InferResult.of(facts, falsehoods, condResult.cycles());
         if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + "  " + condition.setVariableNames(condDecl).toString(null) + "\u2192" + conseqResult.setVariableNames(conseqDecl));
+            System.err.println(context.prefix() + condition.setVariableNames(condDecl).toString(null) + "\u2192" + conseqResult.setVariableNames(conseqDecl));
         }
         return conseqResult;
     }
