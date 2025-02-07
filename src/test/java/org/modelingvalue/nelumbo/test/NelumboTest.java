@@ -59,6 +59,7 @@ import org.modelingvalue.nelumbo.Rationals.RationalCons;
 public class NelumboTest extends NelumboTestBase {
 
     static {
+        System.setProperty("RANDOM_NELUMBO", "false");
         System.setProperty("TRACE_NELUMBO", "false");
         System.setProperty("PRETTY_NELUMBO", "true");
     }
@@ -269,7 +270,7 @@ public class NelumboTest extends NelumboTestBase {
         print(db);
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void notTest() {
         run(() -> {
             isFalse(and(F(), T()));
@@ -286,7 +287,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void famTest0() {
         run(() -> {
             familyRules();
@@ -316,7 +317,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void famTest1() {
         run(() -> {
             familyRules();
@@ -348,7 +349,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void famTest2() {
         run(() -> {
             familyRules();
@@ -361,7 +362,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void famTest3() {
         run(() -> {
             fact(parentChild(Carel, Jan));
@@ -373,7 +374,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void intTest1() {
         run(() -> {
             integerRules();
@@ -384,7 +385,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void intTest2() {
         run(() -> {
             integerRules();
@@ -412,7 +413,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void rationalTest1() {
         run(() -> {
             rationalRules();
@@ -426,7 +427,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void rationalTest2() {
         run(() -> {
             rationalRules();
@@ -454,7 +455,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void rootTest1() {
         run(() -> {
             rootRules();
@@ -474,7 +475,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(32)
     public void rootTest2() {
         run(() -> {
             rootRules();
@@ -494,7 +495,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(1)
+    @RepeatedTest(32)
     public void fibonacciTest0() {
         run(() -> {
             fibonacciRules();
@@ -504,7 +505,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(16)
     public void fibonacciTest1() {
         run(() -> {
             fibonacciRules();
@@ -516,7 +517,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(16)
     public void fibonacciTest2() {
         run(() -> {
             fibonacciRules();

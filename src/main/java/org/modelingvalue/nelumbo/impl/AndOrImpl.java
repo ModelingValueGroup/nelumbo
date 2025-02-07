@@ -20,11 +20,16 @@
 
 package org.modelingvalue.nelumbo.impl;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
 public abstract class AndOrImpl extends PredicateImpl {
-    private static final long serialVersionUID = -928776822979604743L;
+    private static final long  serialVersionUID = -928776822979604743L;
+
+    private static final int[] ZERO_ONE         = new int[]{0, 1};
+    private static final int[] ONE_ZERO         = new int[]{1, 0};
 
     protected AndOrImpl(FunctorImpl<Predicate> functor, PredicateImpl predicate1, PredicateImpl predicate2) {
         super(functor, predicate1, predicate2);
@@ -44,6 +49,10 @@ public abstract class AndOrImpl extends PredicateImpl {
         return (PredicateImpl) get(2);
     }
 
+    private PredicateImpl predicate(int i) {
+        return (PredicateImpl) get(i + 1);
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public final InferResult infer(PredicateImpl declaration, InferContext context) {
@@ -57,8 +66,8 @@ public abstract class AndOrImpl extends PredicateImpl {
             next = Set.of();
             andor:
             for (AndOrImpl andOr : now) {
-                for (int i = 0; i < 2; i++) {
-                    predicate = i == 0 ? andOr.predicate1() : andOr.predicate2();
+                for (int i : andOr.order()) {
+                    predicate = andOr.predicate(i);
                     predResult[i] = predicate.infer(predDecl[i], context);
                     if (predResult[i].hasStackOverflow()) {
                         return predResult[i];
@@ -104,5 +113,16 @@ public abstract class AndOrImpl extends PredicateImpl {
             }
         } while (true);
 
+    }
+
+    private int[] order() {
+        int unbound1 = predicate1().nrOfUnbound(), unbound2 = predicate2().nrOfUnbound();
+        if (unbound2 < unbound1) {
+            return ONE_ZERO;
+        } else if (RANDOM_NELUMBO && unbound1 == unbound2) {
+            return ThreadLocalRandom.current().nextBoolean() ? ONE_ZERO : ZERO_ONE;
+        } else {
+            return ZERO_ONE;
+        }
     }
 }

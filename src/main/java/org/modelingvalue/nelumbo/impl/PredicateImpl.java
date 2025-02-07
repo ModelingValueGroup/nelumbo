@@ -204,12 +204,12 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     @SuppressWarnings("rawtypes")
     private InferResult inferRules(InferContext context) {
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
-        List<RuleImpl> rules = knowledgebase.getRules(this);
         InferResult result = knowledgebase.getFacts(this), ruleResult;
         if (result.falsehoods().isEmpty()) {
             return result;
         }
-        for (RuleImpl rule : rules) {
+        List<RuleImpl> rules = knowledgebase.getRules(this);
+        for (RuleImpl rule : RANDOM_NELUMBO ? rules.random() : rules) {
             ruleResult = rule.infer(this, context);
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
