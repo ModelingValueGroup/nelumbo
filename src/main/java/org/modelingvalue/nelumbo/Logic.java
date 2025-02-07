@@ -204,15 +204,29 @@ public final class Logic {
         return result.facts().isEmpty();
     }
 
+    public static boolean isEqual(Predicate pred1, Predicate pred2) {
+        InferResult result1 = infer(pred1);
+        InferResult result2 = infer(pred2);
+        PredicateImpl impl1 = StructureImpl.<Predicate, PredicateImpl> unproxy(pred1);
+        PredicateImpl impl2 = StructureImpl.<Predicate, PredicateImpl> unproxy(pred2);
+        return getBindings(result1.facts(), impl1).equals(getBindings(result2.facts(), impl2)) && //
+                getBindings(result1.falsehoods(), impl1).equals(getBindings(result2.falsehoods(), impl2));
+    }
+
     public static Set<Predicate> getFacts(Predicate pred) {
         return infer(pred).facts().replaceAll(StructureImpl::proxy);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static Set<Map<Variable, Object>> getBindings(Predicate pred) {
-        PredicateImpl impl = StructureImpl.<Predicate, PredicateImpl> unproxy(pred);
         InferResult result = infer(pred);
-        Set<Map<VariableImpl, Object>> bindings = result.facts().replaceAll(m -> impl.getBinding(m, Map.of()));
+        PredicateImpl impl = StructureImpl.<Predicate, PredicateImpl> unproxy(pred);
+        return getBindings(result.facts(), impl);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Set<Map<Variable, Object>> getBindings(Set<PredicateImpl> set, PredicateImpl declaration) {
+        Set<Map<VariableImpl, Object>> bindings = set.replaceAll(p -> declaration.getBinding(p, Map.of()));
         return bindings.replaceAll(m -> m.replaceAll(e -> Entry.of((Variable) e.getKey().proxy(), proxy(e.getValue()))));
     }
 
@@ -244,7 +258,7 @@ public final class Logic {
 
     // True
 
-    private static final Relation TRUE_PROXY = (Relation) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Relation.class}, TrueImpl.TRUE);
+    private static final Relation TRUE_PROXY = (Relation) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Relation.class}, BooleanImpl.TRUE);
 
     @SuppressWarnings("unchecked")
     public static Relation T() {
@@ -253,7 +267,7 @@ public final class Logic {
 
     // False
 
-    private static final Relation FALSE_PROXY = (Relation) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Relation.class}, FalseImpl.FALSE);
+    private static final Relation FALSE_PROXY = (Relation) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Relation.class}, BooleanImpl.FALSE);
 
     @SuppressWarnings("unchecked")
     public static Relation F() {
@@ -271,9 +285,10 @@ public final class Logic {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Predicate or(Predicate... ps) {
-        PredicateImpl impl = FalseImpl.FALSE;
-        for (int i = ps.length - 1; i >= 0; i--) {
-            impl = impl == FalseImpl.FALSE ? StructureImpl.unproxy(ps[i]) : new OrImpl(StructureImpl.unproxy(ps[i]), impl);
+        PredicateImpl impl = BooleanImpl.FALSE;
+        int l = ps.length - 1;
+        for (int i = l; i >= 0; i--) {
+            impl = i == l ? StructureImpl.unproxy(ps[i]) : new OrImpl(StructureImpl.unproxy(ps[i]), impl);
         }
         return impl.proxy();
     }
@@ -282,9 +297,10 @@ public final class Logic {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Predicate and(Predicate... ps) {
-        PredicateImpl impl = TrueImpl.TRUE;
-        for (int i = ps.length - 1; i >= 0; i--) {
-            impl = impl == TrueImpl.TRUE ? StructureImpl.unproxy(ps[i]) : new AndImpl(StructureImpl.unproxy(ps[i]), impl);
+        PredicateImpl impl = BooleanImpl.TRUE;
+        int l = ps.length - 1;
+        for (int i = l; i >= 0; i--) {
+            impl = i == l ? StructureImpl.unproxy(ps[i]) : new AndImpl(StructureImpl.unproxy(ps[i]), impl);
         }
         return impl.proxy();
     }

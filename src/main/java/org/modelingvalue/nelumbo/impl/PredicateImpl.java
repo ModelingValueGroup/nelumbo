@@ -88,7 +88,15 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     public InferResult infer() {
-        return setBinding(this, variables()).infer(this, KnowledgeBaseImpl.CURRENT.get().context());
+        InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
+        if (TRACE_NELUMBO) {
+            System.err.println(context.prefix() + toString(null));
+        }
+        InferResult result = setBinding(this, variables()).infer(this, context);
+        if (TRACE_NELUMBO) {
+            System.err.println(context.prefix() + toString(null) + "\u2192" + result.setVariableNames(this));
+        }
+        return result;
     }
 
     public InferResult infer(PredicateImpl declaration, InferContext context) {

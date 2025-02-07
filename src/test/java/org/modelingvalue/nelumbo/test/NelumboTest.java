@@ -274,9 +274,13 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             isFalse(and(F(), T()));
             isFalse(not(or(not(F()), not(T()))));
+            isTrue(not(and(F(), T())));
+            isTrue(not(not(or(not(F()), not(T())))));
 
             integerRules();
 
+            isFalse(plus(i(5), i(2), i(8)));
+            isFalse(is(plus(i(5), i(2)), i(8)));
             isTrue(not(plus(i(5), i(2), i(8))));
             isTrue(not(is(plus(i(5), i(2)), i(8))));
         });
@@ -363,6 +367,7 @@ public class NelumboTest extends NelumboTestBase {
             fact(parentChild(Carel, Jan));
             fact(parentChild(Jan, Wim));
             fact(parentChild(Wim, Marijn));
+
             isTrue(and(parentChild(Carel, A), parentChild(A, B), parentChild(B, Marijn)));
             isTrue(not(or(not(parentChild(Carel, A)), not(parentChild(A, B)), not(parentChild(B, Marijn)))));
         });

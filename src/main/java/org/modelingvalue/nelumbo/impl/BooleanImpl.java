@@ -22,44 +22,56 @@ package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
 
-public final class FalseImpl extends PredicateImpl {
-    private static final long                 serialVersionUID = -8515171118744898263L;
+public final class BooleanImpl extends PredicateImpl {
+    private static final long        serialVersionUID = -8515171118744898263L;
 
-    public static final FunctorImpl<Relation> FALSE_FUNCTOR    = FunctorImpl.<Relation> of(Logic::F);
+    @SuppressWarnings("rawtypes")
+    private static final FunctorImpl BOOLEAN_FUNCTOR  = FunctorImpl.of((SerializableFunction<Boolean, Relation>) BooleanImpl::b);
 
-    public static final FalseImpl             FALSE            = new FalseImpl();
+    public static final BooleanImpl  TRUE             = new BooleanImpl(true);
+    public static final BooleanImpl  FALSE            = new BooleanImpl(false);
 
-    private final InferResult                 FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
+    private static final InferResult TRUE_CONCLUSION  = InferResult.trueFalse(Set.of(TRUE), Set.of());
+    private static final InferResult FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private FalseImpl() {
-        super((FunctorImpl) FALSE_FUNCTOR);
+    private static Relation b(boolean val) {
+        return val ? Logic.T() : Logic.F();
     }
 
-    private FalseImpl(Object[] args) {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private BooleanImpl(boolean val) {
+        super(BOOLEAN_FUNCTOR, val);
+    }
+
+    private BooleanImpl(Object[] args) {
         super(args);
+    }
+
+    public boolean isTrue() {
+        return (Boolean) get(1);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Relation proxy() {
-        return Logic.F();
+        return b(isTrue());
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected FalseImpl struct(Object[] array) {
-        return new FalseImpl(array);
+    protected BooleanImpl struct(Object[] array) {
+        return new BooleanImpl(array);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public InferResult infer(PredicateImpl declaration, InferContext context) {
-        return FALSE_CONCLUSION;
+        return isTrue() ? TRUE_CONCLUSION : FALSE_CONCLUSION;
     }
 
     @SuppressWarnings("rawtypes")
@@ -69,12 +81,12 @@ public final class FalseImpl extends PredicateImpl {
     }
 
     @Override
-    public FalseImpl set(int i, Object... a) {
-        return (FalseImpl) super.set(i, a);
+    public BooleanImpl set(int i, Object... a) {
+        return (BooleanImpl) super.set(i, a);
     }
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? "\u22A5" : super.toString();
+        return PRETTY_NELUMBO ? (isTrue() ? "\u22A4" : "\u22A5") : super.toString();
     }
 }
