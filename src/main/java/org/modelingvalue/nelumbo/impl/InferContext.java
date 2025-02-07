@@ -76,7 +76,7 @@ public interface InferContext {
     }
 
     default String prefix() {
-        return "NELUMBO: " + "  ".repeat(stack().size());
+        return "NELUMBO: " + "    ".repeat(stack().size());
     }
 
 }

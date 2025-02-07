@@ -88,58 +88,68 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     public InferResult infer() {
-        InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
-        if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + toString(null));
-        }
-        InferResult result = setBinding(this, variables()).infer(this, context);
-        if (TRACE_NELUMBO) {
-            System.err.println(context.prefix() + toString(null) + "\u2192" + result.setVariableNames(this));
-        }
-        return result;
+        return setBinding(this, variables()).infer(this, KnowledgeBaseImpl.CURRENT.get().context());
     }
 
     public InferResult infer(PredicateImpl declaration, InferContext context) {
+        prefix(declaration, context);
         FunctorImpl<Predicate> functor = functor();
         LogicLambda logic = functor.logicLambda();
         if (logic != null) {
-            return logic.apply((PredicateImpl) this, context);
+            return result(declaration, logic.apply((PredicateImpl) this, context));
         }
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return incomplete();
+            return result(declaration, incomplete());
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
-        InferResult result;
         if (knowledgebase.getRules(this) != null) {
-            result = knowledgebase.getMemoiz(this);
+            InferResult result = knowledgebase.getMemoiz(this);
             if (result != null) {
-                return result;
+                return result(declaration, result);
             }
             if (context.shallow()) {
-                return incomplete();
+                return result(declaration, incomplete());
             }
             result = context.cycleResult().get(this);
             if (result != null) {
-                return result;
+                return result(declaration, result);
             }
             List<PredicateImpl> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return InferResult.overflow(stack.append(this));
+                return result(declaration, InferResult.overflow(stack.append(this)));
+            }
+            if (TRACE_NELUMBO) {
+                System.err.println();
             }
             result = fixpoint(context.pushOnStack(this));
             if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
                 List<PredicateImpl> overflow = result.stackOverflow();
                 if (overflow != null) {
                     if (stack.size() == MAX_LOGIC_DEPTH_D2) {
-                        return flatten(result, overflow, context);
+                        result = flatten(result, overflow, context);
                     }
-                    return result;
+                    prefix(declaration, context);
+                    return result(declaration, result);
                 }
             }
-            knowledgebase.memoization(this, result, context);
+            knowledgebase.memoization(this, result);
+            prefix(declaration, context);
+            return result(declaration, result);
         } else {
-            result = knowledgebase.getFacts(this);
+            return result(declaration, knowledgebase.getFacts(this));
+        }
+    }
+
+    private void prefix(PredicateImpl declaration, InferContext context) {
+        if (TRACE_NELUMBO) {
+            System.err.print(context.prefix() + setVariableNames(declaration).toString(null));
+        }
+    }
+
+    private InferResult result(PredicateImpl declaration, InferResult result) {
+        if (TRACE_NELUMBO) {
+            System.err.println("\u2192" + result.setVariableNames(declaration));
         }
         return result;
     }
@@ -155,7 +165,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             if (overflow != null) {
                 todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
             } else {
-                context.knowledgebase().memoization(predicate, result, context);
+                context.knowledgebase().memoization(predicate, result);
                 todo = todo.removeLast();
             }
         }

@@ -245,9 +245,14 @@ public interface InferResult {
     }
 
     default InferResult setVariableNames(PredicateImpl declaration) {
-        Set<PredicateImpl> facts = facts().replaceAll(p -> p.setVariableNames(declaration));
-        Set<PredicateImpl> falsehoods = falsehoods().replaceAll(p -> p.setVariableNames(declaration));
-        return of(facts, falsehoods, cycles());
+        List<PredicateImpl> overflow = stackOverflow();
+        if (overflow != null) {
+            return this;
+        } else {
+            Set<PredicateImpl> facts = facts().replaceAll(p -> p.setVariableNames(declaration));
+            Set<PredicateImpl> falsehoods = falsehoods().replaceAll(p -> p.setVariableNames(declaration));
+            return of(facts, falsehoods, cycles());
+        }
     }
 
     default boolean equals(InferResult other) {
