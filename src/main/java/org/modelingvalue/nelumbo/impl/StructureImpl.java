@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.StringUtil;
@@ -124,10 +125,29 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         if (tsl != null) {
             return tsl.apply((StructureImpl) this);
         }
-        String string = super.toString();
+        String string = (PRETTY_NELUMBO ? setVariables() : this).superToString();
         string = string.substring(1, string.length() - 1);
         int i = string.indexOf(',');
         return i >= 0 ? string.substring(0, i) + "(" + string.substring(i + 1) + ")" : string + "()";
+    }
+
+    private String superToString() {
+        return super.toString();
+    }
+
+    public String toString(StructureImpl<?> parent) {
+        return toString();
+    }
+
+    public final String toString(int i) {
+        return StringUtil.toString(get(i));
+    }
+
+    @SuppressWarnings("rawtypes")
+    private StructureImpl<F> setVariables() {
+        Map<VariableImpl, Object> vars = getBinding(Map.of());
+        vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
+        return setBinding(vars);
     }
 
     private static final Object[] array(Object functor, Object[] args) {
@@ -167,14 +187,6 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     public FunctorImpl<F> functor() {
         Object t = get(0);
         return t instanceof FunctorImpl ? (FunctorImpl<F>) t : null;
-    }
-
-    public String toString(StructureImpl<?> parent) {
-        return toString();
-    }
-
-    public final String toString(int i) {
-        return StringUtil.toString(get(i));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -367,7 +379,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings("rawtypes")
-    protected StructureImpl setBinding(Map<VariableImpl, Object> vars) {
+    protected StructureImpl<F> setBinding(Map<VariableImpl, Object> vars) {
         Object[] array = null;
         for (int i = 1; i < length(); i++) {
             Object thisVal = get(i);

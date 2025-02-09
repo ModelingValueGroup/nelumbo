@@ -22,7 +22,6 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.util.Objects;
 
-import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
@@ -103,7 +102,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         }
         InferResult result = setBinding(variables()).infer(context);
         if (context.trace()) {
-            System.err.println(context.prefix() + toString(null) + "\u2192" + result.setVariableNames());
+            System.err.println(context.prefix() + toString(null) + "\u2192" + result);
         }
         return result;
     }
@@ -160,13 +159,13 @@ public class PredicateImpl extends StructureImpl<Predicate> {
 
     private void prefix(InferContext context) {
         if (context.trace()) {
-            System.err.print(context.prefix() + "  " + setVariableNames().toString(null));
+            System.err.print(context.prefix() + "  " + toString(null));
         }
     }
 
     private InferResult result(InferResult result, InferContext context) {
         if (context.trace()) {
-            System.err.println("\u2192" + result.setVariableNames());
+            System.err.println("\u2192" + result);
         }
         return result;
     }
@@ -242,13 +241,6 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     @Override
     public PredicateImpl set(int i, Object... a) {
         return (PredicateImpl) super.set(i, a);
-    }
-
-    @SuppressWarnings("rawtypes")
-    protected PredicateImpl setVariableNames() {
-        Map<VariableImpl, Object> vars = getBinding(Map.of());
-        vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
-        return setBinding(vars);
     }
 
     public InferResult incomplete() {

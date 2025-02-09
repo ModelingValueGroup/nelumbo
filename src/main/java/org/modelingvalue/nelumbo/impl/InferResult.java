@@ -252,17 +252,6 @@ public interface InferResult {
         return set.toString().substring(3);
     }
 
-    default InferResult setVariableNames() {
-        List<PredicateImpl> overflow = stackOverflow();
-        if (overflow != null) {
-            return this;
-        } else {
-            Set<PredicateImpl> facts = facts().replaceAll(p -> p.setVariableNames());
-            Set<PredicateImpl> falsehoods = falsehoods().replaceAll(p -> p.setVariableNames());
-            return of(facts, falsehoods, cycles());
-        }
-    }
-
     default boolean equals(InferResult other) {
         return facts().equals(other.facts()) && falsehoods().equals(other.falsehoods()) && cycles().equals(other.cycles());
     }

@@ -100,7 +100,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl consequence = consequence().setBinding(binding);
         PredicateImpl condition = condition().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + condition.setVariableNames().toString(null) + "\u21D2" + consequence.setVariableNames());
+            System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
         InferResult condResult = condition.infer(context);
         if (condResult == condition.incomplete()) {
@@ -118,7 +118,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         }
         InferResult predResult = InferResult.of(predFacts, predFalsehoods, condResult.cycles());
         if (context.trace()) {
-            System.err.println(context.prefix() + condition.setVariableNames().toString(null) + "\u2192" + predResult.setVariableNames());
+            System.err.println(context.prefix() + condition.toString(null) + "\u2192" + predResult);
         }
         return predResult;
     }
