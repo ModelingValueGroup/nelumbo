@@ -24,7 +24,6 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Logic;
-import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
 
 public final class BooleanImpl extends PredicateImpl {
@@ -48,8 +47,13 @@ public final class BooleanImpl extends PredicateImpl {
         super(BOOLEAN_FUNCTOR, val);
     }
 
-    private BooleanImpl(Object[] args) {
-        super(args);
+    private BooleanImpl(Object[] args, BooleanImpl declaration) {
+        super(args, declaration);
+    }
+
+    @Override
+    public BooleanImpl declaration() {
+        return (BooleanImpl) super.declaration();
     }
 
     public boolean isTrue() {
@@ -65,18 +69,18 @@ public final class BooleanImpl extends PredicateImpl {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected BooleanImpl struct(Object[] array) {
-        return new BooleanImpl(array);
+        return new BooleanImpl(array, declaration());
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public InferResult infer(PredicateImpl declaration, InferContext context) {
+    public InferResult infer(InferContext context) {
         return isTrue() ? TRUE_CONCLUSION : FALSE_CONCLUSION;
     }
 
     @SuppressWarnings("rawtypes")
     @Override
-    public Map<VariableImpl, Object> getBinding(StructureImpl<Predicate> pred, Map<VariableImpl, Object> vars) {
+    public Map<VariableImpl, Object> getBinding(Map<VariableImpl, Object> vars) {
         return vars;
     }
 
@@ -88,5 +92,10 @@ public final class BooleanImpl extends PredicateImpl {
     @Override
     public String toString() {
         return PRETTY_NELUMBO ? (isTrue() ? "\u22A4" : "\u22A5") : super.toString();
+    }
+
+    @Override
+    protected PredicateImpl setDeclaration(PredicateImpl to) {
+        throw new UnsupportedOperationException();
     }
 }

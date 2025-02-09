@@ -96,12 +96,6 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
         return false;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private FunctorImpl(Object[] args) {
-        super(args);
-        throw new UnsupportedOperationException();
-    }
-
     @Override
     public String toString() {
         return ((String) get(2));
@@ -110,7 +104,12 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected FunctorImpl<T> struct(Object[] array) {
-        return new FunctorImpl<T>(array);
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public FunctorImpl<T> declaration() {
+        return (FunctorImpl<T>) super.declaration();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

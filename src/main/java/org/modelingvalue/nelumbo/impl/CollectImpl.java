@@ -40,14 +40,19 @@ public final class CollectImpl extends PredicateImpl {
         super((Functor) COLLECT_FUNCTOR_PROXY, pred, accum);
     }
 
-    private CollectImpl(Object[] args) {
-        super(args);
+    private CollectImpl(Object[] args, CollectImpl declaration) {
+        super(args, declaration);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected CollectImpl struct(Object[] array) {
-        return new CollectImpl(array);
+        return new CollectImpl(array, declaration());
+    }
+
+    @Override
+    public CollectImpl declaration() {
+        return (CollectImpl) super.declaration();
     }
 
     @SuppressWarnings("rawtypes")
@@ -125,15 +130,13 @@ public final class CollectImpl extends PredicateImpl {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public InferResult infer(PredicateImpl declaration, InferContext context) {
-        Map<VariableImpl, Object> localVars = ((CollectImpl) declaration).localVariables();
-        int identityIndex = ((CollectImpl) declaration).identityIndex();
-        int resultIndex = ((CollectImpl) declaration).resultIndex();
-        PredicateImpl goalColl = ((CollectImpl) declaration).collector();
-        PredicateImpl goalAccum = ((CollectImpl) declaration).accumulator();
+    public InferResult infer(InferContext context) {
+        Map<VariableImpl, Object> localVars = declaration().localVariables();
+        int identityIndex = declaration().identityIndex();
+        int resultIndex = declaration().resultIndex();
         PredicateImpl accum = accumulator();
         StructureImpl identity = accum.getVal(identityIndex);
-        InferResult result = goalColl.setBinding(collector(), localVars).infer(goalColl, context);
+        InferResult result = collector().setBinding(localVars).infer(context);
         if (result.hasStackOverflow()) {
             return result;
         }
@@ -141,12 +144,12 @@ public final class CollectImpl extends PredicateImpl {
         Set<StructureImpl> facts = Set.of(identity);
         Set<StructureImpl> falsehoods = Set.of();
         for (PredicateImpl element : result.facts()) {
-            Map<VariableImpl, Object> binding = goalColl.getBinding(element, Map.of());
+            Map<VariableImpl, Object> binding = element.getBinding(Map.of());
             Set<StructureImpl> elemFacts = Set.of();
             Set<StructureImpl> elemFalsehoods = Set.of();
             for (StructureImpl r : facts) {
-                PredicateImpl s = goalAccum.setBinding(accum, binding).set(identityIndex, r);
-                result = s.infer(goalAccum, context);
+                PredicateImpl s = accum.setBinding(binding).set(identityIndex, r);
+                result = s.infer(context);
                 if (result.hasStackOverflow()) {
                     return result;
                 }
@@ -167,13 +170,18 @@ public final class CollectImpl extends PredicateImpl {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public Map<VariableImpl, Object> getBinding(StructureImpl<Predicate> pred, Map<VariableImpl, Object> vars) {
+    public Map<VariableImpl, Object> getBinding(Map<VariableImpl, Object> vars) {
         Map<VariableImpl, Object> localVars = localVariables();
-        return super.getBinding(pred, vars).removeAll(e -> localVars.containsKey(e.getKey()));
+        return super.getBinding(vars).removeAll(e -> localVars.containsKey(e.getKey()));
     }
 
     @Override
     public CollectImpl set(int i, Object... a) {
         return (CollectImpl) super.set(i, a);
+    }
+
+    @Override
+    protected PredicateImpl setDeclaration(PredicateImpl to) {
+        throw new UnsupportedOperationException();
     }
 }

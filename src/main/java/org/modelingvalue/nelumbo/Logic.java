@@ -230,7 +230,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     private static Set<Map<Variable, Object>> getBindings(Set<PredicateImpl> set, PredicateImpl declaration) {
-        Set<Map<VariableImpl, Object>> bindings = set.replaceAll(p -> declaration.getBinding(p, Map.of()));
+        Set<Map<VariableImpl, Object>> bindings = set.replaceAll(p -> p.getBinding(Map.of()));
         return bindings.replaceAll(m -> m.replaceAll(e -> Entry.of((Variable) e.getKey().proxy(), proxy(e.getValue()))));
     }
 

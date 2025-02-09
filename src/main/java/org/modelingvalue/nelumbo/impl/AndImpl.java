@@ -35,14 +35,19 @@ public final class AndImpl extends AndOrImpl {
         super(AND_FUNCTOR, predicate1, predicate2);
     }
 
-    private AndImpl(Object[] args) {
-        super(args);
+    private AndImpl(Object[] args, AndImpl declaration) {
+        super(args, declaration);
+    }
+
+    @Override
+    public AndImpl declaration() {
+        return (AndImpl) super.declaration();
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected AndImpl struct(Object[] array) {
-        return new AndImpl(array);
+        return new AndImpl(array, declaration());
     }
 
     @Override

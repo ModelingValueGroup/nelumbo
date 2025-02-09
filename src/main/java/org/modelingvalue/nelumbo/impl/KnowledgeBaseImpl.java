@@ -171,7 +171,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferResult getFacts(PredicateImpl pred) {
         InferResult result = facts.get().get(pred);
-        return result != null ? result : InferResult.trueFalse(Set.of(), pred.singleton());
+        return result != null ? result.cast(pred) : InferResult.trueFalse(Set.of(), pred.singleton());
     }
 
     public List<RuleImpl> getRules(PredicateImpl pred) {
@@ -183,7 +183,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             Inference memoiz = m.get(pred);
             if (memoiz != null) {
                 memoiz.count++;
-                return memoiz.result();
+                return memoiz.result().cast(pred);
             }
         }
         return null;

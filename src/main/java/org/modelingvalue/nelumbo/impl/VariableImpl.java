@@ -33,8 +33,9 @@ public final class VariableImpl<F extends Structure> extends StructureImpl<F> {
         KnowledgeBaseImpl.updateSpecializations(type);
     }
 
-    private VariableImpl(Object[] args) {
-        super(args);
+    @Override
+    public VariableImpl<F> declaration() {
+        return (VariableImpl<F>) super.declaration();
     }
 
     @Override
@@ -51,7 +52,7 @@ public final class VariableImpl<F extends Structure> extends StructureImpl<F> {
     @Override
     @SuppressWarnings("unchecked")
     protected VariableImpl<F> struct(Object[] array) {
-        return new VariableImpl<F>(array);
+        throw new UnsupportedOperationException();
     }
 
     @Override

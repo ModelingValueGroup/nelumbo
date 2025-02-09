@@ -90,4 +90,9 @@ public interface InferContext {
         return "NELUMBO: " + "    ".repeat(stack().size());
     }
 
+    default InferResult getCycleResult(PredicateImpl predicate) {
+        InferResult result = cycleResult().get(predicate);
+        return result != null ? result.cast(predicate) : null;
+    }
+
 }

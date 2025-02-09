@@ -35,14 +35,19 @@ public final class NotImpl extends PredicateImpl {
         super(NOT_FUNCTOR_PROXY, pred);
     }
 
-    private NotImpl(Object[] args) {
-        super(args);
+    private NotImpl(Object[] args, NotImpl declaration) {
+        super(args, declaration);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected NotImpl struct(Object[] array) {
-        return new NotImpl(array);
+        return new NotImpl(array, declaration());
+    }
+
+    @Override
+    public NotImpl declaration() {
+        return (NotImpl) super.declaration();
     }
 
     @SuppressWarnings("rawtypes")
@@ -52,10 +57,9 @@ public final class NotImpl extends PredicateImpl {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public InferResult infer(PredicateImpl declaration, InferContext context) {
-        PredicateImpl predDecl = ((NotImpl) declaration).predicate();
+    public InferResult infer(InferContext context) {
         PredicateImpl predicate = predicate();
-        InferResult result = predicate.infer(predDecl, context);
+        InferResult result = predicate.infer(context);
         if (result.hasStackOverflow()) {
             return result;
         }
@@ -84,5 +88,10 @@ public final class NotImpl extends PredicateImpl {
     @Override
     public String toString() {
         return PRETTY_NELUMBO ? "\u00AC(" + predicate() + ")" : super.toString();
+    }
+
+    @Override
+    protected PredicateImpl setDeclaration(PredicateImpl to) {
+        throw new UnsupportedOperationException();
     }
 }

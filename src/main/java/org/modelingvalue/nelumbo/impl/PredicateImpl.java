@@ -48,21 +48,30 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         incomplete = InferResult.incomplete(this);
     }
 
-    protected PredicateImpl(Object[] args) {
-        super(args);
+    protected PredicateImpl(Object[] args, PredicateImpl declaration) {
+        super(args, declaration);
         incomplete = InferResult.incomplete(this);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     protected PredicateImpl struct(Object[] array) {
-        return new PredicateImpl(array);
+        return new PredicateImpl(array, declaration());
+    }
+
+    protected PredicateImpl setDeclaration(PredicateImpl to) {
+        return new PredicateImpl(toArray(), to.declaration());
+    }
+
+    @Override
+    public PredicateImpl declaration() {
+        return (PredicateImpl) super.declaration();
     }
 
     @SuppressWarnings("rawtypes")
     @Override
-    public PredicateImpl setBinding(StructureImpl<Predicate> pred, Map<VariableImpl, Object> vars) {
-        return (PredicateImpl) super.setBinding(pred, vars);
+    public PredicateImpl setBinding(Map<VariableImpl, Object> vars) {
+        return (PredicateImpl) super.setBinding(vars);
     }
 
     @SuppressWarnings("rawtypes")
@@ -92,40 +101,40 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null));
         }
-        InferResult result = setBinding(this, variables()).infer(this, context);
+        InferResult result = setBinding(variables()).infer(context);
         if (context.trace()) {
-            System.err.println(context.prefix() + toString(null) + "\u2192" + result.setVariableNames(this));
+            System.err.println(context.prefix() + toString(null) + "\u2192" + result.setVariableNames());
         }
         return result;
     }
 
-    public InferResult infer(PredicateImpl declaration, InferContext context) {
-        prefix(declaration, context);
+    public InferResult infer(InferContext context) {
+        prefix(context);
         FunctorImpl<Predicate> functor = functor();
         LogicLambda logic = functor.logicLambda();
         if (logic != null) {
-            return result(declaration, logic.apply((PredicateImpl) this, context), context);
+            return result(logic.apply((PredicateImpl) this, context), context);
         }
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return result(declaration, incomplete(), context);
+            return result(incomplete(), context);
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         if (knowledgebase.getRules(this) != null) {
             InferResult result = knowledgebase.getMemoiz(this);
             if (result != null) {
-                return result(declaration, result, context);
+                return result(result, context);
             }
             if (context.shallow()) {
-                return result(declaration, incomplete(), context);
+                return result(incomplete(), context);
             }
-            result = context.cycleResult().get(this);
+            result = context.getCycleResult(this);
             if (result != null) {
-                return result(declaration, result, context);
+                return result(result, context);
             }
             List<PredicateImpl> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return result(declaration, InferResult.overflow(stack.append(this)), context);
+                return result(InferResult.overflow(stack.append(this)), context);
             }
             if (context.trace()) {
                 System.err.println();
@@ -137,27 +146,27 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     if (stack.size() == MAX_LOGIC_DEPTH_D2) {
                         result = flatten(result, overflow, context);
                     }
-                    prefix(declaration, context);
-                    return result(declaration, result, context);
+                    prefix(context);
+                    return result(result, context);
                 }
             }
             knowledgebase.memoization(this, result);
-            prefix(declaration, context);
-            return result(declaration, result, context);
+            prefix(context);
+            return result(result, context);
         } else {
-            return result(declaration, knowledgebase.getFacts(this), context);
+            return result(knowledgebase.getFacts(this), context);
         }
     }
 
-    private void prefix(PredicateImpl declaration, InferContext context) {
+    private void prefix(InferContext context) {
         if (context.trace()) {
-            System.err.print(context.prefix() + "  " + setVariableNames(declaration).toString(null));
+            System.err.print(context.prefix() + "  " + setVariableNames().toString(null));
         }
     }
 
-    private InferResult result(PredicateImpl declaration, InferResult result, InferContext context) {
+    private InferResult result(InferResult result, InferContext context) {
         if (context.trace()) {
-            System.err.println("\u2192" + result.setVariableNames(declaration));
+            System.err.println("\u2192" + result.setVariableNames());
         }
         return result;
     }
@@ -236,10 +245,10 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     @SuppressWarnings("rawtypes")
-    protected PredicateImpl setVariableNames(PredicateImpl declaration) {
-        Map<VariableImpl, Object> vars = declaration.getBinding(this, Map.of());
+    protected PredicateImpl setVariableNames() {
+        Map<VariableImpl, Object> vars = getBinding(Map.of());
         vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
-        return declaration.setBinding(this, vars);
+        return setBinding(vars);
     }
 
     public InferResult incomplete() {
@@ -249,4 +258,5 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     public Set<PredicateImpl> singleton() {
         return incomplete.facts();
     }
+
 }

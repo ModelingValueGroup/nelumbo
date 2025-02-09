@@ -75,26 +75,31 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         }
     }
 
-    private final int hashCode;
+    private final int              hashCode;
+    private final StructureImpl<F> declaration;
 
     public StructureImpl(Functor<F> functor, Object... args) {
         super(unproxy(functor, args));
         this.hashCode = getHashCode();
+        declaration = this;
     }
 
     protected StructureImpl(FunctorImpl<F> functor, Object... args) {
         super(array(functor, args));
         this.hashCode = getHashCode();
+        declaration = this;
     }
 
     protected StructureImpl(Class<F> type, Object... args) {
         super(array(type, args));
         this.hashCode = getHashCode();
+        declaration = this;
     }
 
-    protected StructureImpl(Object[] args) {
+    protected StructureImpl(Object[] args, StructureImpl<F> declaration) {
         super(args);
         this.hashCode = getHashCode();
+        this.declaration = declaration;
     }
 
     private int getHashCode() {
@@ -290,14 +295,19 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
 
     @SuppressWarnings("unchecked")
     protected StructureImpl<F> struct(Object[] array) {
-        return new StructureImpl<F>(array).normal();
+        return new StructureImpl<F>(array, declaration).normal();
     }
 
     @SuppressWarnings("rawtypes")
-    public Map<VariableImpl, Object> getBinding(StructureImpl<F> struct, Map<VariableImpl, Object> vars) {
-        if (get(0).equals(struct.get(0))) {
+    public Map<VariableImpl, Object> getBinding(Map<VariableImpl, Object> vars) {
+        return getBinding(declaration, vars);
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected Map<VariableImpl, Object> getBinding(StructureImpl<F> decl, Map<VariableImpl, Object> vars) {
+        if (get(0).equals(decl.get(0))) {
             for (int i = 1; i < length(); i++) {
-                vars = getBinding(get(i), struct.get(i), vars);
+                vars = getBinding(decl.get(i), get(i), vars);
                 if (vars == null) {
                     return null;
                 }
@@ -309,43 +319,43 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Map<VariableImpl, Object> getBinding(Object thisVal, Object structVal, Map<VariableImpl, Object> vars) {
-        Class structType = typeOf(structVal);
-        structVal = structVal instanceof Class ? null : structVal;
-        if (thisVal instanceof VariableImpl) {
-            VariableImpl var = (VariableImpl) thisVal;
+    private static Map<VariableImpl, Object> getBinding(Object declVal, Object thisVal, Map<VariableImpl, Object> vars) {
+        Class thisType = typeOf(thisVal);
+        thisVal = thisVal instanceof Class ? null : thisVal;
+        if (declVal instanceof VariableImpl) {
+            VariableImpl var = (VariableImpl) declVal;
             Object varVal = vars.get(var);
             Class varType = typeOf(varVal);
             varVal = varVal instanceof Class ? null : varVal;
             if (varVal != null) {
-                if (structVal != null && !structVal.equals(varVal)) {
+                if (thisVal != null && !thisVal.equals(varVal)) {
                     return null;
                 }
-            } else if (structVal != null) {
-                if (var.type().isAssignableFrom(structType)) {
-                    vars = vars.put(var, structVal);
+            } else if (thisVal != null) {
+                if (var.type().isAssignableFrom(thisType)) {
+                    vars = vars.put(var, thisVal);
                 } else {
                     return null;
                 }
-            } else if (structType == null || !var.type().isAssignableFrom(structType)) {
+            } else if (thisType == null || !var.type().isAssignableFrom(thisType)) {
                 return null;
-            } else if (varType != null && !varType.equals(structType)) {
+            } else if (varType != null && !varType.equals(thisType)) {
                 return null;
             } else {
-                vars = vars.put(var, structType);
+                vars = vars.put(var, thisType);
             }
-        } else if (thisVal instanceof StructureImpl) {
-            StructureImpl t = (StructureImpl) thisVal;
-            if (structVal != null) {
-                if (structVal instanceof StructureImpl) {
-                    vars = t.getBinding((StructureImpl) structVal, vars);
+        } else if (declVal instanceof StructureImpl) {
+            StructureImpl declStruct = (StructureImpl) declVal;
+            if (thisVal != null) {
+                if (thisVal instanceof StructureImpl) {
+                    vars = ((StructureImpl) thisVal).getBinding(declStruct, vars);
                 } else {
                     return null;
                 }
-            } else if (structType == null || !t.type().isAssignableFrom(structType)) {
+            } else if (thisType == null || !declStruct.type().isAssignableFrom(thisType)) {
                 return null;
             }
-        } else if (structVal != null && !structVal.equals(thisVal)) {
+        } else if (thisVal != null && !thisVal.equals(declVal)) {
             return null;
         }
         return vars;
@@ -357,36 +367,36 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings("rawtypes")
-    protected StructureImpl setBinding(StructureImpl<F> struct, Map<VariableImpl, Object> vars) {
+    protected StructureImpl setBinding(Map<VariableImpl, Object> vars) {
         Object[] array = null;
-        for (int i = 1; i < struct.length(); i++) {
-            Object structVal = struct.get(i);
-            Object bound = setBinding(get(i), structVal, vars);
-            if (!Objects.equals(bound, structVal)) {
+        for (int i = 1; i < length(); i++) {
+            Object thisVal = get(i);
+            Object bound = setBinding(declaration.get(i), thisVal, vars);
+            if (!Objects.equals(bound, thisVal)) {
                 if (array == null) {
-                    array = struct.toArray();
+                    array = toArray();
                 }
                 array[i] = bound;
             }
         }
-        return array != null ? struct.struct(array) : struct;
+        return array != null ? struct(array) : this;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Object setBinding(Object thisVal, Object structVal, Map<VariableImpl, Object> vars) {
-        if (thisVal instanceof VariableImpl) {
-            Object varVal = vars.get((VariableImpl) thisVal);
+    private static Object setBinding(Object declVal, Object thisVal, Map<VariableImpl, Object> vars) {
+        if (declVal instanceof VariableImpl) {
+            Object varVal = vars.get((VariableImpl) declVal);
             if (varVal != null) {
                 return varVal;
             }
-        } else if (thisVal instanceof StructureImpl) {
-            if (structVal instanceof StructureImpl) {
-                return ((StructureImpl) thisVal).setBinding((StructureImpl) structVal, vars);
-            } else if (structVal instanceof Class && ((Class) structVal).isAssignableFrom((((StructureImpl) thisVal).type()))) {
-                return ((StructureImpl) thisVal).setBinding((StructureImpl) thisVal, vars);
+        } else if (declVal instanceof StructureImpl) {
+            if (thisVal instanceof StructureImpl) {
+                return ((StructureImpl) thisVal).setBinding(vars);
+            } else if (thisVal instanceof Class && ((Class) thisVal).isAssignableFrom((((StructureImpl) declVal).type()))) {
+                return ((StructureImpl) thisVal).setBinding(vars);
             }
         }
-        return structVal;
+        return thisVal;
     }
 
     protected boolean isFullyBound() {
@@ -445,5 +455,9 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         } else if (object instanceof List) {
             ((List) object).forEach(StructureImpl::noProxy);
         }
+    }
+
+    public StructureImpl<F> declaration() {
+        return declaration;
     }
 }

@@ -35,14 +35,19 @@ public final class OrImpl extends AndOrImpl {
         super(OR_FUNCTOR, predicate1, predicate2);
     }
 
-    private OrImpl(Object[] args) {
-        super(args);
+    private OrImpl(Object[] args, OrImpl declaration) {
+        super(args, declaration);
+    }
+
+    @Override
+    public OrImpl declaration() {
+        return (OrImpl) super.declaration();
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected OrImpl struct(Object[] array) {
-        return new OrImpl(array);
+        return new OrImpl(array, declaration());
     }
 
     @Override

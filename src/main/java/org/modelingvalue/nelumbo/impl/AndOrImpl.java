@@ -35,8 +35,13 @@ public abstract class AndOrImpl extends PredicateImpl {
         super(functor, predicate1, predicate2);
     }
 
-    protected AndOrImpl(Object[] args) {
-        super(args);
+    protected AndOrImpl(Object[] args, AndOrImpl declaration) {
+        super(args, declaration);
+    }
+
+    @Override
+    public AndOrImpl declaration() {
+        return (AndOrImpl) super.declaration();
     }
 
     @SuppressWarnings("rawtypes")
@@ -55,8 +60,7 @@ public abstract class AndOrImpl extends PredicateImpl {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public final InferResult infer(PredicateImpl declaration, InferContext context) {
-        PredicateImpl[] predDecl = new PredicateImpl[]{((AndOrImpl) declaration).predicate1(), ((AndOrImpl) declaration).predicate2()};
+    public final InferResult infer(InferContext context) {
         PredicateImpl predicate;
         InferResult[] predResult = new InferResult[2];
         Set<AndOrImpl> now, next = (Set) singleton(), andOrAll;
@@ -68,7 +72,7 @@ public abstract class AndOrImpl extends PredicateImpl {
             for (AndOrImpl andOr : now) {
                 for (int i : andOr.order()) {
                     predicate = andOr.predicate(i);
-                    predResult[i] = predicate.infer(predDecl[i], context);
+                    predResult[i] = predicate.infer(context);
                     if (predResult[i].hasStackOverflow()) {
                         return predResult[i];
                     }
@@ -82,7 +86,7 @@ public abstract class AndOrImpl extends PredicateImpl {
                             continue andor;
                         }
                     } else {
-                        andOrAll = (Set) InferResult.bind(predAll, predicate, predDecl[i], andOr, declaration).removeAll(now);
+                        andOrAll = (Set) InferResult.bind(predAll, predicate, andOr).removeAll(now);
                         if (!andOrAll.isEmpty()) {
                             next = next.addAll(andOrAll);
                             cycles = cycles.addAll(predResult[i].cycles());
@@ -124,5 +128,10 @@ public abstract class AndOrImpl extends PredicateImpl {
         } else {
             return ZERO_ONE;
         }
+    }
+
+    @Override
+    protected PredicateImpl setDeclaration(PredicateImpl to) {
+        throw new UnsupportedOperationException();
     }
 }

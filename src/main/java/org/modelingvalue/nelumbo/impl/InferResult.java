@@ -215,8 +215,16 @@ public interface InferResult {
         return of(facts, falsehoods, cycles);
     }
 
-    static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl from, PredicateImpl fromDecl, PredicateImpl to, PredicateImpl toDecl) {
-        return set.replaceAll(p -> p.equals(from) ? to : toDecl.setBinding(to, fromDecl.getBinding(p, Map.of())));
+    default InferResult cast(PredicateImpl to) {
+        return of(cast(facts(), to), cast(falsehoods(), to), cycles());
+    }
+
+    static Set<PredicateImpl> cast(Set<PredicateImpl> set, PredicateImpl to) {
+        return set.replaceAll(p -> p.equals(to) ? to : p.setDeclaration(to));
+    }
+
+    static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl from, PredicateImpl to) {
+        return set.replaceAll(p -> p.equals(from) ? to : to.setBinding(p.getBinding(Map.of())));
     }
 
     default InferResult not() {
@@ -244,13 +252,13 @@ public interface InferResult {
         return set.toString().substring(3);
     }
 
-    default InferResult setVariableNames(PredicateImpl declaration) {
+    default InferResult setVariableNames() {
         List<PredicateImpl> overflow = stackOverflow();
         if (overflow != null) {
             return this;
         } else {
-            Set<PredicateImpl> facts = facts().replaceAll(p -> p.setVariableNames(declaration));
-            Set<PredicateImpl> falsehoods = falsehoods().replaceAll(p -> p.setVariableNames(declaration));
+            Set<PredicateImpl> facts = facts().replaceAll(p -> p.setVariableNames());
+            Set<PredicateImpl> falsehoods = falsehoods().replaceAll(p -> p.setVariableNames());
             return of(facts, falsehoods, cycles());
         }
     }

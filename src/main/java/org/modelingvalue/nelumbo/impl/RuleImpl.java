@@ -53,14 +53,19 @@ public final class RuleImpl extends StructureImpl<Rule> {
         return false;
     }
 
-    private RuleImpl(Object[] args) {
-        super(args);
+    private RuleImpl(Object[] args, RuleImpl declaration) {
+        super(args, declaration);
         trace = false;
     }
 
     @Override
     protected RuleImpl struct(Object[] array) {
-        return new RuleImpl(array);
+        return new RuleImpl(array, declaration());
+    }
+
+    @Override
+    public RuleImpl declaration() {
+        return (RuleImpl) super.declaration();
     }
 
     @Override
@@ -83,39 +88,39 @@ public final class RuleImpl extends StructureImpl<Rule> {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected InferResult infer(PredicateImpl consequence, InferContext context) {
+    protected InferResult infer(PredicateImpl predicate, InferContext context) {
         if (!TRACE_NELUMBO && trace()) {
             context = context.trace(true);
         }
-        PredicateImpl conseqDecl = consequence();
-        Map<VariableImpl, Object> binding = conseqDecl.getBinding(consequence, Map.of());
+        Map<VariableImpl, Object> binding = predicate.getBinding(consequence(), Map.of());
         if (binding == null) {
             return null;
         }
         binding = variables().putAll(binding);
-        PredicateImpl bindConsequence = conseqDecl.setBinding(consequence, binding);
-        PredicateImpl condDecl = condition();
-        PredicateImpl condition = condDecl.setBinding(condDecl, binding);
+        PredicateImpl consequence = consequence().setBinding(binding);
+        PredicateImpl condition = condition().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + condition.setVariableNames(condDecl).toString(null) + "\u21D2" + bindConsequence.setVariableNames(conseqDecl));
+            System.err.println(context.prefix() + condition.setVariableNames().toString(null) + "\u21D2" + consequence.setVariableNames());
         }
-        InferResult condResult = condition.infer(condDecl, context);
+        InferResult condResult = condition.infer(context);
         if (condResult == condition.incomplete()) {
-            return consequence.incomplete();
+            return predicate.incomplete();
         }
         if (condResult.hasStackOverflow()) {
             return condResult;
         }
-        Set<PredicateImpl> facts = InferResult.bind(condResult.facts(), condition, condDecl, bindConsequence, conseqDecl);
-        Set<PredicateImpl> falsehoods = InferResult.bind(condResult.falsehoods(), condition, condDecl, bindConsequence, conseqDecl);
-        if (!consequence.equals(bindConsequence)) {
-            falsehoods = falsehoods.add(consequence);
+        Set<PredicateImpl> consFacts = InferResult.bind(condResult.facts(), condition, consequence);
+        Set<PredicateImpl> consFalsehoods = InferResult.bind(condResult.falsehoods(), condition, consequence);
+        Set<PredicateImpl> predFacts = InferResult.cast(consFacts, predicate);
+        Set<PredicateImpl> predFalsehoods = InferResult.cast(consFalsehoods, predicate);
+        if (!consequence.equals(predicate)) {
+            predFalsehoods = predFalsehoods.add(predicate);
         }
-        InferResult conseqResult = InferResult.of(facts, falsehoods, condResult.cycles());
+        InferResult predResult = InferResult.of(predFacts, predFalsehoods, condResult.cycles());
         if (context.trace()) {
-            System.err.println(context.prefix() + condition.setVariableNames(condDecl).toString(null) + "\u2192" + conseqResult.setVariableNames(conseqDecl));
+            System.err.println(context.prefix() + condition.setVariableNames().toString(null) + "\u2192" + predResult.setVariableNames());
         }
-        return conseqResult;
+        return predResult;
     }
 
     public int rulePrio() {
