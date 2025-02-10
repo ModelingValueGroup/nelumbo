@@ -30,13 +30,11 @@ public interface InferContext {
 
     Map<PredicateImpl, InferResult> cycleResult();
 
-    boolean deep();
-
-    boolean shallow();
+    boolean reduce();
 
     boolean trace();
 
-    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic, boolean deep, boolean shallow, boolean trace) {
+    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic, boolean reduce, boolean trace) {
         return new InferContext() {
             @Override
             public KnowledgeBaseImpl knowledgebase() {
@@ -54,13 +52,8 @@ public interface InferContext {
             }
 
             @Override
-            public boolean deep() {
-                return deep;
-            }
-
-            @Override
-            public boolean shallow() {
-                return shallow;
+            public boolean reduce() {
+                return reduce;
             }
 
             @Override
@@ -71,19 +64,19 @@ public interface InferContext {
     }
 
     default InferContext pushOnStack(PredicateImpl predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false, trace());
+        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, trace());
     }
 
     default InferContext putCycleResult(PredicateImpl predicate, InferResult cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false, trace());
+        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, trace());
     }
 
-    default InferContext deepShallow(boolean deep, boolean shallow) {
-        return of(knowledgebase(), stack(), cycleResult(), deep, shallow, trace());
+    default InferContext reduce(boolean reduce) {
+        return of(knowledgebase(), stack(), cycleResult(), reduce, trace());
     }
 
     default InferContext trace(boolean trace) {
-        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), deep(), shallow(), trace);
+        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), reduce(), trace);
     }
 
     default String prefix() {

@@ -458,6 +458,15 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
+    @RepeatedTest(1)
+    public void simpleTest() {
+        run(() -> {
+            integerRules();
+
+            isTrue(lt(i(0), i(1)));
+        });
+    }
+
     @RepeatedTest(32)
     public void rootTest1() {
         run(() -> {

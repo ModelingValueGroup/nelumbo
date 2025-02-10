@@ -100,21 +100,28 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null));
         }
-        InferResult result = setBinding(variables()).infer(context);
+        InferResult result = setBinding(variables()).resolve(context);
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null) + "\u2192" + result);
         }
         return result;
     }
 
+    public InferResult resolve(InferContext context) {
+        return infer(context);
+    }
+
     public InferResult infer(InferContext context) {
+        int nrOfUnbound = nrOfUnbound();
+        if (nrOfUnbound > 0 && context.reduce()) {
+            return incomplete();
+        }
         prefix(context);
         FunctorImpl<Predicate> functor = functor();
         LogicLambda logic = functor.logicLambda();
         if (logic != null) {
             return result(logic.apply((PredicateImpl) this, context), context);
         }
-        int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
             return result(incomplete(), context);
         }
@@ -123,9 +130,6 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             InferResult result = knowledgebase.getMemoiz(this);
             if (result != null) {
                 return result(result, context);
-            }
-            if (context.shallow()) {
-                return result(incomplete(), context);
             }
             result = context.getCycleResult(this);
             if (result != null) {

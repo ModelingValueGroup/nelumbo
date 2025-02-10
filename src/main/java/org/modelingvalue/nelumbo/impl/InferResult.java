@@ -223,12 +223,12 @@ public interface InferResult {
         return set.replaceAll(p -> p.equals(to) ? to : p.setDeclaration(to));
     }
 
-    static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl from, PredicateImpl to) {
-        return set.replaceAll(p -> p.equals(from) ? to : to.setBinding(p.getBinding(Map.of())));
+    default InferResult bind(PredicateImpl from, PredicateImpl to) {
+        return of(bind(facts(), from, to), bind(falsehoods(), from, to), cycles());
     }
 
-    default InferResult not() {
-        return of(falsehoods(), facts(), cycles());
+    static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl from, PredicateImpl to) {
+        return set.replaceAll(p -> p.equals(from) ? to : to.setBinding(p.getBinding(Map.of())));
     }
 
     default boolean hasCycleWith(PredicateImpl predicate) {
@@ -237,6 +237,10 @@ public interface InferResult {
 
     default boolean hasStackOverflow() {
         return stackOverflow() != null;
+    }
+
+    default boolean hasOnly(PredicateImpl predicate) {
+        return facts().allMatch(predicate::equals) && falsehoods().allMatch(predicate::equals);
     }
 
     default String asString() {

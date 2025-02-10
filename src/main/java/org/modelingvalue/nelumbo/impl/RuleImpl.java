@@ -102,19 +102,34 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (context.trace()) {
             System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
-        InferResult condResult = condition.infer(context);
+        InferResult condResult = condition.resolve(context);
         if (condResult == condition.incomplete()) {
             return predicate.incomplete();
         }
         if (condResult.hasStackOverflow()) {
             return condResult;
         }
-        Set<PredicateImpl> consFacts = InferResult.bind(condResult.facts(), condition, consequence);
-        Set<PredicateImpl> consFalsehoods = InferResult.bind(condResult.falsehoods(), condition, consequence);
+        Set<PredicateImpl> consFacts = InferResult.bind(condResult.facts().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+        Set<PredicateImpl> consFalsehoods = InferResult.bind(condResult.falsehoods().retainAll(PredicateImpl::isFullyBound), condition, consequence);
         Set<PredicateImpl> predFacts = InferResult.cast(consFacts, predicate);
         Set<PredicateImpl> predFalsehoods = InferResult.cast(consFalsehoods, predicate);
         if (!consequence.equals(predicate)) {
             predFalsehoods = predFalsehoods.add(predicate);
+        }
+        if (!predicate.isFullyBound()) {
+            if (!condResult.facts().removeAll(PredicateImpl::isFullyBound).isEmpty()) {
+                predFacts = predFacts.add(predicate);
+            }
+            if (!condResult.falsehoods().removeAll(PredicateImpl::isFullyBound).isEmpty()) {
+                predFalsehoods = predFalsehoods.add(predicate);
+            }
+        } else {
+            if (predFacts.isEmpty() && !condResult.falsehoods().isEmpty()) {
+                predFalsehoods = predFalsehoods.add(predicate);
+            }
+            if (predFalsehoods.isEmpty() && !condResult.facts().isEmpty()) {
+                predFacts = predFacts.add(predicate);
+            }
         }
         InferResult predResult = InferResult.of(predFacts, predFalsehoods, condResult.cycles());
         if (context.trace()) {

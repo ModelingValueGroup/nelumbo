@@ -58,72 +58,80 @@ public abstract class AndOrImpl extends PredicateImpl {
         return (PredicateImpl) get(i + 1);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings("unchecked")
     @Override
-    public final InferResult infer(InferContext context) {
-        PredicateImpl predicate;
-        InferResult[] predResult = new InferResult[2];
-        Set<AndOrImpl> now, next = (Set) singleton(), andOrAll;
-        Set<PredicateImpl> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of(), predAll;
+    public InferResult resolve(InferContext context) {
+        Set<PredicateImpl> now, next = singleton(), facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
         do {
             now = next;
             next = Set.of();
-            andor:
-            for (AndOrImpl andOr : now) {
-                for (int i : andOr.order()) {
-                    predicate = andOr.predicate(i);
-                    predResult[i] = predicate.infer(context);
-                    if (predResult[i].hasStackOverflow()) {
-                        return predResult[i];
-                    }
-                    predAll = predResult[i].facts().addAll(predResult[i].falsehoods()).remove(predicate);
-                    if (predAll.isEmpty()) {
-                        if (this instanceof AndImpl && predResult[i].facts().isEmpty()) {
-                            falsehoods = falsehoods.add(andOr);
-                            continue andor;
-                        } else if (this instanceof OrImpl && predResult[i].falsehoods().isEmpty()) {
-                            facts = facts.add(andOr);
-                            continue andor;
-                        }
-                    } else {
-                        andOrAll = (Set) InferResult.bind(predAll, predicate, andOr).removeAll(now);
-                        if (!andOrAll.isEmpty()) {
-                            next = next.addAll(andOrAll);
-                            cycles = cycles.addAll(predResult[i].cycles());
-                            if (this instanceof AndImpl && !predResult[i].falsehoods().isEmpty() && !isFullyBound()) {
-                                falsehoods = falsehoods.add(this);
-                            } else if (this instanceof OrImpl && !predResult[i].facts().isEmpty() && !isFullyBound()) {
-                                facts = facts.add(this);
-                            }
-                        }
-                        continue andor;
+            for (PredicateImpl predicate : now) {
+                InferResult predResult = predicate.infer(context.reduce(true));
+                if (predResult.hasStackOverflow()) {
+                    return predResult;
+                } else if (predResult.hasOnly(predicate)) {
+                    predResult = predicate.infer(context);
+                    if (predResult.hasStackOverflow()) {
+                        return predResult;
+                    } else if (predResult.hasOnly(predicate)) {
+                        facts = facts.addAll(InferResult.bind(predResult.facts(), predicate.declaration(), this));
+                        falsehoods = falsehoods.addAll(InferResult.bind(predResult.falsehoods(), predicate.declaration(), this));
+                        cycles = cycles.addAll(predResult.cycles());
+                        continue;
                     }
                 }
-                cycles = cycles.addAll(predResult[0].cycles()).addAll(predResult[1].cycles());
-                if (this instanceof AndImpl) {
-                    facts = facts.add(andOr);
-                    if (!predResult[0].falsehoods().isEmpty() || !predResult[1].falsehoods().isEmpty()) {
-                        falsehoods = falsehoods.add(this);
-                    }
-                } else if (this instanceof OrImpl) {
-                    falsehoods = falsehoods.add(andOr);
-                    if (!predResult[0].facts().isEmpty() || !predResult[1].facts().isEmpty()) {
+                next = next.addAll(predResult.facts()).addAll(predResult.falsehoods()).removeAll(now);
+                if (!next.isEmpty() && !predicate.isFullyBound()) {
+                    if (predResult.facts().contains(predicate)) {
                         facts = facts.add(this);
+                        cycles = cycles.addAll(predResult.cycles());
+                    }
+                    if (predResult.falsehoods().contains(predicate)) {
+                        falsehoods = falsehoods.add(this);
+                        cycles = cycles.addAll(predResult.cycles());
                     }
                 }
             }
-            if (next.isEmpty()) {
-                return InferResult.of(facts, falsehoods, cycles);
-            }
-        } while (true);
+        } while (!next.isEmpty());
+        return InferResult.of(facts, falsehoods, cycles);
+    }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Override
+    public final InferResult infer(InferContext context) {
+        PredicateImpl[] predicate = new PredicateImpl[2];
+        InferResult[] predResult = new InferResult[2];
+        for (int i : order()) {
+            predicate[i] = predicate(i);
+            predResult[i] = predicate[i].infer(context);
+            if (predResult[i].hasStackOverflow()) {
+                return predResult[i];
+            } else if (this instanceof AndImpl && predResult[i].facts().isEmpty()) {
+                return predResult[i];
+            } else if (this instanceof OrImpl && predResult[i].falsehoods().isEmpty()) {
+                return predResult[i];
+            } else if (!predResult[i].hasOnly(predicate[i])) {
+                return predResult[i].bind(predicate[i], this);
+            }
+        }
+        Set<PredicateImpl> facts = Set.of(), falsehoods = Set.of(), cycles;
+        if (this instanceof AndImpl) {
+            facts = singleton();
+            if (!predResult[0].falsehoods().isEmpty() || !predResult[1].falsehoods().isEmpty()) {
+                falsehoods = singleton();
+            }
+        } else if (this instanceof OrImpl) {
+            falsehoods = singleton();
+            if (!predResult[0].facts().isEmpty() || !predResult[1].facts().isEmpty()) {
+                facts = singleton();
+            }
+        }
+        cycles = predResult[0].cycles().addAll(predResult[1].cycles());
+        return InferResult.of(facts, falsehoods, cycles);
     }
 
     private int[] order() {
-        int unbound1 = predicate1().nrOfUnbound(), unbound2 = predicate2().nrOfUnbound();
-        if (unbound2 < unbound1) {
-            return ONE_ZERO;
-        } else if (RANDOM_NELUMBO && unbound1 == unbound2) {
+        if (RANDOM_NELUMBO) {
             return ThreadLocalRandom.current().nextBoolean() ? ONE_ZERO : ZERO_ONE;
         } else {
             return ZERO_ONE;
