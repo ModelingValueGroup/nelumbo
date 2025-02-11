@@ -207,11 +207,15 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
-                    return InferResult.of(nextResult.facts().remove(this), nextResult.falsehoods().remove(this), nextResult.cycles().remove(this));
+                    return InferResult.of(uncycle(nextResult.facts()), uncycle(nextResult.falsehoods()), nextResult.cycles().remove(this));
                 }
             }
             return nextResult;
         } while (true);
+    }
+
+    private Set<PredicateImpl> uncycle(Set<PredicateImpl> set) {
+        return set.equals(singleton()) && !isFullyBound() ? set : set.remove(this);
     }
 
     @SuppressWarnings("rawtypes")
