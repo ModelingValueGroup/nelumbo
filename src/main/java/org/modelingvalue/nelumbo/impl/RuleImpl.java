@@ -109,8 +109,16 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (condResult.hasStackOverflow()) {
             return condResult;
         }
-        Set<PredicateImpl> consFacts = InferResult.bind(condResult.facts().retainAll(PredicateImpl::isFullyBound), condition, consequence);
-        Set<PredicateImpl> consFalsehoods = InferResult.bind(condResult.falsehoods().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+        Set<PredicateImpl> condFacts = condResult.facts();
+        Set<PredicateImpl> condFalsehoods = condResult.falsehoods();
+        if (condFacts.size() > 1 && condFacts.contains(condition) && !condFalsehoods.contains(condition)) {
+            condFacts = condition.singleton();
+        }
+        if (condFalsehoods.size() > 1 && condFalsehoods.contains(condition) && !condFacts.contains(condition)) {
+            condFalsehoods = condition.singleton();
+        }
+        Set<PredicateImpl> consFacts = InferResult.bind(condFacts.retainAll(PredicateImpl::isFullyBound), condition, consequence);
+        Set<PredicateImpl> consFalsehoods = InferResult.bind(condFalsehoods.retainAll(PredicateImpl::isFullyBound), condition, consequence);
         Set<PredicateImpl> predFacts = InferResult.cast(consFacts, predicate);
         Set<PredicateImpl> predFalsehoods = InferResult.cast(consFalsehoods, predicate);
         if (!consequence.equals(predicate)) {

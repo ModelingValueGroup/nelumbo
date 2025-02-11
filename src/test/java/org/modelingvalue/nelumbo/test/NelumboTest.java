@@ -458,7 +458,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @RepeatedTest(1)
+    @RepeatedTest(32)
     public void simpleTest() {
         run(() -> {
             integerRules();
