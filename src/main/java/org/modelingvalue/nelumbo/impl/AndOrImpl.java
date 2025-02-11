@@ -67,14 +67,17 @@ public abstract class AndOrImpl extends PredicateImpl {
         do {
             now = next;
             next = Set.of();
+            if (now.size() > 3) {
+                System.err.println();
+            }
             for (PredicateImpl predicate : now) {
                 InferResult predResult = predicate.infer(reduce);
                 if (predResult.hasStackOverflow()) {
                     return predResult;
                 } else if (predResult.facts().isEmpty()) {
-                    falsehoods = falsehoods.add(InferResult.bind(predicate, this, predicate));
+                    falsehoods = falsehoods.add(InferResult.bind(predicate, this, this));
                 } else if (predResult.falsehoods().isEmpty()) {
-                    facts = facts.add(predicate).add(InferResult.bind(predicate, this, predicate));
+                    facts = facts.add(InferResult.bind(predicate, this, this));
                 } else {
                     assert (predResult.facts().equals(predResult.falsehoods()));
                     reduced = predResult.facts().get(0);
@@ -82,9 +85,9 @@ public abstract class AndOrImpl extends PredicateImpl {
                     if (predResult.hasStackOverflow()) {
                         return predResult;
                     } else if (predResult.facts().isEmpty()) {
-                        falsehoods = falsehoods.add(InferResult.bind(predicate, this, predicate));
+                        falsehoods = falsehoods.add(InferResult.bind(predicate, this, this));
                     } else if (predResult.falsehoods().isEmpty()) {
-                        facts = facts.add(predicate).add(InferResult.bind(predicate, this, predicate));
+                        facts = facts.add(InferResult.bind(predicate, this, this));
                     } else {
                         bound = predResult.facts().addAll(predResult.falsehoods()).remove(reduced);
                         if (!bound.isEmpty()) {
@@ -130,7 +133,11 @@ public abstract class AndOrImpl extends PredicateImpl {
                 return predResult[i];
             }
         }
-        if (this instanceof AndImpl && predResult[0].falsehoods().isEmpty()) {
+        if (this instanceof AndImpl && predResult[0].falsehoods().isEmpty() && predResult[1].falsehoods().isEmpty()) {
+            return BooleanImpl.TRUE_CONCLUSION;
+        } else if (this instanceof OrImpl && predResult[0].facts().isEmpty() && predResult[1].facts().isEmpty()) {
+            return BooleanImpl.FALSE_CONCLUSION;
+        } else if (this instanceof AndImpl && predResult[0].falsehoods().isEmpty()) {
             return predResult[1];
         } else if (this instanceof OrImpl && predResult[0].facts().isEmpty()) {
             return predResult[1];
