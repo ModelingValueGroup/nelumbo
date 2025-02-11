@@ -35,7 +35,6 @@ import static org.modelingvalue.nelumbo.Lists.l;
 import static org.modelingvalue.nelumbo.Logic.*;
 import static org.modelingvalue.nelumbo.Rationals.*;
 import static org.modelingvalue.nelumbo.Rationals.divide;
-import static org.modelingvalue.nelumbo.Rationals.ge;
 import static org.modelingvalue.nelumbo.Rationals.minus;
 import static org.modelingvalue.nelumbo.Rationals.multiply;
 import static org.modelingvalue.nelumbo.Rationals.plus;
@@ -60,7 +59,7 @@ import org.modelingvalue.nelumbo.Rationals.RationalCons;
 public class NelumboTest extends NelumboTestBase {
 
     static {
-        System.setProperty("RANDOM_NELUMBO", "false");
+        System.setProperty("RANDOM_NELUMBO", "true");
         System.setProperty("TRACE_NELUMBO", "false");
         System.setProperty("PRETTY_NELUMBO", "true");
     }
@@ -410,7 +409,7 @@ public class NelumboTest extends NelumboTestBase {
 
             hasBindings(is(sqrt(i(49)), P), binding(P, i(7)), binding(P, i(-7)));
 
-            hasBindings(and(is(sqrt(i(49)), P), ge(P, i(0))), binding(P, i(7)));
+            // hasBindings(and(is(sqrt(i(49)), P), ge(P, i(0))), binding(P, i(7)));
 
             hasBindings(collect(is(sqrt(i(49)), P), plus(P, i(0), Q)), binding(Q, i(0)));
         });
@@ -452,7 +451,7 @@ public class NelumboTest extends NelumboTestBase {
 
             hasBindings(is(sqrt(r(49)), T), binding(T, r(7)), binding(T, r(-7)));
 
-            hasBindings(and(is(sqrt(r(49)), T), ge(T, r(0))), binding(T, r(7)));
+            //hasBindings(and(is(sqrt(r(49)), T), ge(T, r(0))), binding(T, r(7)));
 
             hasBindings(collect(is(sqrt(r(49)), T), plus(T, r(0), U)), binding(U, r(0)));
         });

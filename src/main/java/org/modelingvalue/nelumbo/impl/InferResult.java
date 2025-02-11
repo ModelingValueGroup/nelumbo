@@ -267,4 +267,8 @@ public interface InferResult {
     default boolean isIncomplete() {
         return !facts().retainAll(falsehoods()).isEmpty();
     }
+
+    default boolean hasBindings() {
+        return !facts().removeAll(falsehoods()).isEmpty();
+    }
 }

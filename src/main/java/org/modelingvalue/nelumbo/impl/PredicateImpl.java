@@ -111,6 +111,10 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         return infer(context);
     }
 
+    protected InferResult expand(InferContext context) {
+        throw new UnsupportedOperationException();
+    }
+
     public InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 && context.reduce()) {

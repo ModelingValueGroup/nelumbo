@@ -2,7 +2,6 @@ package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.modelingvalue.nelumbo.Logic.getBindings;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
@@ -40,7 +39,7 @@ public class NelumboTestBase {
 
     @SafeVarargs
     public static void hasBindings(Predicate query, Map<Variable, Object>... bindings) {
-        assertEquals(Set.of(bindings), getBindings(query));
+        assertEquals(Set.of(bindings), Logic.getBindings(query));
     }
 
     public static void print(KnowledgeBase db) {

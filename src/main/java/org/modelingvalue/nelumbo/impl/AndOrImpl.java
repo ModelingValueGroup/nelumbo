@@ -89,7 +89,7 @@ public abstract class AndOrImpl extends PredicateImpl {
                     } else {
                         bound = reducedResult.facts().addAll(reducedResult.falsehoods()).remove(reduced);
                         if (!bound.isEmpty()) {
-                            bound = InferResult.bind(bound.retainAll(PredicateImpl::isFullyBound), this, predicate);
+                            bound = InferResult.bind(bound.retainAll(PredicateImpl::isFullyBound), this, predicate).remove(now);
                             if (!bound.isEmpty()) {
                                 next = next.addAll(bound);
                                 if (!reducedResult.facts().removeAll(PredicateImpl::isFullyBound).isEmpty()) {
@@ -127,22 +127,33 @@ public abstract class AndOrImpl extends PredicateImpl {
                 return BooleanImpl.FALSE_CONCLUSION;
             } else if (this instanceof OrImpl && predResult[i].falsehoods().isEmpty()) {
                 return BooleanImpl.TRUE_CONCLUSION;
-            } else if (!predicate[i].isFullyBound() && !predResult[i].hasOnly(predicate[i])) {
-                return predResult[i];
             }
         }
-        if (this instanceof AndImpl && predResult[0].falsehoods().isEmpty() && predResult[1].falsehoods().isEmpty()) {
-            return BooleanImpl.TRUE_CONCLUSION;
-        } else if (this instanceof OrImpl && predResult[0].facts().isEmpty() && predResult[1].facts().isEmpty()) {
-            return BooleanImpl.FALSE_CONCLUSION;
-        } else if (this instanceof AndImpl && predResult[0].falsehoods().isEmpty()) {
-            return predResult[1];
-        } else if (this instanceof OrImpl && predResult[0].facts().isEmpty()) {
-            return predResult[1];
-        } else if (this instanceof AndImpl && predResult[1].falsehoods().isEmpty()) {
-            return predResult[0];
-        } else if (this instanceof OrImpl && predResult[1].facts().isEmpty()) {
-            return predResult[0];
+        if (context.expand()) {
+            if (!predicate[0].isFullyBound() && predResult[0].hasBindings() && !predicate[1].isFullyBound() && predResult[1].hasBindings()) {
+                return predResult[0].add(predResult[1]);
+            } else if (!predicate[0].isFullyBound() && predResult[0].hasBindings()) {
+                return predResult[0];
+            } else if (!predicate[1].isFullyBound() && predResult[1].hasBindings()) {
+                return predResult[1];
+            }
+        }
+        if (this instanceof AndImpl) {
+            if (predResult[0].falsehoods().isEmpty() && predResult[1].falsehoods().isEmpty()) {
+                return BooleanImpl.TRUE_CONCLUSION;
+            } else if (predResult[0].falsehoods().isEmpty()) {
+                return predResult[1];
+            } else if (predResult[1].falsehoods().isEmpty()) {
+                return predResult[0];
+            }
+        } else if (this instanceof OrImpl) {
+            if (predResult[0].facts().isEmpty() && predResult[1].facts().isEmpty()) {
+                return BooleanImpl.FALSE_CONCLUSION;
+            } else if (predResult[0].facts().isEmpty()) {
+                return predResult[1];
+            } else if (predResult[1].facts().isEmpty()) {
+                return predResult[0];
+            }
         }
         return InferResult.of(singleton(), singleton(), predResult[0].cycles().addAll(predResult[1].cycles()));
     }

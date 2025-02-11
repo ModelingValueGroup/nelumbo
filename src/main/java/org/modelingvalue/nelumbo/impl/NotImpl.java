@@ -76,7 +76,7 @@ public final class NotImpl extends PredicateImpl {
             return BooleanImpl.TRUE_CONCLUSION;
         } else if (context.reduce() && result.falsehoods().isEmpty()) {
             return BooleanImpl.FALSE_CONCLUSION;
-        } else if (context.expand() && !result.hasOnly(predicate)) {
+        } else if (context.expand() && !predicate.isFullyBound() && result.hasBindings()) {
             return result;
         }
         Set<PredicateImpl> facts, falsehoods;
