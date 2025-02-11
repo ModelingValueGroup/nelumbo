@@ -92,10 +92,10 @@ public abstract class AndOrImpl extends PredicateImpl {
                             bound = InferResult.bind(bound.retainAll(PredicateImpl::isFullyBound), this, predicate).remove(now);
                             if (!bound.isEmpty()) {
                                 next = next.addAll(bound);
-                                if (!reducedResult.facts().removeAll(reducedResult.falsehoods()).removeAll(PredicateImpl::isFullyBound).isEmpty()) {
+                                if (!reducedResult.facts().removeAll(reducedResult.falsehoods()::contains).removeAll(PredicateImpl::isFullyBound).isEmpty()) {
                                     facts = facts.add(this);
                                 }
-                                if (!reducedResult.falsehoods().removeAll(reducedResult.facts()).removeAll(PredicateImpl::isFullyBound).isEmpty()) {
+                                if (!reducedResult.falsehoods().removeAll(reducedResult.facts()::contains).removeAll(PredicateImpl::isFullyBound).isEmpty()) {
                                     falsehoods = falsehoods.add(this);
                                 }
                                 cycles = cycles.addAll(reducedResult.cycles());
