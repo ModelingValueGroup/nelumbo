@@ -159,7 +159,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     private final AtomicReference<Map<PredicateImpl, InferResult>>          facts;
     private final AtomicReference<Map<PredicateImpl, List<RuleImpl>>>       rules;
     private final AtomicReference<QualifiedSet<PredicateImpl, Inference>[]> memoization;
-    private final InferContext                                              context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, StructureImpl.TRACE_NELUMBO);
+    private final InferContext                                              context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, false, StructureImpl.TRACE_NELUMBO);
     private boolean                                                         stopped;
 
     @SuppressWarnings("unchecked")
@@ -210,48 +210,52 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected void memoization(PredicateImpl predicate, InferResult fullResult) {
-        if (fullResult.facts().retainAll(fullResult.falsehoods()).isEmpty()) {
-            InferResult result = InferResult.trueFalse(fullResult.facts(), fullResult.falsehoods());
-            FunctorImpl<Predicate> functor = predicate.functor();
-            if (functor.factual()) {
-                facts.updateAndGet(map -> {
+        InferResult result = fullResult.cycles().isEmpty() ? fullResult : //
+                InferResult.trueFalse(fullResult.facts(), fullResult.falsehoods());
+        boolean complete = !result.isIncomplete();
+        FunctorImpl<Predicate> functor = predicate.functor();
+        if (functor.factual()) {
+            facts.updateAndGet(map -> {
+                if (complete) {
                     map = map.put(predicate, result);
-                    for (PredicateImpl fact : result.facts()) {
-                        if (fact.isFullyBound()) {
-                            map = map.put(fact, InferResult.trueFalse(fact.singleton(), Set.of()));
-                        }
-                    }
-                    for (PredicateImpl falsehood : result.falsehoods()) {
-                        if (falsehood.isFullyBound()) {
-                            map = map.put(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton()));
-                        }
-                    }
-                    return map;
-                });
-            } else if (!functor.derived()) {
-                QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
-                    array = array.clone();
-                    array[0] = array[0].put(new Inference(predicate, result));
-                    for (PredicateImpl fact : result.facts()) {
-                        if (fact.isFullyBound()) {
-                            array[0] = array[0].put(new Inference(fact, InferResult.trueFalse(fact.singleton(), Set.of())));
-                        }
-                    }
-                    for (PredicateImpl falsehood : result.falsehoods()) {
-                        if (falsehood.isFullyBound()) {
-                            array[0] = array[0].put(new Inference(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton())));
-                        }
-                    }
-                    if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
-                        array[2] = array[2].putAll(array[1]);
-                        array[1] = array[0];
-                        array[0] = EMPTY_MEMOIZ;
-                    }
-                    return array;
-                });
-                if (mem[2].size() > MAX_LOGIC_MEMOIZ) {
-                    POOL.execute(this::cleanup);
                 }
+                for (PredicateImpl fact : result.facts()) {
+                    if (fact.isFullyBound()) {
+                        map = map.put(fact, InferResult.trueFalse(fact.singleton(), Set.of()));
+                    }
+                }
+                for (PredicateImpl falsehood : result.falsehoods()) {
+                    if (falsehood.isFullyBound()) {
+                        map = map.put(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton()));
+                    }
+                }
+                return map;
+            });
+        } else if (!functor.derived()) {
+            QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
+                array = array.clone();
+                if (complete) {
+                    array[0] = array[0].put(new Inference(predicate, result));
+                }
+                for (PredicateImpl fact : result.facts()) {
+                    if (fact.isFullyBound()) {
+                        array[0] = array[0].put(new Inference(fact, InferResult.trueFalse(fact.singleton(), Set.of())));
+                    }
+                }
+                for (PredicateImpl falsehood : result.falsehoods()) {
+                    if (falsehood.isFullyBound()) {
+                        array[0] = array[0].put(new Inference(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton())));
+                    }
+                }
+                if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
+                    array[2] = array[2].putAll(array[1]);
+                    array[1] = array[0];
+                    array[0] = EMPTY_MEMOIZ;
+                }
+                return array;
+            });
+            if (mem[2].size() > MAX_LOGIC_MEMOIZ) {
+                POOL.execute(this::cleanup);
             }
         }
     }

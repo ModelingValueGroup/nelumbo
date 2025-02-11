@@ -228,7 +228,11 @@ public interface InferResult {
     }
 
     static Set<PredicateImpl> bind(Set<PredicateImpl> set, PredicateImpl from, PredicateImpl to) {
-        return set.replaceAll(p -> p.equals(from) ? to : to.setBinding(p.getBinding(Map.of())));
+        return set.replaceAll(p -> bind(p, from, to));
+    }
+
+    static PredicateImpl bind(PredicateImpl pred, PredicateImpl from, PredicateImpl to) {
+        return pred.equals(from) ? to : to.setBinding(pred.getBinding(Map.of()));
     }
 
     default boolean hasCycleWith(PredicateImpl predicate) {
@@ -237,10 +241,6 @@ public interface InferResult {
 
     default boolean hasStackOverflow() {
         return stackOverflow() != null;
-    }
-
-    default boolean hasOnly(PredicateImpl predicate) {
-        return facts().allMatch(predicate::equals) && falsehoods().allMatch(predicate::equals);
     }
 
     default String asString() {
@@ -260,4 +260,11 @@ public interface InferResult {
         return facts().equals(other.facts()) && falsehoods().equals(other.falsehoods()) && cycles().equals(other.cycles());
     }
 
+    default boolean hasOnly(PredicateImpl predicate) {
+        return facts().allMatch(predicate::equals) && falsehoods().allMatch(predicate::equals);
+    }
+
+    default boolean isIncomplete() {
+        return !facts().retainAll(falsehoods()).isEmpty();
+    }
 }

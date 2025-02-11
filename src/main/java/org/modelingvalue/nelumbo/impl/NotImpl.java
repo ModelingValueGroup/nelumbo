@@ -35,6 +35,14 @@ public final class NotImpl extends PredicateImpl {
         super(NOT_FUNCTOR_PROXY, pred);
     }
 
+    private NotImpl(PredicateImpl pred) {
+        super(NOT_FUNCTOR, pred);
+    }
+
+    private NotImpl(PredicateImpl pred, NotImpl declaration) {
+        this(new Object[]{NOT_FUNCTOR, pred}, declaration);
+    }
+
     private NotImpl(Object[] args, NotImpl declaration) {
         super(args, declaration);
     }
@@ -62,20 +70,25 @@ public final class NotImpl extends PredicateImpl {
         InferResult result = predicate.infer(context);
         if (result.hasStackOverflow()) {
             return result;
-        }
-        if (result == predicate.incomplete()) {
+        } else if (result == predicate.incomplete()) {
             return incomplete();
+        } else if (context.reduce() && result.facts().isEmpty()) {
+            return BooleanImpl.TRUE_CONCLUSION;
+        } else if (context.reduce() && result.falsehoods().isEmpty()) {
+            return BooleanImpl.FALSE_CONCLUSION;
+        } else if (context.expand() && !result.hasOnly(predicate)) {
+            return result;
         }
         Set<PredicateImpl> facts, falsehoods;
         if (result.falsehoods().equals(predicate.singleton())) {
             facts = singleton();
         } else {
-            facts = result.falsehoods().replaceAll(f -> f.equals(predicate) ? this : set(1, f));
+            facts = result.falsehoods().replaceAll(f -> f.equals(predicate) ? this : new NotImpl(f, new NotImpl(f.declaration())));
         }
         if (result.facts().equals(predicate.singleton())) {
             falsehoods = singleton();
         } else {
-            falsehoods = result.facts().replaceAll(f -> f.equals(predicate) ? this : set(1, f));
+            falsehoods = result.facts().replaceAll(f -> f.equals(predicate) ? this : new NotImpl(f, new NotImpl(f.declaration())));
         }
         return InferResult.of(facts, falsehoods, result.cycles());
     }

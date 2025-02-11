@@ -133,7 +133,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             }
             result = context.getCycleResult(this);
             if (result != null) {
-                return result(result, context);
+                return result(context.reduce() ? incomplete() : result, context);
             }
             List<PredicateImpl> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
@@ -204,6 +204,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 if (!nextResult.equals(previousResult) && !nextResult.equals(cycleResult)) {
                     previousResult = nextResult;
                     cycleResult = InferResult.of(nextResult.facts().add(this), nextResult.falsehoods().add(this), singleton());
+                    context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
                     return InferResult.of(nextResult.facts().remove(this), nextResult.falsehoods().remove(this), nextResult.cycles().remove(this));

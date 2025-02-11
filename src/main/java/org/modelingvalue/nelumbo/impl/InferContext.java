@@ -32,9 +32,11 @@ public interface InferContext {
 
     boolean reduce();
 
+    boolean expand();
+
     boolean trace();
 
-    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic, boolean reduce, boolean trace) {
+    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic, boolean reduce, boolean expand, boolean trace) {
         return new InferContext() {
             @Override
             public KnowledgeBaseImpl knowledgebase() {
@@ -57,6 +59,11 @@ public interface InferContext {
             }
 
             @Override
+            public boolean expand() {
+                return expand;
+            }
+
+            @Override
             public boolean trace() {
                 return trace;
             }
@@ -64,19 +71,19 @@ public interface InferContext {
     }
 
     default InferContext pushOnStack(PredicateImpl predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, trace());
+        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false, trace());
     }
 
     default InferContext putCycleResult(PredicateImpl predicate, InferResult cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, trace());
+        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false, trace());
     }
 
-    default InferContext reduce(boolean reduce) {
-        return of(knowledgebase(), stack(), cycleResult(), reduce, trace());
+    default InferContext reduceExpand(boolean reduce, boolean expand) {
+        return of(knowledgebase(), stack(), cycleResult(), reduce, expand, trace());
     }
 
     default InferContext trace(boolean trace) {
-        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), reduce(), trace);
+        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), reduce(), expand(), trace);
     }
 
     default String prefix() {

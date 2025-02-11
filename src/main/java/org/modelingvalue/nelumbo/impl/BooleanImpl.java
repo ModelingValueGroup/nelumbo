@@ -27,16 +27,16 @@ import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Relation;
 
 public final class BooleanImpl extends PredicateImpl {
-    private static final long        serialVersionUID = -8515171118744898263L;
+    private static final long          serialVersionUID = -8515171118744898263L;
 
     @SuppressWarnings("rawtypes")
-    private static final FunctorImpl BOOLEAN_FUNCTOR  = FunctorImpl.of((SerializableFunction<Boolean, Relation>) BooleanImpl::b);
+    private static final FunctorImpl   BOOLEAN_FUNCTOR  = FunctorImpl.of((SerializableFunction<Boolean, Relation>) BooleanImpl::b);
 
-    public static final BooleanImpl  TRUE             = new BooleanImpl(true);
-    public static final BooleanImpl  FALSE            = new BooleanImpl(false);
+    public static final BooleanImpl    TRUE             = new BooleanImpl(true);
+    public static final BooleanImpl    FALSE            = new BooleanImpl(false);
 
-    private static final InferResult TRUE_CONCLUSION  = InferResult.trueFalse(Set.of(TRUE), Set.of());
-    private static final InferResult FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
+    protected static final InferResult TRUE_CONCLUSION  = InferResult.trueFalse(Set.of(TRUE), Set.of());
+    protected static final InferResult FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
 
     private static Relation b(boolean val) {
         return val ? Logic.T() : Logic.F();
