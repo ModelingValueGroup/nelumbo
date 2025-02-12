@@ -247,14 +247,14 @@ public final class Rationals {
     }
 
     private static Functor<Relation> GE_FUNCTOR = functor(Rationals::ge, //
-            (ToStringLambda) s -> s.toString(1) + ">=" + s.toString(2));
+            (ToStringLambda) s -> s.toString(1) + "\u2265" + s.toString(2));
 
     public static Relation ge(Rational a, Rational b) {
         return pred(GE_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LE_FUNCTOR = functor(Rationals::le, //
-            (ToStringLambda) s -> s.toString(1) + "<=" + s.toString(2));
+            (ToStringLambda) s -> s.toString(1) + "\u2264" + s.toString(2));
 
     public static Relation le(Rational a, Rational b) {
         return pred(LE_FUNCTOR, a, b);

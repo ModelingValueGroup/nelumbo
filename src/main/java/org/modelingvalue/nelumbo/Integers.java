@@ -214,14 +214,14 @@ public final class Integers {
     }
 
     private static Functor<Relation> GE_FUNCTOR = functor(Integers::ge, //
-            (ToStringLambda) s -> s.toString(1) + ">=" + s.toString(2));
+            (ToStringLambda) s -> s.toString(1) + "\u2265" + s.toString(2));
 
     public static Relation ge(Integer a, Integer b) {
         return pred(GE_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LE_FUNCTOR = functor(Integers::le, //
-            (ToStringLambda) s -> s.toString(1) + "<=" + s.toString(2));
+            (ToStringLambda) s -> s.toString(1) + "\u2264" + s.toString(2));
 
     public static Relation le(Integer a, Integer b) {
         return pred(LE_FUNCTOR, a, b);
