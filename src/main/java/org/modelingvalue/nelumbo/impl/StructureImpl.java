@@ -120,12 +120,13 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public String toString() {
-        FunctorImpl<F> f = PRETTY_NELUMBO ? functor() : null;
+        StructureImpl<F> self = PRETTY_NELUMBO ? setVariables() : this;
+        FunctorImpl<F> f = PRETTY_NELUMBO ? self.functor() : null;
         ToStringLambda tsl = f != null ? f.toStringLambda() : null;
         if (tsl != null) {
-            return tsl.apply((StructureImpl) this);
+            return tsl.apply((StructureImpl) self);
         }
-        String string = (PRETTY_NELUMBO ? setVariables() : this).superToString();
+        String string = self.superToString();
         string = string.substring(1, string.length() - 1);
         int i = string.indexOf(',');
         return i >= 0 ? string.substring(0, i) + "(" + string.substring(i + 1) + ")" : string + "()";
