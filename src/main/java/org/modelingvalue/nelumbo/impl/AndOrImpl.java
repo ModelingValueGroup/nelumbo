@@ -22,7 +22,6 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
 public abstract class AndOrImpl extends PredicateImpl {
@@ -56,60 +55,6 @@ public abstract class AndOrImpl extends PredicateImpl {
 
     private PredicateImpl predicate(int i) {
         return (PredicateImpl) get(i + 1);
-    }
-
-    @SuppressWarnings("unchecked")
-    private InferResult resolve(InferContext context) {
-        Set<PredicateImpl> now, next = singleton(), bound, facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
-        InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
-        PredicateImpl reduced;
-        InferResult predResult, reducedResult;
-        do {
-            now = next;
-            next = Set.of();
-            for (PredicateImpl predicate : now) {
-                predResult = predicate.infer(reduce);
-                if (predResult.hasStackOverflow()) {
-                    return predResult;
-                } else if (predResult.facts().isEmpty()) {
-                    falsehoods = falsehoods.add(InferResult.bind(predicate, this, predicate));
-                } else if (predResult.falsehoods().isEmpty()) {
-                    facts = facts.add(InferResult.bind(predicate, this, predicate));
-                } else {
-                    assert (predResult.facts().equals(predResult.falsehoods()));
-                    reduced = predResult.facts().get(0);
-                    reducedResult = reduced.infer(expand);
-                    if (reducedResult.hasStackOverflow()) {
-                        return reducedResult;
-                    } else if (reducedResult.facts().isEmpty()) {
-                        falsehoods = falsehoods.add(InferResult.bind(predicate, this, predicate));
-                    } else if (reducedResult.falsehoods().isEmpty()) {
-                        facts = facts.add(InferResult.bind(predicate, this, predicate));
-                    } else {
-                        bound = reducedResult.facts().addAll(reducedResult.falsehoods()).remove(reduced);
-                        if (!bound.isEmpty()) {
-                            bound = InferResult.bind(bound.retainAll(PredicateImpl::isFullyBound), this, predicate).remove(now);
-                            if (!bound.isEmpty()) {
-                                next = next.addAll(bound);
-                                if (!reducedResult.facts().removeAll(reducedResult.falsehoods()::contains).removeAll(PredicateImpl::isFullyBound).isEmpty()) {
-                                    facts = facts.add(this);
-                                }
-                                if (!reducedResult.falsehoods().removeAll(reducedResult.facts()::contains).removeAll(PredicateImpl::isFullyBound).isEmpty()) {
-                                    falsehoods = falsehoods.add(this);
-                                }
-                                cycles = cycles.addAll(reducedResult.cycles());
-                            }
-                        } else {
-                            facts = facts.addAll(InferResult.bind(reducedResult.facts(), this, predicate));
-                            falsehoods = falsehoods.addAll(InferResult.bind(reducedResult.falsehoods(), this, predicate));
-                            cycles = cycles.addAll(reducedResult.cycles());
-                            continue;
-                        }
-                    }
-                }
-            }
-        } while (!next.isEmpty());
-        return InferResult.of(facts, falsehoods, cycles);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

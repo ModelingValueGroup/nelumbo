@@ -300,11 +300,12 @@ public class NelumboTest extends NelumboTestBase {
             hasBindings(not(not(ancestorDescendent(A, Wim))), //
                     binding(A, Jan), binding(A, Carel));
 
-            //            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(A, Wim)))), //
-            //                    binding(A, Jan), binding(A, Carel));
-            //
-            //            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(Carel, C)))), //
-            //                    binding(A, Jan), binding(A, Carel), binding(C, Jan), binding(C, Wim));
+            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(A, Wim)))), //
+                    binding(A, Jan), binding(A, Carel));
+
+            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(Carel, C)))), //
+                    binding(A, Jan, C, Jan), binding(A, Jan, C, Wim), //
+                    binding(A, Carel, C, Jan), binding(A, Carel, C, Wim));
         });
     }
 

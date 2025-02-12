@@ -131,6 +131,9 @@ public final class CollectImpl extends PredicateImpl {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public InferResult infer(InferContext context) {
+        if (context.reduce() && !context.expand()) {
+            return resolve(context);
+        }
         Map<VariableImpl, Object> localVars = declaration().localVariables();
         int identityIndex = declaration().identityIndex();
         int resultIndex = declaration().resultIndex();

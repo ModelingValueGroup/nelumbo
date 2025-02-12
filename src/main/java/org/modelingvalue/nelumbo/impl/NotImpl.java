@@ -20,7 +20,6 @@
 
 package org.modelingvalue.nelumbo.impl;
 
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
@@ -37,10 +36,6 @@ public final class NotImpl extends PredicateImpl {
 
     private NotImpl(PredicateImpl pred) {
         super(NOT_FUNCTOR, pred);
-    }
-
-    private NotImpl(PredicateImpl pred, NotImpl declaration) {
-        this(new Object[]{NOT_FUNCTOR, pred}, declaration);
     }
 
     private NotImpl(Object[] args, NotImpl declaration) {
@@ -66,33 +61,24 @@ public final class NotImpl extends PredicateImpl {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public InferResult infer(InferContext context) {
+        if (!context.reduce() && !context.expand()) {
+            return resolve(context);
+        }
         PredicateImpl predicate = predicate();
         InferResult predResult = predicate.infer(context);
         if (predResult.hasStackOverflow()) {
             return predResult;
         } else if (predResult == predicate.incomplete()) {
             return incomplete();
-        } else if (context.reduce() && predResult.facts().isEmpty()) {
+        } else if (predResult.facts().isEmpty()) {
             return BooleanImpl.TRUE_CONCLUSION;
-        } else if (context.reduce() && predResult.falsehoods().isEmpty()) {
+        } else if (predResult.falsehoods().isEmpty()) {
             return BooleanImpl.FALSE_CONCLUSION;
         } else if (context.expand() && !predicate.isFullyBound() && predResult.hasBindings()) {
             return predResult;
-        } else if (context.expand() || context.reduce()) {
+        } else {
             return InferResult.of(singleton(), singleton(), predResult.cycles());
         }
-        Set<PredicateImpl> facts, falsehoods;
-        if (predResult.falsehoods().equals(predicate.singleton())) {
-            facts = singleton();
-        } else {
-            facts = predResult.falsehoods().replaceAll(f -> f.equals(predicate) ? this : new NotImpl(f, new NotImpl(f.declaration())));
-        }
-        if (predResult.facts().equals(predicate.singleton())) {
-            falsehoods = singleton();
-        } else {
-            falsehoods = predResult.facts().replaceAll(f -> f.equals(predicate) ? this : new NotImpl(f, new NotImpl(f.declaration())));
-        }
-        return InferResult.of(facts, falsehoods, predResult.cycles());
     }
 
     @Override

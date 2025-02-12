@@ -238,6 +238,14 @@ public final class Logic {
         return Map.of(Entry.of((Variable) var, val));
     }
 
+    public static <T1 extends Structure, T2 extends Structure> Map<Variable, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2) {
+        return Map.of(Entry.of((Variable) var1, val1), Entry.of((Variable) var2, val2));
+    }
+
+    public static <T1 extends Structure, T2 extends Structure, T3 extends Structure> Map<Variable, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2, T3 var3, Constant<T3> val3) {
+        return Map.of(Entry.of((Variable) var1, val1), Entry.of((Variable) var2, val2), Entry.of((Variable) var3, val3));
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult infer(Predicate pred) {
         return StructureImpl.<Predicate, PredicateImpl> unproxy(pred).infer();
