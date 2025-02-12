@@ -102,7 +102,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (context.trace()) {
             System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
-        InferResult condResult = condition.resolve(context);
+        InferResult condResult = condition.infer(context);
         if (condResult == condition.incomplete()) {
             return predicate.incomplete();
         }

@@ -59,8 +59,7 @@ public abstract class AndOrImpl extends PredicateImpl {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public InferResult resolve(InferContext context) {
+    private InferResult resolve(InferContext context) {
         Set<PredicateImpl> now, next = singleton(), bound, facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
         PredicateImpl reduced;
@@ -116,6 +115,9 @@ public abstract class AndOrImpl extends PredicateImpl {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public final InferResult infer(InferContext context) {
+        if (!context.reduce() && !context.expand()) {
+            return resolve(context);
+        }
         PredicateImpl[] predicate = new PredicateImpl[2];
         InferResult[] predResult = new InferResult[2];
         for (int i : order()) {

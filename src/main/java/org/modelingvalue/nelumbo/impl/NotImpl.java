@@ -67,30 +67,32 @@ public final class NotImpl extends PredicateImpl {
     @Override
     public InferResult infer(InferContext context) {
         PredicateImpl predicate = predicate();
-        InferResult result = predicate.infer(context);
-        if (result.hasStackOverflow()) {
-            return result;
-        } else if (result == predicate.incomplete()) {
+        InferResult predResult = predicate.infer(context);
+        if (predResult.hasStackOverflow()) {
+            return predResult;
+        } else if (predResult == predicate.incomplete()) {
             return incomplete();
-        } else if (context.reduce() && result.facts().isEmpty()) {
+        } else if (context.reduce() && predResult.facts().isEmpty()) {
             return BooleanImpl.TRUE_CONCLUSION;
-        } else if (context.reduce() && result.falsehoods().isEmpty()) {
+        } else if (context.reduce() && predResult.falsehoods().isEmpty()) {
             return BooleanImpl.FALSE_CONCLUSION;
-        } else if (context.expand() && !predicate.isFullyBound() && result.hasBindings()) {
-            return result;
+        } else if (context.expand() && !predicate.isFullyBound() && predResult.hasBindings()) {
+            return predResult;
+        } else if (context.expand() || context.reduce()) {
+            return InferResult.of(singleton(), singleton(), predResult.cycles());
         }
         Set<PredicateImpl> facts, falsehoods;
-        if (result.falsehoods().equals(predicate.singleton())) {
+        if (predResult.falsehoods().equals(predicate.singleton())) {
             facts = singleton();
         } else {
-            facts = result.falsehoods().replaceAll(f -> f.equals(predicate) ? this : new NotImpl(f, new NotImpl(f.declaration())));
+            facts = predResult.falsehoods().replaceAll(f -> f.equals(predicate) ? this : new NotImpl(f, new NotImpl(f.declaration())));
         }
-        if (result.facts().equals(predicate.singleton())) {
+        if (predResult.facts().equals(predicate.singleton())) {
             falsehoods = singleton();
         } else {
-            falsehoods = result.facts().replaceAll(f -> f.equals(predicate) ? this : new NotImpl(f, new NotImpl(f.declaration())));
+            falsehoods = predResult.facts().replaceAll(f -> f.equals(predicate) ? this : new NotImpl(f, new NotImpl(f.declaration())));
         }
-        return InferResult.of(facts, falsehoods, result.cycles());
+        return InferResult.of(facts, falsehoods, predResult.cycles());
     }
 
     @Override

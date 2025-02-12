@@ -287,6 +287,24 @@ public class NelumboTest extends NelumboTestBase {
             isFalse(is(plus(i(5), i(2)), i(8)));
             isTrue(not(plus(i(5), i(2), i(8))));
             isTrue(not(is(plus(i(5), i(2)), i(8))));
+            isTrue(and(not(is(plus(i(5), i(2)), i(8))), not(plus(i(5), i(2), i(8)))));
+
+            familyRules();
+
+            fact(parentChild(Carel, Jan));
+            fact(parentChild(Jan, Wim));
+
+            hasBindings(and(ancestorDescendent(A, Wim), ancestorDescendent(A, Wim)), //
+                    binding(A, Jan), binding(A, Carel));
+
+            hasBindings(not(not(ancestorDescendent(A, Wim))), //
+                    binding(A, Jan), binding(A, Carel));
+
+            //            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(A, Wim)))), //
+            //                    binding(A, Jan), binding(A, Carel));
+            //
+            //            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(Carel, C)))), //
+            //                    binding(A, Jan), binding(A, Carel), binding(C, Jan), binding(C, Wim));
         });
     }
 

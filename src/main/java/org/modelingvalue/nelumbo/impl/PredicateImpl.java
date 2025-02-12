@@ -100,15 +100,11 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null));
         }
-        InferResult result = setBinding(variables()).resolve(context);
+        InferResult result = setBinding(variables()).infer(context);
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null) + "\u2192" + result);
         }
         return result;
-    }
-
-    public InferResult resolve(InferContext context) {
-        return infer(context);
     }
 
     protected InferResult expand(InferContext context) {
