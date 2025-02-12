@@ -147,8 +147,8 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings("rawtypes")
     private StructureImpl<F> setVariables() {
         Map<VariableImpl, Object> vars = getBinding(Map.of());
-        vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
-        return setBinding(vars);
+        vars = vars != null ? vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e) : null;
+        return vars != null ? setBinding(vars) : this;
     }
 
     private static final Object[] array(Object functor, Object[] args) {
