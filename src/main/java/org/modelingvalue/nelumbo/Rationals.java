@@ -100,7 +100,8 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> compare = Logic.<Relation, RationalCons, RationalCons, IntegerCons> functor(Rationals::compare, (LogicLambda) Rationals::compareLogic);
+    private static Functor<Relation> compare = Logic.<Relation, RationalCons, RationalCons, IntegerCons> functor(Rationals::compare, (LogicLambda) Rationals::compareLogic, //
+            (ToStringLambda) s -> s.toString(1) + "\u22DA" + s.toString(2) + "=" + s.toString(3));
 
     @SuppressWarnings("rawtypes")
     private static InferResult compareLogic(PredicateImpl predicate, InferContext context) {

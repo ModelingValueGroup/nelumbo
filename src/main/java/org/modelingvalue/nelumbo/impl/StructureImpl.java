@@ -40,6 +40,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     protected static final boolean TRACE_NELUMBO    = Boolean.getBoolean("TRACE_NELUMBO");
     protected static final boolean PRETTY_NELUMBO   = Boolean.getBoolean("PRETTY_NELUMBO");
     protected static final boolean RANDOM_NELUMBO   = Boolean.getBoolean("RANDOM_NELUMBO");
+    protected static final boolean REVERSE_NELUMBO  = Boolean.getBoolean("REVERSE_NELUMBO");
 
     private static final Method    EQUALS;
     private static final Method    HASHCODE;

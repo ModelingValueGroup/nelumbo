@@ -87,7 +87,8 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> COMPARE_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::compare, (LogicLambda) Integers::compareLogic);
+    private static Functor<Relation> COMPARE_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::compare, (LogicLambda) Integers::compareLogic, //
+            (ToStringLambda) s -> s.toString(1) + "\u22DA" + s.toString(2) + "=" + s.toString(3));
 
     @SuppressWarnings("rawtypes")
     private static InferResult compareLogic(PredicateImpl predicate, InferContext context) {

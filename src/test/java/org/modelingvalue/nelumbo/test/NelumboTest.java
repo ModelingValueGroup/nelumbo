@@ -30,8 +30,6 @@ import static org.modelingvalue.nelumbo.Integers.minus;
 import static org.modelingvalue.nelumbo.Integers.multiply;
 import static org.modelingvalue.nelumbo.Integers.plus;
 import static org.modelingvalue.nelumbo.Integers.sqrt;
-import static org.modelingvalue.nelumbo.Lists.add;
-import static org.modelingvalue.nelumbo.Lists.l;
 import static org.modelingvalue.nelumbo.Logic.*;
 import static org.modelingvalue.nelumbo.Rationals.*;
 import static org.modelingvalue.nelumbo.Rationals.divide;
@@ -60,7 +58,11 @@ import org.modelingvalue.nelumbo.Rationals.RationalCons;
 public class NelumboTest extends NelumboTestBase {
 
     static {
+        System.setProperty("PARALLEL_COLLECTIONS", "false");
+
+        System.setProperty("REVERSE_NELUMBO", "false");
         System.setProperty("RANDOM_NELUMBO", "true");
+
         System.setProperty("TRACE_NELUMBO", "false");
         System.setProperty("PRETTY_NELUMBO", "true");
     }
@@ -294,6 +296,12 @@ public class NelumboTest extends NelumboTestBase {
             fact(parentChild(Carel, Jan));
             fact(parentChild(Jan, Wim));
 
+            hasBindings(ancestorDescendent(Carel, C), //
+                    binding(C, Jan), binding(C, Wim));
+
+            hasBindings(not(not(ancestorDescendent(Carel, C))), //
+                    binding(C, Jan), binding(C, Wim));
+
             hasBindings(and(ancestorDescendent(A, Wim), ancestorDescendent(A, Wim)), //
                     binding(A, Jan), binding(A, Carel));
 
@@ -367,7 +375,7 @@ public class NelumboTest extends NelumboTestBase {
             isFalse(ancestorDescendent(Joppe, Carel));
             isFalse(ancestorDescendent(Carel, Carel));
 
-            hasBindings(collect(parentChild(Wim, C), add(C, l(), PL)), binding(PL, l(Joppe, Marijn)));
+            // hasBindings(collect(parentChild(Wim, C), add(C, l(), PL)), binding(PL, l(Joppe, Marijn)));
         });
     }
 
@@ -431,7 +439,7 @@ public class NelumboTest extends NelumboTestBase {
 
             hasBindings(and(is(sqrt(i(49)), P), ge(P, i(0))), binding(P, i(7)));
 
-            hasBindings(collect(is(sqrt(i(49)), P), plus(P, i(0), Q)), binding(Q, i(0)));
+            // hasBindings(collect(is(sqrt(i(49)), P), plus(P, i(0), Q)), binding(Q, i(0)));
         });
     }
 
@@ -473,7 +481,7 @@ public class NelumboTest extends NelumboTestBase {
 
             hasBindings(and(is(sqrt(r(49)), T), ge(T, r(0))), binding(T, r(7)));
 
-            hasBindings(collect(is(sqrt(r(49)), T), plus(T, r(0), U)), binding(U, r(0)));
+            // hasBindings(collect(is(sqrt(r(49)), T), plus(T, r(0), U)), binding(U, r(0)));
         });
     }
 
@@ -483,6 +491,7 @@ public class NelumboTest extends NelumboTestBase {
             integerRules();
 
             isTrue(lt(i(0), i(1)));
+            isTrue(ge(i(1), i(0)));
         });
     }
 

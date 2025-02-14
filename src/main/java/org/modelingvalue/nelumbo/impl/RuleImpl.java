@@ -97,49 +97,37 @@ public final class RuleImpl extends StructureImpl<Rule> {
             return null;
         }
         binding = variables().putAll(binding);
-        PredicateImpl consequence = consequence().setBinding(binding);
         PredicateImpl condition = condition().setBinding(binding);
+        PredicateImpl consequence = consequence().setBinding(binding);
         if (context.trace()) {
             System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
-        InferResult condResult = condition.infer(context);
-        if (condResult == condition.incomplete()) {
-            return predicate.incomplete();
-        }
+        InferResult predResult;
+        InferResult condResult = condition.resolve(context);
         if (condResult.hasStackOverflow()) {
-            return condResult;
-        }
-        Set<PredicateImpl> condFacts = condResult.facts();
-        Set<PredicateImpl> condFalsehoods = condResult.falsehoods();
-        if (condFacts.size() > 1 && condFacts.contains(condition) && !condFalsehoods.contains(condition)) {
-            condFacts = condition.singleton();
-        }
-        if (condFalsehoods.size() > 1 && condFalsehoods.contains(condition) && !condFacts.contains(condition)) {
-            condFalsehoods = condition.singleton();
-        }
-        Set<PredicateImpl> consFacts = InferResult.bind(condFacts.retainAll(PredicateImpl::isFullyBound), condition, consequence);
-        Set<PredicateImpl> consFalsehoods = InferResult.bind(condFalsehoods.retainAll(PredicateImpl::isFullyBound), condition, consequence);
-        Set<PredicateImpl> predFacts = InferResult.cast(consFacts, predicate);
-        Set<PredicateImpl> predFalsehoods = InferResult.cast(consFalsehoods, predicate);
-        if (!consequence.equals(predicate)) {
-            predFalsehoods = predFalsehoods.add(predicate);
-        }
-        if (!predicate.isFullyBound()) {
-            if (!condResult.facts().removeAll(PredicateImpl::isFullyBound).isEmpty()) {
-                predFacts = predFacts.add(predicate);
-            }
-            if (!condResult.falsehoods().removeAll(PredicateImpl::isFullyBound).isEmpty()) {
-                predFalsehoods = predFalsehoods.add(predicate);
-            }
+            predResult = condResult;
+        } else if (condResult == condition.incomplete()) {
+            predResult = predicate.incomplete();
         } else {
-            if (predFacts.isEmpty() && !condResult.falsehoods().isEmpty()) {
+            Set<PredicateImpl> consFacts = InferResult.bind(condResult.facts().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+            Set<PredicateImpl> consFalsehoods = InferResult.bind(condResult.falsehoods().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+            Set<PredicateImpl> predFacts = InferResult.cast(consFacts, predicate);
+            Set<PredicateImpl> predFalsehoods = InferResult.cast(consFalsehoods, predicate);
+            if (predFacts.isEmpty() && (predicate.isFullyBound() ? //
+                    (!condResult.facts().isEmpty() && consFalsehoods.isEmpty()) : //
+                    !condResult.facts().allMatch(PredicateImpl::isFullyBound))) {
+                predFacts = predicate.singleton();
+            }
+            if (predFalsehoods.isEmpty() && (predicate.isFullyBound() ? //
+                    (!condResult.falsehoods().isEmpty() && predFacts.isEmpty()) : //
+                    !condResult.falsehoods().allMatch(PredicateImpl::isFullyBound))) {
+                predFalsehoods = predicate.singleton();
+            }
+            if (!consequence.equals(predicate)) {
                 predFalsehoods = predFalsehoods.add(predicate);
             }
-            if (predFalsehoods.isEmpty() && !condResult.facts().isEmpty()) {
-                predFacts = predFacts.add(predicate);
-            }
+            predResult = InferResult.of(predFacts, predFalsehoods, condResult.cycles());
         }
-        InferResult predResult = InferResult.of(predFacts, predFalsehoods, condResult.cycles());
         if (context.trace()) {
             System.err.println(context.prefix() + condition.toString(null) + "\u2192" + predResult);
         }

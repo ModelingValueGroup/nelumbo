@@ -30,6 +30,7 @@ import org.modelingvalue.nelumbo.Logic.LogicLambda;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
 public class PredicateImpl extends StructureImpl<Predicate> {
+
     private static final long serialVersionUID   = -1605559565948158856L;
 
     static final int          MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
@@ -100,7 +101,8 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null));
         }
-        InferResult result = setBinding(variables()).infer(context);
+        PredicateImpl conditon = setBinding(variables());
+        InferResult result = conditon.resolve(context);
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null) + "\u2192" + result);
         }
@@ -111,7 +113,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         throw new UnsupportedOperationException();
     }
 
-    public InferResult infer(InferContext context) {
+    protected InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 && context.reduce()) {
             return incomplete();
@@ -226,7 +228,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             return result;
         }
         List<RuleImpl> rules = knowledgebase.getRules(this);
-        for (RuleImpl rule : RANDOM_NELUMBO ? rules.random() : rules) {
+        for (RuleImpl rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
             ruleResult = rule.infer(this, context);
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
@@ -260,7 +262,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         return incomplete.facts();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     protected final InferResult resolve(InferContext context) {
         Set<PredicateImpl> now, next = singleton(), bound, facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
@@ -274,44 +276,49 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 if (predResult.hasStackOverflow()) {
                     return predResult;
                 } else if (predResult.facts().isEmpty()) {
-                    falsehoods = falsehoods.add(InferResult.bind(predicate, this, predicate));
+                    falsehoods = falsehoods.add(predicate);
                 } else if (predResult.falsehoods().isEmpty()) {
-                    facts = facts.add(InferResult.bind(predicate, this, predicate));
+                    facts = facts.add(predicate);
                 } else {
-                    assert (predResult.facts().equals(predResult.falsehoods()));
                     reduced = predResult.facts().get(0);
                     reducedResult = reduced.infer(expand);
                     if (reducedResult.hasStackOverflow()) {
                         return reducedResult;
-                    } else if (reducedResult.facts().isEmpty()) {
-                        falsehoods = falsehoods.add(InferResult.bind(predicate, this, predicate));
-                    } else if (reducedResult.falsehoods().isEmpty()) {
-                        facts = facts.add(InferResult.bind(predicate, this, predicate));
+                    } else if (reducedResult.facts().isEmpty() && reducedResult.falsehoods().allMatch(PredicateImpl::isFullyBound)) {
+                        falsehoods = falsehoods.add(predicate);
+                    } else if (reducedResult.falsehoods().isEmpty() && reducedResult.facts().allMatch(PredicateImpl::isFullyBound)) {
+                        facts = facts.add(predicate);
                     } else {
-                        bound = reducedResult.facts().addAll(reducedResult.falsehoods()).remove(reduced);
-                        if (!bound.isEmpty()) {
-                            bound = InferResult.bind(bound.retainAll(PredicateImpl::isFullyBound), this, predicate).remove(now);
-                            if (!bound.isEmpty()) {
-                                next = next.addAll(bound);
-                                if (!reducedResult.facts().removeAll(reducedResult.falsehoods()::contains).removeAll(PredicateImpl::isFullyBound).isEmpty()) {
-                                    facts = facts.add(this);
-                                }
-                                if (!reducedResult.falsehoods().removeAll(reducedResult.facts()::contains).removeAll(PredicateImpl::isFullyBound).isEmpty()) {
-                                    falsehoods = falsehoods.add(this);
-                                }
-                                cycles = cycles.addAll(reducedResult.cycles());
-                            }
-                        } else {
-                            facts = facts.addAll(InferResult.bind(reducedResult.facts(), this, predicate));
-                            falsehoods = falsehoods.addAll(InferResult.bind(reducedResult.falsehoods(), this, predicate));
-                            cycles = cycles.addAll(reducedResult.cycles());
-                            continue;
+                        bound = reducedResult.facts().addAll(reducedResult.falsehoods()).retainAll(PredicateImpl::isFullyBound);
+                        next = next.addAll(InferResult.bind(bound, null, predicate).removeAll(now));
+                        if (!reducedResult.facts().allMatch(PredicateImpl::isFullyBound)) {
+                            facts = facts.add(this);
                         }
+                        if (!reducedResult.falsehoods().allMatch(PredicateImpl::isFullyBound)) {
+                            falsehoods = falsehoods.add(this);
+                        }
+                        cycles = cycles.addAll(reducedResult.cycles());
                     }
                 }
             }
         } while (!next.isEmpty());
-        return InferResult.of(facts, falsehoods, cycles);
+        if (cycles.isEmpty()) {
+            if (falsehoods.isEmpty() && facts.anyMatch(PredicateImpl::isFullyBound)) {
+                facts = facts.retainAll(PredicateImpl::isFullyBound);
+            } else if (facts.size() > 1 && !facts.allMatch(PredicateImpl::isFullyBound)) {
+                facts = singleton();
+            }
+            if (facts.isEmpty() && falsehoods.anyMatch(PredicateImpl::isFullyBound)) {
+                falsehoods = falsehoods.retainAll(PredicateImpl::isFullyBound);
+            } else if (falsehoods.size() > 1 && !falsehoods.allMatch(PredicateImpl::isFullyBound)) {
+                falsehoods = singleton();
+            }
+        }
+        predResult = InferResult.of(facts, falsehoods, cycles);
+        if (context.trace()) {
+            System.err.println(context.prefix() + toString(null) + "\u2192" + predResult);
+        }
+        return predResult;
     }
 
 }

@@ -60,10 +60,7 @@ public final class NotImpl extends PredicateImpl {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public InferResult infer(InferContext context) {
-        if (!context.reduce() && !context.expand()) {
-            return resolve(context);
-        }
+    protected InferResult infer(InferContext context) {
         PredicateImpl predicate = predicate();
         InferResult predResult = predicate.infer(context);
         if (predResult.hasStackOverflow()) {
@@ -75,7 +72,7 @@ public final class NotImpl extends PredicateImpl {
         } else if (predResult.falsehoods().isEmpty()) {
             return BooleanImpl.FALSE_CONCLUSION;
         } else if (context.expand() && !predicate.isFullyBound() && predResult.hasBindings()) {
-            return predResult;
+            return InferResult.of(predResult.falsehoods(), predResult.facts(), predResult.cycles());
         } else {
             return InferResult.of(singleton(), singleton(), predResult.cycles());
         }

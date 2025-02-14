@@ -74,7 +74,7 @@ public final class BooleanImpl extends PredicateImpl {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public InferResult infer(InferContext context) {
+    protected InferResult infer(InferContext context) {
         return isTrue() ? TRUE_CONCLUSION : FALSE_CONCLUSION;
     }
 

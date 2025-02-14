@@ -59,10 +59,7 @@ public abstract class AndOrImpl extends PredicateImpl {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public final InferResult infer(InferContext context) {
-        if (!context.reduce() && !context.expand()) {
-            return resolve(context);
-        }
+    protected final InferResult infer(InferContext context) {
         PredicateImpl[] predicate = new PredicateImpl[2];
         InferResult[] predResult = new InferResult[2];
         for (int i : order()) {
@@ -106,7 +103,9 @@ public abstract class AndOrImpl extends PredicateImpl {
     }
 
     private int[] order() {
-        if (RANDOM_NELUMBO) {
+        if (REVERSE_NELUMBO) {
+            return ONE_ZERO;
+        } else if (RANDOM_NELUMBO) {
             return ThreadLocalRandom.current().nextBoolean() ? ONE_ZERO : ZERO_ONE;
         } else {
             return ZERO_ONE;
