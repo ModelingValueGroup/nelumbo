@@ -285,9 +285,9 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     if (reducedResult.hasStackOverflow()) {
                         return reducedResult;
                     } else if (reducedResult.facts().isEmpty() && reduced.equals(predicate)) {
-                        falsehoods = falsehoods.add(predicate);
+                        falsehoods = falsehoods.add(this);
                     } else if (reducedResult.falsehoods().isEmpty() && reduced.equals(predicate)) {
-                        facts = facts.add(predicate);
+                        facts = facts.add(this);
                     } else {
                         bound = reducedResult.facts().addAll(reducedResult.falsehoods()).retainAll(PredicateImpl::isFullyBound);
                         next = next.addAll(InferResult.bind(bound, null, predicate).removeAll(now));
@@ -297,16 +297,12 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             }
         } while (!next.isEmpty());
         if (cycles.isEmpty()) {
-            if (!isFullyBound()) {
-                facts = facts.replaceAll(p -> p.isFullyBound() ? p : this);
-                falsehoods = falsehoods.replaceAll(p -> p.isFullyBound() ? p : this);
-                if (!facts.contains(this) && !falsehoods.contains(this)) {
-                    if (facts.isEmpty() || (facts.size() > 1 && !falsehoods.isEmpty())) {
-                        facts = singleton();
-                    }
-                    if (falsehoods.isEmpty() || (falsehoods.size() >= 1 && !facts.equals(singleton()))) {
-                        falsehoods = singleton();
-                    }
+            if (!facts.contains(this) && !falsehoods.contains(this) && !isFullyBound()) {
+                if (facts.isEmpty() || (facts.size() > 1 && !falsehoods.isEmpty())) {
+                    facts = singleton();
+                }
+                if (falsehoods.isEmpty() || (falsehoods.size() >= 1 && !facts.equals(singleton()))) {
+                    falsehoods = singleton();
                 }
             }
         } else {
