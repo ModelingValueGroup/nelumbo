@@ -291,28 +291,27 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     } else {
                         bound = reducedResult.facts().addAll(reducedResult.falsehoods()).retainAll(PredicateImpl::isFullyBound);
                         next = next.addAll(InferResult.bind(bound, null, predicate).removeAll(now));
-                        if (!reducedResult.facts().allMatch(PredicateImpl::isFullyBound)) {
-                            facts = facts.add(this);
-                        }
-                        if (!reducedResult.falsehoods().allMatch(PredicateImpl::isFullyBound)) {
-                            falsehoods = falsehoods.add(this);
-                        }
                         cycles = cycles.addAll(reducedResult.cycles());
                     }
                 }
             }
         } while (!next.isEmpty());
         if (cycles.isEmpty()) {
-            if (falsehoods.isEmpty() && facts.anyMatch(PredicateImpl::isFullyBound)) {
-                facts = facts.retainAll(PredicateImpl::isFullyBound);
-            } else if (facts.size() > 1 && !facts.allMatch(PredicateImpl::isFullyBound)) {
-                facts = singleton();
+            if (!isFullyBound()) {
+                facts = facts.replaceAll(p -> p.isFullyBound() ? p : this);
+                falsehoods = falsehoods.replaceAll(p -> p.isFullyBound() ? p : this);
+                if (!facts.contains(this) && !falsehoods.contains(this)) {
+                    if (facts.isEmpty() || (facts.size() > 1 && !falsehoods.isEmpty())) {
+                        facts = singleton();
+                    }
+                    if (falsehoods.isEmpty() || (falsehoods.size() >= 1 && !facts.equals(singleton()))) {
+                        falsehoods = singleton();
+                    }
+                }
             }
-            if (facts.isEmpty() && falsehoods.anyMatch(PredicateImpl::isFullyBound)) {
-                falsehoods = falsehoods.retainAll(PredicateImpl::isFullyBound);
-            } else if (falsehoods.size() > 1 && !falsehoods.allMatch(PredicateImpl::isFullyBound)) {
-                falsehoods = singleton();
-            }
+        } else {
+            facts = facts.add(this);
+            falsehoods = falsehoods.add(this);
         }
         predResult = InferResult.of(facts, falsehoods, cycles);
         if (context.trace()) {

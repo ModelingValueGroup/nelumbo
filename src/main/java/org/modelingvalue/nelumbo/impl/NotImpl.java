@@ -72,7 +72,7 @@ public final class NotImpl extends PredicateImpl {
         } else if (predResult.falsehoods().isEmpty()) {
             return BooleanImpl.FALSE_CONCLUSION;
         } else if (context.expand() && !predicate.isFullyBound() && predResult.hasBindings()) {
-            return InferResult.of(predResult.falsehoods(), predResult.facts(), predResult.cycles());
+            return predResult;
         } else {
             return InferResult.of(singleton(), singleton(), predResult.cycles());
         }
