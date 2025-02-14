@@ -284,9 +284,9 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                     reducedResult = reduced.infer(expand);
                     if (reducedResult.hasStackOverflow()) {
                         return reducedResult;
-                    } else if (reducedResult.facts().isEmpty() && reducedResult.falsehoods().allMatch(PredicateImpl::isFullyBound)) {
+                    } else if (reducedResult.facts().isEmpty() && reduced.equals(predicate)) {
                         falsehoods = falsehoods.add(predicate);
-                    } else if (reducedResult.falsehoods().isEmpty() && reducedResult.facts().allMatch(PredicateImpl::isFullyBound)) {
+                    } else if (reducedResult.falsehoods().isEmpty() && reduced.equals(predicate)) {
                         facts = facts.add(predicate);
                     } else {
                         bound = reducedResult.facts().addAll(reducedResult.falsehoods()).retainAll(PredicateImpl::isFullyBound);
