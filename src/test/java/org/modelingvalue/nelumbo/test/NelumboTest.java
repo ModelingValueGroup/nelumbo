@@ -390,9 +390,9 @@ public class NelumboTest extends NelumboTestBase {
             fact(parentChild(Carel, Jan));
             fact(parentChild(Jan, Wim));
 
-            // hasBindings(and(parentChild(Carel, B), parentChild(B, Wim)), binding(B, Jan));
+            hasBindings(and(parentChild(Carel, B), parentChild(B, Wim)), binding(B, Jan));
 
-            // hasBindings(ancestorDescendent(Carel, C), binding(C, Jan), binding(C, Wim));
+            hasBindings(ancestorDescendent(Carel, C), binding(C, Jan), binding(C, Wim));
             hasBindings(ancestorDescendent(A, Wim), binding(A, Jan), binding(A, Carel));
         });
     }
