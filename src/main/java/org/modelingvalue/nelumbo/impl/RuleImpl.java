@@ -88,13 +88,13 @@ public final class RuleImpl extends StructureImpl<Rule> {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected InferResult infer(PredicateImpl predicate, InferContext context) {
-        if (!TRACE_NELUMBO && trace()) {
-            context = context.trace(true);
-        }
+    protected InferResult imply(PredicateImpl predicate, InferContext context) {
         Map<VariableImpl, Object> binding = predicate.getBinding(consequence(), Map.of());
         if (binding == null) {
             return null;
+        }
+        if (!TRACE_NELUMBO && trace()) {
+            context = context.trace(true);
         }
         binding = variables().putAll(binding);
         PredicateImpl condition = condition().setBinding(binding);
@@ -102,36 +102,21 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (context.trace()) {
             System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
-        InferResult predResult;
         InferResult condResult = condition.resolve(context);
         if (condResult.hasStackOverflow()) {
-            predResult = condResult;
-        } else if (condResult == condition.incomplete()) {
-            predResult = predicate.incomplete();
+            return condResult;
+        } else if (condResult.equals(condition.unknown())) {
+            return predicate.unknown();
         } else {
-            Set<PredicateImpl> consFacts = InferResult.bind(condResult.facts().retainAll(PredicateImpl::isFullyBound), condition, consequence);
-            Set<PredicateImpl> consFalsehoods = InferResult.bind(condResult.falsehoods().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+            Set<PredicateImpl> consFacts = InferResult.bind(condResult.facts(), condition, consequence);
+            Set<PredicateImpl> consFalsehoods = InferResult.bind(condResult.falsehoods(), condition, consequence);
             Set<PredicateImpl> predFacts = InferResult.cast(consFacts, predicate);
-            Set<PredicateImpl> predFalsehoods = InferResult.cast(consFalsehoods, predicate);
-            if (predFacts.isEmpty() && (predicate.isFullyBound() ? //
-                    (!condResult.facts().isEmpty() && consFalsehoods.isEmpty()) : //
-                    !condResult.facts().allMatch(PredicateImpl::isFullyBound))) {
-                predFacts = predicate.singleton();
-            }
-            if (predFalsehoods.isEmpty() && (predicate.isFullyBound() ? //
-                    (!condResult.falsehoods().isEmpty() && predFacts.isEmpty()) : //
-                    !condResult.falsehoods().allMatch(PredicateImpl::isFullyBound))) {
+            Set<PredicateImpl> predFalsehoods = InferResult.cast(consFalsehoods, predicate).removeAll(p -> predFacts.contains(p) && p.isFullyBound());
+            if (predFalsehoods.isEmpty() && consequence.isFullyBound() && !predicate.isFullyBound()) {
                 predFalsehoods = predicate.singleton();
             }
-            if (!consequence.equals(predicate)) {
-                predFalsehoods = predFalsehoods.add(predicate);
-            }
-            predResult = InferResult.of(predFacts, predFalsehoods, condResult.cycles());
+            return InferResult.of(predFacts, predFalsehoods, condResult.cycles());
         }
-        if (context.trace()) {
-            System.err.println(context.prefix() + condition.toString(null) + "\u2192" + predResult);
-        }
-        return predResult;
     }
 
     public int rulePrio() {

@@ -99,7 +99,7 @@ public final class Integers {
             int r = compared1.compareTo(compared2);
             if (result != null) {
                 boolean eq = r == result.intValue();
-                return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
+                return eq ? predicate.fact() : predicate.falsehood();
             } else {
                 return InferResult.trueFalse(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT).singleton(), predicate.singleton());
             }
@@ -110,7 +110,7 @@ public final class Integers {
                 return InferResult.trueFalse(predicate.set(1, (StructureImpl) predicate.getVal(2)).singleton(), predicate.singleton());
             }
         }
-        return predicate.incomplete();
+        return predicate.unknown();
     }
 
     public static Relation compare(IntegerCons compared1, IntegerCons compared2, IntegerCons result) {
@@ -129,7 +129,7 @@ public final class Integers {
             BigInteger s = addend1.add(addend2);
             if (sum != null) {
                 boolean eq = s.equals(sum);
-                return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
+                return eq ? predicate.fact() : predicate.falsehood();
             } else {
                 return InferResult.trueFalse(predicate.set(3, struct(s)).singleton(), predicate.singleton());
             }
@@ -138,7 +138,7 @@ public final class Integers {
         } else if (addend2 != null && sum != null) {
             return InferResult.trueFalse(predicate.set(1, struct(sum.subtract(addend2))).singleton(), predicate.singleton());
         } else {
-            return predicate.incomplete();
+            return predicate.unknown();
         }
     }
 
@@ -158,7 +158,7 @@ public final class Integers {
             BigInteger p = factor1.multiply(factor2);
             if (product != null) {
                 boolean eq = p.equals(product);
-                return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
+                return eq ? predicate.fact() : predicate.falsehood();
             } else {
                 return InferResult.trueFalse(predicate.set(3, struct(p)).singleton(), predicate.singleton());
             }
@@ -167,7 +167,7 @@ public final class Integers {
         } else if (factor2 != null && product != null) {
             return InferResult.trueFalse(predicate.set(1, struct(product.divide(factor2))).singleton(), predicate.singleton());
         } else {
-            return predicate.incomplete();
+            return predicate.unknown();
         }
     }
 
@@ -183,14 +183,14 @@ public final class Integers {
         BigInteger square = predicate.getVal(2, 1);
         if (root != null && square != null) {
             boolean eq = root.multiply(root).equals(square);
-            return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
+            return eq ? predicate.fact() : predicate.falsehood();
         } else if (root != null && square == null) {
             return InferResult.trueFalse(predicate.set(2, struct(root.multiply(root))).singleton(), predicate.singleton());
         } else if (root == null && square != null) {
             BigInteger sqrt = square.sqrt();
             return InferResult.trueFalse(Set.of(predicate.set(1, struct(sqrt)), predicate.set(1, struct(sqrt.negate()))), predicate.singleton());
         } else {
-            return predicate.incomplete();
+            return predicate.unknown();
         }
     }
 

@@ -104,19 +104,19 @@ public final class Lists {
         org.modelingvalue.collections.List<StructureImpl<Structure>> superlist = superListImpl != null ? superListImpl.list() : null;
         if (element != null && sublist != null && superlist != null) {
             boolean eq = addOrdered(sublist, element).equals(superlist);
-            return InferResult.trueFalse(eq ? predicate.singleton() : Set.of(), eq ? Set.of() : predicate.singleton());
+            return eq ? predicate.fact() : predicate.falsehood();
         } else if (element != null && sublist != null && superlist == null) {
             return InferResult.trueFalse(predicate.set(3, ListImpl.of(addOrdered(sublist, element))).singleton(), predicate.singleton());
         } else if (element != null && sublist == null && superlist != null) {
             return InferResult.trueFalse(permRemove(superlist, element).replaceAll(l -> predicate.set(2, ListImpl.of(l))), predicate.singleton());
         } else if (element == null && sublist != null && superlist != null) {
             if (sublist.anyMatch(superlist::notContains)) {
-                return InferResult.trueFalse(Set.of(), predicate.singleton());
+                return predicate.falsehood();
             } else {
                 return InferResult.trueFalse(superlist.asSet().removeAll(sublist).replaceAll(r -> predicate.set(1, r)), predicate.singleton());
             }
         } else {
-            return InferResult.trueFalse(predicate.singleton(), predicate.singleton());
+            return predicate.unknown();
         }
     }
 

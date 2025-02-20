@@ -302,10 +302,13 @@ public class NelumboTest extends NelumboTestBase {
             hasBindings(not(not(ancestorDescendent(Carel, C))), //
                     binding(C, Jan), binding(C, Wim));
 
-            hasBindings(and(ancestorDescendent(A, Wim), ancestorDescendent(A, Wim)), //
+            hasBindings(ancestorDescendent(A, Wim), //
                     binding(A, Jan), binding(A, Carel));
 
             hasBindings(not(not(ancestorDescendent(A, Wim))), //
+                    binding(A, Jan), binding(A, Carel));
+
+            hasBindings(and(ancestorDescendent(A, Wim), ancestorDescendent(A, Wim)), //
                     binding(A, Jan), binding(A, Carel));
 
             hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(A, Wim)))), //
@@ -387,8 +390,10 @@ public class NelumboTest extends NelumboTestBase {
             fact(parentChild(Carel, Jan));
             fact(parentChild(Jan, Wim));
 
+            // hasBindings(and(parentChild(Carel, B), parentChild(B, Wim)), binding(B, Jan));
+
+            // hasBindings(ancestorDescendent(Carel, C), binding(C, Jan), binding(C, Wim));
             hasBindings(ancestorDescendent(A, Wim), binding(A, Jan), binding(A, Carel));
-            hasBindings(ancestorDescendent(Carel, C), binding(C, Jan), binding(C, Wim));
         });
     }
 

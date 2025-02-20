@@ -21,7 +21,6 @@
 package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Relation;
@@ -35,8 +34,8 @@ public final class BooleanImpl extends PredicateImpl {
     public static final BooleanImpl    TRUE             = new BooleanImpl(true);
     public static final BooleanImpl    FALSE            = new BooleanImpl(false);
 
-    protected static final InferResult TRUE_CONCLUSION  = InferResult.trueFalse(Set.of(TRUE), Set.of());
-    protected static final InferResult FALSE_CONCLUSION = InferResult.trueFalse(Set.of(), Set.of(FALSE));
+    protected static final InferResult TRUE_CONCLUSION  = TRUE.fact();
+    protected static final InferResult FALSE_CONCLUSION = FALSE.falsehood();
 
     private static Relation b(boolean val) {
         return val ? Logic.T() : Logic.F();

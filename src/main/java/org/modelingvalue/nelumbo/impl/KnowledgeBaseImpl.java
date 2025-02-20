@@ -171,7 +171,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferResult getFacts(PredicateImpl pred) {
         InferResult result = facts.get().get(pred);
-        return result != null ? result.cast(pred) : InferResult.trueFalse(Set.of(), pred.singleton());
+        return result != null ? result.cast(pred) : pred.falsehood();
     }
 
     public List<RuleImpl> getRules(PredicateImpl pred) {
@@ -212,21 +212,21 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     protected void memoization(PredicateImpl predicate, InferResult fullResult) {
         InferResult result = fullResult.cycles().isEmpty() ? fullResult : //
                 InferResult.trueFalse(fullResult.facts(), fullResult.falsehoods());
-        boolean complete = !result.isIncomplete();
+        boolean known = !result.hasUnknown();
         FunctorImpl<Predicate> functor = predicate.functor();
         if (functor.factual()) {
             facts.updateAndGet(map -> {
-                if (complete) {
+                if (known) {
                     map = map.put(predicate, result);
                 }
                 for (PredicateImpl fact : result.facts()) {
                     if (fact.isFullyBound()) {
-                        map = map.put(fact, InferResult.trueFalse(fact.singleton(), Set.of()));
+                        map = map.put(fact, fact.fact());
                     }
                 }
                 for (PredicateImpl falsehood : result.falsehoods()) {
                     if (falsehood.isFullyBound()) {
-                        map = map.put(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton()));
+                        map = map.put(falsehood, falsehood.falsehood());
                     }
                 }
                 return map;
@@ -234,17 +234,17 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         } else if (!functor.derived()) {
             QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
                 array = array.clone();
-                if (complete) {
+                if (known) {
                     array[0] = array[0].put(new Inference(predicate, result));
                 }
                 for (PredicateImpl fact : result.facts()) {
                     if (fact.isFullyBound()) {
-                        array[0] = array[0].put(new Inference(fact, InferResult.trueFalse(fact.singleton(), Set.of())));
+                        array[0] = array[0].put(new Inference(fact, fact.fact()));
                     }
                 }
                 for (PredicateImpl falsehood : result.falsehoods()) {
                     if (falsehood.isFullyBound()) {
-                        array[0] = array[0].put(new Inference(falsehood, InferResult.trueFalse(Set.of(), falsehood.singleton())));
+                        array[0] = array[0].put(new Inference(falsehood, falsehood.falsehood()));
                     }
                 }
                 if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
@@ -312,7 +312,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         }
         facts.updateAndGet(map -> {
             List<Class> args = functor.args();
-            map = map.put(fact, InferResult.trueFalse(fact.singleton(), Set.of()));
+            map = map.put(fact, fact.fact());
             for (int i = 1; i < fact.length(); i++) {
                 map = addFact(map, fact, fact.set(i, fact.getType(i)), i, args.get(i - 1));
             }

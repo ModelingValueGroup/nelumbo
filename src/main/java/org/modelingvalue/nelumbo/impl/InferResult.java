@@ -119,17 +119,74 @@ public interface InferResult {
         };
     }
 
-    static InferResult incomplete(PredicateImpl predicate) {
-        Set<PredicateImpl> set = Set.of(predicate);
+    static InferResult unknowns(Set<PredicateImpl> unknowns) {
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
-                return set;
+                return unknowns;
             }
 
             @Override
             public Set<PredicateImpl> falsehoods() {
-                return set;
+                return unknowns;
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return asString();
+            }
+        };
+    }
+
+    static InferResult facts(Set<PredicateImpl> facts) {
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl> facts() {
+                return facts;
+            }
+
+            @Override
+            public Set<PredicateImpl> falsehoods() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<PredicateImpl> stackOverflow() {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return asString();
+            }
+        };
+    }
+
+    static InferResult falsehoods(Set<PredicateImpl> falsehoods) {
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl> falsehoods() {
+                return falsehoods;
             }
 
             @Override
@@ -208,10 +265,28 @@ public interface InferResult {
         };
     }
 
-    default InferResult add(InferResult result) {
-        Set<PredicateImpl> facts = facts().addAll(result.facts());
-        Set<PredicateImpl> falsehoods = falsehoods().addAll(result.falsehoods());
-        Set<PredicateImpl> cycles = cycles().addAll(result.cycles());
+    default InferResult add(InferResult other) {
+        Set<PredicateImpl> facts = facts().addAll(other.facts());
+        Set<PredicateImpl> falsehoods = falsehoods().addAll(other.falsehoods());
+        Set<PredicateImpl> cycles = cycles().addAll(other.cycles());
+        return of(facts, falsehoods, cycles);
+    }
+
+    default InferResult not() {
+        return of(falsehoods(), facts(), cycles());
+    }
+
+    default InferResult and(InferResult other) {
+        Set<PredicateImpl> facts = facts().retainAll(other.facts());
+        Set<PredicateImpl> falsehoods = falsehoods().addAll(other.falsehoods());
+        Set<PredicateImpl> cycles = cycles().addAll(other.cycles());
+        return of(facts, falsehoods, cycles);
+    }
+
+    default InferResult or(InferResult other) {
+        Set<PredicateImpl> facts = facts().addAll(other.facts());
+        Set<PredicateImpl> falsehoods = falsehoods().retainAll(other.falsehoods());
+        Set<PredicateImpl> cycles = cycles().addAll(other.cycles());
         return of(facts, falsehoods, cycles);
     }
 
@@ -264,11 +339,15 @@ public interface InferResult {
         return facts().allMatch(predicate::equals) && falsehoods().allMatch(predicate::equals);
     }
 
-    default boolean isIncomplete() {
+    default boolean hasUnknown() {
         return !facts().retainAll(falsehoods()).isEmpty();
     }
 
-    default boolean hasBindings() {
-        return !facts().removeAll(falsehoods()).isEmpty();
+    default boolean isUnknown() {
+        return facts().size() == 1 && facts().equals(falsehoods()) && cycles().isEmpty();
+    }
+
+    default boolean hasBindings(PredicateImpl predicate) {
+        return !predicate.isFullyBound() && !facts().removeAll(falsehoods()).isEmpty();
     }
 }

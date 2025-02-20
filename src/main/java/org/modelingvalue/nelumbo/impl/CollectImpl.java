@@ -133,7 +133,7 @@ public final class CollectImpl extends PredicateImpl {
     protected InferResult infer(InferContext context) {
         Map<VariableImpl, Object> localVars = declaration().localVariables();
         if (context.reduce() && nrOfUnbound() > 0) {
-            return incomplete();
+            return unknown();
         }
         int identityIndex = declaration().identityIndex();
         int resultIndex = declaration().resultIndex();

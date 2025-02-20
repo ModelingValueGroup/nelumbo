@@ -65,16 +65,20 @@ public final class NotImpl extends PredicateImpl {
         InferResult predResult = predicate.infer(context);
         if (predResult.hasStackOverflow()) {
             return predResult;
-        } else if (predResult == predicate.incomplete()) {
-            return incomplete();
-        } else if (predResult.facts().isEmpty()) {
-            return BooleanImpl.TRUE_CONCLUSION;
-        } else if (predResult.falsehoods().isEmpty()) {
-            return BooleanImpl.FALSE_CONCLUSION;
-        } else if (context.expand() && !predicate.isFullyBound() && predResult.hasBindings()) {
-            return predResult;
+        } else if (context.reduce()) {
+            if (predResult.facts().isEmpty()) {
+                return BooleanImpl.TRUE_CONCLUSION;
+            } else if (predResult.falsehoods().isEmpty()) {
+                return BooleanImpl.FALSE_CONCLUSION;
+            } else {
+                return set(1, predResult.facts().get(0)).unknown();
+            }
         } else {
-            return InferResult.of(singleton(), singleton(), predResult.cycles());
+            if (predResult.isUnknown()) {
+                return InferResult.EMPTY;
+            } else {
+                return predResult.not();
+            }
         }
     }
 
