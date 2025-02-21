@@ -63,7 +63,7 @@ public class NelumboTest extends NelumboTestBase {
         System.setProperty("REVERSE_NELUMBO", "false");
         System.setProperty("RANDOM_NELUMBO", "true");
 
-        System.setProperty("TRACE_NELUMBO", "true");
+        System.setProperty("TRACE_NELUMBO", "false");
         System.setProperty("PRETTY_NELUMBO", "true");
     }
 
@@ -78,10 +78,15 @@ public class NelumboTest extends NelumboTestBase {
     interface RootFunc extends Root, Function<Root> {
     }
 
-    static Functor<RootCons> ROOT = functor((SerializableFunction<String, RootCons>) NelumboTest::root);
+    static Functor<RootCons> ROOT = functor((SerializableFunction<IntegerCons, RootCons>) NelumboTest::root, //
+            (ToStringLambda) p -> "R(" + p.get(1).toString() + ")");
 
-    static RootCons root(String name) {
-        return constant(ROOT, name);
+    static RootCons root(IntegerCons i) {
+        return constant(ROOT, i);
+    }
+
+    static RootCons root(int i) {
+        return root(i(i));
     }
 
     static RootCons rootConsVar(String name) {
@@ -92,13 +97,15 @@ public class NelumboTest extends NelumboTestBase {
         return variable(Root.class, name);
     }
 
-    static Functor<Relation> ROOT_PERSON = functor(NelumboTest::rootPerson);
+    static Functor<Relation> ROOT_PERSON = functor(NelumboTest::rootPerson, //
+            (ToStringLambda) s -> "rp(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation rootPerson(RootCons root, PersonCons person) {
         return pred(ROOT_PERSON, root, person);
     }
 
-    static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) NelumboTest::root);
+    static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) NelumboTest::root, //
+            (ToStringLambda) p -> "r(" + p.get(1).toString() + ")");
 
     static RootFunc root(Person person) {
         return function(ROOT_FUNC, person);
@@ -115,15 +122,15 @@ public class NelumboTest extends NelumboTestBase {
     interface PersonFunc extends Person, Function<Person> {
     }
 
-    static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) NelumboTest::person, (ToStringLambda) p -> {
-        return p.get(1).toString();
-    });
+    static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) NelumboTest::person, //
+            (ToStringLambda) p -> p.get(1).toString());
 
     static PersonCons person(String name) {
         return constant(STRING_PERSON, name);
     }
 
-    static Functor<PersonCons> INTEGER_PERSON = functor((SerializableFunction<IntegerCons, PersonCons>) NelumboTest::person);
+    static Functor<PersonCons> INTEGER_PERSON = functor((SerializableFunction<IntegerCons, PersonCons>) NelumboTest::person, //
+            (ToStringLambda) p -> "P(" + p.get(1).toString() + ")");
 
     static PersonCons person(IntegerCons i) {
         return constant(INTEGER_PERSON, i);
@@ -141,37 +148,43 @@ public class NelumboTest extends NelumboTestBase {
         return variable(Person.class, name);
     }
 
-    static Functor<Relation> PARENT_CHILD = functor(NelumboTest::parentChild);
+    static Functor<Relation> PARENT_CHILD = functor(NelumboTest::parentChild, //
+            (ToStringLambda) s -> "pc(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation parentChild(PersonCons parent, PersonCons child) {
         return pred(PARENT_CHILD, parent, child);
     }
 
-    static Functor<PersonFunc> PARENT = functor(NelumboTest::parent);
+    static Functor<PersonFunc> PARENT = functor(NelumboTest::parent, //
+            (ToStringLambda) s -> "p(" + s.toString(1) + ")");
 
     static PersonFunc parent(Person child) {
         return function(PARENT, child);
     }
 
-    static Functor<PersonFunc> CHILD = functor(NelumboTest::child);
+    static Functor<PersonFunc> CHILD = functor(NelumboTest::child, //
+            (ToStringLambda) s -> "c(" + s.toString(1) + ")");
 
     static PersonFunc child(Person parent) {
         return function(CHILD, parent);
     }
 
-    static Functor<Relation> ANCESTOR_DESCENTENT = functor(NelumboTest::ancestorDescendent);
+    static Functor<Relation> ANCESTOR_DESCENTENT = functor(NelumboTest::ancestorDescendent, //
+            (ToStringLambda) s -> "ad(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation ancestorDescendent(PersonCons ancestor, PersonCons descendent) {
         return pred(ANCESTOR_DESCENTENT, ancestor, descendent);
     }
 
-    static Functor<PersonFunc> ANCESTOR = functor(NelumboTest::ancestor);
+    static Functor<PersonFunc> ANCESTOR = functor(NelumboTest::ancestor, //
+            (ToStringLambda) s -> "a(" + s.toString(1) + ")");
 
     static PersonFunc ancestor(Person descendent) {
         return function(ANCESTOR, descendent);
     }
 
-    static Functor<PersonFunc> DESCENDENT = functor(NelumboTest::descendent);
+    static Functor<PersonFunc> DESCENDENT = functor(NelumboTest::descendent, //
+            (ToStringLambda) s -> "d(" + s.toString(1) + ")");
 
     static PersonFunc descendent(Person ancestor) {
         return function(DESCENDENT, ancestor);
@@ -212,7 +225,7 @@ public class NelumboTest extends NelumboTestBase {
     PersonCons               Heleen = person("Heleen");
     PersonCons               Marijn = person("Marijn");
 
-    RootCons                 Root   = root("Root");
+    RootCons                 Root   = root(1);
 
     // Fibonacci
 
