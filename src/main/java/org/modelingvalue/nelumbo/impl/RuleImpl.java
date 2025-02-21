@@ -108,10 +108,15 @@ public final class RuleImpl extends StructureImpl<Rule> {
         } else if (condResult.equals(condition.unknown())) {
             return predicate.unknown();
         } else {
-            Set<PredicateImpl> consFacts = InferResult.bind(condResult.facts(), condition, consequence);
-            Set<PredicateImpl> consFalsehoods = InferResult.bind(condResult.falsehoods(), condition, consequence);
-            Set<PredicateImpl> predFacts = InferResult.cast(consFacts, predicate);
-            Set<PredicateImpl> predFalsehoods = InferResult.cast(consFalsehoods, predicate).removeAll(p -> predFacts.contains(p) && p.isFullyBound());
+            Set<PredicateImpl> complConsFacts = InferResult.bind(condResult.facts().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+            Set<PredicateImpl> complConsFalsehoods = InferResult.bind(condResult.falsehoods().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+            Set<PredicateImpl> incomConsFacts = InferResult.bind(condResult.facts().removeAll(PredicateImpl::isFullyBound), condition, consequence).//
+                    removeAll(complConsFacts::contains).removeAll(complConsFalsehoods::contains);
+            Set<PredicateImpl> incomConsFalsehoods = InferResult.bind(condResult.falsehoods().removeAll(PredicateImpl::isFullyBound), condition, consequence).//
+                    removeAll(complConsFalsehoods::contains).removeAll(complConsFacts::contains);
+            Set<PredicateImpl> predFacts = InferResult.cast(complConsFacts.isEmpty() ? incomConsFacts : complConsFacts, predicate);
+            Set<PredicateImpl> predFalsehoods = InferResult.cast(complConsFalsehoods.addAll(incomConsFalsehoods), predicate).//
+                    removeAll(p -> predFacts.contains(p) && p.isFullyBound());
             if (predFalsehoods.isEmpty() && consequence.isFullyBound() && !predicate.isFullyBound()) {
                 predFalsehoods = predicate.singleton();
             }

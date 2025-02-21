@@ -251,6 +251,10 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         return (PredicateImpl) super.set(i, a);
     }
 
+    public PredicateImpl copy(int from, int to) {
+        return (PredicateImpl) super.set(to, get(from));
+    }
+
     public final InferResult unknown() {
         return InferResult.unknowns(singleton);
     }

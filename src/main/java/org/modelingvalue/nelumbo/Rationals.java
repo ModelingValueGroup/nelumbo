@@ -20,14 +20,11 @@
 
 package org.modelingvalue.nelumbo;
 
-import static org.modelingvalue.nelumbo.Integers.i;
-import static org.modelingvalue.nelumbo.Integers.iConsVar;
 import static org.modelingvalue.nelumbo.Logic.*;
 
 import java.math.BigInteger;
 
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.Integers.IntegerCons;
 import org.modelingvalue.nelumbo.Logic.*;
 import org.modelingvalue.nelumbo.impl.InferContext;
 import org.modelingvalue.nelumbo.impl.InferResult;
@@ -89,10 +86,6 @@ public final class Rationals {
 
     // Predicates
 
-    private static final StructureImpl<IntegerCons>  ZERO_INT      = StructureImpl.unproxy(i(0));
-    private static final StructureImpl<IntegerCons>  ONE_INT       = StructureImpl.unproxy(i(1));
-    private static final StructureImpl<IntegerCons>  MINUS_ONE_INT = StructureImpl.unproxy(i(-1));
-
     private static final StructureImpl<RationalCons> ZERO_RATIONAL = StructureImpl.unproxy(r(0));
 
     private static StructureImpl<RationalCons> struct(BigInteger numerator, BigInteger denominator) {
@@ -100,36 +93,29 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> compare = Logic.<Relation, RationalCons, RationalCons, IntegerCons> functor(Rationals::compare, (LogicLambda) Rationals::compareLogic, //
-            (ToStringLambda) s -> s.toString(1) + "\u22DA" + s.toString(2) + "=" + s.toString(3));
+    private static Functor<Relation> compare = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::gt, (LogicLambda) Rationals::compareLogic, //
+            (ToStringLambda) s -> s.toString(1) + "\u226B" + s.toString(2));
 
     @SuppressWarnings("rawtypes")
     private static InferResult compareLogic(PredicateImpl predicate, InferContext context) {
         BigInteger numComp1 = predicate.getVal(1, 1);
-        BigInteger denComp1 = predicate.getVal(1, 2);
         BigInteger numComp2 = predicate.getVal(2, 1);
-        BigInteger denComp2 = predicate.getVal(2, 2);
-        BigInteger result = predicate.getVal(3, 1);
         if (numComp1 != null && numComp2 != null) {
+            BigInteger denComp1 = predicate.getVal(1, 2);
+            BigInteger denComp2 = predicate.getVal(2, 2);
             int r = numComp1.multiply(denComp2).compareTo(numComp2.multiply(denComp1));
-            if (result != null) {
-                boolean eq = r == result.intValue();
-                return eq ? predicate.fact() : predicate.falsehood();
-            } else {
-                return InferResult.trueFalse(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT).singleton(), predicate.singleton());
-            }
-        } else if (BigInteger.ZERO.equals(result)) {
-            if (numComp1 != null) {
-                return InferResult.trueFalse(predicate.set(2, (StructureImpl) predicate.getVal(1)).singleton(), predicate.singleton());
-            } else if (numComp2 != null) {
-                return InferResult.trueFalse(predicate.set(1, (StructureImpl) predicate.getVal(2)).singleton(), predicate.singleton());
-            }
+            return r > 0 ? predicate.fact() : predicate.falsehood();
+        } else if (numComp1 != null) {
+            return InferResult.trueFalse(predicate.singleton(), Set.of(predicate.copy(1, 2), predicate));
+        } else if (numComp2 != null) {
+            return InferResult.trueFalse(predicate.singleton(), Set.of(predicate.copy(2, 1), predicate));
+        } else {
+            return predicate.unknown();
         }
-        return predicate.unknown();
     }
 
-    public static Relation compare(RationalCons compared1, RationalCons compared2, IntegerCons result) {
-        return pred(compare, compared1, compared2, result);
+    public static Relation gt(RationalCons compared1, RationalCons compared2) {
+        return pred(compare, compared1, compared2);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -233,7 +219,7 @@ public final class Rationals {
 
     // Functions
 
-    private static Functor<Relation> GT_FUNCTOR = functor(Rationals::gt, //
+    private static Functor<Relation> GT_FUNCTOR = Logic.<Relation, Rational, Rational> functor(Rationals::gt, //
             (ToStringLambda) s -> s.toString(1) + ">" + s.toString(2));
 
     public static Relation gt(Rational a, Rational b) {
@@ -307,18 +293,16 @@ public final class Rationals {
     private static final RationalCons Q = rConsVar("QL");
     private static final RationalCons R = rConsVar("RL");
 
-    private static final IntegerCons  I = iConsVar("IL");
-
     private static final Rational     X = rVar("X");
     private static final Rational     Y = rVar("Y");
 
     public static void rationalRules() {
         isRules();
 
-        rule(gt(X, Y), and(is(X, P), is(Y, Q), compare(P, Q, i(1))));
-        rule(lt(X, Y), and(is(X, P), is(Y, Q), compare(P, Q, i(-1))));
-        rule(ge(X, Y), and(is(X, P), is(Y, Q), compare(P, Q, I), or(eq(I, i(1)), eq(I, i(0)))));
-        rule(le(X, Y), and(is(X, P), is(Y, Q), compare(P, Q, I), or(eq(I, i(-1)), eq(I, i(0)))));
+        rule(gt(X, Y), and(is(X, P), is(Y, Q), gt(P, Q)));
+        rule(lt(X, Y), and(is(X, P), is(Y, Q), gt(Q, P)));
+        rule(ge(X, Y), and(is(X, P), is(Y, Q), or(gt(P, Q), eq(P, Q))));
+        rule(le(X, Y), and(is(X, P), is(Y, Q), or(gt(Q, P), eq(Q, P))));
 
         rule(is(plus(X, Y), R), and(is(X, P), is(Y, Q), plus(P, Q, R)));
         rule(is(minus(X, Y), R), and(is(X, P), is(Y, Q), plus(R, Q, P)));

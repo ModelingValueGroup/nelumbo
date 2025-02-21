@@ -78,43 +78,33 @@ public final class Integers {
 
     // Predicates
 
-    private static final StructureImpl<IntegerCons> ZERO_INT      = StructureImpl.unproxy(i(0));
-    private static final StructureImpl<IntegerCons> ONE_INT       = StructureImpl.unproxy(i(1));
-    private static final StructureImpl<IntegerCons> MINUS_ONE_INT = StructureImpl.unproxy(i(-1));
+    private static final StructureImpl<IntegerCons> ZERO_INT = StructureImpl.unproxy(i(0));
 
     private static StructureImpl<IntegerCons> struct(BigInteger i) {
         return ZERO_INT.set(1, i);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> COMPARE_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::compare, (LogicLambda) Integers::compareLogic, //
-            (ToStringLambda) s -> s.toString(1) + "\u22DA" + s.toString(2) + "=" + s.toString(3));
+    private static Functor<Relation> GT_CONS_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::gt, (LogicLambda) Integers::gtCons, //
+            (ToStringLambda) s -> s.toString(1) + "\u226B" + s.toString(2));
 
     @SuppressWarnings("rawtypes")
-    private static InferResult compareLogic(PredicateImpl predicate, InferContext context) {
+    private static InferResult gtCons(PredicateImpl predicate, InferContext context) {
         BigInteger compared1 = predicate.getVal(1, 1);
         BigInteger compared2 = predicate.getVal(2, 1);
-        BigInteger result = predicate.getVal(3, 1);
         if (compared1 != null && compared2 != null) {
-            int r = compared1.compareTo(compared2);
-            if (result != null) {
-                boolean eq = r == result.intValue();
-                return eq ? predicate.fact() : predicate.falsehood();
-            } else {
-                return InferResult.trueFalse(predicate.set(3, r == 0 ? ZERO_INT : r == 1 ? ONE_INT : MINUS_ONE_INT).singleton(), predicate.singleton());
-            }
-        } else if (BigInteger.ZERO.equals(result)) {
-            if (compared1 != null) {
-                return InferResult.trueFalse(predicate.set(2, (StructureImpl) predicate.getVal(1)).singleton(), predicate.singleton());
-            } else if (compared2 != null) {
-                return InferResult.trueFalse(predicate.set(1, (StructureImpl) predicate.getVal(2)).singleton(), predicate.singleton());
-            }
+            return compared1.compareTo(compared2) > 0 ? predicate.fact() : predicate.falsehood();
+        } else if (compared1 != null) {
+            return InferResult.trueFalse(predicate.singleton(), Set.of(predicate.copy(1, 2), predicate));
+        } else if (compared2 != null) {
+            return InferResult.trueFalse(predicate.singleton(), Set.of(predicate.copy(2, 1), predicate));
+        } else {
+            return predicate.unknown();
         }
-        return predicate.unknown();
     }
 
-    public static Relation compare(IntegerCons compared1, IntegerCons compared2, IntegerCons result) {
-        return pred(COMPARE_FUNCTOR, compared1, compared2, result);
+    public static Relation gt(IntegerCons compared1, IntegerCons compared2) {
+        return pred(GT_CONS_FUNCTOR, compared1, compared2);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -200,7 +190,7 @@ public final class Integers {
 
     // Functions
 
-    private static Functor<Relation> GT_FUNCTOR = functor(Integers::gt, //
+    private static Functor<Relation> GT_FUNCTOR = Logic.<Relation, Integer, Integer> functor(Integers::gt, //
             (ToStringLambda) s -> s.toString(1) + ">" + s.toString(2));
 
     public static Relation gt(Integer a, Integer b) {
@@ -280,10 +270,10 @@ public final class Integers {
     public static void integerRules() {
         isRules();
 
-        rule(gt(X, Y), and(is(X, P), is(Y, Q), compare(P, Q, i(1))));
-        rule(lt(X, Y), and(is(X, P), is(Y, Q), compare(P, Q, i(-1))));
-        rule(ge(X, Y), and(is(X, P), is(Y, Q), compare(P, Q, R), or(eq(R, i(1)), eq(R, i(0)))));
-        rule(le(X, Y), and(is(X, P), is(Y, Q), compare(P, Q, R), or(eq(R, i(-1)), eq(R, i(0)))));
+        rule(gt(X, Y), and(is(X, P), is(Y, Q), gt(P, Q)));
+        rule(lt(X, Y), and(is(X, P), is(Y, Q), gt(Q, P)));
+        rule(ge(X, Y), and(is(X, P), is(Y, Q), or(gt(P, Q), eq(P, Q))));
+        rule(le(X, Y), and(is(X, P), is(Y, Q), or(gt(Q, P), eq(Q, P))));
 
         rule(is(plus(X, Y), R), and(is(X, P), is(Y, Q), plus(P, Q, R)));
         rule(is(minus(X, Y), R), and(is(X, P), is(Y, Q), plus(R, Q, P)));
