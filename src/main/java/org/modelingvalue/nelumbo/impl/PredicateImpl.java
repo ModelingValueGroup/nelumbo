@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.util.Objects;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
@@ -37,17 +38,21 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     private static final int         MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
     private final Set<PredicateImpl> singleton          = Set.of(this);
+    private final PredicateImpl      declaration;
 
     public PredicateImpl(Functor<Predicate> functor, Object... args) {
         super(functor, args);
+        this.declaration = this;
     }
 
     public PredicateImpl(FunctorImpl<Predicate> functor, Object... args) {
         super(functor, args);
+        this.declaration = this;
     }
 
     protected PredicateImpl(Object[] args, PredicateImpl declaration) {
-        super(args, declaration);
+        super(args);
+        this.declaration = declaration;
     }
 
     @Override
@@ -60,15 +65,34 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         return new PredicateImpl(toArray(), to.declaration());
     }
 
-    @Override
     public PredicateImpl declaration() {
-        return (PredicateImpl) super.declaration();
+        return declaration;
+    }
+
+    @Override
+    public String toString() {
+        return PRETTY_NELUMBO ? setVariables().superToString() : super.toString();
+    }
+
+    private String superToString() {
+        return super.toString();
     }
 
     @SuppressWarnings("rawtypes")
-    @Override
-    public PredicateImpl setBinding(Map<VariableImpl, Object> vars) {
-        return (PredicateImpl) super.setBinding(vars);
+    private PredicateImpl setVariables() {
+        Map<VariableImpl, Object> vars = getBinding(declaration, Map.of());
+        vars = vars != null ? vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e) : null;
+        return vars != null ? setBinding(vars) : this;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public Map<VariableImpl, Object> getBinding(Map<VariableImpl, Object> vars) {
+        return super.getBinding(declaration, vars);
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected final PredicateImpl setBinding(Map<VariableImpl, Object> vars) {
+        return (PredicateImpl) super.setBinding(declaration, vars);
     }
 
     @SuppressWarnings("rawtypes")

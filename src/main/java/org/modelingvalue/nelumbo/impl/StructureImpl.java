@@ -25,7 +25,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
 
-import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.StringUtil;
@@ -77,31 +76,26 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         }
     }
 
-    private final int              hashCode;
-    private final StructureImpl<F> declaration;
+    private final int hashCode;
 
     public StructureImpl(Functor<F> functor, Object... args) {
         super(unproxy(functor, args));
         this.hashCode = getHashCode();
-        declaration = this;
     }
 
     protected StructureImpl(FunctorImpl<F> functor, Object... args) {
         super(array(functor, args));
         this.hashCode = getHashCode();
-        declaration = this;
     }
 
     protected StructureImpl(Class<F> type, Object... args) {
         super(array(type, args));
         this.hashCode = getHashCode();
-        declaration = this;
     }
 
-    protected StructureImpl(Object[] args, StructureImpl<F> declaration) {
+    protected StructureImpl(Object[] args) {
         super(args);
         this.hashCode = getHashCode();
-        this.declaration = declaration;
     }
 
     private int getHashCode() {
@@ -121,13 +115,12 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public String toString() {
-        StructureImpl<F> self = PRETTY_NELUMBO ? setVariables() : this;
-        FunctorImpl<F> f = PRETTY_NELUMBO ? self.functor() : null;
+        FunctorImpl<F> f = PRETTY_NELUMBO ? functor() : null;
         ToStringLambda tsl = f != null ? f.toStringLambda() : null;
         if (tsl != null) {
-            return tsl.apply((StructureImpl) self);
+            return tsl.apply((StructureImpl) this);
         }
-        String string = self.superToString();
+        String string = superToString();
         string = string.substring(1, string.length() - 1);
         int i = string.indexOf(',');
         return i >= 0 ? string.substring(0, i) + "(" + string.substring(i + 1) + ")" : string + "()";
@@ -143,13 +136,6 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
 
     public final String toString(int i) {
         return StringUtil.toString(get(i));
-    }
-
-    @SuppressWarnings("rawtypes")
-    private StructureImpl<F> setVariables() {
-        Map<VariableImpl, Object> vars = getBinding(Map.of());
-        vars = vars != null ? vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e) : null;
-        return vars != null ? setBinding(vars) : this;
     }
 
     private static final Object[] array(Object functor, Object[] args) {
@@ -309,19 +295,14 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
 
     @SuppressWarnings("unchecked")
     protected StructureImpl<F> struct(Object[] array) {
-        return new StructureImpl<F>(array, declaration).normal();
+        return new StructureImpl<F>(array).normal();
     }
 
     @SuppressWarnings("rawtypes")
-    public Map<VariableImpl, Object> getBinding(Map<VariableImpl, Object> vars) {
-        return getBinding(declaration, vars);
-    }
-
-    @SuppressWarnings("rawtypes")
-    protected Map<VariableImpl, Object> getBinding(StructureImpl<F> decl, Map<VariableImpl, Object> vars) {
-        if (get(0).equals(decl.get(0))) {
+    protected final Map<VariableImpl, Object> getBinding(StructureImpl<F> declaration, Map<VariableImpl, Object> vars) {
+        if (get(0).equals(declaration.get(0))) {
             for (int i = 1; i < length(); i++) {
-                vars = getBinding(decl.get(i), get(i), vars);
+                vars = getBinding(declaration.get(i), get(i), vars);
                 if (vars == null) {
                     return null;
                 }
@@ -381,7 +362,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings("rawtypes")
-    protected StructureImpl<F> setBinding(Map<VariableImpl, Object> vars) {
+    protected final StructureImpl<F> setBinding(StructureImpl<F> declaration, Map<VariableImpl, Object> vars) {
         Object[] array = null;
         for (int i = 1; i < length(); i++) {
             Object thisVal = get(i);
@@ -405,9 +386,9 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             }
         } else if (declVal instanceof StructureImpl) {
             if (thisVal instanceof StructureImpl) {
-                return ((StructureImpl) thisVal).setBinding(vars);
+                return ((StructureImpl) thisVal).setBinding((StructureImpl) declVal, vars);
             } else if (thisVal instanceof Class && ((Class) thisVal).isAssignableFrom((((StructureImpl) declVal).type()))) {
-                return ((StructureImpl) thisVal).setBinding(vars);
+                return ((StructureImpl) thisVal).setBinding((StructureImpl) declVal, vars);
             }
         }
         return thisVal;
@@ -469,9 +450,5 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         } else if (object instanceof List) {
             ((List) object).forEach(StructureImpl::noProxy);
         }
-    }
-
-    public StructureImpl<F> declaration() {
-        return declaration;
     }
 }

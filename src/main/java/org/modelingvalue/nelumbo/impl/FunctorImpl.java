@@ -107,11 +107,6 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public FunctorImpl<T> declaration() {
-        return (FunctorImpl<T>) super.declaration();
-    }
-
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public Class<Functor<T>> type() {

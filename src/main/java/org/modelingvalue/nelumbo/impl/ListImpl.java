@@ -72,19 +72,14 @@ public final class ListImpl<E extends Structure> extends StructureImpl<ListCons<
         super(functor, head, tail);
     }
 
-    private ListImpl(Object[] args, ListImpl<E> declaration) {
-        super(args, declaration);
+    private ListImpl(Object[] args) {
+        super(args);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected ListImpl<E> struct(Object[] array) {
-        return new ListImpl(array, declaration());
-    }
-
-    @Override
-    public ListImpl<E> declaration() {
-        return (ListImpl<E>) super.declaration();
+        return new ListImpl(array);
     }
 
     @SuppressWarnings("unchecked")

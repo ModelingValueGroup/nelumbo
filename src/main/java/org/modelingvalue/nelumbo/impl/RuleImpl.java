@@ -53,19 +53,14 @@ public final class RuleImpl extends StructureImpl<Rule> {
         return false;
     }
 
-    private RuleImpl(Object[] args, RuleImpl declaration) {
-        super(args, declaration);
+    private RuleImpl(Object[] args) {
+        super(args);
         trace = false;
     }
 
     @Override
     protected RuleImpl struct(Object[] array) {
-        return new RuleImpl(array, declaration());
-    }
-
-    @Override
-    public RuleImpl declaration() {
-        return (RuleImpl) super.declaration();
+        return new RuleImpl(array);
     }
 
     @Override

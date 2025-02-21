@@ -63,7 +63,7 @@ public class NelumboTest extends NelumboTestBase {
         System.setProperty("REVERSE_NELUMBO", "false");
         System.setProperty("RANDOM_NELUMBO", "true");
 
-        System.setProperty("TRACE_NELUMBO", "false");
+        System.setProperty("TRACE_NELUMBO", "true");
         System.setProperty("PRETTY_NELUMBO", "true");
     }
 
