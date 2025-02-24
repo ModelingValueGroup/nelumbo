@@ -41,7 +41,7 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
         this.declaration = this;
     }
 
-    public PredicateImpl(FunctorImpl<Predicate> functor, Object... args) {
+    protected PredicateImpl(FunctorImpl<Predicate> functor, Object... args) {
         super(functor, args);
         this.declaration = this;
     }
@@ -162,7 +162,7 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     @SuppressWarnings("rawtypes")
-    protected final InferResult resolve(PredicateImpl consequence, InferContext context) {
+    protected InferResult resolve(PredicateImpl consequence, InferContext context) {
         Set<PredicateImpl> now, next = singleton(), bindings, facts = Set.of(), falsehoods = Set.of();
         Set<RelationImpl> cycles = Set.of();
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
