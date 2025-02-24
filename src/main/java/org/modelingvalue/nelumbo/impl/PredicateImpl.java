@@ -20,8 +20,6 @@
 
 package org.modelingvalue.nelumbo.impl;
 
-import java.util.Objects;
-
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
@@ -88,22 +86,6 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
     @Override
     @SuppressWarnings("unchecked")
     protected abstract PredicateImpl struct(Object[] array);
-
-    @SuppressWarnings("rawtypes")
-    public final PredicateImpl signature() {
-        Object[] array = null;
-        for (int i = 1; i < length(); i++) {
-            Object v = get(i);
-            Object s = typeOf(v);
-            if (!Objects.equals(s, v)) {
-                if (array == null) {
-                    array = toArray();
-                }
-                array[i] = s;
-            }
-        }
-        return array != null ? struct(array) : this;
-    }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Class getType(int i) {

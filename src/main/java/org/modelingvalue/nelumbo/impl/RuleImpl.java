@@ -39,8 +39,8 @@ public final class RuleImpl extends StructureImpl<Rule> {
     private Map<VariableImpl, Object>      variables;
     private final boolean                  trace;
 
-    public RuleImpl(Relation pred, Predicate decl, RuleModifier[] modifiers) {
-        super(RULE_FUNCTOR_PROXY, pred, decl);
+    public RuleImpl(Relation consequence, Predicate condition, RuleModifier[] modifiers) {
+        super(RULE_FUNCTOR_PROXY, consequence, condition);
         trace = has(RuleModifier.trace, modifiers);
     }
 
@@ -73,8 +73,8 @@ public final class RuleImpl extends StructureImpl<Rule> {
     }
 
     @SuppressWarnings("rawtypes")
-    public final PredicateImpl consequence() {
-        return (PredicateImpl) get(1);
+    public final RelationImpl consequence() {
+        return (RelationImpl) get(1);
     }
 
     @SuppressWarnings("rawtypes")

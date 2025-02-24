@@ -427,12 +427,12 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings("unchecked")
-    public static final <T extends Structure, R extends StructureImpl<T>> R unproxy(T object) {
+    public static final <T extends Structure, R extends StructureImpl<?>> R unproxy(T object) {
         return (R) Proxy.getInvocationHandler(object);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static final Object unproxy(Object object) {
+    private static final Object unproxy(Object object) {
         if (object instanceof Structure) {
             return Proxy.getInvocationHandler(object);
         } else if (object instanceof List) {

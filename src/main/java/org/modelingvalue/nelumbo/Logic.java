@@ -325,8 +325,9 @@ public final class Logic {
     // Facts
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static void fact(Relation pred) {
-        KnowledgeBaseImpl.CURRENT.get().addFact(StructureImpl.<Predicate, PredicateImpl> unproxy(pred));
+    public static void fact(Relation relation) {
+        RelationImpl unproxy = StructureImpl.<Relation, RelationImpl> unproxy(relation);
+        KnowledgeBaseImpl.CURRENT.get().addFact(unproxy);
     }
 
     // Equals

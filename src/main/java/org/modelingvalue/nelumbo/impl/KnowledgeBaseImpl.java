@@ -169,21 +169,21 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         memoization = new AtomicReference<>(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
     }
 
-    public InferResult getFacts(PredicateImpl pred) {
-        InferResult result = facts.get().get(pred);
-        return result != null ? result.cast(pred) : pred.falsehood();
+    public InferResult getFacts(RelationImpl relation) {
+        InferResult result = facts.get().get(relation);
+        return result != null ? result.cast(relation) : relation.falsehood();
     }
 
-    public List<RuleImpl> getRules(PredicateImpl pred) {
-        return rules.get().get(pred.signature());
+    public List<RuleImpl> getRules(RelationImpl relation) {
+        return rules.get().get(relation.signature());
     }
 
-    public InferResult getMemoiz(PredicateImpl pred) {
+    public InferResult getMemoiz(RelationImpl relation) {
         for (QualifiedSet<PredicateImpl, Inference> m : memoization.get()) {
-            Inference memoiz = m.get(pred);
+            Inference memoiz = m.get(relation);
             if (memoiz != null) {
                 memoiz.count++;
-                return memoiz.result().cast(pred);
+                return memoiz.result().cast(relation);
             }
         }
         return null;
@@ -282,7 +282,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public void addRule(RuleImpl ruleImpl) {
         Map<Class, Set<Class>> specs = SPECIALIZATIONS.get();
-        PredicateImpl consequence = ruleImpl.consequence();
+        RelationImpl consequence = ruleImpl.consequence();
         rules.updateAndGet(m -> addRule(consequence.signature(), ruleImpl, m, specs));
     }
 
@@ -302,7 +302,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public final void addFact(PredicateImpl fact) {
+    public final void addFact(RelationImpl fact) {
         FunctorImpl<Predicate> functor = fact.functor();
         if (functor.logicLambda() != null) {
             throw new IllegalArgumentException("No facts of a functor with a logic lambda allowed. " + this);

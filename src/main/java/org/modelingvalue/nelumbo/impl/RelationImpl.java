@@ -1,5 +1,7 @@
 package org.modelingvalue.nelumbo.impl;
 
+import java.util.Objects;
+
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Functor;
@@ -183,6 +185,22 @@ public class RelationImpl extends PredicateImpl {
     protected InferResult resolve(PredicateImpl consequence, InferContext context) {
         InferResult result = infer(context);
         return result.bind(this, consequence);
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected final RelationImpl signature() {
+        Object[] array = null;
+        for (int i = 1; i < length(); i++) {
+            Object v = get(i);
+            Object s = typeOf(v);
+            if (!Objects.equals(s, v)) {
+                if (array == null) {
+                    array = toArray();
+                }
+                array[i] = s;
+            }
+        }
+        return array != null ? struct(array) : this;
     }
 
 }
