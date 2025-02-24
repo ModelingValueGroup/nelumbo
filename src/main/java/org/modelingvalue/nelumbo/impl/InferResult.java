@@ -21,7 +21,6 @@
 package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 
 public interface InferResult {
@@ -30,9 +29,9 @@ public interface InferResult {
 
     Set<PredicateImpl> falsehoods();
 
-    Set<PredicateImpl> cycles();
+    Set<RelationImpl> cycles();
 
-    List<PredicateImpl> stackOverflow();
+    List<RelationImpl> stackOverflow();
 
     InferResult EMPTY = new InferResult() {
         @Override
@@ -46,12 +45,12 @@ public interface InferResult {
         }
 
         @Override
-        public Set<PredicateImpl> cycles() {
+        public Set<RelationImpl> cycles() {
             return Set.of();
         }
 
         @Override
-        public List<PredicateImpl> stackOverflow() {
+        public List<RelationImpl> stackOverflow() {
             return null;
         }
 
@@ -61,7 +60,7 @@ public interface InferResult {
         }
     };
 
-    static InferResult of(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods, Set<PredicateImpl> cycles) {
+    static InferResult of(Set<PredicateImpl> facts, Set<PredicateImpl> falsehoods, Set<RelationImpl> cycles) {
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
@@ -74,12 +73,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> cycles() {
+            public Set<RelationImpl> cycles() {
                 return cycles;
             }
 
             @Override
-            public List<PredicateImpl> stackOverflow() {
+            public List<RelationImpl> stackOverflow() {
                 return null;
             }
 
@@ -103,12 +102,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> cycles() {
+            public Set<RelationImpl> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<PredicateImpl> stackOverflow() {
+            public List<RelationImpl> stackOverflow() {
                 return null;
             }
 
@@ -132,12 +131,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> cycles() {
+            public Set<RelationImpl> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<PredicateImpl> stackOverflow() {
+            public List<RelationImpl> stackOverflow() {
                 return null;
             }
 
@@ -161,12 +160,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> cycles() {
+            public Set<RelationImpl> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<PredicateImpl> stackOverflow() {
+            public List<RelationImpl> stackOverflow() {
                 return null;
             }
 
@@ -190,12 +189,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> cycles() {
+            public Set<RelationImpl> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<PredicateImpl> stackOverflow() {
+            public List<RelationImpl> stackOverflow() {
                 return null;
             }
 
@@ -206,8 +205,9 @@ public interface InferResult {
         };
     }
 
-    static InferResult cycle(PredicateImpl predicate) {
-        Set<PredicateImpl> set = Set.of(predicate);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static InferResult cycle(RelationImpl relation) {
+        Set set = Set.of(relation);
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
@@ -220,12 +220,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> cycles() {
+            public Set<RelationImpl> cycles() {
                 return set;
             }
 
             @Override
-            public List<PredicateImpl> stackOverflow() {
+            public List<RelationImpl> stackOverflow() {
                 return null;
             }
 
@@ -236,7 +236,7 @@ public interface InferResult {
         };
     }
 
-    static InferResult overflow(List<PredicateImpl> overflow) {
+    static InferResult overflow(List<RelationImpl> overflow) {
         return new InferResult() {
             @Override
             public Set<PredicateImpl> facts() {
@@ -249,12 +249,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<PredicateImpl> cycles() {
+            public Set<RelationImpl> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<PredicateImpl> stackOverflow() {
+            public List<RelationImpl> stackOverflow() {
                 return overflow;
             }
 
@@ -268,7 +268,7 @@ public interface InferResult {
     default InferResult add(InferResult other) {
         Set<PredicateImpl> facts = facts().addAll(other.facts());
         Set<PredicateImpl> falsehoods = falsehoods().addAll(other.falsehoods());
-        Set<PredicateImpl> cycles = cycles().addAll(other.cycles());
+        Set<RelationImpl> cycles = cycles().addAll(other.cycles());
         return of(facts, falsehoods, cycles);
     }
 
@@ -279,14 +279,14 @@ public interface InferResult {
     default InferResult and(InferResult other) {
         Set<PredicateImpl> facts = facts().retainAll(other.facts());
         Set<PredicateImpl> falsehoods = falsehoods().addAll(other.falsehoods());
-        Set<PredicateImpl> cycles = cycles().addAll(other.cycles());
+        Set<RelationImpl> cycles = cycles().addAll(other.cycles());
         return of(facts, falsehoods, cycles);
     }
 
     default InferResult or(InferResult other) {
         Set<PredicateImpl> facts = facts().addAll(other.facts());
         Set<PredicateImpl> falsehoods = falsehoods().retainAll(other.falsehoods());
-        Set<PredicateImpl> cycles = cycles().addAll(other.cycles());
+        Set<RelationImpl> cycles = cycles().addAll(other.cycles());
         return of(facts, falsehoods, cycles);
     }
 
@@ -295,7 +295,7 @@ public interface InferResult {
     }
 
     static Set<PredicateImpl> cast(Set<PredicateImpl> set, PredicateImpl to) {
-        return set.replaceAll(p -> p.equals(to) ? to : p.setDeclaration(to));
+        return set.replaceAll(p -> p.equals(to) ? to : to.from(p));
     }
 
     default InferResult bind(PredicateImpl from, PredicateImpl to) {
@@ -307,7 +307,7 @@ public interface InferResult {
     }
 
     static PredicateImpl bind(PredicateImpl pred, PredicateImpl from, PredicateImpl to) {
-        return pred.equals(from) ? to : to.setBinding(pred.getBinding(Map.of()));
+        return pred.equals(from) ? to : to.setBinding(pred.getBinding());
     }
 
     default boolean hasCycleWith(PredicateImpl predicate) {
@@ -319,7 +319,7 @@ public interface InferResult {
     }
 
     default String asString() {
-        List<PredicateImpl> overflow = stackOverflow();
+        List<RelationImpl> overflow = stackOverflow();
         if (overflow != null) {
             return overflow.toString().substring(4);
         } else {
@@ -327,7 +327,7 @@ public interface InferResult {
         }
     }
 
-    default String toString(Set<PredicateImpl> set) {
+    default String toString(Set<? extends PredicateImpl> set) {
         return set.toString().substring(3);
     }
 

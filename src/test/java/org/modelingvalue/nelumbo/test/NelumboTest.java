@@ -46,7 +46,6 @@ import org.modelingvalue.nelumbo.Integers.Integer;
 import org.modelingvalue.nelumbo.Integers.IntegerCons;
 import org.modelingvalue.nelumbo.Integers.IntegerFunc;
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Lists.ListCons;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
@@ -101,7 +100,7 @@ public class NelumboTest extends NelumboTestBase {
             (ToStringLambda) s -> "rp(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation rootPerson(RootCons root, PersonCons person) {
-        return pred(ROOT_PERSON, root, person);
+        return rel(ROOT_PERSON, root, person);
     }
 
     static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) NelumboTest::root, //
@@ -152,7 +151,7 @@ public class NelumboTest extends NelumboTestBase {
             (ToStringLambda) s -> "pc(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation parentChild(PersonCons parent, PersonCons child) {
-        return pred(PARENT_CHILD, parent, child);
+        return rel(PARENT_CHILD, parent, child);
     }
 
     static Functor<PersonFunc> PARENT = functor(NelumboTest::parent, //
@@ -173,7 +172,7 @@ public class NelumboTest extends NelumboTestBase {
             (ToStringLambda) s -> "ad(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation ancestorDescendent(PersonCons ancestor, PersonCons descendent) {
-        return pred(ANCESTOR_DESCENTENT, ancestor, descendent);
+        return rel(ANCESTOR_DESCENTENT, ancestor, descendent);
     }
 
     static Functor<PersonFunc> ANCESTOR = functor(NelumboTest::ancestor, //
@@ -212,9 +211,6 @@ public class NelumboTest extends NelumboTestBase {
     RootCons                 V      = rootConsVar("V");
     Root                     W      = rootVar("W");
 
-    @SuppressWarnings("unchecked")
-    ListCons<Person>         PL     = variable(ListCons.class, "PL");
-
     // Terms
 
     PersonCons               Carel  = person("Carel");
@@ -232,7 +228,7 @@ public class NelumboTest extends NelumboTestBase {
     static Functor<Relation> fib2   = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) NelumboTest::fib);
 
     static Relation fib(IntegerCons i, IntegerCons f) {
-        return pred(fib2, i, f);
+        return rel(fib2, i, f);
     }
 
     static Functor<IntegerFunc> fib1 = functor((SerializableFunction<Integer, IntegerFunc>) NelumboTest::fib);
@@ -390,8 +386,6 @@ public class NelumboTest extends NelumboTestBase {
             isFalse(ancestorDescendent(Heleen, Wim));
             isFalse(ancestorDescendent(Joppe, Carel));
             isFalse(ancestorDescendent(Carel, Carel));
-
-            // hasBindings(collect(parentChild(Wim, C), add(C, l(), PL)), binding(PL, l(Joppe, Marijn)));
         });
     }
 
@@ -456,8 +450,6 @@ public class NelumboTest extends NelumboTestBase {
             hasBindings(is(sqrt(i(49)), P), binding(P, i(7)), binding(P, i(-7)));
 
             hasBindings(and(is(sqrt(i(49)), P), ge(P, i(0))), binding(P, i(7)));
-
-            // hasBindings(collect(is(sqrt(i(49)), P), plus(P, i(0), Q)), binding(Q, i(0)));
         });
     }
 
@@ -498,8 +490,6 @@ public class NelumboTest extends NelumboTestBase {
             hasBindings(is(sqrt(r(49)), T), binding(T, r(7)), binding(T, r(-7)));
 
             hasBindings(and(is(sqrt(r(49)), T), ge(T, r(0))), binding(T, r(7)));
-
-            // hasBindings(collect(is(sqrt(r(49)), T), plus(T, r(0), U)), binding(U, r(0)));
         });
     }
 

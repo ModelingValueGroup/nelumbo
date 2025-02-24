@@ -115,7 +115,7 @@ public final class Rationals {
     }
 
     public static Relation gt(RationalCons compared1, RationalCons compared2) {
-        return pred(compare, compared1, compared2);
+        return rel(compare, compared1, compared2);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -153,7 +153,7 @@ public final class Rationals {
     }
 
     public static Relation plus(RationalCons addend1, RationalCons addend2, RationalCons sum) {
-        return pred(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
+        return rel(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -185,7 +185,7 @@ public final class Rationals {
     }
 
     public static Relation multiply(RationalCons factor1, RationalCons factor2, RationalCons product) {
-        return pred(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
+        return rel(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -214,7 +214,7 @@ public final class Rationals {
     }
 
     public static Relation square(RationalCons root, RationalCons square) {
-        return pred(SQUARE_PRED_FUNCTOR, root, square);
+        return rel(SQUARE_PRED_FUNCTOR, root, square);
     }
 
     // Functions
@@ -223,28 +223,28 @@ public final class Rationals {
             (ToStringLambda) s -> s.toString(1) + ">" + s.toString(2));
 
     public static Relation gt(Rational a, Rational b) {
-        return pred(GT_FUNCTOR, a, b);
+        return rel(GT_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LT_FUNCTOR = functor(Rationals::lt, //
             (ToStringLambda) s -> s.toString(1) + "<" + s.toString(2));
 
     public static Relation lt(Rational a, Rational b) {
-        return pred(LT_FUNCTOR, a, b);
+        return rel(LT_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> GE_FUNCTOR = functor(Rationals::ge, //
             (ToStringLambda) s -> s.toString(1) + "\u2265" + s.toString(2));
 
     public static Relation ge(Rational a, Rational b) {
-        return pred(GE_FUNCTOR, a, b);
+        return rel(GE_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LE_FUNCTOR = functor(Rationals::le, //
             (ToStringLambda) s -> s.toString(1) + "\u2264" + s.toString(2));
 
     public static Relation le(Rational a, Rational b) {
-        return pred(LE_FUNCTOR, a, b);
+        return rel(LE_FUNCTOR, a, b);
     }
 
     private static Functor<RationalFunc> PLUS_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::plus, //

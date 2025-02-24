@@ -23,25 +23,21 @@ package org.modelingvalue.nelumbo.impl;
 import java.util.Objects;
 
 import org.modelingvalue.collections.Entry;
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.LogicLambda;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public class PredicateImpl extends StructureImpl<Predicate> {
+public abstract class PredicateImpl extends StructureImpl<Predicate> {
 
-    private static final long        serialVersionUID   = -1605559565948158856L;
+    private static final long        serialVersionUID = -1605559565948158856L;
 
-    static final int                 MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
-    private static final int         MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
-
-    private final Set<PredicateImpl> singleton          = Set.of(this);
+    private final Set<PredicateImpl> singleton        = Set.of(this);
     private final PredicateImpl      declaration;
 
-    public PredicateImpl(Functor<Predicate> functor, Object... args) {
-        super(functor, args);
+    @SuppressWarnings("unchecked")
+    protected PredicateImpl(Functor<? extends Predicate> functor, Object... args) {
+        super((Functor<Predicate>) functor, args);
         this.declaration = this;
     }
 
@@ -55,18 +51,12 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         this.declaration = declaration;
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    protected PredicateImpl struct(Object[] array) {
-        return new PredicateImpl(array, declaration());
-    }
-
-    protected PredicateImpl setDeclaration(PredicateImpl to) {
-        return new PredicateImpl(toArray(), to.declaration());
-    }
-
     public PredicateImpl declaration() {
         return declaration;
+    }
+
+    protected PredicateImpl from(PredicateImpl from) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -86,14 +76,18 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     @SuppressWarnings("rawtypes")
-    public Map<VariableImpl, Object> getBinding(Map<VariableImpl, Object> vars) {
-        return super.getBinding(declaration, vars);
+    public Map<VariableImpl, Object> getBinding() {
+        return super.getBinding(declaration, Map.of());
     }
 
     @SuppressWarnings("rawtypes")
     protected final PredicateImpl setBinding(Map<VariableImpl, Object> vars) {
         return (PredicateImpl) super.setBinding(declaration, vars);
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected abstract PredicateImpl struct(Object[] array);
 
     @SuppressWarnings("rawtypes")
     public final PredicateImpl signature() {
@@ -123,7 +117,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
             System.err.println(context.prefix() + toString(null));
         }
         PredicateImpl conditon = setBinding(variables());
-        InferResult result = conditon.resolve(context);
+        InferResult result = conditon.resolve(conditon, context);
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null) + "\u2192" + result);
         }
@@ -134,135 +128,7 @@ public class PredicateImpl extends StructureImpl<Predicate> {
         throw new UnsupportedOperationException();
     }
 
-    protected InferResult infer(InferContext context) {
-        int nrOfUnbound = nrOfUnbound();
-        if (nrOfUnbound > 0 && context.reduce()) {
-            return unknown();
-        }
-        prefix(context);
-        FunctorImpl<Predicate> functor = functor();
-        LogicLambda logic = functor.logicLambda();
-        if (logic != null) {
-            return result(logic.apply((PredicateImpl) this, context), context);
-        }
-        if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return result(unknown(), context);
-        }
-        KnowledgeBaseImpl knowledgebase = context.knowledgebase();
-        if (knowledgebase.getRules(this) != null) {
-            InferResult result = knowledgebase.getMemoiz(this);
-            if (result != null) {
-                return result(result, context);
-            }
-            result = context.getCycleResult(this);
-            if (result != null) {
-                return result(context.reduce() ? unknown() : result, context);
-            }
-            List<PredicateImpl> stack = context.stack();
-            if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return result(InferResult.overflow(stack.append(this)), context);
-            }
-            if (context.trace()) {
-                System.err.println();
-            }
-            result = fixpoint(context.pushOnStack(this));
-            if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
-                List<PredicateImpl> overflow = result.stackOverflow();
-                if (overflow != null) {
-                    if (stack.size() == MAX_LOGIC_DEPTH_D2) {
-                        result = flatten(result, overflow, context);
-                    }
-                    prefix(context);
-                    return result(result, context);
-                }
-            }
-            knowledgebase.memoization(this, result);
-            prefix(context);
-            return result(result, context);
-        } else {
-            return result(knowledgebase.getFacts(this), context);
-        }
-    }
-
-    private void prefix(InferContext context) {
-        if (context.trace()) {
-            System.err.print(context.prefix() + "  " + toString(null));
-        }
-    }
-
-    private InferResult result(InferResult result, InferContext context) {
-        if (context.trace()) {
-            System.err.println("\u2192" + result);
-        }
-        return result;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static InferResult flatten(InferResult result, List<PredicateImpl> overflow, InferContext context) {
-        int stackSize = context.stack().size();
-        List<PredicateImpl> todo = overflow.sublist(stackSize, overflow.size());
-        while (todo.size() > 0) {
-            PredicateImpl predicate = todo.last();
-            result = predicate.fixpoint(context.pushOnStack(predicate));
-            overflow = result.stackOverflow();
-            if (overflow != null) {
-                todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
-            } else {
-                context.knowledgebase().memoization(predicate, result);
-                todo = todo.removeLast();
-            }
-        }
-        return result;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private InferResult fixpoint(InferContext context) {
-        InferResult previousResult = InferResult.EMPTY, cycleResult = InferResult.cycle(this), nextResult;
-        do {
-            nextResult = inferRules(context.putCycleResult(this, cycleResult));
-            if (nextResult.hasStackOverflow()) {
-                return nextResult;
-            }
-            if (nextResult.hasCycleWith(this)) {
-                if (!nextResult.equals(previousResult) && !nextResult.equals(cycleResult)) {
-                    previousResult = nextResult;
-                    cycleResult = InferResult.of(nextResult.facts().add(this), nextResult.falsehoods().add(this), singleton());
-                    context.knowledgebase().memoization(this, cycleResult);
-                    continue;
-                } else {
-                    return InferResult.of(uncycle(nextResult.facts()), uncycle(nextResult.falsehoods()), nextResult.cycles().remove(this));
-                }
-            }
-            return nextResult;
-        } while (true);
-    }
-
-    private Set<PredicateImpl> uncycle(Set<PredicateImpl> set) {
-        return set.equals(singleton()) && !isFullyBound() ? set : set.remove(this);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private InferResult inferRules(InferContext context) {
-        KnowledgeBaseImpl knowledgebase = context.knowledgebase();
-        InferResult result = knowledgebase.getFacts(this), ruleResult;
-        if (result.falsehoods().isEmpty()) {
-            return result;
-        }
-        List<RuleImpl> rules = knowledgebase.getRules(this);
-        for (RuleImpl rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
-            ruleResult = rule.imply(this, context);
-            if (ruleResult != null) {
-                if (ruleResult.hasStackOverflow()) {
-                    return ruleResult;
-                } else if (ruleResult.falsehoods().isEmpty()) {
-                    return ruleResult;
-                } else {
-                    result = result.or(ruleResult);
-                }
-            }
-        }
-        return result;
-    }
+    protected abstract InferResult infer(InferContext context);
 
     @SuppressWarnings("rawtypes")
     public boolean contains(PredicateImpl cond) {
@@ -296,11 +162,13 @@ public class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     @SuppressWarnings("rawtypes")
-    protected final InferResult resolve(InferContext context) {
-        Set<PredicateImpl> now, next = singleton(), bindings, facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
+    protected final InferResult resolve(PredicateImpl consequence, InferContext context) {
+        Set<PredicateImpl> now, next = singleton(), bindings, facts = Set.of(), falsehoods = Set.of();
+        Set<RelationImpl> cycles = Set.of();
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
         PredicateImpl reduced;
         InferResult predResult, reducedResult, bindResult;
+        boolean consFacts = false, consFalsehoods = false;
         do {
             now = next;
             next = Set.of();
@@ -309,9 +177,9 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                 if (predResult.hasStackOverflow()) {
                     return predResult;
                 } else if (predResult.facts().isEmpty()) {
-                    falsehoods = falsehoods.add(predicate);
+                    falsehoods = falsehoods.add(InferResult.bind(predicate, this, consequence));
                 } else if (predResult.falsehoods().isEmpty()) {
-                    facts = facts.add(predicate);
+                    facts = facts.add(InferResult.bind(predicate, this, consequence));
                 } else {
                     reduced = predResult.facts().get(0);
                     reducedResult = reduced.infer(expand);
@@ -323,20 +191,31 @@ public class PredicateImpl extends StructureImpl<Predicate> {
                         next = next.addAll(bindings);
                         cycles = cycles.addAll(bindResult.cycles());
                         if (!bindResult.facts().allMatch(bindings::contains)) {
-                            facts = facts.add(this);
+                            consFacts = true;
                         }
                         if (!bindResult.falsehoods().allMatch(bindings::contains)) {
-                            falsehoods = falsehoods.add(this);
+                            consFalsehoods = true;
                         }
                     }
                 }
             }
         } while (!next.isEmpty());
-        predResult = InferResult.of(facts, falsehoods, cycles);
-        if (context.trace()) {
-            System.err.println(context.prefix() + toString(null) + "\u2192" + predResult);
+        if (consFacts && falsehoods.contains(consequence)) {
+            consFacts = false;
         }
-        return predResult;
+        if (consFalsehoods && facts.contains(consequence)) {
+            consFalsehoods = false;
+        }
+        if (consFacts) {
+            facts = facts.add(consequence);
+        }
+        if (consFalsehoods) {
+            falsehoods = falsehoods.add(consequence);
+        }
+        InferResult consResult = InferResult.of(facts, falsehoods, cycles);
+        if (context.trace()) {
+            System.err.println(context.prefix() + toString(null) + "\u2192" + consResult);
+        }
+        return consResult;
     }
-
 }

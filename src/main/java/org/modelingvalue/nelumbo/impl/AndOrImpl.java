@@ -114,8 +114,4 @@ public abstract class AndOrImpl extends PredicateImpl {
         }
     }
 
-    @Override
-    protected PredicateImpl setDeclaration(PredicateImpl to) {
-        throw new UnsupportedOperationException();
-    }
 }

@@ -92,8 +92,4 @@ public final class NotImpl extends PredicateImpl {
         return PRETTY_NELUMBO ? "\u00AC(" + predicate() + ")" : super.toString();
     }
 
-    @Override
-    protected PredicateImpl setDeclaration(PredicateImpl to) {
-        throw new UnsupportedOperationException();
-    }
 }

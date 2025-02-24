@@ -79,8 +79,8 @@ public final class BooleanImpl extends PredicateImpl {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public Map<VariableImpl, Object> getBinding(Map<VariableImpl, Object> vars) {
-        return vars;
+    public Map<VariableImpl, Object> getBinding() {
+        return Map.of();
     }
 
     @Override
@@ -93,8 +93,4 @@ public final class BooleanImpl extends PredicateImpl {
         return PRETTY_NELUMBO ? (isTrue() ? "\u22A4" : "\u22A5") : super.toString();
     }
 
-    @Override
-    protected PredicateImpl setDeclaration(PredicateImpl to) {
-        throw new UnsupportedOperationException();
-    }
 }

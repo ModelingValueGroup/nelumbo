@@ -230,7 +230,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     private static Set<Map<Variable, Object>> getBindings(Set<PredicateImpl> set, PredicateImpl declaration) {
-        Set<Map<VariableImpl, Object>> bindings = set.replaceAll(p -> p.getBinding(Map.of()));
+        Set<Map<VariableImpl, Object>> bindings = set.replaceAll(PredicateImpl::getBinding);
         return bindings.replaceAll(m -> m.replaceAll(e -> Entry.of((Variable) e.getKey().proxy(), proxy(e.getValue()))));
     }
 
@@ -257,15 +257,8 @@ public final class Logic {
     }
 
     @SuppressWarnings("unchecked")
-    public static <P extends Predicate> P pred(Functor<P> functor, Object... args) {
-        return (P) new PredicateImpl((Functor<Predicate>) functor, args).proxy();
-    }
-
-    // Collect
-
-    @SuppressWarnings("unchecked")
-    public static Relation collect(Predicate pred, Predicate accum) {
-        return (Relation) new CollectImpl(pred, accum).proxy();
+    public static <R extends Relation> R rel(Functor<R> functor, Object... args) {
+        return (R) new RelationImpl((Functor<Relation>) functor, args).proxy();
     }
 
     // True
@@ -363,7 +356,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     public static <T extends Structure> Relation eq(Constant<T> a, Constant<T> b) {
-        return pred(EQ_FUNCTOR, a, b);
+        return rel(EQ_FUNCTOR, a, b);
     }
 
     // Is
@@ -376,17 +369,17 @@ public final class Logic {
             (ToStringLambda) s -> s.toString(1) + "=" + s.toString(2));
 
     private static <T extends Structure> Relation is(T a, T b) {
-        return pred(IS_FUNCTOR, a, b);
+        return rel(IS_FUNCTOR, a, b);
     }
 
     // Use this one for function definitions
     public static <T extends Structure> Relation is(T a, Constant<T> b) {
-        return pred(IS_FUNCTOR, a, b);
+        return rel(IS_FUNCTOR, a, b);
     }
 
     // Implied by the above using the generic rules here
     public static <T extends Structure> Relation is(Constant<T> a, T b) {
-        return pred(IS_FUNCTOR, a, b);
+        return rel(IS_FUNCTOR, a, b);
     }
 
     @SuppressWarnings("rawtypes")

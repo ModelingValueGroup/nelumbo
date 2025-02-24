@@ -26,9 +26,9 @@ import org.modelingvalue.collections.Map;
 public interface InferContext {
     KnowledgeBaseImpl knowledgebase();
 
-    List<PredicateImpl> stack();
+    List<RelationImpl> stack();
 
-    Map<PredicateImpl, InferResult> cycleResult();
+    Map<RelationImpl, InferResult> cycleResult();
 
     boolean reduce();
 
@@ -36,7 +36,7 @@ public interface InferContext {
 
     boolean trace();
 
-    static InferContext of(KnowledgeBaseImpl knowledgebase, List<PredicateImpl> stack, Map<PredicateImpl, InferResult> cyclic, boolean reduce, boolean expand, boolean trace) {
+    static InferContext of(KnowledgeBaseImpl knowledgebase, List<RelationImpl> stack, Map<RelationImpl, InferResult> cyclic, boolean reduce, boolean expand, boolean trace) {
         return new InferContext() {
             @Override
             public KnowledgeBaseImpl knowledgebase() {
@@ -44,12 +44,12 @@ public interface InferContext {
             }
 
             @Override
-            public List<PredicateImpl> stack() {
+            public List<RelationImpl> stack() {
                 return stack;
             }
 
             @Override
-            public Map<PredicateImpl, InferResult> cycleResult() {
+            public Map<RelationImpl, InferResult> cycleResult() {
                 return cyclic;
             }
 
@@ -70,12 +70,12 @@ public interface InferContext {
         };
     }
 
-    default InferContext pushOnStack(PredicateImpl predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false, trace());
+    default InferContext pushOnStack(RelationImpl relation) {
+        return of(knowledgebase(), stack().append(relation), cycleResult(), false, false, trace());
     }
 
-    default InferContext putCycleResult(PredicateImpl predicate, InferResult cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false, trace());
+    default InferContext putCycleResult(RelationImpl relation, InferResult cycleResult) {
+        return of(knowledgebase(), stack(), cycleResult().put(relation, cycleResult), false, false, trace());
     }
 
     default InferContext reduceExpand(boolean reduce, boolean expand) {
@@ -90,9 +90,9 @@ public interface InferContext {
         return "NELUMBO: " + "    ".repeat(stack().size());
     }
 
-    default InferResult getCycleResult(PredicateImpl predicate) {
-        InferResult result = cycleResult().get(predicate);
-        return result != null ? result.cast(predicate) : null;
+    default InferResult getCycleResult(RelationImpl relation) {
+        InferResult result = cycleResult().get(relation);
+        return result != null ? result.cast(relation) : null;
     }
 
 }

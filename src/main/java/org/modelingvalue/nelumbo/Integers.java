@@ -104,7 +104,7 @@ public final class Integers {
     }
 
     public static Relation gt(IntegerCons compared1, IntegerCons compared2) {
-        return pred(GT_CONS_FUNCTOR, compared1, compared2);
+        return rel(GT_CONS_FUNCTOR, compared1, compared2);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -133,7 +133,7 @@ public final class Integers {
     }
 
     public static Relation plus(IntegerCons addend1, IntegerCons addend2, IntegerCons sum) {
-        return pred(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
+        return rel(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -162,7 +162,7 @@ public final class Integers {
     }
 
     public static Relation multiply(IntegerCons factor1, IntegerCons factor2, IntegerCons product) {
-        return pred(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
+        return rel(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -185,7 +185,7 @@ public final class Integers {
     }
 
     public static Relation square(IntegerCons root, IntegerCons square) {
-        return pred(SQUARE_PRED_FUNCTOR, root, square);
+        return rel(SQUARE_PRED_FUNCTOR, root, square);
     }
 
     // Functions
@@ -194,28 +194,28 @@ public final class Integers {
             (ToStringLambda) s -> s.toString(1) + ">" + s.toString(2));
 
     public static Relation gt(Integer a, Integer b) {
-        return pred(GT_FUNCTOR, a, b);
+        return rel(GT_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LT_FUNCTOR = functor(Integers::lt, //
             (ToStringLambda) s -> s.toString(1) + "<" + s.toString(2));
 
     public static Relation lt(Integer a, Integer b) {
-        return pred(LT_FUNCTOR, a, b);
+        return rel(LT_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> GE_FUNCTOR = functor(Integers::ge, //
             (ToStringLambda) s -> s.toString(1) + "\u2265" + s.toString(2));
 
     public static Relation ge(Integer a, Integer b) {
-        return pred(GE_FUNCTOR, a, b);
+        return rel(GE_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LE_FUNCTOR = functor(Integers::le, //
             (ToStringLambda) s -> s.toString(1) + "\u2264" + s.toString(2));
 
     public static Relation le(Integer a, Integer b) {
-        return pred(LE_FUNCTOR, a, b);
+        return rel(LE_FUNCTOR, a, b);
     }
 
     private static Functor<IntegerFunc> PLUS_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::plus, //
