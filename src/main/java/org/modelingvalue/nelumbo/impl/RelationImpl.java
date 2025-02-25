@@ -25,8 +25,8 @@ public class RelationImpl extends PredicateImpl {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected RelationImpl struct(Object[] array) {
-        return new RelationImpl(array, declaration());
+    protected RelationImpl struct(Object[] array, PredicateImpl declaration) {
+        return new RelationImpl(array, (RelationImpl) declaration);
     }
 
     @Override
@@ -39,12 +39,8 @@ public class RelationImpl extends PredicateImpl {
         return (RelationImpl) super.set(i, a);
     }
 
-    protected RelationImpl setDeclaration(RelationImpl to) {
-        return new RelationImpl(toArray(), to.declaration());
-    }
-
     @Override
-    protected PredicateImpl from(PredicateImpl from) {
+    protected PredicateImpl castFrom(PredicateImpl from) {
         Object[] array = from.toArray();
         array[0] = functor();
         return new RelationImpl(array, declaration());
@@ -200,7 +196,7 @@ public class RelationImpl extends PredicateImpl {
                 array[i] = s;
             }
         }
-        return array != null ? struct(array) : this;
+        return array != null ? struct(array, declaration()) : this;
     }
 
 }

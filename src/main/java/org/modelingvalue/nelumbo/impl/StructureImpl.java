@@ -394,8 +394,17 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         return thisVal;
     }
 
-    protected boolean isFullyBound() {
-        return nrOfUnbound() == 0;
+    @SuppressWarnings("rawtypes")
+    protected final boolean isFullyBound() {
+        for (int i = 1; i < length(); i++) {
+            Object val = get(i);
+            if (val instanceof Class) {
+                return false;
+            } else if (val instanceof StructureImpl && !((StructureImpl) val).isFullyBound()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @SuppressWarnings("rawtypes")

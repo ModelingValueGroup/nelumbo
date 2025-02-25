@@ -67,8 +67,8 @@ public final class BooleanImpl extends PredicateImpl {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected BooleanImpl struct(Object[] array) {
-        return new BooleanImpl(array, declaration());
+    protected BooleanImpl struct(Object[] array, PredicateImpl declaration) {
+        return new BooleanImpl(array, (BooleanImpl) declaration);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

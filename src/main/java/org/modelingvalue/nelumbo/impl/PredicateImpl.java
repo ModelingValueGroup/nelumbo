@@ -46,14 +46,14 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
 
     protected PredicateImpl(Object[] args, PredicateImpl declaration) {
         super(args);
-        this.declaration = declaration;
+        this.declaration = declaration == null ? this : declaration;
     }
 
     public PredicateImpl declaration() {
         return declaration;
     }
 
-    protected PredicateImpl from(PredicateImpl from) {
+    protected PredicateImpl castFrom(PredicateImpl from) {
         throw new UnsupportedOperationException();
     }
 
@@ -85,7 +85,11 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected abstract PredicateImpl struct(Object[] array);
+    protected final PredicateImpl struct(Object[] array) {
+        return struct(array, declaration);
+    }
+
+    protected abstract PredicateImpl struct(Object[] array, PredicateImpl declaration);
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Class getType(int i) {
@@ -120,11 +124,21 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public PredicateImpl set(int i, Object... a) {
-        return (PredicateImpl) super.set(i, a);
+        return ((PredicateImpl) super.set(i, a));
     }
 
     public PredicateImpl copy(int from, int to) {
         return (PredicateImpl) super.set(to, get(from));
+    }
+
+    protected final PredicateImpl set(int i, PredicateImpl... a) {
+        Object[] predArray = toArray();
+        Object[] declArray = declaration.toArray();
+        for (int x = 0; x < a.length; x++) {
+            predArray[i + x] = a[x];
+            declArray[i + x] = a[x].declaration;
+        }
+        return struct(predArray, declaration.struct(declArray, null));
     }
 
     public final InferResult unknown() {
@@ -145,39 +159,48 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
 
     @SuppressWarnings("rawtypes")
     protected InferResult resolve(PredicateImpl consequence, InferContext context) {
-        Set<PredicateImpl> now, next = singleton(), bindings, facts = Set.of(), falsehoods = Set.of();
+        Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
+        Set<PredicateImpl> facts = Set.of(), falsehoods = Set.of();
         Set<RelationImpl> cycles = Set.of();
+        Map<VariableImpl, Object> map;
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
         PredicateImpl reduced;
-        InferResult predResult, reducedResult, bindResult;
+        InferResult predResult, reducedResult;
         boolean consFacts = false, consFalsehoods = false;
         do {
             now = next;
-            next = Set.of();
-            for (PredicateImpl predicate : now) {
-                predResult = predicate.infer(reduce);
+            next = Map.of();
+            for (Entry<Map<VariableImpl, Object>, PredicateImpl> entry : now) {
+                predResult = entry.getValue().infer(reduce);
                 if (predResult.hasStackOverflow()) {
                     return predResult;
                 } else if (predResult.facts().isEmpty()) {
-                    falsehoods = falsehoods.add(InferResult.bind(predicate, this, consequence));
+                    falsehoods = falsehoods.add(consequence.setBinding(entry.getKey()));
                 } else if (predResult.falsehoods().isEmpty()) {
-                    facts = facts.add(InferResult.bind(predicate, this, consequence));
+                    facts = facts.add(consequence.setBinding(entry.getKey()));
                 } else {
                     reduced = predResult.facts().get(0);
                     reducedResult = reduced.infer(expand);
                     if (reducedResult.hasStackOverflow()) {
                         return reducedResult;
                     } else {
-                        bindResult = reducedResult.bind(null, predicate);
-                        bindings = bindResult.facts().addAll(bindResult.falsehoods()).removeAll(now);
-                        next = next.addAll(bindings);
-                        cycles = cycles.addAll(bindResult.cycles());
-                        if (!bindResult.facts().allMatch(bindings::contains)) {
-                            consFacts = true;
+                        for (PredicateImpl fact : reducedResult.facts()) {
+                            if (fact.isFullyBound()) {
+                                map = entry.getKey().putAll(fact.getBinding());
+                                next = next.put(map, reduced.setBinding(map));
+                            } else {
+                                consFacts = true;
+                            }
                         }
-                        if (!bindResult.falsehoods().allMatch(bindings::contains)) {
-                            consFalsehoods = true;
+                        for (PredicateImpl falsehood : reducedResult.falsehoods()) {
+                            if (falsehood.isFullyBound()) {
+                                map = entry.getKey().putAll(falsehood.getBinding());
+                                next = next.put(map, reduced.setBinding(map));
+                            } else {
+                                consFalsehoods = true;
+                            }
                         }
+                        cycles = cycles.addAll(reducedResult.cycles());
                     }
                 }
             }

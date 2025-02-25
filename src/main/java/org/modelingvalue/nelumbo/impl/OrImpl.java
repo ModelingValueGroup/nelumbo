@@ -46,8 +46,8 @@ public final class OrImpl extends AndOrImpl {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected OrImpl struct(Object[] array) {
-        return new OrImpl(array, declaration());
+    protected OrImpl struct(Object[] array, PredicateImpl declaration) {
+        return new OrImpl(array, (OrImpl) declaration);
     }
 
     @Override

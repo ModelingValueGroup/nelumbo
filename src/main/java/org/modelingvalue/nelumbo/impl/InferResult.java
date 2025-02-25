@@ -295,7 +295,7 @@ public interface InferResult {
     }
 
     static Set<PredicateImpl> cast(Set<PredicateImpl> set, PredicateImpl to) {
-        return set.replaceAll(p -> p.equals(to) ? to : to.from(p));
+        return set.replaceAll(p -> p.equals(to) ? to : to.castFrom(p));
     }
 
     default InferResult bind(PredicateImpl from, PredicateImpl to) {

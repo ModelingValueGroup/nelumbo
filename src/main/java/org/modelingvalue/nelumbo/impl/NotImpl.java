@@ -44,8 +44,8 @@ public final class NotImpl extends PredicateImpl {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected NotImpl struct(Object[] array) {
-        return new NotImpl(array, declaration());
+    protected NotImpl struct(Object[] array, PredicateImpl declaration) {
+        return new NotImpl(array, (NotImpl) declaration);
     }
 
     @Override
