@@ -121,7 +121,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
             predResult = InferResult.of(predFacts, predFalsehoods, condResult.cycles());
         }
         if (context.trace()) {
-            System.err.println(context.prefix() + condition.toString(null) + "\u2192" + predResult);
+            System.err.println(context.prefix() + predicate.toString(null) + "\u2192" + predResult);
         }
         return predResult;
     }
