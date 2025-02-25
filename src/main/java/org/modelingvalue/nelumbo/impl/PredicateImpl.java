@@ -152,9 +152,6 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected InferResult resolve(InferContext context) {
-        if (context.trace()) {
-            System.err.println(context.prefix() + toString(null));
-        }
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
         Set<PredicateImpl<?>> facts = Set.of(), falsehoods = Set.of();
         Set<RelationImpl> cycles = Set.of();
@@ -167,6 +164,9 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
             now = next;
             next = Map.of();
             for (Entry<Map<VariableImpl, Object>, PredicateImpl> entry : now) {
+                if (context.trace()) {
+                    System.err.println(context.prefix() + entry.getValue().toString(null));
+                }
                 predResult = entry.getValue().infer(reduce);
                 if (predResult.hasStackOverflow()) {
                     return predResult;
