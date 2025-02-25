@@ -178,9 +178,8 @@ public class RelationImpl extends PredicateImpl {
     }
 
     @Override
-    protected InferResult resolve(PredicateImpl consequence, InferContext context) {
-        InferResult result = infer(context);
-        return result.bind(this, consequence);
+    protected InferResult resolve(InferContext context) {
+        return infer(context);
     }
 
     @SuppressWarnings("rawtypes")

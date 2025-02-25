@@ -98,16 +98,7 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     public InferResult infer() {
-        InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
-        if (context.trace()) {
-            System.err.println(context.prefix() + toString(null));
-        }
-        PredicateImpl conditon = setBinding(variables());
-        InferResult result = conditon.resolve(conditon, context);
-        if (context.trace()) {
-            System.err.println(context.prefix() + toString(null) + "\u2192" + result);
-        }
-        return result;
+        return setBinding(variables()).resolve(KnowledgeBaseImpl.CURRENT.get().context());
     }
 
     protected InferResult expand(InferContext context) {
@@ -158,7 +149,10 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
     }
 
     @SuppressWarnings("rawtypes")
-    protected InferResult resolve(PredicateImpl consequence, InferContext context) {
+    protected InferResult resolve(InferContext context) {
+        if (context.trace()) {
+            System.err.println(context.prefix() + toString(null));
+        }
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
         Set<PredicateImpl> facts = Set.of(), falsehoods = Set.of();
         Set<RelationImpl> cycles = Set.of();
@@ -166,7 +160,7 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
         PredicateImpl reduced;
         InferResult predResult, reducedResult;
-        boolean consFacts = false, consFalsehoods = false;
+        boolean incomFacts = false, incomFalsehoods = false;
         do {
             now = next;
             next = Map.of();
@@ -175,9 +169,9 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
                 if (predResult.hasStackOverflow()) {
                     return predResult;
                 } else if (predResult.facts().isEmpty()) {
-                    falsehoods = falsehoods.add(consequence.setBinding(entry.getKey()));
+                    falsehoods = falsehoods.add(setBinding(entry.getKey()));
                 } else if (predResult.falsehoods().isEmpty()) {
-                    facts = facts.add(consequence.setBinding(entry.getKey()));
+                    facts = facts.add(setBinding(entry.getKey()));
                 } else {
                     reduced = predResult.facts().get(0);
                     reducedResult = reduced.infer(expand);
@@ -189,7 +183,7 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
                                 map = entry.getKey().putAll(fact.getBinding());
                                 next = next.put(map, reduced.setBinding(map));
                             } else {
-                                consFacts = true;
+                                incomFacts = true;
                             }
                         }
                         for (PredicateImpl falsehood : reducedResult.falsehoods()) {
@@ -197,7 +191,7 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
                                 map = entry.getKey().putAll(falsehood.getBinding());
                                 next = next.put(map, reduced.setBinding(map));
                             } else {
-                                consFalsehoods = true;
+                                incomFalsehoods = true;
                             }
                         }
                         cycles = cycles.addAll(reducedResult.cycles());
@@ -205,22 +199,16 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
                 }
             }
         } while (!next.isEmpty());
-        if (consFacts && falsehoods.contains(consequence)) {
-            consFacts = false;
+        if (incomFacts) {
+            facts = facts.add(this);
         }
-        if (consFalsehoods && facts.contains(consequence)) {
-            consFalsehoods = false;
+        if (incomFalsehoods) {
+            falsehoods = falsehoods.add(this);
         }
-        if (consFacts) {
-            facts = facts.add(consequence);
-        }
-        if (consFalsehoods) {
-            falsehoods = falsehoods.add(consequence);
-        }
-        InferResult consResult = InferResult.of(facts, falsehoods, cycles);
+        InferResult result = InferResult.of(facts, falsehoods, cycles);
         if (context.trace()) {
-            System.err.println(context.prefix() + toString(null) + "\u2192" + consResult);
+            System.err.println(context.prefix() + toString(null) + "\u2192" + result);
         }
-        return consResult;
+        return result;
     }
 }
