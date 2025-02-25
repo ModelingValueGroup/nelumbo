@@ -20,18 +20,19 @@
 
 package org.modelingvalue.nelumbo.impl;
 
+import org.modelingvalue.nelumbo.Logic.And;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public final class AndImpl extends AndOrImpl {
-    private static final long                   serialVersionUID = -7248491569810098948L;
+public final class AndImpl extends AndOrImpl<And> {
+    private static final long             serialVersionUID = -7248491569810098948L;
 
-    private static final FunctorImpl<Predicate> AND_FUNCTOR      = FunctorImpl.<Predicate, Predicate, Predicate> of(AndImpl::and);
+    private static final FunctorImpl<And> AND_FUNCTOR      = FunctorImpl.<And, Predicate, Predicate> of(AndImpl::and);
 
-    private static Predicate and(Predicate p1, Predicate p2) {
+    private static And and(Predicate p1, Predicate p2) {
         return new AndImpl(StructureImpl.unproxy(p1), StructureImpl.unproxy(p2)).proxy();
     }
 
-    public AndImpl(PredicateImpl predicate1, PredicateImpl predicate2) {
+    public AndImpl(PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
         super(AND_FUNCTOR, predicate1, predicate2);
     }
 

@@ -78,7 +78,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
     }
 
     @SuppressWarnings("rawtypes")
-    public final PredicateImpl condition() {
+    public final PredicateImpl<?> condition() {
         return (PredicateImpl) get(2);
     }
 
@@ -104,16 +104,16 @@ public final class RuleImpl extends StructureImpl<Rule> {
         } else if (condResult.equals(condition.unknown())) {
             predResult = predicate.unknown();
         } else {
-            Set<PredicateImpl> complConsFacts = InferResult.bind(condResult.facts().retainAll(PredicateImpl::isFullyBound), condition, consequence);
-            Set<PredicateImpl> complConsFalsehoods = InferResult.bind(condResult.falsehoods().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+            Set<PredicateImpl<?>> complConsFacts = InferResult.bind(condResult.facts().retainAll(PredicateImpl::isFullyBound), condition, consequence);
+            Set<PredicateImpl<?>> complConsFalsehoods = InferResult.bind(condResult.falsehoods().retainAll(PredicateImpl::isFullyBound), condition, consequence);
 
-            Set<PredicateImpl> incomConsFacts = InferResult.bind(condResult.facts().removeAll(PredicateImpl::isFullyBound), condition, consequence).//
+            Set<PredicateImpl<?>> incomConsFacts = InferResult.bind(condResult.facts().removeAll(PredicateImpl::isFullyBound), condition, consequence).//
                     removeAll(complConsFacts::contains).removeAll(complConsFalsehoods::contains);
-            Set<PredicateImpl> incomConsFalsehoods = InferResult.bind(condResult.falsehoods().removeAll(PredicateImpl::isFullyBound), condition, consequence).//
+            Set<PredicateImpl<?>> incomConsFalsehoods = InferResult.bind(condResult.falsehoods().removeAll(PredicateImpl::isFullyBound), condition, consequence).//
                     removeAll(complConsFalsehoods::contains).removeAll(complConsFacts::contains);
 
-            Set<PredicateImpl> predFacts = InferResult.cast(complConsFacts.isEmpty() ? incomConsFacts : complConsFacts, predicate);
-            Set<PredicateImpl> predFalsehoods = InferResult.cast(complConsFalsehoods.addAll(incomConsFalsehoods).removeAll(complConsFacts::contains), predicate);
+            Set<PredicateImpl<?>> predFacts = InferResult.cast(complConsFacts.isEmpty() ? incomConsFacts : complConsFacts, predicate);
+            Set<PredicateImpl<?>> predFalsehoods = InferResult.cast(complConsFalsehoods.addAll(incomConsFalsehoods).removeAll(complConsFacts::contains), predicate);
 
             if (predFalsehoods.isEmpty() && consequence.isFullyBound() && !predicate.isFullyBound()) {
                 predFalsehoods = predicate.singleton();

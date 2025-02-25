@@ -20,18 +20,19 @@
 
 package org.modelingvalue.nelumbo.impl;
 
+import org.modelingvalue.nelumbo.Logic.Or;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public final class OrImpl extends AndOrImpl {
-    private static final long                   serialVersionUID = -1732549494864415986L;
+public final class OrImpl extends AndOrImpl<Or> {
+    private static final long            serialVersionUID = -1732549494864415986L;
 
-    private static final FunctorImpl<Predicate> OR_FUNCTOR       = FunctorImpl.<Predicate, Predicate, Predicate> of(OrImpl::or);
+    private static final FunctorImpl<Or> OR_FUNCTOR       = FunctorImpl.<Or, Predicate, Predicate> of(OrImpl::or);
 
-    private static Predicate or(Predicate predicate1, Predicate predicate2) {
+    private static Or or(Predicate predicate1, Predicate predicate2) {
         return new OrImpl(StructureImpl.unproxy(predicate1), StructureImpl.unproxy(predicate2)).proxy();
     }
 
-    public OrImpl(PredicateImpl predicate1, PredicateImpl predicate2) {
+    public OrImpl(PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
         super(OR_FUNCTOR, predicate1, predicate2);
     }
 

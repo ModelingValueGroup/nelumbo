@@ -23,13 +23,13 @@ package org.modelingvalue.nelumbo.impl;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Logic;
-import org.modelingvalue.nelumbo.Logic.Relation;
+import org.modelingvalue.nelumbo.Logic.Bool;
 
-public final class BooleanImpl extends PredicateImpl {
+public final class BooleanImpl extends PredicateImpl<Bool> {
     private static final long          serialVersionUID = -8515171118744898263L;
 
     @SuppressWarnings("rawtypes")
-    private static final FunctorImpl   BOOLEAN_FUNCTOR  = FunctorImpl.of((SerializableFunction<Boolean, Relation>) BooleanImpl::b);
+    private static final FunctorImpl   BOOLEAN_FUNCTOR  = FunctorImpl.of((SerializableFunction<Boolean, Bool>) BooleanImpl::b);
 
     public static final BooleanImpl    TRUE             = new BooleanImpl(true);
     public static final BooleanImpl    FALSE            = new BooleanImpl(false);
@@ -37,7 +37,7 @@ public final class BooleanImpl extends PredicateImpl {
     protected static final InferResult TRUE_CONCLUSION  = TRUE.fact();
     protected static final InferResult FALSE_CONCLUSION = FALSE.falsehood();
 
-    private static Relation b(boolean val) {
+    private static Bool b(boolean val) {
         return val ? Logic.T() : Logic.F();
     }
 
@@ -61,7 +61,7 @@ public final class BooleanImpl extends PredicateImpl {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Relation proxy() {
+    public Bool proxy() {
         return b(isTrue());
     }
 

@@ -26,34 +26,34 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public abstract class PredicateImpl extends StructureImpl<Predicate> {
+public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P> {
 
-    private static final long        serialVersionUID = -1605559565948158856L;
+    private static final long           serialVersionUID = -1605559565948158856L;
 
-    private final Set<PredicateImpl> singleton        = Set.of(this);
-    private final PredicateImpl      declaration;
+    private final Set<PredicateImpl<?>> singleton        = Set.of(this);
+    private final PredicateImpl<P>      declaration;
 
     @SuppressWarnings("unchecked")
-    protected PredicateImpl(Functor<? extends Predicate> functor, Object... args) {
-        super((Functor<Predicate>) functor, args);
-        this.declaration = this;
-    }
-
-    protected PredicateImpl(FunctorImpl<Predicate> functor, Object... args) {
+    protected PredicateImpl(Functor<P> functor, Object... args) {
         super(functor, args);
         this.declaration = this;
     }
 
-    protected PredicateImpl(Object[] args, PredicateImpl declaration) {
+    protected PredicateImpl(FunctorImpl<P> functor, Object... args) {
+        super(functor, args);
+        this.declaration = this;
+    }
+
+    protected PredicateImpl(Object[] args, PredicateImpl<P> declaration) {
         super(args);
         this.declaration = declaration == null ? this : declaration;
     }
 
-    public PredicateImpl declaration() {
+    public PredicateImpl<P> declaration() {
         return declaration;
     }
 
-    protected PredicateImpl castFrom(PredicateImpl from) {
+    protected PredicateImpl<P> castFrom(PredicateImpl<?> from) {
         throw new UnsupportedOperationException();
     }
 
@@ -85,11 +85,11 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected final PredicateImpl struct(Object[] array) {
+    protected final PredicateImpl<P> struct(Object[] array) {
         return struct(array, declaration);
     }
 
-    protected abstract PredicateImpl struct(Object[] array, PredicateImpl declaration);
+    protected abstract PredicateImpl<P> struct(Object[] array, PredicateImpl<P> declaration);
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Class getType(int i) {
@@ -114,15 +114,17 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public PredicateImpl set(int i, Object... a) {
+    public PredicateImpl<P> set(int i, Object... a) {
         return ((PredicateImpl) super.set(i, a));
     }
 
-    public PredicateImpl copy(int from, int to) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public PredicateImpl<P> copy(int from, int to) {
         return (PredicateImpl) super.set(to, get(from));
     }
 
-    protected final PredicateImpl set(int i, PredicateImpl... a) {
+    @SuppressWarnings("unchecked")
+    protected final PredicateImpl<P> set(int i, PredicateImpl<?>... a) {
         Object[] predArray = toArray();
         Object[] declArray = declaration.toArray();
         for (int x = 0; x < a.length; x++) {
@@ -144,17 +146,17 @@ public abstract class PredicateImpl extends StructureImpl<Predicate> {
         return InferResult.falsehoods(singleton);
     }
 
-    public final Set<PredicateImpl> singleton() {
+    public final Set<PredicateImpl<?>> singleton() {
         return singleton;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     protected InferResult resolve(InferContext context) {
         if (context.trace()) {
             System.err.println(context.prefix() + toString(null));
         }
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
-        Set<PredicateImpl> facts = Set.of(), falsehoods = Set.of();
+        Set<PredicateImpl<?>> facts = Set.of(), falsehoods = Set.of();
         Set<RelationImpl> cycles = Set.of();
         Map<VariableImpl, Object> map;
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);

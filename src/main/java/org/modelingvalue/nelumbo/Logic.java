@@ -109,7 +109,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     @FunctionalInterface
-    public interface LogicLambda extends BiFunction<PredicateImpl, InferContext, InferResult>, LambdaReflection, FunctorModifier {
+    public interface LogicLambda extends BiFunction<RelationImpl, InferContext, InferResult>, LambdaReflection, FunctorModifier {
 
         @Override
         default LogicLambdaImpl of() {
@@ -125,8 +125,8 @@ public final class Logic {
 
             @SuppressWarnings("unchecked")
             @Override
-            public final InferResult apply(PredicateImpl predicate, InferContext context) {
-                return f.apply(predicate, context);
+            public final InferResult apply(RelationImpl relation, InferContext context) {
+                return f.apply(relation, context);
             }
 
         }
@@ -211,8 +211,8 @@ public final class Logic {
     public static boolean isEqual(Predicate pred1, Predicate pred2) {
         InferResult result1 = infer(pred1);
         InferResult result2 = infer(pred2);
-        PredicateImpl impl1 = StructureImpl.<Predicate, PredicateImpl> unproxy(pred1);
-        PredicateImpl impl2 = StructureImpl.<Predicate, PredicateImpl> unproxy(pred2);
+        PredicateImpl<?> impl1 = StructureImpl.<Predicate, PredicateImpl<?>> unproxy(pred1);
+        PredicateImpl<?> impl2 = StructureImpl.<Predicate, PredicateImpl<?>> unproxy(pred2);
         return getBindings(result1.facts(), impl1).equals(getBindings(result2.facts(), impl2)) && //
                 getBindings(result1.falsehoods(), impl1).equals(getBindings(result2.falsehoods(), impl2));
     }
@@ -229,7 +229,7 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static Set<Map<Variable, Object>> getBindings(Set<PredicateImpl> set, PredicateImpl declaration) {
+    private static Set<Map<Variable, Object>> getBindings(Set<PredicateImpl<?>> set, PredicateImpl<?> declaration) {
         Set<Map<VariableImpl, Object>> bindings = set.replaceAll(PredicateImpl::getBinding);
         return bindings.replaceAll(m -> m.replaceAll(e -> Entry.of((Variable) e.getKey().proxy(), proxy(e.getValue()))));
     }
@@ -263,34 +263,46 @@ public final class Logic {
 
     // True
 
-    private static final Relation TRUE_PROXY = (Relation) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Relation.class}, BooleanImpl.TRUE);
+    public interface Bool extends Predicate {
+    }
+
+    private static final Bool TRUE_PROXY = (Bool) Proxy.newProxyInstance(Bool.class.getClassLoader(), new Class[]{Bool.class}, BooleanImpl.TRUE);
 
     @SuppressWarnings("unchecked")
-    public static Relation T() {
+    public static Bool T() {
         return TRUE_PROXY;
     }
 
     // False
 
-    private static final Relation FALSE_PROXY = (Relation) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Relation.class}, BooleanImpl.FALSE);
+    private static final Bool FALSE_PROXY = (Bool) Proxy.newProxyInstance(Bool.class.getClassLoader(), new Class[]{Bool.class}, BooleanImpl.FALSE);
 
     @SuppressWarnings("unchecked")
-    public static Relation F() {
+    public static Bool F() {
         return FALSE_PROXY;
     }
 
     // Not
 
+    public interface Not extends Predicate {
+    }
+
     @SuppressWarnings("unchecked")
-    public static Predicate not(Predicate pred) {
+    public static Not not(Predicate pred) {
         return new NotImpl(pred).proxy();
     }
 
     // Or
 
+    public interface AndOr extends Predicate {
+    }
+
+    public interface Or extends AndOr {
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Predicate or(Predicate... ps) {
-        PredicateImpl impl = BooleanImpl.FALSE;
+        PredicateImpl<? extends Predicate> impl = BooleanImpl.FALSE;
         int l = ps.length - 1;
         for (int i = l; i >= 0; i--) {
             impl = i == l ? StructureImpl.unproxy(ps[i]) : new OrImpl(StructureImpl.unproxy(ps[i]), impl);
@@ -300,9 +312,12 @@ public final class Logic {
 
     // And
 
+    public interface And extends AndOr {
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Predicate and(Predicate... ps) {
-        PredicateImpl impl = BooleanImpl.TRUE;
+        PredicateImpl<? extends Predicate> impl = BooleanImpl.TRUE;
         int l = ps.length - 1;
         for (int i = l; i >= 0; i--) {
             impl = i == l ? StructureImpl.unproxy(ps[i]) : new AndImpl(StructureImpl.unproxy(ps[i]), impl);
@@ -340,7 +355,7 @@ public final class Logic {
             (ToStringLambda) s -> s.toString(1) + "\u2A75" + s.toString(2));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static InferResult eqLogic(PredicateImpl predicate, InferContext context) {
+    private static InferResult eqLogic(PredicateImpl<?> predicate, InferContext context) {
         StructureImpl constant1 = predicate.getVal(1);
         StructureImpl constant2 = predicate.getVal(2);
         if (constant1 == null && constant2 == null) {

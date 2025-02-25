@@ -35,7 +35,7 @@ import org.modelingvalue.nelumbo.Logic.ToStringLambda;
 import org.modelingvalue.nelumbo.impl.FunctorImpl;
 import org.modelingvalue.nelumbo.impl.InferContext;
 import org.modelingvalue.nelumbo.impl.InferResult;
-import org.modelingvalue.nelumbo.impl.PredicateImpl;
+import org.modelingvalue.nelumbo.impl.RelationImpl;
 import org.modelingvalue.nelumbo.impl.StructureImpl;
 
 public final class Integers {
@@ -89,17 +89,17 @@ public final class Integers {
             (ToStringLambda) s -> s.toString(1) + "\u226B" + s.toString(2));
 
     @SuppressWarnings("rawtypes")
-    private static InferResult gtCons(PredicateImpl predicate, InferContext context) {
-        BigInteger compared1 = predicate.getVal(1, 1);
-        BigInteger compared2 = predicate.getVal(2, 1);
+    private static InferResult gtCons(RelationImpl relation, InferContext context) {
+        BigInteger compared1 = relation.getVal(1, 1);
+        BigInteger compared2 = relation.getVal(2, 1);
         if (compared1 != null && compared2 != null) {
-            return compared1.compareTo(compared2) > 0 ? predicate.fact() : predicate.falsehood();
+            return compared1.compareTo(compared2) > 0 ? relation.fact() : relation.falsehood();
         } else if (compared1 != null) {
-            return InferResult.trueFalse(predicate.singleton(), Set.of(predicate.copy(1, 2), predicate));
+            return InferResult.trueFalse(relation.singleton(), Set.of(relation.copy(1, 2), relation));
         } else if (compared2 != null) {
-            return InferResult.trueFalse(predicate.singleton(), Set.of(predicate.copy(2, 1), predicate));
+            return InferResult.trueFalse(relation.singleton(), Set.of(relation.copy(2, 1), relation));
         } else {
-            return predicate.unknown();
+            return relation.unknown();
         }
     }
 
@@ -111,24 +111,24 @@ public final class Integers {
     private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::plus, (LogicLambda) Integers::plusLogic, //
             (ToStringLambda) s -> s.toString(1) + "+" + s.toString(2) + "=" + s.toString(3));
 
-    private static InferResult plusLogic(PredicateImpl predicate, InferContext context) {
-        BigInteger addend1 = predicate.getVal(1, 1);
-        BigInteger addend2 = predicate.getVal(2, 1);
-        BigInteger sum = predicate.getVal(3, 1);
+    private static InferResult plusLogic(RelationImpl relation, InferContext context) {
+        BigInteger addend1 = relation.getVal(1, 1);
+        BigInteger addend2 = relation.getVal(2, 1);
+        BigInteger sum = relation.getVal(3, 1);
         if (addend1 != null && addend2 != null) {
             BigInteger s = addend1.add(addend2);
             if (sum != null) {
                 boolean eq = s.equals(sum);
-                return eq ? predicate.fact() : predicate.falsehood();
+                return eq ? relation.fact() : relation.falsehood();
             } else {
-                return InferResult.trueFalse(predicate.set(3, struct(s)).singleton(), predicate.singleton());
+                return InferResult.trueFalse(relation.set(3, struct(s)).singleton(), relation.singleton());
             }
         } else if (addend1 != null && sum != null) {
-            return InferResult.trueFalse(predicate.set(2, struct(sum.subtract(addend1))).singleton(), predicate.singleton());
+            return InferResult.trueFalse(relation.set(2, struct(sum.subtract(addend1))).singleton(), relation.singleton());
         } else if (addend2 != null && sum != null) {
-            return InferResult.trueFalse(predicate.set(1, struct(sum.subtract(addend2))).singleton(), predicate.singleton());
+            return InferResult.trueFalse(relation.set(1, struct(sum.subtract(addend2))).singleton(), relation.singleton());
         } else {
-            return predicate.unknown();
+            return relation.unknown();
         }
     }
 
@@ -140,24 +140,24 @@ public final class Integers {
     private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::multiply, (LogicLambda) Integers::multiplyLogic, //
             (ToStringLambda) s -> s.toString(1) + "\u00B7" + s.toString(2) + "=" + s.toString(3));
 
-    private static InferResult multiplyLogic(PredicateImpl predicate, InferContext context) {
-        BigInteger factor1 = predicate.getVal(1, 1);
-        BigInteger factor2 = predicate.getVal(2, 1);
-        BigInteger product = predicate.getVal(3, 1);
+    private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
+        BigInteger factor1 = relation.getVal(1, 1);
+        BigInteger factor2 = relation.getVal(2, 1);
+        BigInteger product = relation.getVal(3, 1);
         if (factor1 != null && factor2 != null) {
             BigInteger p = factor1.multiply(factor2);
             if (product != null) {
                 boolean eq = p.equals(product);
-                return eq ? predicate.fact() : predicate.falsehood();
+                return eq ? relation.fact() : relation.falsehood();
             } else {
-                return InferResult.trueFalse(predicate.set(3, struct(p)).singleton(), predicate.singleton());
+                return InferResult.trueFalse(relation.set(3, struct(p)).singleton(), relation.singleton());
             }
         } else if (factor1 != null && product != null) {
-            return InferResult.trueFalse(predicate.set(2, struct(product.divide(factor1))).singleton(), predicate.singleton());
+            return InferResult.trueFalse(relation.set(2, struct(product.divide(factor1))).singleton(), relation.singleton());
         } else if (factor2 != null && product != null) {
-            return InferResult.trueFalse(predicate.set(1, struct(product.divide(factor2))).singleton(), predicate.singleton());
+            return InferResult.trueFalse(relation.set(1, struct(product.divide(factor2))).singleton(), relation.singleton());
         } else {
-            return predicate.unknown();
+            return relation.unknown();
         }
     }
 
@@ -168,19 +168,19 @@ public final class Integers {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor<Relation> SQUARE_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::square, (LogicLambda) Integers::squareLogic);
 
-    private static InferResult squareLogic(PredicateImpl predicate, InferContext context) {
-        BigInteger root = predicate.getVal(1, 1);
-        BigInteger square = predicate.getVal(2, 1);
+    private static InferResult squareLogic(RelationImpl relation, InferContext context) {
+        BigInteger root = relation.getVal(1, 1);
+        BigInteger square = relation.getVal(2, 1);
         if (root != null && square != null) {
             boolean eq = root.multiply(root).equals(square);
-            return eq ? predicate.fact() : predicate.falsehood();
+            return eq ? relation.fact() : relation.falsehood();
         } else if (root != null && square == null) {
-            return InferResult.trueFalse(predicate.set(2, struct(root.multiply(root))).singleton(), predicate.singleton());
+            return InferResult.trueFalse(relation.set(2, struct(root.multiply(root))).singleton(), relation.singleton());
         } else if (root == null && square != null) {
             BigInteger sqrt = square.sqrt();
-            return InferResult.trueFalse(Set.of(predicate.set(1, struct(sqrt)), predicate.set(1, struct(sqrt.negate()))), predicate.singleton());
+            return InferResult.trueFalse(Set.of(relation.set(1, struct(sqrt)), relation.set(1, struct(sqrt.negate()))), relation.singleton());
         } else {
-            return predicate.unknown();
+            return relation.unknown();
         }
     }
 

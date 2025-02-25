@@ -22,38 +22,39 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.modelingvalue.nelumbo.Logic.Predicate;
+import org.modelingvalue.nelumbo.Logic.AndOr;
 
-public abstract class AndOrImpl extends PredicateImpl {
+public abstract class AndOrImpl<T extends AndOr> extends PredicateImpl<T> {
     private static final long  serialVersionUID = -928776822979604743L;
 
     private static final int[] ZERO_ONE         = new int[]{0, 1};
     private static final int[] ONE_ZERO         = new int[]{1, 0};
 
-    protected AndOrImpl(FunctorImpl<Predicate> functor, PredicateImpl predicate1, PredicateImpl predicate2) {
+    protected AndOrImpl(FunctorImpl<T> functor, PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
         super(functor, predicate1, predicate2);
     }
 
-    protected AndOrImpl(Object[] args, AndOrImpl declaration) {
+    protected AndOrImpl(Object[] args, AndOrImpl<T> declaration) {
         super(args, declaration);
     }
 
     @Override
-    public AndOrImpl declaration() {
-        return (AndOrImpl) super.declaration();
+    public AndOrImpl<T> declaration() {
+        return (AndOrImpl<T>) super.declaration();
     }
 
     @SuppressWarnings("rawtypes")
-    public final PredicateImpl predicate1() {
+    public final PredicateImpl<?> predicate1() {
         return (PredicateImpl) get(1);
     }
 
     @SuppressWarnings("rawtypes")
-    public final PredicateImpl predicate2() {
+    public final PredicateImpl<?> predicate2() {
         return (PredicateImpl) get(2);
     }
 
-    private PredicateImpl predicate(int i) {
+    @SuppressWarnings("rawtypes")
+    private PredicateImpl<?> predicate(int i) {
         return (PredicateImpl) get(i + 1);
     }
 

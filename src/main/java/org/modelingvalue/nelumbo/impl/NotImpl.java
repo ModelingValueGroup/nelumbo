@@ -22,19 +22,20 @@ package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Not;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public final class NotImpl extends PredicateImpl {
-    private static final long                   serialVersionUID  = -4543178470298951866L;
+public final class NotImpl extends PredicateImpl<Not> {
+    private static final long             serialVersionUID  = -4543178470298951866L;
 
-    private static final FunctorImpl<Predicate> NOT_FUNCTOR       = FunctorImpl.<Predicate, Predicate> of(Logic::not);
-    private static final Functor<Predicate>     NOT_FUNCTOR_PROXY = NOT_FUNCTOR.proxy();
+    private static final FunctorImpl<Not> NOT_FUNCTOR       = FunctorImpl.<Not, Predicate> of(Logic::not);
+    private static final Functor<Not>     NOT_FUNCTOR_PROXY = NOT_FUNCTOR.proxy();
 
     public NotImpl(Predicate pred) {
         super(NOT_FUNCTOR_PROXY, pred);
     }
 
-    private NotImpl(PredicateImpl pred) {
+    private NotImpl(PredicateImpl<?> pred) {
         super(NOT_FUNCTOR, pred);
     }
 
@@ -54,14 +55,14 @@ public final class NotImpl extends PredicateImpl {
     }
 
     @SuppressWarnings("rawtypes")
-    public final PredicateImpl predicate() {
+    public final PredicateImpl<?> predicate() {
         return (PredicateImpl) get(1);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     protected InferResult infer(InferContext context) {
-        PredicateImpl predicate = predicate();
+        PredicateImpl<?> predicate = predicate();
         InferResult predResult = predicate.infer(context);
         if (predResult.hasStackOverflow()) {
             return predResult;

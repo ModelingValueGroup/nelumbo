@@ -6,10 +6,9 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.LogicLambda;
-import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
 
-public class RelationImpl extends PredicateImpl {
+public class RelationImpl extends PredicateImpl<Relation> {
     private static final long serialVersionUID   = 1032898038061287135L;
 
     static final int          MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
@@ -25,7 +24,7 @@ public class RelationImpl extends PredicateImpl {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected RelationImpl struct(Object[] array, PredicateImpl declaration) {
+    protected RelationImpl struct(Object[] array, PredicateImpl<Relation> declaration) {
         return new RelationImpl(array, (RelationImpl) declaration);
     }
 
@@ -40,7 +39,7 @@ public class RelationImpl extends PredicateImpl {
     }
 
     @Override
-    protected PredicateImpl castFrom(PredicateImpl from) {
+    protected PredicateImpl<Relation> castFrom(PredicateImpl<?> from) {
         Object[] array = from.toArray();
         array[0] = functor();
         return new RelationImpl(array, declaration());
@@ -53,10 +52,10 @@ public class RelationImpl extends PredicateImpl {
             return unknown();
         }
         prefix(context);
-        FunctorImpl<Predicate> functor = functor();
+        FunctorImpl<Relation> functor = functor();
         LogicLambda logic = functor.logicLambda();
         if (logic != null) {
-            return result(logic.apply((PredicateImpl) this, context), context);
+            return result(logic.apply(this, context), context);
         }
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
             return result(unknown(), context);
@@ -150,7 +149,7 @@ public class RelationImpl extends PredicateImpl {
         } while (true);
     }
 
-    private Set<PredicateImpl> uncycle(Set<PredicateImpl> set) {
+    private Set<PredicateImpl<?>> uncycle(Set<PredicateImpl<?>> set) {
         return set.equals(singleton()) && !isFullyBound() ? set : set.remove(this);
     }
 
