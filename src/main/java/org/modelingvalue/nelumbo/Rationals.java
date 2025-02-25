@@ -93,7 +93,7 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> compare = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::gt, (LogicLambda) Rationals::compareLogic, //
+    private static Functor<Relation> GT_CONS_FUNCTOR = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::gt, (LogicLambda) Rationals::compareLogic, //
             (ToStringLambda) s -> s.toString(1) + "\u226B" + s.toString(2));
 
     @SuppressWarnings("rawtypes")
@@ -115,7 +115,7 @@ public final class Rationals {
     }
 
     public static Relation gt(RationalCons compared1, RationalCons compared2) {
-        return rel(compare, compared1, compared2);
+        return rel(GT_CONS_FUNCTOR, compared1, compared2);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

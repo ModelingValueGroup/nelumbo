@@ -355,18 +355,18 @@ public final class Logic {
             (ToStringLambda) s -> s.toString(1) + "\u2A75" + s.toString(2));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static InferResult eqLogic(PredicateImpl<?> predicate, InferContext context) {
-        StructureImpl constant1 = predicate.getVal(1);
-        StructureImpl constant2 = predicate.getVal(2);
+    private static InferResult eqLogic(RelationImpl relation, InferContext context) {
+        StructureImpl constant1 = relation.getVal(1);
+        StructureImpl constant2 = relation.getVal(2);
         if (constant1 == null && constant2 == null) {
-            return predicate.unknown();
+            return relation.unknown();
         } else if (constant1 == null) {
-            return InferResult.trueFalse(predicate.set(1, constant2).singleton(), predicate.singleton());
+            return InferResult.trueFalse(relation.set(1, constant2).singleton(), relation.singleton());
         } else if (constant2 == null) {
-            return InferResult.trueFalse(predicate.set(2, constant1).singleton(), predicate.singleton());
+            return InferResult.trueFalse(relation.set(2, constant1).singleton(), relation.singleton());
         } else {
             StructureImpl eq = constant1.eq(constant2);
-            return eq != null ? predicate.set(1, eq, eq).fact() : predicate.falsehood();
+            return eq != null ? relation.set(1, eq, eq).fact() : relation.falsehood();
         }
     }
 

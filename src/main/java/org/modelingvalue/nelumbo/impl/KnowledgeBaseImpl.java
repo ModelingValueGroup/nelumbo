@@ -37,7 +37,6 @@ import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
 import org.modelingvalue.nelumbo.Logic.Structure;
@@ -51,7 +50,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     @SuppressWarnings("rawtypes")
     private static final AtomicReference<Map<Class, Set<Class>>>              SPECIALIZATIONS     = new AtomicReference<>(Map.of());
     @SuppressWarnings("rawtypes")
-    private static final QualifiedSet<PredicateImpl, Inference>               EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
+    private static final QualifiedSet<RelationImpl, Inference>                EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
     private static final int                                                  MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
     private static final int                                                  MAX_LOGIC_MEMOIZ_D4 = KnowledgeBaseImpl.MAX_LOGIC_MEMOIZ / 4;
     private static final int                                                  INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
@@ -77,16 +76,16 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                                                                                                   };
 
     @SuppressWarnings("rawtypes")
-    private static class Inference extends Struct2Impl<PredicateImpl, InferResult> {
+    private static class Inference extends Struct2Impl<RelationImpl, InferResult> {
         private static final long serialVersionUID = 1531759272582548244L;
 
         public int                count            = INITIAL_USAGE_COUNT;
 
-        public Inference(PredicateImpl predicate, InferResult result) {
+        public Inference(RelationImpl predicate, InferResult result) {
             super(predicate, result);
         }
 
-        public PredicateImpl premise() {
+        public RelationImpl premise() {
             return get0();
         }
 
@@ -156,11 +155,11 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         return specs;
     }
 
-    private final AtomicReference<Map<PredicateImpl, InferResult>>          facts;
-    private final AtomicReference<Map<PredicateImpl, List<RuleImpl>>>       rules;
-    private final AtomicReference<QualifiedSet<PredicateImpl, Inference>[]> memoization;
-    private final InferContext                                              context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, false, StructureImpl.TRACE_NELUMBO);
-    private boolean                                                         stopped;
+    private final AtomicReference<Map<RelationImpl, InferResult>>          facts;
+    private final AtomicReference<Map<RelationImpl, List<RuleImpl>>>       rules;
+    private final AtomicReference<QualifiedSet<RelationImpl, Inference>[]> memoization;
+    private final InferContext                                             context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, false, StructureImpl.TRACE_NELUMBO);
+    private boolean                                                        stopped;
 
     @SuppressWarnings("unchecked")
     public KnowledgeBaseImpl(KnowledgeBaseImpl init) {
@@ -179,7 +178,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     public InferResult getMemoiz(RelationImpl relation) {
-        for (QualifiedSet<PredicateImpl, Inference> m : memoization.get()) {
+        for (QualifiedSet<RelationImpl, Inference> m : memoization.get()) {
             Inference memoiz = m.get(relation);
             if (memoiz != null) {
                 memoiz.count++;
@@ -192,7 +191,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     @Override
     public Map<Relation, List<Rule>> rules() {
         return rules.get().replaceAll(e -> {
-            Relation k = (Relation) e.getKey().proxy();
+            Relation k = e.getKey().proxy();
             List<Rule> v = e.getValue().replaceAll(RuleImpl::proxy);
             return Entry.of(k, v);
         });
@@ -201,7 +200,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     @Override
     public Map<Relation, Pair<Set<Relation>, Set<Relation>>> facts() {
         return facts.get().replaceAll(e -> {
-            Relation k = (Relation) e.getKey().proxy();
+            Relation k = e.getKey().proxy();
             Set<Relation> facts = e.getValue().facts().replaceAll(p -> (Relation) p.proxy());
             Set<Relation> falsehoods = e.getValue().falsehoods().replaceAll(p -> (Relation) p.proxy());
             return Entry.of(k, Pair.of(facts, falsehoods));
@@ -209,42 +208,42 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected void memoization(PredicateImpl predicate, InferResult fullResult) {
+    protected void memoization(RelationImpl relation, InferResult fullResult) {
         InferResult result = fullResult.cycles().isEmpty() ? fullResult : //
                 InferResult.trueFalse(fullResult.facts(), fullResult.falsehoods());
         boolean known = !result.hasUnknown();
-        FunctorImpl<Predicate> functor = predicate.functor();
+        FunctorImpl<Relation> functor = relation.functor();
         if (functor.factual()) {
             facts.updateAndGet(map -> {
                 if (known) {
-                    map = map.put(predicate, result);
+                    map = map.put(relation, result);
                 }
                 for (PredicateImpl fact : result.facts()) {
-                    if (fact.isFullyBound()) {
-                        map = map.put(fact, fact.fact());
+                    if (fact instanceof RelationImpl && fact.isFullyBound()) {
+                        map = map.put((RelationImpl) fact, fact.fact());
                     }
                 }
                 for (PredicateImpl falsehood : result.falsehoods()) {
-                    if (falsehood.isFullyBound()) {
-                        map = map.put(falsehood, falsehood.falsehood());
+                    if (falsehood instanceof RelationImpl && falsehood.isFullyBound()) {
+                        map = map.put((RelationImpl) falsehood, falsehood.falsehood());
                     }
                 }
                 return map;
             });
         } else if (!functor.derived()) {
-            QualifiedSet<PredicateImpl, Inference>[] mem = memoization.updateAndGet(array -> {
+            QualifiedSet<RelationImpl, Inference>[] mem = memoization.updateAndGet(array -> {
                 array = array.clone();
                 if (known) {
-                    array[0] = array[0].put(new Inference(predicate, result));
+                    array[0] = array[0].put(new Inference(relation, result));
                 }
                 for (PredicateImpl fact : result.facts()) {
-                    if (fact.isFullyBound()) {
-                        array[0] = array[0].put(new Inference(fact, fact.fact()));
+                    if (fact instanceof RelationImpl && fact.isFullyBound()) {
+                        array[0] = array[0].put(new Inference((RelationImpl) fact, fact.fact()));
                     }
                 }
                 for (PredicateImpl falsehood : result.falsehoods()) {
-                    if (falsehood.isFullyBound()) {
-                        array[0] = array[0].put(new Inference(falsehood, falsehood.falsehood()));
+                    if (falsehood instanceof RelationImpl && falsehood.isFullyBound()) {
+                        array[0] = array[0].put(new Inference((RelationImpl) falsehood, falsehood.falsehood()));
                     }
                 }
                 if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
@@ -261,7 +260,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     private void cleanup() {
-        QualifiedSet<PredicateImpl, Inference>[] mem = memoization.get();
+        QualifiedSet<RelationImpl, Inference>[] mem = memoization.get();
         while (mem[2].size() > MAX_LOGIC_MEMOIZ) {
             for (int i = 0; i < mem[2].size(); i++) {
                 if (stopped) {
@@ -287,13 +286,13 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Map<PredicateImpl, List<RuleImpl>> addRule(PredicateImpl signature, RuleImpl ruleImpl, Map<PredicateImpl, List<RuleImpl>> rules, Map<Class, Set<Class>> specs) {
+    private static Map<RelationImpl, List<RuleImpl>> addRule(RelationImpl signature, RuleImpl ruleImpl, Map<RelationImpl, List<RuleImpl>> rules, Map<Class, Set<Class>> specs) {
         rules = rules.put(signature, ADD_RULE.apply(rules.get(signature), ruleImpl));
         for (int i = 1; i < signature.length(); i++) {
             Object v = signature.get(i);
             if (v instanceof Class) {
                 for (Class g : specs.get((Class) v)) {
-                    PredicateImpl p = signature.set(i, g);
+                    RelationImpl p = signature.set(i, g);
                     rules = addRule(p, ruleImpl, rules, specs);
                 }
             }
@@ -321,7 +320,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Map<PredicateImpl, InferResult> addFact(Map<PredicateImpl, InferResult> map, PredicateImpl fact, PredicateImpl predicate, int i, Class cls) {
+    private static Map<RelationImpl, InferResult> addFact(Map<RelationImpl, InferResult> map, RelationImpl fact, RelationImpl predicate, int i, Class cls) {
         Class type = predicate.getType(i);
         if (cls.isAssignableFrom(type)) {
             InferResult pre = map.get(predicate);
