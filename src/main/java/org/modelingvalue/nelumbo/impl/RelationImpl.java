@@ -192,4 +192,9 @@ public class RelationImpl extends PredicateImpl<Relation> {
         return array != null ? struct(array, declaration()) : this;
     }
 
+    @Override
+    protected InferResult resolve(PredicateImpl<?> consequence, InferContext context) {
+        return infer(context).bind(this, consequence);
+    }
+
 }
