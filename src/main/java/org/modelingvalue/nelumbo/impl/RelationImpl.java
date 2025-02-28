@@ -176,11 +176,6 @@ public class RelationImpl extends PredicateImpl<Relation> {
         return result;
     }
 
-    @Override
-    protected InferResult resolve(InferContext context) {
-        return infer(context);
-    }
-
     @SuppressWarnings("rawtypes")
     protected final RelationImpl signature() {
         Object[] array = null;

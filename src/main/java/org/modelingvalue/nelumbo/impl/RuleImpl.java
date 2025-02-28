@@ -21,7 +21,6 @@
 package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
@@ -83,7 +82,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected InferResult imply(PredicateImpl predicate, InferContext context) {
+    protected final InferResult imply(PredicateImpl predicate, InferContext context) {
         Map<VariableImpl, Object> binding = predicate.getBinding(consequence(), Map.of());
         if (binding == null) {
             return null;
@@ -97,28 +96,17 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (context.trace()) {
             System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
-        InferResult condResult = condition.resolve(context);
+        InferResult consResult = condition.resolve(consequence, context);
         InferResult predResult;
-        if (condResult.hasStackOverflow()) {
-            predResult = condResult;
-        } else if (condResult.equals(condition.unknown())) {
+        if (consResult.hasStackOverflow()) {
+            predResult = consResult;
+        } else if (consResult.equals(condition.unknown())) {
             predResult = predicate.unknown();
         } else {
-            Set<PredicateImpl<?>> complConsFacts = InferResult.bind(condResult.facts().retainAll(PredicateImpl::isFullyBound), condition, consequence);
-            Set<PredicateImpl<?>> complConsFalsehoods = InferResult.bind(condResult.falsehoods().retainAll(PredicateImpl::isFullyBound), condition, consequence);
-
-            Set<PredicateImpl<?>> incomConsFacts = InferResult.bind(condResult.facts().removeAll(PredicateImpl::isFullyBound), condition, consequence).//
-                    removeAll(complConsFacts::contains).removeAll(complConsFalsehoods::contains);
-            Set<PredicateImpl<?>> incomConsFalsehoods = InferResult.bind(condResult.falsehoods().removeAll(PredicateImpl::isFullyBound), condition, consequence).//
-                    removeAll(complConsFalsehoods::contains).removeAll(complConsFacts::contains);
-
-            Set<PredicateImpl<?>> predFacts = InferResult.cast(complConsFacts.isEmpty() ? incomConsFacts : complConsFacts, predicate);
-            Set<PredicateImpl<?>> predFalsehoods = InferResult.cast(complConsFalsehoods.addAll(incomConsFalsehoods).removeAll(complConsFacts::contains), predicate);
-
-            if (predFalsehoods.isEmpty() && consequence.isFullyBound() && !predicate.isFullyBound()) {
-                predFalsehoods = predicate.singleton();
+            predResult = consResult.cast(predicate);
+            if (predResult.falsehoods().isEmpty() && consequence.isFullyBound() && !predicate.isFullyBound()) {
+                predResult = InferResult.of(predResult.facts(), predicate.singleton(), predResult.cycles());
             }
-            predResult = InferResult.of(predFacts, predFalsehoods, condResult.cycles());
         }
         if (context.trace()) {
             System.err.println(context.prefix() + predicate.toString(null) + "\u2192" + predResult);

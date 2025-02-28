@@ -97,8 +97,10 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         return v instanceof Class ? (Class) v : v instanceof StructureImpl ? ((StructureImpl) v).type() : null;
     }
 
+    @SuppressWarnings("unchecked")
     public InferResult infer() {
-        return setBinding(variables()).resolve(KnowledgeBaseImpl.CURRENT.get().context());
+        PredicateImpl<P> predicate = setBinding(variables());
+        return predicate.resolve(predicate, KnowledgeBaseImpl.CURRENT.get().context());
     }
 
     protected InferResult expand(InferContext context) {
@@ -151,13 +153,13 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected InferResult resolve(InferContext context) {
+    protected InferResult resolve(PredicateImpl<?> consequence, InferContext context) {
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
         Set<PredicateImpl<?>> facts = Set.of(), falsehoods = Set.of();
         Set<RelationImpl> cycles = Set.of();
         Map<VariableImpl, Object> map;
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
-        PredicateImpl reduced;
+        PredicateImpl reduced, bindCons;
         InferResult predResult, reducedResult;
         boolean incomFacts = false, incomFalsehoods = false;
         do {
@@ -171,9 +173,15 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 if (predResult.hasStackOverflow()) {
                     return predResult;
                 } else if (predResult.facts().isEmpty()) {
-                    falsehoods = falsehoods.add(setBinding(entry.getKey()));
+                    bindCons = consequence.setBinding(entry.getKey());
+                    if (!facts.contains(bindCons)) {
+                        falsehoods = falsehoods.add(bindCons);
+                    }
                 } else if (predResult.falsehoods().isEmpty()) {
-                    facts = facts.add(setBinding(entry.getKey()));
+                    bindCons = consequence.setBinding(entry.getKey());
+                    falsehoods = falsehoods.remove(bindCons);
+                    facts = facts.add(bindCons);
+                    incomFacts = false;
                 } else {
                     reduced = predResult.facts().get(0);
                     reducedResult = reduced.infer(expand);
@@ -184,7 +192,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                             if (fact.isFullyBound()) {
                                 map = entry.getKey().putAll(fact.getBinding());
                                 next = next.put(map, reduced.setBinding(map));
-                            } else {
+                            } else if (facts.isEmpty()) {
                                 incomFacts = true;
                             }
                         }
@@ -201,11 +209,17 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 }
             }
         } while (!next.isEmpty());
+        if (incomFacts && falsehoods.contains(consequence)) {
+            incomFacts = false;
+        }
+        if (incomFalsehoods && facts.contains(consequence)) {
+            incomFalsehoods = false;
+        }
         if (incomFacts) {
-            facts = facts.add(this);
+            facts = facts.add(consequence);
         }
         if (incomFalsehoods) {
-            falsehoods = falsehoods.add(this);
+            falsehoods = falsehoods.add(consequence);
         }
         InferResult result = InferResult.of(facts, falsehoods, cycles);
         if (context.trace()) {
