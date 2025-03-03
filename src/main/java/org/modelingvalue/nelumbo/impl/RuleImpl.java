@@ -82,8 +82,8 @@ public final class RuleImpl extends StructureImpl<Rule> {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final InferResult imply(PredicateImpl predicate, InferContext context) {
-        Map<VariableImpl, Object> binding = predicate.getBinding(consequence(), Map.of());
+    protected final InferResult imply(RelationImpl relation, InferContext context) {
+        Map<VariableImpl, Object> binding = relation.getBinding(consequence(), Map.of());
         if (binding == null) {
             return null;
         }
@@ -97,21 +97,21 @@ public final class RuleImpl extends StructureImpl<Rule> {
             System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
         InferResult consResult = condition.resolve(consequence, context);
-        InferResult predResult;
+        InferResult relResult;
         if (consResult.hasStackOverflow()) {
-            predResult = consResult;
+            relResult = consResult;
         } else if (consResult.equals(condition.unknown())) {
-            predResult = predicate.unknown();
+            relResult = relation.unknown();
         } else {
-            predResult = consResult.cast(predicate);
-            if (predResult.falsehoods().isEmpty() && consequence.isFullyBound() && !predicate.isFullyBound()) {
-                predResult = InferResult.of(predResult.facts(), predicate.singleton(), predResult.cycles());
+            relResult = consResult.cast(relation);
+            if (relResult.falsehoods().isEmpty() && consequence.isFullyBound() && !relation.isFullyBound()) {
+                relResult = InferResult.of(relResult.facts(), relation.singleton(), relResult.cycles());
             }
         }
         if (context.trace()) {
-            System.err.println(context.prefix() + predicate.toString(null) + "\u2192" + predResult);
+            System.err.println(context.prefix() + relation + "\u2192" + relResult);
         }
-        return predResult;
+        return relResult;
     }
 
     public int rulePrio() {

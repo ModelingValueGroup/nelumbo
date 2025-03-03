@@ -153,7 +153,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected InferResult resolve(PredicateImpl<?> consequence, InferContext context) {
+    protected final InferResult resolve(PredicateImpl<?> consequence, InferContext context) {
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
         Set<PredicateImpl<?>> facts = Set.of(), falsehoods = Set.of();
         Set<RelationImpl> cycles = Set.of();
