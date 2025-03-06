@@ -167,7 +167,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
             next = Map.of();
             for (Entry<Map<VariableImpl, Object>, PredicateImpl> entry : now) {
                 if (context.trace()) {
-                    System.err.println(context.prefix() + entry.getValue().toString(null));
+                    System.err.println(context.prefix() + "  " + entry.getValue().toString(null));
                 }
                 predResult = entry.getValue().infer(reduce);
                 if (predResult.hasStackOverflow()) {
@@ -223,7 +223,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         }
         InferResult result = InferResult.of(facts, falsehoods, cycles);
         if (context.trace()) {
-            System.err.println(context.prefix() + toString(null) + "\u2192" + result);
+            System.err.println(context.prefix() + "  " + toString(null) + "\u2192" + result);
         }
         return result;
     }

@@ -98,7 +98,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
 
     private void prefix(InferContext context) {
         if (context.trace()) {
-            System.err.print(context.prefix() + "  " + toString(null));
+            System.err.print(context.prefix() + "    " + toString(null));
         }
     }
 
