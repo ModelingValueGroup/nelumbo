@@ -107,6 +107,10 @@ public final class Logic {
         derived,
     }
 
+    public static FunctorModifier logic(LogicLambda logic) {
+        return logic;
+    }
+
     @SuppressWarnings("rawtypes")
     @FunctionalInterface
     public interface LogicLambda extends BiFunction<RelationImpl, InferContext, InferResult>, LambdaReflection, FunctorModifier {
@@ -130,6 +134,10 @@ public final class Logic {
             }
 
         }
+    }
+
+    public static FunctorModifier normalize(NormalizeLambda normalize) {
+        return normalize;
     }
 
     @SuppressWarnings("rawtypes")
@@ -156,19 +164,23 @@ public final class Logic {
         }
     }
 
+    public static FunctorModifier render(RenderLambda render) {
+        return render;
+    }
+
     @SuppressWarnings("rawtypes")
     @FunctionalInterface
-    public interface ToStringLambda extends java.util.function.Function<StructureImpl<Structure>, String>, LambdaReflection, FunctorModifier {
+    public interface RenderLambda extends java.util.function.Function<StructureImpl<Structure>, String>, LambdaReflection, FunctorModifier {
 
         @Override
-        default ToStringLambdaImpl of() {
-            return this instanceof ToStringLambdaImpl ? (ToStringLambdaImpl) this : new ToStringLambdaImpl(this);
+        default RenderLambdaImpl of() {
+            return this instanceof RenderLambdaImpl ? (RenderLambdaImpl) this : new RenderLambdaImpl(this);
         }
 
-        class ToStringLambdaImpl extends LambdaImpl<ToStringLambda> implements ToStringLambda {
+        class RenderLambdaImpl extends LambdaImpl<RenderLambda> implements RenderLambda {
             private static final long serialVersionUID = -9099528018203410620L;
 
-            public ToStringLambdaImpl(ToStringLambda f) {
+            public RenderLambdaImpl(RenderLambda f) {
                 super(f);
             }
 
@@ -351,8 +363,8 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::eq, (LogicLambda) Logic::eqLogic, //
-            (ToStringLambda) s -> s.toString(1) + "\u2A75" + s.toString(2));
+    private static Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::eq, logic(Logic::eqLogic), //
+            render(s -> s.toString(1) + "\u2A75" + s.toString(2)));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult eqLogic(RelationImpl relation, InferContext context) {
@@ -382,7 +394,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     private static final Functor<Relation> IS_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::is, //
-            (ToStringLambda) s -> s.toString(1) + "=" + s.toString(2));
+            render(s -> s.toString(1) + "=" + s.toString(2)));
 
     private static <T extends Structure> Relation is(T a, T b) {
         return rel(IS_FUNCTOR, a, b);

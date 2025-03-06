@@ -28,10 +28,8 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.LogicLambda;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.Logic.ToStringLambda;
 import org.modelingvalue.nelumbo.impl.FunctorImpl;
 import org.modelingvalue.nelumbo.impl.InferContext;
 import org.modelingvalue.nelumbo.impl.InferResult;
@@ -53,7 +51,7 @@ public final class Integers {
     }
 
     private static FunctorImpl<IntegerCons> I_FUNCTOR_IMPL = FunctorImpl.<IntegerCons, BigInteger> of(Integers::i,   //
-            (ToStringLambda) s -> s.toString(1));
+            render(s -> s.toString(1)));
     private static Functor<IntegerCons>     I_FUNCTOR      = I_FUNCTOR_IMPL.proxy();
 
     public static IntegerCons i(BigInteger val) {
@@ -85,8 +83,8 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> GT_CONS_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::gt, (LogicLambda) Integers::gtCons, //
-            (ToStringLambda) s -> s.toString(1) + "\u226B" + s.toString(2));
+    private static Functor<Relation> GT_CONS_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::gt, logic(Integers::gtCons), //
+            render(s -> s.toString(1) + "\u226B" + s.toString(2)));
 
     @SuppressWarnings("rawtypes")
     private static InferResult gtCons(RelationImpl relation, InferContext context) {
@@ -108,8 +106,8 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::plus, (LogicLambda) Integers::plusLogic, //
-            (ToStringLambda) s -> s.toString(1) + "+" + s.toString(2) + "=" + s.toString(3));
+    private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::plus, logic(Integers::plusLogic), //
+            render(s -> s.toString(1) + "+" + s.toString(2) + "=" + s.toString(3)));
 
     private static InferResult plusLogic(RelationImpl relation, InferContext context) {
         BigInteger addend1 = relation.getVal(1, 1);
@@ -137,8 +135,8 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::multiply, (LogicLambda) Integers::multiplyLogic, //
-            (ToStringLambda) s -> s.toString(1) + "\u00B7" + s.toString(2) + "=" + s.toString(3));
+    private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::multiply, logic(Integers::multiplyLogic), //
+            render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "=" + s.toString(3)));
 
     private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
         BigInteger factor1 = relation.getVal(1, 1);
@@ -166,7 +164,7 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> SQUARE_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::square, (LogicLambda) Integers::squareLogic);
+    private static Functor<Relation> SQUARE_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::square, logic(Integers::squareLogic));
 
     private static InferResult squareLogic(RelationImpl relation, InferContext context) {
         BigInteger root = relation.getVal(1, 1);
@@ -191,56 +189,56 @@ public final class Integers {
     // Functions
 
     private static Functor<Relation> GT_FUNCTOR = Logic.<Relation, Integer, Integer> functor(Integers::gt, //
-            (ToStringLambda) s -> s.toString(1) + ">" + s.toString(2));
+            render(s -> s.toString(1) + ">" + s.toString(2)));
 
     public static Relation gt(Integer a, Integer b) {
         return rel(GT_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LT_FUNCTOR = functor(Integers::lt, //
-            (ToStringLambda) s -> s.toString(1) + "<" + s.toString(2));
+            render(s -> s.toString(1) + "<" + s.toString(2)));
 
     public static Relation lt(Integer a, Integer b) {
         return rel(LT_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> GE_FUNCTOR = functor(Integers::ge, //
-            (ToStringLambda) s -> s.toString(1) + "\u2265" + s.toString(2));
+            render(s -> s.toString(1) + "\u2265" + s.toString(2)));
 
     public static Relation ge(Integer a, Integer b) {
         return rel(GE_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LE_FUNCTOR = functor(Integers::le, //
-            (ToStringLambda) s -> s.toString(1) + "\u2264" + s.toString(2));
+            render(s -> s.toString(1) + "\u2264" + s.toString(2)));
 
     public static Relation le(Integer a, Integer b) {
         return rel(LE_FUNCTOR, a, b);
     }
 
     private static Functor<IntegerFunc> PLUS_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::plus, //
-            (ToStringLambda) s -> s.toString(1) + "+" + s.toString(2));
+            render(s -> s.toString(1) + "+" + s.toString(2)));
 
     public static IntegerFunc plus(Integer a, Integer b) {
         return function(PLUS_FUNC_FUNCTOR, a, b);
     }
 
     private static Functor<IntegerFunc> MINUS_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::minus, //
-            (ToStringLambda) s -> s.toString(1) + "-" + s.toString(2));
+            render(s -> s.toString(1) + "-" + s.toString(2)));
 
     public static IntegerFunc minus(Integer a, Integer b) {
         return function(MINUS_FUNC_FUNCTOR, a, b);
     }
 
     private static Functor<IntegerFunc> MULTIPLY_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::multiply, //
-            (ToStringLambda) s -> s.toString(1) + "\u00B7" + s.toString(2));
+            render(s -> s.toString(1) + "\u00B7" + s.toString(2)));
 
     public static IntegerFunc multiply(Integer a, Integer b) {
         return function(MULTIPLY_FUNC_FUNCTOR, a, b);
     }
 
     private static Functor<IntegerFunc> DIVIDE_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::divide, //
-            (ToStringLambda) s -> s.toString(1) + "/" + s.toString(2));
+            render(s -> s.toString(1) + "/" + s.toString(2)));
 
     public static IntegerFunc divide(Integer a, Integer b) {
         return function(DIVIDE_FUNC_FUNCTOR, a, b);

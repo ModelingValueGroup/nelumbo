@@ -30,8 +30,8 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
+import org.modelingvalue.nelumbo.Logic.RenderLambda;
 import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.Logic.ToStringLambda;
 
 public class StructureImpl<F extends Structure> extends org.modelingvalue.collections.struct.impl.StructImpl implements InvocationHandler, Comparable<StructureImpl<F>> {
     private static final long      serialVersionUID = 7315776001191198132L;
@@ -116,9 +116,9 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @Override
     public String toString() {
         FunctorImpl<F> f = PRETTY_NELUMBO ? functor() : null;
-        ToStringLambda tsl = f != null ? f.toStringLambda() : null;
-        if (tsl != null) {
-            return tsl.apply((StructureImpl) this);
+        RenderLambda rl = f != null ? f.renderLambda() : null;
+        if (rl != null) {
+            return rl.apply((StructureImpl) this);
         }
         String string = superToString();
         string = string.substring(1, string.length() - 1);

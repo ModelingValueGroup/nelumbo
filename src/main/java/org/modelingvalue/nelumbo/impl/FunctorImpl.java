@@ -36,15 +36,15 @@ import org.modelingvalue.nelumbo.Logic.FunctorModifier;
 import org.modelingvalue.nelumbo.Logic.FunctorModifierEnum;
 import org.modelingvalue.nelumbo.Logic.LogicLambda;
 import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
+import org.modelingvalue.nelumbo.Logic.RenderLambda;
 import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.Logic.ToStringLambda;
 
 public final class FunctorImpl<T extends Structure> extends StructureImpl<Functor<T>> {
     private static final long     serialVersionUID = 285147889847599160L;
 
     private final LogicLambda     logicLambda;
     private final NormalizeLambda normalizeLambda;
-    private final ToStringLambda  toStringLambda;
+    private final RenderLambda    renderLambda;
     private final boolean         factual;
     private final boolean         derived;
 
@@ -57,13 +57,13 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
         }
         this.logicLambda = logic(modifiers);
         this.normalizeLambda = normal(modifiers);
-        this.toStringLambda = toString(modifiers);
+        this.renderLambda = render(modifiers);
         this.factual = has(FunctorModifierEnum.factual, modifiers);
         this.derived = has(FunctorModifierEnum.derived, modifiers);
     }
 
-    private ToStringLambda toString(FunctorModifier[] modifiers) {
-        ToStringLambda lambda = get(ToStringLambda.class, modifiers);
+    private RenderLambda render(FunctorModifier[] modifiers) {
+        RenderLambda lambda = get(RenderLambda.class, modifiers);
         return lambda != null ? lambda.of() : null;
     }
 
@@ -126,8 +126,8 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
         return normalizeLambda;
     }
 
-    public ToStringLambda toStringLambda() {
-        return toStringLambda;
+    public RenderLambda renderLambda() {
+        return renderLambda;
     }
 
     public boolean factual() {

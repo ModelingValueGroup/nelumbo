@@ -51,7 +51,7 @@ import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.Logic.ToStringLambda;
+import org.modelingvalue.nelumbo.Logic.RenderLambda;
 import org.modelingvalue.nelumbo.Rationals.RationalCons;
 
 public class NelumboTest extends NelumboTestBase {
@@ -78,7 +78,7 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     static Functor<RootCons> ROOT = functor((SerializableFunction<IntegerCons, RootCons>) NelumboTest::root, //
-            (ToStringLambda) p -> "R(" + p.get(1).toString() + ")");
+            (RenderLambda) p -> "R(" + p.get(1).toString() + ")");
 
     static RootCons root(IntegerCons i) {
         return constant(ROOT, i);
@@ -97,14 +97,14 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     static Functor<Relation> ROOT_PERSON = functor(NelumboTest::rootPerson, //
-            (ToStringLambda) s -> "rp(" + s.toString(1) + "," + s.toString(2) + ")");
+            (RenderLambda) s -> "rp(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation rootPerson(RootCons root, PersonCons person) {
         return rel(ROOT_PERSON, root, person);
     }
 
     static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) NelumboTest::root, //
-            (ToStringLambda) p -> "r(" + p.get(1).toString() + ")");
+            (RenderLambda) p -> "r(" + p.get(1).toString() + ")");
 
     static RootFunc root(Person person) {
         return function(ROOT_FUNC, person);
@@ -122,14 +122,14 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) NelumboTest::person, //
-            (ToStringLambda) p -> p.get(1).toString());
+            (RenderLambda) p -> p.get(1).toString());
 
     static PersonCons person(String name) {
         return constant(STRING_PERSON, name);
     }
 
     static Functor<PersonCons> INTEGER_PERSON = functor((SerializableFunction<IntegerCons, PersonCons>) NelumboTest::person, //
-            (ToStringLambda) p -> "P(" + p.get(1).toString() + ")");
+            (RenderLambda) p -> "P(" + p.get(1).toString() + ")");
 
     static PersonCons person(IntegerCons i) {
         return constant(INTEGER_PERSON, i);
@@ -148,42 +148,42 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     static Functor<Relation> PARENT_CHILD = functor(NelumboTest::parentChild, //
-            (ToStringLambda) s -> "pc(" + s.toString(1) + "," + s.toString(2) + ")");
+            (RenderLambda) s -> "pc(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation parentChild(PersonCons parent, PersonCons child) {
         return rel(PARENT_CHILD, parent, child);
     }
 
     static Functor<PersonFunc> PARENT = functor(NelumboTest::parent, //
-            (ToStringLambda) s -> "p(" + s.toString(1) + ")");
+            (RenderLambda) s -> "p(" + s.toString(1) + ")");
 
     static PersonFunc parent(Person child) {
         return function(PARENT, child);
     }
 
     static Functor<PersonFunc> CHILD = functor(NelumboTest::child, //
-            (ToStringLambda) s -> "c(" + s.toString(1) + ")");
+            (RenderLambda) s -> "c(" + s.toString(1) + ")");
 
     static PersonFunc child(Person parent) {
         return function(CHILD, parent);
     }
 
     static Functor<Relation> ANCESTOR_DESCENTENT = functor(NelumboTest::ancestorDescendent, //
-            (ToStringLambda) s -> "ad(" + s.toString(1) + "," + s.toString(2) + ")");
+            (RenderLambda) s -> "ad(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation ancestorDescendent(PersonCons ancestor, PersonCons descendent) {
         return rel(ANCESTOR_DESCENTENT, ancestor, descendent);
     }
 
     static Functor<PersonFunc> ANCESTOR = functor(NelumboTest::ancestor, //
-            (ToStringLambda) s -> "a(" + s.toString(1) + ")");
+            (RenderLambda) s -> "a(" + s.toString(1) + ")");
 
     static PersonFunc ancestor(Person descendent) {
         return function(ANCESTOR, descendent);
     }
 
     static Functor<PersonFunc> DESCENDENT = functor(NelumboTest::descendent, //
-            (ToStringLambda) s -> "d(" + s.toString(1) + ")");
+            (RenderLambda) s -> "d(" + s.toString(1) + ")");
 
     static PersonFunc descendent(Person ancestor) {
         return function(DESCENDENT, ancestor);
