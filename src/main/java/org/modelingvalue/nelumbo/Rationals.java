@@ -97,11 +97,11 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> GT_CONS_FUNCTOR = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::gt, logic(Rationals::compareLogic), //
+    private static Functor<Relation> GT_CONS_FUNCTOR = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::gtc, logic(Rationals::gtcLogic), //
             render(s -> s.toString(1) + "\u226B" + s.toString(2)));
 
     @SuppressWarnings("rawtypes")
-    private static InferResult compareLogic(RelationImpl relation, InferContext context) {
+    private static InferResult gtcLogic(RelationImpl relation, InferContext context) {
         BigInteger numComp1 = relation.getVal(1, 1);
         BigInteger numComp2 = relation.getVal(2, 1);
         if (numComp1 != null && numComp2 != null) {
@@ -114,7 +114,7 @@ public final class Rationals {
         }
     }
 
-    public static Relation gt(RationalCons compared1, RationalCons compared2) {
+    private static Relation gtc(RationalCons compared1, RationalCons compared2) {
         return rel(GT_CONS_FUNCTOR, compared1, compared2);
     }
 
@@ -219,7 +219,7 @@ public final class Rationals {
 
     // Functions
 
-    private static Functor<Relation> GT_FUNCTOR = Logic.<Relation, Rational, Rational> functor(Rationals::gt, //
+    private static Functor<Relation> GT_FUNCTOR = functor(Rationals::gt, //
             render(s -> s.toString(1) + ">" + s.toString(2)));
 
     public static Relation gt(Rational a, Rational b) {
@@ -299,10 +299,10 @@ public final class Rationals {
     public static void rationalRules() {
         isRules();
 
-        rule(gt(X, Y), and(is(X, P), is(Y, Q), gt(P, Q)));
-        rule(lt(X, Y), and(is(X, P), is(Y, Q), gt(Q, P)));
-        rule(ge(X, Y), and(is(X, P), is(Y, Q), or(gt(P, Q), eq(P, Q))));
-        rule(le(X, Y), and(is(X, P), is(Y, Q), or(gt(Q, P), eq(Q, P))));
+        rule(gt(X, Y), and(is(X, P), is(Y, Q), gtc(P, Q)));
+        rule(lt(X, Y), and(is(X, P), is(Y, Q), gtc(Q, P)));
+        rule(ge(X, Y), and(is(X, P), is(Y, Q), or(gtc(P, Q), eq(P, Q))));
+        rule(le(X, Y), and(is(X, P), is(Y, Q), or(gtc(Q, P), eq(Q, P))));
 
         rule(is(plus(X, Y), R), and(is(X, P), is(Y, Q), plus(P, Q, R)));
         rule(is(minus(X, Y), R), and(is(X, P), is(Y, Q), plus(R, Q, P)));
