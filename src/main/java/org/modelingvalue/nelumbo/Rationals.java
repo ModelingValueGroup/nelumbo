@@ -109,10 +109,6 @@ public final class Rationals {
             BigInteger denComp2 = relation.getVal(2, 2);
             int r = numComp1.multiply(denComp2).compareTo(numComp2.multiply(denComp1));
             return r > 0 ? relation.fact() : relation.falsehood();
-        } else if (numComp1 != null) {
-            return InferResult.trueFalse(relation.singleton(), Set.of(relation.copy(1, 2), relation));
-        } else if (numComp2 != null) {
-            return InferResult.trueFalse(relation.singleton(), Set.of(relation.copy(2, 1), relation));
         } else {
             return relation.unknown();
         }

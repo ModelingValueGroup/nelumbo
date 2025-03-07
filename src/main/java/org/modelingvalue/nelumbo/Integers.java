@@ -92,10 +92,6 @@ public final class Integers {
         BigInteger compared2 = relation.getVal(2, 1);
         if (compared1 != null && compared2 != null) {
             return compared1.compareTo(compared2) > 0 ? relation.fact() : relation.falsehood();
-        } else if (compared1 != null) {
-            return InferResult.trueFalse(relation.singleton(), Set.of(relation.copy(1, 2), relation));
-        } else if (compared2 != null) {
-            return InferResult.trueFalse(relation.singleton(), Set.of(relation.copy(2, 1), relation));
         } else {
             return relation.unknown();
         }
