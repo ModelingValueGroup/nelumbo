@@ -411,9 +411,9 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Constant A1 = variable(Constant.class, "A1");
+    private static final Constant C1 = variable(Constant.class, "C1");
     @SuppressWarnings("rawtypes")
-    private static final Constant A2 = variable(Constant.class, "A2");
+    private static final Constant C2 = variable(Constant.class, "C2");
     @SuppressWarnings("rawtypes")
     private static final Function F1 = variable(Function.class, "F1");
     @SuppressWarnings("rawtypes")
@@ -421,9 +421,9 @@ public final class Logic {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void isRules() {
-        rule(is((Structure) A1, (Structure) A2), eq(A1, A2));
-        rule(is(F1, F2), and(is(F2, A2), is(F1, A2)));
-        rule(is(A1, F1), is(F1, A1));
+        rule(is((Structure) C1, (Structure) C2), eq(C1, C2));
+        rule(is(F1, F2), and(is(F2, C2), is(F1, C2)));
+        rule(is(C1, F1), is(F1, C1));
     }
 
 }
