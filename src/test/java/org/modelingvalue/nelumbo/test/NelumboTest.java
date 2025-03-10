@@ -50,8 +50,8 @@ import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Relation;
-import org.modelingvalue.nelumbo.Logic.Structure;
 import org.modelingvalue.nelumbo.Logic.RenderLambda;
+import org.modelingvalue.nelumbo.Logic.Structure;
 import org.modelingvalue.nelumbo.Rationals.RationalCons;
 
 public class NelumboTest extends NelumboTestBase {
@@ -500,6 +500,8 @@ public class NelumboTest extends NelumboTestBase {
 
             isTrue(lt(i(0), i(1)));
             isTrue(ge(i(1), i(0)));
+
+            hasBindings(is(plus(i(7), i(3)), P), binding(P, i(10)));
         });
     }
 

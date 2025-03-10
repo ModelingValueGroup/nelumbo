@@ -364,7 +364,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     private static Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::eq, logic(Logic::eqLogic), //
-            render(s -> s.toString(1) + "\u2A75" + s.toString(2)));
+            render(s -> s.toString(1) + "\u2261" + s.toString(2)));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult eqLogic(RelationImpl relation, InferContext context) {

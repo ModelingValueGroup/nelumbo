@@ -120,7 +120,7 @@ public final class Rationals {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::plus, logic(Rationals::plusLogic), //
-            render(s -> s.toString(1) + "+" + s.toString(2) + "=" + s.toString(3)));
+            render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult plusLogic(RelationImpl relation, InferContext context) {
         BigInteger numAddend1 = relation.getVal(1, 1);
@@ -158,7 +158,7 @@ public final class Rationals {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::multiply, logic(Rationals::multiplyLogic), //
-            render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "=" + s.toString(3)));
+            render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
         BigInteger numFactor1 = relation.getVal(1, 1);

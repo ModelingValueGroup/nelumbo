@@ -103,7 +103,7 @@ public final class Integers {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::plus, logic(Integers::plusLogic), //
-            render(s -> s.toString(1) + "+" + s.toString(2) + "=" + s.toString(3)));
+            render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult plusLogic(RelationImpl relation, InferContext context) {
         BigInteger addend1 = relation.getVal(1, 1);
@@ -132,7 +132,7 @@ public final class Integers {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::multiply, logic(Integers::multiplyLogic), //
-            render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "=" + s.toString(3)));
+            render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
         BigInteger factor1 = relation.getVal(1, 1);
