@@ -265,6 +265,18 @@ public interface InferResult {
         };
     }
 
+    default InferResult addFact(PredicateImpl<?> fact) {
+        return facts().contains(fact) ? this : of(facts().add(fact), falsehoods(), cycles());
+    }
+
+    default InferResult addFalsehood(PredicateImpl<?> falsehood) {
+        return falsehoods().contains(falsehood) ? this : of(facts(), falsehoods().add(falsehood), cycles());
+    }
+
+    default InferResult addCycles(Set<RelationImpl> cycles) {
+        return of(facts(), falsehoods(), cycles().addAll(cycles));
+    }
+
     default InferResult add(InferResult other) {
         Set<PredicateImpl<?>> facts = facts().addAll(other.facts());
         Set<PredicateImpl<?>> falsehoods = falsehoods().addAll(other.falsehoods());

@@ -28,7 +28,7 @@ import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
 import org.modelingvalue.nelumbo.Logic.RuleModifier;
 
-public final class RuleImpl extends StructureImpl<Rule> {
+public final class RuleImpl extends StructureImpl<Rule> implements ResultCollector {
     private static final long              serialVersionUID   = -4602043866952049391L;
 
     private static final FunctorImpl<Rule> RULE_FUNCTOR       = FunctorImpl.<Rule, Relation, Predicate> of(Logic::rule);
@@ -96,7 +96,7 @@ public final class RuleImpl extends StructureImpl<Rule> {
         if (context.trace()) {
             System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
-        InferResult consResult = condition.resolve(consequence, context);
+        InferResult consResult = condition.resolve(consequence, context, this);
         InferResult relResult;
         if (consResult.hasStackOverflow()) {
             relResult = consResult;
@@ -136,5 +136,23 @@ public final class RuleImpl extends StructureImpl<Rule> {
 
     public boolean trace() {
         return trace;
+    }
+
+    @Override
+    public InferResult addFact(InferResult result, PredicateImpl<?> fact, PredicateImpl<?> incomplete) {
+        return InferResult.of(//
+                result.facts().remove(incomplete).add(fact), //
+                result.falsehoods().remove(fact), //
+                result.cycles());
+    }
+
+    @Override
+    public InferResult addFalsehood(InferResult result, PredicateImpl<?> falsehood, PredicateImpl<?> incomplete) {
+        return result.facts().contains(falsehood) ? result : result.addFalsehood(falsehood);
+    }
+
+    @Override
+    public InferResult addIncompleteFact(InferResult result, PredicateImpl<?> incomplete) {
+        return result.facts().isEmpty() ? result.addFact(incomplete) : result;
     }
 }
