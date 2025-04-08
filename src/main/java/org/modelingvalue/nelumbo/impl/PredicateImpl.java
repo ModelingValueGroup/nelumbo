@@ -162,8 +162,8 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
         Map<VariableImpl, Object> map;
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
-        PredicateImpl reduced, bindCons;
-        InferResult predResult, reducedResult, result = InferResult.EMPTY;
+        PredicateImpl predicate;
+        InferResult result = InferResult.EMPTY, tmpResult;
         boolean addIncompleteFact = false, addIncompleteFalsehood = false;
         do {
             now = next;
@@ -172,48 +172,48 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 if (context.trace()) {
                     System.err.println(context.prefix() + "  " + entry.getValue().toString(null));
                 }
-                predResult = entry.getValue().infer(reduce);
-                if (predResult.hasStackOverflow()) {
-                    return predResult;
-                } else if (predResult.facts().isEmpty()) {
-                    bindCons = consequence.setBinding(entry.getKey());
-                    result = collector.addFalsehood(result, bindCons);
-                } else if (predResult.falsehoods().isEmpty()) {
-                    bindCons = consequence.setBinding(entry.getKey());
-                    result = collector.addFact(result, bindCons);
+                tmpResult = entry.getValue().infer(reduce);
+                if (tmpResult.hasStackOverflow()) {
+                    return tmpResult;
+                } else if (tmpResult.facts().isEmpty()) {
+                    predicate = consequence.setBinding(entry.getKey());
+                    result = collector.addFalsehood(result, predicate);
+                } else if (tmpResult.falsehoods().isEmpty()) {
+                    predicate = consequence.setBinding(entry.getKey());
+                    result = collector.addFact(result, predicate);
                 } else {
-                    reduced = predResult.facts().get(0);
-                    reducedResult = reduced.infer(expand);
-                    if (reducedResult.hasStackOverflow()) {
-                        return reducedResult;
+                    predicate = tmpResult.facts().get(0);
+                    tmpResult = predicate.infer(expand);
+                    if (tmpResult.hasStackOverflow()) {
+                        return tmpResult;
                     } else {
-                        for (PredicateImpl fact : reducedResult.facts()) {
+                        for (PredicateImpl fact : tmpResult.facts()) {
                             if (fact.isFullyBound()) {
                                 map = entry.getKey().putAll(fact.getBinding());
-                                next = next.put(map, reduced.setBinding(map));
+                                next = next.put(map, predicate.setBinding(map));
                             } else {
                                 addIncompleteFact = true;
                             }
                         }
-                        for (PredicateImpl falsehood : reducedResult.falsehoods()) {
+                        for (PredicateImpl falsehood : tmpResult.falsehoods()) {
                             if (falsehood.isFullyBound()) {
                                 map = entry.getKey().putAll(falsehood.getBinding());
-                                next = next.put(map, reduced.setBinding(map));
+                                next = next.put(map, predicate.setBinding(map));
                             } else {
                                 addIncompleteFalsehood = true;
                             }
                         }
-                        result = result.addCycles(reducedResult.cycles());
+                        result = result.addCycles(tmpResult.cycles());
                     }
                 }
             }
         } while (!next.isEmpty());
-        reducedResult = result;
+        tmpResult = result;
         if (addIncompleteFact) {
-            result = collector.addIncompleteFact(reducedResult, result, consequence);
+            result = collector.addIncompleteFact(tmpResult, result, consequence);
         }
         if (addIncompleteFalsehood) {
-            result = collector.addIncompleteFalsehood(reducedResult, result, consequence);
+            result = collector.addIncompleteFalsehood(tmpResult, result, consequence);
         }
         if (context.trace()) {
             System.err.println(context.prefix() + "  " + toString(null) + "\u2192" + result);
