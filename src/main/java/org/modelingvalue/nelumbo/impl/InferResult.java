@@ -274,7 +274,7 @@ public interface InferResult {
     }
 
     default InferResult addCycles(Set<RelationImpl> cycles) {
-        return of(facts(), falsehoods(), cycles().addAll(cycles));
+        return cycles.isEmpty() ? this : of(facts(), falsehoods(), cycles().addAll(cycles));
     }
 
     default InferResult add(InferResult other) {
