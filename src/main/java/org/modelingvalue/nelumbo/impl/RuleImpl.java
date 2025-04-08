@@ -139,20 +139,22 @@ public final class RuleImpl extends StructureImpl<Rule> implements ResultCollect
     }
 
     @Override
-    public InferResult addFact(InferResult result, PredicateImpl<?> fact, PredicateImpl<?> incomplete) {
-        return InferResult.of(//
-                result.facts().remove(incomplete).add(fact), //
-                result.falsehoods().remove(fact), //
-                result.cycles());
+    public InferResult addFact(InferResult result, PredicateImpl<?> fact) {
+        return InferResult.of(result.facts().add(fact), result.falsehoods().remove(fact), result.cycles());
     }
 
     @Override
-    public InferResult addFalsehood(InferResult result, PredicateImpl<?> falsehood, PredicateImpl<?> incomplete) {
+    public InferResult addFalsehood(InferResult result, PredicateImpl<?> falsehood) {
         return result.facts().contains(falsehood) ? result : result.addFalsehood(falsehood);
     }
 
     @Override
-    public InferResult addIncompleteFact(InferResult result, PredicateImpl<?> incomplete) {
-        return result.facts().isEmpty() ? result.addFact(incomplete) : result;
+    public InferResult addIncompleteFact(InferResult preResult, InferResult postResult, PredicateImpl<?> incomplete) {
+        return preResult.facts().isEmpty() && !preResult.falsehoods().contains(incomplete) ? postResult.addFact(incomplete) : postResult;
+    }
+
+    @Override
+    public InferResult addIncompleteFalsehood(InferResult preResult, InferResult postResult, PredicateImpl<?> incomplete) {
+        return !preResult.facts().contains(incomplete) ? postResult.addFalsehood(incomplete) : postResult;
     }
 }

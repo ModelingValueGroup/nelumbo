@@ -40,6 +40,7 @@ import static org.modelingvalue.nelumbo.Rationals.plus;
 import static org.modelingvalue.nelumbo.Rationals.sqrt;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.SerializableBiFunction;
 import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Integers.Integer;
@@ -49,6 +50,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.RenderLambda;
 import org.modelingvalue.nelumbo.Logic.Structure;
@@ -191,6 +193,7 @@ public class NelumboTest extends NelumboTestBase {
 
     // Variables
 
+    IntegerCons              O      = iConsVar("O");
     IntegerCons              P      = iConsVar("P");
     IntegerCons              Q      = iConsVar("Q");
 
@@ -502,6 +505,35 @@ public class NelumboTest extends NelumboTestBase {
             isTrue(ge(i(1), i(0)));
 
             hasBindings(is(plus(i(7), i(3)), P), binding(P, i(10)));
+        });
+    }
+
+    @RepeatedTest(32)
+    public void resultTest() {
+        run(() -> {
+            integerRules();
+
+            Predicate query1 = is(plus(i(7), i(3)), i(10));
+            hasResult(query1, Set.of(query1), Set.of());
+            Predicate query2 = is(plus(i(7), i(3)), i(11));
+            hasResult(query2, Set.of(), Set.of(query2));
+            Predicate query3 = is(plus(i(7), i(3)), P);
+            hasResult(query3, Set.of(is(plus(i(7), i(3)), i(10))), Set.of(query3));
+            Predicate query4 = is(plus(i(7), P), i(10));
+            hasResult(query4, Set.of(is(plus(i(7), i(3)), i(10))), Set.of(query4));
+            Predicate query5 = is(plus(i(7), P), Q);
+            hasResult(query5, Set.of(query5), Set.of(query5));
+
+            query1 = and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)));
+            hasResult(query1, Set.of(query1), Set.of());
+            query2 = and(is(plus(i(7), i(3)), i(11)), is(plus(i(8), i(2)), i(11)));
+            hasResult(query2, Set.of(), Set.of(query2));
+            query3 = and(is(plus(i(7), i(3)), P), is(plus(i(8), i(2)), P));
+            hasResult(query3, Set.of(and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)))), Set.of(query3));
+            query4 = and(is(plus(i(7), P), i(10)), is(plus(i(8), Q), i(10)));
+            hasResult(query4, Set.of(and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)))), Set.of(query4));
+            query5 = and(is(plus(i(7), P), O), is(plus(i(8), Q), O));
+            hasResult(query5, Set.of(query5), Set.of(query5));
         });
     }
 

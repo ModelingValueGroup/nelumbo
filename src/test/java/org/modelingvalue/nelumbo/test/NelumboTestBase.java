@@ -33,8 +33,13 @@ public class NelumboTestBase {
         assertTrue(Logic.isFalse(query));
     }
 
-    public static void isEqual(Predicate query1, Predicate query2) {
-        assertTrue(Logic.isEqual(query1, query2));
+    public static void haveEqualBindings(Predicate query1, Predicate query2) {
+        assertTrue(Logic.haveEqualBindings(query1, query2));
+    }
+
+    public static void hasResult(Predicate query, Set<Predicate> facts, Set<Predicate> falsehoods) {
+        Pair<Set<Predicate>, Set<Predicate>> result = Logic.getResult(query);
+        assertEquals(Pair.of(facts, falsehoods), result);
     }
 
     @SafeVarargs

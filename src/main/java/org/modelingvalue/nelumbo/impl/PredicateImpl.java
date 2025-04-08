@@ -57,6 +57,11 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("unchecked")
+    public P proxyWithVariables() {
+        return (P) setVariables().proxy();
+    }
+
     @Override
     public String toString() {
         return PRETTY_NELUMBO ? setVariables().superToString() : super.toString();
@@ -159,6 +164,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
         PredicateImpl reduced, bindCons;
         InferResult predResult, reducedResult, result = InferResult.EMPTY;
+        boolean addIncompleteFact = false, addIncompleteFalsehood = false;
         do {
             now = next;
             next = Map.of();
@@ -171,10 +177,10 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                     return predResult;
                 } else if (predResult.facts().isEmpty()) {
                     bindCons = consequence.setBinding(entry.getKey());
-                    result = collector.addFalsehood(result, bindCons, consequence);
+                    result = collector.addFalsehood(result, bindCons);
                 } else if (predResult.falsehoods().isEmpty()) {
                     bindCons = consequence.setBinding(entry.getKey());
-                    result = collector.addFact(result, bindCons, consequence);
+                    result = collector.addFact(result, bindCons);
                 } else {
                     reduced = predResult.facts().get(0);
                     reducedResult = reduced.infer(expand);
@@ -186,7 +192,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                                 map = entry.getKey().putAll(fact.getBinding());
                                 next = next.put(map, reduced.setBinding(map));
                             } else {
-                                result = collector.addIncompleteFact(result, consequence);
+                                addIncompleteFact = true;
                             }
                         }
                         for (PredicateImpl falsehood : reducedResult.falsehoods()) {
@@ -194,7 +200,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                                 map = entry.getKey().putAll(falsehood.getBinding());
                                 next = next.put(map, reduced.setBinding(map));
                             } else {
-                                result = collector.addIncompleteFalsehood(result, consequence);
+                                addIncompleteFalsehood = true;
                             }
                         }
                         result = result.addCycles(reducedResult.cycles());
@@ -202,6 +208,13 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 }
             }
         } while (!next.isEmpty());
+        reducedResult = result;
+        if (addIncompleteFact) {
+            result = collector.addIncompleteFact(reducedResult, result, consequence);
+        }
+        if (addIncompleteFalsehood) {
+            result = collector.addIncompleteFalsehood(reducedResult, result, consequence);
+        }
         if (context.trace()) {
             System.err.println(context.prefix() + "  " + toString(null) + "\u2192" + result);
         }
