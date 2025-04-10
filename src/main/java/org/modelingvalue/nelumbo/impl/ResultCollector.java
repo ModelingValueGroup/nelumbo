@@ -11,11 +11,11 @@ public interface ResultCollector {
     }
 
     default InferResult addIncompleteFact(InferResult preResult, InferResult postResult, PredicateImpl<?> incomplete) {
-        return postResult.addFact(incomplete);
+        return preResult.facts().isEmpty() && !preResult.falsehoods().contains(incomplete) ? postResult.addFact(incomplete) : postResult;
     }
 
     default InferResult addIncompleteFalsehood(InferResult preResult, InferResult postResult, PredicateImpl<?> incomplete) {
-        return postResult.addFalsehood(incomplete);
+        return !preResult.facts().contains(incomplete) ? postResult.addFalsehood(incomplete) : postResult;
     }
 
 }

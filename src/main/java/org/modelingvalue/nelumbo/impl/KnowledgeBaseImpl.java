@@ -158,7 +158,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     private final AtomicReference<Map<RelationImpl, InferResult>>          facts;
     private final AtomicReference<Map<RelationImpl, List<RuleImpl>>>       rules;
     private final AtomicReference<QualifiedSet<RelationImpl, Inference>[]> memoization;
-    private final InferContext                                             context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, false, StructureImpl.TRACE_NELUMBO);
+    private final InferContext                                             context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, StructureImpl.TRACE_NELUMBO);
     private boolean                                                        stopped;
 
     @SuppressWarnings("unchecked")

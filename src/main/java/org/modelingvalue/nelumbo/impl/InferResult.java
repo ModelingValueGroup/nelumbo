@@ -20,6 +20,7 @@
 
 package org.modelingvalue.nelumbo.impl;
 
+import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 
@@ -357,10 +358,14 @@ public interface InferResult {
     }
 
     default boolean isUnknown() {
-        return facts().size() == 1 && facts().equals(falsehoods()) && cycles().isEmpty();
+        return cycles().isEmpty() && facts().size() == 1 && facts().equals(falsehoods());
     }
 
     default boolean hasBindings(PredicateImpl<?> predicate) {
         return !predicate.isFullyBound() && !facts().removeAll(falsehoods()).isEmpty();
+    }
+
+    default Collection<PredicateImpl<?>> predicates() {
+        return Collection.concat(facts(), falsehoods());
     }
 }

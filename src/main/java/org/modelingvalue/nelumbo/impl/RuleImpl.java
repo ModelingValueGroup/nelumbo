@@ -148,13 +148,4 @@ public final class RuleImpl extends StructureImpl<Rule> implements ResultCollect
         return result.facts().contains(falsehood) ? result : result.addFalsehood(falsehood);
     }
 
-    @Override
-    public InferResult addIncompleteFact(InferResult preResult, InferResult postResult, PredicateImpl<?> incomplete) {
-        return preResult.facts().isEmpty() && !preResult.falsehoods().contains(incomplete) ? postResult.addFact(incomplete) : postResult;
-    }
-
-    @Override
-    public InferResult addIncompleteFalsehood(InferResult preResult, InferResult postResult, PredicateImpl<?> incomplete) {
-        return !preResult.facts().contains(incomplete) ? postResult.addFalsehood(incomplete) : postResult;
-    }
 }

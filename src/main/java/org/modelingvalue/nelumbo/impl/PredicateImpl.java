@@ -161,10 +161,9 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     protected final InferResult resolve(PredicateImpl<?> consequence, InferContext context, ResultCollector collector) {
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
         Map<VariableImpl, Object> map;
-        InferContext reduce = context.reduceExpand(true, false), expand = context.reduceExpand(false, true);
+        InferContext reduce = context.reduce(true);
         PredicateImpl predicate;
         InferResult result = InferResult.EMPTY, tmpResult;
-        boolean addIncompleteFact = false, addIncompleteFalsehood = false;
         do {
             now = next;
             next = Map.of();
@@ -183,24 +182,14 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                     result = collector.addFact(result, predicate);
                 } else {
                     predicate = tmpResult.facts().get(0);
-                    tmpResult = predicate.infer(expand);
+                    tmpResult = predicate.infer(context);
                     if (tmpResult.hasStackOverflow()) {
                         return tmpResult;
                     } else {
-                        for (PredicateImpl fact : tmpResult.facts()) {
-                            if (fact.isFullyBound()) {
-                                map = entry.getKey().putAll(fact.getBinding());
+                        for (PredicateImpl pred : tmpResult.predicates()) {
+                            if (pred.isFullyBound()) {
+                                map = entry.getKey().putAll(pred.getBinding());
                                 next = next.put(map, predicate.setBinding(map));
-                            } else {
-                                addIncompleteFact = true;
-                            }
-                        }
-                        for (PredicateImpl falsehood : tmpResult.falsehoods()) {
-                            if (falsehood.isFullyBound()) {
-                                map = entry.getKey().putAll(falsehood.getBinding());
-                                next = next.put(map, predicate.setBinding(map));
-                            } else {
-                                addIncompleteFalsehood = true;
                             }
                         }
                         result = result.addCycles(tmpResult.cycles());
@@ -209,12 +198,8 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
             }
         } while (!next.isEmpty());
         tmpResult = result;
-        if (addIncompleteFact) {
-            result = collector.addIncompleteFact(tmpResult, result, consequence);
-        }
-        if (addIncompleteFalsehood) {
-            result = collector.addIncompleteFalsehood(tmpResult, result, consequence);
-        }
+        result = collector.addIncompleteFact(tmpResult, result, consequence);
+        result = collector.addIncompleteFalsehood(tmpResult, result, consequence);
         if (context.trace()) {
             System.err.println(context.prefix() + "  " + toString(null) + "\u2192" + result);
         }
