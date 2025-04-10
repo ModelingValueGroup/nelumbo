@@ -160,10 +160,10 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected final InferResult resolve(PredicateImpl<?> consequence, InferContext context, ResultCollector collector) {
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
-        Map<VariableImpl, Object> map;
-        InferContext reduce = context.reduce(true);
-        PredicateImpl predicate;
         InferResult result = InferResult.EMPTY, tmpResult;
+        InferContext reduce = context.reduce(true);
+        Map<VariableImpl, Object> binding;
+        PredicateImpl predicate;
         do {
             now = next;
             next = Map.of();
@@ -175,10 +175,12 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 if (tmpResult.hasStackOverflow()) {
                     return tmpResult;
                 } else if (tmpResult.facts().isEmpty()) {
-                    predicate = consequence.setBinding(entry.getKey());
+                    binding = entry.getKey();
+                    predicate = consequence.setBinding(binding);
                     result = collector.addFalsehood(result, predicate);
                 } else if (tmpResult.falsehoods().isEmpty()) {
-                    predicate = consequence.setBinding(entry.getKey());
+                    binding = entry.getKey();
+                    predicate = consequence.setBinding(binding);
                     result = collector.addFact(result, predicate);
                 } else {
                     predicate = tmpResult.facts().get(0);
@@ -188,8 +190,8 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                     } else {
                         for (PredicateImpl pred : tmpResult.predicates()) {
                             if (pred.isFullyBound()) {
-                                map = entry.getKey().putAll(pred.getBinding());
-                                next = next.put(map, predicate.setBinding(map));
+                                binding = entry.getKey().putAll(pred.getBinding());
+                                next = next.put(binding, predicate.setBinding(binding));
                             }
                         }
                         result = result.addCycles(tmpResult.cycles());
