@@ -94,11 +94,11 @@ public abstract class AndOrImpl<T extends AndOr> extends PredicateImpl<T> {
             }
         } else {
             if (predResult[0].isUnknown() && predResult[1].isUnknown()) {
-                return InferResult.EMPTY;
+                return InferResult.EMPTY.addCycles(predResult[0].cycles()).addCycles(predResult[1].cycles());
             } else if (predResult[1].isUnknown()) {
-                return predResult[0];
+                return predResult[0].addCycles(predResult[1].cycles());
             } else if (predResult[0].isUnknown()) {
-                return predResult[1];
+                return predResult[1].addCycles(predResult[0].cycles());
             } else {
                 return predResult[0].add(predResult[1]);
             }

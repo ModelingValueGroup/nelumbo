@@ -358,7 +358,7 @@ public interface InferResult {
     }
 
     default boolean isUnknown() {
-        return cycles().isEmpty() && facts().size() == 1 && facts().equals(falsehoods());
+        return facts().size() == 1 && facts().equals(falsehoods());
     }
 
     default boolean hasBindings(PredicateImpl<?> predicate) {

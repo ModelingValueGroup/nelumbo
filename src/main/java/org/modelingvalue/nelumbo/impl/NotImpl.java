@@ -76,7 +76,7 @@ public final class NotImpl extends PredicateImpl<Not> {
             }
         } else {
             if (predResult.isUnknown()) {
-                return InferResult.EMPTY;
+                return InferResult.EMPTY.addCycles(predResult.cycles());
             } else {
                 return predResult.not();
             }
