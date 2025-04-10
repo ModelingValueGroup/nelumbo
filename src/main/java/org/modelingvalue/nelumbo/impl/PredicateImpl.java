@@ -88,6 +88,22 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         return (PredicateImpl) super.setBinding(declaration, vars);
     }
 
+    @SuppressWarnings("rawtypes")
+    protected final PredicateImpl set(VariableImpl var, Object val) {
+        return (PredicateImpl) super.set(declaration, var, val);
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected final Object get(VariableImpl var) {
+        return super.get(declaration, var);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
+    protected final PredicateImpl replace(Object from, Object to) {
+        return (PredicateImpl) super.replace(from, to);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     protected final PredicateImpl<P> struct(Object[] array) {
@@ -176,12 +192,10 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                     return tmpResult;
                 } else if (tmpResult.facts().isEmpty()) {
                     binding = entry.getKey();
-                    predicate = consequence.setBinding(binding);
-                    result = collector.addFalsehood(result, predicate);
+                    result = collector.addFalsehood(result, consequence, binding);
                 } else if (tmpResult.falsehoods().isEmpty()) {
                     binding = entry.getKey();
-                    predicate = consequence.setBinding(binding);
-                    result = collector.addFact(result, predicate);
+                    result = collector.addFact(result, consequence, binding);
                 } else {
                     predicate = tmpResult.facts().get(0);
                     tmpResult = predicate.infer(context);
@@ -199,6 +213,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 }
             }
         } while (!next.isEmpty());
+        result = collector.collect(result, consequence, context);
         tmpResult = result;
         result = collector.addIncompleteFact(tmpResult, result, consequence);
         result = collector.addIncompleteFalsehood(tmpResult, result, consequence);

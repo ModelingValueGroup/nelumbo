@@ -270,8 +270,16 @@ public interface InferResult {
         return facts().contains(fact) ? this : of(facts().add(fact), falsehoods(), cycles());
     }
 
+    default InferResult removeFact(PredicateImpl<?> fact) {
+        return !facts().contains(fact) ? this : of(facts().remove(fact), falsehoods(), cycles());
+    }
+
     default InferResult addFalsehood(PredicateImpl<?> falsehood) {
         return falsehoods().contains(falsehood) ? this : of(facts(), falsehoods().add(falsehood), cycles());
+    }
+
+    default InferResult removeFalsehood(PredicateImpl<?> falsehood) {
+        return !falsehoods().contains(falsehood) ? this : of(facts(), falsehoods().remove(falsehood), cycles());
     }
 
     default InferResult addCycles(Set<RelationImpl> cycles) {

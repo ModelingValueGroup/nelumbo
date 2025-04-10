@@ -1,13 +1,23 @@
 package org.modelingvalue.nelumbo.impl;
 
+import org.modelingvalue.collections.Map;
+
 public interface ResultCollector {
 
-    default InferResult addFact(InferResult result, PredicateImpl<?> fact) {
+    @SuppressWarnings("rawtypes")
+    default InferResult addFact(InferResult result, PredicateImpl<?> incomplete, Map<VariableImpl, Object> binding) {
+        PredicateImpl<?> fact = incomplete.setBinding(binding);
         return result.addFact(fact);
     }
 
-    default InferResult addFalsehood(InferResult result, PredicateImpl<?> falsehood) {
+    @SuppressWarnings("rawtypes")
+    default InferResult addFalsehood(InferResult result, PredicateImpl<?> incomplete, Map<VariableImpl, Object> binding) {
+        PredicateImpl<?> falsehood = incomplete.setBinding(binding);
         return result.addFalsehood(falsehood);
+    }
+
+    default InferResult collect(InferResult postResult, PredicateImpl<?> incomplete, InferContext context) {
+        return postResult;
     }
 
     default InferResult addIncompleteFact(InferResult preResult, InferResult postResult, PredicateImpl<?> incomplete) {

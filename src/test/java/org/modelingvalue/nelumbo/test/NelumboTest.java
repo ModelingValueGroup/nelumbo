@@ -191,6 +191,20 @@ public class NelumboTest extends NelumboTestBase {
         return function(DESCENDENT, ancestor);
     }
 
+    static Functor<Relation> PERSON_AMOUNT = functor(NelumboTest::personAmount, //
+            (RenderLambda) s -> "pa(" + s.toString(1) + "," + s.toString(2) + ")");
+
+    static Relation personAmount(PersonCons person, IntegerCons amount) {
+        return rel(PERSON_AMOUNT, person, amount);
+    }
+
+    static Functor<Relation> PERSON_TOTAL = functor(NelumboTest::personTotal, //
+            (RenderLambda) s -> "pt(" + s.toString(1) + "," + s.toString(2) + ")");
+
+    static Relation personTotal(PersonCons person, IntegerCons amount) {
+        return rel(PERSON_TOTAL, person, amount);
+    }
+
     // Variables
 
     IntegerCons              O      = iConsVar("O");
@@ -276,6 +290,13 @@ public class NelumboTest extends NelumboTestBase {
 
         rule(is(ancestor(X), A), and(is(X, B), ancestorDescendent(A, B)));
         rule(is(descendent(X), A), and(is(X, B), ancestorDescendent(B, A)));
+    }
+
+    private void collectRules() {
+        integerRules();
+        familyRules();
+
+        rule(personTotal(A, O), and(parentChild(A, B), personAmount(B, P)), plus(i(0), P, O));
     }
 
     // @Test
@@ -427,6 +448,20 @@ public class NelumboTest extends NelumboTestBase {
             hasBindings(plus(i(7), i(3), P), binding(P, i(10)));
             hasBindings(plus(i(7), P, i(10)), binding(P, i(3)));
             hasBindings(plus(P, i(3), i(10)), binding(P, i(7)));
+        });
+    }
+
+    @RepeatedTest(32)
+    public void collectTest() {
+        run(() -> {
+            collectRules();
+
+            fact(parentChild(Jan, Wim));
+            fact(parentChild(Jan, Carel));
+            fact(personAmount(Wim, i(3)));
+            fact(personAmount(Carel, i(7)));
+
+            hasBindings(personTotal(Jan, O), binding(O, i(10)));
         });
     }
 

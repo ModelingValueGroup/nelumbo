@@ -28,7 +28,7 @@ import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
 import org.modelingvalue.nelumbo.Logic.RuleModifier;
 
-public final class RuleImpl extends StructureImpl<Rule> implements ResultCollector {
+public class RuleImpl extends StructureImpl<Rule> implements ResultCollector {
     private static final long              serialVersionUID   = -4602043866952049391L;
 
     private static final FunctorImpl<Rule> RULE_FUNCTOR       = FunctorImpl.<Rule, Relation, Predicate> of(Logic::rule);
@@ -39,7 +39,11 @@ public final class RuleImpl extends StructureImpl<Rule> implements ResultCollect
     private final boolean                  trace;
 
     public RuleImpl(Relation consequence, Predicate condition, RuleModifier[] modifiers) {
-        super(RULE_FUNCTOR_PROXY, consequence, condition);
+        this(modifiers, consequence, condition);
+    }
+
+    protected RuleImpl(RuleModifier[] modifiers, Object... parts) {
+        super(RULE_FUNCTOR_PROXY, parts);
         trace = has(RuleModifier.trace, modifiers);
     }
 
@@ -52,7 +56,7 @@ public final class RuleImpl extends StructureImpl<Rule> implements ResultCollect
         return false;
     }
 
-    private RuleImpl(Object[] args) {
+    protected RuleImpl(Object[] args) {
         super(args);
         trace = false;
     }
@@ -94,13 +98,13 @@ public final class RuleImpl extends StructureImpl<Rule> implements ResultCollect
         PredicateImpl condition = condition().setBinding(binding);
         PredicateImpl consequence = consequence().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
+            System.err.println(context.prefix() + condition.toString(null) + collectorString() + "\u21D2" + consequence);
         }
         InferResult consResult = condition.resolve(consequence, context, this);
         InferResult relResult;
         if (consResult.hasStackOverflow()) {
             relResult = consResult;
-        } else if (consResult.equals(condition.unknown())) {
+        } else if (consResult.equals(consequence.unknown())) {
             relResult = relation.unknown();
         } else {
             relResult = consResult.cast(relation);
@@ -131,7 +135,11 @@ public final class RuleImpl extends StructureImpl<Rule> implements ResultCollect
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? condition().toString(null) + "\u21D2" + consequence() : super.toString();
+        return PRETTY_NELUMBO ? condition().toString(null) + collectorString() + "\u21D2" + consequence() : super.toString();
+    }
+
+    protected String collectorString() {
+        return "";
     }
 
     public boolean trace() {
@@ -139,12 +147,16 @@ public final class RuleImpl extends StructureImpl<Rule> implements ResultCollect
     }
 
     @Override
-    public InferResult addFact(InferResult result, PredicateImpl<?> fact) {
+    @SuppressWarnings("rawtypes")
+    public InferResult addFact(InferResult result, PredicateImpl<?> incomplete, Map<VariableImpl, Object> binding) {
+        PredicateImpl<?> fact = incomplete.setBinding(binding);
         return InferResult.of(result.facts().add(fact), result.falsehoods().remove(fact), result.cycles());
     }
 
     @Override
-    public InferResult addFalsehood(InferResult result, PredicateImpl<?> falsehood) {
+    @SuppressWarnings("rawtypes")
+    public InferResult addFalsehood(InferResult result, PredicateImpl<?> incomplete, Map<VariableImpl, Object> binding) {
+        PredicateImpl<?> falsehood = incomplete.setBinding(binding);
         return result.facts().contains(falsehood) ? result : result.addFalsehood(falsehood);
     }
 

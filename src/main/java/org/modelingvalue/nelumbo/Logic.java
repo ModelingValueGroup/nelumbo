@@ -366,6 +366,13 @@ public final class Logic {
         return ruleImpl.proxy();
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static Rule rule(Relation consequence, Predicate condition, Relation collector, RuleModifier... modifiers) {
+        CollectingRuleImpl ruleImpl = new CollectingRuleImpl(consequence, condition, collector, modifiers);
+        KnowledgeBaseImpl.CURRENT.get().addRule(ruleImpl);
+        return ruleImpl.proxy();
+    }
+
     // Facts
 
     @SuppressWarnings({"unchecked", "rawtypes"})

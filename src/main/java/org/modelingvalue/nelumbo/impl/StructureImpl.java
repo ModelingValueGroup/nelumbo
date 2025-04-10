@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.StringUtil;
@@ -260,6 +261,18 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         return vars;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public Map<StructureImpl, Object> structures() {
+        Map<StructureImpl, Object> preds = Map.of();
+        for (int i = 1; i < length(); i++) {
+            Object val = get(i);
+            if (val.getClass() == StructureImpl.class) {
+                preds = preds.put((StructureImpl) val, ((StructureImpl) val).type());
+            }
+        }
+        return preds;
+    }
+
     @SuppressWarnings("unchecked")
     public <V> V getVal(int... is) {
         Object val = this;
@@ -296,6 +309,23 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings("unchecked")
     protected StructureImpl<F> struct(Object[] array) {
         return new StructureImpl<F>(array).normal();
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected final Object get(StructureImpl<F> declaration, VariableImpl var) {
+        for (int i = 1; i < length(); i++) {
+            Object thisVal = get(i);
+            Object declVal = declaration.get(i);
+            if (declVal.equals(var)) {
+                return thisVal;
+            } else if (thisVal instanceof StructureImpl) {
+                Object varVal = ((StructureImpl) thisVal).get((StructureImpl) declVal, var);
+                if (varVal != null) {
+                    return varVal;
+                }
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("rawtypes")
@@ -362,6 +392,11 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings("rawtypes")
+    protected final StructureImpl<F> set(StructureImpl<F> declaration, VariableImpl var, Object val) {
+        return setBinding(declaration, Map.of(Entry.of(var, val)));
+    }
+
+    @SuppressWarnings("rawtypes")
     protected final StructureImpl<F> setBinding(StructureImpl<F> declaration, Map<VariableImpl, Object> vars) {
         Object[] array = null;
         for (int i = 1; i < length(); i++) {
@@ -392,6 +427,20 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             }
         }
         return thisVal;
+    }
+
+    protected StructureImpl<F> replace(Object from, Object to) {
+        Object[] array = null;
+        for (int i = 1; i < length(); i++) {
+            Object thisVal = get(i);
+            if (Objects.equals(from, thisVal)) {
+                if (array == null) {
+                    array = toArray();
+                }
+                array[i] = to;
+            }
+        }
+        return array != null ? struct(array) : this;
     }
 
     @SuppressWarnings("rawtypes")
