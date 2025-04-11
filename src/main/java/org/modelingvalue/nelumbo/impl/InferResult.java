@@ -266,22 +266,6 @@ public interface InferResult {
         };
     }
 
-    default InferResult addFact(PredicateImpl<?> fact) {
-        return facts().contains(fact) ? this : of(facts().add(fact), falsehoods(), cycles());
-    }
-
-    default InferResult removeFact(PredicateImpl<?> fact) {
-        return !facts().contains(fact) ? this : of(facts().remove(fact), falsehoods(), cycles());
-    }
-
-    default InferResult addFalsehood(PredicateImpl<?> falsehood) {
-        return falsehoods().contains(falsehood) ? this : of(facts(), falsehoods().add(falsehood), cycles());
-    }
-
-    default InferResult removeFalsehood(PredicateImpl<?> falsehood) {
-        return !falsehoods().contains(falsehood) ? this : of(facts(), falsehoods().remove(falsehood), cycles());
-    }
-
     default InferResult addCycles(Set<RelationImpl> cycles) {
         return cycles.isEmpty() ? this : of(facts(), falsehoods(), cycles().addAll(cycles));
     }
@@ -376,4 +360,12 @@ public interface InferResult {
     default Collection<PredicateImpl<?>> predicates() {
         return Collection.concat(facts(), falsehoods());
     }
+
+    default InferResult complete(PredicateImpl<?> incomplete) {
+        return InferResult.of(//
+                facts().isEmpty() && !falsehoods().contains(incomplete) ? facts().add(incomplete) : facts(), //
+                !facts().contains(incomplete) ? falsehoods().add(incomplete) : falsehoods(), //
+                cycles());
+    }
+
 }

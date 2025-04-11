@@ -21,6 +21,7 @@
 package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
@@ -28,7 +29,7 @@ import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
 import org.modelingvalue.nelumbo.Logic.RuleModifier;
 
-public class RuleImpl extends StructureImpl<Rule> implements ResultCollector {
+public class RuleImpl extends StructureImpl<Rule> {
     private static final long              serialVersionUID   = -4602043866952049391L;
 
     private static final FunctorImpl<Rule> RULE_FUNCTOR       = FunctorImpl.<Rule, Relation, Predicate> of(Logic::rule);
@@ -100,22 +101,41 @@ public class RuleImpl extends StructureImpl<Rule> implements ResultCollector {
         if (context.trace()) {
             System.err.println(context.prefix() + condition.toString(null) + collectorString() + "\u21D2" + consequence);
         }
-        InferResult consResult = condition.resolve(consequence, context, this);
+        InferResult condResult = condition.resolve(context);
         InferResult relResult;
-        if (consResult.hasStackOverflow()) {
-            relResult = consResult;
-        } else if (consResult.equals(consequence.unknown())) {
-            relResult = relation.unknown();
+        if (condResult.hasStackOverflow()) {
+            relResult = condResult;
         } else {
-            relResult = consResult.cast(relation);
-            if (relResult.falsehoods().isEmpty() && consequence.isFullyBound() && !relation.isFullyBound()) {
-                relResult = InferResult.of(relResult.facts(), relation.singleton(), relResult.cycles());
+            InferResult consResult = collect(condResult, consequence, context);
+            if (consResult.hasStackOverflow()) {
+                relResult = consResult;
+            } else {
+                relResult = consResult.complete(consequence).cast(relation);
+                if (relResult.falsehoods().isEmpty() && consequence.isFullyBound() && !relation.isFullyBound()) {
+                    relResult = InferResult.of(relResult.facts(), relation.singleton(), relResult.cycles());
+                }
             }
         }
         if (context.trace()) {
             System.err.println(context.prefix() + relation + "\u2192" + relResult);
         }
         return relResult;
+    }
+
+    protected InferResult collect(InferResult condResult, PredicateImpl<?> consequence, InferContext context) {
+        Set<PredicateImpl<?>> consFacts = Set.of();
+        for (PredicateImpl<?> condFact : condResult.facts()) {
+            PredicateImpl<?> consFact = consequence.setBinding(condFact.getBinding());
+            consFacts = consFacts.add(consFact);
+        }
+        Set<PredicateImpl<?>> consFalsehoods = Set.of();
+        for (PredicateImpl<?> condFalshood : condResult.falsehoods()) {
+            PredicateImpl<?> consFalshood = consequence.setBinding(condFalshood.getBinding());
+            if (!consFacts.contains(consFalshood)) {
+                consFalsehoods = consFalsehoods.add(consFalshood);
+            }
+        }
+        return InferResult.of(consFacts, consFalsehoods, condResult.cycles());
     }
 
     public int rulePrio() {
@@ -144,20 +164,6 @@ public class RuleImpl extends StructureImpl<Rule> implements ResultCollector {
 
     public boolean trace() {
         return trace;
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public InferResult addFact(InferResult result, PredicateImpl<?> incomplete, Map<VariableImpl, Object> binding) {
-        PredicateImpl<?> fact = incomplete.setBinding(binding);
-        return InferResult.of(result.facts().add(fact), result.falsehoods().remove(fact), result.cycles());
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public InferResult addFalsehood(InferResult result, PredicateImpl<?> incomplete, Map<VariableImpl, Object> binding) {
-        PredicateImpl<?> falsehood = incomplete.setBinding(binding);
-        return result.facts().contains(falsehood) ? result : result.addFalsehood(falsehood);
     }
 
 }

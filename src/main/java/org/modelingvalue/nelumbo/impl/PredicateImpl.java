@@ -26,7 +26,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P> implements ResultCollector {
+public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P> {
 
     private static final long           serialVersionUID = -1605559565948158856L;
 
@@ -120,8 +120,13 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
 
     @SuppressWarnings("unchecked")
     public InferResult infer() {
+        InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
         PredicateImpl<P> predicate = setBinding(variables());
-        return predicate.resolve(predicate, KnowledgeBaseImpl.CURRENT.get().context(), this);
+        InferResult result = predicate.resolve(context).complete(predicate);
+        if (context.trace()) {
+            System.err.println(context.prefix() + predicate.toString(null) + "\u2192" + result);
+        }
+        return result;
     }
 
     protected InferResult expand(InferContext context) {
@@ -174,12 +179,11 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final InferResult resolve(PredicateImpl<?> consequence, InferContext context, ResultCollector collector) {
+    protected final InferResult resolve(InferContext context) {
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
-        InferResult result = InferResult.EMPTY, tmpResult;
+        Set<PredicateImpl<?>> facts = Set.of(), falsehoods = Set.of();
+        Set<RelationImpl> cycles = Set.of();
         InferContext reduce = context.reduce(true);
-        Map<VariableImpl, Object> binding;
-        PredicateImpl predicate;
         do {
             now = next;
             next = Map.of();
@@ -187,40 +191,31 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 if (context.trace()) {
                     System.err.println(context.prefix() + "  " + entry.getValue().toString(null));
                 }
-                tmpResult = entry.getValue().infer(reduce);
-                if (tmpResult.hasStackOverflow()) {
-                    return tmpResult;
-                } else if (tmpResult.facts().isEmpty()) {
-                    binding = entry.getKey();
-                    result = collector.addFalsehood(result, consequence, binding);
-                } else if (tmpResult.falsehoods().isEmpty()) {
-                    binding = entry.getKey();
-                    result = collector.addFact(result, consequence, binding);
+                InferResult result = entry.getValue().infer(reduce);
+                if (result.hasStackOverflow()) {
+                    return result;
+                } else if (result.facts().isEmpty()) {
+                    falsehoods = falsehoods.add(setBinding(entry.getKey()));
+                } else if (result.falsehoods().isEmpty()) {
+                    facts = facts.add(setBinding(entry.getKey()));
                 } else {
-                    predicate = tmpResult.facts().get(0);
-                    tmpResult = predicate.infer(context);
-                    if (tmpResult.hasStackOverflow()) {
-                        return tmpResult;
+                    PredicateImpl predicate = result.facts().get(0);
+                    result = predicate.infer(context);
+                    if (result.hasStackOverflow()) {
+                        return result;
                     } else {
-                        for (PredicateImpl pred : tmpResult.predicates()) {
+                        for (PredicateImpl pred : result.predicates()) {
                             if (pred.isFullyBound()) {
-                                binding = entry.getKey().putAll(pred.getBinding());
+                                Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
                                 next = next.put(binding, predicate.setBinding(binding));
                             }
                         }
-                        result = result.addCycles(tmpResult.cycles());
+                        cycles = cycles.addAll(result.cycles());
                     }
                 }
             }
         } while (!next.isEmpty());
-        result = collector.collect(result, consequence, context);
-        tmpResult = result;
-        result = collector.addIncompleteFact(tmpResult, result, consequence);
-        result = collector.addIncompleteFalsehood(tmpResult, result, consequence);
-        if (context.trace()) {
-            System.err.println(context.prefix() + "  " + toString(null) + "\u2192" + result);
-        }
-        return result;
+        return InferResult.of(facts, falsehoods, cycles);
     }
 
 }

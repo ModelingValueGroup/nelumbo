@@ -1,6 +1,7 @@
 package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.RuleModifier;
@@ -60,27 +61,25 @@ public class CollectingRuleImpl extends RuleImpl {
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
-    public InferResult addFact(InferResult result, PredicateImpl<?> incomplete, Map<VariableImpl, Object> binding) {
-        return super.addFact(result, incomplete, binding.put(total, binding.get(iterator)));
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public InferResult addFalsehood(InferResult result, PredicateImpl<?> incomplete, Map<VariableImpl, Object> binding) {
-        return super.addFalsehood(result, incomplete, binding.put(total, binding.get(iterator)));
-    }
-
-    @Override
-    public InferResult collect(InferResult result, PredicateImpl<?> incomplete, InferContext context) {
-        PredicateImpl<?> resultFact = incomplete.set(total, init);
-        for (PredicateImpl<?> fact : result.facts()) {
-            Object pre = resultFact.get(total);
-            PredicateImpl<?> coll = collector().replace(init, pre).set(iterator, fact.get(total));
-            PredicateImpl<?> res = coll.infer(context).facts().get(0);
-            resultFact = resultFact.replace(pre, res.get(total));
+    protected InferResult collect(InferResult condResult, PredicateImpl<?> consequence, InferContext context) {
+        RelationImpl collector = collector();
+        Set<Object> now, next = Set.of(init);
+        Set<RelationImpl> cycles = condResult.cycles();
+        for (PredicateImpl<?> condFact : condResult.facts()) {
+            now = next;
+            next = Set.of();
+            for (Object accum : now) {
+                PredicateImpl<?> coll = collector.replace(init, accum).set(iterator, condFact.get(iterator));
+                InferResult result = coll.infer(context);
+                if (result.hasStackOverflow()) {
+                    return result;
+                }
+                for (PredicateImpl<?> collFact : result.facts()) {
+                    next = next.add(collFact.get(total));
+                }
+                cycles = cycles.addAll(result.cycles());
+            }
         }
-        return InferResult.of(resultFact.singleton(), result.falsehoods(), result.cycles());
+        return InferResult.of(next.replaceAll(a -> consequence.set(total, a)), Set.of(), cycles);
     }
-
 }
