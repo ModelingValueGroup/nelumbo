@@ -110,10 +110,7 @@ public class RuleImpl extends StructureImpl<Rule> {
             if (consResult.hasStackOverflow()) {
                 relResult = consResult;
             } else {
-                relResult = consResult.complete(consequence).cast(relation);
-                if (relResult.falsehoods().isEmpty() && consequence.isFullyBound() && !relation.isFullyBound()) {
-                    relResult = InferResult.of(relResult.facts(), relation.singleton(), relResult.cycles());
-                }
+                relResult = consResult.cast(relation).complete(relation);
             }
         }
         if (context.trace()) {
