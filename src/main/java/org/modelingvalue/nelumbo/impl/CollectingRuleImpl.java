@@ -36,12 +36,20 @@ public class CollectingRuleImpl extends RuleImpl {
         Map<VariableImpl, Object> consVars = consequence().variables();
         Map<VariableImpl, Object> condVars = condition().variables();
         Map<VariableImpl, Object> collVars = collector().variables();
-        Map<VariableImpl, Object> totalVars = collVars.removeAllKey(condVars);
-        Map<VariableImpl, Object> iteratorVars = collVars.removeAllKey(consVars);
-        Map<StructureImpl, Object> initStrcs = collector().structures();
-        // TODO: Checks!
+        Map<VariableImpl, Object> totalVars = collVars.retainAllKey(consVars).removeAllKey(condVars);
+        if (totalVars.size() != 1) {
+            throw new IllegalArgumentException("Collecting Rules shoud have exactly one shared variable (total) in the consequence and the collector only (not used in the condition), " + totalVars.size() + " found in " + this);
+        }
         total = totalVars.get(0).getKey();
+        Map<VariableImpl, Object> iteratorVars = collVars.retainAllKey(condVars).removeAllKey(consVars);
+        if (iteratorVars.size() != 1) {
+            throw new IllegalArgumentException("Collecting Rules shoud have exactly one shared variable (iterator) in the condition and the collector only (not used in the consequence), " + iteratorVars.size() + " found in " + this);
+        }
         iterator = iteratorVars.get(0).getKey();
+        Map<StructureImpl, Object> initStrcs = collector().structures();
+        if (initStrcs.size() != 1) {
+            throw new IllegalArgumentException("Collecting Rules shoud have exactly one constant in the collector, " + initStrcs.size() + " found in " + collector());
+        }
         init = initStrcs.get(0).getKey();
     }
 
