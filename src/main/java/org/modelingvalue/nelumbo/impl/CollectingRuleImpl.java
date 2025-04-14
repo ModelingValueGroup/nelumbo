@@ -73,7 +73,7 @@ public class CollectingRuleImpl extends RuleImpl {
     @Override
     protected InferResult collect(InferResult condResult, PredicateImpl<?> consequence, InferContext context) {
         RelationImpl collector = collector(), condColl;
-        Set<PredicateImpl<?>> prev, next = Set.of(identityFact);
+        Set<PredicateImpl<?>> prev, next = Set.of(identityFact), facts, falsehoods;
         Set<RelationImpl> cycles = condResult.cycles();
         for (PredicateImpl<?> condFact : condResult.facts()) {
             prev = next;
@@ -89,7 +89,7 @@ public class CollectingRuleImpl extends RuleImpl {
                 cycles = cycles.addAll(inferResult.cycles());
             }
         }
-        Set<PredicateImpl<?>> facts = next.replaceAll(f -> consequence.set(result, f.get(result)));
+        facts = next.replaceAll(f -> consequence.set(result, f.get(result)));
         next = Set.of(identityFact);
         for (PredicateImpl<?> condFalsehood : condResult.falsehoods()) {
             prev = next;
@@ -105,7 +105,7 @@ public class CollectingRuleImpl extends RuleImpl {
                 cycles = cycles.addAll(inferResult.cycles());
             }
         }
-        Set<PredicateImpl<?>> falsehoods = next.replaceAll(f -> consequence.set(result, f.get(result)));
+        falsehoods = next.replaceAll(f -> consequence.set(result, f.get(result)));
         return InferResult.of(facts, falsehoods.removeAll(facts), cycles);
     }
 }
