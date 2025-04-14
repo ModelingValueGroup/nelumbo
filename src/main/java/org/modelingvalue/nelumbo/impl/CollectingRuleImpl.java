@@ -73,22 +73,39 @@ public class CollectingRuleImpl extends RuleImpl {
     @Override
     protected InferResult collect(InferResult condResult, PredicateImpl<?> consequence, InferContext context) {
         RelationImpl collector = collector(), condColl;
-        Set<PredicateImpl<?>> prevFacts, nextFacts = Set.of(identityFact);
+        Set<PredicateImpl<?>> prev, next = Set.of(identityFact);
         Set<RelationImpl> cycles = condResult.cycles();
         for (PredicateImpl<?> condFact : condResult.facts()) {
-            prevFacts = nextFacts;
-            nextFacts = Set.of();
+            prev = next;
+            next = Set.of();
             condColl = collector.set(iterator, condFact.get(iterator));
-            for (PredicateImpl<?> prevFact : prevFacts) {
+            for (PredicateImpl<?> prevFact : prev) {
                 PredicateImpl<?> coll = condColl.replace(identity, prevFact.get(result));
                 InferResult inferResult = coll.infer(context);
                 if (inferResult.hasStackOverflow()) {
                     return inferResult;
                 }
-                nextFacts = nextFacts.addAll(inferResult.facts());
+                next = next.addAll(inferResult.facts());
                 cycles = cycles.addAll(inferResult.cycles());
             }
         }
-        return InferResult.of(nextFacts.replaceAll(f -> consequence.set(result, f.get(result))), Set.of(), cycles);
+        Set<PredicateImpl<?>> facts = next.replaceAll(f -> consequence.set(result, f.get(result)));
+        next = Set.of(identityFact);
+        for (PredicateImpl<?> condFalsehood : condResult.falsehoods()) {
+            prev = next;
+            next = Set.of();
+            condColl = collector.set(iterator, condFalsehood.get(iterator));
+            for (PredicateImpl<?> prevFalsehood : prev) {
+                PredicateImpl<?> coll = condColl.replace(identity, prevFalsehood.get(result));
+                InferResult inferResult = coll.infer(context);
+                if (inferResult.hasStackOverflow()) {
+                    return inferResult;
+                }
+                next = next.addAll(inferResult.facts());
+                cycles = cycles.addAll(inferResult.cycles());
+            }
+        }
+        Set<PredicateImpl<?>> falsehoods = next.replaceAll(f -> consequence.set(result, f.get(result)));
+        return InferResult.of(facts, falsehoods.removeAll(facts), cycles);
     }
 }
