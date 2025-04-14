@@ -89,7 +89,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     }
 
     @SuppressWarnings("rawtypes")
-    protected final PredicateImpl set(VariableImpl var, Object val) {
+    protected PredicateImpl set(VariableImpl var, Object val) {
         return (PredicateImpl) super.set(declaration, var, val);
     }
 

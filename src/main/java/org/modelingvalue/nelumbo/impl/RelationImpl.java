@@ -39,6 +39,12 @@ public class RelationImpl extends PredicateImpl<Relation> {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
+    protected final RelationImpl set(VariableImpl var, Object val) {
+        return (RelationImpl) super.set(var, val);
+    }
+
+    @Override
     protected PredicateImpl<Relation> castFrom(PredicateImpl<?> from) {
         Object[] array = from.toArray();
         array[0] = functor();
