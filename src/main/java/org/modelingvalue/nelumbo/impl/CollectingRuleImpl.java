@@ -39,20 +39,24 @@ public class CollectingRuleImpl extends RuleImpl {
         Map<VariableImpl, Object> collVars = collector().variables();
         Map<VariableImpl, Object> resultVars = collVars.retainAllKey(consVars).removeAllKey(condVars);
         if (resultVars.size() != 1) {
-            throw new IllegalArgumentException("Collecting Rules shoud have exactly one shared (result) variable in the consequence and the collector (that is not used in the condition), " + resultVars.size() + " found in " + this);
+            throw new IllegalArgumentException("Collecting rules shoud have exactly one shared (result) variable in the consequence and the collector (that is not used in the condition), " + resultVars.size() + " found in " + this);
         }
         result = resultVars.get(0).getKey();
         Map<VariableImpl, Object> iteratorVars = collVars.retainAllKey(condVars).removeAllKey(consVars);
         if (iteratorVars.size() != 1) {
-            throw new IllegalArgumentException("Collecting Rules shoud have exactly one shared (iterator) variable in the condition and the collector (that is not used in the consequence), " + iteratorVars.size() + " found in " + this);
+            throw new IllegalArgumentException("Collecting rules shoud have exactly one shared (iterator) variable in the condition and the collector (that is not used in the consequence), " + iteratorVars.size() + " found in " + this);
         }
         iterator = iteratorVars.get(0).getKey();
         Map<StructureImpl, Object> identityStrcs = collector().structures();
         if (identityStrcs.size() != 1) {
-            throw new IllegalArgumentException("Collecting Rules shoud have exactly one (identity) constant in the collector, " + identityStrcs.size() + " found in " + collector());
+            throw new IllegalArgumentException("Collecting rules shoud have exactly one (identity) constant in the collector, " + identityStrcs.size() + " found in " + collector());
         }
         identity = identityStrcs.get(0).getKey();
         identityFact = collector().set(iterator, identity).set(result, identity);
+        InferResult result = identityFact.infer();
+        if (!result.hasOnly(identityFact) || !result.falsehoods().isEmpty()) {
+            throw new IllegalArgumentException("The (identity) constant in the collector of is not an identity, hence " + identityFact + " is not true");
+        }
     }
 
     @Override

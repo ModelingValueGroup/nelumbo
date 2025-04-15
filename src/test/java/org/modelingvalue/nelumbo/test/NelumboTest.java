@@ -310,8 +310,8 @@ public class NelumboTest extends NelumboTestBase {
     // @Test
     public void rulesTest() {
         KnowledgeBase db = run(() -> {
-            familyRules();
             fibonacciRules();
+            collectRules();
         });
         print(db);
     }

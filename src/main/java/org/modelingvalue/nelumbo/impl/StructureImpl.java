@@ -419,12 +419,10 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             if (varVal != null) {
                 return varVal;
             }
-        } else if (declVal instanceof StructureImpl) {
-            if (thisVal instanceof StructureImpl) {
-                return ((StructureImpl) thisVal).setBinding((StructureImpl) declVal, vars);
-            } else if (thisVal instanceof Class && ((Class) thisVal).isAssignableFrom((((StructureImpl) declVal).type()))) {
-                return ((StructureImpl) thisVal).setBinding((StructureImpl) declVal, vars);
-            }
+        } else if (declVal instanceof StructureImpl && thisVal instanceof StructureImpl) {
+            return ((StructureImpl) thisVal).setBinding((StructureImpl) declVal, vars);
+        } else if (thisVal instanceof Class && ((Class) thisVal).isAssignableFrom((((StructureImpl) declVal).type()))) {
+            return ((StructureImpl) declVal).setBinding((StructureImpl) declVal, vars);
         }
         return thisVal;
     }
