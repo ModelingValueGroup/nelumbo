@@ -122,9 +122,12 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     public InferResult infer() {
         InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
         PredicateImpl<P> predicate = setBinding(variables());
-        InferResult result = predicate.resolve(context).complete(predicate);
         if (context.trace()) {
-            System.err.println(context.prefix() + predicate.toString(null) + "\u2192" + result);
+            System.err.println(context.prefix() + "  " + predicate.toString(null));
+        }
+        InferResult result = predicate.resolve(context);
+        if (context.trace()) {
+            System.err.println(context.prefix() + "  " + predicate.toString(null) + "\u2192" + result);
         }
         return result;
     }
@@ -179,7 +182,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final InferResult resolve(InferContext context) {
+    protected InferResult resolve(InferContext context) {
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
         Set<PredicateImpl<?>> facts = Set.of(), falsehoods = Set.of();
         Set<RelationImpl> cycles = Set.of();
@@ -203,11 +206,25 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                     result = predicate.infer(context);
                     if (result.hasStackOverflow()) {
                         return result;
+                    } else if (result.hasOnlyUnknowns()) {
+                        facts = facts.add(this);
+                        falsehoods = falsehoods.add(this);
+                        cycles = cycles.addAll(result.cycles());
                     } else {
-                        for (PredicateImpl pred : result.predicates()) {
+                        for (PredicateImpl pred : result.facts()) {
                             if (pred.isFullyBound()) {
                                 Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
                                 next = next.put(binding, predicate.setBinding(binding));
+                            } else {
+                                facts = facts.add(this);
+                            }
+                        }
+                        for (PredicateImpl pred : result.falsehoods()) {
+                            if (pred.isFullyBound()) {
+                                Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
+                                next = next.put(binding, predicate.setBinding(binding));
+                            } else {
+                                falsehoods = falsehoods.add(this);
                             }
                         }
                         cycles = cycles.addAll(result.cycles());

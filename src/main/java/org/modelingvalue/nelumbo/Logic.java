@@ -263,6 +263,10 @@ public final class Logic {
         return bindings.replaceAll(m -> m.replaceAll(e -> Entry.of((Variable) e.getKey().proxy(), proxy(e.getValue()))));
     }
 
+    public static <T extends Structure> Map<Variable, Object> binding(T var, Class<T> type) {
+        return Map.of(Entry.of((Variable) var, type));
+    }
+
     public static <T extends Structure> Map<Variable, Object> binding(T var, Constant<T> val) {
         return Map.of(Entry.of((Variable) var, val));
     }

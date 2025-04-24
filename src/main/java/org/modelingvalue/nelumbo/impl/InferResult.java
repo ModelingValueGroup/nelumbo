@@ -20,7 +20,6 @@
 
 package org.modelingvalue.nelumbo.impl;
 
-import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 
@@ -270,6 +269,14 @@ public interface InferResult {
         return cycles.isEmpty() ? this : of(facts(), falsehoods(), cycles().addAll(cycles));
     }
 
+    default InferResult addFact(PredicateImpl<?> fact) {
+        return facts().contains(fact) ? this : of(facts().add(fact), falsehoods(), cycles());
+    }
+
+    default InferResult addFalsehood(PredicateImpl<?> falsehood) {
+        return falsehoods().contains(falsehood) ? this : of(facts(), falsehoods().add(falsehood), cycles());
+    }
+
     default InferResult add(InferResult other) {
         Set<PredicateImpl<?>> facts = facts().addAll(other.facts());
         Set<PredicateImpl<?>> falsehoods = falsehoods().addAll(other.falsehoods());
@@ -349,23 +356,12 @@ public interface InferResult {
         return !facts().retainAll(falsehoods()).isEmpty();
     }
 
-    default boolean isUnknown() {
-        return facts().size() == 1 && facts().equals(falsehoods());
+    default boolean hasOnlyUnknowns() {
+        return facts().equals(falsehoods());
     }
 
-    default boolean hasBindings(PredicateImpl<?> predicate) {
-        return !predicate.isFullyBound() && !facts().removeAll(falsehoods()).isEmpty();
-    }
-
-    default Collection<PredicateImpl<?>> predicates() {
-        return Collection.concat(facts(), falsehoods());
-    }
-
-    default InferResult complete(PredicateImpl<?> incomplete) {
-        return InferResult.of(//
-                facts().isEmpty() && !falsehoods().contains(incomplete) ? facts().add(incomplete) : facts(), //
-                !facts().contains(incomplete) ? falsehoods().add(incomplete) : falsehoods(), //
-                cycles());
+    default InferResult remove(PredicateImpl<?> predicate) {
+        return InferResult.of(facts().remove(predicate), falsehoods().remove(predicate), cycles());
     }
 
 }

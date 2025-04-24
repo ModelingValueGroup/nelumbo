@@ -106,11 +106,20 @@ public class RuleImpl extends StructureImpl<Rule> {
         if (condResult.hasStackOverflow()) {
             relResult = condResult;
         } else {
-            InferResult consResult = collect(condResult, consequence, context);
+            boolean condComplete = condition.isFullyBound();
+            InferResult consResult = collect(condComplete ? condResult : condResult.remove(condition), consequence, context);
             if (consResult.hasStackOverflow()) {
                 relResult = consResult;
             } else {
-                relResult = consResult.cast(relation).complete(relation);
+                relResult = consResult.cast(relation);
+                if (!relation.isFullyBound()) {
+                    if (condComplete ? relResult.facts().isEmpty() : condResult.facts().contains(condition)) {
+                        relResult = relResult.addFact(relation);
+                    }
+                    if (condComplete ? relResult.falsehoods().isEmpty() : condResult.falsehoods().contains(condition)) {
+                        relResult = relResult.addFalsehood(relation);
+                    }
+                }
             }
         }
         if (context.trace()) {

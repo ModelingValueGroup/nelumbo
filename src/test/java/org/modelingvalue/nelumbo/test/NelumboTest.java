@@ -332,6 +332,8 @@ public class NelumboTest extends NelumboTestBase {
             isTrue(not(is(plus(i(5), i(2)), i(8))));
             isTrue(and(not(is(plus(i(5), i(2)), i(8))), not(plus(i(5), i(2), i(8)))));
 
+            hasBindings(not(is(plus(i(5), i(2)), O)), binding(O, IntegerCons.class));
+
             familyRules();
 
             fact(parentChild(Carel, Jan));

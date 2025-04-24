@@ -52,6 +52,11 @@ public class RelationImpl extends PredicateImpl<Relation> {
     }
 
     @Override
+    protected InferResult resolve(InferContext context) {
+        return infer(context);
+    }
+
+    @Override
     protected InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 && context.reduce()) {
@@ -174,6 +179,8 @@ public class RelationImpl extends PredicateImpl<Relation> {
                     return ruleResult;
                 } else if (ruleResult.falsehoods().isEmpty()) {
                     return ruleResult;
+                } else if (ruleResult.hasOnlyUnknowns()) {
+                    result = result.addCycles(ruleResult.cycles());
                 } else {
                     result = result.or(ruleResult);
                 }
