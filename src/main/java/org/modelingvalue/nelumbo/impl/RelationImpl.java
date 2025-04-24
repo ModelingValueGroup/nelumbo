@@ -147,21 +147,17 @@ public class RelationImpl extends PredicateImpl<Relation> {
                 return nextResult;
             }
             if (nextResult.hasCycleWith(this)) {
-                if (!nextResult.equals(previousResult) && !nextResult.equals(cycleResult)) {
+                if (!nextResult.equals(previousResult)) {
                     previousResult = nextResult;
                     cycleResult = InferResult.of(nextResult.facts().add(this), nextResult.falsehoods().add(this), (Set) singleton());
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
-                    return InferResult.of(uncycle(nextResult.facts()), uncycle(nextResult.falsehoods()), nextResult.cycles().remove(this));
+                    return InferResult.of(nextResult.facts(), nextResult.falsehoods(), nextResult.cycles().remove(this));
                 }
             }
             return nextResult;
         } while (true);
-    }
-
-    private Set<PredicateImpl<?>> uncycle(Set<PredicateImpl<?>> set) {
-        return set.equals(singleton()) && !isFullyBound() ? set : set.remove(this);
     }
 
     @SuppressWarnings("rawtypes")
@@ -179,8 +175,8 @@ public class RelationImpl extends PredicateImpl<Relation> {
                     return ruleResult;
                 } else if (ruleResult.falsehoods().isEmpty()) {
                     return ruleResult;
-                } else if (ruleResult.hasOnlyUnknowns()) {
-                    result = result.addCycles(ruleResult.cycles());
+                } else if (ruleResult.hasCycleWith(this)) {
+                    result = result.or(ruleResult.remove(this));
                 } else {
                     result = result.or(ruleResult);
                 }
