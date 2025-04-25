@@ -370,11 +370,14 @@ public final class Logic {
         return ruleImpl.proxy();
     }
 
+    // Collect
+
+    public interface Collect extends Predicate {
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static Rule rule(Relation consequence, Predicate condition, Relation collector, RuleModifier... modifiers) {
-        CollectingRuleImpl ruleImpl = new CollectingRuleImpl(consequence, condition, collector, modifiers);
-        KnowledgeBaseImpl.CURRENT.get().addRule(ruleImpl);
-        return ruleImpl.proxy();
+    public static Collect coll(Predicate condition, Predicate collector) {
+        return new CollectImpl(condition, collector).proxy();
     }
 
     // Facts

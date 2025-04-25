@@ -35,10 +35,6 @@ public final class NotImpl extends PredicateImpl<Not> {
         super(NOT_FUNCTOR_PROXY, pred);
     }
 
-    private NotImpl(PredicateImpl<?> pred) {
-        super(NOT_FUNCTOR, pred);
-    }
-
     private NotImpl(Object[] args, NotImpl declaration) {
         super(args, declaration);
     }

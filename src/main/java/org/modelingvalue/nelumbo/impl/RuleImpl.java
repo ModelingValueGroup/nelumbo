@@ -128,7 +128,7 @@ public class RuleImpl extends StructureImpl<Rule> {
         return relResult;
     }
 
-    protected InferResult collect(InferResult condResult, PredicateImpl<?> consequence, InferContext context) {
+    private InferResult collect(InferResult condResult, PredicateImpl<?> consequence, InferContext context) {
         Set<PredicateImpl<?>> consFacts = Set.of();
         for (PredicateImpl<?> condFact : condResult.facts()) {
             PredicateImpl<?> consFact = consequence.setBinding(condFact.getBinding());
