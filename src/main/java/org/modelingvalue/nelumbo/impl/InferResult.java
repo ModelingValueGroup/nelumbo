@@ -488,7 +488,12 @@ public interface InferResult {
         if (overflow != null) {
             return overflow.toString().substring(4);
         } else {
-            return toString(facts(), completeFacts()) + toString(falsehoods(), completeFalsehoods()) + toString(cycles(), true);
+            String cycleString = "";
+            if (!cycles().isEmpty()) {
+                cycleString = toString(cycles(), true);
+                cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
+            }
+            return toString(facts(), completeFacts()) + toString(falsehoods(), completeFalsehoods()) + cycleString;
         }
     }
 

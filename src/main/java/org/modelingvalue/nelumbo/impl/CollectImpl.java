@@ -90,8 +90,6 @@ public class CollectImpl extends PredicateImpl<Collect> {
             InferResult condResult = condition().resolve(context);
             if (condResult.hasStackOverflow()) {
                 return condResult;
-            } else if (!condResult.completeFacts()) {
-                return unknown();
             } else {
                 return collect(condResult, context);
             }
