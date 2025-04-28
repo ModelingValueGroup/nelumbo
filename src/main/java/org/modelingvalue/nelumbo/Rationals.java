@@ -108,7 +108,7 @@ public final class Rationals {
             BigInteger denComp1 = relation.getVal(1, 2);
             BigInteger denComp2 = relation.getVal(2, 2);
             int r = numComp1.multiply(denComp2).compareTo(numComp2.multiply(denComp1));
-            return r > 0 ? relation.fact() : relation.falsehood();
+            return r > 0 ? relation.factCC() : relation.falsehoodCC();
         } else {
             return relation.unknown();
         }
@@ -135,18 +135,18 @@ public final class Rationals {
             StructureImpl<RationalCons> s = struct(a.add(b), denAddend1.multiply(denAddend2));
             if (numSum != null) {
                 boolean eq = s.equals(relation.getVal(3));
-                return eq ? relation.fact() : relation.falsehood();
+                return eq ? relation.factCC() : relation.falsehoodCC();
             } else {
-                return relation.set(3, s).factIncompleteFalsehoods();
+                return relation.set(3, s).factCI();
             }
         } else if (numAddend1 != null && numSum != null) {
             BigInteger a = numAddend1.multiply(denSum);
             BigInteger c = numSum.multiply(denAddend1);
-            return relation.set(2, struct(c.subtract(a), denSum.multiply(denAddend1))).factIncompleteFalsehoods();
+            return relation.set(2, struct(c.subtract(a), denSum.multiply(denAddend1))).factCI();
         } else if (numAddend2 != null && numSum != null) {
             BigInteger b = numAddend2.multiply(denSum);
             BigInteger c = numSum.multiply(denAddend2);
-            return relation.set(1, struct(c.subtract(b), denSum.multiply(denAddend2))).factIncompleteFalsehoods();
+            return relation.set(1, struct(c.subtract(b), denSum.multiply(denAddend2))).factCI();
         } else {
             return relation.unknown();
         }
@@ -171,14 +171,14 @@ public final class Rationals {
             StructureImpl<RationalCons> p = struct(numFactor1.multiply(numFactor2), denFactor1.multiply(denFactor2));
             if (numProduct != null) {
                 boolean eq = p.equals(relation.getVal(3));
-                return eq ? relation.fact() : relation.falsehood();
+                return eq ? relation.factCC() : relation.falsehoodCC();
             } else {
-                return relation.set(3, p).factIncompleteFalsehoods();
+                return relation.set(3, p).factCI();
             }
         } else if (numFactor1 != null && numProduct != null) {
-            return relation.set(2, struct(numProduct.multiply(denFactor1), denProduct.multiply(numFactor1))).factIncompleteFalsehoods();
+            return relation.set(2, struct(numProduct.multiply(denFactor1), denProduct.multiply(numFactor1))).factCI();
         } else if (numFactor2 != null && numProduct != null) {
-            return relation.set(1, struct(numProduct.multiply(denFactor2), denProduct.multiply(numFactor2))).factIncompleteFalsehoods();
+            return relation.set(1, struct(numProduct.multiply(denFactor2), denProduct.multiply(numFactor2))).factCI();
         } else {
             return relation.unknown();
         }
@@ -200,14 +200,14 @@ public final class Rationals {
             StructureImpl<RationalCons> s = struct(numRoot.multiply(numRoot), denRoot.multiply(denRoot));
             if (numSquare != null) {
                 boolean eq = s.equals(relation.getVal(2));
-                return eq ? relation.fact() : relation.falsehood();
+                return eq ? relation.factCC() : relation.falsehoodCC();
             } else {
-                return relation.set(2, s).factIncompleteFalsehoods();
+                return relation.set(2, s).factCI();
             }
         } else if (numSquare != null) {
             BigInteger sqrt = numSquare.multiply(denSquare).sqrt();
             BigInteger abs = denSquare.abs();
-            return InferResult.factsIncompleteFalsehoods(Set.of(relation.set(1, struct(sqrt, abs)), relation.set(1, struct(sqrt.negate(), abs))));
+            return InferResult.factsCI(Set.of(relation.set(1, struct(sqrt, abs)), relation.set(1, struct(sqrt.negate(), abs))));
         } else {
             return relation.unknown();
         }

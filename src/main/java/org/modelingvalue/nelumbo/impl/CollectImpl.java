@@ -44,7 +44,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
         identity = identityStrcs.get(0).getKey();
         identityFact = collector().set(iterator, identity).set(result, identity);
         InferResult result = identityFact.infer();
-        if (!result.equals(identityFact.fact())) {
+        if (!result.equals(identityFact.factCC())) {
             throw new IllegalArgumentException("The (identity) constant in the collector of is not an identity, hence " + identityFact + " is not true");
         }
     }

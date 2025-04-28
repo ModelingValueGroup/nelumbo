@@ -213,12 +213,12 @@ public final class Logic {
 
     public static boolean isTrue(Predicate pred) {
         InferResult result = infer(pred);
-        return !result.facts().isEmpty();
+        return result.isTrue();
     }
 
     public static boolean isFalse(Predicate pred) {
         InferResult result = infer(pred);
-        return result.facts().isEmpty() && result.completeFacts();
+        return result.isFalse();
     }
 
     public static boolean haveEqualBindings(Predicate pred1, Predicate pred2) {
@@ -406,12 +406,12 @@ public final class Logic {
         if (constant1 == null && constant2 == null) {
             return relation.unknown();
         } else if (constant1 == null) {
-            return relation.set(1, constant2).factIncompleteFalsehoods();
+            return relation.set(1, constant2).factCI();
         } else if (constant2 == null) {
-            return relation.set(2, constant1).factIncompleteFalsehoods();
+            return relation.set(2, constant1).factCI();
         } else {
             StructureImpl eq = constant1.eq(constant2);
-            return eq != null ? relation.set(1, eq, eq).fact() : relation.falsehood();
+            return eq != null ? relation.set(1, eq, eq).factCC() : relation.falsehoodCC();
         }
     }
 

@@ -69,25 +69,25 @@ public abstract class AndOrImpl<T extends AndOr> extends PredicateImpl<T> {
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
             } else if (context.reduce()) {
-                if (this instanceof AndImpl && predResult[i].isFalse()) {
+                if (this instanceof AndImpl && predResult[i].isFalseCC()) {
                     return BooleanImpl.FALSE_CONCLUSION;
-                } else if (this instanceof OrImpl && predResult[i].isTrue()) {
+                } else if (this instanceof OrImpl && predResult[i].isTrueCC()) {
                     return BooleanImpl.TRUE_CONCLUSION;
                 }
             }
         }
         if (context.reduce()) {
-            if (this instanceof AndImpl && predResult[0].isTrue() && predResult[1].isTrue()) {
+            if (this instanceof AndImpl && predResult[0].isTrueCC() && predResult[1].isTrueCC()) {
                 return BooleanImpl.TRUE_CONCLUSION;
-            } else if (this instanceof AndImpl && predResult[0].isTrue()) {
+            } else if (this instanceof AndImpl && predResult[0].isTrueCC()) {
                 return predResult[1];
-            } else if (this instanceof AndImpl && predResult[1].isTrue()) {
+            } else if (this instanceof AndImpl && predResult[1].isTrueCC()) {
                 return predResult[0];
-            } else if (this instanceof OrImpl && predResult[0].isFalse() && predResult[1].isFalse()) {
+            } else if (this instanceof OrImpl && predResult[0].isFalseCC() && predResult[1].isFalseCC()) {
                 return BooleanImpl.FALSE_CONCLUSION;
-            } else if (this instanceof OrImpl && predResult[0].isFalse()) {
+            } else if (this instanceof OrImpl && predResult[0].isFalseCC()) {
                 return predResult[1];
-            } else if (this instanceof OrImpl && predResult[1].isFalse()) {
+            } else if (this instanceof OrImpl && predResult[1].isFalseCC()) {
                 return predResult[0];
             } else {
                 return set(1, predResult[0].unknown(), predResult[1].unknown()).unknown();

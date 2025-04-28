@@ -63,9 +63,9 @@ public final class NotImpl extends PredicateImpl<Not> {
         if (predResult.hasStackOverflow()) {
             return predResult;
         } else if (context.reduce()) {
-            if (predResult.isFalse()) {
+            if (predResult.isFalseCC()) {
                 return BooleanImpl.TRUE_CONCLUSION;
-            } else if (predResult.isTrue()) {
+            } else if (predResult.isTrueCC()) {
                 return BooleanImpl.FALSE_CONCLUSION;
             } else {
                 return set(1, predResult.unknown()).unknown();

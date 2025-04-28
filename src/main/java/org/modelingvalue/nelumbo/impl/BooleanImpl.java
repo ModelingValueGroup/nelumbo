@@ -34,8 +34,8 @@ public final class BooleanImpl extends PredicateImpl<Bool> {
     public static final BooleanImpl    TRUE             = new BooleanImpl(true);
     public static final BooleanImpl    FALSE            = new BooleanImpl(false);
 
-    protected static final InferResult TRUE_CONCLUSION  = TRUE.fact();
-    protected static final InferResult FALSE_CONCLUSION = FALSE.falsehood();
+    protected static final InferResult TRUE_CONCLUSION  = TRUE.factCC();
+    protected static final InferResult FALSE_CONCLUSION = FALSE.falsehoodCC();
 
     private static Bool b(boolean val) {
         return val ? Logic.T() : Logic.F();

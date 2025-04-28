@@ -91,7 +91,7 @@ public final class Integers {
         BigInteger compared1 = relation.getVal(1, 1);
         BigInteger compared2 = relation.getVal(2, 1);
         if (compared1 != null && compared2 != null) {
-            return compared1.compareTo(compared2) > 0 ? relation.fact() : relation.falsehood();
+            return compared1.compareTo(compared2) > 0 ? relation.factCC() : relation.falsehoodCC();
         } else {
             return relation.unknown();
         }
@@ -113,14 +113,14 @@ public final class Integers {
             BigInteger s = addend1.add(addend2);
             if (sum != null) {
                 boolean eq = s.equals(sum);
-                return eq ? relation.fact() : relation.falsehood();
+                return eq ? relation.factCC() : relation.falsehoodCC();
             } else {
-                return relation.set(3, struct(s)).factIncompleteFalsehoods();
+                return relation.set(3, struct(s)).factCI();
             }
         } else if (addend1 != null && sum != null) {
-            return relation.set(2, struct(sum.subtract(addend1))).factIncompleteFalsehoods();
+            return relation.set(2, struct(sum.subtract(addend1))).factCI();
         } else if (addend2 != null && sum != null) {
-            return relation.set(1, struct(sum.subtract(addend2))).factIncompleteFalsehoods();
+            return relation.set(1, struct(sum.subtract(addend2))).factCI();
         } else {
             return relation.unknown();
         }
@@ -142,14 +142,14 @@ public final class Integers {
             BigInteger p = factor1.multiply(factor2);
             if (product != null) {
                 boolean eq = p.equals(product);
-                return eq ? relation.fact() : relation.falsehood();
+                return eq ? relation.factCC() : relation.falsehoodCC();
             } else {
-                return relation.set(3, struct(p)).factIncompleteFalsehoods();
+                return relation.set(3, struct(p)).factCI();
             }
         } else if (factor1 != null && product != null) {
-            return relation.set(2, struct(product.divide(factor1))).factIncompleteFalsehoods();
+            return relation.set(2, struct(product.divide(factor1))).factCI();
         } else if (factor2 != null && product != null) {
-            return relation.set(1, struct(product.divide(factor2))).factIncompleteFalsehoods();
+            return relation.set(1, struct(product.divide(factor2))).factCI();
         } else {
             return relation.unknown();
         }
@@ -167,12 +167,12 @@ public final class Integers {
         BigInteger square = relation.getVal(2, 1);
         if (root != null && square != null) {
             boolean eq = root.multiply(root).equals(square);
-            return eq ? relation.fact() : relation.falsehood();
+            return eq ? relation.factCC() : relation.falsehoodCC();
         } else if (root != null && square == null) {
-            return relation.set(2, struct(root.multiply(root))).factIncompleteFalsehoods();
+            return relation.set(2, struct(root.multiply(root))).factCI();
         } else if (root == null && square != null) {
             BigInteger sqrt = square.sqrt();
-            return InferResult.factsIncompleteFalsehoods(Set.of(relation.set(1, struct(sqrt)), relation.set(1, struct(sqrt.negate()))));
+            return InferResult.factsCI(Set.of(relation.set(1, struct(sqrt)), relation.set(1, struct(sqrt.negate()))));
         } else {
             return relation.unknown();
         }

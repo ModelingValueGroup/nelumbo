@@ -169,16 +169,20 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         return InferResult.unknown(this);
     }
 
-    public final InferResult fact() {
-        return InferResult.completeFacts(singleton);
+    public final InferResult factCC() {
+        return InferResult.factsCC(singleton);
     }
 
-    public final InferResult falsehood() {
-        return InferResult.completeFalsehoods(singleton);
+    public final InferResult falsehoodCC() {
+        return InferResult.falsehoodsCC(singleton);
     }
 
-    public final InferResult factIncompleteFalsehoods() {
-        return InferResult.factsIncompleteFalsehoods(singleton);
+    public final InferResult factCI() {
+        return InferResult.factsCI(singleton);
+    }
+
+    public final InferResult falsehoodIC() {
+        return InferResult.falsehoodsCC(singleton);
     }
 
     public final Set<PredicateImpl<?>> singleton() {
@@ -202,9 +206,9 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 InferResult result = entry.getValue().infer(reduce);
                 if (result.hasStackOverflow()) {
                     return result;
-                } else if (result.isFalse()) {
+                } else if (result.isFalseCC()) {
                     falsehoods = falsehoods.add(setBinding(entry.getKey()));
-                } else if (result.isTrue()) {
+                } else if (result.isTrueCC()) {
                     facts = facts.add(setBinding(entry.getKey()));
                 } else {
                     PredicateImpl predicate = result.unknown();

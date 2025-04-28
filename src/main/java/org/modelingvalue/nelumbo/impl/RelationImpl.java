@@ -14,6 +14,8 @@ public class RelationImpl extends PredicateImpl<Relation> {
     static final int          MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
     private static final int  MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
+    private final InferResult cycleResult        = InferResult.cycle(Set.of(), Set.of(), this);
+
     public RelationImpl(Functor<Relation> functor, Object... args) {
         super(functor, args);
     }
@@ -140,7 +142,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private InferResult fixpoint(InferContext context) {
-        InferResult previousResult = null, cycleResult = InferResult.cycle(this), nextResult;
+        InferResult previousResult = null, cycleResult = this.cycleResult, nextResult;
         do {
             nextResult = inferRules(context.putCycleResult(this, cycleResult));
             if (nextResult.hasStackOverflow()) {
@@ -149,7 +151,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
             if (nextResult.hasCycleWith(this)) {
                 if (!nextResult.equals(previousResult)) {
                     previousResult = nextResult;
-                    cycleResult = InferResult.of(nextResult.facts(), false, nextResult.falsehoods(), false, (Set) singleton());
+                    cycleResult = InferResult.cycle(nextResult.facts(), nextResult.falsehoods(), this);
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
@@ -166,7 +168,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
     private InferResult inferRules(InferContext context) {
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         InferResult result = knowledgebase.getFacts(this), ruleResult;
-        if (result.isTrue()) {
+        if (result.isTrueCC()) {
             return result;
         }
         List<RuleImpl> rules = knowledgebase.getRules(this);
@@ -175,7 +177,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
-                } else if (ruleResult.isTrue()) {
+                } else if (ruleResult.isTrueCC()) {
                     return ruleResult;
                 } else if (ruleResult.hasCycleWith(this)) {
                     result = result.or(ruleResult.complete());
