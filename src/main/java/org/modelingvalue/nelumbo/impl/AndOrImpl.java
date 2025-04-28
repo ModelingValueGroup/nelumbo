@@ -69,33 +69,33 @@ public abstract class AndOrImpl<T extends AndOr> extends PredicateImpl<T> {
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
             } else if (context.reduce()) {
-                if (this instanceof AndImpl && predResult[i].facts().isEmpty()) {
+                if (this instanceof AndImpl && predResult[i].isFalse()) {
                     return BooleanImpl.FALSE_CONCLUSION;
-                } else if (this instanceof OrImpl && predResult[i].falsehoods().isEmpty()) {
+                } else if (this instanceof OrImpl && predResult[i].isTrue()) {
                     return BooleanImpl.TRUE_CONCLUSION;
                 }
             }
         }
         if (context.reduce()) {
-            if (this instanceof AndImpl && predResult[0].falsehoods().isEmpty() && predResult[1].falsehoods().isEmpty()) {
+            if (this instanceof AndImpl && predResult[0].isTrue() && predResult[1].isTrue()) {
                 return BooleanImpl.TRUE_CONCLUSION;
-            } else if (this instanceof AndImpl && predResult[0].falsehoods().isEmpty()) {
+            } else if (this instanceof AndImpl && predResult[0].isTrue()) {
                 return predResult[1];
-            } else if (this instanceof AndImpl && predResult[1].falsehoods().isEmpty()) {
+            } else if (this instanceof AndImpl && predResult[1].isTrue()) {
                 return predResult[0];
-            } else if (this instanceof OrImpl && predResult[0].facts().isEmpty() && predResult[1].facts().isEmpty()) {
+            } else if (this instanceof OrImpl && predResult[0].isFalse() && predResult[1].isFalse()) {
                 return BooleanImpl.FALSE_CONCLUSION;
-            } else if (this instanceof OrImpl && predResult[0].facts().isEmpty()) {
+            } else if (this instanceof OrImpl && predResult[0].isFalse()) {
                 return predResult[1];
-            } else if (this instanceof OrImpl && predResult[1].facts().isEmpty()) {
+            } else if (this instanceof OrImpl && predResult[1].isFalse()) {
                 return predResult[0];
             } else {
-                return set(1, predResult[0].facts().get(0), predResult[1].facts().get(0)).unknown();
+                return set(1, predResult[0].unknown(), predResult[1].unknown()).unknown();
             }
         } else {
-            if (!predResult[0].hasOnlyUnknowns() && predResult[1].hasOnlyUnknowns()) {
+            if (!predResult[0].isEmpty() && predResult[1].isEmpty()) {
                 return predResult[0];
-            } else if (predResult[0].hasOnlyUnknowns() && !predResult[1].hasOnlyUnknowns()) {
+            } else if (predResult[0].isEmpty() && !predResult[1].isEmpty()) {
                 return predResult[1];
             } else {
                 return predResult[0].add(predResult[1]);

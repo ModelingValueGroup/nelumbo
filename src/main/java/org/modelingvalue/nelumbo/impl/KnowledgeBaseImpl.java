@@ -170,7 +170,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferResult getFacts(RelationImpl relation) {
         InferResult result = facts.get().get(relation);
-        return result != null ? result.cast(relation) : relation.falsehood();
+        return result != null ? result.cast(relation) : relation.isFullyBound() ? relation.falsehood() : InferResult.factsIncompleteFalsehoods(Set.of());
     }
 
     public List<RuleImpl> getRules(RelationImpl relation) {
@@ -208,10 +208,8 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected void memoization(RelationImpl relation, InferResult fullResult) {
-        InferResult result = fullResult.cycles().isEmpty() ? fullResult : //
-                InferResult.trueFalse(fullResult.facts(), fullResult.falsehoods());
-        boolean known = !result.hasUnknown();
+    protected void memoization(RelationImpl relation, InferResult result) {
+        boolean known = result.cycles().isEmpty() && !result.isIncomplete();
         FunctorImpl<Relation> functor = relation.functor();
         if (functor.factual()) {
             facts.updateAndGet(map -> {
@@ -219,12 +217,12 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                     map = map.put(relation, result);
                 }
                 for (PredicateImpl fact : result.facts()) {
-                    if (fact instanceof RelationImpl && fact.isFullyBound()) {
+                    if (fact instanceof RelationImpl) {
                         map = map.put((RelationImpl) fact, fact.fact());
                     }
                 }
                 for (PredicateImpl falsehood : result.falsehoods()) {
-                    if (falsehood instanceof RelationImpl && falsehood.isFullyBound()) {
+                    if (falsehood instanceof RelationImpl) {
                         map = map.put((RelationImpl) falsehood, falsehood.falsehood());
                     }
                 }
@@ -237,12 +235,12 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                     array[0] = array[0].put(new Inference(relation, result));
                 }
                 for (PredicateImpl fact : result.facts()) {
-                    if (fact instanceof RelationImpl && fact.isFullyBound()) {
+                    if (fact instanceof RelationImpl) {
                         array[0] = array[0].put(new Inference((RelationImpl) fact, fact.fact()));
                     }
                 }
                 for (PredicateImpl falsehood : result.falsehoods()) {
-                    if (falsehood instanceof RelationImpl && falsehood.isFullyBound()) {
+                    if (falsehood instanceof RelationImpl) {
                         array[0] = array[0].put(new Inference((RelationImpl) falsehood, falsehood.falsehood()));
                     }
                 }
@@ -324,7 +322,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         Class type = predicate.getType(i);
         if (cls.isAssignableFrom(type)) {
             InferResult pre = map.get(predicate);
-            map = map.put(predicate, InferResult.trueFalse(pre != null ? pre.facts().add(fact) : fact.singleton(), predicate.singleton()));
+            map = map.put(predicate, InferResult.factsIncompleteFalsehoods(pre != null ? pre.facts().add(fact) : fact.singleton()));
             if (!cls.equals(type)) {
                 for (Type gen : type.getGenericInterfaces()) {
                     while (gen instanceof ParameterizedType) {

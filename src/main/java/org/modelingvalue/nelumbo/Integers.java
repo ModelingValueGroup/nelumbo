@@ -115,12 +115,12 @@ public final class Integers {
                 boolean eq = s.equals(sum);
                 return eq ? relation.fact() : relation.falsehood();
             } else {
-                return InferResult.trueFalse(relation.set(3, struct(s)).singleton(), relation.singleton());
+                return relation.set(3, struct(s)).factIncompleteFalsehoods();
             }
         } else if (addend1 != null && sum != null) {
-            return InferResult.trueFalse(relation.set(2, struct(sum.subtract(addend1))).singleton(), relation.singleton());
+            return relation.set(2, struct(sum.subtract(addend1))).factIncompleteFalsehoods();
         } else if (addend2 != null && sum != null) {
-            return InferResult.trueFalse(relation.set(1, struct(sum.subtract(addend2))).singleton(), relation.singleton());
+            return relation.set(1, struct(sum.subtract(addend2))).factIncompleteFalsehoods();
         } else {
             return relation.unknown();
         }
@@ -144,12 +144,12 @@ public final class Integers {
                 boolean eq = p.equals(product);
                 return eq ? relation.fact() : relation.falsehood();
             } else {
-                return InferResult.trueFalse(relation.set(3, struct(p)).singleton(), relation.singleton());
+                return relation.set(3, struct(p)).factIncompleteFalsehoods();
             }
         } else if (factor1 != null && product != null) {
-            return InferResult.trueFalse(relation.set(2, struct(product.divide(factor1))).singleton(), relation.singleton());
+            return relation.set(2, struct(product.divide(factor1))).factIncompleteFalsehoods();
         } else if (factor2 != null && product != null) {
-            return InferResult.trueFalse(relation.set(1, struct(product.divide(factor2))).singleton(), relation.singleton());
+            return relation.set(1, struct(product.divide(factor2))).factIncompleteFalsehoods();
         } else {
             return relation.unknown();
         }
@@ -169,10 +169,10 @@ public final class Integers {
             boolean eq = root.multiply(root).equals(square);
             return eq ? relation.fact() : relation.falsehood();
         } else if (root != null && square == null) {
-            return InferResult.trueFalse(relation.set(2, struct(root.multiply(root))).singleton(), relation.singleton());
+            return relation.set(2, struct(root.multiply(root))).factIncompleteFalsehoods();
         } else if (root == null && square != null) {
             BigInteger sqrt = square.sqrt();
-            return InferResult.trueFalse(Set.of(relation.set(1, struct(sqrt)), relation.set(1, struct(sqrt.negate()))), relation.singleton());
+            return InferResult.factsIncompleteFalsehoods(Set.of(relation.set(1, struct(sqrt)), relation.set(1, struct(sqrt.negate()))));
         } else {
             return relation.unknown();
         }

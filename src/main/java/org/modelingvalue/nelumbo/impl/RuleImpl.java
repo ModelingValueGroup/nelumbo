@@ -99,49 +99,40 @@ public class RuleImpl extends StructureImpl<Rule> {
         PredicateImpl condition = condition().setBinding(binding);
         PredicateImpl consequence = consequence().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + condition.toString(null) + collectorString() + "\u21D2" + consequence);
+            System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
         }
         InferResult condResult = condition.resolve(context);
         InferResult relResult;
         if (condResult.hasStackOverflow()) {
             relResult = condResult;
         } else {
-            boolean condComplete = condition.isFullyBound();
-            InferResult consResult = collect(condComplete ? condResult : condResult.remove(condition), consequence, context);
-            if (consResult.hasStackOverflow()) {
-                relResult = consResult;
-            } else {
-                relResult = consResult.cast(relation);
-                if (!relation.isFullyBound()) {
-                    if (condComplete ? relResult.facts().isEmpty() : condResult.facts().contains(condition)) {
-                        relResult = relResult.addFact(relation);
-                    }
-                    if (condComplete ? relResult.falsehoods().isEmpty() : condResult.falsehoods().contains(condition)) {
-                        relResult = relResult.addFalsehood(relation);
-                    }
+            Set<PredicateImpl<?>> relFacts = Set.of(), relFalsehoods = Set.of();
+            boolean completeFacts = true, completeFalsehoods = true;
+            for (PredicateImpl<?> condFact : condResult.facts()) {
+                PredicateImpl<?> relFact = relation.castFrom(consequence.setBinding(condFact.getBinding()));
+                relFacts = relFacts.add(relFact);
+            }
+            for (PredicateImpl<?> condFalsehood : condResult.falsehoods()) {
+                PredicateImpl<?> relFalsehood = relation.castFrom(consequence.setBinding(condFalsehood.getBinding()));
+                if (!relFacts.contains(relFalsehood)) {
+                    relFalsehoods = relFalsehoods.add(relFalsehood);
                 }
             }
+            if (!relation.isFullyBound()) {
+                boolean condFullyBound = condition.isFullyBound();
+                if (condFullyBound ? relFacts.isEmpty() : !condResult.completeFacts()) {
+                    completeFacts = false;
+                }
+                if (condFullyBound ? relFalsehoods.isEmpty() : !condResult.completeFalsehoods()) {
+                    completeFalsehoods = false;
+                }
+            }
+            relResult = InferResult.of(relFacts, completeFacts, relFalsehoods, completeFalsehoods, condResult.cycles());
         }
         if (context.trace()) {
             System.err.println(context.prefix() + relation + "\u2192" + relResult);
         }
         return relResult;
-    }
-
-    private InferResult collect(InferResult condResult, PredicateImpl<?> consequence, InferContext context) {
-        Set<PredicateImpl<?>> consFacts = Set.of();
-        for (PredicateImpl<?> condFact : condResult.facts()) {
-            PredicateImpl<?> consFact = consequence.setBinding(condFact.getBinding());
-            consFacts = consFacts.add(consFact);
-        }
-        Set<PredicateImpl<?>> consFalsehoods = Set.of();
-        for (PredicateImpl<?> condFalshood : condResult.falsehoods()) {
-            PredicateImpl<?> consFalshood = consequence.setBinding(condFalshood.getBinding());
-            if (!consFacts.contains(consFalshood)) {
-                consFalsehoods = consFalsehoods.add(consFalshood);
-            }
-        }
-        return InferResult.of(consFacts, consFalsehoods, condResult.cycles());
     }
 
     public int rulePrio() {
@@ -161,11 +152,7 @@ public class RuleImpl extends StructureImpl<Rule> {
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? condition().toString(null) + collectorString() + "\u21D2" + consequence() : super.toString();
-    }
-
-    protected String collectorString() {
-        return "";
+        return PRETTY_NELUMBO ? condition().toString(null) + "\u21D2" + consequence() : super.toString();
     }
 
     public boolean trace() {

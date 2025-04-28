@@ -140,7 +140,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private InferResult fixpoint(InferContext context) {
-        InferResult previousResult = InferResult.EMPTY, cycleResult = InferResult.cycle(this), nextResult;
+        InferResult previousResult = null, cycleResult = InferResult.cycle(this), nextResult;
         do {
             nextResult = inferRules(context.putCycleResult(this, cycleResult));
             if (nextResult.hasStackOverflow()) {
@@ -149,11 +149,13 @@ public class RelationImpl extends PredicateImpl<Relation> {
             if (nextResult.hasCycleWith(this)) {
                 if (!nextResult.equals(previousResult)) {
                     previousResult = nextResult;
-                    cycleResult = InferResult.of(nextResult.facts().add(this), nextResult.falsehoods().add(this), (Set) singleton());
+                    cycleResult = InferResult.of(nextResult.facts(), false, nextResult.falsehoods(), false, (Set) singleton());
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
-                    return InferResult.of(nextResult.facts(), nextResult.falsehoods(), nextResult.cycles().remove(this));
+                    return InferResult.of(nextResult.facts(), nextResult.completeFacts(), //
+                            nextResult.falsehoods(), nextResult.completeFalsehoods(), //
+                            nextResult.cycles().remove(this));
                 }
             }
             return nextResult;
@@ -164,7 +166,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
     private InferResult inferRules(InferContext context) {
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         InferResult result = knowledgebase.getFacts(this), ruleResult;
-        if (result.falsehoods().isEmpty()) {
+        if (result.isTrue()) {
             return result;
         }
         List<RuleImpl> rules = knowledgebase.getRules(this);
@@ -173,10 +175,10 @@ public class RelationImpl extends PredicateImpl<Relation> {
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
-                } else if (ruleResult.falsehoods().isEmpty()) {
+                } else if (ruleResult.isTrue()) {
                     return ruleResult;
                 } else if (ruleResult.hasCycleWith(this)) {
-                    result = result.or(ruleResult.remove(this));
+                    result = result.or(ruleResult.complete());
                 } else {
                     result = result.or(ruleResult);
                 }

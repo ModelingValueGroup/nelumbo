@@ -218,7 +218,7 @@ public final class Logic {
 
     public static boolean isFalse(Predicate pred) {
         InferResult result = infer(pred);
-        return result.facts().isEmpty();
+        return result.facts().isEmpty() && result.completeFacts();
     }
 
     public static boolean haveEqualBindings(Predicate pred1, Predicate pred2) {
@@ -227,7 +227,9 @@ public final class Logic {
         PredicateImpl<?> impl1 = StructureImpl.<Predicate, PredicateImpl<?>> unproxy(pred1);
         PredicateImpl<?> impl2 = StructureImpl.<Predicate, PredicateImpl<?>> unproxy(pred2);
         return getBindings(result1.facts(), impl1).equals(getBindings(result2.facts(), impl2)) && //
-                getBindings(result1.falsehoods(), impl1).equals(getBindings(result2.falsehoods(), impl2));
+                result1.completeFacts() == result2.completeFacts() && //
+                getBindings(result1.falsehoods(), impl1).equals(getBindings(result2.falsehoods(), impl2)) && //
+                result1.completeFalsehoods() == result2.completeFalsehoods();
     }
 
     public static Set<Predicate> getFacts(Predicate pred) {
@@ -404,9 +406,9 @@ public final class Logic {
         if (constant1 == null && constant2 == null) {
             return relation.unknown();
         } else if (constant1 == null) {
-            return InferResult.trueFalse(relation.set(1, constant2).singleton(), relation.singleton());
+            return relation.set(1, constant2).factIncompleteFalsehoods();
         } else if (constant2 == null) {
-            return InferResult.trueFalse(relation.set(2, constant1).singleton(), relation.singleton());
+            return relation.set(2, constant1).factIncompleteFalsehoods();
         } else {
             StructureImpl eq = constant1.eq(constant2);
             return eq != null ? relation.set(1, eq, eq).fact() : relation.falsehood();

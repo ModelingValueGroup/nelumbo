@@ -44,7 +44,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
         identity = identityStrcs.get(0).getKey();
         identityFact = collector().set(iterator, identity).set(result, identity);
         InferResult result = identityFact.infer();
-        if (!result.hasOnly(identityFact) || !result.falsehoods().isEmpty()) {
+        if (!result.equals(identityFact.fact())) {
             throw new IllegalArgumentException("The (identity) constant in the collector of is not an identity, hence " + identityFact + " is not true");
         }
     }
@@ -90,8 +90,8 @@ public class CollectImpl extends PredicateImpl<Collect> {
             InferResult condResult = condition().resolve(context);
             if (condResult.hasStackOverflow()) {
                 return condResult;
-            } else if (condResult.hasOnlyUnknowns()) {
-                return condResult;
+            } else if (!condResult.completeFacts()) {
+                return unknown();
             } else {
                 return collect(condResult, context);
             }
@@ -116,7 +116,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
                 cycles = cycles.addAll(inferResult.cycles());
             }
         }
-        return InferResult.of(next.replaceAll(f -> identityFact.set(result, f.get(result))), collector.singleton(), cycles);
+        return InferResult.of(next.replaceAll(f -> identityFact.set(result, f.get(result))), cycles.isEmpty(), Set.of(), false, cycles);
     }
 
     @Override

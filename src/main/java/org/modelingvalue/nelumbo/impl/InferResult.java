@@ -29,38 +29,17 @@ public interface InferResult {
 
     Set<PredicateImpl<?>> falsehoods();
 
+    boolean completeFacts();
+
+    boolean completeFalsehoods();
+
+    PredicateImpl<?> unknown();
+
     Set<RelationImpl> cycles();
 
     List<RelationImpl> stackOverflow();
 
-    InferResult EMPTY = new InferResult() {
-        @Override
-        public Set<PredicateImpl<?>> facts() {
-            return Set.of();
-        }
-
-        @Override
-        public Set<PredicateImpl<?>> falsehoods() {
-            return Set.of();
-        }
-
-        @Override
-        public Set<RelationImpl> cycles() {
-            return Set.of();
-        }
-
-        @Override
-        public List<RelationImpl> stackOverflow() {
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            return asString();
-        }
-    };
-
-    static InferResult of(Set<PredicateImpl<?>> facts, Set<PredicateImpl<?>> falsehoods, Set<RelationImpl> cycles) {
+    static InferResult of(Set<PredicateImpl<?>> facts, boolean completeFacts, Set<PredicateImpl<?>> falsehoods, boolean completeFalsehoods, Set<RelationImpl> cycles) {
         return new InferResult() {
             @Override
             public Set<PredicateImpl<?>> facts() {
@@ -70,6 +49,21 @@ public interface InferResult {
             @Override
             public Set<PredicateImpl<?>> falsehoods() {
                 return falsehoods;
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return completeFacts;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return completeFalsehoods;
+            }
+
+            @Override
+            public PredicateImpl<?> unknown() {
+                return null;
             }
 
             @Override
@@ -89,65 +83,7 @@ public interface InferResult {
         };
     }
 
-    static InferResult trueFalse(Set<PredicateImpl<?>> facts, Set<PredicateImpl<?>> falsehoods) {
-        return new InferResult() {
-            @Override
-            public Set<PredicateImpl<?>> facts() {
-                return facts;
-            }
-
-            @Override
-            public Set<PredicateImpl<?>> falsehoods() {
-                return falsehoods;
-            }
-
-            @Override
-            public Set<RelationImpl> cycles() {
-                return Set.of();
-            }
-
-            @Override
-            public List<RelationImpl> stackOverflow() {
-                return null;
-            }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
-        };
-    }
-
-    static InferResult unknowns(Set<PredicateImpl<?>> unknowns) {
-        return new InferResult() {
-            @Override
-            public Set<PredicateImpl<?>> facts() {
-                return unknowns;
-            }
-
-            @Override
-            public Set<PredicateImpl<?>> falsehoods() {
-                return unknowns;
-            }
-
-            @Override
-            public Set<RelationImpl> cycles() {
-                return Set.of();
-            }
-
-            @Override
-            public List<RelationImpl> stackOverflow() {
-                return null;
-            }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
-        };
-    }
-
-    static InferResult facts(Set<PredicateImpl<?>> facts) {
+    static InferResult factsIncompleteFalsehoods(Set<PredicateImpl<?>> facts) {
         return new InferResult() {
             @Override
             public Set<PredicateImpl<?>> facts() {
@@ -160,6 +96,21 @@ public interface InferResult {
             }
 
             @Override
+            public boolean completeFacts() {
+                return true;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
+            }
+
+            @Override
+            public PredicateImpl<?> unknown() {
+                return null;
+            }
+
+            @Override
             public Set<RelationImpl> cycles() {
                 return Set.of();
             }
@@ -176,7 +127,95 @@ public interface InferResult {
         };
     }
 
-    static InferResult falsehoods(Set<PredicateImpl<?>> falsehoods) {
+    static InferResult unknown(PredicateImpl<?> unknown) {
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl<?>> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<PredicateImpl<?>> falsehoods() {
+                return Set.of();
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return false;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
+            }
+
+            @Override
+            public PredicateImpl<?> unknown() {
+                return unknown;
+            }
+
+            @Override
+            public Set<RelationImpl> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<RelationImpl> stackOverflow() {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return asString();
+            }
+        };
+    }
+
+    static InferResult completeFacts(Set<PredicateImpl<?>> facts) {
+        return new InferResult() {
+            @Override
+            public Set<PredicateImpl<?>> facts() {
+                return facts;
+            }
+
+            @Override
+            public Set<PredicateImpl<?>> falsehoods() {
+                return Set.of();
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return true;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return true;
+            }
+
+            @Override
+            public PredicateImpl<?> unknown() {
+                return null;
+            }
+
+            @Override
+            public Set<RelationImpl> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<RelationImpl> stackOverflow() {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return asString();
+            }
+        };
+    }
+
+    static InferResult completeFalsehoods(Set<PredicateImpl<?>> falsehoods) {
         return new InferResult() {
             @Override
             public Set<PredicateImpl<?>> facts() {
@@ -186,6 +225,21 @@ public interface InferResult {
             @Override
             public Set<PredicateImpl<?>> falsehoods() {
                 return falsehoods;
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return true;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return true;
+            }
+
+            @Override
+            public PredicateImpl<?> unknown() {
+                return null;
             }
 
             @Override
@@ -207,21 +261,36 @@ public interface InferResult {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     static InferResult cycle(RelationImpl relation) {
-        Set set = Set.of(relation);
+        Set cycles = Set.of(relation);
         return new InferResult() {
             @Override
             public Set<PredicateImpl<?>> facts() {
-                return set;
+                return Set.of();
             }
 
             @Override
             public Set<PredicateImpl<?>> falsehoods() {
-                return set;
+                return Set.of();
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return false;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
+            }
+
+            @Override
+            public PredicateImpl<?> unknown() {
+                return relation;
             }
 
             @Override
             public Set<RelationImpl> cycles() {
-                return set;
+                return cycles;
             }
 
             @Override
@@ -249,6 +318,21 @@ public interface InferResult {
             }
 
             @Override
+            public boolean completeFacts() {
+                return false;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
+            }
+
+            @Override
+            public PredicateImpl<?> unknown() {
+                return null;
+            }
+
+            @Override
             public Set<RelationImpl> cycles() {
                 return Set.of();
             }
@@ -266,52 +350,54 @@ public interface InferResult {
     }
 
     default InferResult addCycles(Set<RelationImpl> cycles) {
-        return cycles.isEmpty() ? this : of(facts(), falsehoods(), cycles().addAll(cycles));
+        return cycles.isEmpty() ? this : of(facts(), completeFacts(), falsehoods(), completeFalsehoods(), cycles().addAll(cycles));
     }
 
-    default InferResult addFact(PredicateImpl<?> fact) {
-        return facts().contains(fact) ? this : of(facts().add(fact), falsehoods(), cycles());
+    default InferResult incompleteFacts() {
+        return !completeFacts() ? this : of(facts(), false, falsehoods(), completeFalsehoods(), cycles());
     }
 
-    default InferResult addFalsehood(PredicateImpl<?> falsehood) {
-        return falsehoods().contains(falsehood) ? this : of(facts(), falsehoods().add(falsehood), cycles());
+    default InferResult incompleteFalsehood(PredicateImpl<?> falsehood) {
+        return !completeFalsehoods() ? this : of(facts(), completeFacts(), falsehoods(), false, cycles());
     }
 
     default InferResult add(InferResult other) {
         Set<PredicateImpl<?>> facts = facts().addAll(other.facts());
+        boolean completeFacts = completeFacts() && other.completeFacts();
         Set<PredicateImpl<?>> falsehoods = falsehoods().addAll(other.falsehoods());
+        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<RelationImpl> cycles = cycles().addAll(other.cycles());
-        return of(facts, falsehoods, cycles);
+        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
     default InferResult not() {
-        return of(falsehoods(), facts(), cycles());
+        return of(falsehoods(), completeFalsehoods(), facts(), completeFacts(), cycles());
     }
 
     default InferResult and(InferResult other) {
         Set<PredicateImpl<?>> facts = facts().retainAll(other.facts());
+        boolean completeFacts = completeFacts() || other.completeFacts();
         Set<PredicateImpl<?>> falsehoods = falsehoods().addAll(other.falsehoods());
+        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<RelationImpl> cycles = cycles().addAll(other.cycles());
-        return of(facts, falsehoods, cycles);
+        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
     default InferResult or(InferResult other) {
         Set<PredicateImpl<?>> facts = facts().addAll(other.facts());
+        boolean completeFacts = completeFacts() && other.completeFacts();
         Set<PredicateImpl<?>> falsehoods = falsehoods().retainAll(other.falsehoods());
+        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
         Set<RelationImpl> cycles = cycles().addAll(other.cycles());
-        return of(facts, falsehoods, cycles);
+        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
-    default InferResult cast(PredicateImpl<?> to) {
-        return of(cast(facts(), to), cast(falsehoods(), to), cycles());
-    }
-
-    static Set<PredicateImpl<?>> cast(Set<PredicateImpl<?>> set, PredicateImpl<?> to) {
-        return set.replaceAll(p -> p.equals(to) ? to : to.castFrom(p));
+    default InferResult complete() {
+        return completeFacts() && completeFalsehoods() ? this : of(facts(), true, falsehoods(), true, cycles());
     }
 
     default InferResult bind(PredicateImpl<?> from, PredicateImpl<?> to) {
-        return of(bind(facts(), from, to), bind(falsehoods(), from, to), cycles());
+        return of(bind(facts(), from, to), completeFacts(), bind(falsehoods(), from, to), completeFalsehoods(), cycles());
     }
 
     static Set<PredicateImpl<?>> bind(Set<PredicateImpl<?>> set, PredicateImpl<?> from, PredicateImpl<?> to) {
@@ -320,6 +406,14 @@ public interface InferResult {
 
     static PredicateImpl<?> bind(PredicateImpl<?> pred, PredicateImpl<?> from, PredicateImpl<?> to) {
         return pred.equals(from) ? to : to.setBinding(pred.getBinding());
+    }
+
+    default InferResult cast(PredicateImpl<?> to) {
+        return of(cast(facts(), to), completeFacts(), cast(falsehoods(), to), completeFalsehoods(), cycles());
+    }
+
+    static Set<PredicateImpl<?>> cast(Set<PredicateImpl<?>> set, PredicateImpl<?> to) {
+        return set.replaceAll(p -> p.equals(to) ? to : to.castFrom(p));
     }
 
     default boolean hasCycleWith(PredicateImpl<?> predicate) {
@@ -335,33 +429,39 @@ public interface InferResult {
         if (overflow != null) {
             return overflow.toString().substring(4);
         } else {
-            return toString(facts()) + toString(falsehoods()) + toString(cycles());
+            return toString(facts(), completeFacts()) + toString(falsehoods(), completeFalsehoods()) + toString(cycles(), true);
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    default String toString(Set<? extends PredicateImpl> set) {
-        return set.toString().substring(3);
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    default String toString(Set set, boolean complete) {
+        String result = set.toString().substring(3);
+        return complete ? result : result.substring(0, result.length() - 1) + (set.isEmpty() ? "" : ",") + "\u2026]";
     }
 
     default boolean equals(InferResult other) {
-        return facts().equals(other.facts()) && falsehoods().equals(other.falsehoods()) && cycles().equals(other.cycles());
+        if (other == null) {
+            return false;
+        }
+        return facts().equals(other.facts()) && completeFacts() == other.completeFacts() && //
+                falsehoods().equals(other.falsehoods()) && completeFalsehoods() == other.completeFalsehoods() && //
+                cycles().equals(other.cycles());
     }
 
-    default boolean hasOnly(PredicateImpl<?> predicate) {
-        return facts().allMatch(predicate::equals) && falsehoods().allMatch(predicate::equals);
+    default boolean isTrue() {
+        return falsehoods().isEmpty() && completeFalsehoods();
     }
 
-    default boolean hasUnknown() {
-        return !facts().retainAll(falsehoods()).isEmpty();
+    default boolean isFalse() {
+        return facts().isEmpty() && completeFacts();
     }
 
-    default boolean hasOnlyUnknowns() {
-        return facts().equals(falsehoods());
+    default boolean isIncomplete() {
+        return !completeFacts() && !completeFalsehoods();
     }
 
-    default InferResult remove(PredicateImpl<?> predicate) {
-        return InferResult.of(facts().remove(predicate), falsehoods().remove(predicate), cycles());
+    default boolean isEmpty() {
+        return facts().isEmpty() && falsehoods().isEmpty();
     }
 
 }

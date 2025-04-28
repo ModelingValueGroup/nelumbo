@@ -137,16 +137,16 @@ public final class Rationals {
                 boolean eq = s.equals(relation.getVal(3));
                 return eq ? relation.fact() : relation.falsehood();
             } else {
-                return InferResult.trueFalse(relation.set(3, s).singleton(), relation.singleton());
+                return relation.set(3, s).factIncompleteFalsehoods();
             }
         } else if (numAddend1 != null && numSum != null) {
             BigInteger a = numAddend1.multiply(denSum);
             BigInteger c = numSum.multiply(denAddend1);
-            return InferResult.trueFalse(relation.set(2, struct(c.subtract(a), denSum.multiply(denAddend1))).singleton(), relation.singleton());
+            return relation.set(2, struct(c.subtract(a), denSum.multiply(denAddend1))).factIncompleteFalsehoods();
         } else if (numAddend2 != null && numSum != null) {
             BigInteger b = numAddend2.multiply(denSum);
             BigInteger c = numSum.multiply(denAddend2);
-            return InferResult.trueFalse(relation.set(1, struct(c.subtract(b), denSum.multiply(denAddend2))).singleton(), relation.singleton());
+            return relation.set(1, struct(c.subtract(b), denSum.multiply(denAddend2))).factIncompleteFalsehoods();
         } else {
             return relation.unknown();
         }
@@ -173,12 +173,12 @@ public final class Rationals {
                 boolean eq = p.equals(relation.getVal(3));
                 return eq ? relation.fact() : relation.falsehood();
             } else {
-                return InferResult.trueFalse(Set.of(relation.set(3, p)), relation.singleton());
+                return relation.set(3, p).factIncompleteFalsehoods();
             }
         } else if (numFactor1 != null && numProduct != null) {
-            return InferResult.trueFalse(relation.set(2, struct(numProduct.multiply(denFactor1), denProduct.multiply(numFactor1))).singleton(), relation.singleton());
+            return relation.set(2, struct(numProduct.multiply(denFactor1), denProduct.multiply(numFactor1))).factIncompleteFalsehoods();
         } else if (numFactor2 != null && numProduct != null) {
-            return InferResult.trueFalse(relation.set(1, struct(numProduct.multiply(denFactor2), denProduct.multiply(numFactor2))).singleton(), relation.singleton());
+            return relation.set(1, struct(numProduct.multiply(denFactor2), denProduct.multiply(numFactor2))).factIncompleteFalsehoods();
         } else {
             return relation.unknown();
         }
@@ -202,12 +202,12 @@ public final class Rationals {
                 boolean eq = s.equals(relation.getVal(2));
                 return eq ? relation.fact() : relation.falsehood();
             } else {
-                return InferResult.trueFalse(relation.set(2, s).singleton(), relation.singleton());
+                return relation.set(2, s).factIncompleteFalsehoods();
             }
         } else if (numSquare != null) {
             BigInteger sqrt = numSquare.multiply(denSquare).sqrt();
             BigInteger abs = denSquare.abs();
-            return InferResult.trueFalse(Set.of(relation.set(1, struct(sqrt, abs)), relation.set(1, struct(sqrt.negate(), abs))), relation.singleton());
+            return InferResult.factsIncompleteFalsehoods(Set.of(relation.set(1, struct(sqrt, abs)), relation.set(1, struct(sqrt.negate(), abs))));
         } else {
             return relation.unknown();
         }

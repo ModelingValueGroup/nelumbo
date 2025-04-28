@@ -166,15 +166,19 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     }
 
     public final InferResult unknown() {
-        return InferResult.unknowns(singleton);
+        return InferResult.unknown(this);
     }
 
     public final InferResult fact() {
-        return InferResult.facts(singleton);
+        return InferResult.completeFacts(singleton);
     }
 
     public final InferResult falsehood() {
-        return InferResult.falsehoods(singleton);
+        return InferResult.completeFalsehoods(singleton);
+    }
+
+    public final InferResult factIncompleteFalsehoods() {
+        return InferResult.factsIncompleteFalsehoods(singleton);
     }
 
     public final Set<PredicateImpl<?>> singleton() {
@@ -185,6 +189,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     protected InferResult resolve(InferContext context) {
         Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
         Set<PredicateImpl<?>> facts = Set.of(), falsehoods = Set.of();
+        boolean completeFacts = true, completeFalsehoods = true;
         Set<RelationImpl> cycles = Set.of();
         InferContext reduce = context.reduce(true);
         do {
@@ -197,42 +202,36 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 InferResult result = entry.getValue().infer(reduce);
                 if (result.hasStackOverflow()) {
                     return result;
-                } else if (result.facts().isEmpty()) {
+                } else if (result.isFalse()) {
                     falsehoods = falsehoods.add(setBinding(entry.getKey()));
-                } else if (result.falsehoods().isEmpty()) {
+                } else if (result.isTrue()) {
                     facts = facts.add(setBinding(entry.getKey()));
                 } else {
-                    PredicateImpl predicate = result.facts().get(0);
+                    PredicateImpl predicate = result.unknown();
                     result = predicate.infer(context);
                     if (result.hasStackOverflow()) {
                         return result;
-                    } else if (result.hasOnlyUnknowns()) {
-                        facts = facts.add(this);
-                        falsehoods = falsehoods.add(this);
+                    } else if (result.isEmpty()) {
+                        completeFacts = false;
+                        completeFalsehoods = false;
                         cycles = cycles.addAll(result.cycles());
                     } else {
                         for (PredicateImpl pred : result.facts()) {
-                            if (pred.isFullyBound()) {
-                                Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
-                                next = next.put(binding, predicate.setBinding(binding));
-                            } else {
-                                facts = facts.add(this);
-                            }
+                            Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
+                            next = next.put(binding, predicate.setBinding(binding));
                         }
                         for (PredicateImpl pred : result.falsehoods()) {
-                            if (pred.isFullyBound()) {
-                                Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
-                                next = next.put(binding, predicate.setBinding(binding));
-                            } else {
-                                falsehoods = falsehoods.add(this);
-                            }
+                            Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
+                            next = next.put(binding, predicate.setBinding(binding));
                         }
+                        completeFacts &= result.completeFacts();
+                        completeFalsehoods &= result.completeFalsehoods();
                         cycles = cycles.addAll(result.cycles());
                     }
                 }
             }
         } while (!next.isEmpty());
-        return InferResult.of(facts, falsehoods, cycles);
+        return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
 }
