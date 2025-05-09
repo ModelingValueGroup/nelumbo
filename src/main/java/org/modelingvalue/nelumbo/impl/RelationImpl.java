@@ -41,6 +41,11 @@ public class RelationImpl extends PredicateImpl<Relation> {
     }
 
     @Override
+    public RelationImpl set(int[] idx, Object val) {
+        return (RelationImpl) super.set(idx, val);
+    }
+
+    @Override
     @SuppressWarnings("rawtypes")
     protected final RelationImpl set(VariableImpl var, Object val) {
         return (RelationImpl) super.set(var, val);

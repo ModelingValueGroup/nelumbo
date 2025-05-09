@@ -303,8 +303,8 @@ public class NelumboTest extends NelumboTestBase {
         integerRules();
         familyRules();
 
-        rule(personTotal(A, O), coll(and(parentChild(A, B), personAmount(B, P)), plus(i(0), P, O)));
-        rule(personNumber(A, O), coll(and(parentChild(A, B), eq(i(1), P)), plus(i(0), P, O)));
+        rule(personTotal(A, O), coll(and(parentChild(A, B), personAmount(B, P)), is(plus(i(0), P), O)));
+        rule(personNumber(A, O), coll(and(parentChild(A, B), eq(i(1), P)), is(plus(i(0), P), O)));
     }
 
     // @Test

@@ -44,6 +44,9 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         this.declaration = this;
     }
 
+    protected void init(StructureImpl<?> parent, int i) {
+    }
+
     protected PredicateImpl(Object[] args, PredicateImpl<P> declaration) {
         super(args);
         this.declaration = declaration == null ? this : declaration;
@@ -98,12 +101,6 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         return super.get(declaration, var);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    @Override
-    protected final PredicateImpl replace(Object from, Object to) {
-        return (PredicateImpl) super.replace(from, to);
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     protected final PredicateImpl<P> struct(Object[] array) {
@@ -146,7 +143,13 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public PredicateImpl<P> set(int i, Object... a) {
-        return ((PredicateImpl) super.set(i, a));
+        return (PredicateImpl) super.set(i, a);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public PredicateImpl<P> set(int[] idx, Object val) {
+        return (PredicateImpl) super.set(idx, val);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

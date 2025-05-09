@@ -14,47 +14,50 @@ public class CollectImpl extends PredicateImpl<Collect> {
     private static final FunctorImpl<Collect> COLL_FUNCTOR        = FunctorImpl.<Collect, Predicate, Relation> of(Logic::coll);
     private static final Functor<Collect>     COLL_FUNCTORR_PROXY = COLL_FUNCTOR.proxy();
 
-    @SuppressWarnings("rawtypes")
-    private final VariableImpl                result;
-    @SuppressWarnings("rawtypes")
-    private final VariableImpl                iterator;
-    @SuppressWarnings("rawtypes")
-    private final StructureImpl<?>            identity;
-    private final PredicateImpl<?>            identityFact;
+    private final VariableImpl<?>             resultVar;
+    private final VariableImpl<?>             iteratorVar;
+    private final StructureImpl<?>            identityCons;
+    private final int[]                       identityIdx;
+    private final PredicateImpl<?>            identityPred;
 
     @SuppressWarnings("rawtypes")
     public CollectImpl(Predicate condition, Predicate collector) {
         super(COLL_FUNCTORR_PROXY, condition, collector);
         Map<VariableImpl, Object> condVars = condition().variables();
         Map<VariableImpl, Object> collVars = collector().variables();
+        // result
         Map<VariableImpl, Object> resultVars = collVars.removeAllKey(condVars);
         if (resultVars.size() != 1) {
             throw new IllegalArgumentException("Collect shoud have exactly one (result) variable in the collector (that is not used in the condition), " + resultVars.size() + " found in " + this);
         }
-        result = resultVars.get(0).getKey();
+        resultVar = resultVars.get(0).getKey();
+        // iterator
         Map<VariableImpl, Object> iteratorVars = collVars.retainAllKey(condVars);
         if (iteratorVars.size() != 1) {
             throw new IllegalArgumentException("Collect shoud have exactly one shared (iterator) variable in the condition and the collector, " + iteratorVars.size() + " found in " + this);
         }
-        iterator = iteratorVars.get(0).getKey();
-        Map<StructureImpl, Object> identityStrcs = collector().structures();
-        if (identityStrcs.size() != 1) {
-            throw new IllegalArgumentException("Collect shoud have exactly one (identity) constant in the collector, " + identityStrcs.size() + " found in " + collector());
+        iteratorVar = iteratorVars.get(0).getKey();
+        // identity
+        Map<StructureImpl, int[]> collCons = collector().constants();
+        if (collCons.size() != 1) {
+            throw new IllegalArgumentException("Collect shoud have exactly one (identity) constant in the collector, " + collCons.size() + " found in " + collector());
         }
-        identity = identityStrcs.get(0).getKey();
-        identityFact = collector().set(iterator, identity).set(result, identity);
-        InferResult result = identityFact.infer();
-        if (!result.equals(identityFact.factCC())) {
-            throw new IllegalArgumentException("The (identity) constant in the collector of is not an identity, hence " + identityFact + " is not true");
+        identityCons = collCons.get(0).getKey();
+        identityIdx = collCons.get(0).getValue();
+        identityPred = collector().set(iteratorVar, identityCons).set(resultVar, identityCons);
+        InferResult result = identityPred.infer();
+        if (!result.equals(identityPred.factCC())) {
+            throw new IllegalArgumentException("The (identity) constant in the collector of is not an identity, hence " + identityPred + " is not true");
         }
     }
 
     private CollectImpl(Object[] args, CollectImpl declaration) {
         super(args, declaration);
-        result = declaration.result;
-        iterator = declaration.iterator;
-        identity = declaration.identity;
-        identityFact = declaration.identityFact;
+        resultVar = declaration.resultVar;
+        iteratorVar = declaration.iteratorVar;
+        identityCons = declaration.identityCons;
+        identityIdx = declaration.identityIdx;
+        identityPred = declaration.identityPred;
     }
 
     @Override
@@ -81,7 +84,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
     @Override
     protected InferResult infer(InferContext context) {
         if (context.reduce()) {
-            if (get(result) instanceof Class) {
+            if (get(resultVar) instanceof Class) {
                 return unknown();
             } else {
                 return BooleanImpl.TRUE_CONCLUSION;
@@ -98,15 +101,15 @@ public class CollectImpl extends PredicateImpl<Collect> {
 
     private InferResult collect(InferResult condResult, InferContext context) {
         PredicateImpl<?> collector = collector(), condColl;
-        Set<PredicateImpl<?>> prev, next = Set.of(identityFact);
+        Set<PredicateImpl<?>> prev, next = Set.of(identityPred);
         Set<RelationImpl> cycles = condResult.cycles();
         for (PredicateImpl<?> condFact : condResult.facts()) {
             prev = next;
             next = Set.of();
-            condColl = collector.set(iterator, condFact.get(iterator));
+            condColl = collector.set(iteratorVar, condFact.get(iteratorVar));
             for (PredicateImpl<?> prevFact : prev) {
-                PredicateImpl<?> coll = condColl.replace(identity, prevFact.get(result));
-                InferResult inferResult = coll.infer(context);
+                PredicateImpl<?> coll = condColl.set(identityIdx, prevFact.get(resultVar));
+                InferResult inferResult = coll.resolve(context);
                 if (inferResult.hasStackOverflow()) {
                     return inferResult;
                 }
@@ -114,7 +117,13 @@ public class CollectImpl extends PredicateImpl<Collect> {
                 cycles = cycles.addAll(inferResult.cycles());
             }
         }
-        return InferResult.of(next.replaceAll(f -> identityFact.set(result, f.get(result))), cycles.isEmpty(), Set.of(), false, cycles);
+        return InferResult.of(next.replaceAll(f -> identityPred.set(resultVar, f.get(resultVar))), cycles.isEmpty(), Set.of(), false, cycles);
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Map<VariableImpl, Object> variables() {
+        return super.variables();
     }
 
     @Override

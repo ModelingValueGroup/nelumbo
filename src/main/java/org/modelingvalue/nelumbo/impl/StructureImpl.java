@@ -29,6 +29,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.StringUtil;
+import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
 import org.modelingvalue.nelumbo.Logic.RenderLambda;
@@ -262,15 +263,26 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Map<StructureImpl, Object> structures() {
-        Map<StructureImpl, Object> preds = Map.of();
+    public Map<StructureImpl, int[]> constants() {
+        Map<StructureImpl, int[]> preds = Map.of();
         for (int i = 1; i < length(); i++) {
             Object val = get(i);
-            if (val.getClass() == StructureImpl.class) {
-                preds = preds.put((StructureImpl) val, ((StructureImpl) val).type());
+            if (val instanceof StructureImpl && !(val instanceof VariableImpl)) {
+                if (Constant.class.isAssignableFrom(((StructureImpl) val).type())) {
+                    preds = preds.put((StructureImpl) val, new int[]{i});
+                } else {
+                    int ii = i;
+                    preds = preds.putAll(((StructureImpl<?>) val).constants().replaceAll(e -> {
+                        int[] idx = new int[e.getValue().length + 1];
+                        System.arraycopy(e.getValue(), 0, idx, 1, e.getValue().length);
+                        idx[0] = ii;
+                        return Entry.of(e.getKey(), idx);
+                    }));
+                }
             }
         }
         return preds;
+
     }
 
     @SuppressWarnings("unchecked")
@@ -297,6 +309,22 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             }
         }
         return array != null ? struct(array) : this;
+    }
+
+    public StructureImpl<F> set(int[] idx, Object val) {
+        return set(0, idx, val);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private StructureImpl<F> set(int ii, int[] idx, Object val) {
+        Object[] array = toArray();
+        if (ii < idx.length - 1) {
+            StructureImpl s = (StructureImpl) array[idx[ii]];
+            array[idx[ii]] = s.set(ii + 1, idx, val);
+        } else {
+            array[idx[ii]] = val;
+        }
+        return struct(array);
     }
 
     @SuppressWarnings("unchecked")
@@ -425,20 +453,6 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             return ((StructureImpl) declVal).setBinding((StructureImpl) declVal, vars);
         }
         return thisVal;
-    }
-
-    protected StructureImpl<F> replace(Object from, Object to) {
-        Object[] array = null;
-        for (int i = 1; i < length(); i++) {
-            Object thisVal = get(i);
-            if (Objects.equals(from, thisVal)) {
-                if (array == null) {
-                    array = toArray();
-                }
-                array[i] = to;
-            }
-        }
-        return array != null ? struct(array) : this;
     }
 
     @SuppressWarnings("rawtypes")
