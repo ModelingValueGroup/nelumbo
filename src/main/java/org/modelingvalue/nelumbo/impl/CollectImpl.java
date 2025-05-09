@@ -14,50 +14,72 @@ public class CollectImpl extends PredicateImpl<Collect> {
     private static final FunctorImpl<Collect> COLL_FUNCTOR        = FunctorImpl.<Collect, Predicate, Relation> of(Logic::coll);
     private static final Functor<Collect>     COLL_FUNCTORR_PROXY = COLL_FUNCTOR.proxy();
 
-    private final VariableImpl<?>             resultVar;
-    private final VariableImpl<?>             iteratorVar;
-    private final StructureImpl<?>            identityCons;
-    private final int[]                       identityIdx;
-    private final PredicateImpl<?>            identityPred;
+    private VariableImpl<?>                   resultVar;
+    private VariableImpl<?>                   iteratorVar;
+    private VariableImpl<?>                   contextVar;
+    private StructureImpl<?>                  identityCons;
+    private int[]                             identityIdx;
+    private PredicateImpl<?>                  identityPred;
 
     @SuppressWarnings("rawtypes")
     public CollectImpl(Predicate condition, Predicate collector) {
         super(COLL_FUNCTORR_PROXY, condition, collector);
-        Map<VariableImpl, Object> condVars = condition().variables();
-        Map<VariableImpl, Object> collVars = collector().variables();
-        // result
-        Map<VariableImpl, Object> resultVars = collVars.removeAllKey(condVars);
-        if (resultVars.size() != 1) {
-            throw new IllegalArgumentException("Collect shoud have exactly one (result) variable in the collector (that is not used in the condition), " + resultVars.size() + " found in " + this);
-        }
-        resultVar = resultVars.get(0).getKey();
-        // iterator
-        Map<VariableImpl, Object> iteratorVars = collVars.retainAllKey(condVars);
-        if (iteratorVars.size() != 1) {
-            throw new IllegalArgumentException("Collect shoud have exactly one shared (iterator) variable in the condition and the collector, " + iteratorVars.size() + " found in " + this);
-        }
-        iteratorVar = iteratorVars.get(0).getKey();
-        // identity
-        Map<StructureImpl, int[]> collCons = collector().constants();
-        if (collCons.size() != 1) {
-            throw new IllegalArgumentException("Collect shoud have exactly one (identity) constant in the collector, " + collCons.size() + " found in " + collector());
-        }
-        identityCons = collCons.get(0).getKey();
-        identityIdx = collCons.get(0).getValue();
-        identityPred = collector().set(iteratorVar, identityCons).set(resultVar, identityCons);
-        InferResult result = identityPred.infer();
-        if (!result.equals(identityPred.factCC())) {
-            throw new IllegalArgumentException("The (identity) constant in the collector of is not an identity, hence " + identityPred + " is not true");
-        }
     }
 
     private CollectImpl(Object[] args, CollectImpl declaration) {
         super(args, declaration);
-        resultVar = declaration.resultVar;
-        iteratorVar = declaration.iteratorVar;
-        identityCons = declaration.identityCons;
-        identityIdx = declaration.identityIdx;
-        identityPred = declaration.identityPred;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void initDeclaration() {
+        if (identityPred == null) {
+            Map<VariableImpl, Object> condVars = condition().variables();
+            Map<VariableImpl, Object> collVars = collector().variables();
+            Map<VariableImpl, Object> globalVars = root().variables();
+            // result
+            Map<VariableImpl, Object> resultVars = collVars.retainAllKey(globalVars).removeAllKey(condVars);
+            if (resultVars.size() != 1) {
+                throw new IllegalArgumentException("Collect shoud have exactly one (result) variable in the collector (that is not used in the condition), " + resultVars.size() + " found in " + this);
+            }
+            resultVar = resultVars.get(0).getKey();
+            // iterator
+            Map<VariableImpl, Object> iteratorVars = collVars.retainAllKey(condVars).removeAllKey(globalVars);
+            if (iteratorVars.size() != 1) {
+                throw new IllegalArgumentException("Collect shoud have exactly one shared (iterator) variable in the condition and the collector, " + iteratorVars.size() + " found in " + this);
+            }
+            iteratorVar = iteratorVars.get(0).getKey();
+            // context
+            Map<VariableImpl, Object> contextVars = condVars.retainAllKey(globalVars).removeAllKey(collVars);
+            if (contextVars.size() != 1) {
+                throw new IllegalArgumentException("Collect shoud have exactly one (context) variable in the condition, " + contextVars.size() + " found in " + this);
+            }
+            contextVar = contextVars.get(0).getKey();
+            // identity
+            Map<StructureImpl, int[]> collCons = collector().constants();
+            if (collCons.size() != 1) {
+                throw new IllegalArgumentException("Collect shoud have exactly one (identity) constant in the collector, " + collCons.size() + " found in " + collector());
+            }
+            identityCons = collCons.get(0).getKey();
+            identityIdx = collCons.get(0).getValue();
+            identityPred = collector().set(iteratorVar, identityCons).set(resultVar, identityCons);
+            InferResult result = identityPred.infer();
+            if (!result.equals(identityPred.factCC())) {
+                throw new IllegalArgumentException("The (identity) constant in the collector of is not an identity, hence " + identityPred + " is not true");
+            }
+        }
+    }
+
+    private void init() {
+        if (identityPred == null) {
+            CollectImpl decl = declaration();
+            decl.initDeclaration();
+            resultVar = decl.resultVar;
+            iteratorVar = decl.iteratorVar;
+            contextVar = decl.contextVar;
+            identityCons = decl.identityCons;
+            identityIdx = decl.identityIdx;
+            identityPred = decl.identityPred;
+        }
     }
 
     @Override
@@ -83,12 +105,15 @@ public class CollectImpl extends PredicateImpl<Collect> {
 
     @Override
     protected InferResult infer(InferContext context) {
+        init();
         if (context.reduce()) {
             if (get(resultVar) instanceof Class) {
                 return unknown();
             } else {
                 return BooleanImpl.TRUE_CONCLUSION;
             }
+        } else if (get(contextVar) instanceof Class) {
+            return unknown();
         } else {
             InferResult condResult = condition().resolve(context);
             if (condResult.hasStackOverflow()) {

@@ -51,6 +51,10 @@ public final class BooleanImpl extends PredicateImpl<Bool> {
     }
 
     @Override
+    protected void init(StructureImpl<?> parent, int idx) {
+    }
+
+    @Override
     public BooleanImpl declaration() {
         return (BooleanImpl) super.declaration();
     }

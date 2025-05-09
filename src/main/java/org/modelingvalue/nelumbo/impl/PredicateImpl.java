@@ -23,6 +23,7 @@ package org.modelingvalue.nelumbo.impl;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
@@ -32,6 +33,9 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
 
     private final Set<PredicateImpl<?>> singleton        = Set.of(this);
     private final PredicateImpl<P>      declaration;
+
+    private StructureImpl<?>            parent;
+    private int                         parentIdx;
 
     @SuppressWarnings("unchecked")
     protected PredicateImpl(Functor<P> functor, Object... args) {
@@ -44,7 +48,31 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         this.declaration = this;
     }
 
-    protected void init(StructureImpl<?> parent, int i) {
+    protected void init(StructureImpl<?> parent, int idx) {
+        assert (this.parent == null && this.parentIdx == 0);
+        this.parent = parent;
+        this.parentIdx = idx;
+    }
+
+    private Pair<StructureImpl<?>, int[]> rootIdx() {
+        if (parent != null) {
+            Pair<StructureImpl<?>, int[]> root = parent instanceof PredicateImpl ? ((PredicateImpl<?>) parent).rootIdx() : null;
+            if (root != null) {
+                int[] idx = new int[root.b().length + 1];
+                System.arraycopy(root.b(), 0, idx, 1, root.b().length);
+                idx[0] = parentIdx;
+                return Pair.of(root.a(), idx);
+            } else {
+                return Pair.of(parent, new int[]{parentIdx});
+            }
+        } else {
+            return null;
+        }
+    }
+
+    protected StructureImpl<?> root() {
+        Pair<StructureImpl<?>, int[]> ri = rootIdx();
+        return ri != null ? ri.a().set(ri.b(), BooleanImpl.TRUE) : null;
     }
 
     protected PredicateImpl(Object[] args, PredicateImpl<P> declaration) {

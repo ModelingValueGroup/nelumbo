@@ -83,16 +83,19 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     public StructureImpl(Functor<F> functor, Object... args) {
         super(unproxy(functor, args));
         this.hashCode = getHashCode();
+        init();
     }
 
     protected StructureImpl(FunctorImpl<F> functor, Object... args) {
         super(array(functor, args));
         this.hashCode = getHashCode();
+        init();
     }
 
     protected StructureImpl(Class<F> type, Object... args) {
         super(array(type, args));
         this.hashCode = getHashCode();
+        init();
     }
 
     protected StructureImpl(Object[] args) {
@@ -107,6 +110,15 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             r = 31 * r + (e == null ? 0 : e.hashCode());
         }
         return 31 * r + get(0).hashCode();
+    }
+
+    private void init() {
+        for (int i = 1; i < length(); i++) {
+            Object e = get(i);
+            if (e instanceof PredicateImpl) {
+                ((PredicateImpl<?>) e).init(this, i);
+            }
+        }
     }
 
     @Override
