@@ -156,6 +156,8 @@ public class CollectImpl extends PredicateImpl<Collect> {
         if (!(resultVal instanceof Class)) {
             if (next.anyMatch(f -> f.get(resultVar).equals(resultVal))) {
                 return InferResult.of(Set.of(collector()), true, Set.of(), true, cycles);
+            } else if (!complete) {
+                return InferResult.of(Set.of(), false, Set.of(), false, cycles);
             } else {
                 return InferResult.of(Set.of(), true, Set.of(collector()), true, cycles);
             }
