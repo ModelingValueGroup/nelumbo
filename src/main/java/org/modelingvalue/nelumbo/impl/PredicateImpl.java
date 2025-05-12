@@ -174,6 +174,10 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         return (PredicateImpl) super.set(i, a);
     }
 
+    protected PredicateImpl<?> replace(PredicateImpl<?> from, PredicateImpl<?> to) {
+        return (PredicateImpl<?>) super.replace(from, to);
+    }
+
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public PredicateImpl<P> set(int[] idx, Object val) {
@@ -253,11 +257,11 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                     } else {
                         for (PredicateImpl pred : result.facts()) {
                             Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
-                            next = next.put(binding, predicate.setBinding(binding));
+                            next = next.put(binding, predicate.setBinding(binding).replace(pred, BooleanImpl.TRUE));
                         }
                         for (PredicateImpl pred : result.falsehoods()) {
                             Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
-                            next = next.put(binding, predicate.setBinding(binding));
+                            next = next.put(binding, predicate.setBinding(binding).replace(pred, BooleanImpl.FALSE));
                         }
                         completeFacts &= result.completeFacts();
                         completeFalsehoods &= result.completeFalsehoods();

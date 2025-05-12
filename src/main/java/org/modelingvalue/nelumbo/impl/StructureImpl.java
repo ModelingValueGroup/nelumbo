@@ -339,6 +339,28 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         return struct(array);
     }
 
+    @SuppressWarnings("rawtypes")
+    protected StructureImpl<?> replace(StructureImpl<?> from, StructureImpl<?> to) {
+        if (equals(from)) {
+            return to;
+        } else {
+            Object[] array = null;
+            for (int i = 0; i < length(); i++) {
+                Object thisVal = get(i);
+                if (thisVal instanceof StructureImpl) {
+                    StructureImpl<?> toVal = ((StructureImpl<?>) thisVal).replace(from, to);
+                    if (toVal != thisVal) {
+                        if (array == null) {
+                            array = toArray();
+                        }
+                        array[i] = toVal;
+                    }
+                }
+            }
+            return array != null ? struct(array) : this;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public final StructureImpl<F> normal() {
         FunctorImpl<F> f = functor();

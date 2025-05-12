@@ -437,6 +437,10 @@ public interface InferResult {
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
+    default InferResult flipComplete() {
+        return of(facts(), completeFalsehoods(), falsehoods(), completeFacts(), cycles());
+    }
+
     default InferResult not() {
         return of(falsehoods(), completeFalsehoods(), facts(), completeFacts(), cycles());
     }

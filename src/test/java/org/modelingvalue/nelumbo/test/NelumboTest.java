@@ -214,42 +214,43 @@ public class NelumboTest extends NelumboTestBase {
 
     // Variables
 
-    IntegerCons              O      = iConsVar("O");
-    IntegerCons              P      = iConsVar("P");
-    IntegerCons              Q      = iConsVar("Q");
+    IntegerCons              O        = iConsVar("O");
+    IntegerCons              P        = iConsVar("P");
+    IntegerCons              Q        = iConsVar("Q");
 
-    Integer                  R      = iVar("R");
-    Integer                  S      = iVar("S");
+    Integer                  R        = iVar("R");
+    Integer                  S        = iVar("S");
 
-    RationalCons             T      = rConsVar("T");
-    RationalCons             U      = rConsVar("U");
+    RationalCons             T        = rConsVar("T");
+    RationalCons             U        = rConsVar("U");
 
-    PersonCons               A      = personConsVar("A");
-    PersonCons               B      = personConsVar("B");
-    PersonCons               C      = personConsVar("C");
+    PersonCons               A        = personConsVar("A");
+    PersonCons               B        = personConsVar("B");
+    PersonCons               C        = personConsVar("C");
 
-    Person                   X      = personVar("X");
-    Person                   Y      = personVar("Y");
-    Person                   Z      = personVar("Z");
+    Person                   X        = personVar("X");
+    Person                   Y        = personVar("Y");
+    Person                   Z        = personVar("Z");
 
-    RootCons                 V      = rootConsVar("V");
-    Root                     W      = rootVar("W");
+    RootCons                 V        = rootConsVar("V");
+    Root                     W        = rootVar("W");
 
     // Terms
 
-    PersonCons               Carel  = person("Carel");
-    PersonCons               Jan    = person("Jan");
-    PersonCons               Elske  = person("Elske");
-    PersonCons               Wim    = person("Wim");
-    PersonCons               Joppe  = person("Joppe");
-    PersonCons               Heleen = person("Heleen");
-    PersonCons               Marijn = person("Marijn");
+    PersonCons               Carel    = person("Carel");
+    PersonCons               Jan      = person("Jan");
+    PersonCons               Elske    = person("Elske");
+    PersonCons               Wim      = person("Wim");
+    PersonCons               Joppe    = person("Joppe");
+    PersonCons               Heleen   = person("Heleen");
+    PersonCons               Marijn   = person("Marijn");
+    PersonCons               Jannette = person("Jannette");
 
-    RootCons                 Root   = root(1);
+    RootCons                 Root     = root(1);
 
     // Fibonacci
 
-    static Functor<Relation> fib2   = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) NelumboTest::fib);
+    static Functor<Relation> fib2     = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) NelumboTest::fib);
 
     static Relation fib(IntegerCons i, IntegerCons f) {
         return rel(fib2, i, f);
@@ -468,13 +469,19 @@ public class NelumboTest extends NelumboTestBase {
 
             fact(parentChild(Jan, Wim));
             fact(parentChild(Jan, Carel));
-            fact(parentChild(Jan, Heleen));
+            fact(parentChild(Jan, Jannette));
+            fact(parentChild(Elske, Wim));
+            fact(parentChild(Elske, Carel));
+            fact(parentChild(Elske, Jannette));
             fact(personAmount(Wim, i(3)));
             fact(personAmount(Carel, i(7)));
-            fact(personAmount(Heleen, i(7)));
+            fact(personAmount(Jannette, i(7)));
 
             hasBindings(personTotal(Jan, O), binding(O, i(17)));
             hasBindings(personNumber(Jan, O), binding(O, i(3)));
+
+            isTrue(personTotal(Elske, i(17)));
+            isFalse(personNumber(Elske, i(4)));
         });
     }
 

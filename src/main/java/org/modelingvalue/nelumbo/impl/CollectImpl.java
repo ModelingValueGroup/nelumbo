@@ -20,6 +20,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
     private StructureImpl<?>                  identityCons;
     private int[]                             identityIdx;
     private PredicateImpl<?>                  identityPred;
+    private PredicateImpl<?>                  emptyCollector;
 
     @SuppressWarnings("rawtypes")
     public CollectImpl(Predicate condition, Predicate collector) {
@@ -32,7 +33,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
 
     @SuppressWarnings("rawtypes")
     private void initDeclaration() {
-        if (identityPred == null) {
+        if (emptyCollector == null) {
             Map<VariableImpl, Object> condVars = condition().variables();
             Map<VariableImpl, Object> collVars = collector().variables();
             Map<VariableImpl, Object> globalVars = root().variables();
@@ -66,11 +67,12 @@ public class CollectImpl extends PredicateImpl<Collect> {
             if (!result.equals(identityPred.factCC())) {
                 throw new IllegalArgumentException("The (identity) constant in the collector of is not an identity, hence " + identityPred + " is not true");
             }
+            emptyCollector = collector().set(resultVar, resultVar.type());
         }
     }
 
     private void init() {
-        if (identityPred == null) {
+        if (emptyCollector == null) {
             CollectImpl decl = declaration();
             decl.initDeclaration();
             resultVar = decl.resultVar;
@@ -79,6 +81,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
             identityCons = decl.identityCons;
             identityIdx = decl.identityIdx;
             identityPred = decl.identityPred;
+            emptyCollector = decl.emptyCollector;
         }
     }
 
@@ -107,10 +110,21 @@ public class CollectImpl extends PredicateImpl<Collect> {
     protected InferResult infer(InferContext context) {
         init();
         if (context.reduce()) {
-            if (get(resultVar) instanceof Class) {
+            if (collector().equals(BooleanImpl.TRUE)) {
+                return BooleanImpl.TRUE_CONCLUSION;
+            } else if (get(resultVar) instanceof Class || get(contextVar) instanceof Class) {
                 return unknown();
             } else {
-                return BooleanImpl.TRUE_CONCLUSION;
+                InferContext expand = context.reduce(false);
+                InferResult condResult = condition().resolve(expand);
+                if (condResult.hasStackOverflow()) {
+                    return condResult;
+                } else {
+                    InferResult result = collect(condResult, expand);
+                    Object rval = get(resultVar);
+                    boolean match = result.facts().replaceAll(f -> f.get(resultVar)).contains(rval);
+                    return match ? factCC() : falsehoodCC();
+                }
             }
         } else if (get(contextVar) instanceof Class) {
             return unknown();
@@ -125,7 +139,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
     }
 
     private InferResult collect(InferResult condResult, InferContext context) {
-        PredicateImpl<?> collector = collector(), condColl;
+        PredicateImpl<?> collector = emptyCollector, condColl;
         Set<PredicateImpl<?>> prev, next = Set.of(identityPred);
         Set<RelationImpl> cycles = condResult.cycles();
         for (PredicateImpl<?> condFact : condResult.facts()) {
@@ -142,7 +156,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
                 cycles = cycles.addAll(inferResult.cycles());
             }
         }
-        return InferResult.of(next.replaceAll(f -> identityPred.set(resultVar, f.get(resultVar))), cycles.isEmpty(), Set.of(), false, cycles);
+        return InferResult.of(next.replaceAll(f -> collector.set(resultVar, f.get(resultVar))), cycles.isEmpty(), Set.of(), false, cycles);
     }
 
     @SuppressWarnings("rawtypes")
