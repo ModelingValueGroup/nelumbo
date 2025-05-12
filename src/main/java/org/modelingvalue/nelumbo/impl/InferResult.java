@@ -424,10 +424,6 @@ public interface InferResult {
         };
     }
 
-    default InferResult addCycles(Set<RelationImpl> cycles) {
-        return cycles.isEmpty() ? this : of(facts(), completeFacts(), falsehoods(), completeFalsehoods(), cycles().addAll(cycles));
-    }
-
     default InferResult add(InferResult other) {
         Set<PredicateImpl<?>> facts = facts().addAll(other.facts());
         boolean completeFacts = completeFacts() && other.completeFacts();

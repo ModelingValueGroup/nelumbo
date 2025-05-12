@@ -111,24 +111,11 @@ public class CollectImpl extends PredicateImpl<Collect> {
         init();
         if (context.reduce()) {
             if (collector().equals(BooleanImpl.TRUE)) {
-                return BooleanImpl.TRUE_CONCLUSION;
-            } else if (get(resultVar) instanceof Class || get(contextVar) instanceof Class) {
-                return unknown();
+                return factCC();
+            } else if (collector().equals(BooleanImpl.FALSE)) {
+                return falsehoodCC();
             } else {
-                InferContext expand = context.reduce(false);
-                InferResult condResult = condition().resolve(expand);
-                if (condResult.hasStackOverflow()) {
-                    return condResult;
-                } else {
-                    InferResult result = collect(condResult, expand);
-                    if (condResult.hasStackOverflow()) {
-                        return condResult;
-                    } else {
-                        Object rval = get(resultVar);
-                        boolean match = result.facts().replaceAll(f -> f.get(resultVar)).contains(rval);
-                        return match ? factCC() : falsehoodCC();
-                    }
-                }
+                return unknown();
             }
         } else if (get(contextVar) instanceof Class) {
             return unknown();
@@ -143,13 +130,13 @@ public class CollectImpl extends PredicateImpl<Collect> {
     }
 
     private InferResult collect(InferResult condResult, InferContext context) {
-        PredicateImpl<?> collector = emptyCollector, condColl;
+        PredicateImpl<?> condColl;
         Set<PredicateImpl<?>> prev, next = Set.of(identityPred);
         Set<RelationImpl> cycles = condResult.cycles();
         for (PredicateImpl<?> condFact : condResult.facts()) {
             prev = next;
             next = Set.of();
-            condColl = collector.set(iteratorVar, condFact.get(iteratorVar));
+            condColl = emptyCollector.set(iteratorVar, condFact.get(iteratorVar));
             for (PredicateImpl<?> prevFact : prev) {
                 PredicateImpl<?> coll = condColl.set(identityIdx, prevFact.get(resultVar));
                 InferResult inferResult = coll.resolve(context);
@@ -160,7 +147,16 @@ public class CollectImpl extends PredicateImpl<Collect> {
                 cycles = cycles.addAll(inferResult.cycles());
             }
         }
-        return InferResult.of(next.replaceAll(f -> collector.set(resultVar, f.get(resultVar))), cycles.isEmpty(), Set.of(), false, cycles);
+        Object resultVal = collector().get(resultVar);
+        if (!(resultVal instanceof Class)) {
+            if (next.anyMatch(f -> f.get(resultVar).equals(resultVal))) {
+                return InferResult.of(Set.of(collector()), true, Set.of(), true, cycles);
+            } else {
+                return InferResult.of(Set.of(), true, Set.of(collector()), true, cycles);
+            }
+        } else {
+            return InferResult.of(next.replaceAll(f -> collector().set(resultVar, f.get(resultVar))), cycles.isEmpty(), Set.of(), false, cycles);
+        }
     }
 
     @SuppressWarnings("rawtypes")
