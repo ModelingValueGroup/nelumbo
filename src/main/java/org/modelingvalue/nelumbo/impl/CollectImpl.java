@@ -121,9 +121,13 @@ public class CollectImpl extends PredicateImpl<Collect> {
                     return condResult;
                 } else {
                     InferResult result = collect(condResult, expand);
-                    Object rval = get(resultVar);
-                    boolean match = result.facts().replaceAll(f -> f.get(resultVar)).contains(rval);
-                    return match ? factCC() : falsehoodCC();
+                    if (condResult.hasStackOverflow()) {
+                        return condResult;
+                    } else {
+                        Object rval = get(resultVar);
+                        boolean match = result.facts().replaceAll(f -> f.get(resultVar)).contains(rval);
+                        return match ? factCC() : falsehoodCC();
+                    }
                 }
             }
         } else if (get(contextVar) instanceof Class) {
