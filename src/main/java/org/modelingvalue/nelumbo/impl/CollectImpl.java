@@ -131,20 +131,25 @@ public class CollectImpl extends PredicateImpl<Collect> {
 
     private InferResult collect(InferResult condResult, InferContext context) {
         PredicateImpl<?> condColl;
-        Set<PredicateImpl<?>> prev, next = Set.of(identityPred);
+        Set<PredicateImpl<?>> prev, next = Set.of();
         Set<RelationImpl> cycles = condResult.cycles();
-        for (PredicateImpl<?> condFact : condResult.facts()) {
-            prev = next;
-            next = Set.of();
-            condColl = emptyCollector.set(iteratorVar, condFact.get(iteratorVar));
-            for (PredicateImpl<?> prevFact : prev) {
-                PredicateImpl<?> coll = condColl.set(identityIdx, prevFact.get(resultVar));
-                InferResult inferResult = coll.resolve(context);
-                if (inferResult.hasStackOverflow()) {
-                    return inferResult;
+        boolean complete = condResult.completeFacts();
+        if (complete) {
+            next = identityPred.singleton();
+            for (PredicateImpl<?> condFact : condResult.facts()) {
+                prev = next;
+                next = Set.of();
+                condColl = emptyCollector.set(iteratorVar, condFact.get(iteratorVar));
+                for (PredicateImpl<?> prevFact : prev) {
+                    PredicateImpl<?> coll = condColl.set(identityIdx, prevFact.get(resultVar));
+                    InferResult inferResult = coll.resolve(context);
+                    if (inferResult.hasStackOverflow()) {
+                        return inferResult;
+                    }
+                    next = next.addAll(inferResult.facts());
+                    cycles = cycles.addAll(inferResult.cycles());
+                    complete &= inferResult.completeFacts();
                 }
-                next = next.addAll(inferResult.facts());
-                cycles = cycles.addAll(inferResult.cycles());
             }
         }
         Object resultVal = collector().get(resultVar);
@@ -155,7 +160,7 @@ public class CollectImpl extends PredicateImpl<Collect> {
                 return InferResult.of(Set.of(), true, Set.of(collector()), true, cycles);
             }
         } else {
-            return InferResult.of(next.replaceAll(f -> collector().set(resultVar, f.get(resultVar))), cycles.isEmpty(), Set.of(), false, cycles);
+            return InferResult.of(next.replaceAll(f -> collector().set(resultVar, f.get(resultVar))), complete, Set.of(), false, cycles);
         }
     }
 
