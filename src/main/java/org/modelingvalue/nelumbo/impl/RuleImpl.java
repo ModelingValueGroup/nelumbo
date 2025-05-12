@@ -88,7 +88,7 @@ public class RuleImpl extends StructureImpl<Rule> {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected final InferResult imply(RelationImpl relation, InferContext context) {
-        Map<VariableImpl, Object> binding = relation.getBinding(consequence(), Map.of());
+        Map<VariableImpl, Object> binding = relation.getBinding(consequence(), Map.of(), true);
         if (binding == null) {
             return null;
         }

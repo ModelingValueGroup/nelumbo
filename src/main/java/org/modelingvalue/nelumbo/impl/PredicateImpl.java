@@ -104,14 +104,14 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
 
     @SuppressWarnings("rawtypes")
     private PredicateImpl setVariables() {
-        Map<VariableImpl, Object> vars = getBinding(declaration, Map.of());
-        vars = vars != null ? vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e) : null;
-        return vars != null ? setBinding(vars) : this;
+        Map<VariableImpl, Object> vars = getBinding(declaration, Map.of(), false);
+        vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
+        return setBinding(vars);
     }
 
     @SuppressWarnings("rawtypes")
     public Map<VariableImpl, Object> getBinding() {
-        return super.getBinding(declaration, Map.of());
+        return super.getBinding(declaration, Map.of(), false);
     }
 
     @SuppressWarnings("rawtypes")
@@ -235,9 +235,6 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
             now = next;
             next = Map.of();
             for (Entry<Map<VariableImpl, Object>, PredicateImpl> entry : now) {
-                if (context.trace()) {
-                    System.err.println(context.prefix() + "  " + entry.getValue().toString(null));
-                }
                 InferResult result = entry.getValue().infer(reduce);
                 if (result.hasStackOverflow()) {
                     return result;
@@ -247,6 +244,9 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                     facts = facts.add(setBinding(entry.getKey()));
                 } else {
                     PredicateImpl predicate = result.unknown();
+                    if (context.trace()) {
+                        System.err.println(context.prefix() + "  " + predicate.toString(null));
+                    }
                     result = predicate.infer(context);
                     if (result.hasStackOverflow()) {
                         return result;

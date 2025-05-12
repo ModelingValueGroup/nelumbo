@@ -391,10 +391,10 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings("rawtypes")
-    protected final Map<VariableImpl, Object> getBinding(StructureImpl<F> declaration, Map<VariableImpl, Object> vars) {
+    protected final Map<VariableImpl, Object> getBinding(StructureImpl<F> declaration, Map<VariableImpl, Object> vars, boolean check) {
         if (get(0).equals(declaration.get(0))) {
             for (int i = 1; i < length(); i++) {
-                vars = getBinding(declaration.get(i), get(i), vars);
+                vars = getBinding(declaration.get(i), get(i), vars, check);
                 if (vars == null) {
                     return null;
                 }
@@ -406,7 +406,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Map<VariableImpl, Object> getBinding(Object declVal, Object thisVal, Map<VariableImpl, Object> vars) {
+    private static Map<VariableImpl, Object> getBinding(Object declVal, Object thisVal, Map<VariableImpl, Object> vars, boolean check) {
         Class thisType = typeOf(thisVal);
         thisVal = thisVal instanceof Class ? null : thisVal;
         if (declVal instanceof VariableImpl) {
@@ -435,14 +435,14 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             StructureImpl declStruct = (StructureImpl) declVal;
             if (thisVal != null) {
                 if (thisVal instanceof StructureImpl) {
-                    vars = ((StructureImpl) thisVal).getBinding(declStruct, vars);
+                    vars = ((StructureImpl) thisVal).getBinding(declStruct, vars, check);
                 } else {
                     return null;
                 }
             } else if (thisType == null || !declStruct.type().isAssignableFrom(thisType)) {
                 return null;
             }
-        } else if (thisVal != null && !thisVal.equals(declVal)) {
+        } else if (check && thisVal != null && !thisVal.equals(declVal)) {
             return null;
         }
         return vars;
