@@ -111,7 +111,7 @@ public abstract class BinaryPredicateImpl<T extends BinaryPredicate> extends Pre
 
     protected abstract boolean isRigth(InferResult[] predResult);
 
-    private int[] order() {
+    protected int[] order() {
         if (REVERSE_NELUMBO) {
             return ONE_ZERO;
         } else if (RANDOM_NELUMBO) {
