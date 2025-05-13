@@ -28,7 +28,7 @@ public abstract class BinaryPredicateImpl<T extends BinaryPredicate> extends Pre
     private static final long    serialVersionUID = -928776822979604743L;
 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
-    private static final int[]   ONE_ZERO         = new int[]{1, 0};
+    protected static final int[] ONE_ZERO         = new int[]{1, 0};
 
     protected BinaryPredicateImpl(FunctorImpl<T> functor, PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
         super(functor, predicate1, predicate2);
