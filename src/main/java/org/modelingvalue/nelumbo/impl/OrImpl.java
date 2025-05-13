@@ -82,7 +82,7 @@ public final class OrImpl extends BinaryPredicateImpl<Or> {
     }
 
     @Override
-    protected boolean isRigth(InferResult[] predResult) {
+    protected boolean isRight(InferResult[] predResult) {
         return predResult[0].isFalseCC();
     }
 

@@ -83,7 +83,7 @@ public abstract class BinaryPredicateImpl<T extends BinaryPredicate> extends Pre
                 return BooleanImpl.FALSE_CONCLUSION;
             } else if (isLeft(predResult)) {
                 return predResult[0];
-            } else if (isRigth(predResult)) {
+            } else if (isRight(predResult)) {
                 return predResult[1];
             } else {
                 return set(1, predResult[0].unknown(), predResult[1].unknown()).unknown();
@@ -109,7 +109,7 @@ public abstract class BinaryPredicateImpl<T extends BinaryPredicate> extends Pre
 
     protected abstract boolean isLeft(InferResult[] predResult);
 
-    protected abstract boolean isRigth(InferResult[] predResult);
+    protected abstract boolean isRight(InferResult[] predResult);
 
     protected int[] order() {
         if (REVERSE_NELUMBO) {
