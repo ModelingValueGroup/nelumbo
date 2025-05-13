@@ -207,7 +207,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
                 array[i] = s;
             }
         }
-        return array != null ? struct(array, declaration()) : this;
+        return array != null ? struct(array, null) : this;
     }
 
 }
