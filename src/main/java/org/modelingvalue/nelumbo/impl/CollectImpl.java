@@ -109,23 +109,14 @@ public class CollectImpl extends PredicateImpl<Collect> {
     @Override
     protected InferResult infer(InferContext context) {
         init();
-        if (context.reduce()) {
-            if (collector().equals(BooleanImpl.TRUE)) {
-                return factCC();
-            } else if (collector().equals(BooleanImpl.FALSE)) {
-                return falsehoodCC();
-            } else {
-                return unknown();
-            }
-        } else if (get(contextVar) instanceof Class) {
+        if (context.reduce() || get(contextVar) instanceof Class) {
             return unknown();
+        }
+        InferResult condResult = condition().resolve(context);
+        if (condResult.hasStackOverflow()) {
+            return condResult;
         } else {
-            InferResult condResult = condition().resolve(context);
-            if (condResult.hasStackOverflow()) {
-                return condResult;
-            } else {
-                return collect(condResult, context);
-            }
+            return collect(condResult, context);
         }
     }
 
@@ -155,15 +146,14 @@ public class CollectImpl extends PredicateImpl<Collect> {
         Object resultVal = collector().get(resultVar);
         if (!(resultVal instanceof Class)) {
             if (next.anyMatch(f -> f.get(resultVar).equals(resultVal))) {
-                return InferResult.of(Set.of(collector()), true, Set.of(), true, cycles);
+                return InferResult.of(singleton(), true, Set.of(), true, cycles);
             } else if (!complete) {
                 return InferResult.of(Set.of(), false, Set.of(), false, cycles);
             } else {
-                return InferResult.of(Set.of(), true, Set.of(collector()), true, cycles);
+                return InferResult.of(Set.of(), true, singleton(), true, cycles);
             }
-        } else {
-            return InferResult.of(next.replaceAll(f -> collector().set(resultVar, f.get(resultVar))), complete, Set.of(), false, cycles);
         }
+        return InferResult.of(next.replaceAll(f -> set(resultVar, f.get(resultVar))), complete, Set.of(), false, cycles);
     }
 
     @SuppressWarnings("rawtypes")
