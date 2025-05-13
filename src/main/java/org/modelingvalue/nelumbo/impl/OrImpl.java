@@ -23,7 +23,7 @@ package org.modelingvalue.nelumbo.impl;
 import org.modelingvalue.nelumbo.Logic.Or;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public final class OrImpl extends AndOrImpl<Or> {
+public final class OrImpl extends BinaryPredicateImpl<Or> {
     private static final long            serialVersionUID = -1732549494864415986L;
 
     private static final FunctorImpl<Or> OR_FUNCTOR       = FunctorImpl.<Or, Predicate, Predicate> of(OrImpl::or);
@@ -54,6 +54,36 @@ public final class OrImpl extends AndOrImpl<Or> {
     @Override
     public OrImpl set(int i, Object... a) {
         return (OrImpl) super.set(i, a);
+    }
+
+    @Override
+    protected boolean isTrue(InferResult predResult) {
+        return predResult.isTrueCC();
+    }
+
+    @Override
+    protected boolean isFalse(InferResult predResult) {
+        return false;
+    }
+
+    @Override
+    protected boolean isTrue(InferResult[] predResult) {
+        return false;
+    }
+
+    @Override
+    protected boolean isFalse(InferResult[] predResult) {
+        return predResult[0].isFalseCC() && predResult[1].isFalseCC();
+    }
+
+    @Override
+    protected boolean isLeft(InferResult[] predResult) {
+        return predResult[1].isFalseCC();
+    }
+
+    @Override
+    protected boolean isRigth(InferResult[] predResult) {
+        return predResult[0].isFalseCC();
     }
 
     @Override

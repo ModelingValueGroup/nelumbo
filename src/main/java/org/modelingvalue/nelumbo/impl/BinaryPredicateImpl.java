@@ -22,25 +22,25 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.modelingvalue.nelumbo.Logic.AndOr;
+import org.modelingvalue.nelumbo.Logic.BinaryPredicate;
 
-public abstract class AndOrImpl<T extends AndOr> extends PredicateImpl<T> {
+public abstract class BinaryPredicateImpl<T extends BinaryPredicate> extends PredicateImpl<T> {
     private static final long  serialVersionUID = -928776822979604743L;
 
     private static final int[] ZERO_ONE         = new int[]{0, 1};
     private static final int[] ONE_ZERO         = new int[]{1, 0};
 
-    protected AndOrImpl(FunctorImpl<T> functor, PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
+    protected BinaryPredicateImpl(FunctorImpl<T> functor, PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
         super(functor, predicate1, predicate2);
     }
 
-    protected AndOrImpl(Object[] args, AndOrImpl<T> declaration) {
+    protected BinaryPredicateImpl(Object[] args, BinaryPredicateImpl<T> declaration) {
         super(args, declaration);
     }
 
     @Override
-    public AndOrImpl<T> declaration() {
-        return (AndOrImpl<T>) super.declaration();
+    public BinaryPredicateImpl<T> declaration() {
+        return (BinaryPredicateImpl<T>) super.declaration();
     }
 
     @SuppressWarnings("rawtypes")
@@ -69,26 +69,22 @@ public abstract class AndOrImpl<T extends AndOr> extends PredicateImpl<T> {
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
             } else if (context.reduce()) {
-                if (this instanceof AndImpl && predResult[i].isFalseCC()) {
-                    return BooleanImpl.FALSE_CONCLUSION;
-                } else if (this instanceof OrImpl && predResult[i].isTrueCC()) {
+                if (isTrue(predResult[i])) {
                     return BooleanImpl.TRUE_CONCLUSION;
+                } else if (isFalse(predResult[i])) {
+                    return BooleanImpl.FALSE_CONCLUSION;
                 }
             }
         }
         if (context.reduce()) {
-            if (this instanceof AndImpl && predResult[0].isTrueCC() && predResult[1].isTrueCC()) {
+            if (isTrue(predResult)) {
                 return BooleanImpl.TRUE_CONCLUSION;
-            } else if (this instanceof AndImpl && predResult[0].isTrueCC()) {
-                return predResult[1];
-            } else if (this instanceof AndImpl && predResult[1].isTrueCC()) {
-                return predResult[0];
-            } else if (this instanceof OrImpl && predResult[0].isFalseCC() && predResult[1].isFalseCC()) {
+            } else if (isFalse(predResult)) {
                 return BooleanImpl.FALSE_CONCLUSION;
-            } else if (this instanceof OrImpl && predResult[0].isFalseCC()) {
-                return predResult[1];
-            } else if (this instanceof OrImpl && predResult[1].isFalseCC()) {
+            } else if (isLeft(predResult)) {
                 return predResult[0];
+            } else if (isRigth(predResult)) {
+                return predResult[1];
             } else {
                 return set(1, predResult[0].unknown(), predResult[1].unknown()).unknown();
             }
@@ -102,6 +98,18 @@ public abstract class AndOrImpl<T extends AndOr> extends PredicateImpl<T> {
             }
         }
     }
+
+    protected abstract boolean isTrue(InferResult predResult);
+
+    protected abstract boolean isFalse(InferResult predResult);
+
+    protected abstract boolean isTrue(InferResult[] predResult);
+
+    protected abstract boolean isFalse(InferResult[] predResult);
+
+    protected abstract boolean isLeft(InferResult[] predResult);
+
+    protected abstract boolean isRigth(InferResult[] predResult);
 
     private int[] order() {
         if (REVERSE_NELUMBO) {

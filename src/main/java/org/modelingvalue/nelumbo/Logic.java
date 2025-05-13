@@ -329,10 +329,10 @@ public final class Logic {
 
     // Or
 
-    public interface AndOr extends Predicate {
+    public interface BinaryPredicate extends Predicate {
     }
 
-    public interface Or extends AndOr {
+    public interface Or extends BinaryPredicate {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -347,7 +347,7 @@ public final class Logic {
 
     // And
 
-    public interface And extends AndOr {
+    public interface And extends BinaryPredicate {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

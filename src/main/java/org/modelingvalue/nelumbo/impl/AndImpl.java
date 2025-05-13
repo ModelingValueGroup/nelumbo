@@ -23,7 +23,7 @@ package org.modelingvalue.nelumbo.impl;
 import org.modelingvalue.nelumbo.Logic.And;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public final class AndImpl extends AndOrImpl<And> {
+public final class AndImpl extends BinaryPredicateImpl<And> {
     private static final long             serialVersionUID = -7248491569810098948L;
 
     private static final FunctorImpl<And> AND_FUNCTOR      = FunctorImpl.<And, Predicate, Predicate> of(AndImpl::and);
@@ -54,6 +54,36 @@ public final class AndImpl extends AndOrImpl<And> {
     @Override
     public AndImpl set(int i, Object... a) {
         return (AndImpl) super.set(i, a);
+    }
+
+    @Override
+    protected boolean isTrue(InferResult predResult) {
+        return false;
+    }
+
+    @Override
+    protected boolean isFalse(InferResult predResult) {
+        return predResult.isFalseCC();
+    }
+
+    @Override
+    protected boolean isTrue(InferResult[] predResult) {
+        return predResult[0].isTrueCC() && predResult[1].isTrueCC();
+    }
+
+    @Override
+    protected boolean isFalse(InferResult[] predResult) {
+        return false;
+    }
+
+    @Override
+    protected boolean isLeft(InferResult[] predResult) {
+        return predResult[1].isTrueCC();
+    }
+
+    @Override
+    protected boolean isRigth(InferResult[] predResult) {
+        return predResult[0].isTrueCC();
     }
 
     @Override
