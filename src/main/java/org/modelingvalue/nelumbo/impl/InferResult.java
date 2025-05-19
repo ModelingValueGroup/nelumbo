@@ -63,8 +63,8 @@ public interface InferResult {
         return facts().isEmpty() && completeFacts();
     }
 
-    default boolean isIncomplete() {
-        return !completeFacts() && !completeFalsehoods();
+    default boolean isComplete() {
+        return completeFacts() || completeFalsehoods();
     }
 
     default boolean isEmpty() {

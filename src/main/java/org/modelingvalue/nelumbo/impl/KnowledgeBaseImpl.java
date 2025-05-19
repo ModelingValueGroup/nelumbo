@@ -209,7 +209,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected void memoization(RelationImpl relation, InferResult result) {
-        boolean known = result.cycles().isEmpty() && !result.isIncomplete();
+        boolean known = result.cycles().isEmpty() && result.isComplete();
         FunctorImpl<Relation> functor = relation.functor();
         if (functor.factual()) {
             facts.updateAndGet(map -> {
