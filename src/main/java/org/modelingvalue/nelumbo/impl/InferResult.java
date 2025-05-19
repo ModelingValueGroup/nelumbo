@@ -443,7 +443,7 @@ public interface InferResult {
 
     default InferResult and(InferResult other) {
         Set<PredicateImpl<?>> facts = facts().retainAll(other.facts());
-        boolean completeFacts = completeFacts() || other.completeFacts();
+        boolean completeFacts = completeFacts() && other.completeFacts();
         Set<PredicateImpl<?>> falsehoods = falsehoods().addAll(other.falsehoods());
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<RelationImpl> cycles = cycles().addAll(other.cycles());
@@ -454,7 +454,7 @@ public interface InferResult {
         Set<PredicateImpl<?>> facts = facts().addAll(other.facts());
         boolean completeFacts = completeFacts() && other.completeFacts();
         Set<PredicateImpl<?>> falsehoods = falsehoods().retainAll(other.falsehoods());
-        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
+        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<RelationImpl> cycles = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
