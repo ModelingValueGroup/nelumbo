@@ -569,26 +569,26 @@ public class NelumboTest extends NelumboTestBase {
             integerRules();
 
             Predicate query1 = is(plus(i(7), i(3)), i(10));
-            hasResult(query1, Set.of(query1), Set.of());
+            hasResult(query1, Set.of(query1), true, Set.of(), true);
             Predicate query2 = is(plus(i(7), i(3)), i(11));
-            hasResult(query2, Set.of(), Set.of(query2));
+            hasResult(query2, Set.of(), true, Set.of(query2), true);
             Predicate query3 = is(plus(i(7), i(3)), P);
-            hasResult(query3, Set.of(is(plus(i(7), i(3)), i(10))), Set.of());
+            hasResult(query3, Set.of(is(plus(i(7), i(3)), i(10))), true, Set.of(), false);
             Predicate query4 = is(plus(i(7), P), i(10));
-            hasResult(query4, Set.of(is(plus(i(7), i(3)), i(10))), Set.of());
+            hasResult(query4, Set.of(is(plus(i(7), i(3)), i(10))), true, Set.of(), false);
             Predicate query5 = is(plus(i(7), P), Q);
-            hasResult(query5, Set.of(), Set.of());
+            hasResult(query5, Set.of(), false, Set.of(), false);
 
             query1 = and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)));
-            hasResult(query1, Set.of(query1), Set.of());
+            hasResult(query1, Set.of(query1), true, Set.of(), true);
             query2 = and(is(plus(i(7), i(3)), i(11)), is(plus(i(8), i(2)), i(11)));
-            hasResult(query2, Set.of(), Set.of(query2));
+            hasResult(query2, Set.of(), true, Set.of(query2), true);
             query3 = and(is(plus(i(7), i(3)), P), is(plus(i(8), i(2)), P));
-            hasResult(query3, Set.of(and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)))), Set.of());
+            hasResult(query3, Set.of(and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)))), true, Set.of(), false);
             query4 = and(is(plus(i(7), P), i(10)), is(plus(i(8), Q), i(10)));
-            hasResult(query4, Set.of(and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)))), Set.of());
+            hasResult(query4, Set.of(and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)))), true, Set.of(), false);
             query5 = and(is(plus(i(7), P), O), is(plus(i(8), Q), O));
-            hasResult(query5, Set.of(), Set.of());
+            hasResult(query5, Set.of(), false, Set.of(), false);
         });
     }
 

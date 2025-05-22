@@ -28,7 +28,6 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.LambdaReflection;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.collections.util.SerializableBiFunction;
 import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.collections.util.SerializableQuadFunction;
@@ -221,35 +220,8 @@ public final class Logic {
         return result.isFalse();
     }
 
-    public static boolean haveEqualBindings(Predicate pred1, Predicate pred2) {
-        InferResult result1 = infer(pred1);
-        InferResult result2 = infer(pred2);
-        PredicateImpl<?> impl1 = StructureImpl.<Predicate, PredicateImpl<?>> unproxy(pred1);
-        PredicateImpl<?> impl2 = StructureImpl.<Predicate, PredicateImpl<?>> unproxy(pred2);
-        return getBindings(result1.facts(), impl1).equals(getBindings(result2.facts(), impl2)) && //
-                result1.completeFacts() == result2.completeFacts() && //
-                getBindings(result1.falsehoods(), impl1).equals(getBindings(result2.falsehoods(), impl2)) && //
-                result1.completeFalsehoods() == result2.completeFalsehoods();
-    }
-
-    public static Set<Predicate> getFacts(Predicate pred) {
-        return infer(pred).facts().replaceAll(PredicateImpl::proxyWithVariables);
-    }
-
-    public static Set<Predicate> getFalsehoods(Predicate pred) {
-        return infer(pred).falsehoods().replaceAll(PredicateImpl::proxyWithVariables);
-    }
-
-    public static Pair<Set<Predicate>, Set<Predicate>> getResult(Predicate pred) {
-        InferResult result = infer(pred);
-        return Pair.of(result.facts().replaceAll(PredicateImpl::proxyWithVariables), //
-                result.falsehoods().replaceAll(PredicateImpl::proxyWithVariables));
-    }
-
-    public static boolean hasResult(Predicate pred, Set<Predicate> facts, Set<Predicate> falshoods) {
-        InferResult result = infer(pred);
-        return result.facts().replaceAll(PredicateImpl::proxyWithVariables).equals(facts) && //
-                result.falsehoods().replaceAll(PredicateImpl::proxyWithVariables).equals(falshoods);
+    public static Result getResult(Predicate pred) {
+        return new Result(infer(pred));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

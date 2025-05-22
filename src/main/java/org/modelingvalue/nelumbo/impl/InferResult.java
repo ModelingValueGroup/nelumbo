@@ -503,6 +503,11 @@ public interface InferResult {
         return complete ? result : result.substring(0, result.length() - 1) + (set.isEmpty() ? "" : ",") + "\u2026]";
     }
 
+    default int hash() {
+        int h = (completeFacts() ? 3 : 0) + (completeFalsehoods() ? 7 : 0);
+        return h + facts().hashCode() ^ falsehoods().hashCode();
+    }
+
     default boolean equals(InferResult other) {
         if (other == null) {
             return false;
