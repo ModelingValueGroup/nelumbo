@@ -72,7 +72,7 @@ public interface InferResult {
     }
 
     static InferResult of(Set<PredicateImpl<?>> facts, boolean completeFacts, Set<PredicateImpl<?>> falsehoods, boolean completeFalsehoods, Set<RelationImpl> cycles) {
-        return new InferResult() {
+        return new InferResultImpl() {
             @Override
             public Set<PredicateImpl<?>> facts() {
                 return facts;
@@ -107,16 +107,11 @@ public interface InferResult {
             public List<RelationImpl> stackOverflow() {
                 return null;
             }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
         };
     }
 
     static InferResult unknown(PredicateImpl<?> unknown) {
-        return new InferResult() {
+        return new InferResultImpl() {
             @Override
             public Set<PredicateImpl<?>> facts() {
                 return Set.of();
@@ -150,11 +145,6 @@ public interface InferResult {
             @Override
             public List<RelationImpl> stackOverflow() {
                 return null;
-            }
-
-            @Override
-            public String toString() {
-                return asString();
             }
         };
     }
@@ -195,16 +185,11 @@ public interface InferResult {
             public List<RelationImpl> stackOverflow() {
                 return null;
             }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
         };
     }
 
     static InferResult factsCC(Set<PredicateImpl<?>> facts) {
-        return new InferResult() {
+        return new InferResultImpl() {
             @Override
             public Set<PredicateImpl<?>> facts() {
                 return facts;
@@ -239,16 +224,11 @@ public interface InferResult {
             public List<RelationImpl> stackOverflow() {
                 return null;
             }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
         };
     }
 
     static InferResult falsehoodsCC(Set<PredicateImpl<?>> falsehoods) {
-        return new InferResult() {
+        return new InferResultImpl() {
             @Override
             public Set<PredicateImpl<?>> facts() {
                 return Set.of();
@@ -283,16 +263,11 @@ public interface InferResult {
             public List<RelationImpl> stackOverflow() {
                 return null;
             }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
         };
     }
 
     static InferResult falsehoodsIC(Set<PredicateImpl<?>> falsehoods) {
-        return new InferResult() {
+        return new InferResultImpl() {
             @Override
             public Set<PredicateImpl<?>> facts() {
                 return Set.of();
@@ -327,17 +302,12 @@ public interface InferResult {
             public List<RelationImpl> stackOverflow() {
                 return null;
             }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
         };
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     static InferResult cycle(Set<PredicateImpl<?>> facts, Set<PredicateImpl<?>> falsehoods, RelationImpl relation) {
-        return new InferResult() {
+        return new InferResultImpl() {
             @Override
             public Set<PredicateImpl<?>> facts() {
                 return facts;
@@ -372,16 +342,11 @@ public interface InferResult {
             public List<RelationImpl> stackOverflow() {
                 return null;
             }
-
-            @Override
-            public String toString() {
-                return asString();
-            }
         };
     }
 
     static InferResult overflow(List<RelationImpl> overflow) {
-        return new InferResult() {
+        return new InferResultImpl() {
             @Override
             public Set<PredicateImpl<?>> facts() {
                 return null;
@@ -415,11 +380,6 @@ public interface InferResult {
             @Override
             public List<RelationImpl> stackOverflow() {
                 return overflow;
-            }
-
-            @Override
-            public String toString() {
-                return asString();
             }
         };
     }
@@ -483,38 +443,49 @@ public interface InferResult {
         return set.replaceAll(p -> p.equals(to) ? to : to.castFrom(p));
     }
 
-    default String asString() {
-        List<RelationImpl> overflow = stackOverflow();
-        if (overflow != null) {
-            return overflow.toString().substring(4);
-        } else {
-            String cycleString = "";
-            if (!cycles().isEmpty()) {
-                cycleString = toString(cycles(), true);
-                cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
+    static abstract class InferResultImpl implements InferResult {
+        @Override
+        public String toString() {
+            List<RelationImpl> overflow = stackOverflow();
+            if (overflow != null) {
+                return overflow.toString().substring(4);
+            } else {
+                String cycleString = "";
+                if (!cycles().isEmpty()) {
+                    cycleString = toString(cycles(), true);
+                    cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
+                }
+                return toString(facts(), completeFacts()) + toString(falsehoods(), completeFalsehoods()) + cycleString;
             }
-            return toString(facts(), completeFacts()) + toString(falsehoods(), completeFalsehoods()) + cycleString;
         }
-    }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    default String toString(Set set, boolean complete) {
-        String result = set.toString().substring(3);
-        return complete ? result : result.substring(0, result.length() - 1) + (set.isEmpty() ? "" : ",") + "\u2026]";
-    }
-
-    default int hash() {
-        int h = (completeFacts() ? 3 : 0) + (completeFalsehoods() ? 7 : 0);
-        return h + facts().hashCode() ^ falsehoods().hashCode();
-    }
-
-    default boolean equals(InferResult other) {
-        if (other == null) {
-            return false;
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        private String toString(Set set, boolean complete) {
+            String result = set.toString().substring(3);
+            return complete ? result : result.substring(0, result.length() - 1) + (set.isEmpty() ? "" : ",") + "\u2026]";
         }
-        return facts().equals(other.facts()) && completeFacts() == other.completeFacts() && //
-                falsehoods().equals(other.falsehoods()) && completeFalsehoods() == other.completeFalsehoods() && //
-                cycles().equals(other.cycles());
+
+        @Override
+        public int hashCode() {
+            int h = (completeFacts() ? 3 : 0) + (completeFalsehoods() ? 7 : 0);
+            return h + facts().hashCode() ^ falsehoods().hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            } else if (obj == null) {
+                return false;
+            } else if (!(obj instanceof InferResult)) {
+                return false;
+            } else {
+                InferResult other = (InferResult) obj;
+                return facts().equals(other.facts()) && completeFacts() == other.completeFacts() && //
+                        falsehoods().equals(other.falsehoods()) && completeFalsehoods() == other.completeFalsehoods() && //
+                        cycles().equals(other.cycles());
+            }
+        }
     }
 
 }

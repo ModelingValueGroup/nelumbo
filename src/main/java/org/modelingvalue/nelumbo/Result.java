@@ -40,7 +40,7 @@ public final class Result {
 
     @Override
     public int hashCode() {
-        return inferResult.hash();
+        return inferResult.hashCode();
     }
 
     @Override
