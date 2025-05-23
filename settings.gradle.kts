@@ -34,10 +34,4 @@ if(inEclipse!=null && inEclipse.equals("true")) {
 	       substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
 	    }
 	}
-	
-	includeBuild("../mvg-json") {
-	    dependencySubstitution {
-	       substitute(module("org.modelingvalue:mvg-json")).using(project(":"))
-	    }
-	}
 }
