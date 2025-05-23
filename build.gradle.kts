@@ -11,7 +11,7 @@
 //      Wim Bast, Tom Brus                                                                                               ~
 //                                                                                                                       ~
 //  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld âœ�, Arjan Kok, Carel Bast                                                                       ~
+//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
 // --------------------------------------------------------------------------------------------------------------------- ~
 //  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
 //      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
