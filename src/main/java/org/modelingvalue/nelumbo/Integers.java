@@ -41,6 +41,8 @@ public final class Integers {
     private Integers() {
     }
 
+    // Types
+
     public interface Integer extends Structure {
     }
 
@@ -49,6 +51,8 @@ public final class Integers {
 
     public interface IntegerFunc extends Integer, Function<Integer> {
     }
+
+    // Constants
 
     private static FunctorImpl<IntegerCons> I_FUNCTOR_IMPL = FunctorImpl.<IntegerCons, BigInteger> of(Integers::i,   //
             render(s -> s.toString(1)));
@@ -74,7 +78,7 @@ public final class Integers {
         return variable(Integer.class, name);
     }
 
-    // Predicates
+    // Relations
 
     private static final StructureImpl<IntegerCons> ZERO_INT = StructureImpl.unproxy(i(0));
 
@@ -254,9 +258,9 @@ public final class Integers {
 
     // Rules
 
-    private static final IntegerCons P = iConsVar("PL");
-    private static final IntegerCons Q = iConsVar("QL");
-    private static final IntegerCons R = iConsVar("RL");
+    private static final IntegerCons P = iConsVar("P");
+    private static final IntegerCons Q = iConsVar("Q");
+    private static final IntegerCons R = iConsVar("R");
 
     private static final Integer     X = iVar("X");
     private static final Integer     Y = iVar("Y");

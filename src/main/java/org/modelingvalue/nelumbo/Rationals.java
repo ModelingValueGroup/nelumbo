@@ -40,6 +40,8 @@ public final class Rationals {
     private Rationals() {
     }
 
+    // Types
+
     public interface Rational extends Structure {
     }
 
@@ -48,6 +50,8 @@ public final class Rationals {
 
     public interface RationalFunc extends Rational, Function<Rational> {
     }
+
+    // Constants
 
     private static Functor<RationalCons> R_FUNCTOR = Logic.<RationalCons, BigInteger, BigInteger> functor(Rationals::r, normalize(r -> {
         BigInteger numerator = r.getVal(1);
@@ -88,7 +92,7 @@ public final class Rationals {
         return variable(Rational.class, name);
     }
 
-    // Predicates
+    // Relations
 
     private static final StructureImpl<RationalCons> ZERO_RATIONAL = StructureImpl.unproxy(r(0));
 
@@ -289,9 +293,9 @@ public final class Rationals {
 
     // Rules
 
-    private static final RationalCons P = rConsVar("PL");
-    private static final RationalCons Q = rConsVar("QL");
-    private static final RationalCons R = rConsVar("RL");
+    private static final RationalCons P = rConsVar("P");
+    private static final RationalCons Q = rConsVar("Q");
+    private static final RationalCons R = rConsVar("R");
 
     private static final Rational     X = rVar("X");
     private static final Rational     Y = rVar("Y");

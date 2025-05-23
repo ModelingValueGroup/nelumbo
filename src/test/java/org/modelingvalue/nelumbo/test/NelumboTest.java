@@ -71,51 +71,7 @@ public class NelumboTest extends NelumboTestBase {
     static final int NR_OF_REPEATS     = 32;
     static final int NR_OF_FIB_REPEATS = 8;
 
-    // Root
-
-    interface Root extends Structure {
-    }
-
-    interface RootCons extends Root, Constant<Root> {
-    }
-
-    interface RootFunc extends Root, Function<Root> {
-    }
-
-    static Functor<RootCons> ROOT = functor((SerializableFunction<IntegerCons, RootCons>) NelumboTest::root, //
-            (RenderLambda) p -> "R(" + p.get(1).toString() + ")");
-
-    static RootCons root(IntegerCons i) {
-        return constant(ROOT, i);
-    }
-
-    static RootCons root(int i) {
-        return root(i(i));
-    }
-
-    static RootCons rootConsVar(String name) {
-        return variable(RootCons.class, name);
-    }
-
-    static Root rootVar(String name) {
-        return variable(Root.class, name);
-    }
-
-    static Functor<Relation> ROOT_PERSON = functor(NelumboTest::rootPerson, //
-            (RenderLambda) s -> "rp(" + s.toString(1) + "," + s.toString(2) + ")");
-
-    static Relation rootPerson(RootCons root, PersonCons person) {
-        return rel(ROOT_PERSON, root, person);
-    }
-
-    static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) NelumboTest::root, //
-            (RenderLambda) p -> "r(" + p.get(1).toString() + ")");
-
-    static RootFunc root(Person person) {
-        return function(ROOT_FUNC, person);
-    }
-
-    // Family Tree
+    // Family Language
 
     interface Person extends Structure {
     }
@@ -194,6 +150,66 @@ public class NelumboTest extends NelumboTestBase {
         return function(DESCENDENT, ancestor);
     }
 
+    // Root Language
+
+    interface Root extends Structure {
+    }
+
+    interface RootCons extends Root, Constant<Root> {
+    }
+
+    interface RootFunc extends Root, Function<Root> {
+    }
+
+    static Functor<RootCons> ROOT = functor((SerializableFunction<IntegerCons, RootCons>) NelumboTest::root, //
+            (RenderLambda) p -> "R(" + p.get(1).toString() + ")");
+
+    static RootCons root(IntegerCons i) {
+        return constant(ROOT, i);
+    }
+
+    static RootCons root(int i) {
+        return root(i(i));
+    }
+
+    static RootCons rootConsVar(String name) {
+        return variable(RootCons.class, name);
+    }
+
+    static Root rootVar(String name) {
+        return variable(Root.class, name);
+    }
+
+    static Functor<Relation> ROOT_PERSON = functor(NelumboTest::rootPerson, //
+            (RenderLambda) s -> "rp(" + s.toString(1) + "," + s.toString(2) + ")");
+
+    static Relation rootPerson(RootCons root, PersonCons person) {
+        return rel(ROOT_PERSON, root, person);
+    }
+
+    static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) NelumboTest::root, //
+            (RenderLambda) p -> "r(" + p.get(1).toString() + ")");
+
+    static RootFunc root(Person person) {
+        return function(ROOT_FUNC, person);
+    }
+
+    // Fibonacci Language
+
+    static Functor<Relation> fib2 = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) NelumboTest::fib);
+
+    static Relation fib(IntegerCons i, IntegerCons f) {
+        return rel(fib2, i, f);
+    }
+
+    static Functor<IntegerFunc> fib1 = functor((SerializableFunction<Integer, IntegerFunc>) NelumboTest::fib);
+
+    static IntegerFunc fib(Integer i) {
+        return function(fib1, i);
+    }
+
+    // Collect Example Language
+
     static Functor<Relation> PERSON_AMOUNT = functor(NelumboTest::personAmount, //
             (RenderLambda) s -> "pa(" + s.toString(1) + "," + s.toString(2) + ")");
 
@@ -217,76 +233,39 @@ public class NelumboTest extends NelumboTestBase {
 
     // Variables
 
-    IntegerCons              O        = iConsVar("O");
-    IntegerCons              P        = iConsVar("P");
-    IntegerCons              Q        = iConsVar("Q");
+    IntegerCons  O        = iConsVar("O");
+    IntegerCons  P        = iConsVar("P");
+    IntegerCons  Q        = iConsVar("Q");
 
-    Integer                  R        = iVar("R");
-    Integer                  S        = iVar("S");
+    Integer      R        = iVar("R");
+    Integer      S        = iVar("S");
 
-    RationalCons             T        = rConsVar("T");
-    RationalCons             U        = rConsVar("U");
+    RationalCons T        = rConsVar("T");
+    RationalCons U        = rConsVar("U");
 
-    PersonCons               A        = personConsVar("A");
-    PersonCons               B        = personConsVar("B");
-    PersonCons               C        = personConsVar("C");
+    PersonCons   A        = personConsVar("A");
+    PersonCons   B        = personConsVar("B");
+    PersonCons   C        = personConsVar("C");
 
-    Person                   X        = personVar("X");
-    Person                   Y        = personVar("Y");
-    Person                   Z        = personVar("Z");
+    Person       X        = personVar("X");
+    Person       Y        = personVar("Y");
+    Person       Z        = personVar("Z");
 
-    RootCons                 V        = rootConsVar("V");
-    Root                     W        = rootVar("W");
+    RootCons     V        = rootConsVar("V");
+    Root         W        = rootVar("W");
 
-    // Terms
+    // Constants
 
-    PersonCons               Carel    = person("Carel");
-    PersonCons               Jan      = person("Jan");
-    PersonCons               Elske    = person("Elske");
-    PersonCons               Wim      = person("Wim");
-    PersonCons               Joppe    = person("Joppe");
-    PersonCons               Heleen   = person("Heleen");
-    PersonCons               Marijn   = person("Marijn");
-    PersonCons               Jannette = person("Jannette");
+    PersonCons   Carel    = person("Carel");
+    PersonCons   Jan      = person("Jan");
+    PersonCons   Elske    = person("Elske");
+    PersonCons   Wim      = person("Wim");
+    PersonCons   Joppe    = person("Joppe");
+    PersonCons   Heleen   = person("Heleen");
+    PersonCons   Marijn   = person("Marijn");
+    PersonCons   Jannette = person("Jannette");
 
-    RootCons                 Root     = root(1);
-
-    // Fibonacci
-
-    static Functor<Relation> fib2     = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) NelumboTest::fib);
-
-    static Relation fib(IntegerCons i, IntegerCons f) {
-        return rel(fib2, i, f);
-    }
-
-    static Functor<IntegerFunc> fib1 = functor((SerializableFunction<Integer, IntegerFunc>) NelumboTest::fib);
-
-    static IntegerFunc fib(Integer i) {
-        return function(fib1, i);
-    }
-
-    private void fibonacciRules() {
-        integerRules();
-
-        rule(fib(P, Q), and(ge(P, i(0)), le(P, i(1)), eq(Q, P)));
-        rule(fib(P, Q), and(gt(P, i(1)), is(plus(fib(minus(P, i(1))), fib(minus(P, i(2)))), Q)));
-
-        rule(is(fib(R), Q), and(is(R, P), fib(P, Q)));
-    }
-
-    // Root Rules
-
-    private void rootRules() {
-        integerRules();
-
-        rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), is(plus(Q, i(1)), P)));
-        rule(rootPerson(V, person(0)), T());
-        rule(rootPerson(V, C), and(rootPerson(V, A), parentChild(A, C)));
-
-        rule(is(parent(X), A), and(is(X, B), parentChild(A, B)));
-        rule(is(child(X), A), and(is(X, B), parentChild(B, A)));
-        rule(is(root(X), V), and(is(X, B), rootPerson(V, B)));
-    }
+    RootCons     Root     = root(1);
 
     // Family Rules
 
@@ -303,7 +282,34 @@ public class NelumboTest extends NelumboTestBase {
         rule(is(descendent(X), A), and(is(X, B), ancestorDescendent(B, A)));
     }
 
-    private void collectRules() {
+    // Root Rules
+
+    private void rootRules() {
+        integerRules();
+
+        rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), is(plus(Q, i(1)), P)));
+        rule(rootPerson(V, person(0)), T());
+        rule(rootPerson(V, C), and(rootPerson(V, A), parentChild(A, C)));
+
+        rule(is(parent(X), A), and(is(X, B), parentChild(A, B)));
+        rule(is(child(X), A), and(is(X, B), parentChild(B, A)));
+        rule(is(root(X), V), and(is(X, B), rootPerson(V, B)));
+    }
+
+    // Fibonacci Rules
+
+    private void fibonacciRules() {
+        integerRules();
+
+        rule(fib(P, Q), and(ge(P, i(0)), le(P, i(1)), eq(Q, P)));
+        rule(fib(P, Q), and(gt(P, i(1)), is(plus(fib(minus(P, i(1))), fib(minus(P, i(2)))), Q)));
+
+        rule(is(fib(R), Q), and(is(R, P), fib(P, Q)));
+    }
+
+    // Collect Example Rules
+
+    private void collectExampleRules() {
         integerRules();
         familyRules();
 
@@ -311,67 +317,17 @@ public class NelumboTest extends NelumboTestBase {
         rule(personNumber(A, O), coll(and(parentChild(A, B), eq(i(1), P)), is(plus(i(0), P), O)));
     }
 
-    // @RepeatedTest(1)
-    public void factsAndRulesPrintTest() {
-        KnowledgeBase db = run(() -> {
-            fact(parentChild(Carel, Jan));
-            fact(parentChild(Jan, Wim));
-            fact(parentChild(Elske, Wim));
-            fact(parentChild(Wim, Joppe));
-            fact(parentChild(Heleen, Joppe));
-            fact(parentChild(Wim, Marijn));
-            fact(parentChild(Heleen, Marijn));
-
-            fibonacciRules();
-            collectRules();
-        });
-        print(db);
-    }
+    // Tests
 
     @RepeatedTest(NR_OF_REPEATS)
-    public void notTest() {
+    public void simpleTest() {
         run(() -> {
-            isFalse(and(F(), T()));
-            isFalse(not(or(not(F()), not(T()))));
-            isTrue(not(and(F(), T())));
-            isTrue(not(not(or(not(F()), not(T())))));
-
             integerRules();
 
-            isFalse(plus(i(5), i(2), i(8)));
-            isFalse(is(plus(i(5), i(2)), i(8)));
-            isTrue(not(plus(i(5), i(2), i(8))));
-            isTrue(not(is(plus(i(5), i(2)), i(8))));
-            isTrue(and(not(is(plus(i(5), i(2)), i(8))), not(plus(i(5), i(2), i(8)))));
+            isTrue(lt(i(0), i(1)));
+            isTrue(ge(i(1), i(0)));
 
-            hasBindings(not(is(plus(i(5), i(2)), O)));
-
-            familyRules();
-
-            fact(parentChild(Carel, Jan));
-            fact(parentChild(Jan, Wim));
-
-            hasBindings(ancestorDescendent(Carel, C), //
-                    binding(C, Jan), binding(C, Wim));
-
-            hasBindings(not(not(ancestorDescendent(Carel, C))), //
-                    binding(C, Jan), binding(C, Wim));
-
-            hasBindings(ancestorDescendent(A, Wim), //
-                    binding(A, Jan), binding(A, Carel));
-
-            hasBindings(not(not(ancestorDescendent(A, Wim))), //
-                    binding(A, Jan), binding(A, Carel));
-
-            hasBindings(and(ancestorDescendent(A, Wim), ancestorDescendent(A, Wim)), //
-                    binding(A, Jan), binding(A, Carel));
-
-            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(A, Wim)))), //
-                    binding(A, Jan), binding(A, Carel));
-
-            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(Carel, C)))), //
-                    binding(A, Jan, C, Jan), binding(A, Jan, C, Wim), //
-                    binding(A, Carel, C, Jan), binding(A, Carel, C, Wim));
+            hasBindings(is(plus(i(7), i(3)), P), binding(P, i(10)));
         });
     }
 
@@ -474,29 +430,6 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(NR_OF_REPEATS)
-    public void collectTest() {
-        run(() -> {
-            collectRules();
-
-            fact(parentChild(Jan, Wim));
-            fact(parentChild(Jan, Carel));
-            fact(parentChild(Jan, Jannette));
-            fact(parentChild(Elske, Wim));
-            fact(parentChild(Elske, Carel));
-            fact(parentChild(Elske, Jannette));
-            fact(personAmount(Wim, i(3)));
-            fact(personAmount(Carel, i(7)));
-            fact(personAmount(Jannette, i(7)));
-
-            hasBindings(personTotal(Jan, O), binding(O, i(17)));
-            hasBindings(personNumber(Jan, O), binding(O, i(3)));
-
-            isTrue(personTotal(Elske, i(17)));
-            isFalse(personNumber(Elske, i(4)));
-        });
-    }
-
-    @RepeatedTest(NR_OF_REPEATS)
     public void intTest2() {
         run(() -> {
             integerRules();
@@ -563,14 +496,49 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(NR_OF_REPEATS)
-    public void simpleTest() {
+    public void notTest() {
         run(() -> {
+            isFalse(and(F(), T()));
+            isFalse(not(or(not(F()), not(T()))));
+            isTrue(not(and(F(), T())));
+            isTrue(not(not(or(not(F()), not(T())))));
+
             integerRules();
 
-            isTrue(lt(i(0), i(1)));
-            isTrue(ge(i(1), i(0)));
+            isFalse(plus(i(5), i(2), i(8)));
+            isFalse(is(plus(i(5), i(2)), i(8)));
+            isTrue(not(plus(i(5), i(2), i(8))));
+            isTrue(not(is(plus(i(5), i(2)), i(8))));
+            isTrue(and(not(is(plus(i(5), i(2)), i(8))), not(plus(i(5), i(2), i(8)))));
 
-            hasBindings(is(plus(i(7), i(3)), P), binding(P, i(10)));
+            hasBindings(not(is(plus(i(5), i(2)), O)));
+
+            familyRules();
+
+            fact(parentChild(Carel, Jan));
+            fact(parentChild(Jan, Wim));
+
+            hasBindings(ancestorDescendent(Carel, C), //
+                    binding(C, Jan), binding(C, Wim));
+
+            hasBindings(not(not(ancestorDescendent(Carel, C))), //
+                    binding(C, Jan), binding(C, Wim));
+
+            hasBindings(ancestorDescendent(A, Wim), //
+                    binding(A, Jan), binding(A, Carel));
+
+            hasBindings(not(not(ancestorDescendent(A, Wim))), //
+                    binding(A, Jan), binding(A, Carel));
+
+            hasBindings(and(ancestorDescendent(A, Wim), ancestorDescendent(A, Wim)), //
+                    binding(A, Jan), binding(A, Carel));
+
+            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(A, Wim)))), //
+                    binding(A, Jan), binding(A, Carel));
+
+            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(Carel, C)))), //
+                    binding(A, Jan, C, Jan), binding(A, Jan, C, Wim), //
+                    binding(A, Carel, C, Jan), binding(A, Carel, C, Wim));
         });
     }
 
@@ -674,6 +642,46 @@ public class NelumboTest extends NelumboTestBase {
             hasBindings(is(fib(i(21)), P), binding(P, i(10946)));
             hasBindings(is(fib(i(1000)), P), binding(P, i("18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf", Character.MAX_RADIX)));
         });
+    }
+
+    @RepeatedTest(NR_OF_REPEATS)
+    public void collectExampleTest() {
+        run(() -> {
+            collectExampleRules();
+
+            fact(parentChild(Jan, Wim));
+            fact(parentChild(Jan, Carel));
+            fact(parentChild(Jan, Jannette));
+            fact(parentChild(Elske, Wim));
+            fact(parentChild(Elske, Carel));
+            fact(parentChild(Elske, Jannette));
+            fact(personAmount(Wim, i(3)));
+            fact(personAmount(Carel, i(7)));
+            fact(personAmount(Jannette, i(7)));
+
+            hasBindings(personTotal(Jan, O), binding(O, i(17)));
+            hasBindings(personNumber(Jan, O), binding(O, i(3)));
+
+            isTrue(personTotal(Elske, i(17)));
+            isFalse(personNumber(Elske, i(4)));
+        });
+    }
+
+    // @RepeatedTest(1)
+    public void factsAndRulesPrintTest() {
+        KnowledgeBase db = run(() -> {
+            fact(parentChild(Carel, Jan));
+            fact(parentChild(Jan, Wim));
+            fact(parentChild(Elske, Wim));
+            fact(parentChild(Wim, Joppe));
+            fact(parentChild(Heleen, Joppe));
+            fact(parentChild(Wim, Marijn));
+            fact(parentChild(Heleen, Marijn));
+
+            fibonacciRules();
+            collectExampleRules();
+        });
+        print(db);
     }
 
 }
