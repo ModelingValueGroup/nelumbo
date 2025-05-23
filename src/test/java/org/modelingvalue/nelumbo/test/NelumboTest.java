@@ -129,25 +129,25 @@ public class NelumboTest extends NelumboTestBase {
         return function(CHILD, parent);
     }
 
-    static Functor<Relation> ANCESTOR_DESCENTENT = functor(NelumboTest::ancestorDescendent, //
+    static Functor<Relation> ANCESTOR_DESCENTANT = functor(NelumboTest::ancestorDescendant, //
             (RenderLambda) s -> "ad(" + s.toString(1) + "," + s.toString(2) + ")");
 
-    static Relation ancestorDescendent(PersonCons ancestor, PersonCons descendent) {
-        return rel(ANCESTOR_DESCENTENT, ancestor, descendent);
+    static Relation ancestorDescendant(PersonCons ancestor, PersonCons descendant) {
+        return rel(ANCESTOR_DESCENTANT, ancestor, descendant);
     }
 
     static Functor<PersonFunc> ANCESTOR = functor(NelumboTest::ancestor, //
             (RenderLambda) s -> "a(" + s.toString(1) + ")");
 
-    static PersonFunc ancestor(Person descendent) {
-        return function(ANCESTOR, descendent);
+    static PersonFunc ancestor(Person descendant) {
+        return function(ANCESTOR, descendant);
     }
 
-    static Functor<PersonFunc> DESCENDENT = functor(NelumboTest::descendent, //
+    static Functor<PersonFunc> DESCENDANT = functor(NelumboTest::descendant, //
             (RenderLambda) s -> "d(" + s.toString(1) + ")");
 
-    static PersonFunc descendent(Person ancestor) {
-        return function(DESCENDENT, ancestor);
+    static PersonFunc descendant(Person ancestor) {
+        return function(DESCENDANT, ancestor);
     }
 
     // Root Language
@@ -272,14 +272,14 @@ public class NelumboTest extends NelumboTestBase {
     private void familyRules() {
         isRules();
 
-        rule(ancestorDescendent(A, C), parentChild(A, C));
-        rule(ancestorDescendent(A, C), and(ancestorDescendent(A, B), parentChild(B, C)));
+        rule(ancestorDescendant(A, C), parentChild(A, C));
+        rule(ancestorDescendant(A, C), and(ancestorDescendant(A, B), parentChild(B, C)));
 
         rule(is(parent(X), A), and(is(X, B), parentChild(A, B)));
         rule(is(child(X), A), and(is(X, B), parentChild(B, A)));
 
-        rule(is(ancestor(X), A), and(is(X, B), ancestorDescendent(A, B)));
-        rule(is(descendent(X), A), and(is(X, B), ancestorDescendent(B, A)));
+        rule(is(ancestor(X), A), and(is(X, B), ancestorDescendant(A, B)));
+        rule(is(descendant(X), A), and(is(X, B), ancestorDescendant(B, A)));
     }
 
     // Root Rules
@@ -352,12 +352,12 @@ public class NelumboTest extends NelumboTestBase {
             isFalse(is(child(Wim), Wim));
 
             isTrue(is(ancestor(Marijn), Wim));
-            isTrue(is(descendent(Carel), Marijn));
+            isTrue(is(descendant(Carel), Marijn));
 
-            isFalse(is(descendent(Marijn), Wim));
-            isFalse(is(descendent(Heleen), Wim));
-            isFalse(is(descendent(Joppe), Carel));
-            isFalse(is(descendent(Carel), Carel));
+            isFalse(is(descendant(Marijn), Wim));
+            isFalse(is(descendant(Heleen), Wim));
+            isFalse(is(descendant(Joppe), Carel));
+            isFalse(is(descendant(Carel), Carel));
         });
     }
 
@@ -381,13 +381,13 @@ public class NelumboTest extends NelumboTestBase {
             isFalse(parentChild(Heleen, Wim));
             isFalse(parentChild(Wim, Wim));
 
-            isTrue(ancestorDescendent(Wim, Marijn));
-            isTrue(ancestorDescendent(Carel, Marijn));
+            isTrue(ancestorDescendant(Wim, Marijn));
+            isTrue(ancestorDescendant(Carel, Marijn));
 
-            isFalse(ancestorDescendent(Marijn, Wim));
-            isFalse(ancestorDescendent(Heleen, Wim));
-            isFalse(ancestorDescendent(Joppe, Carel));
-            isFalse(ancestorDescendent(Carel, Carel));
+            isFalse(ancestorDescendant(Marijn, Wim));
+            isFalse(ancestorDescendant(Heleen, Wim));
+            isFalse(ancestorDescendant(Joppe, Carel));
+            isFalse(ancestorDescendant(Carel, Carel));
         });
     }
 
@@ -401,8 +401,8 @@ public class NelumboTest extends NelumboTestBase {
 
             hasBindings(and(parentChild(Carel, B), parentChild(B, Wim)), binding(B, Jan));
 
-            hasBindings(ancestorDescendent(Carel, C), binding(C, Jan), binding(C, Wim));
-            hasBindings(ancestorDescendent(A, Wim), binding(A, Jan), binding(A, Carel));
+            hasBindings(ancestorDescendant(Carel, C), binding(C, Jan), binding(C, Wim));
+            hasBindings(ancestorDescendant(A, Wim), binding(A, Jan), binding(A, Carel));
         });
     }
 
@@ -518,25 +518,25 @@ public class NelumboTest extends NelumboTestBase {
             fact(parentChild(Carel, Jan));
             fact(parentChild(Jan, Wim));
 
-            hasBindings(ancestorDescendent(Carel, C), //
+            hasBindings(ancestorDescendant(Carel, C), //
                     binding(C, Jan), binding(C, Wim));
 
-            hasBindings(not(not(ancestorDescendent(Carel, C))), //
+            hasBindings(not(not(ancestorDescendant(Carel, C))), //
                     binding(C, Jan), binding(C, Wim));
 
-            hasBindings(ancestorDescendent(A, Wim), //
+            hasBindings(ancestorDescendant(A, Wim), //
                     binding(A, Jan), binding(A, Carel));
 
-            hasBindings(not(not(ancestorDescendent(A, Wim))), //
+            hasBindings(not(not(ancestorDescendant(A, Wim))), //
                     binding(A, Jan), binding(A, Carel));
 
-            hasBindings(and(ancestorDescendent(A, Wim), ancestorDescendent(A, Wim)), //
+            hasBindings(and(ancestorDescendant(A, Wim), ancestorDescendant(A, Wim)), //
                     binding(A, Jan), binding(A, Carel));
 
-            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(A, Wim)))), //
+            hasBindings(not(or(not(ancestorDescendant(A, Wim)), not(ancestorDescendant(A, Wim)))), //
                     binding(A, Jan), binding(A, Carel));
 
-            hasBindings(not(or(not(ancestorDescendent(A, Wim)), not(ancestorDescendent(Carel, C)))), //
+            hasBindings(not(or(not(ancestorDescendant(A, Wim)), not(ancestorDescendant(Carel, C)))), //
                     binding(A, Jan, C, Jan), binding(A, Jan, C, Wim), //
                     binding(A, Carel, C, Jan), binding(A, Carel, C, Wim));
         });
