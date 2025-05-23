@@ -52,6 +52,11 @@ public class RelationImpl extends PredicateImpl<Relation> {
     }
 
     @Override
+    protected RelationImpl clearDeclaration() {
+        return (RelationImpl) super.clearDeclaration();
+    }
+
+    @Override
     protected PredicateImpl<Relation> castFrom(PredicateImpl<?> from) {
         Object[] array = from.toArray();
         array[0] = functor();
@@ -127,7 +132,6 @@ public class RelationImpl extends PredicateImpl<Relation> {
         return result;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private static InferResult flatten(InferResult result, List<RelationImpl> overflow, InferContext context) {
         int stackSize = context.stack().size();
         List<RelationImpl> todo = overflow.sublist(stackSize, overflow.size());
@@ -145,7 +149,6 @@ public class RelationImpl extends PredicateImpl<Relation> {
         return result;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private InferResult fixpoint(InferContext context) {
         InferResult previousResult = null, cycleResult = this.cycleResult, nextResult;
         do {
@@ -169,7 +172,6 @@ public class RelationImpl extends PredicateImpl<Relation> {
         } while (true);
     }
 
-    @SuppressWarnings("rawtypes")
     private InferResult inferRules(InferContext context) {
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
         InferResult result = knowledgebase.getFacts(this), ruleResult;
@@ -194,7 +196,6 @@ public class RelationImpl extends PredicateImpl<Relation> {
         return result;
     }
 
-    @SuppressWarnings("rawtypes")
     protected final RelationImpl signature() {
         Object[] array = null;
         for (int i = 1; i < length(); i++) {
@@ -206,6 +207,17 @@ public class RelationImpl extends PredicateImpl<Relation> {
                 }
                 array[i] = s;
             }
+        }
+        return array != null ? struct(array, null) : this;
+    }
+
+    protected final RelationImpl setType(int i, Class<?> type) {
+        Object[] array = null;
+        if (!Objects.equals(get(i), type)) {
+            if (array == null) {
+                array = toArray();
+            }
+            array[i] = type;
         }
         return array != null ? struct(array, null) : this;
     }

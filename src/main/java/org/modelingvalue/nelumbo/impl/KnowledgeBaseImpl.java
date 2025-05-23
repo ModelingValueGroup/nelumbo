@@ -35,11 +35,11 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
 import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Result;
 
 @SuppressWarnings("rawtypes")
 public final class KnowledgeBaseImpl implements KnowledgeBase {
@@ -198,12 +198,11 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @Override
-    public Map<Relation, Pair<Set<Relation>, Set<Relation>>> facts() {
+    public Map<Relation, Result> facts() {
         return facts.get().replaceAll(e -> {
             Relation k = e.getKey().proxy();
-            Set<Relation> facts = e.getValue().facts().replaceAll(p -> (Relation) p.proxy());
-            Set<Relation> falsehoods = e.getValue().falsehoods().replaceAll(p -> (Relation) p.proxy());
-            return Entry.of(k, Pair.of(facts, falsehoods));
+            Result v = new Result(e.getValue());
+            return Entry.of(k, v);
         });
     }
 
@@ -279,8 +278,8 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public void addRule(RuleImpl ruleImpl) {
         Map<Class, Set<Class>> specs = SPECIALIZATIONS.get();
-        RelationImpl consequence = ruleImpl.consequence();
-        rules.updateAndGet(m -> addRule(consequence.signature(), ruleImpl, m, specs));
+        RelationImpl signature = ruleImpl.consequence().signature();
+        rules.updateAndGet(m -> addRule(signature, ruleImpl, m, specs));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -290,7 +289,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             Object v = signature.get(i);
             if (v instanceof Class) {
                 for (Class g : specs.get((Class) v)) {
-                    RelationImpl p = signature.set(i, g);
+                    RelationImpl p = signature.setType(i, g);
                     rules = addRule(p, ruleImpl, rules, specs);
                 }
             }
@@ -311,25 +310,25 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             List<Class> args = functor.args();
             map = map.put(fact, fact.factCC());
             for (int i = 1; i < fact.length(); i++) {
-                map = addFact(map, fact, fact.set(i, fact.getType(i)), i, args.get(i - 1));
+                map = addFact(map, fact, fact.setType(i, fact.getType(i)), i, args.get(i - 1));
             }
             return map;
         });
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Map<RelationImpl, InferResult> addFact(Map<RelationImpl, InferResult> map, RelationImpl fact, RelationImpl predicate, int i, Class cls) {
-        Class type = predicate.getType(i);
+    private static Map<RelationImpl, InferResult> addFact(Map<RelationImpl, InferResult> map, RelationImpl fact, RelationImpl relation, int i, Class cls) {
+        Class type = relation.getType(i);
         if (cls.isAssignableFrom(type)) {
-            InferResult pre = map.get(predicate);
-            map = map.put(predicate, InferResult.factsCI(pre != null ? pre.facts().add(fact) : fact.singleton()));
+            InferResult pre = map.get(relation);
+            map = map.put(relation, InferResult.factsCI(pre != null ? pre.facts().add(fact) : fact.singleton()));
             if (!cls.equals(type)) {
                 for (Type gen : type.getGenericInterfaces()) {
                     while (gen instanceof ParameterizedType) {
                         gen = ((ParameterizedType) gen).getRawType();
                     }
                     if (gen instanceof Class) {
-                        map = addFact(map, fact, predicate.set(i, gen), i, cls);
+                        map = addFact(map, fact, relation.setType(i, (Class) gen), i, cls);
                     }
                 }
             }

@@ -150,7 +150,7 @@ public interface InferResult {
     }
 
     static InferResult factsCI(Set<PredicateImpl<?>> facts) {
-        return new InferResult() {
+        return new InferResultImpl() {
             @Override
             public Set<PredicateImpl<?>> facts() {
                 return facts;

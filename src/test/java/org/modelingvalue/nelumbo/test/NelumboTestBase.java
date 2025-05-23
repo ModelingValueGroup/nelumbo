@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Predicate;
@@ -49,13 +48,11 @@ public class NelumboTestBase {
     }
 
     public static void print(KnowledgeBase db) {
-        for (Entry<Relation, Pair<Set<Relation>, Set<Relation>>> e : db.facts()) {
-            System.err.println(e.getKey() + " " + //
-                    e.getValue().a().toString().substring(3) + e.getValue().b().toString().substring(3));
+        for (Entry<Relation, Result> e : db.facts()) {
+            System.err.println(e.getKey() + " " + e.getValue());
         }
         for (Entry<Relation, org.modelingvalue.collections.List<Rule>> e : db.rules()) {
-            System.err.println(e.getKey() + " " + //
-                    e.getValue().toString().substring(4));
+            System.err.println(e.getKey() + " " + e.getValue().toString().substring(4));
         }
     }
 

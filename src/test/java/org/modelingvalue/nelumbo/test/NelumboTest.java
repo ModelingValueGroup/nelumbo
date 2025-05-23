@@ -308,9 +308,17 @@ public class NelumboTest extends NelumboTestBase {
         rule(personNumber(A, O), coll(and(parentChild(A, B), eq(i(1), P)), is(plus(i(0), P), O)));
     }
 
-    //  @Test
-    public void rulesTest() {
+    // @Test
+    public void factsAndRulesPrintTest() {
         KnowledgeBase db = run(() -> {
+            fact(parentChild(Carel, Jan));
+            fact(parentChild(Jan, Wim));
+            fact(parentChild(Elske, Wim));
+            fact(parentChild(Wim, Joppe));
+            fact(parentChild(Heleen, Joppe));
+            fact(parentChild(Wim, Marijn));
+            fact(parentChild(Heleen, Marijn));
+
             fibonacciRules();
             collectRules();
         });

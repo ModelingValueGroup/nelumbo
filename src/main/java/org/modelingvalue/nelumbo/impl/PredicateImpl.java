@@ -88,6 +88,10 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         throw new UnsupportedOperationException();
     }
 
+    protected PredicateImpl<P> clearDeclaration() {
+        return struct(toArray(), (PredicateImpl<P>) null);
+    }
+
     @SuppressWarnings("unchecked")
     public P proxyWithVariables() {
         return (P) setVariables().proxy();
