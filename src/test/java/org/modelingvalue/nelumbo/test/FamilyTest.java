@@ -48,7 +48,7 @@ public class FamilyTest extends NelumboTestBase {
 
     static final int NR_OF_REPEATS = 32;
 
-    // Family Language
+    // Family Types
 
     interface Person extends Structure {
     }
@@ -58,6 +58,8 @@ public class FamilyTest extends NelumboTestBase {
 
     interface PersonFunc extends Person, Function<Person> {
     }
+
+    // Family Functors
 
     static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) FamilyTest::person, //
             (RenderLambda) p -> p.get(1).toString());
@@ -127,7 +129,7 @@ public class FamilyTest extends NelumboTestBase {
         return function(DESCENDANT, ancestor);
     }
 
-    // Root Language
+    // Root Types
 
     interface Root extends Structure {
     }
@@ -137,6 +139,8 @@ public class FamilyTest extends NelumboTestBase {
 
     interface RootFunc extends Root, Function<Root> {
     }
+
+    // Root Functors
 
     static Functor<RootCons> ROOT = functor((SerializableFunction<IntegerCons, RootCons>) FamilyTest::root, //
             (RenderLambda) p -> "R(" + p.get(1).toString() + ")");
@@ -171,7 +175,7 @@ public class FamilyTest extends NelumboTestBase {
         return function(ROOT_FUNC, person);
     }
 
-    // Collect Example Language
+    // Collect Example Functors
 
     static Functor<Relation> PERSON_AMOUNT = functor(FamilyTest::personAmount, //
             (RenderLambda) s -> "pa(" + s.toString(1) + "," + s.toString(2) + ")");

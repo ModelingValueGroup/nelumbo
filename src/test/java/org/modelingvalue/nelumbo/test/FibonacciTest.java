@@ -83,17 +83,21 @@ public class FibonacciTest extends NelumboTestBase {
     // Tests
 
     @RepeatedTest(NR_OF_REPEATS * 2)
-    public void fibonacciTest0() {
+    public void smallFibonacciTest() {
         run(() -> {
             fibonacciRules();
 
             hasBindings(fib(i(1), P), binding(P, i(1)));
             hasBindings(fib(i(6), P), binding(P, i(8)));
+
+            isTrue(fib(i(0), i(0)));
+            isTrue(fib(i(1), i(1)));
+            isTrue(fib(i(6), i(8)));
         });
     }
 
     @RepeatedTest(NR_OF_REPEATS)
-    public void fibonacciTest1() {
+    public void fibonacciTestWithRelation() {
         run(() -> {
             fibonacciRules();
 
@@ -105,7 +109,7 @@ public class FibonacciTest extends NelumboTestBase {
     }
 
     @RepeatedTest(NR_OF_REPEATS)
-    public void fibonacciTest2() {
+    public void fibonacciTestWithFunction() {
         run(() -> {
             fibonacciRules();
 
