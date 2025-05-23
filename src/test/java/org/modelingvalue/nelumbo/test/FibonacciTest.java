@@ -51,7 +51,7 @@ public class FibonacciTest extends NelumboTestBase {
     static Functor<Relation> fib2          = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) FibonacciTest::fib);
 
     static Relation fib(IntegerCons i, IntegerCons f) {
-        return rel(fib2, i, f);
+        return relation(fib2, i, f);
     }
 
     // Function

@@ -89,7 +89,7 @@ public class FamilyTest extends NelumboTestBase {
             (RenderLambda) s -> "pc(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation parentChild(PersonCons parent, PersonCons child) {
-        return rel(PARENT_CHILD, parent, child);
+        return relation(PARENT_CHILD, parent, child);
     }
 
     static Functor<PersonFunc> PARENT = functor(FamilyTest::parent, //
@@ -110,7 +110,7 @@ public class FamilyTest extends NelumboTestBase {
             (RenderLambda) s -> "ad(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation ancestorDescendant(PersonCons ancestor, PersonCons descendant) {
-        return rel(ANCESTOR_DESCENTANT, ancestor, descendant);
+        return relation(ANCESTOR_DESCENTANT, ancestor, descendant);
     }
 
     static Functor<PersonFunc> ANCESTOR = functor(FamilyTest::ancestor, //
@@ -161,7 +161,7 @@ public class FamilyTest extends NelumboTestBase {
             (RenderLambda) s -> "rp(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation rootPerson(RootCons root, PersonCons person) {
-        return rel(ROOT_PERSON, root, person);
+        return relation(ROOT_PERSON, root, person);
     }
 
     static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) FamilyTest::root, //
@@ -177,21 +177,21 @@ public class FamilyTest extends NelumboTestBase {
             (RenderLambda) s -> "pa(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation personAmount(PersonCons person, IntegerCons amount) {
-        return rel(PERSON_AMOUNT, person, amount);
+        return relation(PERSON_AMOUNT, person, amount);
     }
 
     static Functor<Relation> PERSON_TOTAL = functor(FamilyTest::personTotal, //
             (RenderLambda) s -> "pt(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation personTotal(PersonCons person, IntegerCons amount) {
-        return rel(PERSON_TOTAL, person, amount);
+        return relation(PERSON_TOTAL, person, amount);
     }
 
     static Functor<Relation> PERSON_NUMBER = functor(FamilyTest::personNumber, //
             (RenderLambda) s -> "pn(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation personNumber(PersonCons person, IntegerCons number) {
-        return rel(PERSON_NUMBER, person, number);
+        return relation(PERSON_NUMBER, person, number);
     }
 
     // Variables

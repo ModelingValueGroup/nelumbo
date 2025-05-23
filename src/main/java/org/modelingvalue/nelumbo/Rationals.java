@@ -119,7 +119,7 @@ public final class Rationals {
     }
 
     private static Relation gtc(RationalCons compared1, RationalCons compared2) {
-        return rel(GT_CONS_FUNCTOR, compared1, compared2);
+        return relation(GT_CONS_FUNCTOR, compared1, compared2);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -157,7 +157,7 @@ public final class Rationals {
     }
 
     public static Relation plus(RationalCons addend1, RationalCons addend2, RationalCons sum) {
-        return rel(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
+        return relation(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -189,7 +189,7 @@ public final class Rationals {
     }
 
     public static Relation multiply(RationalCons factor1, RationalCons factor2, RationalCons product) {
-        return rel(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
+        return relation(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -218,7 +218,7 @@ public final class Rationals {
     }
 
     public static Relation square(RationalCons root, RationalCons square) {
-        return rel(SQUARE_PRED_FUNCTOR, root, square);
+        return relation(SQUARE_PRED_FUNCTOR, root, square);
     }
 
     // Functions
@@ -227,28 +227,28 @@ public final class Rationals {
             render(s -> s.toString(1) + ">" + s.toString(2)));
 
     public static Relation gt(Rational a, Rational b) {
-        return rel(GT_FUNCTOR, a, b);
+        return relation(GT_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LT_FUNCTOR = functor(Rationals::lt, //
             render(s -> s.toString(1) + "<" + s.toString(2)));
 
     public static Relation lt(Rational a, Rational b) {
-        return rel(LT_FUNCTOR, a, b);
+        return relation(LT_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> GE_FUNCTOR = functor(Rationals::ge, //
             render(s -> s.toString(1) + "\u2265" + s.toString(2)));
 
     public static Relation ge(Rational a, Rational b) {
-        return rel(GE_FUNCTOR, a, b);
+        return relation(GE_FUNCTOR, a, b);
     }
 
     private static Functor<Relation> LE_FUNCTOR = functor(Rationals::le, //
             render(s -> s.toString(1) + "\u2264" + s.toString(2)));
 
     public static Relation le(Rational a, Rational b) {
-        return rel(LE_FUNCTOR, a, b);
+        return relation(LE_FUNCTOR, a, b);
     }
 
     private static Functor<RationalFunc> PLUS_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::plus, //
