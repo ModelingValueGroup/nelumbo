@@ -32,7 +32,7 @@ dependencies {
 }
 publishing {
     publications {
-        create<MavenPublication>("dclare") {
+        create<MavenPublication>("nelumbo") {
             from(components["java"])
         }
     }
