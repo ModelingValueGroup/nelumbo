@@ -30,7 +30,6 @@ import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.impl.FunctorImpl;
 import org.modelingvalue.nelumbo.impl.InferContext;
 import org.modelingvalue.nelumbo.impl.InferResult;
 import org.modelingvalue.nelumbo.impl.RelationImpl;
@@ -54,9 +53,8 @@ public final class Integers {
 
     // Constants
 
-    private static FunctorImpl<IntegerCons> I_FUNCTOR_IMPL = FunctorImpl.<IntegerCons, BigInteger> of(Integers::i,   //
+    private static Functor<IntegerCons> I_FUNCTOR = Logic.<IntegerCons, BigInteger> functor(Integers::i, //
             render(s -> s.toString(1)));
-    private static Functor<IntegerCons>     I_FUNCTOR      = I_FUNCTOR_IMPL.proxy();
 
     public static IntegerCons i(BigInteger val) {
         return constant(I_FUNCTOR, val);

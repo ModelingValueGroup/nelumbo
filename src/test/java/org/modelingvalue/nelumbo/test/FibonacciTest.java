@@ -48,18 +48,18 @@ public class FibonacciTest extends NelumboTestBase {
 
     // Relation
 
-    static Functor<Relation> fib2          = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) FibonacciTest::fib);
+    static Functor<Relation> FIB_REL       = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) FibonacciTest::fib);
 
     static Relation fib(IntegerCons i, IntegerCons f) {
-        return relation(fib2, i, f);
+        return relation(FIB_REL, i, f);
     }
 
     // Function
 
-    static Functor<IntegerFunc> fib1 = functor((SerializableFunction<Integer, IntegerFunc>) FibonacciTest::fib);
+    static Functor<IntegerFunc> FIB_FUNC = functor((SerializableFunction<Integer, IntegerFunc>) FibonacciTest::fib);
 
     static IntegerFunc fib(Integer i) {
-        return function(fib1, i);
+        return function(FIB_FUNC, i);
     }
 
     // Variables

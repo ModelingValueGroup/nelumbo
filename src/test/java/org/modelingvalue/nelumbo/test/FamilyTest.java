@@ -108,11 +108,11 @@ public class FamilyTest extends NelumboTestBase {
         return function(CHILD, parent);
     }
 
-    static Functor<Relation> ANCESTOR_DESCENTANT = functor(FamilyTest::ancestorDescendant, //
+    static Functor<Relation> ANCESTOR_DESCENDANT = functor(FamilyTest::ancestorDescendant, //
             (RenderLambda) s -> "ad(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation ancestorDescendant(PersonCons ancestor, PersonCons descendant) {
-        return relation(ANCESTOR_DESCENTANT, ancestor, descendant);
+        return relation(ANCESTOR_DESCENDANT, ancestor, descendant);
     }
 
     static Functor<PersonFunc> ANCESTOR = functor(FamilyTest::ancestor, //
