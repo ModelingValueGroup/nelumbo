@@ -123,7 +123,7 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> PLUS_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::plus, logic(Rationals::plusLogic), //
+    private static Functor<Relation> PLUS_REL_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::plus, logic(Rationals::plusLogic), //
             render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult plusLogic(RelationImpl relation, InferContext context) {
@@ -157,11 +157,11 @@ public final class Rationals {
     }
 
     public static Relation plus(RationalCons addend1, RationalCons addend2, RationalCons sum) {
-        return relation(PLUS_PRED_FUNCTOR, addend1, addend2, sum);
+        return relation(PLUS_REL_FUNCTOR, addend1, addend2, sum);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> MULTIPLY_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::multiply, logic(Rationals::multiplyLogic), //
+    private static Functor<Relation> MULTIPLY_REL_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::multiply, logic(Rationals::multiplyLogic), //
             render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
@@ -189,11 +189,11 @@ public final class Rationals {
     }
 
     public static Relation multiply(RationalCons factor1, RationalCons factor2, RationalCons product) {
-        return relation(MULTIPLY_PRED_FUNCTOR, factor1, factor2, product);
+        return relation(MULTIPLY_REL_FUNCTOR, factor1, factor2, product);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> SQUARE_PRED_FUNCTOR = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::square, logic(Rationals::squareLogic));
+    private static Functor<Relation> SQUARE_REL_FUNCTOR = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::square, logic(Rationals::squareLogic));
 
     private static InferResult squareLogic(RelationImpl relation, InferContext context) {
         BigInteger numRoot = relation.getVal(1, 1);
@@ -218,7 +218,7 @@ public final class Rationals {
     }
 
     public static Relation square(RationalCons root, RationalCons square) {
-        return relation(SQUARE_PRED_FUNCTOR, root, square);
+        return relation(SQUARE_REL_FUNCTOR, root, square);
     }
 
     // Functions
