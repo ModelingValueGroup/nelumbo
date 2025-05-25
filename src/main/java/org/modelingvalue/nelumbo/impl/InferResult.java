@@ -56,11 +56,11 @@ public interface InferResult {
     }
 
     default boolean isTrueCC() {
-        return falsehoods().isEmpty() && completeFalsehoods();
+        return falsehoods().isEmpty() && !facts().isEmpty() && completeFalsehoods() && completeFacts();
     }
 
     default boolean isFalseCC() {
-        return facts().isEmpty() && completeFacts();
+        return facts().isEmpty() && !falsehoods().isEmpty() && completeFacts() && completeFalsehoods();
     }
 
     default boolean isComplete() {

@@ -118,7 +118,11 @@ public class RuleImpl extends StructureImpl<Rule> {
                     relFalsehoods = relFalsehoods.add(relFalsehood);
                 }
             }
-            if (!relation.isFullyBound()) {
+            if (relation.isFullyBound()) {
+                if (relFacts.isEmpty() && relFalsehoods.isEmpty()) {
+                    relFalsehoods = relation.singleton();
+                }
+            } else {
                 boolean condFullyBound = condition.isFullyBound();
                 if (condFullyBound ? relFacts.isEmpty() : !condResult.completeFacts()) {
                     completeFacts = false;
