@@ -126,6 +126,9 @@ public class RuleImpl extends StructureImpl<Rule> {
                 if (condFullyBound ? relFalsehoods.isEmpty() : !condResult.completeFalsehoods()) {
                     completeFalsehoods = false;
                 }
+                if (!completeFacts && !relFalsehoods.isEmpty()) {
+                    relFalsehoods = Set.of();
+                }
             }
             relResult = InferResult.of(relFacts, completeFacts, relFalsehoods, completeFalsehoods, condResult.cycles());
         }
