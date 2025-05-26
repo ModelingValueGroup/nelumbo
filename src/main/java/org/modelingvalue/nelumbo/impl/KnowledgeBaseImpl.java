@@ -312,16 +312,21 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     private static boolean isSpecGen(RelationImpl spec, RelationImpl gen) {
+        boolean result = false;
         for (int i = 1; i < gen.length(); i++) {
             Object s = spec.get(i);
             Object g = gen.get(i);
             if (s instanceof Class && g instanceof Class) {
-                if (((Class<?>) s).isAssignableFrom((Class<?>) g)) {
-                    return false;
+                if (!s.equals(g)) {
+                    if (((Class<?>) g).isAssignableFrom((Class<?>) s)) {
+                        result = true;
+                    } else {
+                        return false;
+                    }
                 }
             }
         }
-        return true;
+        return result;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
