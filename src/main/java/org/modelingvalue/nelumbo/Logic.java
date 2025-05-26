@@ -419,6 +419,7 @@ public final class Logic {
     private static final Constant C1 = variable(Constant.class, "C1");
     @SuppressWarnings("rawtypes")
     private static final Constant C2 = variable(Constant.class, "C2");
+
     @SuppressWarnings("rawtypes")
     private static final Function F1 = variable(Function.class, "F1");
     @SuppressWarnings("rawtypes")

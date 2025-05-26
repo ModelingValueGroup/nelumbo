@@ -59,7 +59,6 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                                                                                                       if (l == null) {
                                                                                                           return List.of(e);
                                                                                                       } else {
-                                                                                                          int p = e.rulePrio();
                                                                                                           for (int i = 0; i < l.size(); i++) {
                                                                                                               RuleImpl r = l.get(i);
                                                                                                               if (r.equals(e)) {
@@ -67,7 +66,22 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                                                                                                               } else if (r.consequence().equals(e.consequence()) &&   //
                                                                                                                       r.condition().contains(e.condition())) {
                                                                                                                   return l;
-                                                                                                              } else if (r.rulePrio() > p) {
+                                                                                                              } else if (isSpecGen(r.consequence().signature(),       //
+                                                                                                                      e.consequence().signature())) {
+                                                                                                                  return l;
+                                                                                                              }
+                                                                                                          }
+                                                                                                          for (int i = 0; i < l.size(); i++) {
+                                                                                                              RuleImpl r = l.get(i);
+                                                                                                              if (isSpecGen(e.consequence().signature(),              //
+                                                                                                                      r.consequence().signature())) {
+                                                                                                                  l = l.removeIndex(i--);
+                                                                                                              }
+                                                                                                          }
+                                                                                                          int p = e.rulePrio();
+                                                                                                          for (int i = 0; i < l.size(); i++) {
+                                                                                                              RuleImpl r = l.get(i);
+                                                                                                              if (r.rulePrio() > p) {
                                                                                                                   return l.insert(i, e);
                                                                                                               }
                                                                                                           }
@@ -146,7 +160,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                 while (g instanceof ParameterizedType) {
                     g = ((ParameterizedType) g).getRawType();
                 }
-                if (g instanceof Class && !g.equals(Structure.class)) {
+                if (g instanceof Class) {
                     specs = addToSpecializations(specs, (Class) g);
                     specs = specs.put((Class) g, specs.get((Class) g).add(type));
                 }
@@ -295,6 +309,19 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             }
         }
         return rules;
+    }
+
+    private static boolean isSpecGen(RelationImpl spec, RelationImpl gen) {
+        for (int i = 1; i < gen.length(); i++) {
+            Object s = spec.get(i);
+            Object g = gen.get(i);
+            if (s instanceof Class && g instanceof Class) {
+                if (((Class<?>) s).isAssignableFrom((Class<?>) g)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
