@@ -299,34 +299,18 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static Map<RelationImpl, List<RuleImpl>> addRule(RelationImpl signature, RuleImpl ruleImpl, Map<RelationImpl, List<RuleImpl>> rules, Map<Class, Set<Class>> specs) {
         rules = rules.put(signature, ADD_RULE.apply(rules.get(signature), ruleImpl));
-        for (int i = 1; i < signature.length(); i++) {
-            Object v = signature.get(i);
-            if (v instanceof Class) {
-                for (Class g : specs.get((Class) v)) {
-                    RelationImpl p = signature.setType(i, g);
-                    rules = addRule(p, ruleImpl, rules, specs);
-                }
-            }
+        for (RelationImpl spec : signature.specialize(specs)) {
+            rules = addRule(spec, ruleImpl, rules, specs);
         }
         return rules;
     }
 
     private static boolean isSpecGen(RelationImpl spec, RelationImpl gen) {
-        boolean result = false;
-        for (int i = 1; i < gen.length(); i++) {
-            Object s = spec.get(i);
-            Object g = gen.get(i);
-            if (s instanceof Class && g instanceof Class) {
-                if (!s.equals(g)) {
-                    if (((Class<?>) g).isAssignableFrom((Class<?>) s)) {
-                        result = true;
-                    } else {
-                        return false;
-                    }
-                }
-            }
+        if (spec.equals(gen)) {
+            return false;
+        } else {
+            return gen.isAssignableFrom(spec);
         }
-        return result;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

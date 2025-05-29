@@ -58,7 +58,7 @@ public final class Rationals {
         BigInteger denominator = r.getVal(2);
         BigInteger gcd = numerator.gcd(denominator);
         return r.set(1, numerator.divide(gcd), denominator.divide(gcd));
-    }), render(s -> s.toString(1) + "/" + s.toString(2)));
+    }), render(s -> s.getVal(2).equals(BigInteger.ONE) ? s.toString(1) : s.toString(1) + "/" + s.toString(2)));
 
     public static RationalCons r(BigInteger numerator, BigInteger denominator) {
         return constant(R_FUNCTOR, numerator, denominator);
@@ -273,7 +273,7 @@ public final class Rationals {
     }
 
     private static Functor<RationalFunc> DIVIDE_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::divide, //
-            render(s -> s.toString(1) + "/" + s.toString(2)));
+            render(s -> s.toString(1) + "\u00F7" + s.toString(2)));
 
     public static RationalFunc divide(Rational a, Rational b) {
         return function(DIVIDE_FUNC_FUNCTOR, a, b);

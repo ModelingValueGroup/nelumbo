@@ -68,6 +68,7 @@ public class FibonacciTest extends NelumboTestBase {
     IntegerCons Q = iConsVar("Q");
 
     Integer     R = iVar("R");
+    Integer     S = iVar("S");
 
     // Rules
 
@@ -77,7 +78,7 @@ public class FibonacciTest extends NelumboTestBase {
         rule(fib(P, Q), and(ge(P, i(0)), le(P, i(1)), eq(Q, P)));
         rule(fib(P, Q), and(gt(P, i(1)), is(plus(fib(minus(P, i(1))), fib(minus(P, i(2)))), Q)));
 
-        rule(is(fib(R), Q), and(is(R, P), fib(P, Q)));
+        rule(is(fib(R), S), and(is(R, P), is(S, Q), fib(P, Q)));
     }
 
     // Tests
@@ -87,29 +88,17 @@ public class FibonacciTest extends NelumboTestBase {
         run(() -> {
             fibonacciRules();
 
-            hasBindings(fib(i(1), P), binding(P, i(1)));
-            hasBindings(fib(i(6), P), binding(P, i(8)));
+            hasBindings(is(fib(i(1)), P), binding(P, i(1)));
+            hasBindings(is(fib(i(6)), P), binding(P, i(8)));
 
-            isTrue(fib(i(0), i(0)));
-            isTrue(fib(i(1), i(1)));
-            isTrue(fib(i(6), i(8)));
+            isTrue(is(fib(i(0)), i(0)));
+            isTrue(is(fib(i(1)), i(1)));
+            isTrue(is(fib(i(6)), i(8)));
         });
     }
 
     @RepeatedTest(NR_OF_REPEATS)
-    public void fibonacciTestWithRelation() {
-        run(() -> {
-            fibonacciRules();
-
-            hasBindings(fib(i(1), P), binding(P, i(1)));
-            hasBindings(fib(i(7), P), binding(P, i(13)));
-            hasBindings(fib(i(21), P), binding(P, i(10946)));
-            hasBindings(fib(i(1000), P), binding(P, i("18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf", Character.MAX_RADIX)));
-        });
-    }
-
-    @RepeatedTest(NR_OF_REPEATS)
-    public void fibonacciTestWithFunction() {
+    public void bigFibonacciTest() {
         run(() -> {
             fibonacciRules();
 

@@ -31,11 +31,10 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
 import org.modelingvalue.nelumbo.Logic.RenderLambda;
 import org.modelingvalue.nelumbo.Logic.Structure;
 
-public class StructureImpl<F extends Structure> extends org.modelingvalue.collections.struct.impl.StructImpl implements InvocationHandler, Comparable<StructureImpl<F>> {
+public abstract class StructureImpl<F extends Structure> extends org.modelingvalue.collections.struct.impl.StructImpl implements InvocationHandler, Comparable<StructureImpl<F>> {
     private static final long      serialVersionUID = 7315776001191198132L;
 
     protected static final boolean TRACE_NELUMBO    = Boolean.getBoolean("TRACE_NELUMBO");
@@ -80,7 +79,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
 
     private final int hashCode;
 
-    public StructureImpl(Functor<F> functor, Object... args) {
+    protected StructureImpl(Functor<F> functor, Object... args) {
         super(unproxy(functor, args));
         this.hashCode = getHashCode();
         init();
@@ -218,7 +217,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         return r;
     }
 
-    public final StructureImpl<F> eq(StructureImpl<F> other) {
+    protected StructureImpl<F> eq(StructureImpl<F> other) {
         if (equals(other)) {
             return this;
         } else if (length() != other.length()) {
@@ -309,7 +308,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         return (V) val;
     }
 
-    public StructureImpl<F> set(int f, Object... a) {
+    protected final Object[] setArray(int f, Object... a) {
         Object[] array = null;
         for (int i = 0; i < a.length; i++) {
             Object v = get(i + f);
@@ -320,6 +319,11 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
                 array[i + f] = a[i];
             }
         }
+        return array;
+    }
+
+    public StructureImpl<F> set(int f, Object... a) {
+        Object[] array = setArray(f, a);
         return array != null ? struct(array) : this;
     }
 
@@ -362,16 +366,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings("unchecked")
-    public final StructureImpl<F> normal() {
-        FunctorImpl<F> f = functor();
-        NormalizeLambda n = f != null ? f.normalizeLambda() : null;
-        return n != null ? (StructureImpl<F>) n.apply((StructureImpl<Structure>) this) : this;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected StructureImpl<F> struct(Object[] array) {
-        return new StructureImpl<F>(array).normal();
-    }
+    protected abstract StructureImpl<F> struct(Object[] array);
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected final Object get(StructureImpl<F> declaration, VariableImpl var) {
@@ -557,4 +552,51 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             ((List) object).forEach(StructureImpl::noProxy);
         }
     }
+
+    protected final Object[] signatureArray() {
+        Object[] array = null;
+        int deepIndex = functor().deepIndex();
+        for (int i = 1; i < length(); i++) {
+            Object v = get(i);
+            Object r = v;
+            if (i == deepIndex && v instanceof FunctionImpl) {
+                r = ((FunctionImpl<?, ?>) v).signature();
+            } else {
+                r = typeOf(v);
+            }
+            if (!Objects.equals(v, r)) {
+                if (array == null) {
+                    array = toArray();
+                }
+                array[i] = r;
+            }
+        }
+        return array;
+    }
+
+    protected final boolean isAssignableFrom(StructureImpl<?> spec) {
+        assert (functor().equals(spec.functor()));
+        if (equals(spec)) {
+            return true;
+        }
+        for (int i = 1; i < length(); i++) {
+            Object g = get(i);
+            Object s = spec.get(i);
+            if (!s.equals(g)) {
+                assert (g.getClass().equals(s.getClass()));
+                if (g instanceof FunctionImpl) {
+                    if (!((FunctionImpl<?, ?>) g).isAssignableFrom((FunctionImpl<?, ?>) s)) {
+                        return false;
+                    }
+                } else {
+                    assert (g instanceof Class);
+                    if (!((Class<?>) g).isAssignableFrom((Class<?>) s)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
 }

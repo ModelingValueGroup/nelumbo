@@ -284,6 +284,7 @@ public class FamilyTest extends NelumboTestBase {
 
             isTrue(is(parent(Joppe), Heleen));
             isTrue(is(Wim, child(Jan)));
+            isTrue(is(child(Jan), Wim));
 
             isFalse(is(Marijn, parent(Wim)));
             isFalse(is(parent(Wim), Heleen));
@@ -449,6 +450,14 @@ public class FamilyTest extends NelumboTestBase {
             isTrue(personTotal(Elske, i(17)));
             isFalse(personNumber(Elske, i(4)));
         });
+    }
+
+    //  @RepeatedTest(1)
+    public void rulesPrintTest() {
+        KnowledgeBase db = run(() -> {
+            familyRules();
+        });
+        print(db);
     }
 
     // @RepeatedTest(1)

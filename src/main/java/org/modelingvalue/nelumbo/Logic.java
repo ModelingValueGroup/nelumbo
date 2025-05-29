@@ -57,12 +57,12 @@ public final class Logic {
 
     @SuppressWarnings("unchecked")
     public static <C extends Constant<T>, T extends Structure> C constant(Functor<C> functor, Object... args) {
-        return new StructureImpl<C>(functor, args).normal().proxy();
+        return new ConstantImpl<C, T>(functor, args).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
     public static <F extends Function<T>, T extends Structure> F function(Functor<F> functor, Object... args) {
-        return new StructureImpl<F>(functor, args).proxy();
+        return new FunctionImpl<F, T>(functor, args).proxy();
     }
 
     // Functor
@@ -142,7 +142,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     @FunctionalInterface
-    public interface NormalizeLambda extends UnaryOperator<StructureImpl<Structure>>, LambdaReflection, FunctorModifier {
+    public interface NormalizeLambda extends UnaryOperator<ConstantImpl<Constant<Structure>, Structure>>, LambdaReflection, FunctorModifier {
 
         @Override
         default NormalizeLambdaImpl of() {
@@ -158,8 +158,8 @@ public final class Logic {
 
             @SuppressWarnings("unchecked")
             @Override
-            public final StructureImpl<Structure> apply(StructureImpl<Structure> structure) {
-                return f.apply(structure);
+            public final ConstantImpl<Constant<Structure>, Structure> apply(ConstantImpl<Constant<Structure>, Structure> constant) {
+                return f.apply(constant);
             }
         }
     }
@@ -190,6 +190,19 @@ public final class Logic {
                 return f.apply(structure);
             }
         }
+    }
+
+    public interface DeepIndex extends FunctorModifier {
+        static DeepIndex of(int i) {
+            return new DeepIndex() {
+                @Override
+                public int index() {
+                    return i;
+                }
+            };
+        }
+
+        int index();
     }
 
     // Variables
@@ -373,8 +386,8 @@ public final class Logic {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult eqLogic(RelationImpl relation, InferContext context) {
-        StructureImpl constant1 = relation.getVal(1);
-        StructureImpl constant2 = relation.getVal(2);
+        ConstantImpl constant1 = relation.getVal(1);
+        ConstantImpl constant2 = relation.getVal(2);
         if (constant1 == null && constant2 == null) {
             return relation.unknown();
         } else if (constant1 == null) {
@@ -382,7 +395,7 @@ public final class Logic {
         } else if (constant2 == null) {
             return relation.set(2, constant1).factCI();
         } else {
-            StructureImpl eq = constant1.eq(constant2);
+            ConstantImpl eq = constant1.eq(constant2);
             return eq != null ? relation.set(1, eq, eq).factCC() : relation.falsehoodCC();
         }
     }
@@ -399,19 +412,9 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     private static final Functor<Relation> IS_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::is, //
-            render(s -> s.toString(1) + "=" + s.toString(2)));
+            render(s -> s.toString(1) + "=" + s.toString(2)), DeepIndex.of(1));
 
-    private static <T extends Structure> Relation is(T a, T b) {
-        return relation(IS_FUNCTOR, a, b);
-    }
-
-    // Use this one for function definitions
-    public static <T extends Structure> Relation is(T a, Constant<T> b) {
-        return relation(IS_FUNCTOR, a, b);
-    }
-
-    // Implied by the above using the generic rules here
-    public static <T extends Structure> Relation is(Constant<T> a, T b) {
+    public static <T extends Structure> Relation is(T a, T b) {
         return relation(IS_FUNCTOR, a, b);
     }
 
@@ -427,8 +430,8 @@ public final class Logic {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void isRules() {
-        rule(is((Structure) C1, (Structure) C2), eq(C1, C2));
-        rule(is(F1, F2), and(is(F2, C2), is(F1, C2)));
+        rule(is(C1, C2), eq(C1, C2));
+        rule(is(F1, F2), and(is(F1, C1), is(F2, C1)));
         rule(is(C1, F1), is(F1, C1));
     }
 

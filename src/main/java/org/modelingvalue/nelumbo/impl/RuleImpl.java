@@ -57,7 +57,7 @@ public class RuleImpl extends StructureImpl<Rule> {
         return false;
     }
 
-    protected RuleImpl(Object[] args) {
+    private RuleImpl(Object[] args) {
         super(args);
         trace = false;
     }

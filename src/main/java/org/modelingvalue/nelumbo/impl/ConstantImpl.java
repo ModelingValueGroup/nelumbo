@@ -22,46 +22,50 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.lang.reflect.Proxy;
 
+import org.modelingvalue.nelumbo.Logic.Constant;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
 import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.Logic.Variable;
 
-public final class VariableImpl<F extends Structure> extends StructureImpl<F> {
-    private static final long serialVersionUID = -8998368070388908726L;
+public final class ConstantImpl<C extends Constant<T>, T extends Structure> extends StructureImpl<C> {
+    private static final long serialVersionUID = 3217952328495669539L;
 
-    public VariableImpl(Class<F> type, String name) {
-        super(type, name);
-        KnowledgeBaseImpl.updateSpecializations(type);
+    public ConstantImpl(Functor<C> functor, Object... args) {
+        super(functor, args);
     }
 
-    private VariableImpl(Object[] array) {
+    private ConstantImpl(Object[] array) {
         super(array);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public final F proxy() {
-        return (F) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Variable.class}, this);
-    }
-
-    @Override
-    public String toString() {
-        return get(1).toString();
+    public final C proxy() {
+        return (C) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Constant.class}, this);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected VariableImpl<F> struct(Object[] array) {
-        return new VariableImpl<F>(array);
-    }
-
-    @Override
-    public VariableImpl<F> set(int i, Object... a) {
-        return (VariableImpl<F>) super.set(i, a);
+    protected ConstantImpl<C, T> struct(Object[] array) {
+        return new ConstantImpl<C, T>(array).normal();
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public Class<F> type() {
-        return (Class<F>) get(0);
+    public ConstantImpl<C, T> set(int i, Object... a) {
+        return (ConstantImpl<C, T>) super.set(i, a);
     }
+
+    @SuppressWarnings("unchecked")
+    public final ConstantImpl<C, T> normal() {
+        FunctorImpl<C> f = functor();
+        NormalizeLambda n = f != null ? f.normalizeLambda() : null;
+        return n != null ? (ConstantImpl<C, T>) n.apply((ConstantImpl<Constant<Structure>, Structure>) this) : this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public final ConstantImpl<C, T> eq(ConstantImpl<C, T> other) {
+        return (ConstantImpl<C, T>) super.eq(other);
+    }
+
 }

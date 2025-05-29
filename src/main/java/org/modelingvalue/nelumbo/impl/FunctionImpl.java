@@ -22,46 +22,63 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.lang.reflect.Proxy;
 
+import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.Logic.Function;
+import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.Logic.Variable;
 
-public final class VariableImpl<F extends Structure> extends StructureImpl<F> {
-    private static final long serialVersionUID = -8998368070388908726L;
+public final class FunctionImpl<F extends Function<T>, T extends Structure> extends StructureImpl<F> {
+    private static final long serialVersionUID = -8174476116343969718L;
 
-    public VariableImpl(Class<F> type, String name) {
-        super(type, name);
-        KnowledgeBaseImpl.updateSpecializations(type);
+    public FunctionImpl(Functor<F> functor, Object... args) {
+        super(functor, args);
     }
 
-    private VariableImpl(Object[] array) {
+    private FunctionImpl(Object[] array) {
         super(array);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public final F proxy() {
-        return (F) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Variable.class}, this);
-    }
-
-    @Override
-    public String toString() {
-        return get(1).toString();
+        return (F) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Function.class}, this);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected VariableImpl<F> struct(Object[] array) {
-        return new VariableImpl<F>(array);
-    }
-
-    @Override
-    public VariableImpl<F> set(int i, Object... a) {
-        return (VariableImpl<F>) super.set(i, a);
+    protected FunctionImpl<F, T> struct(Object[] array) {
+        return new FunctionImpl<F, T>(array);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public Class<F> type() {
-        return (Class<F>) get(0);
+    public FunctionImpl<F, T> set(int i, Object... a) {
+        return (FunctionImpl<F, T>) super.set(i, a);
     }
+
+    protected FunctionImpl<F, T> signature() {
+        Object[] array = signatureArray();
+        return array != null ? struct(array) : this;
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected Set<FunctionImpl<F, T>> specialize(Map<Class, Set<Class>> specs) {
+        Set<FunctionImpl<F, T>> result = Set.of();
+        for (int i = 1; i < length(); i++) {
+            Object v = get(i);
+            if (v instanceof FunctionImpl) {
+                for (FunctionImpl s : ((FunctionImpl<?, ?>) v).specialize(specs)) {
+                    result = result.add(set(i, s));
+                }
+            } else {
+                assert (v instanceof Class);
+                for (Class s : specs.get((Class) v)) {
+                    result = result.add(set(i, s));
+                }
+            }
+        }
+        return result;
+    }
+
 }

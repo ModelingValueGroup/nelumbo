@@ -236,7 +236,7 @@ public final class Integers {
     }
 
     private static Functor<IntegerFunc> DIVIDE_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::divide, //
-            render(s -> s.toString(1) + "/" + s.toString(2)));
+            render(s -> s.toString(1) + "\u00F7" + s.toString(2)));
 
     public static IntegerFunc divide(Integer a, Integer b) {
         return function(DIVIDE_FUNC_FUNCTOR, a, b);

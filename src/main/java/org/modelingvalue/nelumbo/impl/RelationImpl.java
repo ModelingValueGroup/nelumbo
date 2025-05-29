@@ -20,9 +20,8 @@
 
 package org.modelingvalue.nelumbo.impl;
 
-import java.util.Objects;
-
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.LogicLambda;
@@ -217,28 +216,36 @@ public class RelationImpl extends PredicateImpl<Relation> {
     }
 
     protected final RelationImpl signature() {
-        Object[] array = null;
-        for (int i = 1; i < length(); i++) {
-            Object v = get(i);
-            Object s = typeOf(v);
-            if (!Objects.equals(s, v)) {
-                if (array == null) {
-                    array = toArray();
-                }
-                array[i] = s;
-            }
-        }
+        Object[] array = signatureArray();
         return array != null ? struct(array, null) : this;
     }
 
-    protected final RelationImpl setType(int i, Class<?> type) {
-        Object[] array = null;
-        if (!Objects.equals(get(i), type)) {
-            if (array == null) {
-                array = toArray();
+    @SuppressWarnings("rawtypes")
+    protected final Set<RelationImpl> specialize(Map<Class, Set<Class>> specs) {
+        Set<RelationImpl> result = Set.of();
+        for (int i = 1; i < length(); i++) {
+            Object v = get(i);
+            if (v instanceof FunctionImpl) {
+                for (FunctionImpl s : ((FunctionImpl<?, ?>) v).specialize(specs)) {
+                    result = result.add(setFunction(i, s));
+                }
+            } else {
+                assert (v instanceof Class);
+                for (Class s : specs.get((Class) v)) {
+                    result = result.add(setType(i, s));
+                }
             }
-            array[i] = type;
         }
+        return result;
+    }
+
+    protected final RelationImpl setType(int i, Class<?> type) {
+        Object[] array = setArray(i, type);
+        return array != null ? struct(array, null) : this;
+    }
+
+    protected final RelationImpl setFunction(int i, FunctionImpl<?, ?> func) {
+        Object[] array = setArray(i, func);
         return array != null ? struct(array, null) : this;
     }
 
