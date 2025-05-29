@@ -55,9 +55,19 @@ public final class Logic {
     public interface Structure {
     }
 
+    // Constants
+
+    public interface Constant<T extends Structure> extends Structure {
+    }
+
     @SuppressWarnings("unchecked")
     public static <C extends Constant<T>, T extends Structure> C constant(Functor<C> functor, Object... args) {
         return new ConstantImpl<C, T>(functor, args).normal().proxy();
+    }
+
+    // Functions
+
+    public interface Function<T extends Structure> extends Structure {
     }
 
     @SuppressWarnings("unchecked")
@@ -362,17 +372,14 @@ public final class Logic {
         KnowledgeBaseImpl.CURRENT.get().addFact(unproxy);
     }
 
-    // Equals
-
-    public interface Constant<T extends Structure> extends Structure {
-    }
+    // Is
 
     @SuppressWarnings("rawtypes")
-    private static Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::eq, logic(Logic::eqLogic), //
+    private static Functor<Relation> IS_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::is, logic(Logic::isLogic), //
             render(s -> s.toString(1) + "\u2261" + s.toString(2)));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static InferResult eqLogic(RelationImpl relation, InferContext context) {
+    private static InferResult isLogic(RelationImpl relation, InferContext context) {
         ConstantImpl constant1 = relation.getVal(1);
         ConstantImpl constant2 = relation.getVal(2);
         if (constant1 == null && constant2 == null) {
@@ -382,44 +389,55 @@ public final class Logic {
         } else if (constant2 == null) {
             return relation.set(2, constant1).factCI();
         } else {
-            ConstantImpl eq = constant1.eq(constant2);
+            ConstantImpl eq = constant1.is(constant2);
             return eq != null ? relation.set(1, eq, eq).factCC() : relation.falsehoodCC();
         }
     }
 
     @SuppressWarnings("rawtypes")
-    public static <T extends Structure> Relation eq(Constant<T> a, Constant<T> b) {
-        return relation(EQ_FUNCTOR, a, b);
-    }
-
-    // Is
-
-    public interface Function<T extends Structure> extends Structure {
-    }
-
-    @SuppressWarnings("rawtypes")
-    private static final Functor<Relation> IS_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::is, //
-            render(s -> s.toString(1) + "=" + s.toString(2)));
-
-    public static <T extends Structure> Relation is(T a, T b) {
+    private static <T extends Structure> Relation is(Constant<T> a, Constant<T> b) {
         return relation(IS_FUNCTOR, a, b);
     }
 
-    @SuppressWarnings("rawtypes")
-    private static final Constant C1 = variable(Constant.class, "C1");
-    @SuppressWarnings("rawtypes")
-    private static final Constant C2 = variable(Constant.class, "C2");
+    // Equals
 
     @SuppressWarnings("rawtypes")
-    private static final Function F1 = variable(Function.class, "F1");
+    private static final Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::eq, //
+            render(s -> s.toString(1) + "=" + s.toString(2)));
+
+    public static <T extends Structure> Relation eq(T a, T b) {
+        return relation(EQ_FUNCTOR, a, b);
+    }
+
     @SuppressWarnings("rawtypes")
-    private static final Function F2 = variable(Function.class, "F2");
+    private static final Functor<Relation> NE_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::ne, //
+            render(s -> s.toString(1) + "\u2260" + s.toString(2)));
+
+    public static <T extends Structure> Relation ne(T a, T b) {
+        return relation(NE_FUNCTOR, a, b);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static final Constant  C1 = variable(Constant.class, "C1");
+    @SuppressWarnings("rawtypes")
+    private static final Constant  C2 = variable(Constant.class, "C2");
+
+    @SuppressWarnings("rawtypes")
+    private static final Function  F1 = variable(Function.class, "F1");
+    @SuppressWarnings("rawtypes")
+    private static final Function  F2 = variable(Function.class, "F2");
+
+    @SuppressWarnings("rawtypes")
+    private static final Structure S1 = variable(Structure.class, "S1");
+    @SuppressWarnings("rawtypes")
+    private static final Structure S2 = variable(Structure.class, "S2");
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void isRules() {
-        rule(is(C1, C2), eq(C1, C2));
-        rule(is(F1, F2), and(is(F1, C1), is(F2, C1)));
-        rule(is(C1, F1), is(F1, C1));
+        rule(eq(C1, C2), is(C1, C2));
+        rule(eq(F1, F2), and(eq(F1, C1), eq(F2, C1)));
+        rule(eq(C1, F1), eq(F1, C1));
+        rule(ne(S1, S2), not(eq(S1, S2)));
     }
 
 }

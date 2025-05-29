@@ -130,7 +130,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             while (g instanceof ParameterizedType) {
                 g = ((ParameterizedType) g).getRawType();
             }
-            if (g instanceof Class && !g.equals(Structure.class) && Structure.class.isAssignableFrom((Class) g)) {
+            if (g instanceof Class && Structure.class.isAssignableFrom((Class) g)) {
                 result = result.add((Class) g);
             }
         }

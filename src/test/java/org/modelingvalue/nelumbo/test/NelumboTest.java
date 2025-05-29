@@ -75,7 +75,7 @@ public class NelumboTest extends NelumboTestBase {
             isTrue(lt(i(0), i(1)));
             isTrue(ge(i(1), i(0)));
 
-            hasBindings(is(plus(i(7), i(3)), P), binding(P, i(10)));
+            hasBindings(eq(plus(i(7), i(3)), P), binding(P, i(10)));
         });
     }
 
@@ -95,24 +95,24 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             integerRules();
 
-            isTrue(is(plus(i(11), i(22)), i(33)));
-            isTrue(is(minus(i(33), i(22)), i(11)));
-            isTrue(is(plus(i(11), plus(plus(i(22), i(33)), i(44))), i(110)));
+            isTrue(eq(plus(i(11), i(22)), i(33)));
+            isTrue(eq(minus(i(33), i(22)), i(11)));
+            isTrue(eq(plus(i(11), plus(plus(i(22), i(33)), i(44))), i(110)));
 
-            isTrue(is(plus(i(11), divide(multiply(i(44), i(33)), i(22))), i(77)));
+            isTrue(eq(plus(i(11), divide(multiply(i(44), i(33)), i(22))), i(77)));
 
-            isTrue(is(sqrt(i(49)), i(7)));
-            isTrue(is(sqrt(i(49)), i(-7)));
+            isTrue(eq(sqrt(i(49)), i(7)));
+            isTrue(eq(sqrt(i(49)), i(-7)));
 
-            hasBindings(is(plus(i(11), plus(plus(i(22), i(33)), i(44))), P), binding(P, i(110)));
-            hasBindings(is(plus(i(11), plus(plus(i(22), P), i(44))), i(110)), binding(P, i(33)));
-            hasBindings(is(plus(i(7), i(3)), P), binding(P, i(10)));
-            hasBindings(is(plus(i(7), P), i(10)), binding(P, i(3)));
-            hasBindings(is(plus(P, i(3)), i(10)), binding(P, i(7)));
+            hasBindings(eq(plus(i(11), plus(plus(i(22), i(33)), i(44))), P), binding(P, i(110)));
+            hasBindings(eq(plus(i(11), plus(plus(i(22), P), i(44))), i(110)), binding(P, i(33)));
+            hasBindings(eq(plus(i(7), i(3)), P), binding(P, i(10)));
+            hasBindings(eq(plus(i(7), P), i(10)), binding(P, i(3)));
+            hasBindings(eq(plus(P, i(3)), i(10)), binding(P, i(7)));
 
-            hasBindings(is(sqrt(i(49)), P), binding(P, i(7)), binding(P, i(-7)));
+            hasBindings(eq(sqrt(i(49)), P), binding(P, i(7)), binding(P, i(-7)));
 
-            hasBindings(and(is(sqrt(i(49)), P), ge(P, i(0))), binding(P, i(7)));
+            hasBindings(and(eq(sqrt(i(49)), P), ge(P, i(0))), binding(P, i(7)));
         });
     }
 
@@ -121,8 +121,8 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             rationalRules();
 
-            isTrue(is(divide(r(7), r(5)), r(7, 5)));
-            isTrue(is(r(7, 5), divide(r(7), r(5))));
+            isTrue(eq(divide(r(7), r(5)), r(7, 5)));
+            isTrue(eq(r(7, 5), divide(r(7), r(5))));
 
             hasBindings(plus(r(7), r(3), T), binding(T, r(20, 2)));
             hasBindings(plus(r(7), T, r(20, 2)), binding(T, r(6, 2)));
@@ -135,24 +135,24 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             rationalRules();
 
-            isTrue(is(plus(r(11), r(88, 4)), r(66, 2)));
-            isTrue(is(minus(r(33), r(22)), r(11)));
-            isTrue(is(plus(r(11), plus(plus(r(22), r(33)), r(44))), r(110)));
+            isTrue(eq(plus(r(11), r(88, 4)), r(66, 2)));
+            isTrue(eq(minus(r(33), r(22)), r(11)));
+            isTrue(eq(plus(r(11), plus(plus(r(22), r(33)), r(44))), r(110)));
 
-            isTrue(is(plus(r(44, 4), divide(multiply(r(88, 2), r(66, 2)), r(22))), r(77)));
+            isTrue(eq(plus(r(44, 4), divide(multiply(r(88, 2), r(66, 2)), r(22))), r(77)));
 
-            isTrue(is(sqrt(r(49)), r(-14, 2)));
-            isTrue(is(sqrt(r(98, 2)), r(7)));
+            isTrue(eq(sqrt(r(49)), r(-14, 2)));
+            isTrue(eq(sqrt(r(98, 2)), r(7)));
 
-            hasBindings(is(plus(r(11), plus(plus(r(22), r(33)), r(44))), T), binding(T, r(110)));
-            hasBindings(is(plus(r(11), plus(plus(r(22), T), r(44))), r(110)), binding(T, r(33)));
-            hasBindings(is(plus(r(7), r(3)), T), binding(T, r(10)));
-            hasBindings(is(plus(r(7), T), r(10)), binding(T, r(3)));
-            hasBindings(is(plus(T, r(3)), r(10)), binding(T, r(7)));
+            hasBindings(eq(plus(r(11), plus(plus(r(22), r(33)), r(44))), T), binding(T, r(110)));
+            hasBindings(eq(plus(r(11), plus(plus(r(22), T), r(44))), r(110)), binding(T, r(33)));
+            hasBindings(eq(plus(r(7), r(3)), T), binding(T, r(10)));
+            hasBindings(eq(plus(r(7), T), r(10)), binding(T, r(3)));
+            hasBindings(eq(plus(T, r(3)), r(10)), binding(T, r(7)));
 
-            hasBindings(is(sqrt(r(49)), T), binding(T, r(7)), binding(T, r(-7)));
+            hasBindings(eq(sqrt(r(49)), T), binding(T, r(7)), binding(T, r(-7)));
 
-            hasBindings(and(is(sqrt(r(49)), T), ge(T, r(0))), binding(T, r(7)));
+            hasBindings(and(eq(sqrt(r(49)), T), ge(T, r(0))), binding(T, r(7)));
         });
     }
 
@@ -167,12 +167,15 @@ public class NelumboTest extends NelumboTestBase {
             integerRules();
 
             isFalse(plus(i(5), i(2), i(8)));
-            isFalse(is(plus(i(5), i(2)), i(8)));
+            isFalse(eq(plus(i(5), i(2)), i(8)));
             isTrue(not(plus(i(5), i(2), i(8))));
-            isTrue(not(is(plus(i(5), i(2)), i(8))));
-            isTrue(and(not(is(plus(i(5), i(2)), i(8))), not(plus(i(5), i(2), i(8)))));
+            isTrue(not(eq(plus(i(5), i(2)), i(8))));
+            isTrue(ne(plus(i(5), i(2)), i(8)));
+            isTrue(and(not(eq(plus(i(5), i(2)), i(8))), not(plus(i(5), i(2), i(8)))));
+            isTrue(and(ne(plus(i(5), i(2)), i(8)), not(plus(i(5), i(2), i(8)))));
 
-            hasBindings(not(is(plus(i(5), i(2)), R)));
+            hasBindings(not(eq(plus(i(5), i(2)), R)));
+            hasBindings(ne(plus(i(5), i(2)), R));
         });
     }
 
@@ -181,26 +184,26 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             integerRules();
 
-            Predicate query1 = is(plus(i(7), i(3)), i(10));
+            Predicate query1 = eq(plus(i(7), i(3)), i(10));
             hasResult(query1, Set.of(query1), true, Set.of(), true);
-            Predicate query2 = is(plus(i(7), i(3)), i(11));
+            Predicate query2 = eq(plus(i(7), i(3)), i(11));
             hasResult(query2, Set.of(), true, Set.of(query2), true);
-            Predicate query3 = is(plus(i(7), i(3)), P);
-            hasResult(query3, Set.of(is(plus(i(7), i(3)), i(10))), true, Set.of(), false);
-            Predicate query4 = is(plus(i(7), P), i(10));
-            hasResult(query4, Set.of(is(plus(i(7), i(3)), i(10))), true, Set.of(), false);
-            Predicate query5 = is(plus(i(7), P), Q);
+            Predicate query3 = eq(plus(i(7), i(3)), P);
+            hasResult(query3, Set.of(eq(plus(i(7), i(3)), i(10))), true, Set.of(), false);
+            Predicate query4 = eq(plus(i(7), P), i(10));
+            hasResult(query4, Set.of(eq(plus(i(7), i(3)), i(10))), true, Set.of(), false);
+            Predicate query5 = eq(plus(i(7), P), Q);
             hasResult(query5, Set.of(), false, Set.of(), false);
 
-            query1 = and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)));
+            query1 = and(eq(plus(i(7), i(3)), i(10)), eq(plus(i(8), i(2)), i(10)));
             hasResult(query1, Set.of(query1), true, Set.of(), true);
-            query2 = and(is(plus(i(7), i(3)), i(11)), is(plus(i(8), i(2)), i(11)));
+            query2 = and(eq(plus(i(7), i(3)), i(11)), eq(plus(i(8), i(2)), i(11)));
             hasResult(query2, Set.of(), true, Set.of(query2), true);
-            query3 = and(is(plus(i(7), i(3)), P), is(plus(i(8), i(2)), P));
-            hasResult(query3, Set.of(and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)))), true, Set.of(), false);
-            query4 = and(is(plus(i(7), P), i(10)), is(plus(i(8), Q), i(10)));
-            hasResult(query4, Set.of(and(is(plus(i(7), i(3)), i(10)), is(plus(i(8), i(2)), i(10)))), true, Set.of(), false);
-            query5 = and(is(plus(i(7), P), R), is(plus(i(8), Q), R));
+            query3 = and(eq(plus(i(7), i(3)), P), eq(plus(i(8), i(2)), P));
+            hasResult(query3, Set.of(and(eq(plus(i(7), i(3)), i(10)), eq(plus(i(8), i(2)), i(10)))), true, Set.of(), false);
+            query4 = and(eq(plus(i(7), P), i(10)), eq(plus(i(8), Q), i(10)));
+            hasResult(query4, Set.of(and(eq(plus(i(7), i(3)), i(10)), eq(plus(i(8), i(2)), i(10)))), true, Set.of(), false);
+            query5 = and(eq(plus(i(7), P), R), eq(plus(i(8), Q), R));
             hasResult(query5, Set.of(), false, Set.of(), false);
         });
     }

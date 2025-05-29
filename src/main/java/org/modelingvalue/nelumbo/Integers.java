@@ -267,17 +267,17 @@ public final class Integers {
     public static void integerRules() {
         isRules();
 
-        rule(gt(X, Y), and(is(X, P), is(Y, Q), gtc(P, Q)));
-        rule(lt(X, Y), and(is(X, P), is(Y, Q), gtc(Q, P)));
-        rule(ge(X, Y), and(is(X, P), is(Y, Q), or(gtc(P, Q), eq(P, Q))));
-        rule(le(X, Y), and(is(X, P), is(Y, Q), or(gtc(Q, P), eq(Q, P))));
+        rule(gt(X, Y), and(eq(X, P), eq(Y, Q), gtc(P, Q)));
+        rule(lt(X, Y), and(eq(X, P), eq(Y, Q), gtc(Q, P)));
+        rule(ge(X, Y), and(eq(X, P), eq(Y, Q), or(gtc(P, Q), eq(P, Q))));
+        rule(le(X, Y), and(eq(X, P), eq(Y, Q), or(gtc(Q, P), eq(Q, P))));
 
-        rule(is(plus(X, Y), Z), and(is(X, P), is(Y, Q), is(Z, R), plus(P, Q, R)));
-        rule(is(minus(X, Y), Z), and(is(X, P), is(Y, Q), is(Z, R), plus(R, Q, P)));
-        rule(is(multiply(X, Y), Z), and(is(X, P), is(Y, Q), is(Z, R), multiply(P, Q, R)));
-        rule(is(divide(X, Y), Z), and(is(X, P), is(Y, Q), is(Z, R), multiply(R, Q, P)));
-        rule(is(square(X), Z), and(is(X, P), is(Z, R), square(P, R)));
-        rule(is(sqrt(X), Z), and(is(X, P), is(Z, R), square(R, P)));
+        rule(eq(plus(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), plus(P, Q, R)));
+        rule(eq(minus(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), plus(R, Q, P)));
+        rule(eq(multiply(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), multiply(P, Q, R)));
+        rule(eq(divide(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), multiply(R, Q, P)));
+        rule(eq(square(X), Z), and(eq(X, P), eq(Z, R), square(P, R)));
+        rule(eq(sqrt(X), Z), and(eq(X, P), eq(Z, R), square(R, P)));
     }
 
 }

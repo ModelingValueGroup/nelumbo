@@ -64,7 +64,7 @@ public final class ConstantImpl<C extends Constant<T>, T extends Structure> exte
     }
 
     @SuppressWarnings("unchecked")
-    public final ConstantImpl<C, T> eq(ConstantImpl<C, T> other) {
+    public final ConstantImpl<C, T> is(ConstantImpl<C, T> other) {
         return (ConstantImpl<C, T>) super.eq(other);
     }
 

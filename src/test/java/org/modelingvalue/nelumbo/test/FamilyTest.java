@@ -236,11 +236,11 @@ public class FamilyTest extends NelumboTestBase {
         rule(ancestorDescendant(A, C), parentChild(A, C));
         rule(ancestorDescendant(A, C), and(ancestorDescendant(A, B), parentChild(B, C)));
 
-        rule(is(parent(X), Y), and(is(X, B), is(Y, A), parentChild(A, B)));
-        rule(is(child(X), Y), and(is(X, B), is(Y, A), parentChild(B, A)));
+        rule(eq(parent(X), Y), and(eq(X, B), eq(Y, A), parentChild(A, B)));
+        rule(eq(child(X), Y), and(eq(X, B), eq(Y, A), parentChild(B, A)));
 
-        rule(is(ancestor(X), Y), and(is(X, B), is(Y, A), ancestorDescendant(A, B)));
-        rule(is(descendant(X), Y), and(is(X, B), is(Y, A), ancestorDescendant(B, A)));
+        rule(eq(ancestor(X), Y), and(eq(X, B), eq(Y, A), ancestorDescendant(A, B)));
+        rule(eq(descendant(X), Y), and(eq(X, B), eq(Y, A), ancestorDescendant(B, A)));
     }
 
     // Root Rules
@@ -248,13 +248,13 @@ public class FamilyTest extends NelumboTestBase {
     private void rootRules() {
         integerRules();
 
-        rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), is(plus(Q, i(1)), P)));
+        rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), eq(plus(Q, i(1)), P)));
         rule(rootPerson(V, person(0)), T());
         rule(rootPerson(V, C), and(rootPerson(V, A), parentChild(A, C)));
 
-        rule(is(parent(X), Y), and(is(X, B), is(Y, A), parentChild(A, B)));
-        rule(is(child(X), Y), and(is(X, B), is(Y, A), parentChild(B, A)));
-        rule(is(root(X), W), and(is(X, B), is(W, V), rootPerson(V, B)));
+        rule(eq(parent(X), Y), and(eq(X, B), eq(Y, A), parentChild(A, B)));
+        rule(eq(child(X), Y), and(eq(X, B), eq(Y, A), parentChild(B, A)));
+        rule(eq(root(X), W), and(eq(X, B), eq(W, V), rootPerson(V, B)));
     }
 
     // Collect Example Rules
@@ -263,8 +263,8 @@ public class FamilyTest extends NelumboTestBase {
         integerRules();
         familyRules();
 
-        rule(personTotal(A, R), coll(and(parentChild(A, B), personAmount(B, P)), is(plus(i(0), P), R)));
-        rule(personNumber(A, R), coll(and(parentChild(A, B), eq(i(1), P)), is(plus(i(0), P), R)));
+        rule(personTotal(A, R), coll(and(parentChild(A, B), personAmount(B, P)), eq(plus(i(0), P), R)));
+        rule(personNumber(A, R), coll(and(parentChild(A, B), eq(i(1), P)), eq(plus(i(0), P), R)));
     }
 
     // Tests
@@ -282,21 +282,21 @@ public class FamilyTest extends NelumboTestBase {
             fact(parentChild(Wim, Marijn));
             fact(parentChild(Heleen, Marijn));
 
-            isTrue(is(parent(Joppe), Heleen));
-            isTrue(is(Wim, child(Jan)));
-            isTrue(is(child(Jan), Wim));
+            isTrue(eq(parent(Joppe), Heleen));
+            isTrue(eq(Wim, child(Jan)));
+            isTrue(eq(child(Jan), Wim));
 
-            isFalse(is(Marijn, parent(Wim)));
-            isFalse(is(parent(Wim), Heleen));
-            isFalse(is(child(Wim), Wim));
+            isFalse(eq(Marijn, parent(Wim)));
+            isFalse(eq(parent(Wim), Heleen));
+            isFalse(eq(child(Wim), Wim));
 
-            isTrue(is(ancestor(Marijn), Wim));
-            isTrue(is(descendant(Carel), Marijn));
+            isTrue(eq(ancestor(Marijn), Wim));
+            isTrue(eq(descendant(Carel), Marijn));
 
-            isFalse(is(descendant(Marijn), Wim));
-            isFalse(is(descendant(Heleen), Wim));
-            isFalse(is(descendant(Joppe), Carel));
-            isFalse(is(descendant(Carel), Carel));
+            isFalse(eq(descendant(Marijn), Wim));
+            isFalse(eq(descendant(Heleen), Wim));
+            isFalse(eq(descendant(Joppe), Carel));
+            isFalse(eq(descendant(Carel), Carel));
         });
     }
 
@@ -414,17 +414,17 @@ public class FamilyTest extends NelumboTestBase {
         run(() -> {
             rootRules();
 
-            isTrue(is(child(person(0)), person(1)));
-            isTrue(is(child(person(3)), person(4)));
-            isFalse(is(child(person(4)), person(5)));
+            isTrue(eq(child(person(0)), person(1)));
+            isTrue(eq(child(person(3)), person(4)));
+            isFalse(eq(child(person(4)), person(5)));
 
-            isTrue(is(root(person(0)), Root));
-            isTrue(is(root(person(1)), Root));
-            isTrue(is(root(person(4)), Root));
-            isTrue(is(root(person(3)), Root));
-            isTrue(is(root(person(2)), Root));
+            isTrue(eq(root(person(0)), Root));
+            isTrue(eq(root(person(1)), Root));
+            isTrue(eq(root(person(4)), Root));
+            isTrue(eq(root(person(3)), Root));
+            isTrue(eq(root(person(2)), Root));
 
-            hasBindings(is(root(C), Root), binding(C, person(0)), binding(C, person(1)), //
+            hasBindings(eq(root(C), Root), binding(C, person(0)), binding(C, person(1)), //
                     binding(C, person(2)), binding(C, person(3)), binding(C, person(4)));
         });
     }
