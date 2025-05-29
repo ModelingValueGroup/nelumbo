@@ -192,19 +192,6 @@ public final class Logic {
         }
     }
 
-    public interface DeepIndex extends FunctorModifier {
-        static DeepIndex of(int i) {
-            return new DeepIndex() {
-                @Override
-                public int index() {
-                    return i;
-                }
-            };
-        }
-
-        int index();
-    }
-
     // Variables
 
     public interface Variable extends Constant<Variable> {
@@ -412,7 +399,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     private static final Functor<Relation> IS_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::is, //
-            render(s -> s.toString(1) + "=" + s.toString(2)), DeepIndex.of(1));
+            render(s -> s.toString(1) + "=" + s.toString(2)));
 
     public static <T extends Structure> Relation is(T a, T b) {
         return relation(IS_FUNCTOR, a, b);

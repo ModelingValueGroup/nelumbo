@@ -20,14 +20,14 @@
 
 package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
 
 public interface KnowledgeBase {
 
-    Map<Relation, List<Rule>> rules();
+    Map<Relation, Set<Rule>> rules();
 
     Map<Relation, Result> facts();
 

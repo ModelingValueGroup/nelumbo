@@ -21,7 +21,6 @@
 package org.modelingvalue.nelumbo.impl;
 
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
@@ -44,50 +43,29 @@ import org.modelingvalue.nelumbo.Result;
 @SuppressWarnings("rawtypes")
 public final class KnowledgeBaseImpl implements KnowledgeBase {
 
-    public static final Context<KnowledgeBaseImpl>                            CURRENT             = Context.of();
+    public static final Context<KnowledgeBaseImpl>                          CURRENT             = Context.of();
 
-    private static final ContextPool                                          POOL                = ContextThread.createPool();
+    private static final ContextPool                                        POOL                = ContextThread.createPool();
     @SuppressWarnings("rawtypes")
-    private static final AtomicReference<Map<Class, Set<Class>>>              SPECIALIZATIONS     = new AtomicReference<>(Map.of());
-    @SuppressWarnings("rawtypes")
-    private static final QualifiedSet<RelationImpl, Inference>                EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
-    private static final int                                                  MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
-    private static final int                                                  MAX_LOGIC_MEMOIZ_D4 = KnowledgeBaseImpl.MAX_LOGIC_MEMOIZ / 4;
-    private static final int                                                  INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
+    private static final QualifiedSet<RelationImpl, Inference>              EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
+    private static final int                                                MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
+    private static final int                                                MAX_LOGIC_MEMOIZ_D4 = KnowledgeBaseImpl.MAX_LOGIC_MEMOIZ / 4;
+    private static final int                                                INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
     @SuppressWarnings("unchecked")
-    private static final BiFunction<List<RuleImpl>, RuleImpl, List<RuleImpl>> ADD_RULE            = (l, e) -> {
-                                                                                                      if (l == null) {
-                                                                                                          return List.of(e);
-                                                                                                      } else {
-                                                                                                          for (int i = 0; i < l.size(); i++) {
-                                                                                                              RuleImpl r = l.get(i);
-                                                                                                              if (r.equals(e)) {
-                                                                                                                  return l;
-                                                                                                              } else if (r.consequence().equals(e.consequence()) &&   //
-                                                                                                                      r.condition().contains(e.condition())) {
-                                                                                                                  return l;
-                                                                                                              } else if (isSpecGen(r.consequence().signature(),       //
-                                                                                                                      e.consequence().signature())) {
-                                                                                                                  return l;
-                                                                                                              }
-                                                                                                          }
-                                                                                                          for (int i = 0; i < l.size(); i++) {
-                                                                                                              RuleImpl r = l.get(i);
-                                                                                                              if (isSpecGen(e.consequence().signature(),              //
-                                                                                                                      r.consequence().signature())) {
-                                                                                                                  l = l.removeIndex(i--);
-                                                                                                              }
-                                                                                                          }
-                                                                                                          int p = e.rulePrio();
-                                                                                                          for (int i = 0; i < l.size(); i++) {
-                                                                                                              RuleImpl r = l.get(i);
-                                                                                                              if (r.rulePrio() > p) {
-                                                                                                                  return l.insert(i, e);
-                                                                                                              }
-                                                                                                          }
-                                                                                                          return l.append(e);
-                                                                                                      }
-                                                                                                  };
+    private static final BiFunction<Set<RuleImpl>, RuleImpl, Set<RuleImpl>> ADD_RULE            = (l, e) -> {
+                                                                                                    if (l == null) {
+                                                                                                        return Set.of(e);
+                                                                                                    } else {
+                                                                                                        for (int i = 0; i < l.size(); i++) {
+                                                                                                            RuleImpl r = l.get(i);
+                                                                                                            if (r.consequence().equals(e.consequence()) &&   //
+                                                                                                                    r.condition().contains(e.condition())) {
+                                                                                                                return l;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        return l.add(e);
+                                                                                                    }
+                                                                                                };
 
     @SuppressWarnings("rawtypes")
     private static class Inference extends Struct2Impl<RelationImpl, InferResult> {
@@ -146,31 +124,21 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @SuppressWarnings("rawtypes")
-    public static <F extends Structure> void updateSpecializations(Class type) {
-        if (!SPECIALIZATIONS.get().containsKey(type)) {
-            SPECIALIZATIONS.updateAndGet(m -> addToSpecializations(m, type));
-        }
-    }
-
-    @SuppressWarnings("rawtypes")
-    private static Map<Class, Set<Class>> addToSpecializations(Map<Class, Set<Class>> specs, Class type) {
-        if (!specs.containsKey(type)) {
-            specs = specs.put(type, Set.of());
-            for (java.lang.reflect.Type g : type.getGenericInterfaces()) {
-                while (g instanceof ParameterizedType) {
-                    g = ((ParameterizedType) g).getRawType();
-                }
-                if (g instanceof Class) {
-                    specs = addToSpecializations(specs, (Class) g);
-                    specs = specs.put((Class) g, specs.get((Class) g).add(type));
-                }
+    public static Set<Class> generalizations(Class type) {
+        Set<Class> result = Set.of();
+        for (java.lang.reflect.Type g : type.getGenericInterfaces()) {
+            while (g instanceof ParameterizedType) {
+                g = ((ParameterizedType) g).getRawType();
+            }
+            if (g instanceof Class && !g.equals(Structure.class) && Structure.class.isAssignableFrom((Class) g)) {
+                result = result.add((Class) g);
             }
         }
-        return specs;
+        return result;
     }
 
     private final AtomicReference<Map<RelationImpl, InferResult>>          facts;
-    private final AtomicReference<Map<RelationImpl, List<RuleImpl>>>       rules;
+    private final AtomicReference<Map<RelationImpl, Set<RuleImpl>>>        rules;
     private final AtomicReference<QualifiedSet<RelationImpl, Inference>[]> memoization;
     private final InferContext                                             context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, StructureImpl.TRACE_NELUMBO);
     private boolean                                                        stopped;
@@ -187,8 +155,33 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         return result != null ? result.cast(relation) : relation.isFullyBound() ? relation.falsehoodCC() : InferResult.factsCI(Set.of());
     }
 
-    public List<RuleImpl> getRules(RelationImpl relation) {
-        return rules.get().get(relation.signature());
+    public Set<RuleImpl> getRules(RelationImpl relation) {
+        RelationImpl signature = relation.signature();
+        Set<RuleImpl> result = rules.get().get(signature);
+        if (result != null) {
+            return result;
+        }
+        result = Set.of();
+        Set<RelationImpl> post = signature.generalize();
+        while (result.isEmpty() && !post.isEmpty()) {
+            for (RelationImpl rel : post) {
+                Set<RuleImpl> r = rules.get().get(rel);
+                if (r != null) {
+                    result = result.addAll(r);
+                }
+            }
+            if (result.isEmpty()) {
+                Set<RelationImpl> pre = post;
+                post = Set.of();
+                for (RelationImpl rel : pre) {
+                    post = post.addAll(rel.generalize());
+                }
+            }
+        }
+        Set<RuleImpl> finalRsult = result;
+        rules.updateAndGet(m -> m.put(signature, finalRsult));
+        return result;
+
     }
 
     public InferResult getMemoiz(RelationImpl relation) {
@@ -203,10 +196,10 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     @Override
-    public Map<Relation, List<Rule>> rules() {
+    public Map<Relation, Set<Rule>> rules() {
         return rules.get().replaceAll(e -> {
             Relation k = e.getKey().proxy();
-            List<Rule> v = e.getValue().replaceAll(RuleImpl::proxy);
+            Set<Rule> v = e.getValue().replaceAll(RuleImpl::proxy);
             return Entry.of(k, v);
         });
     }
@@ -291,26 +284,8 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     public void addRule(RuleImpl ruleImpl) {
-        Map<Class, Set<Class>> specs = SPECIALIZATIONS.get();
         RelationImpl signature = ruleImpl.consequence().signature();
-        rules.updateAndGet(m -> addRule(signature, ruleImpl, m, specs));
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Map<RelationImpl, List<RuleImpl>> addRule(RelationImpl signature, RuleImpl ruleImpl, Map<RelationImpl, List<RuleImpl>> rules, Map<Class, Set<Class>> specs) {
-        rules = rules.put(signature, ADD_RULE.apply(rules.get(signature), ruleImpl));
-        for (RelationImpl spec : signature.specialize(specs)) {
-            rules = addRule(spec, ruleImpl, rules, specs);
-        }
-        return rules;
-    }
-
-    private static boolean isSpecGen(RelationImpl spec, RelationImpl gen) {
-        if (spec.equals(gen)) {
-            return false;
-        } else {
-            return gen.isAssignableFrom(spec);
-        }
+        rules.updateAndGet(m -> m.put(signature, ADD_RULE.apply(m.get(signature), ruleImpl)));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -319,7 +294,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         if (functor.logicLambda() != null) {
             throw new IllegalArgumentException("No facts of a functor with a logic lambda allowed. " + this);
         }
-        if (getRules(fact.signature()) != null) {
+        if (!getRules(fact.signature()).isEmpty()) {
             throw new IllegalArgumentException("No facts of a functor with rules allowed. " + this);
         }
         facts.updateAndGet(map -> {
@@ -339,13 +314,8 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             InferResult pre = map.get(relation);
             map = map.put(relation, InferResult.factsCI(pre != null ? pre.facts().add(fact) : fact.singleton()));
             if (!cls.equals(type)) {
-                for (Type gen : type.getGenericInterfaces()) {
-                    while (gen instanceof ParameterizedType) {
-                        gen = ((ParameterizedType) gen).getRawType();
-                    }
-                    if (gen instanceof Class) {
-                        map = addFact(map, fact, relation.setType(i, (Class) gen), i, cls);
-                    }
+                for (Class gen : generalizations(type)) {
+                    map = addFact(map, fact, relation.setType(i, (Class) gen), i, cls);
                 }
             }
         }

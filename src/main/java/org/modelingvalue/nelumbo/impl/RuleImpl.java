@@ -142,10 +142,6 @@ public class RuleImpl extends StructureImpl<Rule> {
         return relResult;
     }
 
-    public int rulePrio() {
-        return condition().nrOfVariables();
-    }
-
     @Override
     public RuleImpl set(int i, Object... a) {
         return (RuleImpl) super.set(i, a);

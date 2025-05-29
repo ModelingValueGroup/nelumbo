@@ -71,7 +71,7 @@ public class NelumboTestBase {
         for (Entry<Relation, Result> e : db.facts()) {
             System.err.println(e.getKey() + " " + e.getValue());
         }
-        for (Entry<Relation, org.modelingvalue.collections.List<Rule>> e : db.rules()) {
+        for (Entry<Relation, Set<Rule>> e : db.rules()) {
             System.err.println(e.getKey() + " " + e.getValue().toString().substring(4));
         }
     }

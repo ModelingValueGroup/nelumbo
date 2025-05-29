@@ -31,7 +31,13 @@ import org.modelingvalue.collections.util.SerializableSupplier;
 import org.modelingvalue.collections.util.SerializableSupplier.SerializableSupplierImpl;
 import org.modelingvalue.collections.util.SerializableTriFunction;
 import org.modelingvalue.collections.util.SerializableTriFunction.SerializableTriFunctionImpl;
-import org.modelingvalue.nelumbo.Logic.*;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.FunctorModifier;
+import org.modelingvalue.nelumbo.Logic.FunctorModifierEnum;
+import org.modelingvalue.nelumbo.Logic.LogicLambda;
+import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
+import org.modelingvalue.nelumbo.Logic.RenderLambda;
+import org.modelingvalue.nelumbo.Logic.Structure;
 
 public final class FunctorImpl<T extends Structure> extends StructureImpl<Functor<T>> {
     private static final long     serialVersionUID = 285147889847599160L;
@@ -41,21 +47,15 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
     private final RenderLambda    renderLambda;
     private final boolean         factual;
     private final boolean         derived;
-    private final int             deepIndex;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public FunctorImpl(Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
         super((Class) Functor.class, type, name, args);
-        KnowledgeBaseImpl.updateSpecializations(type);
-        for (Class arg : args) {
-            KnowledgeBaseImpl.updateSpecializations(arg);
-        }
         this.logicLambda = logic(modifiers);
         this.normalizeLambda = normal(modifiers);
         this.renderLambda = render(modifiers);
         this.factual = has(FunctorModifierEnum.factual, modifiers);
         this.derived = has(FunctorModifierEnum.derived, modifiers);
-        this.deepIndex = deepIndex(modifiers);
     }
 
     private RenderLambda render(FunctorModifier[] modifiers) {
@@ -71,11 +71,6 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
     private static NormalizeLambda normal(FunctorModifier[] modifiers) {
         NormalizeLambda lambda = get(NormalizeLambda.class, modifiers);
         return lambda != null ? lambda.of() : null;
-    }
-
-    private int deepIndex(FunctorModifier[] modifiers) {
-        DeepIndex deepIndex = get(DeepIndex.class, modifiers);
-        return deepIndex != null ? deepIndex.index() : -1;
     }
 
     @SuppressWarnings("unchecked")
@@ -137,10 +132,6 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
 
     public boolean derived() {
         return derived;
-    }
-
-    public int deepIndex() {
-        return deepIndex;
     }
 
     @SuppressWarnings("unchecked")

@@ -21,7 +21,6 @@
 package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.LogicLambda;
@@ -103,7 +102,9 @@ public class RelationImpl extends PredicateImpl<Relation> {
             return result(unknown(), context);
         }
         KnowledgeBaseImpl knowledgebase = context.knowledgebase();
-        if (knowledgebase.getRules(this) != null) {
+        if (knowledgebase.getRules(this).isEmpty()) {
+            return result(knowledgebase.getFacts(this), context);
+        } else {
             InferResult result = knowledgebase.getMemoiz(this);
             if (result != null) {
                 return result(result, context);
@@ -133,8 +134,6 @@ public class RelationImpl extends PredicateImpl<Relation> {
             knowledgebase.memoization(this, result);
             prefix(context);
             return result(result, context);
-        } else {
-            return result(knowledgebase.getFacts(this), context);
         }
     }
 
@@ -197,7 +196,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
         if (result.isTrueCC()) {
             return result;
         }
-        List<RuleImpl> rules = knowledgebase.getRules(this);
+        Set<RuleImpl> rules = knowledgebase.getRules(this);
         for (RuleImpl rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
             ruleResult = rule.imply(this, context);
             if (ruleResult != null) {
@@ -220,18 +219,22 @@ public class RelationImpl extends PredicateImpl<Relation> {
         return array != null ? struct(array, null) : this;
     }
 
-    @SuppressWarnings("rawtypes")
-    protected final Set<RelationImpl> specialize(Map<Class, Set<Class>> specs) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected final Set<RelationImpl> generalize() {
         Set<RelationImpl> result = Set.of();
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             if (v instanceof FunctionImpl) {
-                for (FunctionImpl s : ((FunctionImpl<?, ?>) v).specialize(specs)) {
+                Set<FunctionImpl> gen = ((FunctionImpl) v).generalize();
+                for (FunctionImpl s : gen) {
                     result = result.add(setFunction(i, s));
+                }
+                if (gen.isEmpty()) {
+                    result = result.add(setType(i, typeOf(v)));
                 }
             } else {
                 assert (v instanceof Class);
-                for (Class s : specs.get((Class) v)) {
+                for (Class s : KnowledgeBaseImpl.generalizations((Class) v)) {
                     result = result.add(setType(i, s));
                 }
             }

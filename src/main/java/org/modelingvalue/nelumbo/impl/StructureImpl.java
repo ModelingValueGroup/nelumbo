@@ -555,11 +555,10 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
 
     protected final Object[] signatureArray() {
         Object[] array = null;
-        int deepIndex = functor().deepIndex();
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             Object r = v;
-            if (i == deepIndex && v instanceof FunctionImpl) {
+            if (v instanceof FunctionImpl) {
                 r = ((FunctionImpl<?, ?>) v).signature();
             } else {
                 r = typeOf(v);
@@ -572,31 +571,6 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
             }
         }
         return array;
-    }
-
-    protected final boolean isAssignableFrom(StructureImpl<?> spec) {
-        assert (functor().equals(spec.functor()));
-        if (equals(spec)) {
-            return true;
-        }
-        for (int i = 1; i < length(); i++) {
-            Object g = get(i);
-            Object s = spec.get(i);
-            if (!s.equals(g)) {
-                assert (g.getClass().equals(s.getClass()));
-                if (g instanceof FunctionImpl) {
-                    if (!((FunctionImpl<?, ?>) g).isAssignableFrom((FunctionImpl<?, ?>) s)) {
-                        return false;
-                    }
-                } else {
-                    assert (g instanceof Class);
-                    if (!((Class<?>) g).isAssignableFrom((Class<?>) s)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
     }
 
 }

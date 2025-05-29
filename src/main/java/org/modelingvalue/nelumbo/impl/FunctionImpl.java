@@ -22,7 +22,6 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.lang.reflect.Proxy;
 
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
@@ -62,18 +61,22 @@ public final class FunctionImpl<F extends Function<T>, T extends Structure> exte
         return array != null ? struct(array) : this;
     }
 
-    @SuppressWarnings("rawtypes")
-    protected Set<FunctionImpl<F, T>> specialize(Map<Class, Set<Class>> specs) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected Set<FunctionImpl<F, T>> generalize() {
         Set<FunctionImpl<F, T>> result = Set.of();
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             if (v instanceof FunctionImpl) {
-                for (FunctionImpl s : ((FunctionImpl<?, ?>) v).specialize(specs)) {
+                Set<FunctionImpl> gen = ((FunctionImpl) v).generalize();
+                for (FunctionImpl s : gen) {
                     result = result.add(set(i, s));
+                }
+                if (gen.isEmpty()) {
+                    result = result.add(set(i, typeOf(v)));
                 }
             } else {
                 assert (v instanceof Class);
-                for (Class s : specs.get((Class) v)) {
+                for (Class s : KnowledgeBaseImpl.generalizations((Class) v)) {
                     result = result.add(set(i, s));
                 }
             }
