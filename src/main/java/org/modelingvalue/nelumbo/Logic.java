@@ -77,7 +77,7 @@ public final class Logic {
 
     // Functor
 
-    public interface Functor<T extends Structure> extends Constant<Functor<T>> {
+    public interface Functor<T extends Structure> extends Structure {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -204,7 +204,7 @@ public final class Logic {
 
     // Variables
 
-    public interface Variable extends Constant<Variable> {
+    public interface Variable extends Structure {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -344,7 +344,7 @@ public final class Logic {
 
     // Rules
 
-    public interface Rule extends Constant<Rule> {
+    public interface Rule extends Structure {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
