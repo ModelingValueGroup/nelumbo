@@ -236,11 +236,11 @@ public class FamilyTest extends NelumboTestBase {
         rule(ancestorDescendant(A, C), parentChild(A, C));
         rule(ancestorDescendant(A, C), and(ancestorDescendant(A, B), parentChild(B, C)));
 
-        rule(is(parent(X), A), and(is(X, B), parentChild(A, B)));
-        rule(is(child(X), A), and(is(X, B), parentChild(B, A)));
+        rule(is(parent(X), Y), and(is(X, B), is(Y, A), parentChild(A, B)));
+        rule(is(child(X), Y), and(is(X, B), is(Y, A), parentChild(B, A)));
 
-        rule(is(ancestor(X), A), and(is(X, B), ancestorDescendant(A, B)));
-        rule(is(descendant(X), A), and(is(X, B), ancestorDescendant(B, A)));
+        rule(is(ancestor(X), Y), and(is(X, B), is(Y, A), ancestorDescendant(A, B)));
+        rule(is(descendant(X), Y), and(is(X, B), is(Y, A), ancestorDescendant(B, A)));
     }
 
     // Root Rules
@@ -252,9 +252,9 @@ public class FamilyTest extends NelumboTestBase {
         rule(rootPerson(V, person(0)), T());
         rule(rootPerson(V, C), and(rootPerson(V, A), parentChild(A, C)));
 
-        rule(is(parent(X), A), and(is(X, B), parentChild(A, B)));
-        rule(is(child(X), A), and(is(X, B), parentChild(B, A)));
-        rule(is(root(X), V), and(is(X, B), rootPerson(V, B)));
+        rule(is(parent(X), Y), and(is(X, B), is(Y, A), parentChild(A, B)));
+        rule(is(child(X), Y), and(is(X, B), is(Y, A), parentChild(B, A)));
+        rule(is(root(X), W), and(is(X, B), is(W, V), rootPerson(V, B)));
     }
 
     // Collect Example Rules

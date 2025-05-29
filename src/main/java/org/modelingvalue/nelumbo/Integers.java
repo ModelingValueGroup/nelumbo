@@ -262,6 +262,7 @@ public final class Integers {
 
     private static final Integer     X = iVar("X");
     private static final Integer     Y = iVar("Y");
+    private static final Integer     Z = iVar("Z");
 
     public static void integerRules() {
         isRules();
@@ -271,12 +272,12 @@ public final class Integers {
         rule(ge(X, Y), and(is(X, P), is(Y, Q), or(gtc(P, Q), eq(P, Q))));
         rule(le(X, Y), and(is(X, P), is(Y, Q), or(gtc(Q, P), eq(Q, P))));
 
-        rule(is(plus(X, Y), R), and(is(X, P), is(Y, Q), plus(P, Q, R)));
-        rule(is(minus(X, Y), R), and(is(X, P), is(Y, Q), plus(R, Q, P)));
-        rule(is(multiply(X, Y), R), and(is(X, P), is(Y, Q), multiply(P, Q, R)));
-        rule(is(divide(X, Y), R), and(is(X, P), is(Y, Q), multiply(R, Q, P)));
-        rule(is(square(X), R), and(is(X, P), square(P, R)));
-        rule(is(sqrt(X), R), and(is(X, P), square(R, P)));
+        rule(is(plus(X, Y), Z), and(is(X, P), is(Y, Q), is(Z, R), plus(P, Q, R)));
+        rule(is(minus(X, Y), Z), and(is(X, P), is(Y, Q), is(Z, R), plus(R, Q, P)));
+        rule(is(multiply(X, Y), Z), and(is(X, P), is(Y, Q), is(Z, R), multiply(P, Q, R)));
+        rule(is(divide(X, Y), Z), and(is(X, P), is(Y, Q), is(Z, R), multiply(R, Q, P)));
+        rule(is(square(X), Z), and(is(X, P), is(Z, R), square(P, R)));
+        rule(is(sqrt(X), Z), and(is(X, P), is(Z, R), square(R, P)));
     }
 
 }
