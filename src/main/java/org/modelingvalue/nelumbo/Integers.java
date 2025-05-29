@@ -29,7 +29,7 @@ import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Relation;
-import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.Typed;
 import org.modelingvalue.nelumbo.impl.InferContext;
 import org.modelingvalue.nelumbo.impl.InferResult;
 import org.modelingvalue.nelumbo.impl.RelationImpl;
@@ -42,7 +42,7 @@ public final class Integers {
 
     // Types
 
-    public interface Integer extends Structure {
+    public interface Integer extends Typed<Integer> {
     }
 
     public interface IntegerCons extends Integer, Constant<Integer> {

@@ -32,7 +32,7 @@ import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.RenderLambda;
-import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.Typed;
 
 public class FamilyTest extends NelumboTestBase {
 
@@ -50,7 +50,7 @@ public class FamilyTest extends NelumboTestBase {
 
     // Family Types
 
-    interface Person extends Structure {
+    interface Person extends Typed<Person> {
     }
 
     interface PersonCons extends Person, Constant<Person> {
@@ -131,7 +131,7 @@ public class FamilyTest extends NelumboTestBase {
 
     // Root Types
 
-    interface Root extends Structure {
+    interface Root extends Typed<Root> {
     }
 
     interface RootCons extends Root, Constant<Root> {

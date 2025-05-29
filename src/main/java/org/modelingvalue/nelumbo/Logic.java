@@ -55,9 +55,12 @@ public final class Logic {
     public interface Structure {
     }
 
+    public interface Typed<T extends Structure> extends Structure {
+    }
+
     // Constants
 
-    public interface Constant<T extends Structure> extends Structure {
+    public interface Constant<T extends Structure> extends Typed<T> {
     }
 
     @SuppressWarnings("unchecked")
@@ -67,7 +70,7 @@ public final class Logic {
 
     // Functions
 
-    public interface Function<T extends Structure> extends Structure {
+    public interface Function<T extends Structure> extends Typed<T> {
     }
 
     @SuppressWarnings("unchecked")
@@ -402,42 +405,42 @@ public final class Logic {
     // Equals
 
     @SuppressWarnings("rawtypes")
-    private static final Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::eq, //
+    private static final Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Typed, Typed> functor(Logic::eq, //
             render(s -> s.toString(1) + "=" + s.toString(2)));
 
-    public static <T extends Structure> Relation eq(T a, T b) {
+    public static <T extends Structure> Relation eq(Typed<T> a, Typed<T> b) {
         return relation(EQ_FUNCTOR, a, b);
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Functor<Relation> NE_FUNCTOR = Logic.<Relation, Structure, Structure> functor(Logic::ne, //
+    private static final Functor<Relation> NE_FUNCTOR = Logic.<Relation, Typed, Typed> functor(Logic::ne, //
             render(s -> s.toString(1) + "\u2260" + s.toString(2)));
 
-    public static <T extends Structure> Relation ne(T a, T b) {
+    public static <T extends Structure> Relation ne(Typed<T> a, Typed<T> b) {
         return relation(NE_FUNCTOR, a, b);
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Constant  C1 = variable(Constant.class, "C1");
+    private static final Constant C1 = variable(Constant.class, "C1");
     @SuppressWarnings("rawtypes")
-    private static final Constant  C2 = variable(Constant.class, "C2");
+    private static final Constant C2 = variable(Constant.class, "C2");
 
     @SuppressWarnings("rawtypes")
-    private static final Function  F1 = variable(Function.class, "F1");
+    private static final Function F1 = variable(Function.class, "F1");
     @SuppressWarnings("rawtypes")
-    private static final Function  F2 = variable(Function.class, "F2");
+    private static final Function F2 = variable(Function.class, "F2");
 
     @SuppressWarnings("rawtypes")
-    private static final Structure S1 = variable(Structure.class, "S1");
+    private static final Typed    T1 = variable(Typed.class, "T1");
     @SuppressWarnings("rawtypes")
-    private static final Structure S2 = variable(Structure.class, "S2");
+    private static final Typed    T2 = variable(Typed.class, "T2");
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void isRules() {
         rule(eq(C1, C2), is(C1, C2));
         rule(eq(F1, F2), and(eq(F1, C1), eq(F2, C1)));
         rule(eq(C1, F1), eq(F1, C1));
-        rule(ne(S1, S2), not(eq(S1, S2)));
+        rule(ne(T1, T2), not(eq(T1, T2)));
     }
 
 }
