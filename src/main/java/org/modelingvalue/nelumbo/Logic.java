@@ -55,26 +55,26 @@ public final class Logic {
     public interface Structure {
     }
 
-    public interface Typed<T extends Structure> extends Structure {
+    public interface Typed<T extends Typed<T>> extends Structure {
     }
 
     // Constants
 
-    public interface Constant<T extends Structure> extends Typed<T> {
+    public interface Constant<T extends Typed<T>> extends Typed<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <C extends Constant<T>, T extends Structure> C constant(Functor<C> functor, Object... args) {
+    public static <C extends Constant<T>, T extends Typed<T>> C constant(Functor<C> functor, Object... args) {
         return new ConstantImpl<C, T>(functor, args).normal().proxy();
     }
 
     // Functions
 
-    public interface Function<T extends Structure> extends Typed<T> {
+    public interface Function<T extends Typed<T>> extends Typed<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <F extends Function<T>, T extends Structure> F function(Functor<F> functor, Object... args) {
+    public static <F extends Function<T>, T extends Typed<T>> F function(Functor<F> functor, Object... args) {
         return new FunctionImpl<F, T>(functor, args).proxy();
     }
 
@@ -155,7 +155,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     @FunctionalInterface
-    public interface NormalizeLambda extends UnaryOperator<ConstantImpl<Constant<Structure>, Structure>>, LambdaReflection, FunctorModifier {
+    public interface NormalizeLambda extends UnaryOperator<ConstantImpl<?, ?>>, LambdaReflection, FunctorModifier {
 
         @Override
         default NormalizeLambdaImpl of() {
@@ -171,7 +171,7 @@ public final class Logic {
 
             @SuppressWarnings("unchecked")
             @Override
-            public final ConstantImpl<Constant<Structure>, Structure> apply(ConstantImpl<Constant<Structure>, Structure> constant) {
+            public final ConstantImpl<?, ?> apply(ConstantImpl<?, ?> constant) {
                 return f.apply(constant);
             }
         }
@@ -250,19 +250,19 @@ public final class Logic {
         return bindings.replaceAll(m -> m.replaceAll(e -> Entry.of((Variable) e.getKey().proxy(), proxy(e.getValue()))));
     }
 
-    public static <T extends Structure> Map<Variable, Object> binding(T var, Class<T> type) {
+    public static <T extends Typed<T>> Map<Variable, Object> binding(T var, Class<T> type) {
         return Map.of(Entry.of((Variable) var, type));
     }
 
-    public static <T extends Structure> Map<Variable, Object> binding(T var, Constant<T> val) {
+    public static <T extends Typed<T>> Map<Variable, Object> binding(T var, Constant<T> val) {
         return Map.of(Entry.of((Variable) var, val));
     }
 
-    public static <T1 extends Structure, T2 extends Structure> Map<Variable, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2) {
+    public static <T1 extends Typed<T1>, T2 extends Typed<T2>> Map<Variable, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2) {
         return Map.of(Entry.of((Variable) var1, val1), Entry.of((Variable) var2, val2));
     }
 
-    public static <T1 extends Structure, T2 extends Structure, T3 extends Structure> Map<Variable, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2, T3 var3, Constant<T3> val3) {
+    public static <T1 extends Typed<T1>, T2 extends Typed<T2>, T3 extends Typed<T3>> Map<Variable, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2, T3 var3, Constant<T3> val3) {
         return Map.of(Entry.of((Variable) var1, val1), Entry.of((Variable) var2, val2), Entry.of((Variable) var3, val3));
     }
 
@@ -398,7 +398,7 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static <T extends Structure> Relation is(Constant<T> a, Constant<T> b) {
+    private static <T extends Typed<T>> Relation is(Constant<T> a, Constant<T> b) {
         return relation(IS_FUNCTOR, a, b);
     }
 
@@ -408,7 +408,7 @@ public final class Logic {
     private static final Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Typed, Typed> functor(Logic::eq, //
             render(s -> s.toString(1) + "=" + s.toString(2)));
 
-    public static <T extends Structure> Relation eq(Typed<T> a, Typed<T> b) {
+    public static <T extends Typed<T>> Relation eq(Typed<T> a, Typed<T> b) {
         return relation(EQ_FUNCTOR, a, b);
     }
 
@@ -416,7 +416,7 @@ public final class Logic {
     private static final Functor<Relation> NE_FUNCTOR = Logic.<Relation, Typed, Typed> functor(Logic::ne, //
             render(s -> s.toString(1) + "\u2260" + s.toString(2)));
 
-    public static <T extends Structure> Relation ne(Typed<T> a, Typed<T> b) {
+    public static <T extends Typed<T>> Relation ne(Typed<T> a, Typed<T> b) {
         return relation(NE_FUNCTOR, a, b);
     }
 

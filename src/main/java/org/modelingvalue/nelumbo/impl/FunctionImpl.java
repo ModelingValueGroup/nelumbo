@@ -25,9 +25,9 @@ import java.lang.reflect.Proxy;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.Typed;
 
-public final class FunctionImpl<F extends Function<T>, T extends Structure> extends StructureImpl<F> {
+public final class FunctionImpl<F extends Function<T>, T extends Typed<T>> extends StructureImpl<F> {
     private static final long serialVersionUID = -8174476116343969718L;
 
     public FunctionImpl(Functor<F> functor, Object... args) {

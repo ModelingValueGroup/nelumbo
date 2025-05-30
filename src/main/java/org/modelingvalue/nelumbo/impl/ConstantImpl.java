@@ -25,9 +25,9 @@ import java.lang.reflect.Proxy;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
-import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.Typed;
 
-public final class ConstantImpl<C extends Constant<T>, T extends Structure> extends StructureImpl<C> {
+public final class ConstantImpl<C extends Constant<T>, T extends Typed<T>> extends StructureImpl<C> {
     private static final long serialVersionUID = 3217952328495669539L;
 
     public ConstantImpl(Functor<C> functor, Object... args) {
@@ -60,7 +60,7 @@ public final class ConstantImpl<C extends Constant<T>, T extends Structure> exte
     public final ConstantImpl<C, T> normal() {
         FunctorImpl<C> f = functor();
         NormalizeLambda n = f != null ? f.normalizeLambda() : null;
-        return n != null ? (ConstantImpl<C, T>) n.apply((ConstantImpl<Constant<Structure>, Structure>) this) : this;
+        return n != null ? (ConstantImpl<C, T>) n.apply((ConstantImpl<?, ?>) this) : this;
     }
 
     @SuppressWarnings("unchecked")
