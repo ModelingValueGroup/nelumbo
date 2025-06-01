@@ -27,7 +27,7 @@ import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
 import org.modelingvalue.nelumbo.Logic.Typed;
 
-public final class ConstantImpl<C extends Constant<T>, T extends Typed<T>> extends StructureImpl<C> {
+public final class ConstantImpl<C extends Constant<T>, T extends Typed<T>> extends TypedImpl<C, T> {
     private static final long serialVersionUID = 3217952328495669539L;
 
     public ConstantImpl(Functor<C> functor, Object... args) {
@@ -66,6 +66,17 @@ public final class ConstantImpl<C extends Constant<T>, T extends Typed<T>> exten
     @SuppressWarnings("unchecked")
     public final ConstantImpl<C, T> is(ConstantImpl<C, T> other) {
         return (ConstantImpl<C, T>) super.eq(other);
+    }
+
+    @Override
+    protected boolean atomic() {
+        for (int i = 1; i < length(); i++) {
+            Object v = get(i);
+            if (!(v instanceof StructureImpl) && !(v instanceof Class)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

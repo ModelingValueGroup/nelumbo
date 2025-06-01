@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
@@ -37,7 +38,6 @@ import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Rule;
-import org.modelingvalue.nelumbo.Logic.Structure;
 import org.modelingvalue.nelumbo.Result;
 
 @SuppressWarnings("rawtypes")
@@ -123,14 +123,14 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         return POOL.invoke(new LogicTask(runnable, init));
     }
 
-    @SuppressWarnings("rawtypes")
-    public static Set<Class> generalizations(Class type) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static Set<Class> generalizations(Class type, Class top) {
         Set<Class> result = Set.of();
         for (java.lang.reflect.Type g : type.getGenericInterfaces()) {
             while (g instanceof ParameterizedType) {
                 g = ((ParameterizedType) g).getRawType();
             }
-            if (g instanceof Class && Structure.class.isAssignableFrom((Class) g)) {
+            if (g instanceof Class && top.isAssignableFrom((Class) g)) {
                 result = result.add((Class) g);
             }
         }
@@ -139,6 +139,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     private final AtomicReference<Map<RelationImpl, InferResult>>          facts;
     private final AtomicReference<Map<RelationImpl, Set<RuleImpl>>>        rules;
+    private final AtomicInteger                                            depth;
     private final AtomicReference<QualifiedSet<RelationImpl, Inference>[]> memoization;
     private final InferContext                                             context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, StructureImpl.TRACE_NELUMBO);
     private boolean                                                        stopped;
@@ -148,6 +149,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         facts = new AtomicReference<>(init != null ? init.facts.get() : Map.of());
         rules = new AtomicReference<>(init != null ? init.rules.get() : Map.of());
         memoization = new AtomicReference<>(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
+        depth = new AtomicInteger(0);
     }
 
     public InferResult getFacts(RelationImpl relation) {
@@ -156,7 +158,10 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     public Set<RuleImpl> getRules(RelationImpl relation) {
-        RelationImpl signature = relation.signature();
+        return doGetRules(relation.signature(depth()));
+    }
+
+    private Set<RuleImpl> doGetRules(RelationImpl signature) {
         Set<RuleImpl> result = rules.get().get(signature);
         if (result != null) {
             return result;
@@ -165,10 +170,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         Set<RelationImpl> post = signature.generalize();
         while (result.isEmpty() && !post.isEmpty()) {
             for (RelationImpl rel : post) {
-                Set<RuleImpl> r = rules.get().get(rel);
-                if (r != null) {
-                    result = result.addAll(r);
-                }
+                result = result.addAll(doGetRules(rel));
             }
             if (result.isEmpty()) {
                 Set<RelationImpl> pre = post;
@@ -181,7 +183,6 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         Set<RuleImpl> finalRsult = result;
         rules.updateAndGet(m -> m.put(signature, finalRsult));
         return result;
-
     }
 
     public InferResult getMemoiz(RelationImpl relation) {
@@ -284,8 +285,18 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     }
 
     public void addRule(RuleImpl ruleImpl) {
-        RelationImpl signature = ruleImpl.consequence().signature();
-        rules.updateAndGet(m -> m.put(signature, ADD_RULE.apply(m.get(signature), ruleImpl)));
+        RelationImpl signature = ruleImpl.consequence().signature(Integer.MAX_VALUE);
+        rules.updateAndGet(m -> addRule(ruleImpl, signature, m));
+        int signDepth = signature.depth();
+        depth.accumulateAndGet(signDepth, Math::max);
+    }
+
+    private static Map<RelationImpl, Set<RuleImpl>> addRule(RuleImpl ruleImpl, RelationImpl signature, Map<RelationImpl, Set<RuleImpl>> map) {
+        map = map.put(signature, ADD_RULE.apply(map.get(signature), ruleImpl));
+        for (RelationImpl gen : signature.generalize()) {
+            map = addRule(ruleImpl, gen, map);
+        }
+        return map;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -294,11 +305,11 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
         if (functor.logicLambda() != null) {
             throw new IllegalArgumentException("No facts of a functor with a logic lambda allowed. " + this);
         }
-        if (!getRules(fact.signature()).isEmpty()) {
+        if (!getRules(fact.signature(depth())).isEmpty()) {
             throw new IllegalArgumentException("No facts of a functor with rules allowed. " + this);
         }
+        List<Class> args = functor.args();
         facts.updateAndGet(map -> {
-            List<Class> args = functor.args();
             map = map.put(fact, fact.factCC());
             for (int i = 1; i < fact.length(); i++) {
                 map = addFact(map, fact, fact.setType(i, fact.getType(i)), i, args.get(i - 1));
@@ -314,7 +325,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             InferResult pre = map.get(relation);
             map = map.put(relation, InferResult.factsCI(pre != null ? pre.facts().add(fact) : fact.singleton()));
             if (!cls.equals(type)) {
-                for (Class gen : generalizations(type)) {
+                for (Class gen : generalizations(type, cls)) {
                     map = addFact(map, fact, relation.setType(i, (Class) gen), i, cls);
                 }
             }
@@ -324,5 +335,9 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public InferContext context() {
         return context;
+    }
+
+    public int depth() {
+        return depth.get();
     }
 }

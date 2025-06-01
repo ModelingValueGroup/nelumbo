@@ -26,7 +26,6 @@ import static org.modelingvalue.nelumbo.Logic.*;
 import org.junit.jupiter.api.RepeatedTest;
 import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Integers.IntegerCons;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
 import org.modelingvalue.nelumbo.Logic.Functor;
@@ -62,14 +61,14 @@ public class FamilyTest extends NelumboTestBase {
     // Family Functors
 
     static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) FamilyTest::person, //
-            (RenderLambda) p -> p.get(1).toString());
+            (RenderLambda) p -> p.toString(1));
 
     static PersonCons person(String name) {
         return constant(STRING_PERSON, name);
     }
 
     static Functor<PersonCons> INTEGER_PERSON = functor((SerializableFunction<IntegerCons, PersonCons>) FamilyTest::person, //
-            (RenderLambda) p -> "P(" + p.get(1).toString() + ")");
+            (RenderLambda) p -> "P(" + p.toString(1) + ")");
 
     static PersonCons person(IntegerCons i) {
         return constant(INTEGER_PERSON, i);
@@ -143,7 +142,7 @@ public class FamilyTest extends NelumboTestBase {
     // Root Functors
 
     static Functor<RootCons> ROOT = functor((SerializableFunction<IntegerCons, RootCons>) FamilyTest::root, //
-            (RenderLambda) p -> "R(" + p.get(1).toString() + ")");
+            (RenderLambda) p -> "R(" + p.toString(1) + ")");
 
     static RootCons root(IntegerCons i) {
         return constant(ROOT, i);
@@ -169,7 +168,7 @@ public class FamilyTest extends NelumboTestBase {
     }
 
     static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) FamilyTest::root, //
-            (RenderLambda) p -> "r(" + p.get(1).toString() + ")");
+            (RenderLambda) p -> "r(" + p.toString(1) + ")");
 
     static RootFunc root(Person person) {
         return function(ROOT_FUNC, person);
@@ -250,7 +249,7 @@ public class FamilyTest extends NelumboTestBase {
 
         rule(parentChild(person(Q), person(P)), and(lt(Q, i(4)), ge(Q, i(0)), eq(plus(Q, i(1)), P)));
         rule(rootPerson(V, person(0)), T());
-        rule(rootPerson(V, C), and(rootPerson(V, A), parentChild(A, C)));
+        rule(rootPerson(V, A), and(rootPerson(V, B), parentChild(B, A)));
 
         rule(eq(parent(X), Y), and(eq(X, B), eq(Y, A), parentChild(A, B)));
         rule(eq(child(X), Y), and(eq(X, B), eq(Y, A), parentChild(B, A)));
@@ -404,8 +403,8 @@ public class FamilyTest extends NelumboTestBase {
             isTrue(rootPerson(Root, person(3)));
             isTrue(rootPerson(Root, person(2)));
 
-            hasBindings(rootPerson(Root, C), binding(C, person(0)), binding(C, person(1)), //
-                    binding(C, person(2)), binding(C, person(3)), binding(C, person(4)));
+            hasBindings(rootPerson(Root, person(P)), binding(P, i(0)), binding(P, i(1)), //
+                    binding(P, i(2)), binding(P, i(3)), binding(P, i(4)));
         });
     }
 
@@ -424,8 +423,8 @@ public class FamilyTest extends NelumboTestBase {
             isTrue(eq(root(person(3)), Root));
             isTrue(eq(root(person(2)), Root));
 
-            hasBindings(eq(root(C), Root), binding(C, person(0)), binding(C, person(1)), //
-                    binding(C, person(2)), binding(C, person(3)), binding(C, person(4)));
+            hasBindings(eq(root(person(P)), Root), binding(P, i(0)), binding(P, i(1)), //
+                    binding(P, i(2)), binding(P, i(3)), binding(P, i(4)));
         });
     }
 
@@ -450,32 +449,6 @@ public class FamilyTest extends NelumboTestBase {
             isTrue(personTotal(Elske, i(17)));
             isFalse(personNumber(Elske, i(4)));
         });
-    }
-
-    //  @RepeatedTest(1)
-    public void rulesPrintTest() {
-        KnowledgeBase db = run(() -> {
-            familyRules();
-        });
-        print(db);
-    }
-
-    // @RepeatedTest(1)
-    public void factsAndRulesPrintTest() {
-        KnowledgeBase db = run(() -> {
-            fact(parentChild(Jan, Wim));
-            fact(parentChild(Jan, Carel));
-            fact(parentChild(Jan, Jannette));
-            fact(parentChild(Elske, Wim));
-            fact(parentChild(Elske, Carel));
-            fact(parentChild(Elske, Jannette));
-            fact(personAmount(Wim, i(3)));
-            fact(personAmount(Carel, i(7)));
-            fact(personAmount(Jannette, i(7)));
-
-            collectExampleRules();
-        });
-        print(db);
     }
 
 }

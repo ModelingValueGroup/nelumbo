@@ -214,41 +214,25 @@ public class RelationImpl extends PredicateImpl<Relation> {
         return result;
     }
 
-    protected final RelationImpl signature() {
-        Object[] array = signatureArray();
+    protected final RelationImpl signature(int depth) {
+        Object[] array = signatureArray(depth);
         return array != null ? struct(array, null) : this;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected final Set<RelationImpl> generalize() {
-        Set<RelationImpl> result = Set.of();
-        for (int i = 1; i < length(); i++) {
-            Object v = get(i);
-            if (v instanceof FunctionImpl) {
-                Set<FunctionImpl> gen = ((FunctionImpl) v).generalize();
-                for (FunctionImpl s : gen) {
-                    result = result.add(setFunction(i, s));
-                }
-                if (gen.isEmpty()) {
-                    result = result.add(setType(i, typeOf(v)));
-                }
-            } else {
-                assert (v instanceof Class);
-                for (Class s : KnowledgeBaseImpl.generalizations((Class) v)) {
-                    result = result.add(setType(i, s));
-                }
-            }
-        }
-        return result;
+        return (Set) doGeneralize();
     }
 
+    @Override
     protected final RelationImpl setType(int i, Class<?> type) {
         Object[] array = setArray(i, type);
         return array != null ? struct(array, null) : this;
     }
 
-    protected final RelationImpl setFunction(int i, FunctionImpl<?, ?> func) {
-        Object[] array = setArray(i, func);
+    @Override
+    protected final RelationImpl setTyped(int i, StructureImpl<?> typed) {
+        Object[] array = setArray(i, typed);
         return array != null ? struct(array, null) : this;
     }
 

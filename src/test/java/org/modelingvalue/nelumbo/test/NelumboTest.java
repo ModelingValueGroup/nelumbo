@@ -96,6 +96,7 @@ public class NelumboTest extends NelumboTestBase {
             integerRules();
 
             isTrue(eq(plus(i(11), i(22)), i(33)));
+
             isTrue(eq(minus(i(33), i(22)), i(11)));
             isTrue(eq(plus(i(11), plus(plus(i(22), i(33)), i(44))), i(110)));
 

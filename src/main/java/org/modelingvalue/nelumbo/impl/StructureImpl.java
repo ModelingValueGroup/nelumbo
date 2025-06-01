@@ -28,6 +28,7 @@ import java.util.Objects;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Functor;
@@ -553,13 +554,24 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
         }
     }
 
-    protected final Object[] signatureArray() {
+    protected final int depth() {
+        int result = 1;
+        for (int i = 1; i < length(); i++) {
+            Object v = get(i);
+            if (v instanceof TypedImpl && !((TypedImpl<?, ?>) v).atomic()) {
+                result = Math.max(result, ((StructureImpl<?>) v).depth() + 1);
+            }
+        }
+        return result;
+    }
+
+    protected final Object[] signatureArray(int depth) {
         Object[] array = null;
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             Object r = v;
-            if (v instanceof FunctionImpl) {
-                r = ((FunctionImpl<?, ?>) v).signature();
+            if (depth > 1 && v instanceof TypedImpl && !((TypedImpl<?, ?>) v).atomic()) {
+                r = ((TypedImpl<?, ?>) v).signature(depth - 1);
             } else {
                 r = typeOf(v);
             }
@@ -571,6 +583,37 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
             }
         }
         return array;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected final Set<StructureImpl<F>> doGeneralize() {
+        Set<StructureImpl<F>> result = Set.of();
+        for (int i = 1; i < length(); i++) {
+            Object v = get(i);
+            if (v instanceof TypedImpl) {
+                Set<StructureImpl> gen = ((TypedImpl) v).doGeneralize();
+                for (StructureImpl s : gen) {
+                    result = result.add(setTyped(i, s));
+                }
+                if (gen.isEmpty()) {
+                    result = result.add(setType(i, typeOf(v)));
+                }
+            } else if (v instanceof Class) {
+                List<Class> args = functor().args();
+                for (Class s : KnowledgeBaseImpl.generalizations((Class) v, args.get(i - 1))) {
+                    result = result.add(setType(i, s));
+                }
+            }
+        }
+        return result;
+    }
+
+    protected StructureImpl<F> setType(int i, Class<?> type) {
+        return set(i, type);
+    }
+
+    protected StructureImpl<F> setTyped(int i, StructureImpl<?> typed) {
+        return set(i, typed);
     }
 
 }

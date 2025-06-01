@@ -22,16 +22,14 @@ package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.Logic.Relation;
-import org.modelingvalue.nelumbo.Logic.Rule;
 import org.modelingvalue.nelumbo.Logic.Variable;
 import org.modelingvalue.nelumbo.Result;
+import org.modelingvalue.nelumbo.impl.KnowledgeBaseImpl;
 
 public class NelumboTestBase {
     // Utilities
@@ -67,13 +65,8 @@ public class NelumboTestBase {
         assertEquals(Set.of(bindings), Logic.getBindings(query));
     }
 
-    public static void print(KnowledgeBase db) {
-        for (Entry<Relation, Result> e : db.facts()) {
-            System.err.println(e.getKey() + " " + e.getValue());
-        }
-        for (Entry<Relation, Set<Rule>> e : db.rules()) {
-            System.err.println(e.getKey() + " " + e.getValue().toString().substring(4));
-        }
+    public static void printKnowledgeBase() {
+        KnowledgeBaseImpl.CURRENT.get().print();
     }
 
 }

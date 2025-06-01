@@ -29,7 +29,6 @@ import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Integers.Integer;
 import org.modelingvalue.nelumbo.Integers.IntegerCons;
 import org.modelingvalue.nelumbo.Integers.IntegerFunc;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Relation;
 
@@ -86,8 +85,7 @@ public class FibonacciTest extends NelumboTestBase {
 
     @RepeatedTest(NR_OF_REPEATS * 2)
     public void smallFibonacciTest() {
-        @SuppressWarnings("unused")
-        KnowledgeBase nb = run(() -> {
+        run(() -> {
             fibonacciRules();
 
             hasBindings(eq(fib(i(1)), P), binding(P, i(1)));
@@ -97,7 +95,6 @@ public class FibonacciTest extends NelumboTestBase {
             isTrue(eq(fib(i(1)), i(1)));
             isTrue(eq(fib(i(6)), i(8)));
         });
-        // print(nb);
     }
 
     @RepeatedTest(NR_OF_REPEATS)

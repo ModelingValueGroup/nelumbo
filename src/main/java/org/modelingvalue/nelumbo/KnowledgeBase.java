@@ -20,6 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Relation;
@@ -30,5 +31,14 @@ public interface KnowledgeBase {
     Map<Relation, Set<Rule>> rules();
 
     Map<Relation, Result> facts();
+
+    default void print() {
+        for (Entry<Relation, Result> e : facts()) {
+            System.err.println(e.getKey() + " " + e.getValue());
+        }
+        for (Entry<Relation, Set<Rule>> e : rules()) {
+            System.err.println(e.getKey() + " " + e.getValue().toString().substring(3));
+        }
+    }
 
 }
