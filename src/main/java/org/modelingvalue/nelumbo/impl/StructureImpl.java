@@ -586,19 +586,19 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final Set<StructureImpl<F>> doGeneralize() {
+    protected final Set<StructureImpl<F>> doGeneralize(boolean full) {
         Set<StructureImpl<F>> result = Set.of();
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             if (v instanceof TypedImpl) {
-                Set<StructureImpl> gen = ((TypedImpl) v).doGeneralize();
+                Set<StructureImpl> gen = ((TypedImpl) v).doGeneralize(full);
                 for (StructureImpl s : gen) {
                     result = result.add(setTyped(i, s));
                 }
                 if (gen.isEmpty()) {
                     result = result.add(setType(i, typeOf(v)));
                 }
-            } else if (v instanceof Class) {
+            } else if (full && v instanceof Class) {
                 List<Class> args = functor().args();
                 for (Class s : KnowledgeBaseImpl.generalizations((Class) v, args.get(i - 1))) {
                     result = result.add(setType(i, s));

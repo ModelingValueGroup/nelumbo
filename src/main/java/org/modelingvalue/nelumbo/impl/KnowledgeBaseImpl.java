@@ -167,7 +167,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
             return result;
         }
         result = Set.of();
-        Set<RelationImpl> post = signature.generalize();
+        Set<RelationImpl> post = signature.generalize(true);
         while (result.isEmpty() && !post.isEmpty()) {
             for (RelationImpl rel : post) {
                 result = result.addAll(doGetRules(rel));
@@ -176,7 +176,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
                 Set<RelationImpl> pre = post;
                 post = Set.of();
                 for (RelationImpl rel : pre) {
-                    post = post.addAll(rel.generalize());
+                    post = post.addAll(rel.generalize(true));
                 }
             }
         }
@@ -293,7 +293,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     private static Map<RelationImpl, Set<RuleImpl>> addRule(RuleImpl ruleImpl, RelationImpl signature, Map<RelationImpl, Set<RuleImpl>> map) {
         map = map.put(signature, ADD_RULE.apply(map.get(signature), ruleImpl));
-        for (RelationImpl gen : signature.generalize()) {
+        for (RelationImpl gen : signature.generalize(false)) {
             map = addRule(ruleImpl, gen, map);
         }
         return map;

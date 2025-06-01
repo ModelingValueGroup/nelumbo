@@ -220,8 +220,8 @@ public class RelationImpl extends PredicateImpl<Relation> {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final Set<RelationImpl> generalize() {
-        return (Set) doGeneralize();
+    protected final Set<RelationImpl> generalize(boolean full) {
+        return (Set) doGeneralize(full);
     }
 
     @Override
