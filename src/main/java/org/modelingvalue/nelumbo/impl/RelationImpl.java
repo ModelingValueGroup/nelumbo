@@ -214,6 +214,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
         return result;
     }
 
+    @Override
     protected final RelationImpl signature(int depth) {
         Object[] array = signatureArray(depth);
         return array != null ? struct(array, null) : this;

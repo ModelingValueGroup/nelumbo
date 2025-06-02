@@ -65,7 +65,7 @@ public final class Logic {
 
     @SuppressWarnings("unchecked")
     public static <C extends Constant<T>, T extends Typed<T>> C constant(Functor<C> functor, Object... args) {
-        return new ConstantImpl<C, T>(functor, args).normal().proxy();
+        return new StructureImpl<C>(functor, args).normal().proxy();
     }
 
     // Functions
@@ -75,7 +75,7 @@ public final class Logic {
 
     @SuppressWarnings("unchecked")
     public static <F extends Function<T>, T extends Typed<T>> F function(Functor<F> functor, Object... args) {
-        return new FunctionImpl<F, T>(functor, args).proxy();
+        return new StructureImpl<F>(functor, args).proxy();
     }
 
     // Functor
@@ -155,7 +155,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     @FunctionalInterface
-    public interface NormalizeLambda extends UnaryOperator<ConstantImpl<?, ?>>, LambdaReflection, FunctorModifier {
+    public interface NormalizeLambda extends UnaryOperator<StructureImpl<?>>, LambdaReflection, FunctorModifier {
 
         @Override
         default NormalizeLambdaImpl of() {
@@ -171,7 +171,7 @@ public final class Logic {
 
             @SuppressWarnings("unchecked")
             @Override
-            public final ConstantImpl<?, ?> apply(ConstantImpl<?, ?> constant) {
+            public final StructureImpl<?> apply(StructureImpl<?> constant) {
                 return f.apply(constant);
             }
         }
@@ -383,8 +383,8 @@ public final class Logic {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult isLogic(RelationImpl relation, InferContext context) {
-        ConstantImpl constant1 = relation.getVal(1);
-        ConstantImpl constant2 = relation.getVal(2);
+        StructureImpl constant1 = relation.getVal(1);
+        StructureImpl constant2 = relation.getVal(2);
         if (constant1 == null && constant2 == null) {
             return relation.unknown();
         } else if (constant1 == null) {
@@ -392,7 +392,7 @@ public final class Logic {
         } else if (constant2 == null) {
             return relation.set(2, constant1).factCI();
         } else {
-            ConstantImpl eq = constant1.is(constant2);
+            StructureImpl eq = constant1.is(constant2);
             return eq != null ? relation.set(1, eq, eq).factCC() : relation.falsehoodCC();
         }
     }

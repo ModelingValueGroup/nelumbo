@@ -32,10 +32,11 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
 import org.modelingvalue.nelumbo.Logic.RenderLambda;
 import org.modelingvalue.nelumbo.Logic.Structure;
 
-public abstract class StructureImpl<F extends Structure> extends org.modelingvalue.collections.struct.impl.StructImpl implements InvocationHandler, Comparable<StructureImpl<F>> {
+public class StructureImpl<F extends Structure> extends org.modelingvalue.collections.struct.impl.StructImpl implements InvocationHandler, Comparable<StructureImpl<F>> {
     private static final long      serialVersionUID = 7315776001191198132L;
 
     protected static final boolean TRACE_NELUMBO    = Boolean.getBoolean("TRACE_NELUMBO");
@@ -80,7 +81,7 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
 
     private final int hashCode;
 
-    protected StructureImpl(Functor<F> functor, Object... args) {
+    public StructureImpl(Functor<F> functor, Object... args) {
         super(unproxy(functor, args));
         this.hashCode = getHashCode();
         init();
@@ -218,7 +219,7 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
         return r;
     }
 
-    protected StructureImpl<F> eq(StructureImpl<F> other) {
+    public StructureImpl<F> is(StructureImpl<F> other) {
         if (equals(other)) {
             return this;
         } else if (length() != other.length()) {
@@ -227,24 +228,24 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
-            Object eq = eq(thisVal, other.get(i));
-            if (eq == null) {
+            Object is = is(thisVal, other.get(i));
+            if (is == null) {
                 return null;
-            } else if (!Objects.equals(eq, thisVal)) {
+            } else if (!Objects.equals(is, thisVal)) {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i] = eq;
+                array[i] = is;
             }
         }
         return array != null ? struct(array) : this;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Object eq(Object thisVal, Object otherVal) {
+    private static Object is(Object thisVal, Object otherVal) {
         if (thisVal != otherVal) {
             if (thisVal instanceof StructureImpl && otherVal instanceof StructureImpl) {
-                return ((StructureImpl) thisVal).eq((StructureImpl) otherVal);
+                return ((StructureImpl) thisVal).is((StructureImpl) otherVal);
             } else if (thisVal instanceof StructureImpl && otherVal instanceof Class) {
                 return ((Class) otherVal).isAssignableFrom(((StructureImpl) thisVal).type()) ? thisVal : null;
             } else if (thisVal instanceof Class && otherVal instanceof StructureImpl) {
@@ -367,7 +368,9 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
     }
 
     @SuppressWarnings("unchecked")
-    protected abstract StructureImpl<F> struct(Object[] array);
+    protected StructureImpl<F> struct(Object[] array) {
+        return new StructureImpl<F>(array).normal();
+    }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected final Object get(StructureImpl<F> declaration, VariableImpl var) {
@@ -558,7 +561,7 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
         int result = 1;
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
-            if (v instanceof TypedImpl && !((TypedImpl<?, ?>) v).atomic()) {
+            if (v instanceof StructureImpl && !((StructureImpl<?>) v).atomic()) {
                 result = Math.max(result, ((StructureImpl<?>) v).depth() + 1);
             }
         }
@@ -570,8 +573,8 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             Object r = v;
-            if (depth > 1 && v instanceof TypedImpl && !((TypedImpl<?, ?>) v).atomic()) {
-                r = ((TypedImpl<?, ?>) v).signature(depth - 1);
+            if (depth > 1 && v instanceof StructureImpl && !((StructureImpl<?>) v).atomic()) {
+                r = ((StructureImpl<?>) v).signature(depth - 1);
             } else {
                 r = typeOf(v);
             }
@@ -585,13 +588,18 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
         return array;
     }
 
+    protected StructureImpl<F> signature(int depth) {
+        Object[] array = signatureArray(depth);
+        return array != null ? struct(array) : this;
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected final Set<StructureImpl<F>> doGeneralize(boolean full) {
         Set<StructureImpl<F>> result = Set.of();
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
-            if (v instanceof TypedImpl) {
-                Set<StructureImpl> gen = ((TypedImpl) v).doGeneralize(full);
+            if (v instanceof StructureImpl) {
+                Set<StructureImpl> gen = ((StructureImpl) v).doGeneralize(full);
                 for (StructureImpl s : gen) {
                     result = result.add(setTyped(i, s));
                 }
@@ -614,6 +622,23 @@ public abstract class StructureImpl<F extends Structure> extends org.modelingval
 
     protected StructureImpl<F> setTyped(int i, StructureImpl<?> typed) {
         return set(i, typed);
+    }
+
+    protected boolean atomic() {
+        for (int i = 1; i < length(); i++) {
+            Object v = get(i);
+            if (!(v instanceof StructureImpl) && !(v instanceof Class)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    public final StructureImpl<F> normal() {
+        FunctorImpl<F> f = functor();
+        NormalizeLambda n = f != null ? f.normalizeLambda() : null;
+        return n != null ? (StructureImpl<F>) n.apply((StructureImpl<?>) this) : this;
     }
 
 }
