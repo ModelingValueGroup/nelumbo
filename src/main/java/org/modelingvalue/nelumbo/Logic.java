@@ -378,7 +378,7 @@ public final class Logic {
     // Is
 
     @SuppressWarnings("rawtypes")
-    private static Functor<Relation> IS_FUNCTOR = Logic.<Relation, Constant, Constant> functor(Logic::is, logic(Logic::isLogic), //
+    private static Functor<Relation> IS_FUNCTOR = Logic.<Relation, Constant<?>, Constant<?>> functor(Logic::is, logic(Logic::isLogic), //
             render(s -> s.toString(1) + "\u2261" + s.toString(2)));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -405,7 +405,7 @@ public final class Logic {
     // Equals
 
     @SuppressWarnings("rawtypes")
-    private static final Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Typed, Typed> functor(Logic::eq, //
+    private static final Functor<Relation> EQ_FUNCTOR = Logic.<Relation, Typed<?>, Typed<?>> functor(Logic::eq, //
             render(s -> s.toString(1) + "=" + s.toString(2)));
 
     public static <T extends Typed<T>> Relation eq(Typed<T> a, Typed<T> b) {
@@ -413,7 +413,7 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Functor<Relation> NE_FUNCTOR = Logic.<Relation, Typed, Typed> functor(Logic::ne, //
+    private static final Functor<Relation> NE_FUNCTOR = Logic.<Relation, Typed<?>, Typed<?>> functor(Logic::ne, //
             render(s -> s.toString(1) + "\u2260" + s.toString(2)));
 
     public static <T extends Typed<T>> Relation ne(Typed<T> a, Typed<T> b) {
