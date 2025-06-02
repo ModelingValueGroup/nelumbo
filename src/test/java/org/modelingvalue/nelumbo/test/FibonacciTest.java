@@ -24,11 +24,10 @@ import static org.modelingvalue.nelumbo.Integers.*;
 import static org.modelingvalue.nelumbo.Logic.*;
 
 import org.junit.jupiter.api.RepeatedTest;
-import org.modelingvalue.collections.util.SerializableBiFunction;
-import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Integers.Integer;
 import org.modelingvalue.nelumbo.Integers.IntegerCons;
 import org.modelingvalue.nelumbo.Integers.IntegerFunc;
+import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Relation;
 
@@ -48,7 +47,7 @@ public class FibonacciTest extends NelumboTestBase {
 
     // Relation
 
-    static Functor<Relation> FIB_REL       = functor((SerializableBiFunction<IntegerCons, IntegerCons, Relation>) FibonacciTest::fib);
+    static Functor<Relation> FIB_REL       = Logic.<Relation, IntegerCons, IntegerCons> functor(FibonacciTest::fib);
 
     static Relation fib(IntegerCons i, IntegerCons f) {
         return relation(FIB_REL, i, f);
@@ -56,7 +55,7 @@ public class FibonacciTest extends NelumboTestBase {
 
     // Function
 
-    static Functor<IntegerFunc> FIB_FUNC = functor((SerializableFunction<Integer, IntegerFunc>) FibonacciTest::fib);
+    static Functor<IntegerFunc> FIB_FUNC = Logic.<IntegerFunc, Integer> functor(FibonacciTest::fib);
 
     static IntegerFunc fib(Integer i) {
         return function(FIB_FUNC, i);
