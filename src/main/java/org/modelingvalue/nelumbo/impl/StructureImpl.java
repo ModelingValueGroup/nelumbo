@@ -79,38 +79,28 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         }
     }
 
-    private final int hashCode;
+    private int                       hashCode    = 0;
+    @SuppressWarnings("rawtypes")
+    private Map<VariableImpl, Object> variables;
+    private int                       nrOfUnbound = -1;
 
     public StructureImpl(Functor<F> functor, Object... args) {
         super(unproxy(functor, args));
-        this.hashCode = getHashCode();
         init();
     }
 
     protected StructureImpl(FunctorImpl<F> functor, Object... args) {
         super(array(functor, args));
-        this.hashCode = getHashCode();
         init();
     }
 
     protected StructureImpl(Class<F> type, Object... args) {
         super(array(type, args));
-        this.hashCode = getHashCode();
         init();
     }
 
     protected StructureImpl(Object[] args) {
         super(args);
-        this.hashCode = getHashCode();
-    }
-
-    private int getHashCode() {
-        int r = 1;
-        for (int i = 1; i < length(); i++) {
-            Object e = get(i);
-            r = 31 * r + (e == null ? 0 : e.hashCode());
-        }
-        return 31 * r + get(0).hashCode();
     }
 
     private void init() {
@@ -123,8 +113,56 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
+        if (hashCode == 0) {
+            int r = 1;
+            for (int i = 1; i < length(); i++) {
+                Object e = get(i);
+                r = 31 * r + (e == null ? 0 : e.hashCode());
+            }
+            r = 31 * r + get(0).hashCode();
+            hashCode = r == 0 ? 1 : r;
+        }
         return hashCode;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public final Map<VariableImpl, Object> variables() {
+        if (variables == null) {
+            Map<VariableImpl, Object> vars = Map.of();
+            for (int i = 1; i < length(); i++) {
+                Object val = get(i);
+                if (val instanceof VariableImpl) {
+                    vars = vars.put((VariableImpl) val, ((VariableImpl) val).type());
+                } else if (val instanceof StructureImpl) {
+                    vars = vars.putAll(((StructureImpl) val).variables());
+                }
+            }
+            variables = vars;
+        }
+        return variables;
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected final int nrOfUnbound() {
+        if (nrOfUnbound < 0) {
+            int nr = 0;
+            for (int i = 1; i < length(); i++) {
+                Object val = get(i);
+                if (val instanceof Class) {
+                    nr++;
+                } else if (val instanceof StructureImpl) {
+                    nr += ((StructureImpl) val).nrOfUnbound();
+                }
+            }
+            nrOfUnbound = nr;
+        }
+        return nrOfUnbound;
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected final boolean isFullyBound() {
+        return nrOfUnbound() == 0;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -259,20 +297,6 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             }
         }
         return thisVal;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Map<VariableImpl, Object> variables() {
-        Map<VariableImpl, Object> vars = Map.of();
-        for (int i = 1; i < length(); i++) {
-            Object val = get(i);
-            if (val instanceof VariableImpl) {
-                vars = vars.put((VariableImpl) val, ((VariableImpl) val).type());
-            } else if (val instanceof StructureImpl) {
-                vars = vars.putAll(((StructureImpl) val).variables());
-            }
-        }
-        return vars;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -488,47 +512,6 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
             }
         }
         return thisVal;
-    }
-
-    @SuppressWarnings("rawtypes")
-    protected final boolean isFullyBound() {
-        for (int i = 1; i < length(); i++) {
-            Object val = get(i);
-            if (val instanceof Class) {
-                return false;
-            } else if (val instanceof StructureImpl && !((StructureImpl) val).isFullyBound()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @SuppressWarnings("rawtypes")
-    protected final int nrOfUnbound() {
-        int nr = 0;
-        for (int i = 1; i < length(); i++) {
-            Object val = get(i);
-            if (val instanceof Class) {
-                nr++;
-            } else if (val instanceof StructureImpl) {
-                nr += ((StructureImpl) val).nrOfUnbound();
-            }
-        }
-        return nr;
-    }
-
-    @SuppressWarnings("rawtypes")
-    protected final int nrOfVariables() {
-        int nr = 0;
-        for (int i = 1; i < length(); i++) {
-            Object val = get(i);
-            if (val instanceof VariableImpl) {
-                nr++;
-            } else if (val instanceof StructureImpl) {
-                nr += ((StructureImpl) val).nrOfVariables();
-            }
-        }
-        return nr;
     }
 
     @SuppressWarnings("unchecked")

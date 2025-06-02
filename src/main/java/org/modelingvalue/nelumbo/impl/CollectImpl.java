@@ -176,12 +176,6 @@ public class CollectImpl extends PredicateImpl<Collect> {
         return InferResult.of(next.replaceAll(f -> set(resultVar, f.get(resultVar))), complete, Set.of(), false, cycles);
     }
 
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Map<VariableImpl, Object> variables() {
-        return super.variables();
-    }
-
     @Override
     public CollectImpl set(int i, Object... a) {
         return (CollectImpl) super.set(i, a);

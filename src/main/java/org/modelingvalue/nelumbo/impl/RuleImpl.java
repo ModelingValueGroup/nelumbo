@@ -35,8 +35,6 @@ public class RuleImpl extends StructureImpl<Rule> {
     private static final FunctorImpl<Rule> RULE_FUNCTOR       = FunctorImpl.<Rule, Relation, Predicate<?>> of(Logic::rule);
     private static final Functor<Rule>     RULE_FUNCTOR_PROXY = RULE_FUNCTOR.proxy();
 
-    @SuppressWarnings("rawtypes")
-    private Map<VariableImpl, Object>      variables;
     private final boolean                  trace;
 
     public RuleImpl(Relation consequence, Predicate<?> condition, RuleModifier[] modifiers) {
@@ -65,15 +63,6 @@ public class RuleImpl extends StructureImpl<Rule> {
     @Override
     protected RuleImpl struct(Object[] array) {
         return new RuleImpl(array);
-    }
-
-    @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Map<VariableImpl, Object> variables() {
-        if (variables == null) {
-            variables = super.variables();
-        }
-        return variables;
     }
 
     @SuppressWarnings("rawtypes")
