@@ -42,26 +42,26 @@ public class NelumboTestBase {
         return Logic.run(test, init);
     }
 
-    public static void isTrue(Predicate query) {
+    public static void isTrue(Predicate<?> query) {
         assertTrue(Logic.isTrue(query));
     }
 
-    public static void isFalse(Predicate query) {
+    public static void isFalse(Predicate<?> query) {
         assertFalse(!Logic.isFalse(query));
     }
 
-    public static void haveEqualResult(Predicate query1, Predicate query2) {
+    public static void haveEqualResult(Predicate<?> query1, Predicate<?> query2) {
         assertEquals(Logic.getResult(query1), Logic.getResult(query2));
     }
 
-    public static void hasResult(Predicate query, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods) {
+    public static void hasResult(Predicate<?> query, Set<Predicate<?>> facts, boolean completeFacts, Set<Predicate<?>> falsehoods, boolean completeFalsehoods) {
         Result expectedResult = new Result(facts, completeFacts, falsehoods, completeFalsehoods);
         Result queryResult = Logic.getResult(query);
         assertEquals(expectedResult, queryResult);
     }
 
     @SafeVarargs
-    public static void hasBindings(Predicate query, Map<Variable, Object>... bindings) {
+    public static void hasBindings(Predicate<?> query, Map<Variable<?>, Object>... bindings) {
         assertEquals(Set.of(bindings), Logic.getBindings(query));
     }
 

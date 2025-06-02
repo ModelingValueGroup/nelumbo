@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.Logic.Relation;
 public class CollectImpl extends PredicateImpl<Collect> {
     private static final long                 serialVersionUID    = -3084545514049410749L;
 
-    private static final FunctorImpl<Collect> COLL_FUNCTOR        = FunctorImpl.<Collect, Predicate, Relation> of(Logic::coll);
+    private static final FunctorImpl<Collect> COLL_FUNCTOR        = FunctorImpl.<Collect, Predicate<?>, Relation> of(Logic::coll);
     private static final Functor<Collect>     COLL_FUNCTORR_PROXY = COLL_FUNCTOR.proxy();
 
     private VariableImpl<?>                   resultVar;

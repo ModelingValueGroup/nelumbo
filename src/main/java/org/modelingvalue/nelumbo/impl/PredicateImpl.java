@@ -27,7 +27,7 @@ import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P> {
+public abstract class PredicateImpl<P extends Predicate<?>> extends StructureImpl<P> {
 
     private static final long           serialVersionUID = -1605559565948158856L;
 

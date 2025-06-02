@@ -28,10 +28,10 @@ import org.modelingvalue.nelumbo.Logic.Predicate;
 public final class NotImpl extends PredicateImpl<Not> {
     private static final long             serialVersionUID  = -4543178470298951866L;
 
-    private static final FunctorImpl<Not> NOT_FUNCTOR       = FunctorImpl.<Not, Predicate> of(Logic::not);
+    private static final FunctorImpl<Not> NOT_FUNCTOR       = FunctorImpl.<Not, Predicate<?>> of(Logic::not);
     private static final Functor<Not>     NOT_FUNCTOR_PROXY = NOT_FUNCTOR.proxy();
 
-    public NotImpl(Predicate pred) {
+    public NotImpl(Predicate<?> pred) {
         super(NOT_FUNCTOR_PROXY, pred);
     }
 

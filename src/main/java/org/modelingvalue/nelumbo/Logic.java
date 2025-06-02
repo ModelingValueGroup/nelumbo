@@ -80,7 +80,7 @@ public final class Logic {
 
     // Functor
 
-    public interface Functor<T extends Structure> extends Structure {
+    public interface Functor<T extends Structure> extends Typed<Functor<T>> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -207,7 +207,7 @@ public final class Logic {
 
     // Variables
 
-    public interface Variable extends Structure {
+    public interface Variable<T extends Structure> extends Typed<Variable<T>> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -217,23 +217,23 @@ public final class Logic {
 
     // Predicates
 
-    public interface Predicate extends Structure {
+    public interface Predicate<T extends Predicate<T>> extends Typed<T> {
     }
 
-    public interface Relation extends Predicate {
+    public interface Relation extends Predicate<Relation> {
     }
 
-    public static boolean isTrue(Predicate pred) {
+    public static boolean isTrue(Predicate<?> pred) {
         InferResult result = infer(pred);
         return result.isTrue();
     }
 
-    public static boolean isFalse(Predicate pred) {
+    public static boolean isFalse(Predicate<?> pred) {
         InferResult result = infer(pred);
         return result.isFalse();
     }
 
-    public static Result getResult(Predicate pred) {
+    public static Result getResult(Predicate<?> pred) {
         return new Result(infer(pred));
     }
 
@@ -250,20 +250,20 @@ public final class Logic {
         return bindings.replaceAll(m -> m.replaceAll(e -> Entry.of((Variable) e.getKey().proxy(), proxy(e.getValue()))));
     }
 
-    public static <T extends Typed<T>> Map<Variable, Object> binding(T var, Class<T> type) {
-        return Map.of(Entry.of((Variable) var, type));
+    public static <T extends Typed<T>> Map<Variable<?>, Object> binding(T var, Class<T> type) {
+        return Map.of(Entry.of((Variable<?>) var, type));
     }
 
-    public static <T extends Typed<T>> Map<Variable, Object> binding(T var, Constant<T> val) {
-        return Map.of(Entry.of((Variable) var, val));
+    public static <T extends Typed<T>> Map<Variable<?>, Object> binding(T var, Constant<T> val) {
+        return Map.of(Entry.of((Variable<?>) var, val));
     }
 
-    public static <T1 extends Typed<T1>, T2 extends Typed<T2>> Map<Variable, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2) {
-        return Map.of(Entry.of((Variable) var1, val1), Entry.of((Variable) var2, val2));
+    public static <T1 extends Typed<T1>, T2 extends Typed<T2>> Map<Variable<?>, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2) {
+        return Map.of(Entry.of((Variable<?>) var1, val1), Entry.of((Variable<?>) var2, val2));
     }
 
-    public static <T1 extends Typed<T1>, T2 extends Typed<T2>, T3 extends Typed<T3>> Map<Variable, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2, T3 var3, Constant<T3> val3) {
-        return Map.of(Entry.of((Variable) var1, val1), Entry.of((Variable) var2, val2), Entry.of((Variable) var3, val3));
+    public static <T1 extends Typed<T1>, T2 extends Typed<T2>, T3 extends Typed<T3>> Map<Variable<?>, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2, T3 var3, Constant<T3> val3) {
+        return Map.of(Entry.of((Variable<?>) var1, val1), Entry.of((Variable<?>) var2, val2), Entry.of((Variable<?>) var3, val3));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -283,7 +283,7 @@ public final class Logic {
 
     // True
 
-    public interface Bool extends Predicate {
+    public interface Bool extends Predicate<Bool> {
     }
 
     private static final Bool TRUE_PROXY = (Bool) Proxy.newProxyInstance(Bool.class.getClassLoader(), new Class[]{Bool.class}, BooleanImpl.TRUE);
@@ -304,20 +304,20 @@ public final class Logic {
 
     // Not
 
-    public interface Not extends Predicate {
+    public interface Not extends Predicate<Not> {
     }
 
     @SuppressWarnings("unchecked")
-    public static Not not(Predicate pred) {
+    public static Not not(Predicate<?> pred) {
         return new NotImpl(pred).proxy();
     }
 
     // Or
 
-    public interface BinaryPredicate extends Predicate {
+    public interface BinaryPredicate<T extends BinaryPredicate<T>> extends Predicate<T> {
     }
 
-    public interface Or extends BinaryPredicate {
+    public interface Or extends BinaryPredicate<Or> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -332,7 +332,7 @@ public final class Logic {
 
     // And
 
-    public interface And extends BinaryPredicate {
+    public interface And extends BinaryPredicate<And> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -347,7 +347,7 @@ public final class Logic {
 
     // Rules
 
-    public interface Rule extends Structure {
+    public interface Rule extends Typed<Rule> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -359,7 +359,7 @@ public final class Logic {
 
     // Collect
 
-    public interface Collect extends Predicate {
+    public interface Collect extends Predicate<Collect> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

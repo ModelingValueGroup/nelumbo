@@ -26,9 +26,9 @@ import org.modelingvalue.nelumbo.Logic.Predicate;
 public final class OrImpl extends BinaryPredicateImpl<Or> {
     private static final long            serialVersionUID = -1732549494864415986L;
 
-    private static final FunctorImpl<Or> OR_FUNCTOR       = FunctorImpl.<Or, Predicate, Predicate> of(OrImpl::or);
+    private static final FunctorImpl<Or> OR_FUNCTOR       = FunctorImpl.<Or, Predicate<?>, Predicate<?>> of(OrImpl::or);
 
-    private static Or or(Predicate predicate1, Predicate predicate2) {
+    private static Or or(Predicate<?> predicate1, Predicate<?> predicate2) {
         return new OrImpl(StructureImpl.unproxy(predicate1), StructureImpl.unproxy(predicate2)).proxy();
     }
 

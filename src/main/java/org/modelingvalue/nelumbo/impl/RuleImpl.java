@@ -32,14 +32,14 @@ import org.modelingvalue.nelumbo.Logic.RuleModifier;
 public class RuleImpl extends StructureImpl<Rule> {
     private static final long              serialVersionUID   = -4602043866952049391L;
 
-    private static final FunctorImpl<Rule> RULE_FUNCTOR       = FunctorImpl.<Rule, Relation, Predicate> of(Logic::rule);
+    private static final FunctorImpl<Rule> RULE_FUNCTOR       = FunctorImpl.<Rule, Relation, Predicate<?>> of(Logic::rule);
     private static final Functor<Rule>     RULE_FUNCTOR_PROXY = RULE_FUNCTOR.proxy();
 
     @SuppressWarnings("rawtypes")
     private Map<VariableImpl, Object>      variables;
     private final boolean                  trace;
 
-    public RuleImpl(Relation consequence, Predicate condition, RuleModifier[] modifiers) {
+    public RuleImpl(Relation consequence, Predicate<?> condition, RuleModifier[] modifiers) {
         this(modifiers, consequence, condition);
     }
 
