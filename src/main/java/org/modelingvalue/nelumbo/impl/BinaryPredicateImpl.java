@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.modelingvalue.nelumbo.Logic.BinaryPredicate;
 
-public abstract class BinaryPredicateImpl<T extends BinaryPredicate> extends PredicateImpl<T> {
+public abstract class BinaryPredicateImpl<T extends BinaryPredicate<T>> extends PredicateImpl<T> {
     private static final long    serialVersionUID = -928776822979604743L;
 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
