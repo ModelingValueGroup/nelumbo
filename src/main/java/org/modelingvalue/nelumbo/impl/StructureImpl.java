@@ -577,12 +577,12 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final Set<StructureImpl<F>> doGeneralize(boolean full) {
+    protected Set<? extends StructureImpl<F>> generalize(boolean full) {
         Set<StructureImpl<F>> result = Set.of();
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             if (v instanceof StructureImpl) {
-                Set<StructureImpl> gen = ((StructureImpl) v).doGeneralize(full);
+                Set<StructureImpl> gen = ((StructureImpl) v).generalize(full);
                 for (StructureImpl s : gen) {
                     result = result.add(setTyped(i, s));
                 }

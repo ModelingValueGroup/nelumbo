@@ -215,26 +215,24 @@ public class RelationImpl extends PredicateImpl<Relation> {
     }
 
     @Override
-    protected final RelationImpl signature(int depth) {
-        Object[] array = signatureArray(depth);
-        return array != null ? struct(array, null) : this;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final Set<RelationImpl> generalize(boolean full) {
-        return (Set) doGeneralize(full);
-    }
-
-    @Override
     protected final RelationImpl setType(int i, Class<?> type) {
-        Object[] array = setArray(i, type);
-        return array != null ? struct(array, null) : this;
+        return (RelationImpl) super.setType(i, type);
     }
 
     @Override
     protected final RelationImpl setTyped(int i, StructureImpl<?> typed) {
-        Object[] array = setArray(i, typed);
-        return array != null ? struct(array, null) : this;
+        return (RelationImpl) super.setTyped(i, typed);
+    }
+
+    @Override
+    protected final RelationImpl signature(int depth) {
+        return (RelationImpl) super.signature(depth);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected final Set<RelationImpl> generalize(boolean full) {
+        return (Set<RelationImpl>) super.generalize(full);
     }
 
 }

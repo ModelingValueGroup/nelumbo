@@ -277,4 +277,22 @@ public abstract class PredicateImpl<P extends Predicate<P>> extends StructureImp
         return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
+    @Override
+    protected PredicateImpl<P> setType(int i, Class<?> type) {
+        Object[] array = setArray(i, type);
+        return array != null ? struct(array, null) : this;
+    }
+
+    @Override
+    protected PredicateImpl<P> setTyped(int i, StructureImpl<?> typed) {
+        Object[] array = setArray(i, typed);
+        return array != null ? struct(array, null) : this;
+    }
+
+    @Override
+    protected PredicateImpl<P> signature(int depth) {
+        Object[] array = signatureArray(depth);
+        return array != null ? struct(array, null) : this;
+    }
+
 }
