@@ -80,7 +80,7 @@ public final class Logic {
 
     // Functor
 
-    public interface Functor<T extends Structure> extends Structure {
+    public interface Functor<T extends Structure> extends Typed<Functor<T>> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -207,7 +207,7 @@ public final class Logic {
 
     // Variables
 
-    public interface Variable<T extends Structure> extends Structure {
+    public interface Variable<T extends Structure> extends Typed<Variable<T>> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
