@@ -24,11 +24,9 @@ import static org.modelingvalue.nelumbo.Integers.*;
 import static org.modelingvalue.nelumbo.Logic.*;
 
 import org.junit.jupiter.api.RepeatedTest;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Integers.IntegerCons;
-import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public class NelumboTest extends NelumboTestBase {
+public class IntegersTest extends NelumboTestBase {
 
     static {
         System.setProperty("PARALLEL_COLLECTIONS", "false");
@@ -44,73 +42,45 @@ public class NelumboTest extends NelumboTestBase {
 
     // Variables
 
-    IntegerCons      P             = iConsVar("P");
-    IntegerCons      Q             = iConsVar("Q");
-    IntegerCons      R             = iConsVar("R");
+    IntegerCons      I             = iConsVar("I");
 
     // Tests
 
     @RepeatedTest(NR_OF_REPEATS)
-    public void simpleTest() {
+    public void intTest1() {
         run(() -> {
             integerRules();
 
-            isTrue(lt(i(0), i(1)));
-            isTrue(ge(i(1), i(0)));
-
-            hasBindings(eq(plus(i(7), i(3)), P), binding(P, i(10)));
+            hasBindings(plus(i(7), i(3), I), binding(I, i(10)));
+            hasBindings(plus(i(7), I, i(10)), binding(I, i(3)));
+            hasBindings(plus(I, i(3), i(10)), binding(I, i(7)));
         });
     }
 
     @RepeatedTest(NR_OF_REPEATS)
-    public void notTest() {
-        run(() -> {
-            isFalse(and(F(), T()));
-            isFalse(not(or(not(F()), not(T()))));
-            isTrue(not(and(F(), T())));
-            isTrue(not(not(or(not(F()), not(T())))));
-
-            integerRules();
-
-            isFalse(plus(i(5), i(2), i(8)));
-            isFalse(eq(plus(i(5), i(2)), i(8)));
-            isTrue(not(plus(i(5), i(2), i(8))));
-            isTrue(not(eq(plus(i(5), i(2)), i(8))));
-            isTrue(ne(plus(i(5), i(2)), i(8)));
-            isTrue(and(not(eq(plus(i(5), i(2)), i(8))), not(plus(i(5), i(2), i(8)))));
-            isTrue(and(ne(plus(i(5), i(2)), i(8)), not(plus(i(5), i(2), i(8)))));
-
-            hasBindings(not(eq(plus(i(5), i(2)), R)));
-            hasBindings(ne(plus(i(5), i(2)), R));
-        });
-    }
-
-    @RepeatedTest(NR_OF_REPEATS)
-    public void resultTest() {
+    public void intTest2() {
         run(() -> {
             integerRules();
 
-            Predicate<?> query1 = eq(plus(i(7), i(3)), i(10));
-            hasResult(query1, Set.of(query1), true, Set.of(), true);
-            Predicate<?> query2 = eq(plus(i(7), i(3)), i(11));
-            hasResult(query2, Set.of(), true, Set.of(query2), true);
-            Predicate<?> query3 = eq(plus(i(7), i(3)), P);
-            hasResult(query3, Set.of(eq(plus(i(7), i(3)), i(10))), true, Set.of(), false);
-            Predicate<?> query4 = eq(plus(i(7), P), i(10));
-            hasResult(query4, Set.of(eq(plus(i(7), i(3)), i(10))), true, Set.of(), false);
-            Predicate<?> query5 = eq(plus(i(7), P), Q);
-            hasResult(query5, Set.of(), false, Set.of(), false);
+            isTrue(eq(plus(i(11), i(22)), i(33)));
 
-            query1 = and(eq(plus(i(7), i(3)), i(10)), eq(plus(i(8), i(2)), i(10)));
-            hasResult(query1, Set.of(query1), true, Set.of(), true);
-            query2 = and(eq(plus(i(7), i(3)), i(11)), eq(plus(i(8), i(2)), i(11)));
-            hasResult(query2, Set.of(), true, Set.of(query2), true);
-            query3 = and(eq(plus(i(7), i(3)), P), eq(plus(i(8), i(2)), P));
-            hasResult(query3, Set.of(and(eq(plus(i(7), i(3)), i(10)), eq(plus(i(8), i(2)), i(10)))), true, Set.of(), false);
-            query4 = and(eq(plus(i(7), P), i(10)), eq(plus(i(8), Q), i(10)));
-            hasResult(query4, Set.of(and(eq(plus(i(7), i(3)), i(10)), eq(plus(i(8), i(2)), i(10)))), true, Set.of(), false);
-            query5 = and(eq(plus(i(7), P), R), eq(plus(i(8), Q), R));
-            hasResult(query5, Set.of(), false, Set.of(), false);
+            isTrue(eq(minus(i(33), i(22)), i(11)));
+            isTrue(eq(plus(i(11), plus(plus(i(22), i(33)), i(44))), i(110)));
+
+            isTrue(eq(plus(i(11), divide(multiply(i(44), i(33)), i(22))), i(77)));
+
+            isTrue(eq(sqrt(i(49)), i(7)));
+            isTrue(eq(sqrt(i(49)), i(-7)));
+
+            hasBindings(eq(plus(i(11), plus(plus(i(22), i(33)), i(44))), I), binding(I, i(110)));
+            hasBindings(eq(plus(i(11), plus(plus(i(22), I), i(44))), i(110)), binding(I, i(33)));
+            hasBindings(eq(plus(i(7), i(3)), I), binding(I, i(10)));
+            hasBindings(eq(plus(i(7), I), i(10)), binding(I, i(3)));
+            hasBindings(eq(plus(I, i(3)), i(10)), binding(I, i(7)));
+
+            hasBindings(eq(sqrt(i(49)), I), binding(I, i(7)), binding(I, i(-7)));
+
+            hasBindings(and(eq(sqrt(i(49)), I), ge(I, i(0))), binding(I, i(7)));
         });
     }
 
