@@ -22,11 +22,12 @@ package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.nelumbo.Logic.And;
 import org.modelingvalue.nelumbo.Logic.Predicate;
+import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
 
 public final class AndImpl extends BinaryPredicateImpl<And> {
-    private static final long             serialVersionUID = -7248491569810098948L;
+    private static final long                                          serialVersionUID = -7248491569810098948L;
 
-    private static final FunctorImpl<And> AND_FUNCTOR      = FunctorImpl.<And, Predicate<?>, Predicate<?>> of(AndImpl::and);
+    private static final FunctorImpl2<And, Predicate<?>, Predicate<?>> AND_FUNCTOR      = FunctorImpl.of2(AndImpl::and);
 
     private static And and(Predicate<?> p1, Predicate<?> p2) {
         return new AndImpl(StructureImpl.unproxy(p1), StructureImpl.unproxy(p2)).proxy();

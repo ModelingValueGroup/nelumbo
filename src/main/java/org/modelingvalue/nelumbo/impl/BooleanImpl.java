@@ -21,21 +21,21 @@
 package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Bool;
+import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl1;
 
 public final class BooleanImpl extends PredicateImpl<Bool> {
-    private static final long          serialVersionUID = -8515171118744898263L;
+    private static final long                        serialVersionUID = -8515171118744898263L;
 
     @SuppressWarnings("rawtypes")
-    private static final FunctorImpl   BOOLEAN_FUNCTOR  = FunctorImpl.of((SerializableFunction<Boolean, Bool>) BooleanImpl::b);
+    private static final FunctorImpl1<Bool, Boolean> BOOLEAN_FUNCTOR  = FunctorImpl.of1(BooleanImpl::b);
 
-    public static final BooleanImpl    TRUE             = new BooleanImpl(true);
-    public static final BooleanImpl    FALSE            = new BooleanImpl(false);
+    public static final BooleanImpl                  TRUE             = new BooleanImpl(true);
+    public static final BooleanImpl                  FALSE            = new BooleanImpl(false);
 
-    protected static final InferResult TRUE_CONCLUSION  = TRUE.factCC();
-    protected static final InferResult FALSE_CONCLUSION = FALSE.falsehoodCC();
+    protected static final InferResult               TRUE_CONCLUSION  = TRUE.factCC();
+    protected static final InferResult               FALSE_CONCLUSION = FALSE.falsehoodCC();
 
     private static Bool b(boolean val) {
         return val ? Logic.T() : Logic.F();

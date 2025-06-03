@@ -24,11 +24,11 @@ import static org.modelingvalue.nelumbo.Integers.*;
 import static org.modelingvalue.nelumbo.Logic.*;
 
 import org.junit.jupiter.api.RepeatedTest;
-import org.modelingvalue.collections.util.SerializableFunction;
 import org.modelingvalue.nelumbo.Integers.IntegerCons;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
-import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Functor1;
+import org.modelingvalue.nelumbo.Logic.Functor2;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.RenderLambda;
 import org.modelingvalue.nelumbo.Logic.Typed;
@@ -60,14 +60,14 @@ public class FamilyTest extends NelumboTestBase {
 
     // Family Functors
 
-    static Functor<PersonCons> STRING_PERSON = functor((SerializableFunction<String, PersonCons>) FamilyTest::person, //
+    static Functor1<PersonCons, String> STRING_PERSON = functor1(FamilyTest::person, //
             (RenderLambda) p -> p.toString(1));
 
     static PersonCons person(String name) {
         return constant(STRING_PERSON, name);
     }
 
-    static Functor<PersonCons> INTEGER_PERSON = functor((SerializableFunction<IntegerCons, PersonCons>) FamilyTest::person, //
+    static Functor1<PersonCons, IntegerCons> INTEGER_PERSON = functor1(FamilyTest::person, //
             (RenderLambda) p -> "P(" + p.toString(1) + ")");
 
     static PersonCons person(IntegerCons i) {
@@ -86,42 +86,42 @@ public class FamilyTest extends NelumboTestBase {
         return variable(Person.class, name);
     }
 
-    static Functor<Relation> PARENT_CHILD = functor(FamilyTest::parentChild, //
+    static Functor2<Relation, PersonCons, PersonCons> PARENT_CHILD = functor2(FamilyTest::parentChild, //
             (RenderLambda) s -> "pc(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation parentChild(PersonCons parent, PersonCons child) {
         return relation(PARENT_CHILD, parent, child);
     }
 
-    static Functor<PersonFunc> PARENT = functor(FamilyTest::parent, //
+    static Functor1<PersonFunc, PersonCons> PARENT = functor1(FamilyTest::parent, //
             (RenderLambda) s -> "p(" + s.toString(1) + ")");
 
     static PersonFunc parent(Person child) {
         return function(PARENT, child);
     }
 
-    static Functor<PersonFunc> CHILD = functor(FamilyTest::child, //
+    static Functor1<PersonFunc, PersonCons> CHILD = functor1(FamilyTest::child, //
             (RenderLambda) s -> "c(" + s.toString(1) + ")");
 
     static PersonFunc child(Person parent) {
         return function(CHILD, parent);
     }
 
-    static Functor<Relation> ANCESTOR_DESCENDANT = functor(FamilyTest::ancestorDescendant, //
+    static Functor2<Relation, PersonCons, PersonCons> ANCESTOR_DESCENDANT = functor2(FamilyTest::ancestorDescendant, //
             (RenderLambda) s -> "ad(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation ancestorDescendant(PersonCons ancestor, PersonCons descendant) {
         return relation(ANCESTOR_DESCENDANT, ancestor, descendant);
     }
 
-    static Functor<PersonFunc> ANCESTOR = functor(FamilyTest::ancestor, //
+    static Functor1<PersonFunc, Person> ANCESTOR = functor1(FamilyTest::ancestor, //
             (RenderLambda) s -> "a(" + s.toString(1) + ")");
 
     static PersonFunc ancestor(Person descendant) {
         return function(ANCESTOR, descendant);
     }
 
-    static Functor<PersonFunc> DESCENDANT = functor(FamilyTest::descendant, //
+    static Functor1<PersonFunc, Person> DESCENDANT = functor1(FamilyTest::descendant, //
             (RenderLambda) s -> "d(" + s.toString(1) + ")");
 
     static PersonFunc descendant(Person ancestor) {
@@ -141,7 +141,7 @@ public class FamilyTest extends NelumboTestBase {
 
     // Root Functors
 
-    static Functor<RootCons> ROOT = functor((SerializableFunction<IntegerCons, RootCons>) FamilyTest::root, //
+    static Functor1<RootCons, IntegerCons> ROOT = functor1(FamilyTest::root, //
             (RenderLambda) p -> "R(" + p.toString(1) + ")");
 
     static RootCons root(IntegerCons i) {
@@ -160,14 +160,14 @@ public class FamilyTest extends NelumboTestBase {
         return variable(Root.class, name);
     }
 
-    static Functor<Relation> ROOT_PERSON = functor(FamilyTest::rootPerson, //
+    static Functor2<Relation, RootCons, PersonCons> ROOT_PERSON = functor2(FamilyTest::rootPerson, //
             (RenderLambda) s -> "rp(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation rootPerson(RootCons root, PersonCons person) {
         return relation(ROOT_PERSON, root, person);
     }
 
-    static Functor<RootFunc> ROOT_FUNC = functor((SerializableFunction<Person, RootFunc>) FamilyTest::root, //
+    static Functor1<RootFunc, Person> ROOT_FUNC = functor1(FamilyTest::root, //
             (RenderLambda) p -> "r(" + p.toString(1) + ")");
 
     static RootFunc root(Person person) {
@@ -176,21 +176,21 @@ public class FamilyTest extends NelumboTestBase {
 
     // Collect Example Functors
 
-    static Functor<Relation> PERSON_AMOUNT = functor(FamilyTest::personAmount, //
+    static Functor2<Relation, PersonCons, IntegerCons> PERSON_AMOUNT = functor2(FamilyTest::personAmount, //
             (RenderLambda) s -> "pa(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation personAmount(PersonCons person, IntegerCons amount) {
         return relation(PERSON_AMOUNT, person, amount);
     }
 
-    static Functor<Relation> PERSON_TOTAL = functor(FamilyTest::personTotal, //
+    static Functor2<Relation, PersonCons, IntegerCons> PERSON_TOTAL = functor2(FamilyTest::personTotal, //
             (RenderLambda) s -> "pt(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation personTotal(PersonCons person, IntegerCons amount) {
         return relation(PERSON_TOTAL, person, amount);
     }
 
-    static Functor<Relation> PERSON_NUMBER = functor(FamilyTest::personNumber, //
+    static Functor2<Relation, PersonCons, IntegerCons> PERSON_NUMBER = functor2(FamilyTest::personNumber, //
             (RenderLambda) s -> "pn(" + s.toString(1) + "," + s.toString(2) + ")");
 
     static Relation personNumber(PersonCons person, IntegerCons number) {

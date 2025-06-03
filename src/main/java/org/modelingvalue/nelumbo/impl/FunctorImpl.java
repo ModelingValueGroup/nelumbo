@@ -31,15 +31,9 @@ import org.modelingvalue.collections.util.SerializableSupplier;
 import org.modelingvalue.collections.util.SerializableSupplier.SerializableSupplierImpl;
 import org.modelingvalue.collections.util.SerializableTriFunction;
 import org.modelingvalue.collections.util.SerializableTriFunction.SerializableTriFunctionImpl;
-import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.FunctorModifier;
-import org.modelingvalue.nelumbo.Logic.FunctorModifierEnum;
-import org.modelingvalue.nelumbo.Logic.LogicLambda;
-import org.modelingvalue.nelumbo.Logic.NormalizeLambda;
-import org.modelingvalue.nelumbo.Logic.RenderLambda;
-import org.modelingvalue.nelumbo.Logic.Structure;
+import org.modelingvalue.nelumbo.Logic.*;
 
-public final class FunctorImpl<T extends Structure> extends StructureImpl<Functor<T>> {
+public abstract class FunctorImpl<T extends Structure, F extends Functor<T>> extends StructureImpl<F> {
     private static final long     serialVersionUID = 285147889847599160L;
 
     private final LogicLambda     logicLambda;
@@ -49,8 +43,8 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
     private final boolean         derived;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public FunctorImpl(Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
-        super((Class) Functor.class, type, name, args);
+    private FunctorImpl(Class functorClass, Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
+        super(functorClass, type, name, args);
         this.logicLambda = logic(modifiers);
         this.normalizeLambda = normal(modifiers);
         this.renderLambda = render(modifiers);
@@ -99,14 +93,14 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected FunctorImpl<T> struct(Object[] array) {
+    protected FunctorImpl<T, F> struct(Object[] array) {
         throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public Class<Functor<T>> type() {
-        return (Class) Functor.class;
+    public Class<F> type() {
+        return (Class) get(0);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -139,39 +133,85 @@ public final class FunctorImpl<T extends Structure> extends StructureImpl<Functo
         return (Class<T>) get(1);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public FunctorImpl<T> set(int i, Object... a) {
-        return (FunctorImpl<T>) super.set(i, a);
+    public FunctorImpl<T, F> set(int i, Object... a) {
+        return (FunctorImpl<T, F>) super.set(i, a);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure, A, B, C, D> FunctorImpl<T> of(SerializableQuadFunction<A, B, C, D, T> method, FunctorModifier... modifiers) {
+    public static <T extends Structure, A, B, C, D> FunctorImpl4<T, A, B, C, D> of4(SerializableQuadFunction<A, B, C, D, T> method, FunctorModifier... modifiers) {
         SerializableQuadFunctionImpl<A, B, C, D, T> l = method.of();
-        return new FunctorImpl<T>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+        return new FunctorImpl4<T, A, B, C, D>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+    }
+
+    public static final class FunctorImpl4<T extends Structure, A, B, C, D> extends FunctorImpl<T, Functor4<T, A, B, C, D>> {
+        private static final long serialVersionUID = 7923040687479253009L;
+
+        private FunctorImpl4(Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
+            super(Functor4.class, type, name, args, modifiers);
+        }
+
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure, A, B, C> FunctorImpl<T> of(SerializableTriFunction<A, B, C, T> method, FunctorModifier... modifiers) {
+    public static <T extends Structure, A, B, C> FunctorImpl3<T, A, B, C> of3(SerializableTriFunction<A, B, C, T> method, FunctorModifier... modifiers) {
         SerializableTriFunctionImpl<A, B, C, T> l = method.of();
-        return new FunctorImpl<T>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+        return new FunctorImpl3<T, A, B, C>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+    }
+
+    public static final class FunctorImpl3<T extends Structure, A, B, C> extends FunctorImpl<T, Functor3<T, A, B, C>> {
+        private static final long serialVersionUID = -3000503193120874295L;
+
+        private FunctorImpl3(Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
+            super(Functor3.class, type, name, args, modifiers);
+        }
+
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure, A, B> FunctorImpl<T> of(SerializableBiFunction<A, B, T> method, FunctorModifier... modifiers) {
+    public static <T extends Structure, A, B> FunctorImpl2<T, A, B> of2(SerializableBiFunction<A, B, T> method, FunctorModifier... modifiers) {
         SerializableBiFunctionImpl<A, B, T> l = method.of();
-        return new FunctorImpl<T>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+        return new FunctorImpl2<T, A, B>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+    }
+
+    public static final class FunctorImpl2<T extends Structure, A, B> extends FunctorImpl<T, Functor2<T, A, B>> {
+        private static final long serialVersionUID = -3183049692712735358L;
+
+        private FunctorImpl2(Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
+            super(Functor2.class, type, name, args, modifiers);
+        }
+
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure, A> FunctorImpl<T> of(SerializableFunction<A, T> method, FunctorModifier... modifiers) {
+    public static <T extends Structure, A> FunctorImpl1<T, A> of1(SerializableFunction<A, T> method, FunctorModifier... modifiers) {
         SerializableFunctionImpl<A, T> l = method.of();
-        return new FunctorImpl<T>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+        return new FunctorImpl1<T, A>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+    }
+
+    public static final class FunctorImpl1<T extends Structure, A> extends FunctorImpl<T, Functor1<T, A>> {
+        private static final long serialVersionUID = 673008347258770580L;
+
+        private FunctorImpl1(Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
+            super(Functor1.class, type, name, args, modifiers);
+        }
+
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure> FunctorImpl<T> of(SerializableSupplier<T> method, FunctorModifier... modifiers) {
+    public static <T extends Structure> FunctorImpl0<T> of0(SerializableSupplier<T> method, FunctorModifier... modifiers) {
         SerializableSupplierImpl<T> l = method.of();
-        return new FunctorImpl<T>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+        return new FunctorImpl0<T>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+    }
+
+    public static final class FunctorImpl0<T extends Structure> extends FunctorImpl<T, Functor0<T>> {
+        private static final long serialVersionUID = 2054896270008795131L;
+
+        private FunctorImpl0(Class<T> type, String name, List<Class<?>> args, FunctorModifier[] modifiers) {
+            super(Functor0.class, type, name, args, modifiers);
+        }
+
     }
 
 }

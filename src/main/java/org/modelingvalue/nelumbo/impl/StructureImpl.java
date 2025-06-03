@@ -89,7 +89,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         init();
     }
 
-    protected StructureImpl(FunctorImpl<F> functor, Object... args) {
+    protected StructureImpl(FunctorImpl<F, ?> functor, Object... args) {
         super(array(functor, args));
         init();
     }
@@ -168,7 +168,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public String toString() {
-        FunctorImpl<F> f = PRETTY_NELUMBO ? functor() : null;
+        FunctorImpl<F, ?> f = PRETTY_NELUMBO ? functor() : null;
         RenderLambda rl = f != null ? f.renderLambda() : null;
         if (rl != null) {
             return rl.apply((StructureImpl) this);
@@ -221,13 +221,13 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings("unchecked")
     protected Class<F> type() {
         Object t = get(0);
-        return t instanceof FunctorImpl ? ((FunctorImpl<F>) t).functType() : (Class<F>) t;
+        return t instanceof FunctorImpl ? ((FunctorImpl<F, ?>) t).functType() : (Class<F>) t;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public FunctorImpl<F> functor() {
+    public FunctorImpl<F, ?> functor() {
         Object t = get(0);
-        return t instanceof FunctorImpl ? (FunctorImpl<F>) t : null;
+        return t instanceof FunctorImpl ? (FunctorImpl<F, ?>) t : null;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -619,7 +619,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
 
     @SuppressWarnings("unchecked")
     public final StructureImpl<F> normal() {
-        FunctorImpl<F> f = functor();
+        FunctorImpl<F, ?> f = functor();
         NormalizeLambda n = f != null ? f.normalizeLambda() : null;
         return n != null ? (StructureImpl<F>) n.apply((StructureImpl<?>) this) : this;
     }

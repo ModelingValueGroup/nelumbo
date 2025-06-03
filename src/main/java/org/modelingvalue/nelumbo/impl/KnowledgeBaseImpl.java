@@ -217,7 +217,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected void memoization(RelationImpl relation, InferResult result) {
         boolean known = result.cycles().isEmpty() && result.isComplete();
-        FunctorImpl<Relation> functor = relation.functor();
+        FunctorImpl<Relation, ?> functor = relation.functor();
         if (functor.factual()) {
             facts.updateAndGet(map -> {
                 if (known) {
@@ -301,7 +301,7 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public final void addFact(RelationImpl fact) {
-        FunctorImpl<Relation> functor = fact.functor();
+        FunctorImpl<Relation, ?> functor = fact.functor();
         if (functor.logicLambda() != null) {
             throw new IllegalArgumentException("No facts of a functor with a logic lambda allowed. " + this);
         }

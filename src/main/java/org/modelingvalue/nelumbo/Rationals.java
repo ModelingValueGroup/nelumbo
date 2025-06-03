@@ -27,7 +27,9 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
-import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Functor1;
+import org.modelingvalue.nelumbo.Logic.Functor2;
+import org.modelingvalue.nelumbo.Logic.Functor3;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Typed;
 import org.modelingvalue.nelumbo.impl.InferContext;
@@ -53,7 +55,7 @@ public final class Rationals {
 
     // Constants
 
-    private static Functor<RationalCons> R_FUNCTOR = Logic.<RationalCons, BigInteger, BigInteger> functor(Rationals::r, normalize(r -> {
+    private static Functor2<RationalCons, BigInteger, BigInteger> R_FUNCTOR = functor2(Rationals::r, normalize(r -> {
         BigInteger numerator = r.getVal(1);
         BigInteger denominator = r.getVal(2);
         BigInteger gcd = numerator.gcd(denominator);
@@ -101,8 +103,8 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> GT_CONS_FUNCTOR = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::gtc, logic(Rationals::gtcLogic), //
-            render(s -> s.toString(1) + "\u226B" + s.toString(2)));
+    private static Functor2<Relation, RationalCons, RationalCons> GT_CONS_FUNCTOR = functor2(Rationals::gtc, //
+            logic(Rationals::gtcLogic), render(s -> s.toString(1) + "\u226B" + s.toString(2)));
 
     @SuppressWarnings("rawtypes")
     private static InferResult gtcLogic(RelationImpl relation, InferContext context) {
@@ -123,8 +125,8 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> PLUS_REL_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::plus, logic(Rationals::plusLogic), //
-            render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
+    private static Functor3<Relation, RationalCons, RationalCons, RationalCons> PLUS_REL_FUNCTOR = functor3(Rationals::plus, //
+            logic(Rationals::plusLogic), render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult plusLogic(RelationImpl relation, InferContext context) {
         BigInteger numAddend1 = relation.getVal(1, 1);
@@ -161,8 +163,8 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> MULTIPLY_REL_FUNCTOR = Logic.<Relation, RationalCons, RationalCons, RationalCons> functor(Rationals::multiply, logic(Rationals::multiplyLogic), //
-            render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
+    private static Functor3<Relation, RationalCons, RationalCons, RationalCons> MULTIPLY_REL_FUNCTOR = functor3(Rationals::multiply, //
+            logic(Rationals::multiplyLogic), render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
         BigInteger numFactor1 = relation.getVal(1, 1);
@@ -193,7 +195,8 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> SQUARE_REL_FUNCTOR = Logic.<Relation, RationalCons, RationalCons> functor(Rationals::square, logic(Rationals::squareLogic));
+    private static Functor2<Relation, RationalCons, RationalCons> SQUARE_REL_FUNCTOR = functor2(Rationals::square, //
+            logic(Rationals::squareLogic));
 
     private static InferResult squareLogic(RelationImpl relation, InferContext context) {
         BigInteger numRoot = relation.getVal(1, 1);
@@ -223,69 +226,69 @@ public final class Rationals {
 
     // Functions
 
-    private static Functor<Relation> GT_FUNCTOR = functor(Rationals::gt, //
+    private static Functor2<Relation, Rational, Rational> GT_FUNCTOR = functor2(Rationals::gt, //
             render(s -> s.toString(1) + ">" + s.toString(2)));
 
     public static Relation gt(Rational a, Rational b) {
         return relation(GT_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> LT_FUNCTOR = functor(Rationals::lt, //
+    private static Functor2<Relation, Rational, Rational> LT_FUNCTOR = functor2(Rationals::lt, //
             render(s -> s.toString(1) + "<" + s.toString(2)));
 
     public static Relation lt(Rational a, Rational b) {
         return relation(LT_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> GE_FUNCTOR = functor(Rationals::ge, //
+    private static Functor2<Relation, Rational, Rational> GE_FUNCTOR = functor2(Rationals::ge, //
             render(s -> s.toString(1) + "\u2265" + s.toString(2)));
 
     public static Relation ge(Rational a, Rational b) {
         return relation(GE_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> LE_FUNCTOR = functor(Rationals::le, //
+    private static Functor2<Relation, Rational, Rational> LE_FUNCTOR = functor2(Rationals::le, //
             render(s -> s.toString(1) + "\u2264" + s.toString(2)));
 
     public static Relation le(Rational a, Rational b) {
         return relation(LE_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> PLUS_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::plus, //
+    private static Functor2<RationalFunc, Rational, Rational> PLUS_FUNC_FUNCTOR = functor2(Rationals::plus, //
             render(s -> s.toString(1) + "+" + s.toString(2)));
 
     public static RationalFunc plus(Rational a, Rational b) {
         return function(PLUS_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> MINUS_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::minus, //
+    private static Functor2<RationalFunc, Rational, Rational> MINUS_FUNC_FUNCTOR = functor2(Rationals::minus, //
             render(s -> s.toString(1) + "-" + s.toString(2)));
 
     public static RationalFunc minus(Rational a, Rational b) {
         return function(MINUS_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> MULTIPLY_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::multiply, //
+    private static Functor2<RationalFunc, Rational, Rational> MULTIPLY_FUNC_FUNCTOR = functor2(Rationals::multiply, //
             render(s -> s.toString(1) + "\u00B7" + s.toString(2)));
 
     public static RationalFunc multiply(Rational a, Rational b) {
         return function(MULTIPLY_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> DIVIDE_FUNC_FUNCTOR = Logic.<RationalFunc, Rational, Rational> functor(Rationals::divide, //
+    private static Functor2<RationalFunc, Rational, Rational> DIVIDE_FUNC_FUNCTOR = functor2(Rationals::divide, //
             render(s -> s.toString(1) + "\u00F7" + s.toString(2)));
 
     public static RationalFunc divide(Rational a, Rational b) {
         return function(DIVIDE_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<RationalFunc> SQUARE_FUNC_FUNCTOR = Logic.<RationalFunc, Rational> functor(Rationals::square);
+    private static Functor1<RationalFunc, Rational> SQUARE_FUNC_FUNCTOR = functor1(Rationals::square);
 
     public static RationalFunc square(Rational a) {
         return function(SQUARE_FUNC_FUNCTOR, a);
     }
 
-    private static Functor<RationalFunc> SQRT_FUNC_FUNCTOR = Logic.<RationalFunc, Rational> functor(Rationals::sqrt);
+    private static Functor1<RationalFunc, Rational> SQRT_FUNC_FUNCTOR = functor1(Rationals::sqrt);
 
     public static RationalFunc sqrt(Rational a) {
         return function(SQRT_FUNC_FUNCTOR, a);

@@ -27,8 +27,8 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.modelingvalue.nelumbo.Integers.Integer;
 import org.modelingvalue.nelumbo.Integers.IntegerCons;
 import org.modelingvalue.nelumbo.Integers.IntegerFunc;
-import org.modelingvalue.nelumbo.Logic;
-import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Functor1;
+import org.modelingvalue.nelumbo.Logic.Functor2;
 import org.modelingvalue.nelumbo.Logic.Relation;
 
 public class FibonacciTest extends NelumboTestBase {
@@ -43,11 +43,11 @@ public class FibonacciTest extends NelumboTestBase {
         System.setProperty("PRETTY_NELUMBO", "true");
     }
 
-    static final int         NR_OF_REPEATS = 16;
+    static final int                                    NR_OF_REPEATS = 16;
 
     // Relation
 
-    static Functor<Relation> FIB_REL       = Logic.<Relation, IntegerCons, IntegerCons> functor(FibonacciTest::fib);
+    static Functor2<Relation, IntegerCons, IntegerCons> FIB_REL       = functor2(FibonacciTest::fib);
 
     static Relation fib(IntegerCons i, IntegerCons f) {
         return relation(FIB_REL, i, f);
@@ -55,7 +55,7 @@ public class FibonacciTest extends NelumboTestBase {
 
     // Function
 
-    static Functor<IntegerFunc> FIB_FUNC = Logic.<IntegerFunc, Integer> functor(FibonacciTest::fib);
+    static Functor1<IntegerFunc, IntegerCons> FIB_FUNC = functor1(FibonacciTest::fib);
 
     static IntegerFunc fib(Integer i) {
         return function(FIB_FUNC, i);

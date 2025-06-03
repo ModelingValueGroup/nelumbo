@@ -27,7 +27,9 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Logic.Constant;
 import org.modelingvalue.nelumbo.Logic.Function;
-import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Functor1;
+import org.modelingvalue.nelumbo.Logic.Functor2;
+import org.modelingvalue.nelumbo.Logic.Functor3;
 import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.Logic.Typed;
 import org.modelingvalue.nelumbo.impl.InferContext;
@@ -53,7 +55,7 @@ public final class Integers {
 
     // Constants
 
-    private static Functor<IntegerCons> I_FUNCTOR = Logic.<IntegerCons, BigInteger> functor(Integers::i, //
+    private static Functor1<IntegerCons, BigInteger> I_FUNCTOR = functor1(Integers::i, //
             render(s -> s.toString(1)));
 
     public static IntegerCons i(BigInteger val) {
@@ -85,8 +87,8 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> GT_CONS_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::gtc, logic(Integers::gtcLogic), //
-            render(s -> s.toString(1) + "\u226B" + s.toString(2)));
+    private static Functor2<Relation, IntegerCons, IntegerCons> GT_CONS_FUNCTOR = functor2(Integers::gtc, //
+            logic(Integers::gtcLogic), render(s -> s.toString(1) + "\u226B" + s.toString(2)));
 
     @SuppressWarnings("rawtypes")
     private static InferResult gtcLogic(RelationImpl relation, InferContext context) {
@@ -104,8 +106,8 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> PLUS_REL_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::plus, logic(Integers::plusLogic), //
-            render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
+    private static Functor3<Relation, IntegerCons, IntegerCons, IntegerCons> PLUS_REL_FUNCTOR = functor3(Integers::plus, //
+            logic(Integers::plusLogic), render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult plusLogic(RelationImpl relation, InferContext context) {
         BigInteger addend1 = relation.getVal(1, 1);
@@ -133,8 +135,8 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> MULTIPLY_REL_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons, IntegerCons> functor(Integers::multiply, logic(Integers::multiplyLogic), //
-            render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
+    private static Functor3<Relation, IntegerCons, IntegerCons, IntegerCons> MULTIPLY_REL_FUNCTOR = functor3(Integers::multiply, //
+            logic(Integers::multiplyLogic), render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
 
     private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
         BigInteger factor1 = relation.getVal(1, 1);
@@ -162,7 +164,7 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor<Relation> SQUARE_REL_FUNCTOR = Logic.<Relation, IntegerCons, IntegerCons> functor(Integers::square, logic(Integers::squareLogic));
+    private static Functor2<Relation, IntegerCons, IntegerCons> SQUARE_REL_FUNCTOR = functor2(Integers::square, logic(Integers::squareLogic));
 
     private static InferResult squareLogic(RelationImpl relation, InferContext context) {
         BigInteger root = relation.getVal(1, 1);
@@ -186,69 +188,69 @@ public final class Integers {
 
     // Functions
 
-    private static Functor<Relation> GT_FUNCTOR = functor(Integers::gt, //
+    private static Functor2<Relation, Integer, Integer> GT_FUNCTOR = functor2(Integers::gt, //
             render(s -> s.toString(1) + ">" + s.toString(2)));
 
     public static Relation gt(Integer a, Integer b) {
         return relation(GT_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> LT_FUNCTOR = functor(Integers::lt, //
+    private static Functor2<Relation, Integer, Integer> LT_FUNCTOR = functor2(Integers::lt, //
             render(s -> s.toString(1) + "<" + s.toString(2)));
 
     public static Relation lt(Integer a, Integer b) {
         return relation(LT_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> GE_FUNCTOR = functor(Integers::ge, //
+    private static Functor2<Relation, Integer, Integer> GE_FUNCTOR = functor2(Integers::ge, //
             render(s -> s.toString(1) + "\u2265" + s.toString(2)));
 
     public static Relation ge(Integer a, Integer b) {
         return relation(GE_FUNCTOR, a, b);
     }
 
-    private static Functor<Relation> LE_FUNCTOR = functor(Integers::le, //
+    private static Functor2<Relation, Integer, Integer> LE_FUNCTOR = functor2(Integers::le, //
             render(s -> s.toString(1) + "\u2264" + s.toString(2)));
 
     public static Relation le(Integer a, Integer b) {
         return relation(LE_FUNCTOR, a, b);
     }
 
-    private static Functor<IntegerFunc> PLUS_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::plus, //
+    private static Functor2<IntegerFunc, Integer, Integer> PLUS_FUNC_FUNCTOR = functor2(Integers::plus, //
             render(s -> s.toString(1) + "+" + s.toString(2)));
 
     public static IntegerFunc plus(Integer a, Integer b) {
         return function(PLUS_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<IntegerFunc> MINUS_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::minus, //
+    private static Functor2<IntegerFunc, Integer, Integer> MINUS_FUNC_FUNCTOR = functor2(Integers::minus, //
             render(s -> s.toString(1) + "-" + s.toString(2)));
 
     public static IntegerFunc minus(Integer a, Integer b) {
         return function(MINUS_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<IntegerFunc> MULTIPLY_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::multiply, //
+    private static Functor2<IntegerFunc, Integer, Integer> MULTIPLY_FUNC_FUNCTOR = functor2(Integers::multiply, //
             render(s -> s.toString(1) + "\u00B7" + s.toString(2)));
 
     public static IntegerFunc multiply(Integer a, Integer b) {
         return function(MULTIPLY_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<IntegerFunc> DIVIDE_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer, Integer> functor(Integers::divide, //
+    private static Functor2<IntegerFunc, Integer, Integer> DIVIDE_FUNC_FUNCTOR = functor2(Integers::divide, //
             render(s -> s.toString(1) + "\u00F7" + s.toString(2)));
 
     public static IntegerFunc divide(Integer a, Integer b) {
         return function(DIVIDE_FUNC_FUNCTOR, a, b);
     }
 
-    private static Functor<IntegerFunc> SQUARE_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer> functor(Integers::square);
+    private static Functor1<IntegerFunc, Integer> SQUARE_FUNC_FUNCTOR = functor1(Integers::square);
 
     public static IntegerFunc square(Integer a) {
         return function(SQUARE_FUNC_FUNCTOR, a);
     }
 
-    private static Functor<IntegerFunc> SQRT_FUNC_FUNCTOR = Logic.<IntegerFunc, Integer> functor(Integers::sqrt);
+    private static Functor1<IntegerFunc, Integer> SQRT_FUNC_FUNCTOR = functor1(Integers::sqrt);
 
     public static IntegerFunc sqrt(Integer a) {
         return function(SQRT_FUNC_FUNCTOR, a);

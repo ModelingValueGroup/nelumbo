@@ -93,7 +93,7 @@ public class RelationImpl extends PredicateImpl<Relation> {
             return unknown();
         }
         prefix(context);
-        FunctorImpl<Relation> functor = functor();
+        FunctorImpl<Relation, ?> functor = functor();
         LogicLambda logic = functor.logicLambda();
         if (logic != null) {
             return result(logic.apply(this, context), context);

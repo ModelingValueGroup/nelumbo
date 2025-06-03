@@ -22,17 +22,13 @@ package org.modelingvalue.nelumbo;
 
 import java.lang.reflect.Proxy;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.util.LambdaReflection;
-import org.modelingvalue.collections.util.SerializableBiFunction;
-import org.modelingvalue.collections.util.SerializableFunction;
-import org.modelingvalue.collections.util.SerializableQuadFunction;
-import org.modelingvalue.collections.util.SerializableSupplier;
-import org.modelingvalue.collections.util.SerializableTriFunction;
+import org.modelingvalue.collections.util.*;
 import org.modelingvalue.nelumbo.impl.*;
 
 public final class Logic {
@@ -83,29 +79,44 @@ public final class Logic {
     public interface Functor<T extends Structure> extends Typed<Functor<T>> {
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure> Functor<T> functor(SerializableSupplier<T> method, FunctorModifier... modifiers) {
-        return FunctorImpl.of(method, modifiers).proxy();
+    public interface Functor0<T extends Structure> extends Functor<T>, Supplier<T> {
+    }
+
+    public interface Functor1<T extends Structure, A> extends Functor<T>, java.util.function.Function<A, T> {
+    }
+
+    public interface Functor2<T extends Structure, A, B> extends Functor<T>, BiFunction<A, B, T> {
+    }
+
+    public interface Functor3<T extends Structure, A, B, C> extends Functor<T>, TriFunction<A, B, C, T> {
+    }
+
+    public interface Functor4<T extends Structure, A, B, C, D> extends Functor<T>, QuadFunction<A, B, C, D, T> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure, A> Functor<T> functor(SerializableFunction<A, T> method, FunctorModifier... modifiers) {
-        return FunctorImpl.of(method, modifiers).proxy();
+    public static <T extends Structure> Functor0<T> functor0(SerializableSupplier<T> method, FunctorModifier... modifiers) {
+        return FunctorImpl.of0(method, modifiers).proxy();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure, A, B> Functor<T> functor(SerializableBiFunction<A, B, T> method, FunctorModifier... modifiers) {
-        return FunctorImpl.of(method, modifiers).proxy();
+    public static <T extends Structure, A> Functor1<T, A> functor1(SerializableFunction<A, T> method, FunctorModifier... modifiers) {
+        return FunctorImpl.of1(method, modifiers).proxy();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure, A, B, C> Functor<T> functor(SerializableTriFunction<A, B, C, T> method, FunctorModifier... modifiers) {
-        return FunctorImpl.of(method, modifiers).proxy();
+    public static <T extends Structure, A, B> Functor2<T, A, B> functor2(SerializableBiFunction<A, B, T> method, FunctorModifier... modifiers) {
+        return FunctorImpl.of2(method, modifiers).proxy();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T extends Structure, A, B, C, D> Functor<T> functor(SerializableQuadFunction<A, B, C, D, T> method, FunctorModifier... modifiers) {
-        return FunctorImpl.of(method, modifiers).proxy();
+    public static <T extends Structure, A, B, C> Functor3<T, A, B, C> functor3(SerializableTriFunction<A, B, C, T> method, FunctorModifier... modifiers) {
+        return FunctorImpl.of3(method, modifiers).proxy();
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <T extends Structure, A, B, C, D> Functor4<T, A, B, C, D> functor4(SerializableQuadFunction<A, B, C, D, T> method, FunctorModifier... modifiers) {
+        return FunctorImpl.of4(method, modifiers).proxy();
     }
 
     public enum RuleModifier {
@@ -378,7 +389,7 @@ public final class Logic {
     // Is
 
     @SuppressWarnings("rawtypes")
-    private static Functor<Relation> IS_FUNCTOR = functor((SerializableBiFunction<Constant, Constant, Relation>) Logic::is, //
+    private static Functor2<Relation, Constant, Constant> IS_FUNCTOR = functor2(Logic::is, //
             logic(Logic::isLogic), render(s -> s.toString(1) + "\u2261" + s.toString(2)));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -405,7 +416,7 @@ public final class Logic {
     // Equals
 
     @SuppressWarnings("rawtypes")
-    private static final Functor<Relation> EQ_FUNCTOR = functor((SerializableBiFunction<Typed, Typed, Relation>) Logic::eq, //
+    private static final Functor2<Relation, Typed, Typed> EQ_FUNCTOR = functor2(Logic::eq, //
             render(s -> s.toString(1) + "=" + s.toString(2)));
 
     public static <T extends Typed<T>> Relation eq(Typed<T> a, Typed<T> b) {
@@ -413,7 +424,7 @@ public final class Logic {
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Functor<Relation> NE_FUNCTOR = functor((SerializableBiFunction<Typed, Typed, Relation>) Logic::ne, //
+    private static final Functor2<Relation, Typed, Typed> NE_FUNCTOR = functor2(Logic::ne, //
             render(s -> s.toString(1) + "\u2260" + s.toString(2)));
 
     public static <T extends Typed<T>> Relation ne(Typed<T> a, Typed<T> b) {

@@ -43,7 +43,7 @@ public abstract class PredicateImpl<P extends Predicate<P>> extends StructureImp
         this.declaration = this;
     }
 
-    protected PredicateImpl(FunctorImpl<P> functor, Object... args) {
+    protected PredicateImpl(FunctorImpl<P, ?> functor, Object... args) {
         super(functor, args);
         this.declaration = this;
     }

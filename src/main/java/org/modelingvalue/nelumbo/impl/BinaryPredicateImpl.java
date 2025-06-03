@@ -30,7 +30,7 @@ public abstract class BinaryPredicateImpl<T extends BinaryPredicate<T>> extends 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
     protected static final int[] ONE_ZERO         = new int[]{1, 0};
 
-    protected BinaryPredicateImpl(FunctorImpl<T> functor, PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
+    protected BinaryPredicateImpl(FunctorImpl<T, ?> functor, PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
         super(functor, predicate1, predicate2);
     }
 
