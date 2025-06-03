@@ -211,8 +211,8 @@ public final class Logic {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <F extends Structure> F variable(Class<F> type, String id) {
-        return new VariableImpl<F>(type, id).proxy();
+    public static <F extends Structure> F variable(Class<F> type, String name) {
+        return new VariableImpl<F>(type, name).proxy();
     }
 
     // Predicates
@@ -442,5 +442,4 @@ public final class Logic {
         rule(eq(C1, F1), eq(F1, C1));
         rule(ne(T1, T2), not(eq(T1, T2)));
     }
-
 }

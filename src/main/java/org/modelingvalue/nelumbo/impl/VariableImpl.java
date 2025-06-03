@@ -29,7 +29,7 @@ public final class VariableImpl<F extends Structure> extends StructureImpl<F> {
     private static final long serialVersionUID = -8998368070388908726L;
 
     public VariableImpl(Class<F> type, String name) {
-        super(type, name);
+        super(type, name, new Object());
     }
 
     private VariableImpl(Object[] array) {
