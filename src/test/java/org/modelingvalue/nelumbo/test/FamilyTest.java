@@ -93,14 +93,14 @@ public class FamilyTest extends NelumboTestBase {
         return relation(PARENT_CHILD, parent, child);
     }
 
-    static Functor1<PersonFunc, PersonCons> PARENT = functor1(FamilyTest::parent, //
+    static Functor1<PersonFunc, Person> PARENT = functor1(FamilyTest::parent, //
             (RenderLambda) s -> "p(" + s.toString(1) + ")");
 
     static PersonFunc parent(Person child) {
         return function(PARENT, child);
     }
 
-    static Functor1<PersonFunc, PersonCons> CHILD = functor1(FamilyTest::child, //
+    static Functor1<PersonFunc, Person> CHILD = functor1(FamilyTest::child, //
             (RenderLambda) s -> "c(" + s.toString(1) + ")");
 
     static PersonFunc child(Person parent) {

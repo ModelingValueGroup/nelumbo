@@ -60,8 +60,28 @@ public final class Logic {
     }
 
     @SuppressWarnings("unchecked")
-    public static <C extends Constant<T>, T extends Typed<T>> C constant(Functor<C> functor, Object... args) {
-        return new StructureImpl<C>(functor, args).normal().proxy();
+    public static <F extends Constant<T>, T extends Typed<T>> F constant(Functor0<F> functor) {
+        return new StructureImpl<F>(functor).normal().proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, F extends Constant<T>, T extends Typed<T>> F constant(Functor1<F, A> functor, A a) {
+        return new StructureImpl<F>(functor, a).normal().proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B, F extends Constant<T>, T extends Typed<T>> F constant(Functor2<F, A, B> functor, A a, B b) {
+        return new StructureImpl<F>(functor, a, b).normal().proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B, C, F extends Constant<T>, T extends Typed<T>> F constant(Functor3<F, A, B, C> functor, A a, B b, C c) {
+        return new StructureImpl<F>(functor, a, b, c).normal().proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B, C, D, F extends Constant<T>, T extends Typed<T>> F constant(Functor4<F, A, B, C, D> functor, A a, B b, C c, D d) {
+        return new StructureImpl<F>(functor, a, b, c, d).normal().proxy();
     }
 
     // Functions
@@ -70,8 +90,28 @@ public final class Logic {
     }
 
     @SuppressWarnings("unchecked")
-    public static <F extends Function<T>, T extends Typed<T>> F function(Functor<F> functor, Object... args) {
-        return new StructureImpl<F>(functor, args).proxy();
+    public static <F extends Function<T>, T extends Typed<T>> F function(Functor0<F> functor) {
+        return new StructureImpl<F>(functor).normal().proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, F extends Function<T>, T extends Typed<T>> F function(Functor1<F, A> functor, A a) {
+        return new StructureImpl<F>(functor, a).normal().proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B, F extends Function<T>, T extends Typed<T>> F function(Functor2<F, A, B> functor, A a, B b) {
+        return new StructureImpl<F>(functor, a, b).normal().proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B, C, F extends Function<T>, T extends Typed<T>> F function(Functor3<F, A, B, C> functor, A a, B b, C c) {
+        return new StructureImpl<F>(functor, a, b, c).normal().proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B, C, D, F extends Function<T>, T extends Typed<T>> F function(Functor4<F, A, B, C, D> functor, A a, B b, C c, D d) {
+        return new StructureImpl<F>(functor, a, b, c, d).normal().proxy();
     }
 
     // Functor
@@ -288,8 +328,28 @@ public final class Logic {
     }
 
     @SuppressWarnings("unchecked")
-    public static <R extends Relation> R relation(Functor<R> functor, Object... args) {
-        return (R) new RelationImpl((Functor<Relation>) functor, args).proxy();
+    public static Relation relation(Functor0<Relation> functor) {
+        return new RelationImpl(functor).proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A> Relation relation(Functor1<Relation, A> functor, A a) {
+        return new RelationImpl(functor, a).proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B> Relation relation(Functor2<Relation, A, B> functor, A a, B b) {
+        return new RelationImpl(functor, a, b).proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B, C> Relation relation(Functor3<Relation, A, B, C> functor, A a, B b, C c) {
+        return new RelationImpl(functor, a, b, c).proxy();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B, C, D> Relation relation(Functor4<Relation, A, B, C, D> functor, A a, B b, C c, D d) {
+        return new RelationImpl(functor, a, b, c, d).proxy();
     }
 
     // True

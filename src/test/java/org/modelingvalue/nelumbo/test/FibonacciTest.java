@@ -55,7 +55,7 @@ public class FibonacciTest extends NelumboTestBase {
 
     // Function
 
-    static Functor1<IntegerFunc, IntegerCons> FIB_FUNC = functor1(FibonacciTest::fib);
+    static Functor1<IntegerFunc, Integer> FIB_FUNC = functor1(FibonacciTest::fib);
 
     static IntegerFunc fib(Integer i) {
         return function(FIB_FUNC, i);
