@@ -53,7 +53,7 @@ public final class Integers {
     public interface IntegerFunc extends Integer, Function {
     }
 
-    // Constants
+    // Constants and variables
 
     private static Functor1<IntegerCons, BigInteger> I_FUNCTOR = functor1(Integers::i, //
             render(s -> s.toString(1)));
@@ -78,7 +78,7 @@ public final class Integers {
         return variable(Integer.class, name);
     }
 
-    // Relations
+    // Defined by native logic
 
     private static final StructureImpl<IntegerCons> ZERO_INT = StructureImpl.unproxy(i(0));
 
@@ -87,8 +87,8 @@ public final class Integers {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor2<Relation, IntegerCons, IntegerCons> GT_CONS_FUNCTOR = functor2(Integers::gtc, //
-            logic(Integers::gtcLogic), render(s -> s.toString(1) + "\u226B" + s.toString(2)));
+    private static Functor2<Relation, IntegerCons, IntegerCons> GT_CONS_FUNCTOR = functor2(Integers::gt, //
+            logic(Integers::gtcLogic));
 
     @SuppressWarnings("rawtypes")
     private static InferResult gtcLogic(RelationImpl relation, InferContext context) {
@@ -101,13 +101,13 @@ public final class Integers {
         }
     }
 
-    private static Relation gtc(IntegerCons compared1, IntegerCons compared2) {
+    private static Relation gt(IntegerCons compared1, IntegerCons compared2) {
         return relation(GT_CONS_FUNCTOR, compared1, compared2);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor3<Relation, IntegerCons, IntegerCons, IntegerCons> PLUS_REL_FUNCTOR = functor3(Integers::plus, //
-            logic(Integers::plusLogic), render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
+            logic(Integers::plusLogic));
 
     private static InferResult plusLogic(RelationImpl relation, InferContext context) {
         BigInteger addend1 = relation.getVal(1, 1);
@@ -130,13 +130,13 @@ public final class Integers {
         }
     }
 
-    public static Relation plus(IntegerCons addend1, IntegerCons addend2, IntegerCons sum) {
+    private static Relation plus(IntegerCons addend1, IntegerCons addend2, IntegerCons sum) {
         return relation(PLUS_REL_FUNCTOR, addend1, addend2, sum);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor3<Relation, IntegerCons, IntegerCons, IntegerCons> MULTIPLY_REL_FUNCTOR = functor3(Integers::multiply, //
-            logic(Integers::multiplyLogic), render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
+            logic(Integers::multiplyLogic));
 
     private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
         BigInteger factor1 = relation.getVal(1, 1);
@@ -159,7 +159,7 @@ public final class Integers {
         }
     }
 
-    public static Relation multiply(IntegerCons factor1, IntegerCons factor2, IntegerCons product) {
+    private static Relation multiply(IntegerCons factor1, IntegerCons factor2, IntegerCons product) {
         return relation(MULTIPLY_REL_FUNCTOR, factor1, factor2, product);
     }
 
@@ -182,11 +182,11 @@ public final class Integers {
         }
     }
 
-    public static Relation square(IntegerCons root, IntegerCons square) {
+    private static Relation square(IntegerCons root, IntegerCons square) {
         return relation(SQUARE_REL_FUNCTOR, root, square);
     }
 
-    // Functions
+    // Defined by rules
 
     private static Functor2<Relation, Integer, Integer> GT_FUNCTOR = functor2(Integers::gt, //
             render(s -> s.toString(1) + ">" + s.toString(2)));
@@ -216,6 +216,12 @@ public final class Integers {
         return relation(LE_FUNCTOR, a, b);
     }
 
+    private static Functor3<Relation, Integer, Integer, Integer> PLUS_FUNCTOR = functor3(Integers::plus);
+
+    private static Relation plus(Integer a, Integer b, Integer c) {
+        return relation(PLUS_FUNCTOR, a, b, c);
+    }
+
     private static Functor2<IntegerFunc, Integer, Integer> PLUS_FUNC_FUNCTOR = functor2(Integers::plus, //
             render(s -> s.toString(1) + "+" + s.toString(2)));
 
@@ -230,6 +236,12 @@ public final class Integers {
         return function(MINUS_FUNC_FUNCTOR, a, b);
     }
 
+    private static Functor3<Relation, Integer, Integer, Integer> MULTIPLY_FUNCTOR = functor3(Integers::multiply);
+
+    private static Relation multiply(Integer a, Integer b, Integer c) {
+        return relation(MULTIPLY_FUNCTOR, a, b, c);
+    }
+
     private static Functor2<IntegerFunc, Integer, Integer> MULTIPLY_FUNC_FUNCTOR = functor2(Integers::multiply, //
             render(s -> s.toString(1) + "\u00B7" + s.toString(2)));
 
@@ -242,6 +254,12 @@ public final class Integers {
 
     public static IntegerFunc divide(Integer a, Integer b) {
         return function(DIVIDE_FUNC_FUNCTOR, a, b);
+    }
+
+    private static Functor2<Relation, Integer, Integer> SQUARE_FUNCTOR = functor2(Integers::square);
+
+    private static Relation square(Integer a, Integer b) {
+        return relation(SQUARE_FUNCTOR, a, b);
     }
 
     private static Functor1<IntegerFunc, Integer> SQUARE_FUNC_FUNCTOR = functor1(Integers::square);
@@ -269,17 +287,22 @@ public final class Integers {
     public static void integerRules() {
         isRules();
 
-        rule(gt(X, Y), and(eq(X, P), eq(Y, Q), gtc(P, Q)));
-        rule(lt(X, Y), and(eq(X, P), eq(Y, Q), gtc(Q, P)));
-        rule(ge(X, Y), and(eq(X, P), eq(Y, Q), or(gtc(P, Q), eq(P, Q))));
-        rule(le(X, Y), and(eq(X, P), eq(Y, Q), or(gtc(Q, P), eq(Q, P))));
+        rule(gt(X, Y), and(eq(X, P), eq(Y, Q), gt(P, Q)));
+        rule(lt(X, Y), gt(Y, X));
+        rule(ge(X, Y), or(gt(X, Y), eq(X, Y)));
+        rule(le(X, Y), or(lt(X, Y), eq(X, Y)));
 
-        rule(eq(plus(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), plus(P, Q, R)));
-        rule(eq(minus(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), plus(R, Q, P)));
-        rule(eq(multiply(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), multiply(P, Q, R)));
-        rule(eq(divide(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), multiply(R, Q, P)));
-        rule(eq(square(X), Z), and(eq(X, P), eq(Z, R), square(P, R)));
-        rule(eq(sqrt(X), Z), and(eq(X, P), eq(Z, R), square(R, P)));
+        rule(plus(X, Y, Z), and(eq(X, P), eq(Y, Q), eq(Z, R), plus(P, Q, R)));
+        rule(eq(plus(X, Y), Z), plus(X, Y, Z));
+        rule(eq(minus(X, Y), Z), plus(Z, Y, X));
+
+        rule(multiply(X, Y, Z), and(eq(X, P), eq(Y, Q), eq(Z, R), multiply(P, Q, R)));
+        rule(eq(multiply(X, Y), Z), multiply(X, Y, Z));
+        rule(eq(divide(X, Y), Z), multiply(Z, Y, X));
+
+        rule(square(X, Z), and(eq(X, P), eq(Z, R), square(P, R)));
+        rule(eq(square(X), Z), square(X, Z));
+        rule(eq(sqrt(X), Z), square(Z, X));
     }
 
 }

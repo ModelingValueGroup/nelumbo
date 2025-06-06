@@ -72,13 +72,10 @@ public class NelumboTest extends NelumboTestBase {
 
             integerRules();
 
-            isFalse(plus(i(5), i(2), i(8)));
             isFalse(eq(plus(i(5), i(2)), i(8)));
-            isTrue(not(plus(i(5), i(2), i(8))));
             isTrue(not(eq(plus(i(5), i(2)), i(8))));
             isTrue(ne(plus(i(5), i(2)), i(8)));
-            isTrue(and(not(eq(plus(i(5), i(2)), i(8))), not(plus(i(5), i(2), i(8)))));
-            isTrue(and(ne(plus(i(5), i(2)), i(8)), not(plus(i(5), i(2), i(8)))));
+            isTrue(and(not(eq(plus(i(5), i(2)), i(8))), not(eq(plus(i(5), i(2)), i(8)))));
 
             hasBindings(not(eq(plus(i(5), i(2)), R)));
             hasBindings(ne(plus(i(5), i(2)), R));

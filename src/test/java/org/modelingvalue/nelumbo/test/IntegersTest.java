@@ -51,9 +51,9 @@ public class IntegersTest extends NelumboTestBase {
         run(() -> {
             integerRules();
 
-            hasBindings(plus(i(7), i(3), I), binding(I, i(10)));
-            hasBindings(plus(i(7), I, i(10)), binding(I, i(3)));
-            hasBindings(plus(I, i(3), i(10)), binding(I, i(7)));
+            hasBindings(eq(plus(i(7), i(3)), I), binding(I, i(10)));
+            hasBindings(eq(plus(i(7), I), i(10)), binding(I, i(3)));
+            hasBindings(eq(plus(I, i(3)), i(10)), binding(I, i(7)));
         });
     }
 

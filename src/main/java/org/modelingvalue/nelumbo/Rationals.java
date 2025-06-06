@@ -53,7 +53,7 @@ public final class Rationals {
     public interface RationalFunc extends Rational, Function {
     }
 
-    // Constants
+    // Constants and variables
 
     private static Functor2<RationalCons, BigInteger, BigInteger> R_FUNCTOR = functor2(Rationals::r, normalize(r -> {
         BigInteger numerator = r.getVal(1);
@@ -94,7 +94,7 @@ public final class Rationals {
         return variable(Rational.class, name);
     }
 
-    // Relations
+    // Defined by native logic
 
     private static final StructureImpl<RationalCons> ZERO_RATIONAL = StructureImpl.unproxy(r(0));
 
@@ -103,8 +103,8 @@ public final class Rationals {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Functor2<Relation, RationalCons, RationalCons> GT_CONS_FUNCTOR = functor2(Rationals::gtc, //
-            logic(Rationals::gtcLogic), render(s -> s.toString(1) + "\u226B" + s.toString(2)));
+    private static Functor2<Relation, RationalCons, RationalCons> GT_CONS_FUNCTOR = functor2(Rationals::gt, //
+            logic(Rationals::gtcLogic));
 
     @SuppressWarnings("rawtypes")
     private static InferResult gtcLogic(RelationImpl relation, InferContext context) {
@@ -120,13 +120,13 @@ public final class Rationals {
         }
     }
 
-    private static Relation gtc(RationalCons compared1, RationalCons compared2) {
+    private static Relation gt(RationalCons compared1, RationalCons compared2) {
         return relation(GT_CONS_FUNCTOR, compared1, compared2);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor3<Relation, RationalCons, RationalCons, RationalCons> PLUS_REL_FUNCTOR = functor3(Rationals::plus, //
-            logic(Rationals::plusLogic), render(s -> s.toString(1) + "+" + s.toString(2) + "\u2261" + s.toString(3)));
+            logic(Rationals::plusLogic));
 
     private static InferResult plusLogic(RelationImpl relation, InferContext context) {
         BigInteger numAddend1 = relation.getVal(1, 1);
@@ -164,7 +164,7 @@ public final class Rationals {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Functor3<Relation, RationalCons, RationalCons, RationalCons> MULTIPLY_REL_FUNCTOR = functor3(Rationals::multiply, //
-            logic(Rationals::multiplyLogic), render(s -> s.toString(1) + "\u00B7" + s.toString(2) + "\u2261" + s.toString(3)));
+            logic(Rationals::multiplyLogic));
 
     private static InferResult multiplyLogic(RelationImpl relation, InferContext context) {
         BigInteger numFactor1 = relation.getVal(1, 1);
@@ -224,7 +224,7 @@ public final class Rationals {
         return relation(SQUARE_REL_FUNCTOR, root, square);
     }
 
-    // Functions
+    // Defined by rules
 
     private static Functor2<Relation, Rational, Rational> GT_FUNCTOR = functor2(Rationals::gt, //
             render(s -> s.toString(1) + ">" + s.toString(2)));
@@ -254,6 +254,12 @@ public final class Rationals {
         return relation(LE_FUNCTOR, a, b);
     }
 
+    private static Functor3<Relation, Rational, Rational, Rational> PLUS_FUNCTOR = functor3(Rationals::plus);
+
+    private static Relation plus(Rational a, Rational b, Rational c) {
+        return relation(PLUS_FUNCTOR, a, b, c);
+    }
+
     private static Functor2<RationalFunc, Rational, Rational> PLUS_FUNC_FUNCTOR = functor2(Rationals::plus, //
             render(s -> s.toString(1) + "+" + s.toString(2)));
 
@@ -268,6 +274,12 @@ public final class Rationals {
         return function(MINUS_FUNC_FUNCTOR, a, b);
     }
 
+    private static Functor3<Relation, Rational, Rational, Rational> MULTIPLY_FUNCTOR = functor3(Rationals::multiply);
+
+    private static Relation multiply(Rational a, Rational b, Rational c) {
+        return relation(MULTIPLY_FUNCTOR, a, b, c);
+    }
+
     private static Functor2<RationalFunc, Rational, Rational> MULTIPLY_FUNC_FUNCTOR = functor2(Rationals::multiply, //
             render(s -> s.toString(1) + "\u00B7" + s.toString(2)));
 
@@ -280,6 +292,12 @@ public final class Rationals {
 
     public static RationalFunc divide(Rational a, Rational b) {
         return function(DIVIDE_FUNC_FUNCTOR, a, b);
+    }
+
+    private static Functor2<Relation, Rational, Rational> SQUARE_FUNCTOR = functor2(Rationals::square);
+
+    private static Relation square(Rational a, Rational b) {
+        return relation(SQUARE_FUNCTOR, a, b);
     }
 
     private static Functor1<RationalFunc, Rational> SQUARE_FUNC_FUNCTOR = functor1(Rationals::square);
@@ -307,17 +325,22 @@ public final class Rationals {
     public static void rationalRules() {
         isRules();
 
-        rule(gt(X, Y), and(eq(X, P), eq(Y, Q), gtc(P, Q)));
-        rule(lt(X, Y), and(eq(X, P), eq(Y, Q), gtc(Q, P)));
-        rule(ge(X, Y), and(eq(X, P), eq(Y, Q), or(gtc(P, Q), eq(P, Q))));
-        rule(le(X, Y), and(eq(X, P), eq(Y, Q), or(gtc(Q, P), eq(Q, P))));
+        rule(gt(X, Y), and(eq(X, P), eq(Y, Q), gt(P, Q)));
+        rule(lt(X, Y), gt(Y, X));
+        rule(ge(X, Y), or(gt(X, Y), eq(X, Y)));
+        rule(le(X, Y), or(lt(X, Y), eq(X, Y)));
 
-        rule(eq(plus(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), plus(P, Q, R)));
-        rule(eq(minus(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), plus(R, Q, P)));
-        rule(eq(multiply(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), multiply(P, Q, R)));
-        rule(eq(divide(X, Y), Z), and(eq(X, P), eq(Y, Q), eq(Z, R), multiply(R, Q, P)));
-        rule(eq(square(X), Z), and(eq(X, P), eq(Z, R), square(P, R)));
-        rule(eq(sqrt(X), Z), and(eq(X, P), eq(Z, R), square(R, P)));
+        rule(plus(X, Y, Z), and(eq(X, P), eq(Y, Q), eq(Z, R), plus(P, Q, R)));
+        rule(eq(plus(X, Y), Z), plus(X, Y, Z));
+        rule(eq(minus(X, Y), Z), plus(Z, Y, X));
+
+        rule(multiply(X, Y, Z), and(eq(X, P), eq(Y, Q), eq(Z, R), multiply(P, Q, R)));
+        rule(eq(multiply(X, Y), Z), multiply(X, Y, Z));
+        rule(eq(divide(X, Y), Z), multiply(Z, Y, X));
+
+        rule(square(X, Z), and(eq(X, P), eq(Z, R), square(P, R)));
+        rule(eq(square(X), Z), square(X, Z));
+        rule(eq(sqrt(X), Z), square(Z, X));
     }
 
 }
