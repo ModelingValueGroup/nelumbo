@@ -426,7 +426,7 @@ public final class Logic {
 
     @SuppressWarnings("rawtypes")
     private static Functor2<Relation, Constant, Constant> IS_FUNCTOR = functor2(Logic::is, //
-            logic(Logic::isLogic), render(s -> s.toString(1) + "\u2261" + s.toString(2)));
+            logic(Logic::isLogic));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static InferResult isLogic(RelationImpl relation, InferContext context) {
