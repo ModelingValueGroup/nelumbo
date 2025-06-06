@@ -30,18 +30,18 @@ import org.modelingvalue.nelumbo.Logic.Relation;
 import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
 
 public class CollectImpl extends PredicateImpl<Collect> {
-    private static final long                                          serialVersionUID    = -3084545514049410749L;
+    private static final long                                       serialVersionUID    = -3084545514049410749L;
 
-    private static final FunctorImpl2<Collect, Predicate<?>, Relation> COLL_FUNCTOR        = FunctorImpl.of2(Logic::coll);
-    private static final Functor2<Collect, Predicate<?>, Relation>     COLL_FUNCTORR_PROXY = COLL_FUNCTOR.proxy();
+    private static final FunctorImpl2<Collect, Predicate, Relation> COLL_FUNCTOR        = FunctorImpl.of2(Logic::coll);
+    private static final Functor2<Collect, Predicate, Relation>     COLL_FUNCTORR_PROXY = COLL_FUNCTOR.proxy();
 
-    private VariableImpl<?>                                            resultVar;
-    private VariableImpl<?>                                            iteratorVar;
-    private VariableImpl<?>                                            contextVar;
-    private StructureImpl<?>                                           identityCons;
-    private int[]                                                      identityIdx;
-    private PredicateImpl<?>                                           identityPred;
-    private PredicateImpl<?>                                           emptyCollector;
+    private VariableImpl<?>                                         resultVar;
+    private VariableImpl<?>                                         iteratorVar;
+    private VariableImpl<?>                                         contextVar;
+    private StructureImpl<?>                                        identityCons;
+    private int[]                                                   identityIdx;
+    private PredicateImpl<?>                                        identityPred;
+    private PredicateImpl<?>                                        emptyCollector;
 
     @SuppressWarnings("rawtypes")
     public CollectImpl(Predicate condition, Predicate collector) {

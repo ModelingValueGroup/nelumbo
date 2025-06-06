@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.Logic.Functor1;
 import org.modelingvalue.nelumbo.Logic.Functor2;
 import org.modelingvalue.nelumbo.Logic.Functor3;
 import org.modelingvalue.nelumbo.Logic.Relation;
-import org.modelingvalue.nelumbo.Logic.Typed;
+import org.modelingvalue.nelumbo.Logic.Structure;
 import org.modelingvalue.nelumbo.impl.InferContext;
 import org.modelingvalue.nelumbo.impl.InferResult;
 import org.modelingvalue.nelumbo.impl.RelationImpl;
@@ -44,13 +44,13 @@ public final class Rationals {
 
     // Types
 
-    public interface Rational extends Typed<Rational> {
+    public interface Rational extends Structure {
     }
 
-    public interface RationalCons extends Rational, Constant<Rational> {
+    public interface RationalCons extends Rational, Constant {
     }
 
-    public interface RationalFunc extends Rational, Function<Rational> {
+    public interface RationalFunc extends Rational, Function {
     }
 
     // Constants

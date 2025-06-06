@@ -43,8 +43,8 @@ public final class VariableImpl<F extends Structure> extends StructureImpl<F> {
     }
 
     @SuppressWarnings("unchecked")
-    public final Variable<F> varProxy() {
-        return (Variable<F>) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Variable.class}, this);
+    public final Variable varProxy() {
+        return (Variable) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Variable.class}, this);
     }
 
     @Override

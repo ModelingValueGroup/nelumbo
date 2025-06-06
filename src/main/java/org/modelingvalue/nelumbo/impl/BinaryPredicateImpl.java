@@ -22,25 +22,26 @@ package org.modelingvalue.nelumbo.impl;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.modelingvalue.nelumbo.Logic.BinaryPredicate;
+import org.modelingvalue.nelumbo.Logic.Functor;
+import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public abstract class BinaryPredicateImpl<T extends BinaryPredicate<T>> extends PredicateImpl<T> {
+public abstract class BinaryPredicateImpl extends PredicateImpl<Predicate> {
     private static final long    serialVersionUID = -928776822979604743L;
 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
     protected static final int[] ONE_ZERO         = new int[]{1, 0};
 
-    protected BinaryPredicateImpl(FunctorImpl<T, ?> functor, PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
+    protected BinaryPredicateImpl(FunctorImpl<Predicate, ? extends Functor<Predicate>> functor, PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
         super(functor, predicate1, predicate2);
     }
 
-    protected BinaryPredicateImpl(Object[] args, BinaryPredicateImpl<T> declaration) {
+    protected BinaryPredicateImpl(Object[] args, BinaryPredicateImpl declaration) {
         super(args, declaration);
     }
 
     @Override
-    public BinaryPredicateImpl<T> declaration() {
-        return (BinaryPredicateImpl<T>) super.declaration();
+    public BinaryPredicateImpl declaration() {
+        return (BinaryPredicateImpl) super.declaration();
     }
 
     @SuppressWarnings("rawtypes")

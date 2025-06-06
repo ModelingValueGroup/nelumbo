@@ -31,14 +31,14 @@ import org.modelingvalue.nelumbo.Logic.RuleModifier;
 import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
 
 public class RuleImpl extends StructureImpl<Rule> {
-    private static final long                                       serialVersionUID   = -4602043866952049391L;
+    private static final long                                    serialVersionUID   = -4602043866952049391L;
 
-    private static final FunctorImpl2<Rule, Relation, Predicate<?>> RULE_FUNCTOR       = FunctorImpl.of2(Logic::rule);
-    private static final Functor<Rule>                              RULE_FUNCTOR_PROXY = RULE_FUNCTOR.proxy();
+    private static final FunctorImpl2<Rule, Relation, Predicate> RULE_FUNCTOR       = FunctorImpl.of2(Logic::rule);
+    private static final Functor<Rule>                           RULE_FUNCTOR_PROXY = RULE_FUNCTOR.proxy();
 
-    private final boolean                                           trace;
+    private final boolean                                        trace;
 
-    public RuleImpl(Relation consequence, Predicate<?> condition, RuleModifier[] modifiers) {
+    public RuleImpl(Relation consequence, Predicate condition, RuleModifier[] modifiers) {
         this(modifiers, consequence, condition);
     }
 

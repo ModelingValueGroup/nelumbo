@@ -51,72 +51,69 @@ public final class Logic {
     public interface Structure {
     }
 
-    public interface Typed<T extends Typed<T>> extends Structure {
-    }
-
     // Constants
 
-    public interface Constant<T extends Typed<T>> extends Typed<T> {
+    public interface Constant extends Structure {
     }
 
     @SuppressWarnings("unchecked")
-    public static <F extends Constant<T>, T extends Typed<T>> F constant(Functor0<F> functor) {
+    public static <F extends Constant> F constant(Functor0<F> functor) {
         return new StructureImpl<F>(functor).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
-    public static <A, F extends Constant<T>, T extends Typed<T>> F constant(Functor1<F, A> functor, A a) {
+    public static <A, F extends Constant> F constant(Functor1<F, A> functor, A a) {
         return new StructureImpl<F>(functor, a).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
-    public static <A, B, F extends Constant<T>, T extends Typed<T>> F constant(Functor2<F, A, B> functor, A a, B b) {
+    public static <A, B, F extends Constant> F constant(Functor2<F, A, B> functor, A a, B b) {
         return new StructureImpl<F>(functor, a, b).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
-    public static <A, B, C, F extends Constant<T>, T extends Typed<T>> F constant(Functor3<F, A, B, C> functor, A a, B b, C c) {
+    public static <A, B, C, F extends Constant> F constant(Functor3<F, A, B, C> functor, A a, B b, C c) {
         return new StructureImpl<F>(functor, a, b, c).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
-    public static <A, B, C, D, F extends Constant<T>, T extends Typed<T>> F constant(Functor4<F, A, B, C, D> functor, A a, B b, C c, D d) {
+    public static <A, B, C, D, F extends Constant> F constant(Functor4<F, A, B, C, D> functor, A a, B b, C c, D d) {
         return new StructureImpl<F>(functor, a, b, c, d).normal().proxy();
     }
 
     // Functions
 
-    public interface Function<T extends Typed<T>> extends Typed<T> {
+    public interface Function extends Structure {
     }
 
     @SuppressWarnings("unchecked")
-    public static <F extends Function<T>, T extends Typed<T>> F function(Functor0<F> functor) {
+    public static <F extends Function> F function(Functor0<F> functor) {
         return new StructureImpl<F>(functor).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
-    public static <A, F extends Function<T>, T extends Typed<T>> F function(Functor1<F, A> functor, A a) {
+    public static <A, F extends Function> F function(Functor1<F, A> functor, A a) {
         return new StructureImpl<F>(functor, a).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
-    public static <A, B, F extends Function<T>, T extends Typed<T>> F function(Functor2<F, A, B> functor, A a, B b) {
+    public static <A, B, F extends Function> F function(Functor2<F, A, B> functor, A a, B b) {
         return new StructureImpl<F>(functor, a, b).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
-    public static <A, B, C, F extends Function<T>, T extends Typed<T>> F function(Functor3<F, A, B, C> functor, A a, B b, C c) {
+    public static <A, B, C, F extends Function> F function(Functor3<F, A, B, C> functor, A a, B b, C c) {
         return new StructureImpl<F>(functor, a, b, c).normal().proxy();
     }
 
     @SuppressWarnings("unchecked")
-    public static <A, B, C, D, F extends Function<T>, T extends Typed<T>> F function(Functor4<F, A, B, C, D> functor, A a, B b, C c, D d) {
+    public static <A, B, C, D, F extends Function> F function(Functor4<F, A, B, C, D> functor, A a, B b, C c, D d) {
         return new StructureImpl<F>(functor, a, b, c, d).normal().proxy();
     }
 
     // Functor
 
-    public interface Functor<T extends Structure> extends Typed<Functor<T>> {
+    public interface Functor<T extends Structure> extends Structure {
     }
 
     public interface Functor0<T extends Structure> extends Functor<T>, Supplier<T> {
@@ -258,7 +255,7 @@ public final class Logic {
 
     // Variables
 
-    public interface Variable<T extends Structure> extends Typed<Variable<T>> {
+    public interface Variable extends Structure {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -268,23 +265,23 @@ public final class Logic {
 
     // Predicates
 
-    public interface Predicate<T extends Predicate<T>> extends Typed<T> {
+    public interface Predicate extends Structure {
     }
 
-    public interface Relation extends Predicate<Relation> {
+    public interface Relation extends Predicate {
     }
 
-    public static boolean isTrue(Predicate<?> pred) {
+    public static boolean isTrue(Predicate pred) {
         InferResult result = infer(pred);
         return result.isTrue();
     }
 
-    public static boolean isFalse(Predicate<?> pred) {
+    public static boolean isFalse(Predicate pred) {
         InferResult result = infer(pred);
         return result.isFalse();
     }
 
-    public static Result getResult(Predicate<?> pred) {
+    public static Result getResult(Predicate pred) {
         return new Result(infer(pred));
     }
 
@@ -301,20 +298,20 @@ public final class Logic {
         return bindings.replaceAll(m -> m.replaceAll(e -> Entry.of((Variable) e.getKey().proxy(), proxy(e.getValue()))));
     }
 
-    public static <T extends Typed<T>> Map<Variable<?>, Object> binding(T var, Class<T> type) {
-        return Map.of(Entry.of((Variable<?>) var, type));
+    public static <T extends Structure> Map<Variable, Object> binding(T var, Class<T> type) {
+        return Map.of(Entry.of((Variable) var, type));
     }
 
-    public static <T extends Typed<T>> Map<Variable<?>, Object> binding(T var, Constant<T> val) {
-        return Map.of(Entry.of((Variable<?>) var, val));
+    public static <T extends Constant> Map<Variable, Object> binding(T var, T val) {
+        return Map.of(Entry.of((Variable) var, (Constant) val));
     }
 
-    public static <T1 extends Typed<T1>, T2 extends Typed<T2>> Map<Variable<?>, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2) {
-        return Map.of(Entry.of((Variable<?>) var1, val1), Entry.of((Variable<?>) var2, val2));
+    public static <T1 extends Constant, T2 extends Constant> Map<Variable, Object> binding(T1 var1, T1 val1, T2 var2, T2 val2) {
+        return Map.of(Entry.of((Variable) var1, (Constant) val1), Entry.of((Variable) var2, (Constant) val2));
     }
 
-    public static <T1 extends Typed<T1>, T2 extends Typed<T2>, T3 extends Typed<T3>> Map<Variable<?>, Object> binding(T1 var1, Constant<T1> val1, T2 var2, Constant<T2> val2, T3 var3, Constant<T3> val3) {
-        return Map.of(Entry.of((Variable<?>) var1, val1), Entry.of((Variable<?>) var2, val2), Entry.of((Variable<?>) var3, val3));
+    public static <T1 extends Constant, T2 extends Constant, T3 extends Constant> Map<Variable, Object> binding(T1 var1, T1 val1, T2 var2, T2 val2, T3 var3, T3 val3) {
+        return Map.of(Entry.of((Variable) var1, (Constant) val1), Entry.of((Variable) var2, (Constant) val2), Entry.of((Variable) var3, (Constant) val3));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -354,7 +351,7 @@ public final class Logic {
 
     // True
 
-    public interface Bool extends Predicate<Bool> {
+    public interface Bool extends Predicate {
     }
 
     private static final Bool TRUE_PROXY = (Bool) Proxy.newProxyInstance(Bool.class.getClassLoader(), new Class[]{Bool.class}, BooleanImpl.TRUE);
@@ -374,22 +371,12 @@ public final class Logic {
     }
 
     // Not
-
-    public interface Not extends Predicate<Not> {
-    }
-
     @SuppressWarnings("unchecked")
-    public static Not not(Predicate<?> pred) {
+    public static Predicate not(Predicate pred) {
         return new NotImpl(pred).proxy();
     }
 
     // Or
-
-    public interface BinaryPredicate<T extends BinaryPredicate<T>> extends Predicate<T> {
-    }
-
-    public interface Or extends BinaryPredicate<Or> {
-    }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Predicate or(Predicate... ps) {
@@ -403,9 +390,6 @@ public final class Logic {
 
     // And
 
-    public interface And extends BinaryPredicate<And> {
-    }
-
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Predicate and(Predicate... ps) {
         PredicateImpl<? extends Predicate> impl = BooleanImpl.TRUE;
@@ -418,7 +402,7 @@ public final class Logic {
 
     // Rules
 
-    public interface Rule extends Typed<Rule> {
+    public interface Rule extends Structure {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -430,17 +414,15 @@ public final class Logic {
 
     // Collect
 
-    public interface Collect extends Predicate<Collect> {
+    public interface Collect extends Predicate {
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static Collect coll(Predicate condition, Predicate collector) {
         return new CollectImpl(condition, collector).proxy();
     }
 
     // Facts
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static void fact(Relation relation) {
         RelationImpl unproxy = StructureImpl.<Relation, RelationImpl> unproxy(relation);
         KnowledgeBaseImpl.CURRENT.get().addFact(unproxy);
@@ -468,49 +450,53 @@ public final class Logic {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    private static <T extends Typed<T>> Relation is(Constant<T> a, Constant<T> b) {
+    private static <T extends Constant> Relation is(T a, T b) {
+        Class<? extends Constant> ac = a.getClass();
+        Class<? extends Constant> bc = b.getClass();
+        if (!ac.isAssignableFrom(bc) && !bc.isAssignableFrom(ac)) {
+            throw new IllegalArgumentException("Cannot compare " + ac.getName() + " with " + bc.getName());
+        }
         return relation(IS_FUNCTOR, a, b);
     }
 
     // Equals
 
     @SuppressWarnings("rawtypes")
-    private static final Functor2<Relation, Typed, Typed> EQ_FUNCTOR = functor2(Logic::eq, //
+    private static final Functor2<Relation, Structure, Structure> EQ_FUNCTOR = functor2(Logic::eq, //
             render(s -> s.toString(1) + "=" + s.toString(2)));
 
-    public static <T extends Typed<T>> Relation eq(Typed<T> a, Typed<T> b) {
+    public static <T extends Structure> Relation eq(T a, T b) {
         return relation(EQ_FUNCTOR, a, b);
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Functor2<Relation, Typed, Typed> NE_FUNCTOR = functor2(Logic::ne, //
+    private static final Functor2<Relation, Structure, Structure> NE_FUNCTOR = functor2(Logic::ne, //
             render(s -> s.toString(1) + "\u2260" + s.toString(2)));
 
-    public static <T extends Typed<T>> Relation ne(Typed<T> a, Typed<T> b) {
+    public static <T extends Structure> Relation ne(T a, T b) {
         return relation(NE_FUNCTOR, a, b);
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Constant C1 = variable(Constant.class, "C1");
+    private static final Constant  C1 = variable(Constant.class, "C1");
     @SuppressWarnings("rawtypes")
-    private static final Constant C2 = variable(Constant.class, "C2");
+    private static final Constant  C2 = variable(Constant.class, "C2");
 
     @SuppressWarnings("rawtypes")
-    private static final Function F1 = variable(Function.class, "F1");
+    private static final Function  F1 = variable(Function.class, "F1");
     @SuppressWarnings("rawtypes")
-    private static final Function F2 = variable(Function.class, "F2");
+    private static final Function  F2 = variable(Function.class, "F2");
 
     @SuppressWarnings("rawtypes")
-    private static final Typed    T1 = variable(Typed.class, "T1");
+    private static final Structure S1 = variable(Structure.class, "T1");
     @SuppressWarnings("rawtypes")
-    private static final Typed    T2 = variable(Typed.class, "T2");
+    private static final Structure S2 = variable(Structure.class, "T2");
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void isRules() {
         rule(eq(C1, C2), is(C1, C2));
         rule(eq(F1, F2), and(eq(F1, C1), eq(F2, C1)));
         rule(eq(C1, F1), eq(F1, C1));
-        rule(ne(T1, T2), not(eq(T1, T2)));
+        rule(ne(S1, S2), not(eq(S1, S2)));
     }
 }

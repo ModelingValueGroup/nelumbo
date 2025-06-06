@@ -90,15 +90,15 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             integerRules();
 
-            Predicate<?> query1 = eq(plus(i(7), i(3)), i(10));
+            Predicate query1 = eq(plus(i(7), i(3)), i(10));
             hasResult(query1, Set.of(query1), true, Set.of(), true);
-            Predicate<?> query2 = eq(plus(i(7), i(3)), i(11));
+            Predicate query2 = eq(plus(i(7), i(3)), i(11));
             hasResult(query2, Set.of(), true, Set.of(query2), true);
-            Predicate<?> query3 = eq(plus(i(7), i(3)), P);
+            Predicate query3 = eq(plus(i(7), i(3)), P);
             hasResult(query3, Set.of(eq(plus(i(7), i(3)), i(10))), true, Set.of(), false);
-            Predicate<?> query4 = eq(plus(i(7), P), i(10));
+            Predicate query4 = eq(plus(i(7), P), i(10));
             hasResult(query4, Set.of(eq(plus(i(7), i(3)), i(10))), true, Set.of(), false);
-            Predicate<?> query5 = eq(plus(i(7), P), Q);
+            Predicate query5 = eq(plus(i(7), P), Q);
             hasResult(query5, Set.of(), false, Set.of(), false);
 
             query1 = and(eq(plus(i(7), i(3)), i(10)), eq(plus(i(8), i(2)), i(10)));

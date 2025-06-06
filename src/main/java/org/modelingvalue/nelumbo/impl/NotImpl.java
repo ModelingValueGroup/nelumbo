@@ -22,17 +22,16 @@ package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Functor1;
-import org.modelingvalue.nelumbo.Logic.Not;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl1;
 
-public final class NotImpl extends PredicateImpl<Not> {
-    private static final long                            serialVersionUID  = -4543178470298951866L;
+public final class NotImpl extends PredicateImpl<Predicate> {
+    private static final long                               serialVersionUID  = -4543178470298951866L;
 
-    private static final FunctorImpl1<Not, Predicate<?>> NOT_FUNCTOR       = FunctorImpl.of1(Logic::not);
-    private static final Functor1<Not, Predicate<?>>     NOT_FUNCTOR_PROXY = NOT_FUNCTOR.proxy();
+    private static final FunctorImpl1<Predicate, Predicate> NOT_FUNCTOR       = FunctorImpl.of1(Logic::not);
+    private static final Functor1<Predicate, Predicate>     NOT_FUNCTOR_PROXY = NOT_FUNCTOR.proxy();
 
-    public NotImpl(Predicate<?> pred) {
+    public NotImpl(Predicate pred) {
         super(NOT_FUNCTOR_PROXY, pred);
     }
 

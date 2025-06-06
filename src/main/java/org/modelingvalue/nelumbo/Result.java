@@ -34,19 +34,19 @@ public final class Result {
         this.inferResult = inferResult;
     }
 
-    public Result(Set<Predicate<?>> facts, boolean completeFacts, Set<Predicate<?>> falsehoods, boolean completeFalsehoods) {
+    public Result(Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods) {
         this.inferResult = InferResult.of(unproxy(facts), completeFacts, unproxy(falsehoods), completeFalsehoods, Set.of());
     }
 
-    private static Set<PredicateImpl<?>> unproxy(Set<Predicate<?>> set) {
+    private static Set<PredicateImpl<?>> unproxy(Set<Predicate> set) {
         return set.replaceAll(StructureImpl::unproxy);
     }
 
-    public Set<Predicate<?>> facts() {
+    public Set<Predicate> facts() {
         return inferResult.facts().replaceAll(PredicateImpl::proxyWithVariables);
     }
 
-    public Set<Predicate<?>> falsehoods() {
+    public Set<Predicate> falsehoods() {
         return inferResult.falsehoods().replaceAll(PredicateImpl::proxyWithVariables);
     }
 
