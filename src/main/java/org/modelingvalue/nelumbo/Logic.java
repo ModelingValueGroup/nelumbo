@@ -351,22 +351,19 @@ public final class Logic {
 
     // True
 
-    public interface Bool extends Predicate {
-    }
-
-    private static final Bool TRUE_PROXY = (Bool) Proxy.newProxyInstance(Bool.class.getClassLoader(), new Class[]{Bool.class}, BooleanImpl.TRUE);
+    private static final Predicate TRUE_PROXY = (Predicate) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Predicate.class}, BooleanImpl.TRUE);
 
     @SuppressWarnings("unchecked")
-    public static Bool T() {
+    public static Predicate T() {
         return TRUE_PROXY;
     }
 
     // False
 
-    private static final Bool FALSE_PROXY = (Bool) Proxy.newProxyInstance(Bool.class.getClassLoader(), new Class[]{Bool.class}, BooleanImpl.FALSE);
+    private static final Predicate FALSE_PROXY = (Predicate) Proxy.newProxyInstance(Predicate.class.getClassLoader(), new Class[]{Predicate.class}, BooleanImpl.FALSE);
 
     @SuppressWarnings("unchecked")
-    public static Bool F() {
+    public static Predicate F() {
         return FALSE_PROXY;
     }
 
@@ -414,10 +411,7 @@ public final class Logic {
 
     // Collect
 
-    public interface Collect extends Predicate {
-    }
-
-    public static Collect coll(Predicate condition, Predicate collector) {
+    public static Predicate coll(Predicate condition, Predicate collector) {
         return new CollectImpl(condition, collector).proxy();
     }
 
