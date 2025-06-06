@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo;
 
 import static org.modelingvalue.nelumbo.Logic.*;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.modelingvalue.collections.Set;
@@ -84,6 +85,16 @@ public final class Rationals {
 
     public static RationalCons r(long numerator) {
         return r(BigInteger.valueOf(numerator));
+    }
+
+    public static RationalCons r(BigDecimal decimal) {
+        BigInteger numerator = decimal.unscaledValue();
+        BigInteger denominator = BigInteger.TEN.pow(decimal.scale());
+        return r(numerator, denominator);
+    }
+
+    public static RationalCons r(double value) {
+        return r(BigDecimal.valueOf(value));
     }
 
     public static RationalCons rConsVar(String name) {
