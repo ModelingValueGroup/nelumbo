@@ -1,31 +1,28 @@
-nelumbo = ((type | relation | functor | fact | variable | rule)';')*;
+nelumbo = namespace (typeDecl | functor | variable | rule)*;
 
-type = identifier;
-functor = type identifier '(' (type (',' type)*)? ')';
-fact = relation;
-variable = type identifier;
-rule = relation '<-' predicate;
+namespace = H? qualified (H? ':' V? H? qualified (H? ',' V? H? qualified)*)? V;
+typeDecl = H? identifier (H? ':' V? H? type (H? ',' V? H? type)*)? V;
+functor = H? type H identifier H? '(' V?  (H? type (H? ',' V? H? type)*)? H? ')' V;
+variable = H? type H identifier V;
+rule = expression V;
 
-predicate = relation | and | or | not | bracketed_predicate;
-and = predicate '&' predicate;
-or = predicate '|' predicate;
-not = '!' predicate;
-bracketed_predicate = '(' predicate ')';
-relation = functor_call | relation_operator_call;
-functor_call = identifier '(' (expression (',' expression)*)? ')';
-relation_operator_call = expression relation_operator expression;
+type = identifier; 
+expression = binaryOperatorCall;
+binaryOperatorCall = unaryOperatorCall (H? operator V? H? binaryOperatorCall)?;
+unaryOperatorCall = H? (operator H? unaryOperatorCall | primaryExpression);
 
-expression = additive_expression;
-additive_expression = multiplicative_expression (additive_operator additive_expression)?;
-multiplicative_expression = primary_expression (multiplicative_operator multiplicative_expression)?;
-primary_expression = functor_call | variable_call | bracketed_expression | literal;
-variable_call = identifier;
-bracketed_expression = '(' expression ')';
-literal = number | string;
+primaryExpression = H? (literal | variableCall | bracketed | functorCall);
+functorCall = identifier H? '(' V? (expression (H? ',' V? expression)*)? H? ')';
+bracketed = '(' V? expression H? ')';
+variableCall = identifier;
+literal = number | decimal | string;
 
-number = /[0-9]+(\.[0-9]+)?/;
+qualified = identifier ('.' identifier)+;
+decimal = number '.' number;
+number = /[0-9]+/;
 string = '"' /[^"]*/ '"';
 identifier = /[a-zA-Z_][a-zA-Z0-9_]*/;
-relation_operator = '=' | '!=' | '<' | '<=' | '>' | '>=';
-additive_operator = '+' | '-';
-multiplicative_operator = '*' | '/'';
+operator = /[~!@#$%^&*\/\?|+-<>]+/;
+
+H = /\h+/;
+V = /(\h*(\/\/[^\v+]*)?\v+)+/;
