@@ -46,9 +46,9 @@ public class SyntaxTest {
     @Test
     public void tokenizer() {
         String example = """
-                abb + bcc *
-                c - dee //*COMMEND*!@
-                e = 8.9 / 2
+                    abb + bcc *
+                    c - dee //*COMMEND*!@
+                    e = 8.9 / 2
                 """;
         try {
             LinkedList<Token> tokens = new Tokenizer(example).tokenize();
@@ -62,8 +62,8 @@ public class SyntaxTest {
     @Test
     public void parser() {
         String example = """
-                   a<=b := a<b | a=b
-                   a>=b := a>b | a=b
+                    a<=b := a<b | a=b
+                    a>=b := a>b | a=b
                 """;
         try {
             LinkedList<Token> tokens = new Tokenizer(example).tokenize();

@@ -26,7 +26,7 @@ import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.LogicLambda;
 import org.modelingvalue.nelumbo.Logic.Relation;
 
-public class RelationImpl extends PredicateImpl<Relation> {
+public final class RelationImpl extends PredicateImpl<Relation> {
     private static final long serialVersionUID   = 1032898038061287135L;
 
     static final int          MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
