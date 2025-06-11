@@ -22,7 +22,6 @@ package org.modelingvalue.nelumbo.impl;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.Logic;
 import org.modelingvalue.nelumbo.Logic.Functor;
 import org.modelingvalue.nelumbo.Logic.Predicate;
 import org.modelingvalue.nelumbo.Logic.Relation;
@@ -33,17 +32,22 @@ import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
 public class RuleImpl extends StructureImpl<Rule> {
     private static final long                                    serialVersionUID   = -4602043866952049391L;
 
-    private static final FunctorImpl2<Rule, Relation, Predicate> RULE_FUNCTOR       = FunctorImpl.of2(Logic::rule);
+    private static final FunctorImpl2<Rule, Relation, Predicate> RULE_FUNCTOR       = FunctorImpl.of2(RuleImpl::rule);
     private static final Functor<Rule>                           RULE_FUNCTOR_PROXY = RULE_FUNCTOR.proxy();
 
     private final boolean                                        trace;
 
-    public RuleImpl(Relation consequence, Predicate condition, RuleModifier[] modifiers) {
-        this(modifiers, consequence, condition);
+    private static Rule rule(Relation consequence, Predicate condition) {
+        return null;
     }
 
-    protected RuleImpl(RuleModifier[] modifiers, Object... parts) {
-        super(RULE_FUNCTOR_PROXY, parts);
+    public RuleImpl(Relation consequence, Predicate condition, RuleModifier... modifiers) {
+        super(RULE_FUNCTOR_PROXY, consequence, condition);
+        trace = has(RuleModifier.trace, modifiers);
+    }
+
+    public RuleImpl(RelationImpl consequence, PredicateImpl<?> condition, RuleModifier... modifiers) {
+        super(RULE_FUNCTOR, consequence, condition);
         trace = has(RuleModifier.trace, modifiers);
     }
 

@@ -89,7 +89,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         init();
     }
 
-    protected StructureImpl(FunctorImpl<F, ? extends Functor<F>> functor, Object... args) {
+    public StructureImpl(FunctorImpl<F, ? extends Functor<F>> functor, Object... args) {
         super(array(functor, args));
         init();
     }

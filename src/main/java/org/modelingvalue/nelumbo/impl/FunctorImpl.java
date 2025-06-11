@@ -145,6 +145,10 @@ public abstract class FunctorImpl<T extends Structure, F extends Functor<T>> ext
         return new FunctorImpl4<T, A, B, C, D>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
     }
 
+    public static <T extends Structure, A, B, C, D> FunctorImpl4<T, A, B, C, D> of4(Class<T> r, String name, Class<A> a, Class<B> b, Class<C> c, Class<D> d, FunctorModifier... modifiers) {
+        return new FunctorImpl4<T, A, B, C, D>(r, name, List.of(a, b, c, d), modifiers);
+    }
+
     public static final class FunctorImpl4<T extends Structure, A, B, C, D> extends FunctorImpl<T, Functor4<T, A, B, C, D>> {
         private static final long serialVersionUID = 7923040687479253009L;
 
@@ -158,6 +162,10 @@ public abstract class FunctorImpl<T extends Structure, F extends Functor<T>> ext
     public static <T extends Structure, A, B, C> FunctorImpl3<T, A, B, C> of3(SerializableTriFunction<A, B, C, T> method, FunctorModifier... modifiers) {
         SerializableTriFunctionImpl<A, B, C, T> l = method.of();
         return new FunctorImpl3<T, A, B, C>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+    }
+
+    public static <T extends Structure, A, B, C> FunctorImpl3<T, A, B, C> of3(Class<T> r, String name, Class<A> a, Class<B> b, Class<C> c, FunctorModifier... modifiers) {
+        return new FunctorImpl3<T, A, B, C>(r, name, List.of(a, b, c), modifiers);
     }
 
     public static final class FunctorImpl3<T extends Structure, A, B, C> extends FunctorImpl<T, Functor3<T, A, B, C>> {
@@ -175,6 +183,10 @@ public abstract class FunctorImpl<T extends Structure, F extends Functor<T>> ext
         return new FunctorImpl2<T, A, B>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
     }
 
+    public static <T extends Structure, A, B> FunctorImpl2<T, A, B> of2(Class<T> r, String name, Class<A> a, Class<B> b, FunctorModifier... modifiers) {
+        return new FunctorImpl2<T, A, B>(r, name, List.of(a, b), modifiers);
+    }
+
     public static final class FunctorImpl2<T extends Structure, A, B> extends FunctorImpl<T, Functor2<T, A, B>> {
         private static final long serialVersionUID = -3183049692712735358L;
 
@@ -190,6 +202,10 @@ public abstract class FunctorImpl<T extends Structure, F extends Functor<T>> ext
         return new FunctorImpl1<T, A>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
     }
 
+    public static <T extends Structure, A> FunctorImpl1<T, A> of1(Class<T> r, String name, Class<A> a, FunctorModifier... modifiers) {
+        return new FunctorImpl1<T, A>(r, name, List.of(a), modifiers);
+    }
+
     public static final class FunctorImpl1<T extends Structure, A> extends FunctorImpl<T, Functor1<T, A>> {
         private static final long serialVersionUID = 673008347258770580L;
 
@@ -203,6 +219,10 @@ public abstract class FunctorImpl<T extends Structure, F extends Functor<T>> ext
     public static <T extends Structure> FunctorImpl0<T> of0(SerializableSupplier<T> method, FunctorModifier... modifiers) {
         SerializableSupplierImpl<T> l = method.of();
         return new FunctorImpl0<T>((Class<T>) l.out(), l.getImplMethodName(), l.in(), modifiers);
+    }
+
+    public static <T extends Structure> FunctorImpl0<T> of0(Class<T> r, String name, FunctorModifier... modifiers) {
+        return new FunctorImpl0<T>(r, name, List.of(), modifiers);
     }
 
     public static final class FunctorImpl0<T extends Structure> extends FunctorImpl<T, Functor0<T>> {

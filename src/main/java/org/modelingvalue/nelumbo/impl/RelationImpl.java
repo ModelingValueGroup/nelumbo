@@ -38,6 +38,10 @@ public class RelationImpl extends PredicateImpl<Relation> {
         super(functor, args);
     }
 
+    public RelationImpl(FunctorImpl<Relation, ?> functor, Object... args) {
+        super(functor, args);
+    }
+
     private RelationImpl(Object[] args, RelationImpl declaration) {
         super(args, declaration);
     }
