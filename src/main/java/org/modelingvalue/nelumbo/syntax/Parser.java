@@ -74,7 +74,7 @@ public class Parser {
             }
             if (!tokens.isEmpty()) {
                 result = result.add(parseExpression(0));
-                if (tokens.peek() == null && tokens.peek().type() != TokenType.V) {
+                if (tokens.peek() == null || tokens.peek().type() != TokenType.V) {
                     break;
                 }
             }

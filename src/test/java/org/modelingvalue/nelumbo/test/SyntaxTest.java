@@ -46,10 +46,6 @@ import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 public class SyntaxTest extends NelumboTestBase {
 
-    static {
-        System.setProperty("PRETTY_NELUMBO", "false");
-    }
-
     static final FunctorImpl2<Relation, Integer, Integer> LE  = FunctorImpl.of2(Relation.class, "le", Integer.class, Integer.class);
     static final FunctorImpl2<Relation, Integer, Integer> GE  = FunctorImpl.of2(Relation.class, "ge", Integer.class, Integer.class);
     static final FunctorImpl2<Relation, Integer, Integer> LT  = FunctorImpl.of2(Relation.class, "lt", Integer.class, Integer.class);
@@ -76,12 +72,11 @@ public class SyntaxTest extends NelumboTestBase {
     public void tokenizer() {
         String example = """
                     abb + bcc *
-                    c - dee //*COMMEND*!@
+                       c - dee //*COMMEND*!@
                     e = 8.9 / 2
                 """;
         try {
             LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-            //  printTokens(tokens);
             assertEquals(16, tokens.size());
         } catch (ParseException e) {
             fail(e);
@@ -98,7 +93,6 @@ public class SyntaxTest extends NelumboTestBase {
                     """;
             try {
                 LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-                printTokens(tokens);
                 Parser parser = new Parser(tokens);
                 parser.register(TokenType.IDENTIFIER, VAR);
                 var structures = parser.parseExpression();
@@ -109,6 +103,7 @@ public class SyntaxTest extends NelumboTestBase {
         });
     }
 
+    @SuppressWarnings("unused")
     private static void printTokens(LinkedList<Token> tokens) {
         for (Token token : tokens) {
             System.out.println("Token: " + token);
