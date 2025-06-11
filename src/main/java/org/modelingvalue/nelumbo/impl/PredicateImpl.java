@@ -99,7 +99,7 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? setVariables().superToString() : super.toString();
+        return isPrettyPrinting() ? setVariables().superToString() : super.toString();
     }
 
     private String superToString() {

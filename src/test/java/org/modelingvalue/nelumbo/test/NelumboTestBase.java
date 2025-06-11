@@ -69,4 +69,8 @@ public class NelumboTestBase {
         KnowledgeBaseImpl.CURRENT.get().print();
     }
 
+    public void setPrettyPrinting(boolean prettyPrint) {
+        KnowledgeBaseImpl.CURRENT.get().setPrettyPrinting(prettyPrint);
+    }
+
 }

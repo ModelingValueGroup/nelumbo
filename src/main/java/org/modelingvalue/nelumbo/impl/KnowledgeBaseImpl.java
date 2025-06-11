@@ -141,8 +141,9 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
     private final AtomicReference<Map<RelationImpl, Set<RuleImpl>>>        rules;
     private final AtomicInteger                                            depth;
     private final AtomicReference<QualifiedSet<RelationImpl, Inference>[]> memoization;
-    private final InferContext                                             context = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, StructureImpl.TRACE_NELUMBO);
+    private final InferContext                                             context     = InferContext.of(KnowledgeBaseImpl.this, List.of(), Map.of(), false, StructureImpl.TRACE_NELUMBO);
     private boolean                                                        stopped;
+    private boolean                                                        prettyPrint = StructureImpl.PRETTY_NELUMBO;
 
     @SuppressWarnings("unchecked")
     public KnowledgeBaseImpl(KnowledgeBaseImpl init) {
@@ -339,5 +340,13 @@ public final class KnowledgeBaseImpl implements KnowledgeBase {
 
     public int depth() {
         return depth.get();
+    }
+
+    public boolean isPrettyPrinting() {
+        return prettyPrint;
+    }
+
+    public void setPrettyPrinting(boolean prettyPrint) {
+        this.prettyPrint = prettyPrint;
     }
 }

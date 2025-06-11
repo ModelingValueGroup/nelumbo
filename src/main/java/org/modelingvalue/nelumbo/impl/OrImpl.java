@@ -94,11 +94,11 @@ public final class OrImpl extends BinaryPredicateImpl {
 
     @Override
     public String toString(StructureImpl<?> parent) {
-        return PRETTY_NELUMBO && (parent == null || parent instanceof OrImpl) ? predicate1().toString(this) + "\u2228" + predicate2().toString(this) : toString();
+        return isPrettyPrinting() && (parent == null || parent instanceof OrImpl) ? predicate1().toString(this) + "\u2228" + predicate2().toString(this) : toString();
     }
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + "\u2228" + predicate2().toString(this) + ")" : super.toString();
+        return isPrettyPrinting() ? "(" + predicate1().toString(this) + "\u2228" + predicate2().toString(this) + ")" : super.toString();
     }
 }

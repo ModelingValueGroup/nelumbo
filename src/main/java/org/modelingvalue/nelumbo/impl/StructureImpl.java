@@ -168,7 +168,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public String toString() {
-        FunctorImpl<F, ?> f = PRETTY_NELUMBO ? functor() : null;
+        FunctorImpl<F, ?> f = isPrettyPrinting() ? functor() : null;
         RenderLambda rl = f != null ? f.renderLambda() : null;
         if (rl != null) {
             return rl.apply((StructureImpl) this);
@@ -624,4 +624,7 @@ public class StructureImpl<F extends Structure> extends org.modelingvalue.collec
         return n != null ? (StructureImpl<F>) n.apply((StructureImpl<?>) this) : this;
     }
 
+    public boolean isPrettyPrinting() {
+        return KnowledgeBaseImpl.CURRENT.get().isPrettyPrinting();
+    }
 }

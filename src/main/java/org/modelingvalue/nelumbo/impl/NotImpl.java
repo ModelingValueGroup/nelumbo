@@ -82,7 +82,7 @@ public final class NotImpl extends PredicateImpl<Predicate> {
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? "\u00AC(" + predicate() + ")" : super.toString();
+        return isPrettyPrinting() ? "\u00AC(" + predicate() + ")" : super.toString();
     }
 
 }

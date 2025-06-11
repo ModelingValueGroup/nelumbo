@@ -88,12 +88,12 @@ public final class AndImpl extends BinaryPredicateImpl {
 
     @Override
     public String toString(StructureImpl<?> parent) {
-        return PRETTY_NELUMBO && (parent == null || parent instanceof AndImpl) ? predicate1().toString(this) + "\u2227" + predicate2().toString(this) : toString();
+        return isPrettyPrinting() && (parent == null || parent instanceof AndImpl) ? predicate1().toString(this) + "\u2227" + predicate2().toString(this) : toString();
     }
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? "(" + predicate1().toString(this) + "\u2227" + predicate2().toString(this) + ")" : super.toString();
+        return isPrettyPrinting() ? "(" + predicate1().toString(this) + "\u2227" + predicate2().toString(this) + ")" : super.toString();
     }
 
 }

@@ -183,7 +183,7 @@ public class CollectImpl extends PredicateImpl<Predicate> {
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? "(" + condition() + "\u03BB" + collector() + ")" : super.toString();
+        return isPrettyPrinting() ? "(" + condition() + "\u03BB" + collector() + ")" : super.toString();
     }
 
 }

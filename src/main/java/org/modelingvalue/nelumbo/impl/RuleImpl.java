@@ -149,7 +149,7 @@ public class RuleImpl extends StructureImpl<Rule> {
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? condition().toString(null) + "\u21D2" + consequence() : super.toString();
+        return isPrettyPrinting() ? condition().toString(null) + "\u21D2" + consequence() : super.toString();
     }
 
     public boolean trace() {

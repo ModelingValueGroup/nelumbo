@@ -94,7 +94,7 @@ public final class BooleanImpl extends PredicateImpl<Predicate> {
 
     @Override
     public String toString() {
-        return PRETTY_NELUMBO ? (isTrue() ? "\u22A4" : "\u22A5") : super.toString();
+        return isPrettyPrinting() ? (isTrue() ? "\u22A4" : "\u22A5") : super.toString();
     }
 
 }
