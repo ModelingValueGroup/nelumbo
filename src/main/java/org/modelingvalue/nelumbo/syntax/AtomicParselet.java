@@ -25,9 +25,9 @@ import java.util.function.Function;
 
 import org.modelingvalue.nelumbo.impl.StructureImpl;
 
-public abstract class IdentifierParselet extends PrefixParselet {
+public abstract class AtomicParselet extends PrefixParselet {
 
-    private IdentifierParselet() {
+    private AtomicParselet() {
     }
 
     @Override
@@ -37,8 +37,8 @@ public abstract class IdentifierParselet extends PrefixParselet {
 
     public abstract StructureImpl<?> construct(Token token);
 
-    public static IdentifierParselet of(Function<Token, StructureImpl<?>> constructor) {
-        return new IdentifierParselet() {
+    public static AtomicParselet of(Function<Token, StructureImpl<?>> constructor) {
+        return new AtomicParselet() {
             @Override
             public StructureImpl<?> construct(Token token) {
                 return constructor.apply(token);

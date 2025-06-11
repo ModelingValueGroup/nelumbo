@@ -29,32 +29,39 @@ import java.util.LinkedList;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.nelumbo.Integers.Integer;
 import org.modelingvalue.nelumbo.Logic.Relation;
-import org.modelingvalue.nelumbo.impl.FunctorImpl;
+import org.modelingvalue.nelumbo.impl.*;
+import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl1;
 import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
-import org.modelingvalue.nelumbo.impl.KnowledgeBaseImpl;
-import org.modelingvalue.nelumbo.impl.OrImpl;
-import org.modelingvalue.nelumbo.impl.PredicateImpl;
-import org.modelingvalue.nelumbo.impl.RelationImpl;
-import org.modelingvalue.nelumbo.impl.RuleImpl;
-import org.modelingvalue.nelumbo.impl.VariableImpl;
+import org.modelingvalue.nelumbo.syntax.AtomicParselet;
 import org.modelingvalue.nelumbo.syntax.BinaryOperator;
-import org.modelingvalue.nelumbo.syntax.IdentifierParselet;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Token.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import org.modelingvalue.nelumbo.syntax.UnaryOperator;
 
 public class SyntaxTest extends NelumboTestBase {
 
-    static final FunctorImpl2<Relation, Integer, Integer> LE  = FunctorImpl.of2(Relation.class, "le", Integer.class, Integer.class);
-    static final FunctorImpl2<Relation, Integer, Integer> GE  = FunctorImpl.of2(Relation.class, "ge", Integer.class, Integer.class);
-    static final FunctorImpl2<Relation, Integer, Integer> LT  = FunctorImpl.of2(Relation.class, "lt", Integer.class, Integer.class);
-    static final FunctorImpl2<Relation, Integer, Integer> GT  = FunctorImpl.of2(Relation.class, "gt", Integer.class, Integer.class);
-    static final FunctorImpl2<Relation, Integer, Integer> EQ  = FunctorImpl.of2(Relation.class, "eq", Integer.class, Integer.class);
+    static final FunctorImpl1<Integer, String>            INT1 = FunctorImpl.of1(Integer.class, "int", String.class);
 
-    static final IdentifierParselet                       VAR = IdentifierParselet.of(t -> new VariableImpl<>(Integer.class, t.text()));
+    static final FunctorImpl1<Relation, Integer>          MIN1 = FunctorImpl.of1(Relation.class, "min", Integer.class);
+
+    static final FunctorImpl2<Integer, Integer, Integer>  MIN2 = FunctorImpl.of2(Integer.class, "min", Integer.class, Integer.class);
+
+    static final FunctorImpl2<Relation, Integer, Integer> LE   = FunctorImpl.of2(Relation.class, "le", Integer.class, Integer.class);
+    static final FunctorImpl2<Relation, Integer, Integer> GE   = FunctorImpl.of2(Relation.class, "ge", Integer.class, Integer.class);
+    static final FunctorImpl2<Relation, Integer, Integer> LT   = FunctorImpl.of2(Relation.class, "lt", Integer.class, Integer.class);
+    static final FunctorImpl2<Relation, Integer, Integer> GT   = FunctorImpl.of2(Relation.class, "gt", Integer.class, Integer.class);
+    static final FunctorImpl2<Relation, Integer, Integer> EQ   = FunctorImpl.of2(Relation.class, "eq", Integer.class, Integer.class);
+
+    static final AtomicParselet                           VAR  = AtomicParselet.of(t -> new VariableImpl<>(Integer.class, t.text()));
+
+    static final AtomicParselet                           INT  = AtomicParselet.of(t -> new StructureImpl<>(INT1, t.text()));
 
     static {
+        UnaryOperator.of("-", 50, (t, r) -> new StructureImpl<>(MIN1, r));
+        BinaryOperator.of("-", 40, (t, l, r) -> new StructureImpl<>(MIN2, l, r));
+
         BinaryOperator.of("=", 30, (t, l, r) -> new RelationImpl(EQ, l, r));
         BinaryOperator.of("<", 30, (t, l, r) -> new RelationImpl(LT, l, r));
         BinaryOperator.of(">", 30, (t, l, r) -> new RelationImpl(GT, l, r));
@@ -71,13 +78,14 @@ public class SyntaxTest extends NelumboTestBase {
     @Test
     public void tokenizer() {
         String example = """
-                    abb + bcc *
+                    -abb + bcc *
                        c - dee //*COMMEND*!@
                     e = 8.9 / 2
                 """;
         try {
             LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-            assertEquals(16, tokens.size());
+            printTokens(tokens);
+            assertEquals(17, tokens.size());
         } catch (ParseException e) {
             fail(e);
         }
@@ -90,13 +98,15 @@ public class SyntaxTest extends NelumboTestBase {
             String example = """
                         a<=b := a<b | a=b
                         a>=b := a>b | a=b
+                        -a=b := 0-a=b
                     """;
             try {
                 LinkedList<Token> tokens = new Tokenizer(example).tokenize();
                 Parser parser = new Parser(tokens);
                 parser.register(TokenType.IDENTIFIER, VAR);
+                parser.register(TokenType.NUMBER, INT);
                 var structures = parser.parseExpression();
-                assertEquals("[rule(le(a,b),or(lt(a,b),eq(a,b))),rule(ge(a,b),or(gt(a,b),eq(a,b)))]", structures.toString().substring(4));
+                assertEquals("[rule(le(a,b),or(lt(a,b),eq(a,b))),rule(ge(a,b),or(gt(a,b),eq(a,b))),rule(eq(min(a),b),eq(min(int(0),a),b))]", structures.toString().substring(4));
             } catch (ParseException e) {
                 fail(e);
             }
