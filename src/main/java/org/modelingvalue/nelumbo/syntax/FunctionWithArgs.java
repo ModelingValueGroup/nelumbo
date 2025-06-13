@@ -22,28 +22,35 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.impl.StructureImpl;
 
-public abstract class UnaryOperator {
+public abstract class FunctionWithArgs {
 
     private final String text;
+    private final int    nrOfArgs;
 
-    public UnaryOperator(String text) {
+    public FunctionWithArgs(String text, int nrOfArgs) {
         this.text = text;
-        UnaryOperatorParselet.register(this);
+        this.nrOfArgs = nrOfArgs;
+        CallParselet.register(this);
     }
 
     public String text() {
         return text;
     }
 
-    public abstract StructureImpl<?> construct(Token token, StructureImpl<?> right) throws ParseException;
+    public int nrOfArgs() {
+        return nrOfArgs;
+    }
 
-    public static UnaryOperator of(String text, ThrowingBiFunction<Token, StructureImpl<?>, StructureImpl<?>> constructor) {
-        return new UnaryOperator(text) {
+    public abstract StructureImpl<?> construct(Token token, List<StructureImpl<?>> args) throws ParseException;
+
+    public static FunctionWithArgs of(String text, int nrOfArgs, ThrowingBiFunction<Token, List<StructureImpl<?>>, StructureImpl<?>> constructor) {
+        return new FunctionWithArgs(text, nrOfArgs) {
             @Override
-            public StructureImpl<?> construct(Token token, StructureImpl<?> right) throws ParseException {
-                return constructor.apply(token, right);
+            public StructureImpl<?> construct(Token token, List<StructureImpl<?>> args) throws ParseException {
+                return constructor.apply(token, args);
             }
         };
     }

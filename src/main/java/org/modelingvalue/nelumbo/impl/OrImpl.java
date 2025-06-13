@@ -32,7 +32,7 @@ public final class OrImpl extends BinaryPredicateImpl {
         return new OrImpl(StructureImpl.unproxy(predicate1), StructureImpl.unproxy(predicate2)).proxy();
     }
 
-    public OrImpl(PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
+    public OrImpl(StructureImpl<?> predicate1, StructureImpl<?> predicate2) {
         super(OR_FUNCTOR, predicate1, predicate2);
     }
 

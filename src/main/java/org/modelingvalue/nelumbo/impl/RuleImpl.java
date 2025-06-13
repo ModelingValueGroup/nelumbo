@@ -35,18 +35,18 @@ public class RuleImpl extends StructureImpl<Rule> {
     private static final FunctorImpl2<Rule, Relation, Predicate> RULE_FUNCTOR       = FunctorImpl.of2(RuleImpl::rule);
     private static final Functor<Rule>                           RULE_FUNCTOR_PROXY = RULE_FUNCTOR.proxy();
 
-    private final boolean                                        trace;
-
     private static Rule rule(Relation consequence, Predicate condition) {
         return null;
     }
+
+    private final boolean trace;
 
     public RuleImpl(Relation consequence, Predicate condition, RuleModifier... modifiers) {
         super(RULE_FUNCTOR_PROXY, consequence, condition);
         trace = has(RuleModifier.trace, modifiers);
     }
 
-    public RuleImpl(RelationImpl consequence, PredicateImpl<?> condition, RuleModifier... modifiers) {
+    public RuleImpl(StructureImpl<?> consequence, StructureImpl<?> condition, RuleModifier... modifiers) {
         super(RULE_FUNCTOR, consequence, condition);
         trace = has(RuleModifier.trace, modifiers);
     }

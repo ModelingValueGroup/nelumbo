@@ -21,11 +21,10 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
-import java.util.function.Function;
 
 import org.modelingvalue.nelumbo.impl.StructureImpl;
 
-public abstract class AtomicParselet extends PrefixParselet {
+public abstract class AtomicParselet extends Prefix1Parselet {
 
     private AtomicParselet() {
     }
@@ -35,12 +34,12 @@ public abstract class AtomicParselet extends PrefixParselet {
         return construct(token);
     }
 
-    public abstract StructureImpl<?> construct(Token token);
+    public abstract StructureImpl<?> construct(Token token) throws ParseException;
 
-    public static AtomicParselet of(Function<Token, StructureImpl<?>> constructor) {
+    public static AtomicParselet of(ThrowingFunction<Token, StructureImpl<?>> constructor) {
         return new AtomicParselet() {
             @Override
-            public StructureImpl<?> construct(Token token) {
+            public StructureImpl<?> construct(Token token) throws ParseException {
                 return constructor.apply(token);
             }
         };

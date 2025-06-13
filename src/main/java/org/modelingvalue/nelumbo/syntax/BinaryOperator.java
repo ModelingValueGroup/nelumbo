@@ -20,7 +20,8 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import org.modelingvalue.collections.util.TriFunction;
+import java.text.ParseException;
+
 import org.modelingvalue.nelumbo.impl.StructureImpl;
 
 public abstract class BinaryOperator {
@@ -42,12 +43,12 @@ public abstract class BinaryOperator {
         return precedence;
     }
 
-    public abstract StructureImpl<?> construct(Token token, StructureImpl<?> left, StructureImpl<?> right);
+    public abstract StructureImpl<?> construct(Token token, StructureImpl<?> left, StructureImpl<?> right) throws ParseException;
 
-    public static BinaryOperator of(String text, int precedence, TriFunction<Token, StructureImpl<?>, StructureImpl<?>, StructureImpl<?>> constructor) {
+    public static BinaryOperator of(String text, int precedence, ThrowingTriFunction<Token, StructureImpl<?>, StructureImpl<?>, StructureImpl<?>> constructor) {
         return new BinaryOperator(text, precedence) {
             @Override
-            public StructureImpl<?> construct(Token token, StructureImpl<?> left, StructureImpl<?> right) {
+            public StructureImpl<?> construct(Token token, StructureImpl<?> left, StructureImpl<?> right) throws ParseException {
                 return constructor.apply(token, left, right);
             }
         };

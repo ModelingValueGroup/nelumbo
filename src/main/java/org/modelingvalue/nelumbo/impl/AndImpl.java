@@ -32,7 +32,7 @@ public final class AndImpl extends BinaryPredicateImpl {
         return new AndImpl(StructureImpl.unproxy(p1), StructureImpl.unproxy(p2)).proxy();
     }
 
-    public AndImpl(PredicateImpl<?> predicate1, PredicateImpl<?> predicate2) {
+    public AndImpl(StructureImpl<?> predicate1, StructureImpl<?> predicate2) {
         super(AND_FUNCTOR, predicate1, predicate2);
     }
 

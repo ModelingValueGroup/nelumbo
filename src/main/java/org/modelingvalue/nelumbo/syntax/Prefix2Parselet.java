@@ -24,28 +24,8 @@ import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.impl.StructureImpl;
 
-public abstract class UnaryOperator {
+public abstract class Prefix2Parselet {
 
-    private final String text;
-
-    public UnaryOperator(String text) {
-        this.text = text;
-        UnaryOperatorParselet.register(this);
-    }
-
-    public String text() {
-        return text;
-    }
-
-    public abstract StructureImpl<?> construct(Token token, StructureImpl<?> right) throws ParseException;
-
-    public static UnaryOperator of(String text, ThrowingBiFunction<Token, StructureImpl<?>, StructureImpl<?>> constructor) {
-        return new UnaryOperator(text) {
-            @Override
-            public StructureImpl<?> construct(Token token, StructureImpl<?> right) throws ParseException {
-                return constructor.apply(token, right);
-            }
-        };
-    }
+    public abstract StructureImpl<?> parse(Parser parser, Token token1, Token token2) throws ParseException;
 
 }

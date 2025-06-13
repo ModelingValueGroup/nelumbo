@@ -18,14 +18,52 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.syntax;
+package org.modelingvalue.nelumbo.impl;
 
-import java.text.ParseException;
+import java.lang.reflect.Proxy;
 
-import org.modelingvalue.nelumbo.impl.StructureImpl;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.Logic.Type;
+import org.modelingvalue.nelumbo.Logic.Variable;
+import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
 
-public abstract class PrefixParselet {
+public final class TypeImpl extends StructureImpl<Type> {
+    private static final long                                   serialVersionUID = -4583279157841144493L;
 
-    public abstract StructureImpl<?> parse(Parser parser, Token token) throws ParseException;
+    private static final FunctorImpl2<Type, String, List<Type>> TYPE_FUNCTOR     = FunctorImpl.of2(TypeImpl::type);
+
+    private static Type type(String name, List<Type> supers) {
+        return null;
+    }
+
+    public TypeImpl(String name, List<TypeImpl> supers) {
+        super(TYPE_FUNCTOR, name, supers);
+    }
+
+    private TypeImpl(Object[] array) {
+        super(array);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final Type proxy() {
+        return (Type) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Variable.class}, this);
+    }
+
+    @Override
+    public String toString() {
+        return get(1).toString();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected TypeImpl struct(Object[] array) {
+        return new TypeImpl(array);
+    }
+
+    @Override
+    public TypeImpl set(int i, Object... a) {
+        return (TypeImpl) super.set(i, a);
+    }
 
 }

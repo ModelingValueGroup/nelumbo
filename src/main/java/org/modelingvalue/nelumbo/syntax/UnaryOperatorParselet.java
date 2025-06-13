@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.modelingvalue.nelumbo.impl.StructureImpl;
 
-public final class UnaryOperatorParselet extends PrefixParselet {
+public final class UnaryOperatorParselet extends Prefix1Parselet {
 
     public final static UnaryOperatorParselet INSTANCE       = new UnaryOperatorParselet();
 
@@ -37,9 +37,17 @@ public final class UnaryOperatorParselet extends PrefixParselet {
 
     @Override
     public StructureImpl<?> parse(Parser parser, Token token) throws ParseException {
-        UnaryOperator unaryOperator = unaryOperators.get(token.text());
-        StructureImpl<?> right = parser.parseExpression(unaryOperator.precedence());
+        UnaryOperator unaryOperator = getOperator(token);
+        StructureImpl<?> right = parser.parseExpression(100);
         return unaryOperator.construct(token, right);
+    }
+
+    private UnaryOperator getOperator(Token token) throws ParseException {
+        UnaryOperator unaryOperator = unaryOperators.get(token.text());
+        if (unaryOperator == null) {
+            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+        }
+        return unaryOperator;
     }
 
     public static void register(UnaryOperator operator) {

@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 public class Token {
 
     public enum TokenType {
-        COLON(":", true), //
         COMMA(",", true), //
         DOT("\\.", true), //
         LPAREN("\\(", true), //
@@ -33,7 +32,7 @@ public class Token {
         STRING("\"[^\"]*\"", false), //
         NUMBER("[0-9]+", false), //
         IDENTIFIER("[a-zA-Z_][a-zA-Z0-9_]*", false), //
-        OPERATOR("[:\\=\\-\\*\\+<>/!@#$%^&|]+", true), //
+        OPERATOR("[:\\=\\-\\*\\+<>/!@#$%^&|~]+", true), //
         H("\\h+", false), //
         V("((//[^\\v]*)?\\v)+", false);
 

@@ -51,6 +51,11 @@ public final class Logic {
     public interface Structure {
     }
 
+    // Types
+
+    public interface Type extends Structure {
+    }
+
     // Constants
 
     public interface Constant extends Structure {

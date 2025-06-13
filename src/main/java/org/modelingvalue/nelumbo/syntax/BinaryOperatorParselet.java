@@ -37,18 +37,23 @@ public final class BinaryOperatorParselet extends InfixParselet {
 
     @Override
     public StructureImpl<?> parse(Parser parser, StructureImpl<?> left, Token token) throws ParseException {
-        BinaryOperator binaryOperator = binaryOperators.get(token.text());
+        BinaryOperator binaryOperator = getOperator(token);
         StructureImpl<?> right = parser.parseExpression(binaryOperator.precedence());
         return binaryOperator.construct(token, left, right);
     }
 
     @Override
     public int precedence(Token token) throws ParseException {
+        BinaryOperator binaryOperator = getOperator(token);
+        return binaryOperator.precedence();
+    }
+
+    private BinaryOperator getOperator(Token token) throws ParseException {
         BinaryOperator binaryOperator = binaryOperators.get(token.text());
         if (binaryOperator == null) {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
-        return binaryOperator.precedence();
+        return binaryOperator;
     }
 
     public static void register(BinaryOperator operator) {

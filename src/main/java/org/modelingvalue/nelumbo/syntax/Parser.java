@@ -26,25 +26,34 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.impl.StructureImpl;
 import org.modelingvalue.nelumbo.syntax.Token.TokenType;
 
 public class Parser {
 
-    private final LinkedList<Token>              tokens;
-    private final Map<TokenType, PrefixParselet> prefixParselets;
-    private final Map<TokenType, InfixParselet>  infixParselets;
+    private final LinkedList<Token>                                tokens;
+    private final Map<Pair<TokenType, TokenType>, Prefix2Parselet> prefix2Parselets;
+    private final Map<TokenType, Prefix1Parselet>                  prefix1Parselets;
+    private final Map<TokenType, InfixParselet>                    infixParselets;
 
     public Parser(LinkedList<Token> tokens) {
         this.tokens = tokens;
-        this.prefixParselets = new HashMap<>();
+        this.prefix1Parselets = new HashMap<>();
+        this.prefix2Parselets = new HashMap<>();
         this.infixParselets = new HashMap<>();
         register(TokenType.OPERATOR, UnaryOperatorParselet.INSTANCE);
         register(TokenType.OPERATOR, BinaryOperatorParselet.INSTANCE);
+        register(TokenType.LPAREN, ParenParselet.INSTANCE);
+        register(TokenType.IDENTIFIER, TokenType.LPAREN, CallParselet.INSTANCE);
     }
 
-    public void register(TokenType token, PrefixParselet parselet) {
-        prefixParselets.put(token, parselet);
+    public void register(TokenType token, Prefix1Parselet parselet) {
+        prefix1Parselets.put(token, parselet);
+    }
+
+    public void register(TokenType token1, TokenType token2, Prefix2Parselet parselet) {
+        prefix2Parselets.put(Pair.of(token1, token2), parselet);
     }
 
     public void register(TokenType token, InfixParselet parselet) {
@@ -53,11 +62,17 @@ public class Parser {
 
     public StructureImpl<?> parseExpression(int precedence) throws ParseException {
         Token token = tokens.poll();
-        PrefixParselet prefix = prefixParselets.get(token.type());
-        if (prefix == null) {
-            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+        StructureImpl<?> left;
+        Prefix2Parselet prefix2 = prefix2Parselets.get(Pair.of(token.type(), tokens.peek().type()));
+        if (prefix2 != null) {
+            left = prefix2.parse(this, token, tokens.poll());
+        } else {
+            Prefix1Parselet prefix1 = prefix1Parselets.get(token.type());
+            if (prefix1 == null) {
+                throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+            }
+            left = prefix1.parse(this, token);
         }
-        StructureImpl<?> left = prefix.parse(this, token);
         while (precedence < precedence()) {
             token = tokens.poll();
             InfixParselet infix = infixParselets.get(token.type());
@@ -66,17 +81,14 @@ public class Parser {
         return left;
     }
 
-    public List<StructureImpl<?>> parseExpression() throws ParseException {
+    public List<StructureImpl<?>> parseRoots() throws ParseException {
         List<StructureImpl<?>> result = List.of();
         while (!tokens.isEmpty()) {
-            while (tokens.peek() != null && tokens.peek().type() == TokenType.V) {
-                tokens.poll();
+            while (match(TokenType.V)) {
             }
             if (!tokens.isEmpty()) {
                 result = result.add(parseExpression(0));
-                if (tokens.peek() == null || tokens.peek().type() != TokenType.V) {
-                    break;
-                }
+                consume(TokenType.V);
             }
         }
         if (!tokens.isEmpty()) {
@@ -84,6 +96,23 @@ public class Parser {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
         return result;
+    }
+
+    public boolean match(TokenType expected) {
+        Token token = tokens.peek();
+        if (token.type() != expected) {
+            return false;
+        }
+        tokens.poll();
+        return true;
+    }
+
+    public Token consume(TokenType expected) throws ParseException {
+        Token token = tokens.poll();
+        if (token.type() != expected) {
+            throw new ParseException("Expected token " + expected + " and found " + token.type(), token.position());
+        }
+        return token;
     }
 
     private int precedence() throws ParseException {
