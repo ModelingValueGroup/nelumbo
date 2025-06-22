@@ -28,7 +28,6 @@ import java.util.Map;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.Structure;
-import org.modelingvalue.nelumbo.syntax.Token.TokenType;
 
 public class Parser {
 
@@ -84,11 +83,11 @@ public class Parser {
     public List<Structure> parseRoots() throws ParseException {
         List<Structure> result = List.of();
         while (!tokens.isEmpty()) {
-            while (match(TokenType.V)) {
+            while (match(TokenType.NEWLINE)) {
             }
             if (!tokens.isEmpty()) {
                 result = result.add(parseExpression(0));
-                consume(TokenType.V);
+                consume(TokenType.NEWLINE);
             }
         }
         if (!tokens.isEmpty()) {

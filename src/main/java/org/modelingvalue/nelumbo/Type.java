@@ -28,10 +28,12 @@ public final class Type extends Structure {
 
     public Type(Class<?> clss) {
         super(TYPE, clss);
+        KnowledgeBase.CURRENT.get().addType(this);
     }
 
     public Type(String name, List<Type> supers) {
         super(TYPE, name, supers);
+        KnowledgeBase.CURRENT.get().addType(this);
     }
 
     private Type(Object[] array) {
@@ -43,10 +45,14 @@ public final class Type extends Structure {
         return TYPE;
     }
 
+    public String name() {
+        Object type = get(1);
+        return type instanceof Class ? ((Class<?>) type).getSimpleName() : (String) type;
+    }
+
     @Override
     public String toString() {
-        Object type = get(1);
-        return "<" + (type instanceof Class ? ((Class<?>) type).getSimpleName() : (String) type) + ">";
+        return "<" + name() + ">";
     }
 
     @SuppressWarnings("unchecked")

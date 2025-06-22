@@ -24,8 +24,6 @@ import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 
-import org.modelingvalue.nelumbo.syntax.Token.TokenType;
-
 public class Tokenizer {
 
     private final String input;
@@ -65,7 +63,7 @@ public class Tokenizer {
             if (text == null) {
                 throw new ParseException("Unexpected character '" + input.charAt(pos) + "' at position " + pos + ".", pos);
             } else {
-                if (type != TokenType.H && (type != TokenType.V || tokens.isEmpty() || !tokens.getLast().type().more())) {
+                if (type != TokenType.HSPACE && (type != TokenType.NEWLINE || tokens.isEmpty() || !tokens.getLast().type().more())) {
                     tokens.add(new Token(type, text, pos));
                 }
                 pos += text.length();

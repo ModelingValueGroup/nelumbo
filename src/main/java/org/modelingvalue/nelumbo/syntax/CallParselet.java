@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Structure;
-import org.modelingvalue.nelumbo.syntax.Token.TokenType;
 
 public class CallParselet extends Prefix2Parselet {
 

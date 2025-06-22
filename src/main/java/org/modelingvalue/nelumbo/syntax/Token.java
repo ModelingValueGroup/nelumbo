@@ -20,42 +20,7 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.util.regex.Pattern;
-
 public class Token {
-
-    public enum TokenType {
-        COMMA(",", true), //
-        LPAREN("\\(", true), //
-        RPAREN("\\)", false), //
-        LBRACKET("\\[", true), //
-        RBRACKET("\\]", false), //
-        LBRACE("\\{", true), //
-        RBRACE("\\}", false), //
-        STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false), //
-        NUMBER("[0-9]+", false), //
-        IDENTIFIER("[a-zA-Z_][a-zA-Z0-9_]*", false), //
-        TYPE("<[a-zA-Z_][a-zA-Z0-9_]*([\\*|\\+])?>", false), //
-        OPERATOR("[:\\=\\-\\*\\+<>/!@#$%^&|~]+", true), //
-        H("((/\\*[\\s\\S]*\\*/)|\\h)+", false), //
-        V("((//[^\\v]*)?\\v)+", false);
-
-        private final Pattern pattern;
-        private final boolean more;
-
-        private TokenType(String regexp, boolean more) {
-            this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
-            this.more = more;
-        }
-
-        public boolean more() {
-            return more;
-        }
-
-        public Pattern pattern() {
-            return pattern;
-        }
-    }
 
     private final TokenType type;
     private final String    text;

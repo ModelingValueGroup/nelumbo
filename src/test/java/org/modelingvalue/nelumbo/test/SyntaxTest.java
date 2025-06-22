@@ -37,14 +37,15 @@ public class SyntaxTest extends NelumboTestBase {
     @Test
     public void tokenizer() {
         String example = """
+                // COMMEND
                     -abb + bcc *
-                       c - dee //*COMMEND*!@
+                       c - dee // MORE COMMEND
                     e = 8.9 / 2
                 """;
         try {
             LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-            // printTokens(tokens);
-            assertEquals(17, tokens.size());
+            printTokens(tokens);
+            assertEquals(16, tokens.size());
         } catch (ParseException e) {
             fail(e);
         }

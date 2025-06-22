@@ -36,9 +36,13 @@ public final class Variable extends Structure {
         return (Type) get(0);
     }
 
+    public String name() {
+        return get(1).toString();
+    }
+
     @Override
     public String toString() {
-        return get(1).toString();
+        return name();
     }
 
     @Override

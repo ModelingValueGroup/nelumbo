@@ -23,7 +23,6 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Structure;
-import org.modelingvalue.nelumbo.syntax.Token.TokenType;
 
 public class ParenParselet extends Prefix1Parselet {
 

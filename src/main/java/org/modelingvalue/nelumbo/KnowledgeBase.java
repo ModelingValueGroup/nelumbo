@@ -133,6 +133,8 @@ public final class KnowledgeBase {
         return result;
     }
 
+    private final AtomicReference<Map<String, Type>>                   types;
+    private final AtomicReference<Map<String, Variable>>               variables;
     private final AtomicReference<Map<Relation, InferResult>>          facts;
     private final AtomicReference<Map<Relation, Set<Rule>>>            rules;
     private final AtomicInteger                                        depth;
@@ -142,6 +144,8 @@ public final class KnowledgeBase {
 
     @SuppressWarnings("unchecked")
     public KnowledgeBase(KnowledgeBase init) {
+        types = new AtomicReference<>(init != null ? init.types.get() : Map.of());
+        variables = new AtomicReference<>(Map.of());
         facts = new AtomicReference<>(init != null ? init.facts.get() : Map.of());
         rules = new AtomicReference<>(init != null ? init.rules.get() : Map.of());
         memoization = new AtomicReference<>(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
@@ -190,6 +194,14 @@ public final class KnowledgeBase {
             }
         }
         return null;
+    }
+
+    public Map<String, Variable> variables() {
+        return variables.get();
+    }
+
+    public Map<String, Type> types() {
+        return types.get();
     }
 
     public Map<Relation, Set<Rule>> rules() {
@@ -293,6 +305,14 @@ public final class KnowledgeBase {
         return map;
     }
 
+    public final void addType(Type type) {
+        types.updateAndGet(map -> map.put(type.name(), type));
+    }
+
+    public final Type getype(String name) {
+        return types.get().get(name);
+    }
+
     public InferContext context() {
         return context;
     }
@@ -302,6 +322,15 @@ public final class KnowledgeBase {
     }
 
     public void print() {
+        for (Entry<String, Type> e : types()) {
+            Type type = e.getValue();
+            String supers = type.supers().toString();
+            System.err.println(type.name() + ":" + supers.substring(45, supers.length() - 1));
+        }
+        for (Entry<String, Variable> e : variables()) {
+            Variable var = e.getValue();
+            System.err.println(var.name() + ":" + var.type());
+        }
         for (Entry<Relation, InferResult> e : facts()) {
             System.err.println(e.getKey() + " " + e.getValue());
         }
