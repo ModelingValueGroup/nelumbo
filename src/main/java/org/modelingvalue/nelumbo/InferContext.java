@@ -20,65 +20,72 @@
 
 package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.impl.InferResult;
-import org.modelingvalue.nelumbo.impl.PredicateImpl;
-import org.modelingvalue.nelumbo.impl.StructureImpl;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 
-public final class Result {
+public interface InferContext {
+    KnowledgeBase knowledgebase();
 
-    private final InferResult inferResult;
+    List<Relation> stack();
 
-    public Result(InferResult inferResult) {
-        this.inferResult = inferResult;
+    Map<Relation, InferResult> cycleResult();
+
+    boolean reduce();
+
+    boolean trace();
+
+    static InferContext of(KnowledgeBase knowledgebase, List<Relation> stack, Map<Relation, InferResult> cyclic, boolean reduce, boolean trace) {
+        return new InferContext() {
+            @Override
+            public KnowledgeBase knowledgebase() {
+                return knowledgebase;
+            }
+
+            @Override
+            public List<Relation> stack() {
+                return stack;
+            }
+
+            @Override
+            public Map<Relation, InferResult> cycleResult() {
+                return cyclic;
+            }
+
+            @Override
+            public boolean reduce() {
+                return reduce;
+            }
+
+            @Override
+            public boolean trace() {
+                return trace;
+            }
+        };
     }
 
-    public Result(Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods) {
-        this.inferResult = InferResult.of(unproxy(facts), completeFacts, unproxy(falsehoods), completeFalsehoods, Set.of());
+    default InferContext pushOnStack(Relation relation) {
+        return of(knowledgebase(), stack().append(relation), cycleResult(), false, trace());
     }
 
-    private static Set<PredicateImpl<?>> unproxy(Set<Predicate> set) {
-        return set.replaceAll(StructureImpl::unproxy);
+    default InferContext putCycleResult(Relation relation, InferResult cycleResult) {
+        return of(knowledgebase(), stack(), cycleResult().put(relation, cycleResult), false, trace());
     }
 
-    public Set<Predicate> facts() {
-        return inferResult.facts().replaceAll(PredicateImpl::proxyWithVariables);
+    default InferContext reduce(boolean reduce) {
+        return of(knowledgebase(), stack(), cycleResult(), reduce, trace());
     }
 
-    public Set<Predicate> falsehoods() {
-        return inferResult.falsehoods().replaceAll(PredicateImpl::proxyWithVariables);
+    default InferContext trace(boolean trace) {
+        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), reduce(), trace);
     }
 
-    public boolean completeFacts() {
-        return inferResult.completeFacts();
+    default String prefix() {
+        return "NELUMBO: " + "      ".repeat(stack().size());
     }
 
-    public boolean completeFalsehoods() {
-        return inferResult.completeFalsehoods();
+    default InferResult getCycleResult(Relation relation) {
+        InferResult result = cycleResult().get(relation);
+        return result != null ? result.cast(relation) : null;
     }
 
-    @Override
-    public int hashCode() {
-        return inferResult.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (!(obj instanceof Result)) {
-            return false;
-        } else {
-            Result other = (Result) obj;
-            return inferResult.equals(other.inferResult);
-        }
-    }
-
-    @Override
-    public String toString() {
-        return inferResult.toString();
-    }
 }

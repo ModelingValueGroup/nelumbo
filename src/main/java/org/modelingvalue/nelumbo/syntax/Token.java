@@ -26,14 +26,18 @@ public class Token {
 
     public enum TokenType {
         COMMA(",", true), //
-        DOT("\\.", true), //
         LPAREN("\\(", true), //
         RPAREN("\\)", false), //
-        STRING("\"[^\"]*\"", false), //
+        LBRACKET("\\[", true), //
+        RBRACKET("\\]", false), //
+        LBRACE("\\{", true), //
+        RBRACE("\\}", false), //
+        STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false), //
         NUMBER("[0-9]+", false), //
         IDENTIFIER("[a-zA-Z_][a-zA-Z0-9_]*", false), //
+        TYPE("<[a-zA-Z_][a-zA-Z0-9_]*([\\*|\\+])?>", false), //
         OPERATOR("[:\\=\\-\\*\\+<>/!@#$%^&|~]+", true), //
-        H("\\h+", false), //
+        H("((/\\*[\\s\\S]*\\*/)|\\h)+", false), //
         V("((//[^\\v]*)?\\v)+", false);
 
         private final Pattern pattern;

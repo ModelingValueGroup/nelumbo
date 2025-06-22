@@ -18,96 +18,62 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.Logic.Relation;
-import org.modelingvalue.nelumbo.Logic.Rule;
-import org.modelingvalue.nelumbo.Logic.RuleModifier;
-import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
 
-public class RuleImpl extends StructureImpl<Rule> {
-    private static final long                                    serialVersionUID   = -4602043866952049391L;
+public class Rule extends Structure {
+    private static final long    serialVersionUID = -4602043866952049391L;
+    private static final Type    TYPE             = new Type(Rule.class);
+    private static final Functor FUNCTOR          = new Functor(TYPE, "Rule", List.of(Relation.TYPE, Predicate.TYPE));
 
-    private static final FunctorImpl2<Rule, Relation, Predicate> RULE_FUNCTOR       = FunctorImpl.of2(RuleImpl::rule);
-    private static final Functor<Rule>                           RULE_FUNCTOR_PROXY = RULE_FUNCTOR.proxy();
-
-    private static Rule rule(Relation consequence, Predicate condition) {
-        return null;
+    public Rule(Structure consequence, Structure condition) {
+        super(FUNCTOR, consequence, condition);
     }
 
-    private final boolean trace;
-
-    public RuleImpl(Relation consequence, Predicate condition, RuleModifier... modifiers) {
-        super(RULE_FUNCTOR_PROXY, consequence, condition);
-        trace = has(RuleModifier.trace, modifiers);
-    }
-
-    public RuleImpl(StructureImpl<?> consequence, StructureImpl<?> condition, RuleModifier... modifiers) {
-        super(RULE_FUNCTOR, consequence, condition);
-        trace = has(RuleModifier.trace, modifiers);
-    }
-
-    private static boolean has(RuleModifier e, RuleModifier[] modifiers) {
-        for (RuleModifier m : modifiers) {
-            if (m == e) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private RuleImpl(Object[] args) {
+    private Rule(Object[] args) {
         super(args);
-        trace = false;
     }
 
     @Override
-    protected RuleImpl struct(Object[] array) {
-        return new RuleImpl(array);
+    protected Rule struct(Object[] array) {
+        return new Rule(array);
     }
 
-    @SuppressWarnings("rawtypes")
-    public final RelationImpl consequence() {
-        return (RelationImpl) get(1);
+    public final Relation consequence() {
+        return (Relation) get(1);
     }
 
-    @SuppressWarnings("rawtypes")
-    public final PredicateImpl<?> condition() {
-        return (PredicateImpl) get(2);
+    public final Predicate condition() {
+        return (Predicate) get(2);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final InferResult imply(RelationImpl relation, InferContext context) {
-        Map<VariableImpl, Object> binding = relation.getBinding(consequence(), Map.of(), true);
+    protected final InferResult imply(Relation relation, InferContext context) {
+        Map<Variable, Object> binding = relation.getBinding(consequence(), Map.of(), true);
         if (binding == null) {
             return null;
         }
-        if (!TRACE_NELUMBO && trace()) {
-            context = context.trace(true);
-        }
         binding = variables().putAll(binding);
-        PredicateImpl condition = condition().setBinding(binding);
-        PredicateImpl consequence = consequence().setBinding(binding);
+        Predicate condition = condition().setBinding(binding);
+        Predicate consequence = consequence().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + condition.toString(null) + "\u21D2" + consequence);
+            System.err.println(context.prefix() + condition + "\u21D2" + consequence);
         }
         InferResult condResult = condition.resolve(context);
         InferResult relResult;
         if (condResult.hasStackOverflow()) {
             relResult = condResult;
         } else {
-            Set<PredicateImpl<?>> relFacts = Set.of(), relFalsehoods = Set.of();
+            Set<Predicate> relFacts = Set.of(), relFalsehoods = Set.of();
             boolean completeFacts = true, completeFalsehoods = true;
-            for (PredicateImpl<?> condFact : condResult.facts()) {
-                PredicateImpl<?> relFact = relation.castFrom(consequence.setBinding(condFact.getBinding()));
+            for (Predicate condFact : condResult.facts()) {
+                Predicate relFact = relation.castFrom(consequence.setBinding(condFact.getBinding()));
                 relFacts = relFacts.add(relFact);
             }
-            for (PredicateImpl<?> condFalsehood : condResult.falsehoods()) {
-                PredicateImpl<?> relFalsehood = relation.castFrom(consequence.setBinding(condFalsehood.getBinding()));
+            for (Predicate condFalsehood : condResult.falsehoods()) {
+                Predicate relFalsehood = relation.castFrom(consequence.setBinding(condFalsehood.getBinding()));
                 if (!relFacts.contains(relFalsehood)) {
                     relFalsehoods = relFalsehoods.add(relFalsehood);
                 }
@@ -137,23 +103,18 @@ public class RuleImpl extends StructureImpl<Rule> {
     }
 
     @Override
-    public RuleImpl set(int i, Object... a) {
-        return (RuleImpl) super.set(i, a);
+    public Rule set(int i, Object... a) {
+        return (Rule) super.set(i, a);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Class<Rule> type() {
-        return Rule.class;
+    public Type type() {
+        return TYPE;
     }
 
     @Override
     public String toString() {
-        return isPrettyPrinting() ? condition().toString(null) + "\u21D2" + consequence() : super.toString();
-    }
-
-    public boolean trace() {
-        return trace;
+        return consequence() + "<==" + condition();
     }
 
 }

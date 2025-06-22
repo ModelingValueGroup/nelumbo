@@ -18,51 +18,45 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.Predicate;
-
-public abstract class BinaryPredicateImpl extends PredicateImpl<Predicate> {
+public abstract class BinaryPredicate extends Predicate {
     private static final long    serialVersionUID = -928776822979604743L;
 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
     protected static final int[] ONE_ZERO         = new int[]{1, 0};
 
-    protected BinaryPredicateImpl(FunctorImpl<Predicate, ? extends Functor<Predicate>> functor, StructureImpl<?> predicate1, StructureImpl<?> predicate2) {
+    protected BinaryPredicate(Functor functor, Structure predicate1, Structure predicate2) {
         super(functor, predicate1, predicate2);
     }
 
-    protected BinaryPredicateImpl(Object[] args, BinaryPredicateImpl declaration) {
+    protected BinaryPredicate(Object[] args, BinaryPredicate declaration) {
         super(args, declaration);
     }
 
     @Override
-    public BinaryPredicateImpl declaration() {
-        return (BinaryPredicateImpl) super.declaration();
+    public BinaryPredicate declaration() {
+        return (BinaryPredicate) super.declaration();
     }
 
-    @SuppressWarnings("rawtypes")
-    public final PredicateImpl<?> predicate1() {
-        return (PredicateImpl) get(1);
+    public final Predicate predicate1() {
+        return (Predicate) get(1);
     }
 
-    @SuppressWarnings("rawtypes")
-    public final PredicateImpl<?> predicate2() {
-        return (PredicateImpl) get(2);
+    public final Predicate predicate2() {
+        return (Predicate) get(2);
     }
 
-    @SuppressWarnings("rawtypes")
-    private PredicateImpl<?> predicate(int i) {
-        return (PredicateImpl) get(i + 1);
+    private Predicate predicate(int i) {
+        return (Predicate) get(i + 1);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     protected final InferResult infer(InferContext context) {
-        PredicateImpl[] predicate = new PredicateImpl[2];
+        Predicate[] predicate = new Predicate[2];
         InferResult[] predResult = new InferResult[2];
         for (int i : order()) {
             predicate[i] = predicate(i);
@@ -71,17 +65,17 @@ public abstract class BinaryPredicateImpl extends PredicateImpl<Predicate> {
                 return predResult[i];
             } else if (context.reduce()) {
                 if (isTrue(predResult[i])) {
-                    return BooleanImpl.TRUE_CONCLUSION;
+                    return Boolean.TRUE_CONCLUSION;
                 } else if (isFalse(predResult[i])) {
-                    return BooleanImpl.FALSE_CONCLUSION;
+                    return Boolean.FALSE_CONCLUSION;
                 }
             }
         }
         if (context.reduce()) {
             if (isTrue(predResult)) {
-                return BooleanImpl.TRUE_CONCLUSION;
+                return Boolean.TRUE_CONCLUSION;
             } else if (isFalse(predResult)) {
-                return BooleanImpl.FALSE_CONCLUSION;
+                return Boolean.FALSE_CONCLUSION;
             } else if (isLeft(predResult)) {
                 return predResult[0];
             } else if (isRight(predResult)) {

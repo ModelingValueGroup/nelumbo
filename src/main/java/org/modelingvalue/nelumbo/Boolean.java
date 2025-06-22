@@ -18,52 +18,64 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
-
-import java.lang.reflect.Proxy;
+package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Logic.Type;
-import org.modelingvalue.nelumbo.Logic.Variable;
-import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
+import org.modelingvalue.collections.Map;
 
-public final class TypeImpl extends StructureImpl<Type> {
-    private static final long                                   serialVersionUID = -4583279157841144493L;
+public final class Boolean extends Predicate {
+    private static final long          serialVersionUID = -8515171118744898263L;
+    private static final Type          BOOLEAN          = new Type(java.lang.Boolean.class);
 
-    private static final FunctorImpl2<Type, String, List<Type>> TYPE_FUNCTOR     = FunctorImpl.of2(TypeImpl::type);
+    @SuppressWarnings("rawtypes")
+    private static final Functor       BOOLEAN_FUNCTOR  = new Functor(Predicate.TYPE, "Boolean", List.of(BOOLEAN));
 
-    private static Type type(String name, List<Type> supers) {
-        return null;
+    public static final Boolean        TRUE             = new Boolean(true);
+    public static final Boolean        FALSE            = new Boolean(false);
+
+    protected static final InferResult TRUE_CONCLUSION  = TRUE.factCC();
+    protected static final InferResult FALSE_CONCLUSION = FALSE.falsehoodCC();
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private Boolean(boolean val) {
+        super(BOOLEAN_FUNCTOR, val);
     }
 
-    public TypeImpl(String name, List<TypeImpl> supers) {
-        super(TYPE_FUNCTOR, name, supers);
-    }
-
-    private TypeImpl(Object[] array) {
-        super(array);
+    private Boolean(Object[] args, Boolean declaration) {
+        super(args, declaration);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public final Type proxy() {
-        return (Type) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Variable.class}, this);
+    protected void init(Structure parent, int idx) {
+    }
+
+    public boolean isTrue() {
+        return (java.lang.Boolean) get(1);
+    }
+
+    @Override
+    protected Boolean struct(Object[] array, Predicate declaration) {
+        return new Boolean(array, (Boolean) declaration);
+    }
+
+    @Override
+    protected InferResult infer(InferContext context) {
+        return isTrue() ? TRUE_CONCLUSION : FALSE_CONCLUSION;
+    }
+
+    @Override
+    public Map<Variable, Object> getBinding() {
+        return Map.of();
+    }
+
+    @Override
+    public Boolean set(int i, Object... a) {
+        return (Boolean) super.set(i, a);
     }
 
     @Override
     public String toString() {
         return get(1).toString();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    protected TypeImpl struct(Object[] array) {
-        return new TypeImpl(array);
-    }
-
-    @Override
-    public TypeImpl set(int i, Object... a) {
-        return (TypeImpl) super.set(i, a);
     }
 
 }

@@ -18,45 +18,39 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.Pair;
-import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.Predicate;
 
-public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P> {
+public abstract class Predicate extends Structure {
 
-    private static final long           serialVersionUID = -1605559565948158856L;
+    private static final long    serialVersionUID = -1605559565948158856L;
 
-    private final Set<PredicateImpl<?>> singleton        = Set.of(this);
-    private final PredicateImpl<P>      declaration;
+    protected static final Type  TYPE             = new Type(Predicate.class);
 
-    private StructureImpl<?>            parent;
-    private int                         parentIdx;
+    private final Set<Predicate> singleton        = Set.of(this);
+    private final Predicate      declaration;
 
-    @SuppressWarnings("unchecked")
-    protected PredicateImpl(Functor<P> functor, Object... args) {
+    private Structure            parent;
+    private int                  parentIdx;
+
+    protected Predicate(Functor functor, Object... args) {
         super(functor, args);
         this.declaration = this;
     }
 
-    protected PredicateImpl(FunctorImpl<P, ? extends Functor<P>> functor, Object... args) {
-        super(functor, args);
-        this.declaration = this;
-    }
-
-    protected void init(StructureImpl<?> parent, int idx) {
+    protected void init(Structure parent, int idx) {
         assert (this.parent == null && this.parentIdx == 0);
         this.parent = parent;
         this.parentIdx = idx;
     }
 
-    private Pair<StructureImpl<?>, int[]> rootIdx() {
+    private Pair<Structure, int[]> rootIdx() {
         if (parent != null) {
-            Pair<StructureImpl<?>, int[]> root = parent instanceof PredicateImpl ? ((PredicateImpl<?>) parent).rootIdx() : null;
+            Pair<Structure, int[]> root = parent instanceof Predicate ? ((Predicate) parent).rootIdx() : null;
             if (root != null) {
                 int[] idx = new int[root.b().length + 1];
                 System.arraycopy(root.b(), 0, idx, 1, root.b().length);
@@ -70,93 +64,80 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         }
     }
 
-    protected StructureImpl<?> root() {
-        Pair<StructureImpl<?>, int[]> ri = rootIdx();
-        return ri != null ? ri.a().set(ri.b(), BooleanImpl.TRUE) : null;
+    protected Structure root() {
+        Pair<Structure, int[]> ri = rootIdx();
+        return ri != null ? ri.a().set(ri.b(), Boolean.TRUE) : null;
     }
 
-    protected PredicateImpl(Object[] args, PredicateImpl<P> declaration) {
+    protected Predicate(Object[] args, Predicate declaration) {
         super(args);
         this.declaration = declaration == null ? this : declaration;
     }
 
-    public PredicateImpl<P> declaration() {
+    public Predicate declaration() {
         return declaration;
     }
 
-    protected PredicateImpl<P> castFrom(PredicateImpl<?> from) {
+    protected Predicate castFrom(Predicate from) {
         throw new UnsupportedOperationException();
     }
 
-    protected PredicateImpl<P> clearDeclaration() {
-        return struct(toArray(), (PredicateImpl<P>) null);
-    }
-
-    @SuppressWarnings("unchecked")
-    public P proxyWithVariables() {
-        return (P) setVariables().proxy();
+    protected Predicate clearDeclaration() {
+        return struct(toArray(), (Predicate) null);
     }
 
     @Override
     public String toString() {
-        return isPrettyPrinting() ? setVariables().superToString() : super.toString();
+        return setVariables().superToString();
     }
 
     private String superToString() {
         return super.toString();
     }
 
-    @SuppressWarnings("rawtypes")
-    private PredicateImpl setVariables() {
-        Map<VariableImpl, Object> vars = getBinding(declaration, Map.of(), false);
+    private Predicate setVariables() {
+        Map<Variable, Object> vars = getBinding(declaration, Map.of(), false);
         vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
         return setBinding(vars);
     }
 
-    @SuppressWarnings("rawtypes")
-    public Map<VariableImpl, Object> getBinding() {
+    public Map<Variable, Object> getBinding() {
         return super.getBinding(declaration, Map.of(), false);
     }
 
-    @SuppressWarnings("rawtypes")
-    protected final PredicateImpl setBinding(Map<VariableImpl, Object> vars) {
-        return (PredicateImpl) super.setBinding(declaration, vars);
+    protected final Predicate setBinding(Map<Variable, Object> vars) {
+        return (Predicate) super.setBinding(declaration, vars);
     }
 
-    @SuppressWarnings("rawtypes")
-    protected PredicateImpl set(VariableImpl var, Object val) {
-        return (PredicateImpl) super.set(declaration, var, val);
+    protected Predicate set(Variable var, Object val) {
+        return (Predicate) super.set(declaration, var, val);
     }
 
-    @SuppressWarnings("rawtypes")
-    protected final Object get(VariableImpl var) {
+    protected final Object get(Variable var) {
         return super.get(declaration, var);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected final PredicateImpl<P> struct(Object[] array) {
+    protected final Predicate struct(Object[] array) {
         return struct(array, declaration);
     }
 
-    protected abstract PredicateImpl<P> struct(Object[] array, PredicateImpl<P> declaration);
+    protected abstract Predicate struct(Object[] array, Predicate declaration);
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public Class getType(int i) {
+    public Type getType(int i) {
         Object v = get(i);
-        return v instanceof Class ? (Class) v : v instanceof StructureImpl ? ((StructureImpl) v).type() : null;
+        return v instanceof Type ? (Type) v : v instanceof Structure ? ((Structure) v).type() : null;
     }
 
-    @SuppressWarnings("unchecked")
     public InferResult infer() {
-        InferContext context = KnowledgeBaseImpl.CURRENT.get().context();
-        PredicateImpl<P> predicate = setBinding(variables());
+        InferContext context = KnowledgeBase.CURRENT.get().context();
+        Predicate predicate = setBinding(variables());
         if (context.trace()) {
-            System.err.println(context.prefix() + "  " + predicate.toString(null));
+            System.err.println(context.prefix() + "  " + predicate);
         }
         InferResult result = predicate.resolve(context);
         if (context.trace()) {
-            System.err.println(context.prefix() + "  " + predicate.toString(null) + "\u2192" + result);
+            System.err.println(context.prefix() + "  " + predicate + "\u2192" + result);
         }
         return result;
     }
@@ -167,34 +148,30 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
 
     protected abstract InferResult infer(InferContext context);
 
-    @SuppressWarnings("rawtypes")
-    public boolean contains(PredicateImpl cond) {
+    public boolean contains(Predicate cond) {
         return equals(cond);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public PredicateImpl<P> set(int i, Object... a) {
-        return (PredicateImpl) super.set(i, a);
+    public Predicate set(int i, Object... a) {
+        return (Predicate) super.set(i, a);
     }
 
-    protected PredicateImpl<?> replace(PredicateImpl<?> from, PredicateImpl<?> to) {
-        return (PredicateImpl<?>) super.replace(from, to);
+    protected Predicate replace(Predicate from, Predicate to) {
+        return (Predicate) super.replace(from, to);
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public PredicateImpl<P> set(int[] idx, Object val) {
-        return (PredicateImpl) super.set(idx, val);
+    public Predicate set(int[] idx, Object val) {
+        return (Predicate) super.set(idx, val);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public PredicateImpl<P> copy(int from, int to) {
-        return (PredicateImpl) super.set(to, get(from));
+    public Predicate copy(int from, int to) {
+        return (Predicate) super.set(to, get(from));
     }
 
     @SuppressWarnings("unchecked")
-    protected final PredicateImpl<P> set(int i, PredicateImpl<?>... a) {
+    protected final Predicate set(int i, Predicate... a) {
         Object[] predArray = toArray();
         Object[] declArray = declaration.toArray();
         for (int x = 0; x < a.length; x++) {
@@ -224,21 +201,20 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
         return InferResult.falsehoodsCC(singleton);
     }
 
-    public final Set<PredicateImpl<?>> singleton() {
+    public final Set<Predicate> singleton() {
         return singleton;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     protected InferResult resolve(InferContext context) {
-        Map<Map<VariableImpl, Object>, PredicateImpl> now, next = Map.of(Entry.of(getBinding(), this));
-        Set<PredicateImpl<?>> facts = Set.of(), falsehoods = Set.of();
+        Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(), this));
+        Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
-        Set<RelationImpl> cycles = Set.of();
+        Set<Relation> cycles = Set.of();
         InferContext reduce = context.reduce(true);
         do {
             now = next;
             next = Map.of();
-            for (Entry<Map<VariableImpl, Object>, PredicateImpl> entry : now) {
+            for (Entry<Map<Variable, Object>, Predicate> entry : now) {
                 InferResult result = entry.getValue().infer(reduce);
                 if (result.hasStackOverflow()) {
                     return result;
@@ -247,9 +223,9 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                 } else if (result.isTrueCC()) {
                     facts = facts.add(setBinding(entry.getKey()));
                 } else {
-                    PredicateImpl predicate = result.unknown();
+                    Predicate predicate = result.unknown();
                     if (context.trace()) {
-                        System.err.println(context.prefix() + "  " + predicate.toString(null));
+                        System.err.println(context.prefix() + "  " + predicate);
                     }
                     result = predicate.infer(context);
                     if (result.hasStackOverflow()) {
@@ -259,13 +235,13 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
                         completeFalsehoods = false;
                         cycles = cycles.addAll(result.cycles());
                     } else {
-                        for (PredicateImpl pred : result.facts()) {
-                            Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
-                            next = next.put(binding, predicate.setBinding(binding).replace(pred, BooleanImpl.TRUE));
+                        for (Predicate pred : result.facts()) {
+                            Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
+                            next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.TRUE));
                         }
-                        for (PredicateImpl pred : result.falsehoods()) {
-                            Map<VariableImpl, Object> binding = entry.getKey().putAll(pred.getBinding());
-                            next = next.put(binding, predicate.setBinding(binding).replace(pred, BooleanImpl.FALSE));
+                        for (Predicate pred : result.falsehoods()) {
+                            Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
+                            next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.FALSE));
                         }
                         completeFacts &= result.completeFacts();
                         completeFalsehoods &= result.completeFalsehoods();
@@ -278,19 +254,19 @@ public abstract class PredicateImpl<P extends Predicate> extends StructureImpl<P
     }
 
     @Override
-    protected PredicateImpl<P> setType(int i, Class<?> type) {
+    protected Predicate setType(int i, Type type) {
         Object[] array = setArray(i, type);
         return array != null ? struct(array, null) : this;
     }
 
     @Override
-    protected PredicateImpl<P> setTyped(int i, StructureImpl<?> typed) {
+    protected Predicate setTyped(int i, Structure typed) {
         Object[] array = setArray(i, typed);
         return array != null ? struct(array, null) : this;
     }
 
     @Override
-    protected PredicateImpl<P> signature(int depth) {
+    protected Predicate signature(int depth) {
         Object[] array = signatureArray(depth);
         return array != null ? struct(array, null) : this;
     }

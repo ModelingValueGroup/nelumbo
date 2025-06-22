@@ -24,7 +24,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.modelingvalue.nelumbo.impl.StructureImpl;
+import org.modelingvalue.nelumbo.Structure;
 
 public final class BinaryOperatorParselet extends InfixParselet {
 
@@ -36,9 +36,9 @@ public final class BinaryOperatorParselet extends InfixParselet {
     }
 
     @Override
-    public StructureImpl<?> parse(Parser parser, StructureImpl<?> left, Token token) throws ParseException {
+    public Structure parse(Parser parser, Structure left, Token token) throws ParseException {
         BinaryOperator binaryOperator = getOperator(token);
-        StructureImpl<?> right = parser.parseExpression(binaryOperator.precedence());
+        Structure right = parser.parseExpression(binaryOperator.precedence());
         return binaryOperator.construct(token, left, right);
     }
 

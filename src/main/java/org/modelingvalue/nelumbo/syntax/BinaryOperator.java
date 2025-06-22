@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.nelumbo.impl.StructureImpl;
+import org.modelingvalue.nelumbo.Structure;
 
 public abstract class BinaryOperator {
 
@@ -43,12 +43,12 @@ public abstract class BinaryOperator {
         return precedence;
     }
 
-    public abstract StructureImpl<?> construct(Token token, StructureImpl<?> left, StructureImpl<?> right) throws ParseException;
+    public abstract Structure construct(Token token, Structure left, Structure right) throws ParseException;
 
-    public static BinaryOperator of(String text, int precedence, ThrowingTriFunction<Token, StructureImpl<?>, StructureImpl<?>, StructureImpl<?>> constructor) {
+    public static BinaryOperator of(String text, int precedence, ThrowingTriFunction<Token, Structure, Structure, Structure> constructor) {
         return new BinaryOperator(text, precedence) {
             @Override
-            public StructureImpl<?> construct(Token token, StructureImpl<?> left, StructureImpl<?> right) throws ParseException {
+            public Structure construct(Token token, Structure left, Structure right) throws ParseException {
                 return constructor.apply(token, left, right);
             }
         };

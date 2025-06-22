@@ -18,54 +18,59 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
-import java.lang.reflect.Proxy;
+import org.modelingvalue.collections.List;
 
-import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.Logic.Variable;
+public final class Type extends Structure {
+    private static final long serialVersionUID = -4583279157841144493L;
+    private static final Type TYPE             = new Type(Type.class);
 
-public final class VariableImpl<F extends Structure> extends StructureImpl<F> {
-    private static final long serialVersionUID = -8998368070388908726L;
-
-    public VariableImpl(Class<F> type, String name) {
-        super(type, name, new Object());
+    public Type(Class<?> clss) {
+        super(TYPE, clss);
     }
 
-    private VariableImpl(Object[] array) {
+    public Type(String name, List<Type> supers) {
+        super(TYPE, name, supers);
+    }
+
+    private Type(Object[] array) {
         super(array);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public final F proxy() {
-        return (F) varProxy();
-    }
-
-    @SuppressWarnings("unchecked")
-    public final Variable varProxy() {
-        return (Variable) Proxy.newProxyInstance(type().getClassLoader(), new Class[]{type(), Variable.class}, this);
+    protected Type type() {
+        return TYPE;
     }
 
     @Override
     public String toString() {
-        return get(1).toString();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    protected VariableImpl<F> struct(Object[] array) {
-        return new VariableImpl<F>(array);
-    }
-
-    @Override
-    public VariableImpl<F> set(int i, Object... a) {
-        return (VariableImpl<F>) super.set(i, a);
+        Object type = get(1);
+        return "<" + (type instanceof Class ? ((Class<?>) type).getSimpleName() : (String) type) + ">";
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public Class<F> type() {
-        return (Class<F>) get(0);
+    public List<Type> supers() {
+        return (List<Type>) get(2);
     }
+
+    @Override
+    protected Type struct(Object[] array) {
+        return new Type(array);
+    }
+
+    @Override
+    public Type set(int i, Object... a) {
+        return (Type) super.set(i, a);
+    }
+
+    public boolean isAssignableFrom(Type type) {
+        return equals(type) || supers().anyMatch(s -> s.isAssignableFrom(type));
+    }
+
+    public boolean isAssignableFrom(Class<?> type) {
+        Object clss = get(1);
+        return clss instanceof Class && ((Class<?>) clss).isAssignableFrom(type);
+    }
+
 }

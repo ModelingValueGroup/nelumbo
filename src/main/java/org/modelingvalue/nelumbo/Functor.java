@@ -18,75 +18,49 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.nelumbo.Logic;
-import org.modelingvalue.nelumbo.Logic.Functor1;
-import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl1;
+import org.modelingvalue.collections.List;
 
-public final class NotImpl extends PredicateImpl<Predicate> {
-    private static final long                               serialVersionUID  = -4543178470298951866L;
+public final class Functor extends Structure {
+    private static final long serialVersionUID = 285147889847599160L;
+    private static final Type TYPE             = new Type(Functor.class);
 
-    private static final FunctorImpl1<Predicate, Predicate> NOT_FUNCTOR       = FunctorImpl.of1(Logic::not);
-    private static final Functor1<Predicate, Predicate>     NOT_FUNCTOR_PROXY = NOT_FUNCTOR.proxy();
-
-    public NotImpl(Predicate pred) {
-        super(NOT_FUNCTOR_PROXY, pred);
+    protected Functor(Type resultType, String name, List<Type> args) {
+        super(TYPE, resultType, name, args);
     }
 
-    public NotImpl(StructureImpl<?> predicate) {
-        super(NOT_FUNCTOR, predicate);
-    }
-
-    private NotImpl(Object[] args, NotImpl declaration) {
-        super(args, declaration);
+    protected Functor(Object[] array) {
+        super(array);
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected NotImpl struct(Object[] array, PredicateImpl declaration) {
-        return new NotImpl(array, (NotImpl) declaration);
+    public Type type() {
+        return TYPE;
     }
 
-    @Override
-    public NotImpl declaration() {
-        return (NotImpl) super.declaration();
-    }
-
-    @SuppressWarnings("rawtypes")
-    public final PredicateImpl<?> predicate() {
-        return (PredicateImpl) get(1);
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    @Override
-    protected InferResult infer(InferContext context) {
-        PredicateImpl<?> predicate = predicate();
-        InferResult predResult = predicate.infer(context);
-        if (predResult.hasStackOverflow()) {
-            return predResult;
-        } else if (context.reduce()) {
-            if (predResult.isFalseCC()) {
-                return BooleanImpl.TRUE_CONCLUSION;
-            } else if (predResult.isTrueCC()) {
-                return BooleanImpl.FALSE_CONCLUSION;
-            } else {
-                return set(1, predResult.unknown()).unknown();
-            }
-        } else {
-            return predResult.flipComplete();
-        }
-    }
-
-    @Override
-    public NotImpl set(int i, Object... a) {
-        return (NotImpl) super.set(i, a);
+    protected Type resultType() {
+        return (Type) get(1);
     }
 
     @Override
     public String toString() {
-        return isPrettyPrinting() ? "\u00AC(" + predicate() + ")" : super.toString();
+        return ((String) get(2));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Type> args() {
+        return (List<Type>) get(3);
+    }
+
+    @Override
+    protected Functor struct(Object[] array) {
+        return new Functor(array);
+    }
+
+    @Override
+    public Functor set(int i, Object... a) {
+        return (Functor) super.set(i, a);
     }
 
 }

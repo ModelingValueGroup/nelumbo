@@ -18,65 +18,58 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.Logic;
-import org.modelingvalue.nelumbo.Logic.Functor2;
-import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.Logic.Relation;
-import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
 
-public class CollectImpl extends PredicateImpl<Predicate> {
-    private static final long                                         serialVersionUID    = -3084545514049410749L;
+public class Collect extends Predicate {
+    private static final long    serialVersionUID = -3084545514049410749L;
 
-    private static final FunctorImpl2<Predicate, Predicate, Relation> COLL_FUNCTOR        = FunctorImpl.of2(Logic::coll);
-    private static final Functor2<Predicate, Predicate, Relation>     COLL_FUNCTORR_PROXY = COLL_FUNCTOR.proxy();
+    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Collect", List.of(Predicate.TYPE, Predicate.TYPE));
 
-    private VariableImpl<?>                                           resultVar;
-    private VariableImpl<?>                                           iteratorVar;
-    private VariableImpl<?>                                           contextVar;
-    private StructureImpl<?>                                          identityCons;
-    private int[]                                                     identityIdx;
-    private PredicateImpl<?>                                          identityPred;
-    private PredicateImpl<?>                                          emptyCollector;
+    private Variable             resultVar;
+    private Variable             iteratorVar;
+    private Variable             contextVar;
+    private Structure            identityCons;
+    private int[]                identityIdx;
+    private Predicate            identityPred;
+    private Predicate            emptyCollector;
 
-    @SuppressWarnings("rawtypes")
-    public CollectImpl(Predicate condition, Predicate collector) {
-        super(COLL_FUNCTORR_PROXY, condition, collector);
+    public Collect(Structure condition, Structure collector) {
+        super(FUNCTOR, condition, collector);
     }
 
-    private CollectImpl(Object[] args, CollectImpl declaration) {
+    private Collect(Object[] args, Collect declaration) {
         super(args, declaration);
     }
 
-    @SuppressWarnings("rawtypes")
     private void initDeclaration() {
         if (emptyCollector == null) {
-            Map<VariableImpl, Object> condVars = condition().variables();
-            Map<VariableImpl, Object> collVars = collector().variables();
-            Map<VariableImpl, Object> globalVars = root().variables();
+            Map<Variable, Object> condVars = condition().variables();
+            Map<Variable, Object> collVars = collector().variables();
+            Map<Variable, Object> globalVars = root().variables();
             // result
-            Map<VariableImpl, Object> resultVars = collVars.retainAllKey(globalVars).removeAllKey(condVars);
+            Map<Variable, Object> resultVars = collVars.retainAllKey(globalVars).removeAllKey(condVars);
             if (resultVars.size() != 1) {
                 throw new IllegalArgumentException("Collect shoud have exactly one (result) variable in the collector (that is not used in the condition), " + resultVars.size() + " found in " + this);
             }
             resultVar = resultVars.get(0).getKey();
             // iterator
-            Map<VariableImpl, Object> iteratorVars = collVars.retainAllKey(condVars).removeAllKey(globalVars);
+            Map<Variable, Object> iteratorVars = collVars.retainAllKey(condVars).removeAllKey(globalVars);
             if (iteratorVars.size() != 1) {
                 throw new IllegalArgumentException("Collect shoud have exactly one shared (iterator) variable in the condition and the collector, " + iteratorVars.size() + " found in " + this);
             }
             iteratorVar = iteratorVars.get(0).getKey();
             // context
-            Map<VariableImpl, Object> contextVars = condVars.retainAllKey(globalVars).removeAllKey(collVars);
+            Map<Variable, Object> contextVars = condVars.retainAllKey(globalVars).removeAllKey(collVars);
             if (contextVars.size() != 1) {
                 throw new IllegalArgumentException("Collect shoud have exactly one (context) variable in the condition, " + contextVars.size() + " found in " + this);
             }
             contextVar = contextVars.get(0).getKey();
             // identity
-            Map<StructureImpl, int[]> collCons = collector().constants();
+            Map<Terminal, int[]> collCons = collector().terminals();
             if (collCons.size() != 1) {
                 throw new IllegalArgumentException("Collect shoud have exactly one (identity) constant in the collector, " + collCons.size() + " found in " + collector());
             }
@@ -93,7 +86,7 @@ public class CollectImpl extends PredicateImpl<Predicate> {
 
     private void init() {
         if (emptyCollector == null) {
-            CollectImpl decl = declaration();
+            Collect decl = declaration();
             decl.initDeclaration();
             resultVar = decl.resultVar;
             iteratorVar = decl.iteratorVar;
@@ -106,24 +99,21 @@ public class CollectImpl extends PredicateImpl<Predicate> {
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected CollectImpl struct(Object[] array, PredicateImpl declaration) {
-        return new CollectImpl(array, (CollectImpl) declaration);
+    protected Collect struct(Object[] array, Predicate declaration) {
+        return new Collect(array, (Collect) declaration);
     }
 
     @Override
-    public CollectImpl declaration() {
-        return (CollectImpl) super.declaration();
+    public Collect declaration() {
+        return (Collect) super.declaration();
     }
 
-    @SuppressWarnings("rawtypes")
-    public final PredicateImpl<?> condition() {
-        return (PredicateImpl) get(1);
+    public final Predicate condition() {
+        return (Predicate) get(1);
     }
 
-    @SuppressWarnings("rawtypes")
-    public final PredicateImpl<?> collector() {
-        return (PredicateImpl<?>) get(2);
+    public final Predicate collector() {
+        return (Predicate) get(2);
     }
 
     @Override
@@ -141,18 +131,18 @@ public class CollectImpl extends PredicateImpl<Predicate> {
     }
 
     private InferResult collect(InferResult condResult, InferContext context) {
-        PredicateImpl<?> condColl;
-        Set<PredicateImpl<?>> prev, next = Set.of();
-        Set<RelationImpl> cycles = condResult.cycles();
+        Predicate condColl;
+        Set<Predicate> prev, next = Set.of();
+        Set<Relation> cycles = condResult.cycles();
         boolean complete = condResult.completeFacts();
         if (complete) {
             next = identityPred.singleton();
-            for (PredicateImpl<?> condFact : condResult.facts()) {
+            for (Predicate condFact : condResult.facts()) {
                 prev = next;
                 next = Set.of();
                 condColl = emptyCollector.set(iteratorVar, condFact.get(iteratorVar));
-                for (PredicateImpl<?> prevFact : prev) {
-                    PredicateImpl<?> coll = condColl.set(identityIdx, prevFact.get(resultVar));
+                for (Predicate prevFact : prev) {
+                    Predicate coll = condColl.set(identityIdx, prevFact.get(resultVar));
                     InferResult inferResult = coll.resolve(context);
                     if (inferResult.hasStackOverflow()) {
                         return inferResult;
@@ -177,13 +167,13 @@ public class CollectImpl extends PredicateImpl<Predicate> {
     }
 
     @Override
-    public CollectImpl set(int i, Object... a) {
-        return (CollectImpl) super.set(i, a);
+    public Collect set(int i, Object... a) {
+        return (Collect) super.set(i, a);
     }
 
     @Override
     public String toString() {
-        return isPrettyPrinting() ? "(" + condition() + "\u03BB" + collector() + ")" : super.toString();
+        return "(" + condition() + "\u03BB" + collector() + ")";
     }
 
 }

@@ -18,72 +18,37 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.test;
+package org.modelingvalue.nelumbo;
 
-import static org.modelingvalue.nelumbo.Logic.*;
-import static org.modelingvalue.nelumbo.Rationals.*;
+public final class Variable extends Structure {
+    private static final long serialVersionUID = -8998368070388908726L;
 
-import org.junit.jupiter.api.RepeatedTest;
-import org.modelingvalue.nelumbo.Rationals.RationalCons;
-
-public class RationalsTest extends NelumboTestBase {
-
-    static {
-        System.setProperty("PARALLEL_COLLECTIONS", "false");
-
-        System.setProperty("REVERSE_NELUMBO", "false");
-        System.setProperty("RANDOM_NELUMBO", "true");
-
-        System.setProperty("TRACE_NELUMBO", "false");
-        System.setProperty("PRETTY_NELUMBO", "true");
+    public Variable(Type type, String name) {
+        super(type, name, new Object());
     }
 
-    static final int NR_OF_REPEATS = 32;
-
-    // Variables
-
-    RationalCons     R             = rConsVar("R");
-
-    // Tests
-
-    @RepeatedTest(NR_OF_REPEATS)
-    public void rationalTest1() {
-        run(() -> {
-            rationalRules();
-
-            isTrue(eq(divide(r(7), r(5)), r(7, 5)));
-            isTrue(eq(r(7, 5), divide(r(7), r(5))));
-
-            hasBindings(plus(r(7), r(3), R), binding(R, r(20, 2)));
-            hasBindings(plus(r(7), R, r(20, 2)), binding(R, r(6, 2)));
-            hasBindings(plus(R, r(3), r(40, 4)), binding(R, r(7)));
-        });
+    private Variable(Object[] array) {
+        super(array);
     }
 
-    @RepeatedTest(NR_OF_REPEATS)
-    public void rationalTest2() {
-        run(() -> {
-            rationalRules();
+    @Override
+    public Type type() {
+        return (Type) get(0);
+    }
 
-            isTrue(eq(plus(r(11), r(88, 4)), r(66, 2)));
-            isTrue(eq(minus(r(33), r(22)), r(11)));
-            isTrue(eq(plus(r(11), plus(plus(r(22), r(33)), r(44))), r(110)));
+    @Override
+    public String toString() {
+        return get(1).toString();
+    }
 
-            isTrue(eq(plus(r(44, 4), divide(multiply(r(88, 2), r(66, 2)), r(22))), r(77)));
+    @Override
+    protected Variable struct(Object[] array) {
+        return new Variable(array);
+    }
 
-            isTrue(eq(sqrt(r(49)), r(-14, 2)));
-            isTrue(eq(sqrt(r(98, 2)), r(7)));
-
-            hasBindings(eq(plus(r(11), plus(plus(r(22), r(33)), r(44))), R), binding(R, r(110)));
-            hasBindings(eq(plus(r(11), plus(plus(r(22), R), r(44))), r(110)), binding(R, r(33)));
-            hasBindings(eq(plus(r(7), r(3)), R), binding(R, r(10)));
-            hasBindings(eq(plus(r(7), R), r(10)), binding(R, r(3)));
-            hasBindings(eq(plus(R, r(3)), r(10)), binding(R, r(7)));
-
-            hasBindings(eq(sqrt(r(49)), R), binding(R, r(7)), binding(R, r(-7)));
-
-            hasBindings(and(eq(sqrt(r(49)), R), ge(R, r(0))), binding(R, r(7)));
-        });
+    @Override
+    public Variable set(int i, Object... a) {
+        return (Variable) super.set(i, a);
     }
 
 }

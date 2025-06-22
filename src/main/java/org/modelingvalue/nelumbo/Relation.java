@@ -18,15 +18,12 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.Logic.Functor;
-import org.modelingvalue.nelumbo.Logic.LogicLambda;
-import org.modelingvalue.nelumbo.Logic.Relation;
 
-public final class RelationImpl extends PredicateImpl<Relation> {
+public final class Relation extends Predicate {
     private static final long serialVersionUID   = 1032898038061287135L;
 
     static final int          MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
@@ -34,55 +31,50 @@ public final class RelationImpl extends PredicateImpl<Relation> {
 
     private final InferResult cycleResult        = InferResult.cycle(Set.of(), Set.of(), this);
 
-    public RelationImpl(Functor<Relation> functor, Object... args) {
+    public Relation(Functor functor, Object... args) {
         super(functor, args);
     }
 
-    public RelationImpl(FunctorImpl<Relation, ?> functor, Object... args) {
-        super(functor, args);
-    }
-
-    private RelationImpl(Object[] args, RelationImpl declaration) {
+    private Relation(Object[] args, Relation declaration) {
         super(args, declaration);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected RelationImpl struct(Object[] array, PredicateImpl<Relation> declaration) {
-        return new RelationImpl(array, (RelationImpl) declaration);
+    protected Relation struct(Object[] array, Predicate declaration) {
+        return new Relation(array, (Relation) declaration);
     }
 
     @Override
-    public RelationImpl declaration() {
-        return (RelationImpl) super.declaration();
+    public Relation declaration() {
+        return (Relation) super.declaration();
     }
 
     @Override
-    public RelationImpl set(int i, Object... a) {
-        return (RelationImpl) super.set(i, a);
+    public Relation set(int i, Object... a) {
+        return (Relation) super.set(i, a);
     }
 
     @Override
-    public RelationImpl set(int[] idx, Object val) {
-        return (RelationImpl) super.set(idx, val);
+    public Relation set(int[] idx, Object val) {
+        return (Relation) super.set(idx, val);
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
-    protected final RelationImpl set(VariableImpl var, Object val) {
-        return (RelationImpl) super.set(var, val);
+    protected final Relation set(Variable var, Object val) {
+        return (Relation) super.set(var, val);
     }
 
     @Override
-    protected RelationImpl clearDeclaration() {
-        return (RelationImpl) super.clearDeclaration();
+    protected Relation clearDeclaration() {
+        return (Relation) super.clearDeclaration();
     }
 
     @Override
-    protected PredicateImpl<Relation> castFrom(PredicateImpl<?> from) {
+    protected Predicate castFrom(Predicate from) {
         Object[] array = from.toArray();
         array[0] = functor();
-        return new RelationImpl(array, declaration());
+        return new Relation(array, declaration());
     }
 
     @Override
@@ -91,59 +83,59 @@ public final class RelationImpl extends PredicateImpl<Relation> {
     }
 
     @Override
-    protected InferResult infer(InferContext context) {
+    protected final InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 && context.reduce()) {
             return unknown();
         }
         prefix(context);
-        FunctorImpl<Relation, ?> functor = functor();
-        LogicLambda logic = functor.logicLambda();
-        if (logic != null) {
-            return result(logic.apply(this, context), context);
-        }
+        return result(infer(nrOfUnbound, context), context);
+    }
+
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        Functor functor = functor();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return result(unknown(), context);
+            return unknown();
         }
-        KnowledgeBaseImpl knowledgebase = context.knowledgebase();
+        KnowledgeBase knowledgebase = context.knowledgebase();
         if (knowledgebase.getRules(this).isEmpty()) {
-            return result(knowledgebase.getFacts(this), context);
+            return knowledgebase.getFacts(this);
         } else {
             InferResult result = knowledgebase.getMemoiz(this);
             if (result != null) {
-                return result(result, context);
+                return result;
             }
             result = context.getCycleResult(this);
             if (result != null) {
-                return result(context.reduce() ? unknown() : result, context);
+                return context.reduce() ? unknown() : result;
             }
-            List<RelationImpl> stack = context.stack();
+            List<Relation> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return result(InferResult.overflow(stack.append(this)), context);
+                return InferResult.overflow(stack.append(this));
             }
             if (context.trace()) {
                 System.err.println();
             }
             result = fixpoint(context.pushOnStack(this));
             if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
-                List<RelationImpl> overflow = result.stackOverflow();
+                List<Relation> overflow = result.stackOverflow();
                 if (overflow != null) {
                     if (stack.size() == MAX_LOGIC_DEPTH_D2) {
                         result = flatten(result, overflow, context);
                     }
                     prefix(context);
-                    return result(result, context);
+                    return result;
                 }
             }
             knowledgebase.memoization(this, result);
             prefix(context);
-            return result(result, context);
+            return result;
         }
     }
 
     private void prefix(InferContext context) {
         if (context.trace()) {
-            System.err.print(context.prefix() + "    " + toString(null));
+            System.err.print(context.prefix() + "    " + toString());
         }
     }
 
@@ -154,11 +146,11 @@ public final class RelationImpl extends PredicateImpl<Relation> {
         return result;
     }
 
-    private static InferResult flatten(InferResult result, List<RelationImpl> overflow, InferContext context) {
+    private static InferResult flatten(InferResult result, List<Relation> overflow, InferContext context) {
         int stackSize = context.stack().size();
-        List<RelationImpl> todo = overflow.sublist(stackSize, overflow.size());
+        List<Relation> todo = overflow.sublist(stackSize, overflow.size());
         while (todo.size() > 0) {
-            RelationImpl predicate = todo.last();
+            Relation predicate = todo.last();
             result = predicate.fixpoint(context.pushOnStack(predicate));
             overflow = result.stackOverflow();
             if (overflow != null) {
@@ -195,13 +187,13 @@ public final class RelationImpl extends PredicateImpl<Relation> {
     }
 
     private InferResult inferRules(InferContext context) {
-        KnowledgeBaseImpl knowledgebase = context.knowledgebase();
+        KnowledgeBase knowledgebase = context.knowledgebase();
         InferResult result = knowledgebase.getFacts(this), ruleResult;
         if (result.isTrueCC()) {
             return result;
         }
-        Set<RuleImpl> rules = knowledgebase.getRules(this);
-        for (RuleImpl rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
+        Set<Rule> rules = knowledgebase.getRules(this);
+        for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
             ruleResult = rule.imply(this, context);
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
@@ -219,24 +211,24 @@ public final class RelationImpl extends PredicateImpl<Relation> {
     }
 
     @Override
-    protected final RelationImpl setType(int i, Class<?> type) {
-        return (RelationImpl) super.setType(i, type);
+    protected final Relation setType(int i, Type type) {
+        return (Relation) super.setType(i, type);
     }
 
     @Override
-    protected final RelationImpl setTyped(int i, StructureImpl<?> typed) {
-        return (RelationImpl) super.setTyped(i, typed);
+    protected final Relation setTyped(int i, Structure typed) {
+        return (Relation) super.setTyped(i, typed);
     }
 
     @Override
-    protected final RelationImpl signature(int depth) {
-        return (RelationImpl) super.signature(depth);
+    protected final Relation signature(int depth) {
+        return (Relation) super.signature(depth);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected final Set<RelationImpl> generalize(boolean full) {
-        return (Set<RelationImpl>) super.generalize(full);
+    protected final Set<Relation> generalize(boolean full) {
+        return (Set<Relation>) super.generalize(full);
     }
 
 }

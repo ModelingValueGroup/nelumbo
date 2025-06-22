@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.util.Pair;
-import org.modelingvalue.nelumbo.impl.StructureImpl;
+import org.modelingvalue.nelumbo.Structure;
 import org.modelingvalue.nelumbo.syntax.Token.TokenType;
 
 public class Parser {
@@ -60,9 +60,9 @@ public class Parser {
         infixParselets.put(token, parselet);
     }
 
-    public StructureImpl<?> parseExpression(int precedence) throws ParseException {
+    public Structure parseExpression(int precedence) throws ParseException {
         Token token = tokens.poll();
-        StructureImpl<?> left;
+        Structure left;
         Prefix2Parselet prefix2 = prefix2Parselets.get(Pair.of(token.type(), tokens.peek().type()));
         if (prefix2 != null) {
             left = prefix2.parse(this, token, tokens.poll());
@@ -81,8 +81,8 @@ public class Parser {
         return left;
     }
 
-    public List<StructureImpl<?>> parseRoots() throws ParseException {
-        List<StructureImpl<?>> result = List.of();
+    public List<Structure> parseRoots() throws ParseException {
+        List<Structure> result = List.of();
         while (!tokens.isEmpty()) {
             while (match(TokenType.V)) {
             }

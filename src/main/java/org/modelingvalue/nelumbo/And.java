@@ -18,74 +18,72 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 
-public interface InferContext {
-    KnowledgeBaseImpl knowledgebase();
+public final class And extends BinaryPredicate {
+    private static final long    serialVersionUID = -7248491569810098948L;
 
-    List<RelationImpl> stack();
+    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "And", List.of(Predicate.TYPE, Predicate.TYPE));
 
-    Map<RelationImpl, InferResult> cycleResult();
-
-    boolean reduce();
-
-    boolean trace();
-
-    static InferContext of(KnowledgeBaseImpl knowledgebase, List<RelationImpl> stack, Map<RelationImpl, InferResult> cyclic, boolean reduce, boolean trace) {
-        return new InferContext() {
-            @Override
-            public KnowledgeBaseImpl knowledgebase() {
-                return knowledgebase;
-            }
-
-            @Override
-            public List<RelationImpl> stack() {
-                return stack;
-            }
-
-            @Override
-            public Map<RelationImpl, InferResult> cycleResult() {
-                return cyclic;
-            }
-
-            @Override
-            public boolean reduce() {
-                return reduce;
-            }
-
-            @Override
-            public boolean trace() {
-                return trace;
-            }
-        };
+    public And(Structure predicate1, Structure predicate2) {
+        super(FUNCTOR, predicate1, predicate2);
     }
 
-    default InferContext pushOnStack(RelationImpl relation) {
-        return of(knowledgebase(), stack().append(relation), cycleResult(), false, trace());
+    private And(Object[] args, And declaration) {
+        super(args, declaration);
     }
 
-    default InferContext putCycleResult(RelationImpl relation, InferResult cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult().put(relation, cycleResult), false, trace());
+    @Override
+    public And declaration() {
+        return (And) super.declaration();
     }
 
-    default InferContext reduce(boolean reduce) {
-        return of(knowledgebase(), stack(), cycleResult(), reduce, trace());
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected And struct(Object[] array, Predicate declaration) {
+        return new And(array, (And) declaration);
     }
 
-    default InferContext trace(boolean trace) {
-        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), reduce(), trace);
+    @Override
+    public And set(int i, Object... a) {
+        return (And) super.set(i, a);
     }
 
-    default String prefix() {
-        return "NELUMBO: " + "      ".repeat(stack().size());
+    @Override
+    protected boolean isTrue(InferResult predResult) {
+        return false;
     }
 
-    default InferResult getCycleResult(RelationImpl relation) {
-        InferResult result = cycleResult().get(relation);
-        return result != null ? result.cast(relation) : null;
+    @Override
+    protected boolean isFalse(InferResult predResult) {
+        return predResult.isFalseCC();
+    }
+
+    @Override
+    protected boolean isTrue(InferResult[] predResult) {
+        return predResult[0].isTrueCC() && predResult[1].isTrueCC();
+    }
+
+    @Override
+    protected boolean isFalse(InferResult[] predResult) {
+        return false;
+    }
+
+    @Override
+    protected boolean isLeft(InferResult[] predResult) {
+        return predResult[1].isTrueCC();
+    }
+
+    @Override
+    protected boolean isRight(InferResult[] predResult) {
+        return predResult[0].isTrueCC();
+    }
+
+    @Override
+    public String toString() {
+        return "(" + predicate1() + "&" + predicate2() + ")";
     }
 
 }

@@ -18,83 +18,76 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.Map;
-import org.modelingvalue.nelumbo.Logic;
-import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl1;
+import org.modelingvalue.collections.List;
 
-public final class BooleanImpl extends PredicateImpl<Predicate> {
-    private static final long                             serialVersionUID = -8515171118744898263L;
+public final class Or extends BinaryPredicate {
+    private static final long    serialVersionUID = -1732549494864415986L;
 
-    @SuppressWarnings("rawtypes")
-    private static final FunctorImpl1<Predicate, Boolean> BOOLEAN_FUNCTOR  = FunctorImpl.of1(BooleanImpl::b);
+    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Or", List.of(Predicate.TYPE, Predicate.TYPE));
 
-    public static final BooleanImpl                       TRUE             = new BooleanImpl(true);
-    public static final BooleanImpl                       FALSE            = new BooleanImpl(false);
-
-    protected static final InferResult                    TRUE_CONCLUSION  = TRUE.factCC();
-    protected static final InferResult                    FALSE_CONCLUSION = FALSE.falsehoodCC();
-
-    private static Predicate b(boolean val) {
-        return val ? Logic.T() : Logic.F();
+    public Or(Structure predicate1, Structure predicate2) {
+        super(FUNCTOR, predicate1, predicate2);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private BooleanImpl(boolean val) {
-        super(BOOLEAN_FUNCTOR, val);
-    }
-
-    private BooleanImpl(Object[] args, BooleanImpl declaration) {
+    private Or(Object[] args, Or declaration) {
         super(args, declaration);
     }
 
     @Override
-    protected void init(StructureImpl<?> parent, int idx) {
+    public Or declaration() {
+        return (Or) super.declaration();
     }
 
     @Override
-    public BooleanImpl declaration() {
-        return (BooleanImpl) super.declaration();
-    }
-
-    public boolean isTrue() {
-        return (Boolean) get(1);
+    protected Or struct(Object[] array, Predicate declaration) {
+        return new Or(array, (Or) declaration);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Predicate proxy() {
-        return b(isTrue());
+    public Or set(int i, Object... a) {
+        return (Or) super.set(i, a);
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected BooleanImpl struct(Object[] array, PredicateImpl declaration) {
-        return new BooleanImpl(array, (BooleanImpl) declaration);
+    protected boolean isTrue(InferResult predResult) {
+        return predResult.isTrueCC();
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    protected InferResult infer(InferContext context) {
-        return isTrue() ? TRUE_CONCLUSION : FALSE_CONCLUSION;
+    protected boolean isFalse(InferResult predResult) {
+        return false;
     }
 
+    @Override
+    protected boolean isTrue(InferResult[] predResult) {
+        return false;
+    }
+
+    @Override
+    protected boolean isFalse(InferResult[] predResult) {
+        return predResult[0].isFalseCC() && predResult[1].isFalseCC();
+    }
+
+    @Override
+    protected boolean isLeft(InferResult[] predResult) {
+        return predResult[1].isFalseCC();
+    }
+
+    @Override
+    protected boolean isRight(InferResult[] predResult) {
+        return predResult[0].isFalseCC();
+    }
+
+    @Override
     @SuppressWarnings("rawtypes")
-    @Override
-    public Map<VariableImpl, Object> getBinding() {
-        return Map.of();
-    }
-
-    @Override
-    public BooleanImpl set(int i, Object... a) {
-        return (BooleanImpl) super.set(i, a);
+    public boolean contains(Predicate cond) {
+        return super.contains(cond) || predicate1().contains(cond) || predicate2().contains(cond);
     }
 
     @Override
     public String toString() {
-        return isPrettyPrinting() ? (isTrue() ? "\u22A4" : "\u22A5") : super.toString();
+        return "(" + predicate1() + "|" + predicate2() + ")";
     }
-
 }

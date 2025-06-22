@@ -27,74 +27,12 @@ import java.text.ParseException;
 import java.util.LinkedList;
 
 import org.junit.jupiter.api.Test;
-import org.modelingvalue.nelumbo.Integers.Integer;
-import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.Logic.Relation;
-import org.modelingvalue.nelumbo.Logic.Structure;
-import org.modelingvalue.nelumbo.impl.*;
-import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl1;
-import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
-import org.modelingvalue.nelumbo.syntax.AtomicParselet;
-import org.modelingvalue.nelumbo.syntax.BinaryOperator;
-import org.modelingvalue.nelumbo.syntax.FunctionWithArgs;
+import org.modelingvalue.nelumbo.Rule;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.Token.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
-import org.modelingvalue.nelumbo.syntax.UnaryOperator;
 
 public class SyntaxTest extends NelumboTestBase {
-
-    static final FunctorImpl1<Predicate, Predicate>            NOT  = FunctorImpl.of1(Predicate.class, "not", Predicate.class);
-    static final FunctorImpl1<Integer, String>                 INT1 = FunctorImpl.of1(Integer.class, "int", String.class);
-
-    static final FunctorImpl1<Relation, Integer>               MIN1 = FunctorImpl.of1(Relation.class, "min", Integer.class);
-
-    static final FunctorImpl2<Integer, Integer, Integer>       MIN2 = FunctorImpl.of2(Integer.class, "min", Integer.class, Integer.class);
-
-    static final FunctorImpl2<Relation, Integer, Integer>      LE   = FunctorImpl.of2(Relation.class, "le", Integer.class, Integer.class);
-    static final FunctorImpl2<Relation, Integer, Integer>      GE   = FunctorImpl.of2(Relation.class, "ge", Integer.class, Integer.class);
-    static final FunctorImpl2<Relation, Integer, Integer>      LT   = FunctorImpl.of2(Relation.class, "lt", Integer.class, Integer.class);
-    static final FunctorImpl2<Relation, Integer, Integer>      GT   = FunctorImpl.of2(Relation.class, "gt", Integer.class, Integer.class);
-    static final FunctorImpl2<Relation, Integer, Integer>      EQ   = FunctorImpl.of2(Relation.class, "eq", Integer.class, Integer.class);
-
-    static final AtomicParselet                                VAR  = AtomicParselet.of(t -> new VariableImpl<>(Structure.class, t.text()));
-    static final AtomicParselet                                INT  = AtomicParselet.of(t -> new StructureImpl<>(INT1, t.text()));
-
-    static final FunctorImpl2<Structure, Structure, Structure> DECL = FunctorImpl.of2(Structure.class, "decl", Structure.class, Structure.class);
-
-    static final FunctorImpl2<Structure, Structure, Structure> PREC = FunctorImpl.of2(Structure.class, "prec", Structure.class, Structure.class);
-
-    static {
-        FunctionWithArgs.of("gt", 2, (t, a) -> new RelationImpl(GT, a.get(0), a.get(1)));
-
-        UnaryOperator.of("-", (t, r) -> new StructureImpl<>(MIN1, r));
-        UnaryOperator.of("!", (t, r) -> new NotImpl(r));
-
-        BinaryOperator.of("-", 40, (t, l, r) -> new StructureImpl<>(MIN2, l, r));
-        BinaryOperator.of("=", 30, (t, l, r) -> new RelationImpl(EQ, l, r));
-        BinaryOperator.of("<", 30, (t, l, r) -> new RelationImpl(LT, l, r));
-        BinaryOperator.of(">", 30, (t, l, r) -> new RelationImpl(GT, l, r));
-        BinaryOperator.of("<=", 30, (t, l, r) -> new RelationImpl(LE, l, r));
-        BinaryOperator.of(">=", 30, (t, l, r) -> new RelationImpl(GE, l, r));
-        BinaryOperator.of("|", 20, (t, l, r) -> new OrImpl(l, r));
-        BinaryOperator.of("&", 20, (t, l, r) -> new AndImpl(l, r));
-        BinaryOperator.of(":=", 10, (t, l, r) -> {
-            RuleImpl ruleImpl = new RuleImpl(l, r);
-            if (l instanceof RelationImpl && r instanceof PredicateImpl) {
-                KnowledgeBaseImpl.CURRENT.get().addRule(ruleImpl);
-            }
-            return ruleImpl;
-        });
-        BinaryOperator.of("->", 5, (t, l, r) -> {
-            StructureImpl<?> declaration = new StructureImpl<>(DECL, l, r);
-            return declaration;
-        });
-        BinaryOperator.of("#", 3, (t, l, r) -> {
-            StructureImpl<?> precedence = new StructureImpl<>(PREC, l, r);
-            return precedence;
-        });
-    }
 
     @Test
     public void tokenizer() {
@@ -113,59 +51,171 @@ public class SyntaxTest extends NelumboTestBase {
     }
 
     @Test
-    public void parser() {
+    public void parser1() {
         run(() -> {
-            setPrettyPrinting(false);
             String example = """
-                        // org.my.test :
-                        //     nelumbo.logic,
-                        //     nelumbo.integers
+                        org.my.test :
+                            nelumbo.logic,
+                            nelumbo.integers
 
-                        // Struct
-                        // Const    : Struct
-                        // Pred     : Struct
-                        // Rel      : Pred
-                        // Rule     : Struct
-                        // Int      : Struct
-                        // IntConst : Int, Const
+                        <Node>
+                        <Lit>    : <Node>
+                        <Pred>   : <Node>
+                        <Rel>    : <Pred>
+                        <Rule>   : <Node>
+                        <Int>    : <Node>
+                        <IntLit> : <Int>, <Lit>
+                        <Str>    : <Node>
+                        <StrLit> : <Str>, <Lit>
 
-                        Rel    := Pred   -> Rule #10
-                        Struct =  Struct -> Rel  #30
+                        NUMBER : <IntLit>
+                        STRING : <StrLit>
 
-                        gt(IntConst,IntConst) -> Rel // Native
+                        @org.modelingvalue.nelumbo.Rule
+                        <Rel> <==(10) <Pred> : <Rule>
 
-                        Int <  Int -> Rel #30
-                        Int >  Int -> Rel #30
-                        Int <= Int -> Rel #30
-                        Int >= Int -> Rel #30
+                        <Node> =(30) <Node>  : <Rel>
 
-                        Int -  Int -> Int #40
+                        @org.modelingvalue.nelumbo.integers.GreaterThen
+                        gt(<IntLit>,<IntLit>) : <Rel>
 
-                        - Int -> Int
+                        <Int> <(30)  <Int> : <Rel>
+                        <Int> >(30)  <Int> : <Rel>
+                        <Int> <=(30) <Int> : <Rel>
+                        <Int> >=(30) <Int> : <Rel>
 
-                        a -> Int
-                        b -> Int
-                        c -> Int
+                        <Int> -(40) <Int> : <Int>
+                        <Int> +(40) <Int> : <Int>
 
-                        x -> IntConst
-                        y -> IntConst
-                        z -> IntConst
+                        -(50) <Int> : <Int>
 
-                        a>b := a=x & b=y & gt(x,y)
+                        a : <Int>
+                        b : <Int>
 
-                        a<b  := b>a
-                        a<=b := a<b | a=b
-                        a>=b := !(a<b)
-                        -a=b := 0-a=b
+                        x : <IntLit>
+                        y : <IntLit>
+
+                        a>b  <== a=x & b=y & gt(x,y)
+
+                        a<b  <== b>a
+                        a<=b <== a<b | a=b
+                        a>=b <== !(a<b)
+                        -a=b <== 0-a=b
 
                     """;
             try {
                 LinkedList<Token> tokens = new Tokenizer(example).tokenize();
                 Parser parser = new Parser(tokens);
-                parser.register(TokenType.IDENTIFIER, VAR);
-                parser.register(TokenType.NUMBER, INT);
                 var roots = parser.parseRoots();
-                roots = roots.removeAll(s -> !(s instanceof RuleImpl));
+                roots = roots.removeAll(s -> !(s instanceof Rule));
+                assertEquals(5, roots.size());
+                String expected = "[" + //
+                        "rule(gt(a,b),and(and(eq(a,x),eq(b,y)),gt(x,y)))," + //
+                        "rule(lt(a,b),gt(b,a))," + //
+                        "rule(le(a,b),or(lt(a,b),eq(a,b)))," + //
+                        "rule(ge(a,b),not(lt(a,b)))," + //
+                        "rule(eq(min(a),b),eq(min(int(0),a),b))" + //
+                        "]";
+                assertEquals(expected, roots.toString().substring(4));
+            } catch (ParseException e) {
+                fail(e);
+            }
+        });
+    }
+
+    @Test
+    public void parser2() {
+        run(() -> {
+            String example = """
+                        org.mvg.fib :
+                            nelumbo.logic,
+                            nelumbo.integers
+
+                        <Rel>    : <Pred>
+                        <IntLit> : <Int>, <Lit>
+                        <IntFun> : <Int>, <Fun>
+
+                        fib(<IntConst>,<IntConst>) : <Rel>
+                        fib(<Int>)                 : <IntFun>
+
+                        // Literal Integer Variables
+                        x : <IntLit>
+                        y : <IntLit>
+
+                        // Int Variables
+                        a : <Int>
+                        b : <Int>
+
+                        // Function-like Syntaxtual Suggar
+                        fib(a)=b <== a=x & b=y & fib(x,y)
+
+                        // Facts
+                        fib(0,0)
+                        fib(1,1)
+
+                        // Rule
+                        fib(a,b) <== a>1 & b=fib(a-1)+fib(a-2)
+
+                    """;
+            try {
+                LinkedList<Token> tokens = new Tokenizer(example).tokenize();
+                Parser parser = new Parser(tokens);
+                var roots = parser.parseRoots();
+                roots = roots.removeAll(s -> !(s instanceof Rule));
+                assertEquals(5, roots.size());
+                String expected = "[" + //
+                        "rule(gt(a,b),and(and(eq(a,x),eq(b,y)),gt(x,y)))," + //
+                        "rule(lt(a,b),gt(b,a))," + //
+                        "rule(le(a,b),or(lt(a,b),eq(a,b)))," + //
+                        "rule(ge(a,b),not(lt(a,b)))," + //
+                        "rule(eq(min(a),b),eq(min(int(0),a),b))" + //
+                        "]";
+                assertEquals(expected, roots.toString().substring(4));
+            } catch (ParseException e) {
+                fail(e);
+            }
+        });
+    }
+
+    @Test
+    public void parser3() {
+        run(() -> {
+            String example = """
+                        org.mvg.fib :
+                            nelumbo.logic
+
+                        <Person>    : <Node>
+                        <PersonLit> : <Person>, <Literal>
+                        <PersonFun> : <Person>, <Function>
+
+                        pc(<PersonLit>,<PersonLit>) : <Rel>
+                        p(<Person>)                 : <PersonFun>
+                        c(<Person>)                 : <PersonFun>
+
+                        ad(<PersonLit>,<PersonLit>) : <Rel>
+                        a(<Person>)                 : <PersonFun>
+                        d(<Person>)                 : <PersonFun>
+
+                        x : <PersonLit>
+                        y : <PersonLit>
+                        z : <PersonLit>
+
+                        a : <Person>
+                        b : <Person>
+                        c : <Person>
+
+                        ad(x,z) <== pc(x,z) | (ad(x,y) & pc(y, z))
+
+                        c(a)=b <== a=x & b=y & pc(x,y)
+                        p(a)=b <== c(b)=a
+                        d(a)=b <== a=x & b=y & ad(x,y)
+                        a(a)=b <== d(b)=a
+                    """;
+            try {
+                LinkedList<Token> tokens = new Tokenizer(example).tokenize();
+                Parser parser = new Parser(tokens);
+                var roots = parser.parseRoots();
+                roots = roots.removeAll(s -> !(s instanceof Rule));
                 assertEquals(5, roots.size());
                 String expected = "[" + //
                         "rule(gt(a,b),and(and(eq(a,x),eq(b,y)),gt(x,y)))," + //

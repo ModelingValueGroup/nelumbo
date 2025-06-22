@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.impl.StructureImpl;
+import org.modelingvalue.nelumbo.Structure;
 import org.modelingvalue.nelumbo.syntax.Token.TokenType;
 
 public class CallParselet extends Prefix2Parselet {
@@ -18,9 +18,9 @@ public class CallParselet extends Prefix2Parselet {
     }
 
     @Override
-    public StructureImpl<?> parse(Parser parser, Token token1, Token token2) throws ParseException {
+    public Structure parse(Parser parser, Token token1, Token token2) throws ParseException {
         FunctionWithArgs function = getFunction(token1);
-        List<StructureImpl<?>> args = List.of();
+        List<Structure> args = List.of();
         for (int i = 0; i < function.nrOfArgs(); i++) {
             args = args.add(parser.parseExpression(0));
             if (i < function.nrOfArgs() - 1) {

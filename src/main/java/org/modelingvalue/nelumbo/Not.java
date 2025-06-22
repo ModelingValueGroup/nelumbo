@@ -18,87 +18,65 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.impl;
+package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.impl.FunctorImpl.FunctorImpl2;
+import org.modelingvalue.collections.List;
 
-public final class OrImpl extends BinaryPredicateImpl {
-    private static final long                                          serialVersionUID = -1732549494864415986L;
+public final class Not extends Predicate {
+    private static final long    serialVersionUID = -4543178470298951866L;
 
-    private static final FunctorImpl2<Predicate, Predicate, Predicate> OR_FUNCTOR       = FunctorImpl.of2(OrImpl::or);
+    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Not", List.of(Predicate.TYPE));
 
-    private static Predicate or(Predicate predicate1, Predicate predicate2) {
-        return new OrImpl(StructureImpl.unproxy(predicate1), StructureImpl.unproxy(predicate2)).proxy();
+    public Not(Structure predicate) {
+        super(FUNCTOR, predicate);
     }
 
-    public OrImpl(StructureImpl<?> predicate1, StructureImpl<?> predicate2) {
-        super(OR_FUNCTOR, predicate1, predicate2);
-    }
-
-    private OrImpl(Object[] args, OrImpl declaration) {
+    private Not(Object[] args, Not declaration) {
         super(args, declaration);
     }
 
     @Override
-    public OrImpl declaration() {
-        return (OrImpl) super.declaration();
-    }
-
-    @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected OrImpl struct(Object[] array, PredicateImpl declaration) {
-        return new OrImpl(array, (OrImpl) declaration);
+    protected Not struct(Object[] array, Predicate declaration) {
+        return new Not(array, (Not) declaration);
     }
 
     @Override
-    public OrImpl set(int i, Object... a) {
-        return (OrImpl) super.set(i, a);
+    public Not declaration() {
+        return (Not) super.declaration();
+    }
+
+    public final Predicate predicate() {
+        return (Predicate) get(1);
     }
 
     @Override
-    protected boolean isTrue(InferResult predResult) {
-        return predResult.isTrueCC();
+    protected InferResult infer(InferContext context) {
+        Predicate predicate = predicate();
+        InferResult predResult = predicate.infer(context);
+        if (predResult.hasStackOverflow()) {
+            return predResult;
+        } else if (context.reduce()) {
+            if (predResult.isFalseCC()) {
+                return Boolean.TRUE_CONCLUSION;
+            } else if (predResult.isTrueCC()) {
+                return Boolean.FALSE_CONCLUSION;
+            } else {
+                return set(1, predResult.unknown()).unknown();
+            }
+        } else {
+            return predResult.flipComplete();
+        }
     }
 
     @Override
-    protected boolean isFalse(InferResult predResult) {
-        return false;
-    }
-
-    @Override
-    protected boolean isTrue(InferResult[] predResult) {
-        return false;
-    }
-
-    @Override
-    protected boolean isFalse(InferResult[] predResult) {
-        return predResult[0].isFalseCC() && predResult[1].isFalseCC();
-    }
-
-    @Override
-    protected boolean isLeft(InferResult[] predResult) {
-        return predResult[1].isFalseCC();
-    }
-
-    @Override
-    protected boolean isRight(InferResult[] predResult) {
-        return predResult[0].isFalseCC();
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public boolean contains(PredicateImpl cond) {
-        return super.contains(cond) || predicate1().contains(cond) || predicate2().contains(cond);
-    }
-
-    @Override
-    public String toString(StructureImpl<?> parent) {
-        return isPrettyPrinting() && (parent == null || parent instanceof OrImpl) ? predicate1().toString(this) + "\u2228" + predicate2().toString(this) : toString();
+    public Not set(int i, Object... a) {
+        return (Not) super.set(i, a);
     }
 
     @Override
     public String toString() {
-        return isPrettyPrinting() ? "(" + predicate1().toString(this) + "\u2228" + predicate2().toString(this) + ")" : super.toString();
+        return "!(" + predicate() + ")";
     }
+
 }

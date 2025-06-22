@@ -22,55 +22,48 @@ package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Logic;
-import org.modelingvalue.nelumbo.Logic.Predicate;
-import org.modelingvalue.nelumbo.Logic.Variable;
-import org.modelingvalue.nelumbo.Result;
-import org.modelingvalue.nelumbo.impl.KnowledgeBaseImpl;
+import org.modelingvalue.nelumbo.Predicate;
 
 public class NelumboTestBase {
     // Utilities
 
     public KnowledgeBase run(Runnable test) {
-        return Logic.run(test);
+        return KnowledgeBase.run(test);
     }
 
     public KnowledgeBase run(Runnable test, KnowledgeBase init) {
-        return Logic.run(test, init);
+        return KnowledgeBase.run(test, init);
     }
 
-    public static void isTrue(Predicate query) {
-        assertTrue(Logic.isTrue(query));
+    public static void isTrue(Predicate pred) {
+        InferResult result = getResult(pred);
+        assertTrue(result.isTrue());
     }
 
-    public static void isFalse(Predicate query) {
-        assertFalse(!Logic.isFalse(query));
+    public static void isFalse(Predicate pred) {
+        InferResult result = getResult(pred);
+        assertFalse(!result.isFalse());
+    }
+
+    public static InferResult getResult(Predicate pred) {
+        return pred.infer();
     }
 
     public static void haveEqualResult(Predicate query1, Predicate query2) {
-        assertEquals(Logic.getResult(query1), Logic.getResult(query2));
+        assertEquals(getResult(query1), getResult(query2));
     }
 
     public static void hasResult(Predicate query, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods) {
-        Result expectedResult = new Result(facts, completeFacts, falsehoods, completeFalsehoods);
-        Result queryResult = Logic.getResult(query);
+        InferResult expectedResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
+        InferResult queryResult = getResult(query);
         assertEquals(expectedResult, queryResult);
     }
 
-    @SafeVarargs
-    public static void hasBindings(Predicate query, Map<Variable, Object>... bindings) {
-        assertEquals(Set.of(bindings), Logic.getBindings(query));
-    }
-
     public static void printKnowledgeBase() {
-        KnowledgeBaseImpl.CURRENT.get().print();
-    }
-
-    public void setPrettyPrinting(boolean prettyPrint) {
-        KnowledgeBaseImpl.CURRENT.get().setPrettyPrinting(prettyPrint);
+        KnowledgeBase.CURRENT.get().print();
     }
 
 }
