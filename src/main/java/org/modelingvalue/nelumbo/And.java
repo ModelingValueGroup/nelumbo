@@ -23,11 +23,10 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.List;
 
 public final class And extends BinaryPredicate {
-    private static final long    serialVersionUID = -7248491569810098948L;
+    private static final long   serialVersionUID = -7248491569810098948L;
+    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "And", List.of(Predicate.TYPE, Predicate.TYPE));
 
-    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "And", List.of(Predicate.TYPE, Predicate.TYPE));
-
-    public And(Structure predicate1, Structure predicate2) {
+    public And(Predicate predicate1, Predicate predicate2) {
         super(FUNCTOR, predicate1, predicate2);
     }
 

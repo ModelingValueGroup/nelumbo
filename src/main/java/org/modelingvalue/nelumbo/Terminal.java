@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo;
 
 public class Terminal extends Structure {
     private static final long serialVersionUID = 7548506547559092927L;
+    public static final Type  TYPE             = new Type(Terminal.class);
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Terminal(Functor functor, Object... args) {

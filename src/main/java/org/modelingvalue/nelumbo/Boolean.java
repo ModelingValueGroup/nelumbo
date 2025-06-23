@@ -25,10 +25,8 @@ import org.modelingvalue.collections.Map;
 
 public final class Boolean extends Predicate {
     private static final long          serialVersionUID = -8515171118744898263L;
-    private static final Type          BOOLEAN          = new Type(java.lang.Boolean.class);
-
-    @SuppressWarnings("rawtypes")
-    private static final Functor       BOOLEAN_FUNCTOR  = new Functor(Predicate.TYPE, "Boolean", List.of(BOOLEAN));
+    public static final Type           BOOLEAN_TYPE     = new Type(java.lang.Boolean.class);
+    public static final Functor        FUNCTOR          = new Functor(Predicate.TYPE, "Boolean", List.of(BOOLEAN_TYPE));
 
     public static final Boolean        TRUE             = new Boolean(true);
     public static final Boolean        FALSE            = new Boolean(false);
@@ -36,9 +34,8 @@ public final class Boolean extends Predicate {
     protected static final InferResult TRUE_CONCLUSION  = TRUE.factCC();
     protected static final InferResult FALSE_CONCLUSION = FALSE.falsehoodCC();
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     private Boolean(boolean val) {
-        super(BOOLEAN_FUNCTOR, val);
+        super(FUNCTOR, val);
     }
 
     private Boolean(Object[] args, Boolean declaration) {

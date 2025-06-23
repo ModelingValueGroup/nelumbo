@@ -22,17 +22,17 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
 
-public final class Type extends Structure {
+public class Type extends Structure {
     private static final long serialVersionUID = -4583279157841144493L;
-    private static final Type TYPE             = new Type(Type.class);
+    public static final Type  TYPE             = new Type(Type.class);
 
     public Type(Class<?> clss) {
         super(TYPE, clss);
         KnowledgeBase.CURRENT.get().addType(this);
     }
 
-    public Type(String name, List<Type> supers) {
-        super(TYPE, name, supers);
+    public Type(String name, Type... supers) {
+        super(TYPE, name, List.of(supers));
         KnowledgeBase.CURRENT.get().addType(this);
     }
 

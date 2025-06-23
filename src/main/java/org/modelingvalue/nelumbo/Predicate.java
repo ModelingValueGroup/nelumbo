@@ -28,8 +28,7 @@ import org.modelingvalue.collections.util.Pair;
 public abstract class Predicate extends Structure {
 
     private static final long    serialVersionUID = -1605559565948158856L;
-
-    protected static final Type  TYPE             = new Type(Predicate.class);
+    public static final Type     TYPE             = new Type(Predicate.class);
 
     private final Set<Predicate> singleton        = Set.of(this);
     private final Predicate      declaration;

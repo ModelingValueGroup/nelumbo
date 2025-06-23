@@ -25,11 +25,11 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 
 public class Rule extends Structure {
-    private static final long    serialVersionUID = -4602043866952049391L;
-    private static final Type    TYPE             = new Type(Rule.class);
-    private static final Functor FUNCTOR          = new Functor(TYPE, "Rule", List.of(Relation.TYPE, Predicate.TYPE));
+    private static final long   serialVersionUID = -4602043866952049391L;
+    public static final Type    TYPE             = new Type(Rule.class);
+    public static final Functor FUNCTOR          = new Functor(TYPE, "Rule", List.of(Relation.TYPE, Predicate.TYPE));
 
-    public Rule(Structure consequence, Structure condition) {
+    public Rule(Relation consequence, Predicate condition) {
         super(FUNCTOR, consequence, condition);
     }
 
@@ -105,11 +105,6 @@ public class Rule extends Structure {
     @Override
     public Rule set(int i, Object... a) {
         return (Rule) super.set(i, a);
-    }
-
-    @Override
-    public Type type() {
-        return TYPE;
     }
 
     @Override

@@ -24,7 +24,7 @@ import org.modelingvalue.collections.List;
 
 public final class Functor extends Structure {
     private static final long serialVersionUID = 285147889847599160L;
-    private static final Type TYPE             = new Type(Functor.class);
+    public static final Type  TYPE             = new Type(Functor.class);
 
     protected Functor(Type resultType, String name, List<Type> args) {
         super(TYPE, resultType, name, args);
@@ -32,11 +32,6 @@ public final class Functor extends Structure {
 
     protected Functor(Object[] array) {
         super(array);
-    }
-
-    @Override
-    public Type type() {
-        return TYPE;
     }
 
     protected Type resultType() {

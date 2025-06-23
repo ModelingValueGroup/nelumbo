@@ -26,10 +26,12 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 
-public class Structure extends org.modelingvalue.collections.struct.impl.StructImpl {
+public class Structure extends StructImpl {
     private static final long      serialVersionUID = 7315776001191198132L;
+    public static final Type       TYPE             = new Type(Structure.class);
 
     protected static final boolean TRACE_NELUMBO    = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
     protected static final boolean RANDOM_NELUMBO   = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");

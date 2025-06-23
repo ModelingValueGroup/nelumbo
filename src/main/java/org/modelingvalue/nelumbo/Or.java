@@ -23,11 +23,10 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.List;
 
 public final class Or extends BinaryPredicate {
-    private static final long    serialVersionUID = -1732549494864415986L;
+    private static final long   serialVersionUID = -1732549494864415986L;
+    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Or", List.of(Predicate.TYPE, Predicate.TYPE));
 
-    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Or", List.of(Predicate.TYPE, Predicate.TYPE));
-
-    public Or(Structure predicate1, Structure predicate2) {
+    public Or(Predicate predicate1, Predicate predicate2) {
         super(FUNCTOR, predicate1, predicate2);
     }
 

@@ -20,11 +20,12 @@
 
 package org.modelingvalue.nelumbo;
 
-public final class Variable extends Structure {
+public class Variable extends Structure {
     private static final long serialVersionUID = -8998368070388908726L;
+    public static final Type  TYPE             = new Type(Variable.class);
 
     public Variable(Type type, String name) {
-        super(type, name, new Object());
+        super(TYPE, type, name, new Object());
     }
 
     private Variable(Object[] array) {
@@ -33,11 +34,11 @@ public final class Variable extends Structure {
 
     @Override
     public Type type() {
-        return (Type) get(0);
+        return (Type) get(1);
     }
 
     public String name() {
-        return get(1).toString();
+        return get(2).toString();
     }
 
     @Override
