@@ -29,29 +29,25 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 
-public class Structure extends StructImpl {
-    private static final long      serialVersionUID = 7315776001191198132L;
-    public static final Type       TYPE             = new Type(Structure.class);
+public class Node extends StructImpl {
+    private static final long     serialVersionUID = 7315776001191198132L;
+    public static final Type      TYPE             = new Type(Node.class);
 
-    protected static final boolean TRACE_NELUMBO    = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
-    protected static final boolean RANDOM_NELUMBO   = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");
-    protected static final boolean REVERSE_NELUMBO  = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
+    private int                   hashCode         = 0;
+    private Map<Variable, Object> variables;
+    private int                   nrOfUnbound      = -1;
 
-    private int                    hashCode         = 0;
-    private Map<Variable, Object>  variables;
-    private int                    nrOfUnbound      = -1;
-
-    public Structure(Functor functor, Object... args) {
+    public Node(Functor functor, Object... args) {
         super(array(functor, args));
         init();
     }
 
-    protected Structure(Type type, Object... args) {
+    protected Node(Type type, Object... args) {
         super(array(type, args));
         init();
     }
 
-    protected Structure(Object[] args) {
+    protected Node(Object[] args) {
         super(args);
     }
 
@@ -85,8 +81,8 @@ public class Structure extends StructImpl {
                 Object val = get(i);
                 if (val instanceof Variable) {
                     vars = vars.put((Variable) val, ((Variable) val).type());
-                } else if (val instanceof Structure) {
-                    vars = vars.putAll(((Structure) val).variables());
+                } else if (val instanceof Node) {
+                    vars = vars.putAll(((Node) val).variables());
                 }
             }
             variables = vars;
@@ -101,8 +97,8 @@ public class Structure extends StructImpl {
                 Object val = get(i);
                 if (val instanceof Type) {
                     nr++;
-                } else if (val instanceof Structure) {
-                    nr += ((Structure) val).nrOfUnbound();
+                } else if (val instanceof Node) {
+                    nr += ((Node) val).nrOfUnbound();
                 }
             }
             nrOfUnbound = nr;
@@ -145,7 +141,7 @@ public class Structure extends StructImpl {
         return t instanceof Functor ? (Functor) t : null;
     }
 
-    public Structure is(Structure other) {
+    public Node is(Node other) {
         if (equals(other)) {
             return this;
         } else if (length() != other.length()) {
@@ -169,12 +165,12 @@ public class Structure extends StructImpl {
 
     private static Object is(Object thisVal, Object otherVal) {
         if (thisVal != otherVal) {
-            if (thisVal instanceof Structure && otherVal instanceof Type) {
-                return ((Type) otherVal).isAssignableFrom(((Structure) thisVal).type()) ? thisVal : null;
-            } else if (thisVal instanceof Type && otherVal instanceof Structure) {
-                return ((Type) thisVal).isAssignableFrom(((Structure) otherVal).type()) ? otherVal : null;
-            } else if (thisVal instanceof Structure && otherVal instanceof Structure) {
-                return ((Structure) thisVal).is((Structure) otherVal);
+            if (thisVal instanceof Node && otherVal instanceof Type) {
+                return ((Type) otherVal).isAssignableFrom(((Node) thisVal).type()) ? thisVal : null;
+            } else if (thisVal instanceof Type && otherVal instanceof Node) {
+                return ((Type) thisVal).isAssignableFrom(((Node) otherVal).type()) ? otherVal : null;
+            } else if (thisVal instanceof Node && otherVal instanceof Node) {
+                return ((Node) thisVal).is((Node) otherVal);
             } else if (!(thisVal instanceof Type) && otherVal instanceof Type) {
                 return ((Type) otherVal).isAssignableFrom(thisVal.getClass()) ? thisVal : null;
             } else if (thisVal instanceof Type && !(otherVal instanceof Type)) {
@@ -192,9 +188,9 @@ public class Structure extends StructImpl {
             Object val = get(i);
             if (val instanceof Terminal) {
                 terminals = terminals.put((Terminal) val, new int[]{i});
-            } else if (val instanceof Structure && !(val instanceof Variable)) {
+            } else if (val instanceof Node && !(val instanceof Variable)) {
                 int ii = i;
-                terminals = terminals.putAll(((Structure) val).terminals().replaceAll(e -> {
+                terminals = terminals.putAll(((Node) val).terminals().replaceAll(e -> {
                     int[] idx = new int[e.getValue().length + 1];
                     System.arraycopy(e.getValue(), 0, idx, 1, e.getValue().length);
                     idx[0] = ii;
@@ -209,7 +205,7 @@ public class Structure extends StructImpl {
     public <V> V getVal(int... is) {
         Object val = this;
         for (int i : is) {
-            val = ((Structure) val).get(i);
+            val = ((Node) val).get(i);
             if (val instanceof Type || val instanceof Variable) {
                 return null;
             }
@@ -231,19 +227,19 @@ public class Structure extends StructImpl {
         return array;
     }
 
-    public Structure set(int f, Object... a) {
+    public Node set(int f, Object... a) {
         Object[] array = setArray(f, a);
         return array != null ? struct(array) : this;
     }
 
-    public Structure set(int[] idx, Object val) {
+    public Node set(int[] idx, Object val) {
         return set(0, idx, val);
     }
 
-    private Structure set(int ii, int[] idx, Object val) {
+    private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
         if (ii < idx.length - 1) {
-            Structure s = (Structure) array[idx[ii]];
+            Node s = (Node) array[idx[ii]];
             array[idx[ii]] = s.set(ii + 1, idx, val);
         } else {
             array[idx[ii]] = val;
@@ -251,15 +247,15 @@ public class Structure extends StructImpl {
         return struct(array);
     }
 
-    protected Structure replace(Structure from, Structure to) {
+    protected Node replace(Node from, Node to) {
         if (equals(from)) {
             return to;
         } else {
             Object[] array = null;
             for (int i = 0; i < length(); i++) {
                 Object thisVal = get(i);
-                if (thisVal instanceof Structure) {
-                    Structure toVal = ((Structure) thisVal).replace(from, to);
+                if (thisVal instanceof Node) {
+                    Node toVal = ((Node) thisVal).replace(from, to);
                     if (toVal != thisVal) {
                         if (array == null) {
                             array = toArray();
@@ -273,19 +269,19 @@ public class Structure extends StructImpl {
     }
 
     @SuppressWarnings("unchecked")
-    protected Structure struct(Object[] array) {
-        return new Structure(array);
+    protected Node struct(Object[] array) {
+        return new Node(array);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final Object get(Structure declaration, Variable var) {
+    protected final Object get(Node declaration, Variable var) {
         for (int i = 1; i < length(); i++) {
             Object thisVal = get(i);
             Object declVal = declaration.get(i);
             if (declVal.equals(var)) {
                 return thisVal;
-            } else if (thisVal instanceof Structure) {
-                Object varVal = ((Structure) thisVal).get((Structure) declVal, var);
+            } else if (thisVal instanceof Node) {
+                Object varVal = ((Node) thisVal).get((Node) declVal, var);
                 if (varVal != null) {
                     return varVal;
                 }
@@ -295,7 +291,7 @@ public class Structure extends StructImpl {
     }
 
     @SuppressWarnings("rawtypes")
-    protected final Map<Variable, Object> getBinding(Structure declaration, Map<Variable, Object> vars, boolean check) {
+    protected final Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars, boolean check) {
         if (get(0).equals(declaration.get(0))) {
             for (int i = 1; i < length(); i++) {
                 vars = getBinding(declaration.get(i), get(i), vars, check);
@@ -335,11 +331,11 @@ public class Structure extends StructImpl {
             } else {
                 vars = vars.put(var, thisType);
             }
-        } else if (declVal instanceof Structure) {
-            Structure declStruct = (Structure) declVal;
+        } else if (declVal instanceof Node) {
+            Node declStruct = (Node) declVal;
             if (thisVal != null) {
-                if (thisVal instanceof Structure) {
-                    vars = ((Structure) thisVal).getBinding(declStruct, vars, check);
+                if (thisVal instanceof Node) {
+                    vars = ((Node) thisVal).getBinding(declStruct, vars, check);
                 } else {
                     return null;
                 }
@@ -353,15 +349,15 @@ public class Structure extends StructImpl {
     }
 
     public static Type typeOf(Object v) {
-        return v instanceof Structure ? ((Structure) v).type() : v instanceof Type ? (Type) v : null;
+        return v instanceof Node ? ((Node) v).type() : v instanceof Type ? (Type) v : null;
     }
 
-    protected final Structure set(Structure declaration, Variable var, Object val) {
+    protected final Node set(Node declaration, Variable var, Object val) {
         return setBinding(declaration, Map.of(Entry.of(var, val)));
     }
 
     @SuppressWarnings("rawtypes")
-    protected final Structure setBinding(Structure declaration, Map<Variable, Object> vars) {
+    protected final Node setBinding(Node declaration, Map<Variable, Object> vars) {
         Object[] array = null;
         for (int i = 1; i < length(); i++) {
             Object thisVal = get(i);
@@ -383,11 +379,11 @@ public class Structure extends StructImpl {
             if (varVal != null) {
                 return varVal;
             }
-        } else if (declVal instanceof Structure) {
-            if (thisVal instanceof Type && ((Type) thisVal).isAssignableFrom((((Structure) declVal).type()))) {
-                return ((Structure) declVal).setBinding((Structure) declVal, vars);
-            } else if (thisVal instanceof Structure) {
-                return ((Structure) thisVal).setBinding((Structure) declVal, vars);
+        } else if (declVal instanceof Node) {
+            if (thisVal instanceof Type && ((Type) thisVal).isAssignableFrom((((Node) declVal).type()))) {
+                return ((Node) declVal).setBinding((Node) declVal, vars);
+            } else if (thisVal instanceof Node) {
+                return ((Node) thisVal).setBinding((Node) declVal, vars);
             }
         }
         return thisVal;
@@ -397,8 +393,8 @@ public class Structure extends StructImpl {
         int result = 1;
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
-            if (v instanceof Structure && !((Structure) v).atomic()) {
-                result = Math.max(result, ((Structure) v).depth() + 1);
+            if (v instanceof Node && !((Node) v).atomic()) {
+                result = Math.max(result, ((Node) v).depth() + 1);
             }
         }
         return result;
@@ -409,8 +405,8 @@ public class Structure extends StructImpl {
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             Object r = v;
-            if (depth > 1 && v instanceof Structure && !((Structure) v).atomic()) {
-                r = ((Structure) v).signature(depth - 1);
+            if (depth > 1 && v instanceof Node && !((Node) v).atomic()) {
+                r = ((Node) v).signature(depth - 1);
             } else {
                 r = typeOf(v);
             }
@@ -424,14 +420,14 @@ public class Structure extends StructImpl {
         return array;
     }
 
-    protected Structure signature(int depth) {
+    protected Node signature(int depth) {
         Object[] array = signatureArray(depth);
         return array != null ? struct(array) : this;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected Set<? extends Structure> generalize(boolean full) {
-        Set<Structure> result = Set.of();
+    protected Set<? extends Node> generalize(boolean full) {
+        Set<Node> result = Set.of();
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             if (full && v instanceof Type) {
@@ -439,9 +435,9 @@ public class Structure extends StructImpl {
                 for (Type s : KnowledgeBase.generalizations((Type) v, args.get(i - 1))) {
                     result = result.add(setType(i, s));
                 }
-            } else if (v instanceof Structure) {
-                Set<? extends Structure> gen = ((Structure) v).generalize(full);
-                for (Structure s : gen) {
+            } else if (v instanceof Node) {
+                Set<? extends Node> gen = ((Node) v).generalize(full);
+                for (Node s : gen) {
                     result = result.add(setTyped(i, s));
                 }
                 if (gen.isEmpty()) {
@@ -452,18 +448,18 @@ public class Structure extends StructImpl {
         return result;
     }
 
-    protected Structure setType(int i, Type type) {
+    protected Node setType(int i, Type type) {
         return set(i, type);
     }
 
-    protected Structure setTyped(int i, Structure typed) {
+    protected Node setTyped(int i, Node typed) {
         return set(i, typed);
     }
 
     protected boolean atomic() {
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
-            if (!(v instanceof Structure)) {
+            if (!(v instanceof Node)) {
                 return true;
             }
         }

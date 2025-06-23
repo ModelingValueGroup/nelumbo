@@ -25,31 +25,34 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.Pair;
 
-public abstract class Predicate extends Structure {
+public abstract class Predicate extends Node {
 
-    private static final long    serialVersionUID = -1605559565948158856L;
-    public static final Type     TYPE             = new Type(Predicate.class);
+    protected static final boolean RANDOM_NELUMBO   = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");
+    protected static final boolean REVERSE_NELUMBO  = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
 
-    private final Set<Predicate> singleton        = Set.of(this);
-    private final Predicate      declaration;
+    private static final long      serialVersionUID = -1605559565948158856L;
+    public static final Type       TYPE             = new Type(Predicate.class);
 
-    private Structure            parent;
-    private int                  parentIdx;
+    private final Set<Predicate>   singleton        = Set.of(this);
+    private final Predicate        declaration;
+
+    private Node                   parent;
+    private int                    parentIdx;
 
     protected Predicate(Functor functor, Object... args) {
         super(functor, args);
         this.declaration = this;
     }
 
-    protected void init(Structure parent, int idx) {
+    protected void init(Node parent, int idx) {
         assert (this.parent == null && this.parentIdx == 0);
         this.parent = parent;
         this.parentIdx = idx;
     }
 
-    private Pair<Structure, int[]> rootIdx() {
+    private Pair<Node, int[]> rootIdx() {
         if (parent != null) {
-            Pair<Structure, int[]> root = parent instanceof Predicate ? ((Predicate) parent).rootIdx() : null;
+            Pair<Node, int[]> root = parent instanceof Predicate ? ((Predicate) parent).rootIdx() : null;
             if (root != null) {
                 int[] idx = new int[root.b().length + 1];
                 System.arraycopy(root.b(), 0, idx, 1, root.b().length);
@@ -63,8 +66,8 @@ public abstract class Predicate extends Structure {
         }
     }
 
-    protected Structure root() {
-        Pair<Structure, int[]> ri = rootIdx();
+    protected Node root() {
+        Pair<Node, int[]> ri = rootIdx();
         return ri != null ? ri.a().set(ri.b(), Boolean.TRUE) : null;
     }
 
@@ -125,7 +128,7 @@ public abstract class Predicate extends Structure {
 
     public Type getType(int i) {
         Object v = get(i);
-        return v instanceof Type ? (Type) v : v instanceof Structure ? ((Structure) v).type() : null;
+        return v instanceof Type ? (Type) v : v instanceof Node ? ((Node) v).type() : null;
     }
 
     public InferResult infer() {
@@ -259,7 +262,7 @@ public abstract class Predicate extends Structure {
     }
 
     @Override
-    protected Predicate setTyped(int i, Structure typed) {
+    protected Predicate setTyped(int i, Node typed) {
         Object[] array = setArray(i, typed);
         return array != null ? struct(array, null) : this;
     }

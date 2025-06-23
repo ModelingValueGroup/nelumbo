@@ -23,7 +23,7 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Structure;
+import org.modelingvalue.nelumbo.Node;
 
 public abstract class FunctionWithArgs {
 
@@ -44,12 +44,12 @@ public abstract class FunctionWithArgs {
         return nrOfArgs;
     }
 
-    public abstract Structure construct(Token token, List<Structure> args) throws ParseException;
+    public abstract Node construct(Token token, List<Node> args) throws ParseException;
 
-    public static FunctionWithArgs of(String text, int nrOfArgs, ThrowingBiFunction<Token, List<Structure>, Structure> constructor) {
+    public static FunctionWithArgs of(String text, int nrOfArgs, ThrowingBiFunction<Token, List<Node>, Node> constructor) {
         return new FunctionWithArgs(text, nrOfArgs) {
             @Override
-            public Structure construct(Token token, List<Structure> args) throws ParseException {
+            public Node construct(Token token, List<Node> args) throws ParseException {
                 return constructor.apply(token, args);
             }
         };

@@ -24,7 +24,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 
-public class Rule extends Structure {
+public class Rule extends Node {
     private static final long   serialVersionUID = -4602043866952049391L;
     public static final Type    TYPE             = new Type(Rule.class);
     public static final Functor FUNCTOR          = new Functor(TYPE, "Rule", List.of(Relation.TYPE, Predicate.TYPE));

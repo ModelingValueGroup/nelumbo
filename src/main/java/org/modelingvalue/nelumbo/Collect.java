@@ -31,7 +31,7 @@ public final class Collect extends Predicate {
     private Variable            resultVar;
     private Variable            iteratorVar;
     private Variable            contextVar;
-    private Structure           identityCons;
+    private Node                identityCons;
     private int[]               identityIdx;
     private Predicate           identityPred;
     private Predicate           emptyCollector;

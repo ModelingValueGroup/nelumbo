@@ -217,7 +217,7 @@ public final class Relation extends Predicate {
     }
 
     @Override
-    protected final Relation setTyped(int i, Structure typed) {
+    protected final Relation setTyped(int i, Node typed) {
         return (Relation) super.setTyped(i, typed);
     }
 

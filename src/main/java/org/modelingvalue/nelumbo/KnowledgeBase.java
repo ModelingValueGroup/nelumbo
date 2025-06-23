@@ -38,6 +38,8 @@ import org.modelingvalue.collections.util.ContextThread;
 @SuppressWarnings("rawtypes")
 public final class KnowledgeBase {
 
+    protected static final boolean                              TRACE_NELUMBO       = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
+
     public static final Context<KnowledgeBase>                  CURRENT             = Context.of();
 
     private static final ContextPool                            POOL                = ContextThread.createPool();
@@ -139,7 +141,7 @@ public final class KnowledgeBase {
     private final AtomicReference<Map<Relation, Set<Rule>>>            rules;
     private final AtomicInteger                                        depth;
     private final AtomicReference<QualifiedSet<Relation, Inference>[]> memoization;
-    private final InferContext                                         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, Structure.TRACE_NELUMBO);
+    private final InferContext                                         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
     private boolean                                                    stopped;
 
     @SuppressWarnings("unchecked")

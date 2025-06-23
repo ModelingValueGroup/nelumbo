@@ -20,7 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
-public class Variable extends Structure {
+public class Variable extends Node {
     private static final long serialVersionUID = -8998368070388908726L;
     public static final Type  TYPE             = new Type(Variable.class);
 

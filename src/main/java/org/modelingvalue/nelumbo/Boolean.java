@@ -43,7 +43,7 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    protected void init(Structure parent, int idx) {
+    protected void init(Node parent, int idx) {
     }
 
     public boolean isTrue() {

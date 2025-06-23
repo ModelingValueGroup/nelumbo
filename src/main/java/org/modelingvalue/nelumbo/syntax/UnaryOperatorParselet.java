@@ -24,7 +24,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.modelingvalue.nelumbo.Structure;
+import org.modelingvalue.nelumbo.Node;
 
 public final class UnaryOperatorParselet extends Prefix1Parselet {
 
@@ -36,9 +36,9 @@ public final class UnaryOperatorParselet extends Prefix1Parselet {
     }
 
     @Override
-    public Structure parse(Parser parser, Token token) throws ParseException {
+    public Node parse(Parser parser, Token token) throws ParseException {
         UnaryOperator unaryOperator = getOperator(token);
-        Structure right = parser.parseExpression(100);
+        Node right = parser.parseExpression(100);
         return unaryOperator.construct(token, right);
     }
 

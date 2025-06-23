@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.nelumbo.Structure;
+import org.modelingvalue.nelumbo.Node;
 
 public abstract class AtomicParselet extends Prefix1Parselet {
 
@@ -30,16 +30,16 @@ public abstract class AtomicParselet extends Prefix1Parselet {
     }
 
     @Override
-    public Structure parse(Parser parser, Token token) throws ParseException {
+    public Node parse(Parser parser, Token token) throws ParseException {
         return construct(token);
     }
 
-    public abstract Structure construct(Token token) throws ParseException;
+    public abstract Node construct(Token token) throws ParseException;
 
-    public static AtomicParselet of(ThrowingFunction<Token, Structure> constructor) {
+    public static AtomicParselet of(ThrowingFunction<Token, Node> constructor) {
         return new AtomicParselet() {
             @Override
-            public Structure construct(Token token) throws ParseException {
+            public Node construct(Token token) throws ParseException {
                 return constructor.apply(token);
             }
         };

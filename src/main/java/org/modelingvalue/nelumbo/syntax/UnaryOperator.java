@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.nelumbo.Structure;
+import org.modelingvalue.nelumbo.Node;
 
 public abstract class UnaryOperator {
 
@@ -37,12 +37,12 @@ public abstract class UnaryOperator {
         return text;
     }
 
-    public abstract Structure construct(Token token, Structure right) throws ParseException;
+    public abstract Node construct(Token token, Node right) throws ParseException;
 
-    public static UnaryOperator of(String text, ThrowingBiFunction<Token, Structure, Structure> constructor) {
+    public static UnaryOperator of(String text, ThrowingBiFunction<Token, Node, Node> constructor) {
         return new UnaryOperator(text) {
             @Override
-            public Structure construct(Token token, Structure right) throws ParseException {
+            public Node construct(Token token, Node right) throws ParseException {
                 return constructor.apply(token, right);
             }
         };

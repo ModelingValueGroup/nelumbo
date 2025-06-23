@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
 
-public final class Functor extends Structure {
+public final class Functor extends Node {
     private static final long serialVersionUID = 285147889847599160L;
     public static final Type  TYPE             = new Type(Functor.class);
 

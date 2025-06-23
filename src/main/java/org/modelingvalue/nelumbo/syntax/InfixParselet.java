@@ -22,12 +22,12 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.nelumbo.Structure;
+import org.modelingvalue.nelumbo.Node;
 
 public abstract class InfixParselet {
 
     public abstract int precedence(Token token) throws ParseException;
 
-    public abstract Structure parse(Parser parser, Structure left, Token token) throws ParseException;
+    public abstract Node parse(Parser parser, Node left, Token token) throws ParseException;
 
 }

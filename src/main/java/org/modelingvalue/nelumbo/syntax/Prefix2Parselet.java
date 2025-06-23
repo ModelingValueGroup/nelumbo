@@ -22,10 +22,10 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.nelumbo.Structure;
+import org.modelingvalue.nelumbo.Node;
 
 public abstract class Prefix2Parselet {
 
-    public abstract Structure parse(Parser parser, Token token1, Token token2) throws ParseException;
+    public abstract Node parse(Parser parser, Token token1, Token token2) throws ParseException;
 
 }
