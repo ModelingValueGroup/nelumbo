@@ -27,9 +27,11 @@ import org.modelingvalue.nelumbo.Node;
 public abstract class UnaryOperator {
 
     private final String text;
+    private final int    precedence;
 
-    public UnaryOperator(String text) {
+    public UnaryOperator(String text, int precedence) {
         this.text = text;
+        this.precedence = precedence;
         UnaryOperatorParselet.register(this);
     }
 
@@ -37,10 +39,14 @@ public abstract class UnaryOperator {
         return text;
     }
 
+    public int precedence() {
+        return precedence;
+    }
+
     public abstract Node construct(Token token, Node right) throws ParseException;
 
-    public static UnaryOperator of(String text, ThrowingBiFunction<Token, Node, Node> constructor) {
-        return new UnaryOperator(text) {
+    public static UnaryOperator of(String text, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return new UnaryOperator(text, precedence) {
             @Override
             public Node construct(Token token, Node right) throws ParseException {
                 return constructor.apply(token, right);

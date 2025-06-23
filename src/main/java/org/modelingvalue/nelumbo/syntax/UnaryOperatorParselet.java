@@ -38,7 +38,7 @@ public final class UnaryOperatorParselet extends Prefix1Parselet {
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
         UnaryOperator unaryOperator = getOperator(token);
-        Node right = parser.parseExpression(100);
+        Node right = parser.parseExpression(unaryOperator.precedence());
         return unaryOperator.construct(token, right);
     }
 
