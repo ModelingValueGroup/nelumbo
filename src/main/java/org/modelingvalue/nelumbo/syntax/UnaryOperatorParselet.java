@@ -21,16 +21,16 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
 
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.Node;
 
 public final class UnaryOperatorParselet extends Prefix1Parselet {
 
-    public final static UnaryOperatorParselet INSTANCE       = new UnaryOperatorParselet();
+    public final static UnaryOperatorParselet          INSTANCE       = new UnaryOperatorParselet();
 
-    private final Map<String, UnaryOperator>  unaryOperators = new HashMap<>();
+    private final java.util.Map<String, UnaryOperator> unaryOperators =                             //
+            Map.<String, UnaryOperator> of().toMutable();
 
     private UnaryOperatorParselet() {
     }
@@ -38,7 +38,11 @@ public final class UnaryOperatorParselet extends Prefix1Parselet {
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
         UnaryOperator unaryOperator = getOperator(token);
-        Node right = parser.parseExpression(unaryOperator.precedence());
+        int pos = parser.position();
+        Node right = parser.parseNode(unaryOperator.precedence());
+        if (!unaryOperator.right().isAssignableFrom(right.type())) {
+            throw new ParseException("Expected type " + unaryOperator.right() + " and found " + right.type(), pos);
+        }
         return unaryOperator.construct(token, right);
     }
 
@@ -50,8 +54,11 @@ public final class UnaryOperatorParselet extends Prefix1Parselet {
         return unaryOperator;
     }
 
-    public static void register(UnaryOperator operator) {
-        INSTANCE.unaryOperators.put(operator.text(), operator);
+    public void register(UnaryOperator operator) {
+        if (unaryOperators.containsKey(operator.oper())) {
+            throw new IllegalArgumentException();
+        }
+        unaryOperators.put(operator.oper(), operator);
     }
 
 }

@@ -26,40 +26,55 @@ import java.util.Map;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
-public class CallParselet extends Prefix2Parselet {
+public class CallWithArgsParselet extends Prefix2Parselet {
 
-    public final static CallParselet            INSTANCE  = new CallParselet();
+    public final static CallWithArgsParselet      INSTANCE   = new CallWithArgsParselet();
 
-    private final Map<String, FunctionWithArgs> functions = new HashMap<>();
+    private final Map<String, List<CallWithArgs>> signatures = new HashMap<>();
 
-    private CallParselet() {
+    private CallWithArgsParselet() {
     }
 
     @Override
     public Node parse(Parser parser, Token token1, Token token2) throws ParseException {
-        FunctionWithArgs function = getFunction(token1);
         List<Node> args = List.of();
-        for (int i = 0; i < function.nrOfArgs(); i++) {
-            args = args.add(parser.parseExpression(0));
-            if (i < function.nrOfArgs() - 1) {
-                parser.consume(TokenType.COMMA);
+        do {
+            args = args.add(parser.parseNode(0));
+        } while (parser.match(TokenType.COMMA));
+        parser.consume(TokenType.RPAREN);
+        CallWithArgs call = getCall(token1, args);
+        return call.construct(token1, args);
+    }
+
+    private CallWithArgs getCall(Token token, List<Node> args) throws ParseException {
+        List<CallWithArgs> calls = signatures.get(token.text());
+        if (calls != null) {
+            for (CallWithArgs call : calls) {
+                if (call.isAssignableFrom(args)) {
+                    return call;
+                }
             }
         }
-        parser.consume(TokenType.RPAREN);
-        return function.construct(token1, args);
+        List<Type> types = args.replaceAll(Node::type);
+        String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
+        throw new ParseException("Could not call " + token.text() + signature + ", at position " + token.position() + ".", token.position());
     }
 
-    private FunctionWithArgs getFunction(Token token) throws ParseException {
-        FunctionWithArgs function = functions.get(token.text());
-        if (function == null) {
-            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
-        }
-        return function;
-    }
-
-    public static void register(FunctionWithArgs function) {
-        INSTANCE.functions.put(function.text(), function);
+    public void register(CallWithArgs call) {
+        signatures.compute(call.name(), (k, v) -> {
+            if (v == null) {
+                return List.of(call);
+            } else {
+                for (int i = 0; i < v.size(); i++) {
+                    if (v.get(i).isAssignableFrom(call)) {
+                        return v.insert(i, call);
+                    }
+                }
+                return v.append(call);
+            }
+        });
     }
 
 }

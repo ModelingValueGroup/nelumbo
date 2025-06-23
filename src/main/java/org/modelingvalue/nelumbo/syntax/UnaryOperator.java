@@ -23,20 +23,26 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
 public abstract class UnaryOperator {
 
-    private final String text;
+    private final String oper;
+    private final Type   right;
     private final int    precedence;
 
-    public UnaryOperator(String text, int precedence) {
-        this.text = text;
+    public UnaryOperator(String oper, Type right, int precedence) {
+        this.oper = oper;
+        this.right = right;
         this.precedence = precedence;
-        UnaryOperatorParselet.register(this);
     }
 
-    public String text() {
-        return text;
+    public String oper() {
+        return oper;
+    }
+
+    public Type right() {
+        return right;
     }
 
     public int precedence() {
@@ -45,8 +51,8 @@ public abstract class UnaryOperator {
 
     public abstract Node construct(Token token, Node right) throws ParseException;
 
-    public static UnaryOperator of(String text, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
-        return new UnaryOperator(text, precedence) {
+    public static UnaryOperator of(String text, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return new UnaryOperator(text, right, precedence) {
             @Override
             public Node construct(Token token, Node right) throws ParseException {
                 return constructor.apply(token, right);

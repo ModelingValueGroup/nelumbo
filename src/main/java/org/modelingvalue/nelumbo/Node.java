@@ -42,7 +42,7 @@ public class Node extends StructImpl {
         init();
     }
 
-    protected Node(Type type, Object... args) {
+    public Node(Type type, Object... args) {
         super(array(type, args));
         init();
     }
@@ -61,7 +61,7 @@ public class Node extends StructImpl {
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         if (hashCode == 0) {
             int r = 1;
             for (int i = 1; i < length(); i++) {
@@ -131,7 +131,7 @@ public class Node extends StructImpl {
         return result;
     }
 
-    protected Type type() {
+    public Type type() {
         Object t = get(0);
         return t instanceof Functor ? ((Functor) t).resultType() : (Type) t;
     }

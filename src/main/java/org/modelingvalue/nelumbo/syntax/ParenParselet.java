@@ -33,9 +33,9 @@ public class ParenParselet extends Prefix1Parselet {
 
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
-        Node expression = parser.parseExpression(0);
+        Node node = parser.parseNode(0);
         parser.consume(TokenType.RPAREN);
-        return expression;
+        return node;
     }
 
 }

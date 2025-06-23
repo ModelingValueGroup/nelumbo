@@ -20,29 +20,49 @@
 
 package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
 
 public class Type extends Node {
     private static final long serialVersionUID = -4583279157841144493L;
-    public static final Type  TYPE             = new Type(Type.class);
+
+    private static Type       TYPE             = null;
+
+    public static final Type TYPE() {
+        if (TYPE == null) {
+            TYPE = new Type() {
+                private static final long serialVersionUID = -2303866849518548877L;
+
+                @Override
+                public Object get(int i) {
+                    return i == 0 ? this : super.get(i);
+                }
+
+                @Override
+                public int hashCode() {
+                    return 0;
+                }
+            };
+        }
+        return TYPE;
+    }
+
+    private Type() {
+        super((Type) null, Type.class);
+        KnowledgeBase.CURRENT.get().addType(this);
+    }
 
     public Type(Class<?> clss) {
-        super(TYPE, clss);
+        super(TYPE(), clss);
         KnowledgeBase.CURRENT.get().addType(this);
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE, name, List.of(supers));
+        super(TYPE(), name, Set.of(supers));
         KnowledgeBase.CURRENT.get().addType(this);
     }
 
     private Type(Object[] array) {
         super(array);
-    }
-
-    @Override
-    protected Type type() {
-        return TYPE;
     }
 
     public String name() {
@@ -56,8 +76,8 @@ public class Type extends Node {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Type> supers() {
-        return (List<Type>) get(2);
+    public Set<Type> supers() {
+        return (Set<Type>) get(2);
     }
 
     @Override

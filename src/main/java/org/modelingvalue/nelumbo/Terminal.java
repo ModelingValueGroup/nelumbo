@@ -24,9 +24,12 @@ public class Terminal extends Node {
     private static final long serialVersionUID = 7548506547559092927L;
     public static final Type  TYPE             = new Type(Terminal.class);
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public Terminal(Functor functor, Object... args) {
         super(functor, args);
+    }
+
+    public Terminal(Type type, Object... args) {
+        super(type, args);
     }
 
     private Terminal(Object[] array) {

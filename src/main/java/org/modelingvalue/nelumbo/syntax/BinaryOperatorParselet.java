@@ -21,43 +21,64 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
 
+import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
 public final class BinaryOperatorParselet extends InfixParselet {
 
-    public final static BinaryOperatorParselet INSTANCE        = new BinaryOperatorParselet();
+    public final static BinaryOperatorParselet                      INSTANCE        = new BinaryOperatorParselet();
 
-    private final Map<String, BinaryOperator>  binaryOperators = new HashMap<>();
+    private final java.util.Map<Pair<Type, String>, BinaryOperator> binaryOperators =                              //
+            Map.<Pair<Type, String>, BinaryOperator> of().toMutable();
 
     private BinaryOperatorParselet() {
     }
 
     @Override
     public Node parse(Parser parser, Node left, Token token) throws ParseException {
-        BinaryOperator binaryOperator = getOperator(token);
-        Node right = parser.parseExpression(binaryOperator.precedence());
+        BinaryOperator binaryOperator = getOperator(left, token);
+        int pos = parser.position();
+        Node right = parser.parseNode(binaryOperator.precedence());
+        if (!binaryOperator.right().isAssignableFrom(right.type())) {
+            throw new ParseException("Expected type " + binaryOperator.right() + " and found " + right.type(), pos);
+        }
         return binaryOperator.construct(token, left, right);
     }
 
     @Override
-    public int precedence(Token token) throws ParseException {
-        BinaryOperator binaryOperator = getOperator(token);
+    public int precedence(Node left, Token token) throws ParseException {
+        BinaryOperator binaryOperator = getOperator(left, token);
         return binaryOperator.precedence();
     }
 
-    private BinaryOperator getOperator(Token token) throws ParseException {
-        BinaryOperator binaryOperator = binaryOperators.get(token.text());
-        if (binaryOperator == null) {
-            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+    private BinaryOperator getOperator(Node left, Token token) throws ParseException {
+        Set<Type> pre, post = Set.of(left.type());
+        BinaryOperator binaryOperator = null;
+        while (!post.isEmpty()) {
+            pre = post;
+            post = Set.of();
+            for (Type type : pre) {
+                binaryOperator = binaryOperators.get(Pair.of(type, token.text()));
+                if (binaryOperator != null) {
+                    return binaryOperator;
+                } else {
+                    post = post.addAll(type.supers());
+                }
+            }
         }
-        return binaryOperator;
+        throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
     }
 
-    public static void register(BinaryOperator operator) {
-        INSTANCE.binaryOperators.put(operator.text(), operator);
+    public void register(BinaryOperator operator) {
+        Pair<Type, String> pair = Pair.of(operator.left(), operator.oper());
+        if (binaryOperators.containsKey(pair)) {
+            throw new IllegalArgumentException();
+        }
+        binaryOperators.put(pair, operator);
     }
 
 }

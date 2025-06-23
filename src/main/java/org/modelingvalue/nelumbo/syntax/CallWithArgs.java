@@ -24,35 +24,59 @@ import java.text.ParseException;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
-public abstract class FunctionWithArgs {
+public abstract class CallWithArgs {
 
-    private final String text;
-    private final int    nrOfArgs;
+    private final String     name;
+    private final List<Type> args;
 
-    public FunctionWithArgs(String text, int nrOfArgs) {
-        this.text = text;
-        this.nrOfArgs = nrOfArgs;
-        CallParselet.register(this);
+    public CallWithArgs(String name, Type... args) {
+        this.name = name;
+        this.args = List.of(args);
     }
 
-    public String text() {
-        return text;
+    public String name() {
+        return name;
     }
 
-    public int nrOfArgs() {
-        return nrOfArgs;
+    public List<Type> args() {
+        return args;
     }
 
     public abstract Node construct(Token token, List<Node> args) throws ParseException;
 
-    public static FunctionWithArgs of(String text, int nrOfArgs, ThrowingBiFunction<Token, List<Node>, Node> constructor) {
-        return new FunctionWithArgs(text, nrOfArgs) {
+    public static CallWithArgs of(String text, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
+        return new CallWithArgs(text, args) {
             @Override
             public Node construct(Token token, List<Node> args) throws ParseException {
                 return constructor.apply(token, args);
             }
         };
+    }
+
+    public boolean isAssignableFrom(CallWithArgs sub) {
+        if (!sub.name().equals(name()) || sub.args().size() != args().size()) {
+            return false;
+        }
+        for (int i = 0; i < args.size(); i++) {
+            if (!args().get(i).isAssignableFrom(sub.args().get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isAssignableFrom(List<Node> args) {
+        if (args.size() != args().size()) {
+            return false;
+        }
+        for (int i = 0; i < args.size(); i++) {
+            if (!args().get(i).isAssignableFrom(args.get(i).type())) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
