@@ -26,7 +26,7 @@ import org.modelingvalue.nelumbo.Node;
 
 public abstract class InfixParselet {
 
-    public abstract int precedence(Node left, Token token);
+    public abstract int precedence(Parser parser, Node left, Token token);
 
     public abstract Node parse(Parser parser, Node left, Token token) throws ParseException;
 

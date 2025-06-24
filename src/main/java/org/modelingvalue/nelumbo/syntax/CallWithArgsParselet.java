@@ -21,8 +21,6 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
@@ -31,8 +29,6 @@ import org.modelingvalue.nelumbo.Type;
 public final class CallWithArgsParselet extends PrefixParselet {
 
     public final static CallWithArgsParselet      INSTANCE   = new CallWithArgsParselet();
-
-    private final Map<String, List<CallWithArgs>> signatures = new HashMap<>();
 
     private CallWithArgsParselet() {
     }
@@ -45,12 +41,12 @@ public final class CallWithArgsParselet extends PrefixParselet {
             args = args.add(parser.parseNode(0, Node.TYPE));
         } while (parser.match(TokenType.COMMA));
         parser.consume(TokenType.RPAREN);
-        CallWithArgs call = getCall(token, args);
+        CallWithArgs call = getCall(parser, token, args);
         return call.construct(token, args);
     }
 
-    private CallWithArgs getCall(Token token, List<Node> args) throws ParseException {
-        List<CallWithArgs> calls = signatures.get(token.text());
+    private CallWithArgs getCall(Parser parser, Token token, List<Node> args) throws ParseException {
+        List<CallWithArgs> calls = parser.knowledgeBase().callsWithArgs(token.text());
         if (calls != null) {
             for (CallWithArgs call : calls) {
                 if (call.isAssignableFrom(args)) {
@@ -58,7 +54,7 @@ public final class CallWithArgsParselet extends PrefixParselet {
                 }
             }
         }
-        calls = signatures.get(CallWithArgs.WILDCARD);
+        calls = parser.knowledgeBase().callsWithArgs(CallWithArgs.WILDCARD);
         if (calls != null) {
             for (CallWithArgs call : calls) {
                 if (call.isAssignableFrom(args)) {
@@ -69,21 +65,6 @@ public final class CallWithArgsParselet extends PrefixParselet {
         List<Type> types = args.replaceAll(Node::type);
         String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
         throw new ParseException("Could not call " + token.text() + signature + ", at position " + token.position() + ".", token.position());
-    }
-
-    public void register(CallWithArgs call) {
-        signatures.compute(call.name(), (k, v) -> {
-            if (v == null) {
-                return List.of(call);
-            } else {
-                for (int i = 0; i < v.size(); i++) {
-                    if (v.get(i).isAssignableFrom(call)) {
-                        return v.insert(i, call);
-                    }
-                }
-                return v.append(call);
-            }
-        });
     }
 
 }

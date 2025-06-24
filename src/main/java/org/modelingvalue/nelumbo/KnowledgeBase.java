@@ -20,6 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.text.ParseException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,6 +35,8 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
+import org.modelingvalue.collections.util.Pair;
+import org.modelingvalue.nelumbo.syntax.*;
 
 @SuppressWarnings("rawtypes")
 public final class KnowledgeBase {
@@ -63,6 +66,8 @@ public final class KnowledgeBase {
                                                                                             return l.add(e);
                                                                                         }
                                                                                     };
+
+    public static final KnowledgeBase                           BASE                = new KnowledgeBase(null).initBase();
 
     @SuppressWarnings("rawtypes")
     private static class Inference extends Struct2Impl<Relation, InferResult> {
@@ -117,7 +122,7 @@ public final class KnowledgeBase {
     }
 
     public static final KnowledgeBase run(Runnable runnable) {
-        return run(runnable, null);
+        return run(runnable, BASE);
     }
 
     public static final KnowledgeBase run(Runnable runnable, KnowledgeBase init) {
@@ -135,15 +140,217 @@ public final class KnowledgeBase {
         return result;
     }
 
-    private final AtomicReference<Map<String, Type>>                   types;
-    private final AtomicReference<Set<Functor>>                        functors;
-    private final AtomicReference<Map<String, Variable>>               variables;
-    private final AtomicReference<Map<Relation, InferResult>>          facts;
-    private final AtomicReference<Map<Relation, Set<Rule>>>            rules;
-    private final AtomicInteger                                        depth;
-    private final AtomicReference<QualifiedSet<Relation, Inference>[]> memoization;
-    private final InferContext                                         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
-    private boolean                                                    stopped;
+    private static Type type(String name) {
+        return KnowledgeBase.CURRENT.get().getType(name);
+    }
+
+    private static Variable var(String name) {
+        return KnowledgeBase.CURRENT.get().getVar(name);
+    }
+
+    private static Node createNode(Functor functor, Object[] values) {
+        return Relation.TYPE.isAssignableFrom(functor.resultType()) ? new Relation(functor, values) : new Node(functor, values);
+    }
+
+    public void register(TokenType token, PrefixParselet parselet) {
+        if (prefix1Parselets.get().containsKey(token)) {
+            throw new IllegalArgumentException();
+        }
+        prefix1Parselets.updateAndGet(map -> map.put(token, parselet));
+    }
+
+    public void register(TokenType token, String next, PrefixParselet parselet) {
+        Pair<TokenType, String> pair = Pair.of(token, next);
+        if (prefix2Parselets.get().containsKey(pair)) {
+            throw new IllegalArgumentException();
+        }
+        prefix2Parselets.updateAndGet(map -> map.put(pair, parselet));
+    }
+
+    public void register(Type desired, TokenType token, PrefixParselet parselet) {
+        Pair<Type, TokenType> pair = Pair.of(desired, token);
+        if (prefix3Parselets.get().containsKey(pair)) {
+            throw new IllegalArgumentException();
+        }
+        prefix3Parselets.updateAndGet(map -> map.put(pair, parselet));
+    }
+
+    public void register(TokenType token, InfixParselet parselet) {
+        if (infixParselets.get().containsKey(token)) {
+            throw new IllegalArgumentException();
+        }
+        infixParselets.updateAndGet(map -> map.put(token, parselet));
+    }
+
+    public PrefixParselet prefix(Type desired, TokenType token) {
+        Pair<Type, TokenType> pair = Pair.of(desired, token);
+        return prefix3Parselets.get().get(pair);
+    }
+
+    public PrefixParselet prefix(TokenType token, String next) {
+        Pair<TokenType, String> pair = Pair.of(token, next);
+        return prefix2Parselets.get().get(pair);
+    }
+
+    public PrefixParselet prefix(TokenType token) {
+        return prefix1Parselets.get().get(token);
+    }
+
+    public InfixParselet infix(TokenType token) {
+        return infixParselets.get().get(token);
+    }
+
+    public void register(UnaryOperator operator) {
+        if (unaryOperators.get().containsKey(operator.oper())) {
+            throw new IllegalArgumentException();
+        }
+        unaryOperators.updateAndGet(map -> map.put(operator.oper(), operator));
+    }
+
+    public UnaryOperator unaryOperator(String oper) {
+        return unaryOperators.get().get(oper);
+    }
+
+    public void register(BinaryOperator operator) {
+        Pair<Type, String> pair = Pair.of(operator.left(), operator.oper());
+        if (binaryOperators.get().containsKey(pair)) {
+            throw new IllegalArgumentException();
+        }
+        binaryOperators.updateAndGet(map -> map.put(pair, operator));
+    }
+
+    public BinaryOperator binaryOperator(Type left, String oper) {
+        Pair<Type, String> pair = Pair.of(left, oper);
+        return binaryOperators.get().get(pair);
+    }
+
+    public void register(CallWithArgs call) {
+        callsWithArgs.updateAndGet(map -> map.compute(call.name(), (k, v) -> {
+            if (v == null) {
+                return List.of(call);
+            } else {
+                for (int i = 0; i < v.size(); i++) {
+                    if (v.get(i).isAssignableFrom(call)) {
+                        return v.insert(i, call);
+                    }
+                }
+                return v.append(call);
+            }
+        }));
+    }
+
+    public List<CallWithArgs> callsWithArgs(String name) {
+        return callsWithArgs.get().get(name);
+    }
+
+    @SuppressWarnings("unchecked")
+    private KnowledgeBase initBase() {
+        CURRENT.run(this, () -> {
+            Type RELATION = Relation.TYPE;
+
+            Type TYPE_NAME = new Type("TypeName");
+            Type VAR_NAME = new Type("VarName");
+            Type SIGNATURE = new Type("Signature");
+            Type FUNCTOR_SET = new Type("FunctorSet");
+            Type VAR_SET = new Type("VarSet");
+
+            Type FUNCTION = new Type("Function");
+            Type LITERAL = new Type("Literal");
+
+            register(TokenType.OPERATOR, UnaryOperatorParselet.INSTANCE);
+            register(TokenType.OPERATOR, BinaryOperatorParselet.INSTANCE);
+            // register(TokenType.NAME, UnaryOperatorParselet.INSTANCE);
+            register(TokenType.NAME, BinaryOperatorParselet.INSTANCE);
+            register(TokenType.NAME, "(", CallWithArgsParselet.INSTANCE);
+            register(TokenType.LPAREN, ParenParselet.INSTANCE);
+            register(TokenType.TYPE, "::", AtomicParselet.of(t -> {
+                String name = t.text();
+                name = name.substring(1, name.length() - 1);
+                return new Terminal(TYPE_NAME, name);
+            }));
+            register(TokenType.TYPE, AtomicParselet.of(t -> {
+                String name = t.text();
+                name = name.substring(1, name.length() - 1);
+                Type type = type(name);
+                if (type != null) {
+                    return type;
+                }
+                throw new ParseException("Could not find type " + t.text() + " at position " + t.position() + ".", t.position());
+            }));
+            register(TokenType.NAME, AtomicParselet.of(t -> {
+                String name = t.text();
+                Variable var = var(name);
+                if (var != null) {
+                    return var;
+                }
+                throw new ParseException("Could not find variable " + t.text() + " at position " + t.position() + ".", t.position());
+            }));
+            register(BinaryOperator.of(TYPE_NAME, "::", Type.TYPE().list(), 10, (t, l, r) -> {
+                return new Type((String) l.get(1), ((ListNode) r).elements());
+            }));
+            register(CallWithArgs.of((t, l) -> {
+                return new Node(SIGNATURE, t.text(), l);
+            }, Type.TYPE().list()));
+            register(BinaryOperator.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (t, l, r) -> {
+                Set<Functor> set = Set.of();
+                KnowledgeBase current = KnowledgeBase.CURRENT.get();
+                for (Node s : ((ListNode) r).elements()) {
+                    Functor functor = new Functor((Type) l, (String) s.get(1), (List<Type>) s.get(2));
+                    current.register(CallWithArgs.of(functor.name(), (tt, ll) -> createNode(functor, ll.toArray()), //
+                            functor.args().toArray(i -> new Type[i])));
+                    set = set.add(functor);
+                }
+                return new Node(FUNCTOR_SET, set);
+            }));
+            register(VAR_NAME, TokenType.NAME, AtomicParselet.of(t -> {
+                String name = t.text();
+                return new Terminal(VAR_NAME, name);
+            }));
+            register(BinaryOperator.of(Type.TYPE(), ":", VAR_NAME.list(), 10, (t, l, r) -> {
+                Set<Variable> set = Set.of();
+                for (Node v : ((ListNode) r).elements()) {
+                    set = set.add(new Variable((Type) l, (String) v.get(1)));
+                }
+                return new Node(VAR_SET, set);
+            }));
+            register(BinaryOperator.of(RELATION, "<==", Predicate.TYPE, 10, (t, l, r) -> {
+                return new Rule((Relation) l, (Predicate) r);
+            }));
+            register(UnaryOperator.of("!", Predicate.TYPE, 10, (t, r) -> {
+                return new Not((Predicate) r);
+            }));
+            register(BinaryOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
+                return new And((Predicate) l, (Predicate) r);
+            }));
+            register(BinaryOperator.of(Predicate.TYPE, "|", Predicate.TYPE, 20, (t, l, r) -> {
+                return new Or((Predicate) l, (Predicate) r);
+            }));
+            register(BinaryOperator.of(Node.TYPE, "=", Node.TYPE, 30, (t, l, r) -> {
+                return new Equal((Node) l, (Node) r);
+            }));
+        });
+        return this;
+    }
+
+    private final AtomicReference<Map<String, Type>>                            types;
+    private final AtomicReference<Set<Functor>>                                 functors;
+    private final AtomicReference<Map<String, Variable>>                        variables;
+    private final AtomicReference<Map<Relation, InferResult>>                   facts;
+    private final AtomicReference<Map<Relation, Set<Rule>>>                     rules;
+
+    private final AtomicReference<Map<Pair<Type, TokenType>, PrefixParselet>>   prefix3Parselets;
+    private final AtomicReference<Map<Pair<TokenType, String>, PrefixParselet>> prefix2Parselets;
+    private final AtomicReference<Map<TokenType, PrefixParselet>>               prefix1Parselets;
+    private final AtomicReference<Map<TokenType, InfixParselet>>                infixParselets;
+
+    private final AtomicReference<Map<String, UnaryOperator>>                   unaryOperators;
+    private final AtomicReference<Map<Pair<Type, String>, BinaryOperator>>      binaryOperators;
+    private final AtomicReference<Map<String, List<CallWithArgs>>>              callsWithArgs;
+
+    private final AtomicInteger                                                 depth;
+    private final AtomicReference<QualifiedSet<Relation, Inference>[]>          memoization;
+    private final InferContext                                                  context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
+    private boolean                                                             stopped;
 
     @SuppressWarnings("unchecked")
     public KnowledgeBase(KnowledgeBase init) {
@@ -152,6 +359,16 @@ public final class KnowledgeBase {
         variables = new AtomicReference<>(Map.of());
         facts = new AtomicReference<>(init != null ? init.facts.get() : Map.of());
         rules = new AtomicReference<>(init != null ? init.rules.get() : Map.of());
+
+        prefix3Parselets = new AtomicReference<>(init != null ? init.prefix3Parselets.get() : Map.of());
+        prefix2Parselets = new AtomicReference<>(init != null ? init.prefix2Parselets.get() : Map.of());
+        prefix1Parselets = new AtomicReference<>(init != null ? init.prefix1Parselets.get() : Map.of());
+        infixParselets = new AtomicReference<>(init != null ? init.infixParselets.get() : Map.of());
+
+        unaryOperators = new AtomicReference<>(init != null ? init.unaryOperators.get() : Map.of());
+        binaryOperators = new AtomicReference<>(init != null ? init.binaryOperators.get() : Map.of());
+        callsWithArgs = new AtomicReference<>(init != null ? init.callsWithArgs.get() : Map.of());
+
         memoization = new AtomicReference<>(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
         depth = new AtomicInteger(0);
     }
@@ -317,7 +534,7 @@ public final class KnowledgeBase {
         types.updateAndGet(map -> map.put(type.name(), type));
     }
 
-    public final Type getype(String name) {
+    public final Type getType(String name) {
         return types.get().get(name);
     }
 

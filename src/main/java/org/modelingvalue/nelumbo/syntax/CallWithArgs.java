@@ -49,7 +49,7 @@ public abstract class CallWithArgs {
     public abstract Node construct(Token token, List<Node> args) throws ParseException;
 
     public static CallWithArgs of(ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
-        return of("*", constructor, args);
+        return of(WILDCARD, constructor, args);
     }
 
     public static CallWithArgs of(String text, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {

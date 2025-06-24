@@ -22,26 +22,21 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
 public final class BinaryOperatorParselet extends InfixParselet {
 
-    public final static BinaryOperatorParselet                      INSTANCE        = new BinaryOperatorParselet();
-
-    private final java.util.Map<Pair<Type, String>, BinaryOperator> binaryOperators =                              //
-            Map.<Pair<Type, String>, BinaryOperator> of().toMutable();
+    public final static BinaryOperatorParselet INSTANCE = new BinaryOperatorParselet();
 
     private BinaryOperatorParselet() {
     }
 
     @Override
     public Node parse(Parser parser, Node left, Token token) throws ParseException {
-        BinaryOperator binaryOperator = getOperator(left, token);
+        BinaryOperator binaryOperator = getOperator(parser, left, token);
         if (binaryOperator == null) {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
@@ -69,19 +64,19 @@ public final class BinaryOperatorParselet extends InfixParselet {
     }
 
     @Override
-    public int precedence(Node left, Token token) {
-        BinaryOperator binaryOperator = getOperator(left, token);
+    public int precedence(Parser parser, Node left, Token token) {
+        BinaryOperator binaryOperator = getOperator(parser, left, token);
         return binaryOperator != null ? binaryOperator.precedence() : 0;
     }
 
-    private BinaryOperator getOperator(Node left, Token token) {
+    private BinaryOperator getOperator(Parser parser, Node left, Token token) {
         Set<Type> pre, post = Set.of(left.type());
         BinaryOperator binaryOperator = null;
         while (!post.isEmpty()) {
             pre = post;
             post = Set.of();
             for (Type type : pre) {
-                binaryOperator = binaryOperators.get(Pair.of(type, token.text()));
+                binaryOperator = parser.knowledgeBase().binaryOperator(type, token.text());
                 if (binaryOperator != null) {
                     return binaryOperator;
                 } else {
@@ -90,14 +85,6 @@ public final class BinaryOperatorParselet extends InfixParselet {
             }
         }
         return null;
-    }
-
-    public void register(BinaryOperator operator) {
-        Pair<Type, String> pair = Pair.of(operator.left(), operator.oper());
-        if (binaryOperators.containsKey(pair)) {
-            throw new IllegalArgumentException();
-        }
-        binaryOperators.put(pair, operator);
     }
 
 }

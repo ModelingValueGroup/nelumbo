@@ -22,23 +22,19 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
 public final class UnaryOperatorParselet extends PrefixParselet {
 
-    public final static UnaryOperatorParselet          INSTANCE       = new UnaryOperatorParselet();
-
-    private final java.util.Map<String, UnaryOperator> unaryOperators =                             //
-            Map.<String, UnaryOperator> of().toMutable();
+    public final static UnaryOperatorParselet INSTANCE = new UnaryOperatorParselet();
 
     private UnaryOperatorParselet() {
     }
 
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
-        UnaryOperator unaryOperator = getOperator(token);
+        UnaryOperator unaryOperator = getOperator(parser, token);
         Type rightType = unaryOperator.right();
         int pos = parser.position();
         Node right = parser.parseNode(unaryOperator.precedence(), rightType);
@@ -48,19 +44,12 @@ public final class UnaryOperatorParselet extends PrefixParselet {
         return unaryOperator.construct(token, right);
     }
 
-    private UnaryOperator getOperator(Token token) throws ParseException {
-        UnaryOperator unaryOperator = unaryOperators.get(token.text());
+    private UnaryOperator getOperator(Parser parser, Token token) throws ParseException {
+        UnaryOperator unaryOperator = parser.knowledgeBase().unaryOperator(token.text());
         if (unaryOperator == null) {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
         return unaryOperator;
-    }
-
-    public void register(UnaryOperator operator) {
-        if (unaryOperators.containsKey(operator.oper())) {
-            throw new IllegalArgumentException();
-        }
-        unaryOperators.put(operator.oper(), operator);
     }
 
 }

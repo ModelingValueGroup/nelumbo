@@ -23,171 +23,31 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 import java.util.LinkedList;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.util.Pair;
-import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
 public final class Parser {
 
-    private static final java.util.Map<Pair<Type, TokenType>, PrefixParselet>   prefix3Parselets =                        //
-            Map.<Pair<Type, TokenType>, PrefixParselet> of().toMutable();
-    private static final java.util.Map<Pair<TokenType, String>, PrefixParselet> prefix2Parselets =                        //
-            Map.<Pair<TokenType, String>, PrefixParselet> of().toMutable();
-    private static final java.util.Map<TokenType, PrefixParselet>               prefix1Parselets =                        //
-            Map.<TokenType, PrefixParselet> of().toMutable();
-    private static final java.util.Map<TokenType, InfixParselet>                infixParselets   =                        //
-            Map.<TokenType, InfixParselet> of().toMutable();
-
-    private static final Type                                                   TYPE_NAME        = new Type("TypeName");
-    private static final Type                                                   VAR_NAME         = new Type("VarName");
-    private static final Type                                                   SIGNATURE        = new Type("Signature");
-    private static final Type                                                   FUNCTOR_SET      = new Type("FunctorSet");
-    private static final Type                                                   VAR_SET          = new Type("VarSet");
-
-    static {
-        init();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void init() {
-        new Type(Relation.class);
-        register(TokenType.OPERATOR, UnaryOperatorParselet.INSTANCE);
-        register(TokenType.OPERATOR, BinaryOperatorParselet.INSTANCE);
-        // register(TokenType.NAME, UnaryOperatorParselet.INSTANCE);
-        register(TokenType.NAME, BinaryOperatorParselet.INSTANCE);
-        register(TokenType.NAME, "(", CallWithArgsParselet.INSTANCE);
-        register(TokenType.LPAREN, ParenParselet.INSTANCE);
-        register(TokenType.TYPE, "::", AtomicParselet.of(t -> {
-            String name = t.text();
-            name = name.substring(1, name.length() - 1);
-            return new Terminal(TYPE_NAME, name);
-        }));
-        register(TokenType.TYPE, AtomicParselet.of(t -> {
-            String name = t.text();
-            name = name.substring(1, name.length() - 1);
-            Type type = KnowledgeBase.CURRENT.get().getype(name);
-            if (type != null) {
-                return type;
-            }
-            throw new ParseException("Could not find type " + t.text() + " at position " + t.position() + ".", t.position());
-        }));
-        register(TokenType.NAME, AtomicParselet.of(t -> {
-            String name = t.text();
-            Variable var = KnowledgeBase.CURRENT.get().getVar(name);
-            if (var != null) {
-                return var;
-            }
-            throw new ParseException("Could not find variable " + t.text() + " at position " + t.position() + ".", t.position());
-        }));
-        register(BinaryOperator.of(TYPE_NAME, "::", Type.TYPE().list(), 10, (t, l, r) -> {
-            return new Type((String) l.get(1), ((ListNode) r).elements());
-        }));
-        register(CallWithArgs.of((t, l) -> {
-            return new Node(SIGNATURE, t.text(), l);
-        }, Type.TYPE().list()));
-        register(BinaryOperator.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (t, l, r) -> {
-            Set<Functor> set = Set.of();
-            for (Node s : ((ListNode) r).elements()) {
-                Functor functor = new Functor((Type) l, (String) s.get(1), (List<Type>) s.get(2));
-                register(CallWithArgs.of(functor.name(), (tt, ll) -> createNode(functor, ll.toArray()), //
-                        functor.args().toArray(i -> new Type[i])));
-                set = set.add(functor);
-            }
-            return new Node(FUNCTOR_SET, set);
-        }));
-        register(VAR_NAME, TokenType.NAME, AtomicParselet.of(t -> {
-            String name = t.text();
-            return new Terminal(VAR_NAME, name);
-        }));
-        register(BinaryOperator.of(Type.TYPE(), ":", VAR_NAME.list(), 10, (t, l, r) -> {
-            Set<Variable> set = Set.of();
-            for (Node v : ((ListNode) r).elements()) {
-                set = set.add(new Variable((Type) l, (String) v.get(1)));
-            }
-            return new Node(VAR_SET, set);
-        }));
-        register(BinaryOperator.of(Relation.TYPE, "<==", Predicate.TYPE, 10, (t, l, r) -> {
-            return new Rule((Relation) l, (Predicate) r);
-        }));
-        register(UnaryOperator.of("!", Predicate.TYPE, 10, (t, r) -> {
-            return new Not((Predicate) r);
-        }));
-        register(BinaryOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
-            return new And((Predicate) l, (Predicate) r);
-        }));
-        register(BinaryOperator.of(Predicate.TYPE, "|", Predicate.TYPE, 20, (t, l, r) -> {
-            return new Or((Predicate) l, (Predicate) r);
-        }));
-        register(BinaryOperator.of(Node.TYPE, "=", Node.TYPE, 30, (t, l, r) -> {
-            return new Equal((Node) l, (Node) r);
-        }));
-    }
-
-    private static Node createNode(Functor functor, Object[] values) {
-        return Relation.TYPE.isAssignableFrom(functor.resultType()) ? new Relation(functor, values) : new Node(functor, values);
-    }
-
-    public static void register(TokenType token, PrefixParselet parselet) {
-        if (prefix1Parselets.containsKey(token)) {
-            throw new IllegalArgumentException();
-        }
-        prefix1Parselets.put(token, parselet);
-    }
-
-    public static void register(TokenType token, String next, PrefixParselet parselet) {
-        Pair<TokenType, String> pair = Pair.of(token, next);
-        if (prefix2Parselets.containsKey(pair)) {
-            throw new IllegalArgumentException();
-        }
-        prefix2Parselets.put(pair, parselet);
-    }
-
-    public static void register(Type desired, TokenType token, PrefixParselet parselet) {
-        Pair<Type, TokenType> pair = Pair.of(desired, token);
-        if (prefix3Parselets.containsKey(pair)) {
-            throw new IllegalArgumentException();
-        }
-        prefix3Parselets.put(pair, parselet);
-    }
-
-    public static void register(TokenType token, InfixParselet parselet) {
-        if (infixParselets.containsKey(token)) {
-            throw new IllegalArgumentException();
-        }
-        infixParselets.put(token, parselet);
-    }
-
-    public static void register(UnaryOperator operator) {
-        UnaryOperatorParselet.INSTANCE.register(operator);
-    }
-
-    public static void register(BinaryOperator operator) {
-        BinaryOperatorParselet.INSTANCE.register(operator);
-    }
-
-    public static void register(CallWithArgs call) {
-        CallWithArgsParselet.INSTANCE.register(call);
-    }
-
     // Instance
 
+    private final KnowledgeBase     knowledgeBase;
     private final LinkedList<Token> tokens;
 
     public Parser(LinkedList<Token> tokens) {
+        this.knowledgeBase = KnowledgeBase.CURRENT.get();
         this.tokens = tokens;
     }
 
     public Node parseNode(int precedence, Type desired) throws ParseException {
         Token token = tokens.poll();
         Node left;
-        PrefixParselet prefix = prefix3Parselets.get(Pair.of(desired, token.type()));
+        PrefixParselet prefix = knowledgeBase.prefix(desired, token.type());
         if (prefix == null) {
-            prefix = prefix2Parselets.get(Pair.of(token.type(), tokens.peek().text()));
+            prefix = knowledgeBase.prefix(token.type(), tokens.peek().text());
         }
         if (prefix == null) {
-            prefix = prefix1Parselets.get(token.type());
+            prefix = knowledgeBase.prefix(token.type());
         }
         if (prefix == null) {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
@@ -195,10 +55,14 @@ public final class Parser {
         left = prefix.parse(this, token);
         while (precedence < precedence(left)) {
             token = tokens.poll();
-            InfixParselet infix = infixParselets.get(token.type());
+            InfixParselet infix = knowledgeBase.infix(token.type());
             left = infix.parse(this, left, token);
         }
         return left;
+    }
+
+    public KnowledgeBase knowledgeBase() {
+        return knowledgeBase;
     }
 
     public void parse() throws ParseException {
@@ -256,9 +120,9 @@ public final class Parser {
     private int precedence(Node left) throws ParseException {
         Token token = tokens.peek();
         if (token != null) {
-            InfixParselet parser = infixParselets.get(token.type());
-            if (parser != null) {
-                return parser.precedence(left, token);
+            InfixParselet infix = knowledgeBase.infix(token.type());
+            if (infix != null) {
+                return infix.precedence(this, left, token);
             }
         }
         return 0;

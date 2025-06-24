@@ -108,8 +108,7 @@ public class SyntaxTest extends NelumboTestBase {
                         //     nelumbo.logic,
                         //     nelumbo.integers
 
-                        <Rel>    :: <Pred>
-                        <IntLit> :: <Int>, <Lit>
+                        <IntLit> :: <Int>, <Literal>
                         <IntFun> :: <Int>, <Fun>
 
                         <Rel>    ::= fib(<IntConst>,<IntConst>)
@@ -150,8 +149,6 @@ public class SyntaxTest extends NelumboTestBase {
                         //     nelumbo.logic,
                         //     nelumbo.integers
 
-                        <Literal>   :: <Node>
-                        <Function>  :: <Node>
                         <Person>    :: <Node>
                         <PersonLit> :: <Person>, <Literal>
                         <PersonFun> :: <Person>, <Function>
