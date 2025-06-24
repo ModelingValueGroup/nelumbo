@@ -23,7 +23,7 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 
-public final class Relation extends Predicate {
+public class Relation extends Predicate {
     private static final long serialVersionUID   = 1032898038061287135L;
     public static final Type  TYPE               = new Type(Relation.class);
 
@@ -36,7 +36,7 @@ public final class Relation extends Predicate {
         super(functor, args);
     }
 
-    private Relation(Object[] args, Relation declaration) {
+    protected Relation(Object[] args, Relation declaration) {
         super(args, declaration);
     }
 

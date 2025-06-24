@@ -22,10 +22,13 @@ package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.LinkedList;
+
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class NelumboTestBase {
     // Utilities
@@ -66,4 +69,10 @@ public class NelumboTestBase {
         KnowledgeBase.CURRENT.get().print();
     }
 
+    @SuppressWarnings("unused")
+    public static void printTokens(LinkedList<Token> tokens) {
+        for (Token token : tokens) {
+            System.out.println("Token: " + token);
+        }
+    }
 }

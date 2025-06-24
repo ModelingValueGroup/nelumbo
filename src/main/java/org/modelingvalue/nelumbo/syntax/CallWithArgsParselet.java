@@ -28,7 +28,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
-public class CallWithArgsParselet extends Prefix2Parselet {
+public final class CallWithArgsParselet extends PrefixParselet {
 
     public final static CallWithArgsParselet      INSTANCE   = new CallWithArgsParselet();
 
@@ -38,18 +38,27 @@ public class CallWithArgsParselet extends Prefix2Parselet {
     }
 
     @Override
-    public Node parse(Parser parser, Token token1, Token token2) throws ParseException {
+    public Node parse(Parser parser, Token token) throws ParseException {
+        parser.consume(TokenType.LPAREN);
         List<Node> args = List.of();
         do {
-            args = args.add(parser.parseNode(0));
+            args = args.add(parser.parseNode(0, Node.TYPE));
         } while (parser.match(TokenType.COMMA));
         parser.consume(TokenType.RPAREN);
-        CallWithArgs call = getCall(token1, args);
-        return call.construct(token1, args);
+        CallWithArgs call = getCall(token, args);
+        return call.construct(token, args);
     }
 
     private CallWithArgs getCall(Token token, List<Node> args) throws ParseException {
         List<CallWithArgs> calls = signatures.get(token.text());
+        if (calls != null) {
+            for (CallWithArgs call : calls) {
+                if (call.isAssignableFrom(args)) {
+                    return call;
+                }
+            }
+        }
+        calls = signatures.get(CallWithArgs.WILDCARD);
         if (calls != null) {
             for (CallWithArgs call : calls) {
                 if (call.isAssignableFrom(args)) {

@@ -24,7 +24,7 @@ import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Node;
 
-public class ParenParselet extends Prefix1Parselet {
+public class ParenParselet extends PrefixParselet {
 
     public final static ParenParselet INSTANCE = new ParenParselet();
 
@@ -33,7 +33,7 @@ public class ParenParselet extends Prefix1Parselet {
 
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
-        Node node = parser.parseNode(0);
+        Node node = parser.parseNode(0, Node.TYPE);
         parser.consume(TokenType.RPAREN);
         return node;
     }

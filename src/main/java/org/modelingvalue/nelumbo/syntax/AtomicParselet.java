@@ -24,7 +24,7 @@ import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Node;
 
-public abstract class AtomicParselet extends Prefix1Parselet {
+public abstract class AtomicParselet extends PrefixParselet {
 
     private AtomicParselet() {
     }

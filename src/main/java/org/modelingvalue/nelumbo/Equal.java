@@ -18,14 +18,43 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.syntax;
+package org.modelingvalue.nelumbo;
 
-import java.text.ParseException;
+import org.modelingvalue.collections.List;
 
-import org.modelingvalue.nelumbo.Node;
+public class Equal extends Relation {
+    private static final long   serialVersionUID = -5516286818572134367L;
+    public static final Functor FUNCTOR          = new Functor(Relation.TYPE, "Equal", List.of(Node.TYPE, Node.TYPE));
 
-public abstract class Prefix2Parselet {
+    public Equal(Node node1, Node node2) {
+        super(FUNCTOR, node1, node2);
+    }
 
-    public abstract Node parse(Parser parser, Token token1, Token token2) throws ParseException;
+    private Equal(Object[] array, Equal declaration) {
+        super(array, declaration);
+    }
+
+    public Node node1() {
+        return (Node) get(1);
+    }
+
+    public Node node2() {
+        return (Node) get(2);
+    }
+
+    @Override
+    protected Equal struct(Object[] array, Predicate declaration) {
+        return new Equal(array, (Equal) declaration);
+    }
+
+    @Override
+    public Equal set(int i, Object... a) {
+        return (Equal) super.set(i, a);
+    }
+
+    @Override
+    public String toString() {
+        return node1() + "=" + node2();
+    }
 
 }

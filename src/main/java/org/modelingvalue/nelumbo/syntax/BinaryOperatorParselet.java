@@ -25,6 +25,7 @@ import java.text.ParseException;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.Pair;
+import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
@@ -41,21 +42,39 @@ public final class BinaryOperatorParselet extends InfixParselet {
     @Override
     public Node parse(Parser parser, Node left, Token token) throws ParseException {
         BinaryOperator binaryOperator = getOperator(left, token);
-        int pos = parser.position();
-        Node right = parser.parseNode(binaryOperator.precedence());
-        if (!binaryOperator.right().isAssignableFrom(right.type())) {
-            throw new ParseException("Expected type " + binaryOperator.right() + " and found " + right.type(), pos);
+        if (binaryOperator == null) {
+            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+        }
+        Node right;
+        Type rightType = binaryOperator.right();
+        if (rightType.isList()) {
+            Type elemType = rightType.element();
+            right = new ListNode(elemType);
+            do {
+                int pos = parser.position();
+                Node node = parser.parseNode(binaryOperator.precedence(), elemType);
+                if (!elemType.isAssignableFrom(node.type())) {
+                    throw new ParseException("Expected type " + elemType + " and found " + node.type(), pos);
+                }
+                right = new ListNode((ListNode) right, node);
+            } while (parser.match(TokenType.COMMA));
+        } else {
+            int pos = parser.position();
+            right = parser.parseNode(binaryOperator.precedence(), rightType);
+            if (!rightType.isAssignableFrom(right.type())) {
+                throw new ParseException("Expected type " + rightType + " and found " + right.type(), pos);
+            }
         }
         return binaryOperator.construct(token, left, right);
     }
 
     @Override
-    public int precedence(Node left, Token token) throws ParseException {
+    public int precedence(Node left, Token token) {
         BinaryOperator binaryOperator = getOperator(left, token);
-        return binaryOperator.precedence();
+        return binaryOperator != null ? binaryOperator.precedence() : 0;
     }
 
-    private BinaryOperator getOperator(Node left, Token token) throws ParseException {
+    private BinaryOperator getOperator(Node left, Token token) {
         Set<Type> pre, post = Set.of(left.type());
         BinaryOperator binaryOperator = null;
         while (!post.isEmpty()) {
@@ -70,7 +89,7 @@ public final class BinaryOperatorParselet extends InfixParselet {
                 }
             }
         }
-        throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+        return null;
     }
 
     public void register(BinaryOperator operator) {

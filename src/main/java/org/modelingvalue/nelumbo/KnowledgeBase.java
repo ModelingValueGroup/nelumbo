@@ -136,6 +136,7 @@ public final class KnowledgeBase {
     }
 
     private final AtomicReference<Map<String, Type>>                   types;
+    private final AtomicReference<Set<Functor>>                        functors;
     private final AtomicReference<Map<String, Variable>>               variables;
     private final AtomicReference<Map<Relation, InferResult>>          facts;
     private final AtomicReference<Map<Relation, Set<Rule>>>            rules;
@@ -147,6 +148,7 @@ public final class KnowledgeBase {
     @SuppressWarnings("unchecked")
     public KnowledgeBase(KnowledgeBase init) {
         types = new AtomicReference<>(init != null ? init.types.get() : Map.of());
+        functors = new AtomicReference<>(init != null ? init.functors.get() : Set.of());
         variables = new AtomicReference<>(Map.of());
         facts = new AtomicReference<>(init != null ? init.facts.get() : Map.of());
         rules = new AtomicReference<>(init != null ? init.rules.get() : Map.of());
@@ -200,6 +202,10 @@ public final class KnowledgeBase {
 
     public Map<String, Variable> variables() {
         return variables.get();
+    }
+
+    public Set<Functor> functors() {
+        return functors.get();
     }
 
     public Map<String, Type> types() {
@@ -315,6 +321,18 @@ public final class KnowledgeBase {
         return types.get().get(name);
     }
 
+    public final void addVar(Variable var) {
+        variables.updateAndGet(map -> map.put(var.name(), var));
+    }
+
+    public final Variable getVar(String name) {
+        return variables.get().get(name);
+    }
+
+    public final void addFunctor(Functor functor) {
+        functors.updateAndGet(set -> set.add(functor));
+    }
+
     public InferContext context() {
         return context;
     }
@@ -327,11 +345,14 @@ public final class KnowledgeBase {
         for (Entry<String, Type> e : types()) {
             Type type = e.getValue();
             String supers = type.supers().toString();
-            System.err.println(type.name() + ":" + supers.substring(45, supers.length() - 1));
+            System.err.println(type + " :: " + supers.substring(4, supers.length() - 1));
+        }
+        for (Functor e : functors()) {
+            System.err.println(e.resultType() + " ::= " + e);
         }
         for (Entry<String, Variable> e : variables()) {
             Variable var = e.getValue();
-            System.err.println(var.name() + ":" + var.type());
+            System.err.println(var.type() + " : " + var.name());
         }
         for (Entry<Relation, InferResult> e : facts()) {
             System.err.println(e.getKey() + " " + e.getValue());

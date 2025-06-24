@@ -112,10 +112,15 @@ public class Node extends StructImpl {
 
     @Override
     public String toString() {
+        Functor functor = functor();
+        String name = functor != null ? functor.name() : type().name();
         String string = super.toString();
         string = string.substring(1, string.length() - 1);
-        int i = string.indexOf(',');
-        return i >= 0 ? string.substring(0, i) + "(" + string.substring(i + 1) + ")" : string + "()";
+        string = string.substring(toString(0).length());
+        if (string.startsWith(",")) {
+            string = string.substring(1);
+        }
+        return name + "(" + string + ")";
     }
 
     public final String toString(int i) {
@@ -430,10 +435,12 @@ public class Node extends StructImpl {
         Set<Node> result = Set.of();
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
-            if (full && v instanceof Type) {
-                List<Type> args = functor().args();
-                for (Type s : KnowledgeBase.generalizations((Type) v, args.get(i - 1))) {
-                    result = result.add(setType(i, s));
+            if (v instanceof Type) {
+                if (full) {
+                    List<Type> args = functor().args();
+                    for (Type s : KnowledgeBase.generalizations((Type) v, args.get(i - 1))) {
+                        result = result.add(setType(i, s));
+                    }
                 }
             } else if (v instanceof Node) {
                 Set<? extends Node> gen = ((Node) v).generalize(full);

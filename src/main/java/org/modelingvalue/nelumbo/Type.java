@@ -20,6 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.Set;
 
 public class Type extends Node {
@@ -34,7 +35,7 @@ public class Type extends Node {
 
                 @Override
                 public Object get(int i) {
-                    return i == 0 ? this : super.get(i);
+                    return i == 0 ? this : i == 2 ? Set.of(Node.TYPE) : super.get(i);
                 }
 
                 @Override
@@ -47,22 +48,57 @@ public class Type extends Node {
     }
 
     private Type() {
-        super((Type) null, Type.class);
+        super((Type) null, Type.class, null);
         KnowledgeBase.CURRENT.get().addType(this);
     }
 
     public Type(Class<?> clss) {
-        super(TYPE(), clss);
+        super(TYPE(), clss, supers(clss));
+        KnowledgeBase.CURRENT.get().addType(this);
+    }
+
+    private static Set<Type> supers(Class<?> clss) {
+        if (Node.class.isAssignableFrom(clss) && clss != Node.class) {
+            java.lang.reflect.Type gen = clss.getGenericSuperclass();
+            if (gen instanceof Class) {
+                return Set.of(new Type((Class<?>) gen));
+            }
+        }
+        return Set.of();
+    }
+
+    public Type(String name, Collection<Type> supers) {
+        super(TYPE(), name, supers.asSet());
         KnowledgeBase.CURRENT.get().addType(this);
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE(), name, Set.of(supers));
+        super(TYPE(), name, supers.length == 0 ? Set.of(Node.TYPE) : Set.of(supers));
         KnowledgeBase.CURRENT.get().addType(this);
+    }
+
+    private Type(Type element) {
+        super(TYPE(), "List", Set.of(Node.TYPE), element);
     }
 
     private Type(Object[] array) {
         super(array);
+    }
+
+    public Type element() {
+        if (isList()) {
+            return (Type) get(3);
+        } else {
+            return this;
+        }
+    }
+
+    public boolean isList() {
+        return length() == 4;
+    }
+
+    public Type list() {
+        return new Type(this);
     }
 
     public String name() {
@@ -91,7 +127,7 @@ public class Type extends Node {
     }
 
     public boolean isAssignableFrom(Type type) {
-        return equals(type) || supers().anyMatch(s -> s.isAssignableFrom(type));
+        return equals(type) || type.supers().anyMatch(this::isAssignableFrom);
     }
 
     public boolean isAssignableFrom(Class<?> type) {

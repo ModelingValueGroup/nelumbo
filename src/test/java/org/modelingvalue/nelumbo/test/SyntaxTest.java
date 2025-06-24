@@ -27,7 +27,6 @@ import java.text.ParseException;
 import java.util.LinkedList;
 
 import org.junit.jupiter.api.Test;
-import org.modelingvalue.nelumbo.Rule;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
@@ -107,12 +106,7 @@ public class SyntaxTest extends NelumboTestBase {
             try {
                 LinkedList<Token> tokens = new Tokenizer(example).tokenize();
                 Parser parser = new Parser(tokens);
-                var roots = parser.parseRoots();
-                roots = roots.removeAll(s -> !(s instanceof Rule));
-                assertEquals(5, roots.size());
-                String expected = "[" + //
-                        "]";
-                assertEquals(expected, roots.toString().substring(4));
+                parser.parse();
             } catch (ParseException e) {
                 fail(e);
             }
@@ -156,12 +150,7 @@ public class SyntaxTest extends NelumboTestBase {
             try {
                 LinkedList<Token> tokens = new Tokenizer(example).tokenize();
                 Parser parser = new Parser(tokens);
-                var roots = parser.parseRoots();
-                roots = roots.removeAll(s -> !(s instanceof Rule));
-                assertEquals(5, roots.size());
-                String expected = "[" + //
-                        "]";
-                assertEquals(expected, roots.toString().substring(4));
+                parser.parse();
             } catch (ParseException e) {
                 fail(e);
             }
@@ -172,56 +161,41 @@ public class SyntaxTest extends NelumboTestBase {
     public void parser3() {
         run(() -> {
             String example = """
-                        // org.mvg.family :
-                        //    nelumbo.logic
+                        // org.mvg.family ::
+                        //     nelumbo.logic,
+                        //     nelumbo.integers
 
-                        <Person>    : <Node>
-                        <PersonLit> : <Person>, <Literal>
-                        <PersonFun> : <Person>, <Function>
+                        <Literal>   :: <Node>
+                        <Function>  :: <Node>
+                        <Person>    :: <Node>
+                        <PersonLit> :: <Person>, <Literal>
+                        <PersonFun> :: <Person>, <Function>
 
-                        pc(<PersonLit>,<PersonLit>) : <Rel>
-                        p(<Person>)                 : <PersonFun>
-                        c(<Person>)                 : <PersonFun>
+                        <Relation>  ::= pc(<PersonLit>,<PersonLit>),
+                                        ad(<PersonLit>,<PersonLit>)
 
-                        ad(<PersonLit>,<PersonLit>) : <Rel>
-                        a(<Person>)                 : <PersonFun>
-                        d(<Person>)                 : <PersonFun>
+                        <PersonFun> ::= p(<Person>),
+                                        c(<Person>),
+                                        a(<Person>),
+                                        d(<Person>)
 
-                        x : <PersonLit>
-                        y : <PersonLit>
-                        z : <PersonLit>
-
-                        a : <Person>
-                        b : <Person>
-                        c : <Person>
+                        <PersonLit> : x, y, z
+                        <Person>    : a, b, c
 
                         ad(x,z) <== pc(x,z) | (ad(x,y) & pc(y, z))
 
-                        c(a)=b <== a=x & b=y & pc(x,y)
-                        p(a)=b <== c(b)=a
-                        d(a)=b <== a=x & b=y & ad(x,y)
-                        a(a)=b <== d(b)=a
+                        c(a)=b  <== a=x & b=y & pc(x,y)
+                        p(a)=b  <== c(b)=a
+                        d(a)=b  <== a=x & b=y & ad(x,y)
+                        a(a)=b  <== d(b)=a
                     """;
             try {
-                LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-                Parser parser = new Parser(tokens);
-                var roots = parser.parseRoots();
-                roots = roots.removeAll(s -> !(s instanceof Rule));
-                assertEquals(5, roots.size());
-                String expected = "[" + //
-                        "]";
-                assertEquals(expected, roots.toString().substring(4));
+                new Parser(new Tokenizer(example).tokenize()).parse();
+                printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
             }
         });
-    }
-
-    @SuppressWarnings("unused")
-    private static void printTokens(LinkedList<Token> tokens) {
-        for (Token token : tokens) {
-            System.out.println("Token: " + token);
-        }
     }
 
 }

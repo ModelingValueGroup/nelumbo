@@ -31,6 +31,7 @@ public class Rule extends Node {
 
     public Rule(Relation consequence, Predicate condition) {
         super(FUNCTOR, consequence, condition);
+        KnowledgeBase.CURRENT.get().addRule(this);
     }
 
     private Rule(Object[] args) {
@@ -109,7 +110,7 @@ public class Rule extends Node {
 
     @Override
     public String toString() {
-        return consequence() + "<==" + condition();
+        return consequence() + " <== " + condition();
     }
 
 }

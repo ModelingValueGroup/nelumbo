@@ -26,6 +26,7 @@ public class Variable extends Node {
 
     public Variable(Type type, String name) {
         super(TYPE, type, name, new Object());
+        KnowledgeBase.CURRENT.get().addVar(this);
     }
 
     private Variable(Object[] array) {

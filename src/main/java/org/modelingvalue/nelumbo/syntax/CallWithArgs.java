@@ -28,8 +28,10 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class CallWithArgs {
 
-    private final String     name;
-    private final List<Type> args;
+    protected static final String WILDCARD = "*";
+
+    private final String          name;
+    private final List<Type>      args;
 
     public CallWithArgs(String name, Type... args) {
         this.name = name;
@@ -45,6 +47,10 @@ public abstract class CallWithArgs {
     }
 
     public abstract Node construct(Token token, List<Node> args) throws ParseException;
+
+    public static CallWithArgs of(ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
+        return of("*", constructor, args);
+    }
 
     public static CallWithArgs of(String text, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
         return new CallWithArgs(text, args) {
@@ -68,12 +74,21 @@ public abstract class CallWithArgs {
     }
 
     public boolean isAssignableFrom(List<Node> args) {
-        if (args.size() != args().size()) {
-            return false;
-        }
-        for (int i = 0; i < args.size(); i++) {
-            if (!args().get(i).isAssignableFrom(args.get(i).type())) {
+        if (args().size() == 1 && args().first().isList()) {
+            Type type = args().first().element();
+            for (int i = 0; i < args.size(); i++) {
+                if (!type.isAssignableFrom(args.get(i).type())) {
+                    return false;
+                }
+            }
+        } else {
+            if (args.size() != args().size()) {
                 return false;
+            }
+            for (int i = 0; i < args.size(); i++) {
+                if (!args().get(i).isAssignableFrom(args.get(i).type())) {
+                    return false;
+                }
             }
         }
         return true;

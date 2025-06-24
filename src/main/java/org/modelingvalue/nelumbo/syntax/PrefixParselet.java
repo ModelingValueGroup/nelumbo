@@ -24,7 +24,7 @@ import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Node;
 
-public abstract class Prefix1Parselet {
+public abstract class PrefixParselet {
 
     public abstract Node parse(Parser parser, Token token) throws ParseException;
 

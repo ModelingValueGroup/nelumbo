@@ -34,8 +34,8 @@ public enum TokenType {
     NUMBER("[1-9][0-9]*", false), //
     DECIMAL("[1-9][0-9]*\\.[0-9]+", false), //
     QNAME("[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)+", false), //
-    IDENTIFIER("[a-zA-Z_][a-zA-Z0-9_]*", false), //
-    IDENTIFIERDCL("[a-zA-Z_][a-zA-Z0-9_]*+\\([1-9][0-9]*\\)", false), //
+    NAME("[a-zA-Z_][a-zA-Z0-9_]*", false), //
+    NAMEDCL("[a-zA-Z_][a-zA-Z0-9_]*+\\([1-9][0-9]*\\)", false), //
     TYPE("<[a-zA-Z_][a-zA-Z0-9_]*([\\*|\\+])?>", false), //
     OPERATOR("[:\\=\\-\\*\\+<>/!@#$%^&|~]+", true), //
     OPERATORDCL("[:\\=\\-\\*\\+<>/!@#$%^&|~]+\\([1-9][0-9]*\\)", true), //

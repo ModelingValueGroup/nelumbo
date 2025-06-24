@@ -26,20 +26,26 @@ public final class Functor extends Node {
     private static final long serialVersionUID = 285147889847599160L;
     public static final Type  TYPE             = new Type(Functor.class);
 
-    protected Functor(Type resultType, String name, List<Type> args) {
+    public Functor(Type resultType, String name, List<Type> args) {
         super(TYPE, resultType, name, args);
+        KnowledgeBase.CURRENT.get().addFunctor(this);
     }
 
-    protected Functor(Object[] array) {
+    private Functor(Object[] array) {
         super(array);
     }
 
-    protected Type resultType() {
+    public Type resultType() {
         return (Type) get(1);
     }
 
     @Override
     public String toString() {
+        String types = args().toString();
+        return name() + "(" + types.substring(5, types.length() - 1) + ")";
+    }
+
+    public String name() {
         return ((String) get(2));
     }
 

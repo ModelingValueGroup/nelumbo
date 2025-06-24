@@ -25,57 +25,131 @@ import java.util.LinkedList;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.Pair;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Terminal;
-import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.*;
 
 public final class Parser {
 
-    private static final java.util.Map<Pair<TokenType, TokenType>, Prefix2Parselet> prefix2Parselets =                      //
-            Map.<Pair<TokenType, TokenType>, Prefix2Parselet> of().toMutable();
-    private static final java.util.Map<TokenType, Prefix1Parselet>                  prefix1Parselets =                      //
-            Map.<TokenType, Prefix1Parselet> of().toMutable();
-    private static final java.util.Map<TokenType, InfixParselet>                    infixParselets   =                      //
+    private static final java.util.Map<Pair<Type, TokenType>, PrefixParselet>   prefix3Parselets =                        //
+            Map.<Pair<Type, TokenType>, PrefixParselet> of().toMutable();
+    private static final java.util.Map<Pair<TokenType, String>, PrefixParselet> prefix2Parselets =                        //
+            Map.<Pair<TokenType, String>, PrefixParselet> of().toMutable();
+    private static final java.util.Map<TokenType, PrefixParselet>               prefix1Parselets =                        //
+            Map.<TokenType, PrefixParselet> of().toMutable();
+    private static final java.util.Map<TokenType, InfixParselet>                infixParselets   =                        //
             Map.<TokenType, InfixParselet> of().toMutable();
 
-    private static final Type                                                       TYPE_DECL        = new Type("TypeDecl");
+    private static final Type                                                   TYPE_NAME        = new Type("TypeName");
+    private static final Type                                                   VAR_NAME         = new Type("VarName");
+    private static final Type                                                   SIGNATURE        = new Type("Signature");
+    private static final Type                                                   FUNCTOR_SET      = new Type("FunctorSet");
+    private static final Type                                                   VAR_SET          = new Type("VarSet");
 
     static {
+        init();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void init() {
+        new Type(Relation.class);
         register(TokenType.OPERATOR, UnaryOperatorParselet.INSTANCE);
         register(TokenType.OPERATOR, BinaryOperatorParselet.INSTANCE);
-        register(TokenType.IDENTIFIER, UnaryOperatorParselet.INSTANCE);
-        register(TokenType.IDENTIFIER, BinaryOperatorParselet.INSTANCE);
-        register(TokenType.IDENTIFIER, TokenType.LPAREN, CallWithArgsParselet.INSTANCE);
+        // register(TokenType.NAME, UnaryOperatorParselet.INSTANCE);
+        register(TokenType.NAME, BinaryOperatorParselet.INSTANCE);
+        register(TokenType.NAME, "(", CallWithArgsParselet.INSTANCE);
         register(TokenType.LPAREN, ParenParselet.INSTANCE);
+        register(TokenType.TYPE, "::", AtomicParselet.of(t -> {
+            String name = t.text();
+            name = name.substring(1, name.length() - 1);
+            return new Terminal(TYPE_NAME, name);
+        }));
         register(TokenType.TYPE, AtomicParselet.of(t -> {
             String name = t.text();
             name = name.substring(1, name.length() - 1);
-            Node node = KnowledgeBase.CURRENT.get().getype(name);
-            if (node == null) {
-                node = new Terminal(TYPE_DECL, name);
+            Type type = KnowledgeBase.CURRENT.get().getype(name);
+            if (type != null) {
+                return type;
             }
-            return node;
+            throw new ParseException("Could not find type " + t.text() + " at position " + t.position() + ".", t.position());
         }));
-        register(BinaryOperator.of(TYPE_DECL, ":", Type.TYPE(), 10, (t, l, r) -> {
-            return new Type((String) l.get(1), (Type) r);
+        register(TokenType.NAME, AtomicParselet.of(t -> {
+            String name = t.text();
+            Variable var = KnowledgeBase.CURRENT.get().getVar(name);
+            if (var != null) {
+                return var;
+            }
+            throw new ParseException("Could not find variable " + t.text() + " at position " + t.position() + ".", t.position());
+        }));
+        register(BinaryOperator.of(TYPE_NAME, "::", Type.TYPE().list(), 10, (t, l, r) -> {
+            return new Type((String) l.get(1), ((ListNode) r).elements());
+        }));
+        register(CallWithArgs.of((t, l) -> {
+            return new Node(SIGNATURE, t.text(), l);
+        }, Type.TYPE().list()));
+        register(BinaryOperator.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (t, l, r) -> {
+            Set<Functor> set = Set.of();
+            for (Node s : ((ListNode) r).elements()) {
+                Functor functor = new Functor((Type) l, (String) s.get(1), (List<Type>) s.get(2));
+                register(CallWithArgs.of(functor.name(), (tt, ll) -> createNode(functor, ll.toArray()), //
+                        functor.args().toArray(i -> new Type[i])));
+                set = set.add(functor);
+            }
+            return new Node(FUNCTOR_SET, set);
+        }));
+        register(VAR_NAME, TokenType.NAME, AtomicParselet.of(t -> {
+            String name = t.text();
+            return new Terminal(VAR_NAME, name);
+        }));
+        register(BinaryOperator.of(Type.TYPE(), ":", VAR_NAME.list(), 10, (t, l, r) -> {
+            Set<Variable> set = Set.of();
+            for (Node v : ((ListNode) r).elements()) {
+                set = set.add(new Variable((Type) l, (String) v.get(1)));
+            }
+            return new Node(VAR_SET, set);
+        }));
+        register(BinaryOperator.of(Relation.TYPE, "<==", Predicate.TYPE, 10, (t, l, r) -> {
+            return new Rule((Relation) l, (Predicate) r);
+        }));
+        register(UnaryOperator.of("!", Predicate.TYPE, 10, (t, r) -> {
+            return new Not((Predicate) r);
+        }));
+        register(BinaryOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
+            return new And((Predicate) l, (Predicate) r);
+        }));
+        register(BinaryOperator.of(Predicate.TYPE, "|", Predicate.TYPE, 20, (t, l, r) -> {
+            return new Or((Predicate) l, (Predicate) r);
+        }));
+        register(BinaryOperator.of(Node.TYPE, "=", Node.TYPE, 30, (t, l, r) -> {
+            return new Equal((Node) l, (Node) r);
         }));
     }
 
-    public static void register(TokenType token, Prefix1Parselet parselet) {
+    private static Node createNode(Functor functor, Object[] values) {
+        return Relation.TYPE.isAssignableFrom(functor.resultType()) ? new Relation(functor, values) : new Node(functor, values);
+    }
+
+    public static void register(TokenType token, PrefixParselet parselet) {
         if (prefix1Parselets.containsKey(token)) {
             throw new IllegalArgumentException();
         }
         prefix1Parselets.put(token, parselet);
     }
 
-    public static void register(TokenType token1, TokenType token2, Prefix2Parselet parselet) {
-        Pair<TokenType, TokenType> pair = Pair.of(token1, token2);
+    public static void register(TokenType token, String next, PrefixParselet parselet) {
+        Pair<TokenType, String> pair = Pair.of(token, next);
         if (prefix2Parselets.containsKey(pair)) {
             throw new IllegalArgumentException();
         }
         prefix2Parselets.put(pair, parselet);
+    }
+
+    public static void register(Type desired, TokenType token, PrefixParselet parselet) {
+        Pair<Type, TokenType> pair = Pair.of(desired, token);
+        if (prefix3Parselets.containsKey(pair)) {
+            throw new IllegalArgumentException();
+        }
+        prefix3Parselets.put(pair, parselet);
     }
 
     public static void register(TokenType token, InfixParselet parselet) {
@@ -105,19 +179,20 @@ public final class Parser {
         this.tokens = tokens;
     }
 
-    public Node parseNode(int precedence) throws ParseException {
+    public Node parseNode(int precedence, Type desired) throws ParseException {
         Token token = tokens.poll();
         Node left;
-        Prefix2Parselet prefix2 = prefix2Parselets.get(Pair.of(token.type(), tokens.peek().type()));
-        if (prefix2 != null) {
-            left = prefix2.parse(this, token, tokens.poll());
-        } else {
-            Prefix1Parselet prefix1 = prefix1Parselets.get(token.type());
-            if (prefix1 == null) {
-                throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
-            }
-            left = prefix1.parse(this, token);
+        PrefixParselet prefix = prefix3Parselets.get(Pair.of(desired, token.type()));
+        if (prefix == null) {
+            prefix = prefix2Parselets.get(Pair.of(token.type(), tokens.peek().text()));
         }
+        if (prefix == null) {
+            prefix = prefix1Parselets.get(token.type());
+        }
+        if (prefix == null) {
+            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+        }
+        left = prefix.parse(this, token);
         while (precedence < precedence(left)) {
             token = tokens.poll();
             InfixParselet infix = infixParselets.get(token.type());
@@ -126,13 +201,12 @@ public final class Parser {
         return left;
     }
 
-    public List<Node> parseRoots() throws ParseException {
-        List<Node> result = List.of();
+    public void parse() throws ParseException {
         while (!tokens.isEmpty()) {
             while (match(TokenType.NEWLINE)) {
             }
             if (!tokens.isEmpty()) {
-                result = result.add(parseNode(0));
+                parseNode(0, Node.TYPE);
                 consume(TokenType.NEWLINE);
             }
         }
@@ -140,20 +214,35 @@ public final class Parser {
             Token token = tokens.peek();
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
-        return result;
     }
 
     public int position() {
         return tokens.peek().position();
     }
 
-    public boolean match(TokenType expected) {
+    public boolean next(TokenType expected) {
         Token token = tokens.peek();
-        if (token.type() != expected) {
+        return token.type() == expected;
+    }
+
+    public boolean findInLine(TokenType expected) {
+        for (Token token : tokens) {
+            if (token.type() == expected) {
+                return true;
+            } else if (token.type() == TokenType.NEWLINE) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public boolean match(TokenType expected) {
+        if (next(expected)) {
+            tokens.poll();
+            return true;
+        } else {
             return false;
         }
-        tokens.poll();
-        return true;
     }
 
     public Token consume(TokenType expected) throws ParseException {

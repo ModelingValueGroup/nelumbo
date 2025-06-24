@@ -24,8 +24,9 @@ import java.text.ParseException;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
-public final class UnaryOperatorParselet extends Prefix1Parselet {
+public final class UnaryOperatorParselet extends PrefixParselet {
 
     public final static UnaryOperatorParselet          INSTANCE       = new UnaryOperatorParselet();
 
@@ -38,10 +39,11 @@ public final class UnaryOperatorParselet extends Prefix1Parselet {
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
         UnaryOperator unaryOperator = getOperator(token);
+        Type rightType = unaryOperator.right();
         int pos = parser.position();
-        Node right = parser.parseNode(unaryOperator.precedence());
-        if (!unaryOperator.right().isAssignableFrom(right.type())) {
-            throw new ParseException("Expected type " + unaryOperator.right() + " and found " + right.type(), pos);
+        Node right = parser.parseNode(unaryOperator.precedence(), rightType);
+        if (!rightType.isAssignableFrom(right.type())) {
+            throw new ParseException("Expected type " + rightType + " and found " + right.type(), pos);
         }
         return unaryOperator.construct(token, right);
     }
