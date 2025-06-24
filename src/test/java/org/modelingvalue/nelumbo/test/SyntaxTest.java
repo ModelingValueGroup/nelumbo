@@ -54,53 +54,40 @@ public class SyntaxTest extends NelumboTestBase {
     public void parser1() {
         run(() -> {
             String example = """
-                        // org.my.test :
+                        // org.my.test ::
                         //     nelumbo.logic,
-                        //    nelumbo.integers
+                        //     nelumbo.integers
 
-                        <Node>
-                        <Lit>    : <Node>
-                        <Pred>   : <Node>
-                        <Rel>    : <Pred>
-                        <Rule>   : <Node>
-                        <Int>    : <Node>
-                        <IntLit> : <Int>, <Lit>
-                        <Str>    : <Node>
-                        <StrLit> : <Str>, <Lit>
+                        <Lit>    :: <Node>
+                        <Rule>   :: <Node>
+                        <Int>    :: <Node>
+                        <IntLit> :: <Int>, <Lit>
+                        <Str>    :: <Node>
+                        <StrLit> :: <Str>, <Lit>
 
-                        NUMBER : <IntLit>
-                        STRING : <StrLit>
-
-                        @org.modelingvalue.nelumbo.Rule
-                        <Rel> <==(10) <Pred> : <Rule>
-
-                        <Node> =(30) <Node>  : <Rel>
+                        <IntLit> ::= <NUMBER>
+                        <StrLit> ::= <STRING>
 
                         @org.modelingvalue.nelumbo.integers.GreaterThen
-                        gt(<IntLit>,<IntLit>) : <Rel>
+                        <Relation> ::= gt(<IntLit>,<IntLit>)
 
-                        <Int> <(30)  <Int> : <Rel>
-                        <Int> >(30)  <Int> : <Rel>
-                        <Int> <=(30) <Int> : <Rel>
-                        <Int> >=(30) <Int> : <Rel>
+                        <Relation> ::= <Int> <(30)  <Int>,
+                                       <Int> >(30)  <Int>,
+                                       <Int> <=(30) <Int>,
+                                       <Int> >=(30) <Int>
 
-                        <Int> -(40) <Int> : <Int>
-                        <Int> +(40) <Int> : <Int>
+                         <Int>     ::= <Int> -(40) <Int>,
+                                       <Int> +(40) <Int>,
+                                       -(50) <Int>
 
-                        -(50) <Int> : <Int>
+                        <Int> : a, b
+                        <IntLit> : x, y
 
-                        a : <Int>
-                        b : <Int>
-
-                        x : <IntLit>
-                        y : <IntLit>
-
-                        a>b  <== a=x & b=y & gt(x,y)
-
-                        a<b  <== b>a
-                        a<=b <== a<b | a=b
-                        a>=b <== !(a<b)
-                        -a=b <== 0-a=b
+                        a>b   <==  a=x & b=y & gt(x,y)
+                        a<b   <==  b>a
+                        a<=b  <==  a<b | a=b
+                        a>=b  <==  !(a<b)
+                        -a=b  <==  0-a=b
 
                     """;
             try {
@@ -117,34 +104,32 @@ public class SyntaxTest extends NelumboTestBase {
     public void parser2() {
         run(() -> {
             String example = """
-                        org.mvg.fib :
-                            nelumbo.logic,
-                            nelumbo.integers
+                        // org.mvg.fib ::
+                        //     nelumbo.logic,
+                        //     nelumbo.integers
 
-                        <Rel>    : <Pred>
-                        <IntLit> : <Int>, <Lit>
-                        <IntFun> : <Int>, <Fun>
+                        <Rel>    :: <Pred>
+                        <IntLit> :: <Int>, <Lit>
+                        <IntFun> :: <Int>, <Fun>
 
-                        fib(<IntConst>,<IntConst>) : <Rel>
-                        fib(<Int>)                 : <IntFun>
+                        <Rel>    ::= fib(<IntConst>,<IntConst>)
+                        <IntFun> ::= fib(<Int>)
 
                         // Literal Integer Variables
-                        x : <IntLit>
-                        y : <IntLit>
+                        <IntLit> : x, y
 
                         // Int Variables
-                        a : <Int>
-                        b : <Int>
+                        <Int>    : a, b
 
                         // Function-like Syntaxtual Suggar
-                        fib(a)=b <== a=x & b=y & fib(x,y)
+                        fib(a)=b  <==  a=x & b=y & fib(x,y)
 
                         // Facts
                         fib(0,0)
                         fib(1,1)
 
                         // Rule
-                        fib(a,b) <== a>1 & b=fib(a-1)+fib(a-2)
+                        fib(a,b)  <==  a>1 & b=fib(a-1)+fib(a-2)
 
                     """;
             try {
@@ -182,12 +167,12 @@ public class SyntaxTest extends NelumboTestBase {
                         <PersonLit> : x, y, z
                         <Person>    : a, b, c
 
-                        ad(x,z) <== pc(x,z) | (ad(x,y) & pc(y, z))
+                        ad(x,z) <==  pc(x,z) | (ad(x,y) & pc(y, z))
 
-                        c(a)=b  <== a=x & b=y & pc(x,y)
-                        p(a)=b  <== c(b)=a
-                        d(a)=b  <== a=x & b=y & ad(x,y)
-                        a(a)=b  <== d(b)=a
+                        c(a)=b  <==  a=x & b=y & pc(x,y)
+                        p(a)=b  <==  c(b)=a
+                        d(a)=b  <==  a=x & b=y & ad(x,y)
+                        a(a)=b  <==  d(b)=a
                     """;
             try {
                 new Parser(new Tokenizer(example).tokenize()).parse();

@@ -358,7 +358,14 @@ public final class KnowledgeBase {
             System.err.println(e.getKey() + " " + e.getValue());
         }
         for (Entry<Relation, Set<Rule>> e : rules()) {
-            System.err.println(e.getKey() + " " + e.getValue().toString().substring(3));
+            Set<Rule> rules = e.getValue();
+            String type = e.getKey().toString() + " : ";
+            for (int i = 0; i < rules.size(); i++) {
+                if (i == 1) {
+                    type = " ".repeat(type.length());
+                }
+                System.err.println(type + rules.get(i) + (i < rules.size() - 1 ? "," : ""));
+            }
         }
     }
 
