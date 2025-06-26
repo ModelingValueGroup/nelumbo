@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo;
 
 public final class Not extends Predicate {
     private static final long    serialVersionUID = -4543178470298951866L;
-    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Not", n -> "!" + n.toString(1), 15, Predicate.TYPE);
+    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Not", n -> "!" + n.toString(1), 50, Predicate.TYPE);
 
     public Not(Predicate predicate) {
         super(FUNCTOR, predicate);

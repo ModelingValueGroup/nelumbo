@@ -308,7 +308,7 @@ public final class KnowledgeBase {
             register(BinaryOperator.of(RELATION, "<==", Predicate.TYPE, 10, (t, l, r) -> {
                 return new Rule((Relation) l, (Predicate) r);
             }));
-            register(UnaryOperator.of("!", Predicate.TYPE, 15, (t, r) -> {
+            register(UnaryOperator.of("!", Predicate.TYPE, 50, (t, r) -> {
                 return new Not((Predicate) r);
             }));
             register(BinaryOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
@@ -317,7 +317,7 @@ public final class KnowledgeBase {
             register(BinaryOperator.of(Predicate.TYPE, "|", Predicate.TYPE, 20, (t, l, r) -> {
                 return new Or((Predicate) l, (Predicate) r);
             }));
-            register(CallWithArgs.of("equal", (t, l) -> {
+            register(CallWithArgs.of("eq", (t, l) -> {
                 return new Equal(l.get(0), l.get(1));
             }, Node.TYPE, Node.TYPE));
             try {
@@ -340,7 +340,7 @@ public final class KnowledgeBase {
                      <Function> F1, F2
                      <Node>     N1, N2
 
-                     L1=L2  <==  equal(L1, L2)
+                     L1=L2  <==  eq(L1, L2)
                      F1=F2  <==  F1=L1 & F2=L1
                      L1=F1  <==  F1=L1
                      N1!=N2 <==  !(N1=N2)
