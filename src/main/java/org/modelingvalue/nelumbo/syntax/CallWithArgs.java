@@ -28,7 +28,7 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class CallWithArgs {
 
-    protected static final String WILDCARD = "*";
+    protected static final String WILDCARD = "";
 
     private final String          name;
     private final List<Type>      args;

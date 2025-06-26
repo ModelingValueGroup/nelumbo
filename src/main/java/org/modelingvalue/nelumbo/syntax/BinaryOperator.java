@@ -27,7 +27,7 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class BinaryOperator {
 
-    protected static final String WILDCARD = "*";
+    protected static final String WILDCARD = "";
 
     private final Type            left;
     private final String          oper;

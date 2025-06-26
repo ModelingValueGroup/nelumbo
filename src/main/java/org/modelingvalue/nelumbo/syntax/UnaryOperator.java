@@ -27,9 +27,11 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class UnaryOperator {
 
-    private final String oper;
-    private final Type   right;
-    private final int    precedence;
+    protected static final String WILDCARD = "";
+
+    private final String          oper;
+    private final Type            right;
+    private final int             precedence;
 
     public UnaryOperator(String oper, Type right, int precedence) {
         this.oper = oper;
@@ -50,6 +52,10 @@ public abstract class UnaryOperator {
     }
 
     public abstract Node construct(Token token, Node right) throws ParseException;
+
+    public static UnaryOperator of(Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(WILDCARD, right, precedence, constructor);
+    }
 
     public static UnaryOperator of(String text, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
         return new UnaryOperator(text, right, precedence) {

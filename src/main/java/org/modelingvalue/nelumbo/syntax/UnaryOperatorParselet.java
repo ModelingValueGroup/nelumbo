@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
+import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
@@ -35,21 +36,42 @@ public final class UnaryOperatorParselet extends PrefixParselet {
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
         UnaryOperator unaryOperator = operator(parser, token);
+        if (unaryOperator == null) {
+            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+        }
+        Node right;
         Type rightType = unaryOperator.right();
-        int pos = parser.position();
-        Node right = parser.parseNode(unaryOperator.precedence(), rightType);
-        if (!rightType.isAssignableFrom(right.type())) {
-            throw new ParseException("Expected type " + rightType + " and found " + right + " of type " + right.type(), pos);
+        if (rightType.isList()) {
+            Type elemType = rightType.element();
+            right = new ListNode(elemType);
+            do {
+                int pos = parser.position();
+                Node node = parser.parseNode(unaryOperator.precedence(), elemType);
+                if (!elemType.isAssignableFrom(node.type())) {
+                    throw new ParseException("Expected type " + elemType + " and found " + node + " of type " + node.type(), pos);
+                }
+                right = new ListNode((ListNode) right, node);
+            } while (parser.match(TokenType.COMMA));
+        } else {
+            int pos = parser.position();
+            right = parser.parseNode(unaryOperator.precedence(), rightType);
+            if (!rightType.isAssignableFrom(right.type())) {
+                throw new ParseException("Expected type " + rightType + " and found " + right + " of type " + right.type(), pos);
+            }
         }
         return unaryOperator.construct(token, right);
     }
 
-    private UnaryOperator operator(Parser parser, Token token) throws ParseException {
-        UnaryOperator unaryOperator = parser.knowledgeBase().unaryOperator(token.text());
-        if (unaryOperator == null) {
-            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+    private UnaryOperator operator(Parser parser, Token token) {
+        UnaryOperator operator = operator(parser, token.text());
+        if (operator == null) {
+            operator = operator(parser, BinaryOperator.WILDCARD);
         }
-        return unaryOperator;
+        return operator;
+    }
+
+    private UnaryOperator operator(Parser parser, String text) {
+        return parser.knowledgeBase().unaryOperator(text);
     }
 
 }

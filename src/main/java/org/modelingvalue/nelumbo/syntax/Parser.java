@@ -42,9 +42,12 @@ public final class Parser {
     public Node parseNode(int precedence, Type desired) throws ParseException {
         Token token = tokens.poll();
         Node left;
-        PrefixParselet prefix = knowledgeBase.prefix(desired, token.type());
+        PrefixParselet prefix = knowledgeBase.prefix(token.type(), tokens.peek().text());
         if (prefix == null) {
-            prefix = knowledgeBase.prefix(token.type(), tokens.peek().text());
+            prefix = knowledgeBase.prefix(token.type(), tokens.peek().type());
+        }
+        if (prefix == null) {
+            prefix = knowledgeBase.prefix(token.type(), desired);
         }
         if (prefix == null) {
             prefix = knowledgeBase.prefix(token.type());

@@ -159,20 +159,12 @@ public final class KnowledgeBase {
         prefix1Parselets.updateAndGet(map -> map.put(token, parselet));
     }
 
-    public void register(TokenType token, String next, PrefixParselet parselet) {
-        Pair<TokenType, String> pair = Pair.of(token, next);
+    public void register(TokenType token, Object next, PrefixParselet parselet) {
+        Pair<TokenType, Object> pair = Pair.of(token, next);
         if (prefix2Parselets.get().containsKey(pair)) {
             throw new IllegalArgumentException();
         }
         prefix2Parselets.updateAndGet(map -> map.put(pair, parselet));
-    }
-
-    public void register(Type desired, TokenType token, PrefixParselet parselet) {
-        Pair<Type, TokenType> pair = Pair.of(desired, token);
-        if (prefix3Parselets.get().containsKey(pair)) {
-            throw new IllegalArgumentException();
-        }
-        prefix3Parselets.updateAndGet(map -> map.put(pair, parselet));
     }
 
     public void register(TokenType token, InfixParselet parselet) {
@@ -182,13 +174,8 @@ public final class KnowledgeBase {
         infixParselets.updateAndGet(map -> map.put(token, parselet));
     }
 
-    public PrefixParselet prefix(Type desired, TokenType token) {
-        Pair<Type, TokenType> pair = Pair.of(desired, token);
-        return prefix3Parselets.get().get(pair);
-    }
-
-    public PrefixParselet prefix(TokenType token, String next) {
-        Pair<TokenType, String> pair = Pair.of(token, next);
+    public PrefixParselet prefix(TokenType token, Object next) {
+        Pair<TokenType, Object> pair = Pair.of(token, next);
         return prefix2Parselets.get().get(pair);
     }
 
@@ -265,14 +252,9 @@ public final class KnowledgeBase {
                 return new Terminal(TYPE_NAME, name);
             }));
             register(TokenType.TYPE, AtomicParselet.of(t -> {
-                String name = t.text();
-                name = name.substring(1, name.length() - 1);
-                Type type = type(name);
-                if (type != null) {
-                    return type;
-                }
-                throw new ParseException("Could not find type " + t.text() + " at position " + t.position() + ".", t.position());
+                return type(t);
             }));
+            register(TokenType.TYPE, TokenType.NAME, UnaryOperatorParselet.INSTANCE);
             register(TokenType.NAME, AtomicParselet.of(t -> {
                 String name = t.text();
                 Variable var = var(name);
@@ -312,13 +294,14 @@ public final class KnowledgeBase {
                 }
                 return null;
             }));
-            register(VAR_NAME, TokenType.NAME, AtomicParselet.of(t -> {
+            register(TokenType.NAME, VAR_NAME, AtomicParselet.of(t -> {
                 String name = t.text();
                 return new Terminal(VAR_NAME, name);
             }));
-            register(BinaryOperator.of(Type.TYPE(), ":", VAR_NAME.list(), 10, (t, l, r) -> {
-                for (Node v : ((ListNode) r).elements()) {
-                    new Variable((Type) l, (String) v.get(1));
+            register(UnaryOperator.of(VAR_NAME.list(), 10, (t, l) -> {
+                Type type = type(t);
+                for (Node v : ((ListNode) l).elements()) {
+                    new Variable(type, (String) v.get(1));
                 }
                 return null;
             }));
@@ -346,16 +329,16 @@ public final class KnowledgeBase {
         return this;
     }
 
-    private final static String                                                 INIT_BASE = """
+    private final static String INIT_BASE = """
                      <Literal>  :: <Node>
                      <Function> :: <Node>
 
                      <Relation> ::= <Node>  =(30) <Node>,
                                     <Node> !=(30) <Node>
 
-                     <Literal>  : L1, L2
-                     <Function> : F1, F2
-                     <Node>     : N1, N2
+                     <Literal>  L1, L2
+                     <Function> F1, F2
+                     <Node>     N1, N2
 
                      L1=L2  <==  equal(L1, L2)
                      F1=F2  <==  F1=L1 & F2=L1
@@ -363,14 +346,23 @@ public final class KnowledgeBase {
                      N1!=N2 <==  !(N1=N2)
             """;
 
+    private Type type(Token t) throws ParseException {
+        String name = t.text();
+        name = name.substring(1, name.length() - 1);
+        Type type = type(name);
+        if (type != null) {
+            return type;
+        }
+        throw new ParseException("Could not find type " + t.text() + " at position " + t.position() + ".", t.position());
+    }
+
     private final AtomicReference<Map<String, Type>>                            types;
     private final AtomicReference<Set<Functor>>                                 functors;
     private final AtomicReference<Map<String, Variable>>                        variables;
     private final AtomicReference<Map<Relation, InferResult>>                   facts;
     private final AtomicReference<Map<Relation, Set<Rule>>>                     rules;
 
-    private final AtomicReference<Map<Pair<Type, TokenType>, PrefixParselet>>   prefix3Parselets;
-    private final AtomicReference<Map<Pair<TokenType, String>, PrefixParselet>> prefix2Parselets;
+    private final AtomicReference<Map<Pair<TokenType, Object>, PrefixParselet>> prefix2Parselets;
     private final AtomicReference<Map<TokenType, PrefixParselet>>               prefix1Parselets;
     private final AtomicReference<Map<TokenType, InfixParselet>>                infixParselets;
 
@@ -380,7 +372,7 @@ public final class KnowledgeBase {
 
     private final AtomicInteger                                                 depth;
     private final AtomicReference<QualifiedSet<Relation, Inference>[]>          memoization;
-    private final InferContext                                                  context   = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
+    private final InferContext                                                  context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
     private boolean                                                             stopped;
 
     @SuppressWarnings("unchecked")
@@ -391,7 +383,6 @@ public final class KnowledgeBase {
         facts = new AtomicReference<>(init != null ? init.facts.get() : Map.of());
         rules = new AtomicReference<>(init != null ? init.rules.get() : Map.of());
 
-        prefix3Parselets = new AtomicReference<>(init != null ? init.prefix3Parselets.get() : Map.of());
         prefix2Parselets = new AtomicReference<>(init != null ? init.prefix2Parselets.get() : Map.of());
         prefix1Parselets = new AtomicReference<>(init != null ? init.prefix1Parselets.get() : Map.of());
         infixParselets = new AtomicReference<>(init != null ? init.infixParselets.get() : Map.of());

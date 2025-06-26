@@ -161,8 +161,8 @@ public class SyntaxTest extends NelumboTestBase {
                                         a(<Person>),
                                         d(<Person>)
 
-                        <PersonLit> : x, y, z
-                        <Person>    : a, b, c
+                        <PersonLit> x, y, z
+                        <Person>    a, b, c
 
                         ad(x,z) <==  pc(x,z) | (ad(x,y) & pc(y, z))
 
