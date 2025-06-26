@@ -82,7 +82,7 @@ public class Node extends StructImpl {
                 Object val = get(i);
                 if (val instanceof Variable) {
                     vars = vars.put((Variable) val, ((Variable) val).type());
-                } else if (val instanceof Node) {
+                } else if (val instanceof Node && !(val instanceof Type)) {
                     vars = vars.putAll(((Node) val).variables());
                 }
             }
@@ -98,7 +98,7 @@ public class Node extends StructImpl {
                 Object val = get(i);
                 if (val instanceof Type) {
                     nr++;
-                } else if (val instanceof Node) {
+                } else if (val instanceof Node && !(val instanceof Constant)) {
                     nr += ((Node) val).nrOfUnbound();
                 }
             }
@@ -167,54 +167,13 @@ public class Node extends StructImpl {
         return t instanceof Functor ? (Functor) t : null;
     }
 
-    public Node is(Node other) {
-        if (equals(other)) {
-            return this;
-        } else if (length() != other.length()) {
-            return null;
-        }
-        Object[] array = null;
-        for (int i = 0; i < length(); i++) {
-            Object thisVal = get(i);
-            Object is = is(thisVal, other.get(i));
-            if (is == null) {
-                return null;
-            } else if (!Objects.equals(is, thisVal)) {
-                if (array == null) {
-                    array = toArray();
-                }
-                array[i] = is;
-            }
-        }
-        return array != null ? struct(array) : this;
-    }
-
-    private static Object is(Object thisVal, Object otherVal) {
-        if (thisVal != otherVal) {
-            if (thisVal instanceof Node && otherVal instanceof Type) {
-                return ((Type) otherVal).isAssignableFrom(((Node) thisVal).type()) ? thisVal : null;
-            } else if (thisVal instanceof Type && otherVal instanceof Node) {
-                return ((Type) thisVal).isAssignableFrom(((Node) otherVal).type()) ? otherVal : null;
-            } else if (thisVal instanceof Node && otherVal instanceof Node) {
-                return ((Node) thisVal).is((Node) otherVal);
-            } else if (!(thisVal instanceof Type) && otherVal instanceof Type) {
-                return ((Type) otherVal).isAssignableFrom(thisVal.getClass()) ? thisVal : null;
-            } else if (thisVal instanceof Type && !(otherVal instanceof Type)) {
-                return ((Type) thisVal).isAssignableFrom(otherVal.getClass()) ? otherVal : null;
-            } else if (!Objects.equals(thisVal, otherVal)) {
-                return null;
-            }
-        }
-        return thisVal;
-    }
-
     public Map<Terminal, int[]> terminals() {
         Map<Terminal, int[]> terminals = Map.of();
         for (int i = 1; i < length(); i++) {
             Object val = get(i);
             if (val instanceof Terminal) {
                 terminals = terminals.put((Terminal) val, new int[]{i});
-            } else if (val instanceof Node && !(val instanceof Variable)) {
+            } else if (val instanceof Node && !(val instanceof Variable) && !(val instanceof Type)) {
                 int ii = i;
                 terminals = terminals.putAll(((Node) val).terminals().replaceAll(e -> {
                     int[] idx = new int[e.getValue().length + 1];
@@ -280,7 +239,7 @@ public class Node extends StructImpl {
             Object[] array = null;
             for (int i = 0; i < length(); i++) {
                 Object thisVal = get(i);
-                if (thisVal instanceof Node) {
+                if (thisVal instanceof Node && !(thisVal instanceof Type)) {
                     Node toVal = ((Node) thisVal).replace(from, to);
                     if (toVal != thisVal) {
                         if (array == null) {
@@ -306,7 +265,7 @@ public class Node extends StructImpl {
             Object declVal = declaration.get(i);
             if (declVal.equals(var)) {
                 return thisVal;
-            } else if (thisVal instanceof Node) {
+            } else if (thisVal instanceof Node && !(thisVal instanceof Type)) {
                 Object varVal = ((Node) thisVal).get((Node) declVal, var);
                 if (varVal != null) {
                     return varVal;
@@ -357,10 +316,10 @@ public class Node extends StructImpl {
             } else {
                 vars = vars.put(var, thisType);
             }
-        } else if (declVal instanceof Node) {
+        } else if (declVal instanceof Node && !(declVal instanceof Type)) {
             Node declStruct = (Node) declVal;
             if (thisVal != null) {
-                if (thisVal instanceof Node) {
+                if (thisVal instanceof Node && !(thisVal instanceof Type)) {
                     vars = ((Node) thisVal).getBinding(declStruct, vars, check);
                 } else {
                     return null;
@@ -375,7 +334,7 @@ public class Node extends StructImpl {
     }
 
     public static Type typeOf(Object v) {
-        return v instanceof Node ? ((Node) v).type() : v instanceof Type ? (Type) v : null;
+        return v instanceof Type ? (Type) v : v instanceof Node ? ((Node) v).type() : null;
     }
 
     protected final Node set(Node declaration, Variable var, Object val) {
@@ -405,10 +364,10 @@ public class Node extends StructImpl {
             if (varVal != null) {
                 return varVal;
             }
-        } else if (declVal instanceof Node) {
+        } else if (declVal instanceof Node && !(declVal instanceof Type)) {
             if (thisVal instanceof Type && ((Type) thisVal).isAssignableFrom((((Node) declVal).type()))) {
                 return ((Node) declVal).setBinding((Node) declVal, vars);
-            } else if (thisVal instanceof Node) {
+            } else if (thisVal instanceof Node && !(thisVal instanceof Type)) {
                 return ((Node) thisVal).setBinding((Node) declVal, vars);
             }
         }
@@ -419,7 +378,7 @@ public class Node extends StructImpl {
         int result = 1;
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
-            if (v instanceof Node && !((Node) v).atomic()) {
+            if (v instanceof Node && !(v instanceof Type) && !((Node) v).atomic()) {
                 result = Math.max(result, ((Node) v).depth() + 1);
             }
         }
@@ -431,7 +390,7 @@ public class Node extends StructImpl {
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
             Object r = v;
-            if (depth > 1 && v instanceof Node && !((Node) v).atomic()) {
+            if (depth > 1 && v instanceof Node && !(v instanceof Type) && !((Node) v).atomic()) {
                 r = ((Node) v).signature(depth - 1);
             } else {
                 r = typeOf(v);
@@ -487,7 +446,7 @@ public class Node extends StructImpl {
     protected boolean atomic() {
         for (int i = 1; i < length(); i++) {
             Object v = get(i);
-            if (!(v instanceof Node)) {
+            if (!(v instanceof Node) && !(v instanceof Type)) {
                 return true;
             }
         }

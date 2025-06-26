@@ -99,7 +99,7 @@ public abstract class Predicate extends Node {
 
     private Predicate setVariables() {
         Map<Variable, Object> vars = getBinding(declaration, Map.of(), false);
-        vars = vars.replaceAll(e -> e.getValue() instanceof Class ? Entry.of(e.getKey(), e.getKey()) : e);
+        vars = vars.replaceAll(e -> e.getValue() instanceof Type ? Entry.of(e.getKey(), e.getKey()) : e);
         return setBinding(vars);
     }
 

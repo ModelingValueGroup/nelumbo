@@ -66,7 +66,7 @@ public class NelumboTestBase {
     }
 
     public static void printKnowledgeBase() {
-        KnowledgeBase.CURRENT.get().print();
+        KnowledgeBase.CURRENT.get().print(System.err);
     }
 
     @SuppressWarnings("unused")

@@ -37,7 +37,7 @@ public enum TokenType {
     NAME("[a-zA-Z_][a-zA-Z0-9_]*", false), //
     NAMEDCL("[a-zA-Z_][a-zA-Z0-9_]*+\\([1-9][0-9]*\\)", false), //
     TYPE("<[a-zA-Z_][a-zA-Z0-9_]*([\\*|\\+])?>", false), //
-    OPERATOR("[:\\=\\-\\*\\+<>/!@#$%^&|~]+", true), //
+    OPERATOR("[:\\=\\-\\*\\+<>/!?@#$%^&|~]+", true), //
     OPERATORDCL("[:\\=\\-\\*\\+<>/!@#$%^&|~]+\\([1-9][0-9]*\\)", true), //
     HSPACE("\\h+", false), //
     NEWLINE("((//[^\\v]*)?\\v)+", false);

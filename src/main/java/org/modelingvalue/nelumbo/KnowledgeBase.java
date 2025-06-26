@@ -20,6 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.PrintStream;
 import java.text.ParseException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -312,6 +313,11 @@ public final class KnowledgeBase {
             register(PrefixOperator.of("!", Predicate.TYPE, 50, (t, r) -> {
                 return new Not((Predicate) r);
             }));
+            register(PrefixOperator.of("?", Predicate.TYPE, 10, (t, r) -> {
+                InferResult result = ((Predicate) r).infer();
+                System.err.println(result);
+                return null;
+            }));
             register(InfixOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
                 return new And((Predicate) l, (Predicate) r);
             }));
@@ -342,7 +348,7 @@ public final class KnowledgeBase {
                      <Node>     N1, N2
 
                      L1=L2  <==  eq(L1, L2)
-                     F1=F2  <==  F1=L1 & F2=L1
+                     F1=F2  <==  F1=L1 & F2=L2 & L1=L2
                      L1=F1  <==  F1=L1
                      N1!=N2 <==  !(N1=N2)
             """;
@@ -634,30 +640,30 @@ public final class KnowledgeBase {
         return depth.get();
     }
 
-    public void print() {
+    public void print(PrintStream stream) {
         for (Entry<String, Type> e : types()) {
             Type type = e.getValue();
             String supers = type.supers().toString();
-            System.err.println(type + " :: " + supers.substring(4, supers.length() - 1));
+            stream.println(type + " :: " + supers.substring(4, supers.length() - 1));
         }
         for (Functor e : functors()) {
-            System.err.println(e.resultType() + " ::= " + e);
+            stream.println(e.resultType() + " ::= " + e);
         }
         for (Entry<String, Constant> e : constants()) {
             Constant con = e.getValue();
-            System.err.println(con.type() + " ::= " + con.name());
+            stream.println(con.type() + " ::= " + con.name());
         }
         for (Entry<String, Variable> e : variables()) {
             Variable var = e.getValue();
-            System.err.println(var.type() + " " + var.name());
+            stream.println(var.type() + " " + var.name());
         }
         Set<Rule> rules = rules().flatMap(Entry::getValue).asSet();
         for (Rule r : rules) {
-            System.err.println(r);
+            stream.println(r);
         }
         for (Entry<Relation, InferResult> e : facts()) {
             if (e.getValue().isTrueCC()) {
-                System.err.println(e.getKey());
+                stream.println(e.getKey());
             }
         }
     }

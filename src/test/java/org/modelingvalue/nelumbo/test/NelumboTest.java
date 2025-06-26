@@ -31,7 +31,15 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
-public class SyntaxTest extends NelumboTestBase {
+public class NelumboTest extends NelumboTestBase {
+
+    static {
+        System.setProperty("PARALLEL_COLLECTIONS", "false");
+
+        System.setProperty("REVERSE_NELUMBO", "false");
+        System.setProperty("RANDOM_NELUMBO", "true");
+        System.setProperty("TRACE_NELUMBO", "true");
+    }
 
     @Test
     public void tokenizer() {
@@ -43,7 +51,7 @@ public class SyntaxTest extends NelumboTestBase {
                 """;
         try {
             LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-            printTokens(tokens);
+            // printTokens(tokens);
             assertEquals(16, tokens.size());
         } catch (ParseException e) {
             fail(e);
@@ -175,6 +183,9 @@ public class SyntaxTest extends NelumboTestBase {
 
                         pc(Piet,Jan)
                         pc(Jan, Hein)
+
+                        ? a(Hein)=a
+
                     """;
             try {
                 new Parser(new Tokenizer(example).tokenize()).parse();

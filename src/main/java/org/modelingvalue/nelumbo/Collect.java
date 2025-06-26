@@ -117,7 +117,7 @@ public final class Collect extends Predicate {
     @Override
     protected InferResult infer(InferContext context) {
         init();
-        if (context.reduce() || get(contextVar) instanceof Class) {
+        if (context.reduce() || get(contextVar) instanceof Type) {
             return unknown();
         }
         InferResult condResult = condition().resolve(context);
@@ -152,7 +152,7 @@ public final class Collect extends Predicate {
             }
         }
         Object resultVal = collector().get(resultVar);
-        if (!(resultVal instanceof Class)) {
+        if (!(resultVal instanceof Type)) {
             if (next.anyMatch(f -> f.get(resultVar).equals(resultVal))) {
                 return InferResult.of(singleton(), true, Set.of(), true, cycles);
             } else if (!complete) {
