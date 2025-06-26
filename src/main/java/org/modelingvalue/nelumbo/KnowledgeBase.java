@@ -148,8 +148,8 @@ public final class KnowledgeBase {
         return KnowledgeBase.CURRENT.get().getVar(name);
     }
 
-    private static Node createNode(Functor functor, Object[] values) {
-        return Relation.TYPE.isAssignableFrom(functor.resultType()) ? new Relation(functor, values) : new Node(functor, values);
+    private static Node createNode(Functor functor, Object... args) {
+        return Relation.TYPE.isAssignableFrom(functor.resultType()) ? new Relation(functor, args) : new Node(functor, args);
     }
 
     public void register(TokenType token, PrefixParselet parselet) {
@@ -251,14 +251,10 @@ public final class KnowledgeBase {
             Type TYPE_NAME = new Type("TypeName");
             Type VAR_NAME = new Type("VarName");
             Type SIGNATURE = new Type("Signature");
-            Type FUNCTOR_SET = new Type("FunctorSet");
-            Type VAR_SET = new Type("VarSet");
-
-            Type FUNCTION = new Type("Function");
-            Type LITERAL = new Type("Literal");
 
             register(TokenType.OPERATOR, UnaryOperatorParselet.INSTANCE);
             register(TokenType.OPERATOR, BinaryOperatorParselet.INSTANCE);
+            register(TokenType.OPERATORDCL, BinaryOperatorParselet.INSTANCE);
             // register(TokenType.NAME, UnaryOperatorParselet.INSTANCE);
             register(TokenType.NAME, BinaryOperatorParselet.INSTANCE);
             register(TokenType.NAME, "(", CallWithArgsParselet.INSTANCE);
@@ -291,32 +287,45 @@ public final class KnowledgeBase {
             register(CallWithArgs.of((t, l) -> {
                 return new Node(SIGNATURE, t.text(), l);
             }, Type.TYPE().list()));
+            register(BinaryOperator.of(Type.TYPE(), Type.TYPE(), 100, (t, l, r) -> {
+                return new Node(SIGNATURE, l, t.text(), r);
+            }));
             register(BinaryOperator.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (t, l, r) -> {
-                Set<Functor> set = Set.of();
                 KnowledgeBase current = KnowledgeBase.CURRENT.get();
                 for (Node s : ((ListNode) r).elements()) {
-                    Functor functor = new Functor((Type) l, (String) s.get(1), (List<Type>) s.get(2));
-                    current.register(CallWithArgs.of(functor.name(), (tt, ll) -> createNode(functor, ll.toArray()), //
-                            functor.args().toArray(i -> new Type[i])));
-                    set = set.add(functor);
+                    if (s.get(1) instanceof String && s.get(2) instanceof List) {
+                        String name = (String) s.get(1);
+                        Functor functor = new Functor((Type) l, name, (List<Type>) s.get(2));
+                        current.register(CallWithArgs.of(name, (tt, ll) -> createNode(functor, ll.toArray()), //
+                                functor.args().toArray(i -> new Type[i])));
+                    } else if (s.get(1) instanceof Type && s.get(2) instanceof String && s.get(3) instanceof Type) {
+                        String operDcl = (String) s.get(2);
+                        int i = operDcl.indexOf("(");
+                        int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
+                        String oper = operDcl.substring(0, i);
+                        Functor functor = new Functor((Type) l, oper, n -> n.toString(1) + oper + n.toString(2), precedence, (Type) s.get(1), (Type) s.get(3));
+                        current.register(BinaryOperator.of((Type) s.get(1), oper, (Type) s.get(3), precedence, (tt, ll, rr) -> createNode(functor, ll, rr)));
+                        current.addFunctor(functor);
+                    } else {
+                        throw new ParseException("Invalid signature " + s + " at position " + t.position() + ".", t.position());
+                    }
                 }
-                return new Node(FUNCTOR_SET, set);
+                return null;
             }));
             register(VAR_NAME, TokenType.NAME, AtomicParselet.of(t -> {
                 String name = t.text();
                 return new Terminal(VAR_NAME, name);
             }));
             register(BinaryOperator.of(Type.TYPE(), ":", VAR_NAME.list(), 10, (t, l, r) -> {
-                Set<Variable> set = Set.of();
                 for (Node v : ((ListNode) r).elements()) {
-                    set = set.add(new Variable((Type) l, (String) v.get(1)));
+                    new Variable((Type) l, (String) v.get(1));
                 }
-                return new Node(VAR_SET, set);
+                return null;
             }));
             register(BinaryOperator.of(RELATION, "<==", Predicate.TYPE, 10, (t, l, r) -> {
                 return new Rule((Relation) l, (Predicate) r);
             }));
-            register(UnaryOperator.of("!", Predicate.TYPE, 10, (t, r) -> {
+            register(UnaryOperator.of("!", Predicate.TYPE, 15, (t, r) -> {
                 return new Not((Predicate) r);
             }));
             register(BinaryOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
@@ -325,12 +334,34 @@ public final class KnowledgeBase {
             register(BinaryOperator.of(Predicate.TYPE, "|", Predicate.TYPE, 20, (t, l, r) -> {
                 return new Or((Predicate) l, (Predicate) r);
             }));
-            register(BinaryOperator.of(Node.TYPE, "=", Node.TYPE, 30, (t, l, r) -> {
-                return new Equal((Node) l, (Node) r);
-            }));
+            register(CallWithArgs.of("equal", (t, l) -> {
+                return new Equal(l.get(0), l.get(1));
+            }, Node.TYPE, Node.TYPE));
+            try {
+                new Parser(new Tokenizer(INIT_BASE).tokenize()).parse();
+            } catch (ParseException e) {
+                throw new IllegalArgumentException(e);
+            }
         });
         return this;
     }
+
+    private final static String                                                 INIT_BASE = """
+                     <Literal>  :: <Node>
+                     <Function> :: <Node>
+
+                     <Relation> ::= <Node>  =(30) <Node>,
+                                    <Node> !=(30) <Node>
+
+                     <Literal>  : L1, L2
+                     <Function> : F1, F2
+                     <Node>     : N1, N2
+
+                     L1=L2  <==  equal(L1, L2)
+                     F1=F2  <==  F1=L1 & F2=L1
+                     L1=F1  <==  F1=L1
+                     N1!=N2 <==  !(N1=N2)
+            """;
 
     private final AtomicReference<Map<String, Type>>                            types;
     private final AtomicReference<Set<Functor>>                                 functors;
@@ -349,7 +380,7 @@ public final class KnowledgeBase {
 
     private final AtomicInteger                                                 depth;
     private final AtomicReference<QualifiedSet<Relation, Inference>[]>          memoization;
-    private final InferContext                                                  context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
+    private final InferContext                                                  context   = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
     private boolean                                                             stopped;
 
     @SuppressWarnings("unchecked")
@@ -572,17 +603,11 @@ public final class KnowledgeBase {
             System.err.println(var.type() + " : " + var.name());
         }
         for (Entry<Relation, InferResult> e : facts()) {
-            System.err.println(e.getKey() + " " + e.getValue());
+            System.err.println(e.getValue());
         }
-        for (Entry<Relation, Set<Rule>> e : rules()) {
-            Set<Rule> rules = e.getValue();
-            String type = e.getKey().toString() + " : ";
-            for (int i = 0; i < rules.size(); i++) {
-                if (i == 1) {
-                    type = " ".repeat(type.length());
-                }
-                System.err.println(type + rules.get(i) + (i < rules.size() - 1 ? "," : ""));
-            }
+        Set<Rule> rules = rules().flatMap(Entry::getValue).asSet();
+        for (Rule r : rules) {
+            System.err.println(r);
         }
     }
 

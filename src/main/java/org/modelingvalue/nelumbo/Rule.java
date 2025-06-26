@@ -20,14 +20,13 @@
 
 package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 
 public class Rule extends Node {
     private static final long   serialVersionUID = -4602043866952049391L;
     public static final Type    TYPE             = new Type(Rule.class);
-    public static final Functor FUNCTOR          = new Functor(TYPE, "Rule", List.of(Relation.TYPE, Predicate.TYPE));
+    public static final Functor FUNCTOR          = new Functor(TYPE, "Rule", n -> n.toString(1) + " <== " + n.toString(2), 10, Relation.TYPE, Predicate.TYPE);
 
     public Rule(Relation consequence, Predicate condition) {
         super(FUNCTOR, consequence, condition);
@@ -106,11 +105,6 @@ public class Rule extends Node {
     @Override
     public Rule set(int i, Object... a) {
         return (Rule) super.set(i, a);
-    }
-
-    @Override
-    public String toString() {
-        return consequence() + " <== " + condition();
     }
 
 }

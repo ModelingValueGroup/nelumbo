@@ -20,13 +20,12 @@
 
 package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 
 public final class Collect extends Predicate {
     private static final long   serialVersionUID = -3084545514049410749L;
-    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Collect", List.of(Predicate.TYPE, Predicate.TYPE));
+    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Collect", n -> n.toString(1) + "\u03BB" + n.toString(2), 15, Predicate.TYPE, Predicate.TYPE);
 
     private Variable            resultVar;
     private Variable            iteratorVar;
@@ -168,11 +167,6 @@ public final class Collect extends Predicate {
     @Override
     public Collect set(int i, Object... a) {
         return (Collect) super.set(i, a);
-    }
-
-    @Override
-    public String toString() {
-        return "(" + condition() + "\u03BB" + collector() + ")";
     }
 
 }

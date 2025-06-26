@@ -20,11 +20,9 @@
 
 package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.List;
-
 public final class And extends BinaryPredicate {
     private static final long   serialVersionUID = -7248491569810098948L;
-    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "And", List.of(Predicate.TYPE, Predicate.TYPE));
+    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "And", n -> n.toString(1) + "&" + n.toString(2), 20, Predicate.TYPE, Predicate.TYPE);
 
     public And(Predicate predicate1, Predicate predicate2) {
         super(FUNCTOR, predicate1, predicate2);
@@ -78,11 +76,6 @@ public final class And extends BinaryPredicate {
     @Override
     protected boolean isRight(InferResult[] predResult) {
         return predResult[0].isTrueCC();
-    }
-
-    @Override
-    public String toString() {
-        return "(" + predicate1() + "&" + predicate2() + ")";
     }
 
 }

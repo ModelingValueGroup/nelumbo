@@ -21,6 +21,7 @@
 package org.modelingvalue.nelumbo;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -110,8 +111,21 @@ public class Node extends StructImpl {
         return nrOfUnbound() == 0;
     }
 
+    public Function<Node, String> render() {
+        Functor functor = functor();
+        return functor != null ? functor.render() : null;
+    }
+
+    public int precedence() {
+        return functor().precedence();
+    }
+
     @Override
     public String toString() {
+        Function<Node, String> render = render();
+        if (render != null) {
+            return render.apply(this);
+        }
         Functor functor = functor();
         String name = functor != null ? functor.name() : type().name();
         String string = super.toString();
@@ -124,7 +138,14 @@ public class Node extends StructImpl {
     }
 
     public final String toString(int i) {
-        return StringUtil.toString(get(i));
+        Object v = get(i);
+        String string = StringUtil.toString(v);
+        if (v instanceof Node && render() != null && ((Node) v).render() != null) {
+            if (!functor().equals(((Node) v).functor()) && precedence() >= ((Node) v).precedence()) {
+                return "(" + string + ")";
+            }
+        }
+        return string;
     }
 
     private static final Object[] array(Object functor, Object[] args) {

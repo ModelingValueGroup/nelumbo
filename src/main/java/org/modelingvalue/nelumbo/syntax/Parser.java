@@ -112,7 +112,7 @@ public final class Parser {
     public Token consume(TokenType expected) throws ParseException {
         Token token = tokens.poll();
         if (token.type() != expected) {
-            throw new ParseException("Expected token " + expected + " and found " + token.type(), token.position());
+            throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token.position());
         }
         return token;
     }

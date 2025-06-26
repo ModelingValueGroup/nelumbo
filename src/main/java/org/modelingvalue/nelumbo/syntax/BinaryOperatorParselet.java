@@ -36,7 +36,7 @@ public final class BinaryOperatorParselet extends InfixParselet {
 
     @Override
     public Node parse(Parser parser, Node left, Token token) throws ParseException {
-        BinaryOperator binaryOperator = getOperator(parser, left, token);
+        BinaryOperator binaryOperator = operator(parser, left, token);
         if (binaryOperator == null) {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
@@ -49,7 +49,7 @@ public final class BinaryOperatorParselet extends InfixParselet {
                 int pos = parser.position();
                 Node node = parser.parseNode(binaryOperator.precedence(), elemType);
                 if (!elemType.isAssignableFrom(node.type())) {
-                    throw new ParseException("Expected type " + elemType + " and found " + node.type(), pos);
+                    throw new ParseException("Expected type " + elemType + " and found " + node + " of type " + node.type(), pos);
                 }
                 right = new ListNode((ListNode) right, node);
             } while (parser.match(TokenType.COMMA));
@@ -57,7 +57,7 @@ public final class BinaryOperatorParselet extends InfixParselet {
             int pos = parser.position();
             right = parser.parseNode(binaryOperator.precedence(), rightType);
             if (!rightType.isAssignableFrom(right.type())) {
-                throw new ParseException("Expected type " + rightType + " and found " + right.type(), pos);
+                throw new ParseException("Expected type " + rightType + " and found " + right + " of type " + right.type(), pos);
             }
         }
         return binaryOperator.construct(token, left, right);
@@ -65,18 +65,25 @@ public final class BinaryOperatorParselet extends InfixParselet {
 
     @Override
     public int precedence(Parser parser, Node left, Token token) {
-        BinaryOperator binaryOperator = getOperator(parser, left, token);
+        BinaryOperator binaryOperator = operator(parser, left, token);
         return binaryOperator != null ? binaryOperator.precedence() : 0;
     }
 
-    private BinaryOperator getOperator(Parser parser, Node left, Token token) {
+    private BinaryOperator operator(Parser parser, Node left, Token token) {
+        BinaryOperator operator = operator(parser, left, token.text());
+        if (operator == null) {
+            operator = operator(parser, left, BinaryOperator.WILDCARD);
+        }
+        return operator;
+    }
+
+    private BinaryOperator operator(Parser parser, Node left, String text) {
         Set<Type> pre, post = Set.of(left.type());
-        BinaryOperator binaryOperator = null;
         while (!post.isEmpty()) {
             pre = post;
             post = Set.of();
             for (Type type : pre) {
-                binaryOperator = parser.knowledgeBase().binaryOperator(type, token.text());
+                BinaryOperator binaryOperator = parser.knowledgeBase().binaryOperator(type, text);
                 if (binaryOperator != null) {
                     return binaryOperator;
                 } else {

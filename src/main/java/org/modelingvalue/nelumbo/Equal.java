@@ -24,7 +24,7 @@ import org.modelingvalue.collections.List;
 
 public class Equal extends Relation {
     private static final long   serialVersionUID = -5516286818572134367L;
-    public static final Functor FUNCTOR          = new Functor(Relation.TYPE, "Equal", List.of(Node.TYPE, Node.TYPE));
+    public static final Functor FUNCTOR          = new Functor(Relation.TYPE, "eq", List.of(Node.TYPE, Node.TYPE));
 
     public Equal(Node node1, Node node2) {
         super(FUNCTOR, node1, node2);
@@ -50,11 +50,6 @@ public class Equal extends Relation {
     @Override
     public Equal set(int i, Object... a) {
         return (Equal) super.set(i, a);
-    }
-
-    @Override
-    public String toString() {
-        return node1() + "=" + node2();
     }
 
 }

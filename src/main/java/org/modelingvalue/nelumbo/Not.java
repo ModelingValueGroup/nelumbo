@@ -20,11 +20,9 @@
 
 package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.List;
-
 public final class Not extends Predicate {
     private static final long    serialVersionUID = -4543178470298951866L;
-    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Not", List.of(Predicate.TYPE));
+    private static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Not", n -> "!" + n.toString(1), 15, Predicate.TYPE);
 
     public Not(Predicate predicate) {
         super(FUNCTOR, predicate);
@@ -71,11 +69,6 @@ public final class Not extends Predicate {
     @Override
     public Not set(int i, Object... a) {
         return (Not) super.set(i, a);
-    }
-
-    @Override
-    public String toString() {
-        return "!(" + predicate() + ")";
     }
 
 }

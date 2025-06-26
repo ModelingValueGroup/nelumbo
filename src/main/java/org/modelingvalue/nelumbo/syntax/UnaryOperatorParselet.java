@@ -34,17 +34,17 @@ public final class UnaryOperatorParselet extends PrefixParselet {
 
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
-        UnaryOperator unaryOperator = getOperator(parser, token);
+        UnaryOperator unaryOperator = operator(parser, token);
         Type rightType = unaryOperator.right();
         int pos = parser.position();
         Node right = parser.parseNode(unaryOperator.precedence(), rightType);
         if (!rightType.isAssignableFrom(right.type())) {
-            throw new ParseException("Expected type " + rightType + " and found " + right.type(), pos);
+            throw new ParseException("Expected type " + rightType + " and found " + right + " of type " + right.type(), pos);
         }
         return unaryOperator.construct(token, right);
     }
 
-    private UnaryOperator getOperator(Parser parser, Token token) throws ParseException {
+    private UnaryOperator operator(Parser parser, Token token) throws ParseException {
         UnaryOperator unaryOperator = parser.knowledgeBase().unaryOperator(token.text());
         if (unaryOperator == null) {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());

@@ -20,13 +20,12 @@
 
 package org.modelingvalue.nelumbo;
 
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 
 public final class Boolean extends Predicate {
     private static final long          serialVersionUID = -8515171118744898263L;
     public static final Type           BOOLEAN_TYPE     = new Type(java.lang.Boolean.class);
-    public static final Functor        FUNCTOR          = new Functor(Predicate.TYPE, "Boolean", List.of(BOOLEAN_TYPE));
+    public static final Functor        FUNCTOR          = new Functor(Predicate.TYPE, "Boolean", n -> n.toString(1), 100, BOOLEAN_TYPE);
 
     public static final Boolean        TRUE             = new Boolean(true);
     public static final Boolean        FALSE            = new Boolean(false);
@@ -68,11 +67,6 @@ public final class Boolean extends Predicate {
     @Override
     public Boolean set(int i, Object... a) {
         return (Boolean) super.set(i, a);
-    }
-
-    @Override
-    public String toString() {
-        return get(1).toString();
     }
 
 }

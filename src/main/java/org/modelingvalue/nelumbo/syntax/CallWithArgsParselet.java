@@ -28,7 +28,7 @@ import org.modelingvalue.nelumbo.Type;
 
 public final class CallWithArgsParselet extends PrefixParselet {
 
-    public final static CallWithArgsParselet      INSTANCE   = new CallWithArgsParselet();
+    public final static CallWithArgsParselet INSTANCE = new CallWithArgsParselet();
 
     private CallWithArgsParselet() {
     }
@@ -41,11 +41,11 @@ public final class CallWithArgsParselet extends PrefixParselet {
             args = args.add(parser.parseNode(0, Node.TYPE));
         } while (parser.match(TokenType.COMMA));
         parser.consume(TokenType.RPAREN);
-        CallWithArgs call = getCall(parser, token, args);
+        CallWithArgs call = call(parser, token, args);
         return call.construct(token, args);
     }
 
-    private CallWithArgs getCall(Parser parser, Token token, List<Node> args) throws ParseException {
+    private CallWithArgs call(Parser parser, Token token, List<Node> args) throws ParseException {
         List<CallWithArgs> calls = parser.knowledgeBase().callsWithArgs(token.text());
         if (calls != null) {
             for (CallWithArgs call : calls) {

@@ -27,10 +27,12 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class BinaryOperator {
 
-    private final Type   left;
-    private final String oper;
-    private final Type   right;
-    private final int    precedence;
+    protected static final String WILDCARD = "*";
+
+    private final Type            left;
+    private final String          oper;
+    private final Type            right;
+    private final int             precedence;
 
     public BinaryOperator(Type left, String oper, Type right, int precedence) {
         this.left = left;
@@ -56,6 +58,10 @@ public abstract class BinaryOperator {
     }
 
     public abstract Node construct(Token token, Node left, Node right) throws ParseException;
+
+    public static BinaryOperator of(Type left, Type right, int precedence, ThrowingTriFunction<Token, Node, Node, Node> constructor) {
+        return of(left, WILDCARD, right, precedence, constructor);
+    }
 
     public static BinaryOperator of(Type left, String text, Type right, int precedence, ThrowingTriFunction<Token, Node, Node, Node> constructor) {
         return new BinaryOperator(left, text, right, precedence) {

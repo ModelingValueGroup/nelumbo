@@ -20,11 +20,24 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.util.function.Function;
+
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.util.SerializableFunction;
 
 public final class Functor extends Node {
     private static final long serialVersionUID = 285147889847599160L;
     public static final Type  TYPE             = new Type(Functor.class);
+
+    public Functor(Type resultType, String oper, Type... args) {
+        super(TYPE, resultType, oper, List.of(args));
+        KnowledgeBase.CURRENT.get().addFunctor(this);
+    }
+
+    public Functor(Type resultType, String oper, SerializableFunction<Node, String> render, int precedence, Type... args) {
+        super(TYPE, resultType, oper, List.of(args), render.of(), precedence);
+        KnowledgeBase.CURRENT.get().addFunctor(this);
+    }
 
     public Functor(Type resultType, String name, List<Type> args) {
         super(TYPE, resultType, name, args);
@@ -41,6 +54,10 @@ public final class Functor extends Node {
 
     @Override
     public String toString() {
+        Function<Node, String> render = render();
+        if (render != null) {
+            return render.apply(new Node(this, args().toArray()));
+        }
         String types = args().toString();
         return name() + "(" + types.substring(5, types.length() - 1) + ")";
     }
@@ -52,6 +69,17 @@ public final class Functor extends Node {
     @SuppressWarnings("unchecked")
     public List<Type> args() {
         return (List<Type>) get(3);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Function<Node, String> render() {
+        return length() > 5 ? ((Function<Node, String>) get(4)) : null;
+    }
+
+    @Override
+    public int precedence() {
+        return (Integer) get(5);
     }
 
     @Override
