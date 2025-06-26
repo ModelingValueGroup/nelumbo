@@ -289,6 +289,12 @@ public final class KnowledgeBase {
             register(InfixOperator.of(Type.TYPE(), Type.TYPE(), 100, (t, l, r) -> {
                 return new Node(SIGNATURE, l, t.text(), r);
             }));
+            //            register(PrefixOperator.of(Type.TYPE(), 100, (t, r) -> {
+            //                return new Node(SIGNATURE, t.text(), r);
+            //            }));
+            register(PostfixOperator.of(Type.TYPE(), 100, (l, t) -> {
+                return new Node(SIGNATURE, l, t.text());
+            }));
             register(InfixOperator.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (t, l, r) -> {
                 Type type = (Type) l;
                 for (Node s : ((ListNode) r).elements()) {
@@ -383,14 +389,35 @@ public final class KnowledgeBase {
     private static void createFunctor(Type type, Token token, Node sig) throws ParseException {
         KnowledgeBase current = KnowledgeBase.CURRENT.get();
         if (sig.length() == 2 && sig.get(1) instanceof String) {
+            // Constant
             String name = (String) sig.get(1);
             new Constant(type, name);
         } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof List) {
+            // CallWithArgs
             String name = (String) sig.get(1);
             Functor functor = new Functor(type, name, (List<Type>) sig.get(2));
             current.register(CallWithArgs.of(name, (tt, ll) -> createNode(functor, ll.toArray()), //
                     functor.args().toArray(i -> new Type[i])));
+        } else if (sig.length() == 3 && sig.get(1) instanceof Type && sig.get(2) instanceof String) {
+            // PostfixOperator
+            String operDcl = (String) sig.get(2);
+            int i = operDcl.indexOf("(");
+            int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
+            String oper = operDcl.substring(0, i);
+            Functor functor = new Functor(type, oper, n -> n.toString(1) + oper, precedence, (Type) sig.get(1));
+            current.register(PostfixOperator.of((Type) sig.get(1), oper, precedence, (tt, ll) -> createNode(functor, ll)));
+            current.addFunctor(functor);
+        } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof Type) {
+            // PrefixOperator
+            String operDcl = (String) sig.get(1);
+            int i = operDcl.indexOf("(");
+            int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
+            String oper = operDcl.substring(0, i);
+            Functor functor = new Functor(type, oper, n -> oper + n.toString(1), precedence, (Type) sig.get(2));
+            current.register(PrefixOperator.of(oper, (Type) sig.get(2), precedence, (tt, ll) -> createNode(functor, ll)));
+            current.addFunctor(functor);
         } else if (sig.length() == 4 && sig.get(1) instanceof Type && sig.get(2) instanceof String && sig.get(3) instanceof Type) {
+            // InfixOperator
             String operDcl = (String) sig.get(2);
             int i = operDcl.indexOf("(");
             int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));

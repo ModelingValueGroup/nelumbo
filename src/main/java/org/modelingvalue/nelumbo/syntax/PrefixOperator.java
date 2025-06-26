@@ -57,8 +57,8 @@ public abstract class PrefixOperator {
         return of(WILDCARD, right, precedence, constructor);
     }
 
-    public static PrefixOperator of(String text, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
-        return new PrefixOperator(text, right, precedence) {
+    public static PrefixOperator of(String oper, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return new PrefixOperator(oper, right, precedence) {
             @Override
             public Node construct(Token token, Node right) throws ParseException {
                 return constructor.apply(token, right);

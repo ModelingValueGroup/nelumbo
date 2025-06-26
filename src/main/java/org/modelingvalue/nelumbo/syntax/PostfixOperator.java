@@ -51,17 +51,17 @@ public abstract class PostfixOperator {
         return precedence;
     }
 
-    public abstract Node construct(Token token, Node left) throws ParseException;
+    public abstract Node construct(Node left, Token token) throws ParseException;
 
-    public static PostfixOperator of(Type left, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+    public static PostfixOperator of(Type left, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
         return of(left, WILDCARD, precedence, constructor);
     }
 
-    public static PostfixOperator of(Type left, String text, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
-        return new PostfixOperator(left, text, precedence) {
+    public static PostfixOperator of(Type left, String oper, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return new PostfixOperator(left, oper, precedence) {
             @Override
-            public Node construct(Token token, Node left) throws ParseException {
-                return constructor.apply(token, left);
+            public Node construct(Node left, Token token) throws ParseException {
+                return constructor.apply(left, token);
             }
         };
     }

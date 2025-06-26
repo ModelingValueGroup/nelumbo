@@ -39,7 +39,7 @@ public final class PostfixOperatorParselet extends InfixParselet {
         if (operator == null) {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
-        return operator.construct(token, left);
+        return operator.construct(left, token);
     }
 
     @Override

@@ -63,8 +63,8 @@ public abstract class InfixOperator {
         return of(left, WILDCARD, right, precedence, constructor);
     }
 
-    public static InfixOperator of(Type left, String text, Type right, int precedence, ThrowingTriFunction<Token, Node, Node, Node> constructor) {
-        return new InfixOperator(left, text, right, precedence) {
+    public static InfixOperator of(Type left, String oper, Type right, int precedence, ThrowingTriFunction<Token, Node, Node, Node> constructor) {
+        return new InfixOperator(left, oper, right, precedence) {
             @Override
             public Node construct(Token token, Node left, Node right) throws ParseException {
                 return constructor.apply(token, left, right);
