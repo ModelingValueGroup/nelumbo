@@ -25,6 +25,7 @@ import java.util.LinkedList;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Relation;
 import org.modelingvalue.nelumbo.Type;
 
 public final class Parser {
@@ -74,7 +75,10 @@ public final class Parser {
             while (match(TokenType.NEWLINE)) {
             }
             if (!tokens.isEmpty()) {
-                parseNode(0, Node.TYPE);
+                Node node = parseNode(0, Node.TYPE);
+                if (node instanceof Relation) {
+                    knowledgeBase.addFact((Relation) node);
+                }
                 consume(TokenType.NEWLINE);
             }
         }

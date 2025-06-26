@@ -148,6 +148,10 @@ public final class KnowledgeBase {
         return KnowledgeBase.CURRENT.get().getVar(name);
     }
 
+    private static Constant constant(String name) {
+        return KnowledgeBase.CURRENT.get().getConstant(name);
+    }
+
     private static Node createNode(Functor functor, Object... args) {
         return Relation.TYPE.isAssignableFrom(functor.resultType()) ? new Relation(functor, args) : new Node(functor, args);
     }
@@ -269,13 +273,11 @@ public final class KnowledgeBase {
                 return type(t);
             }));
             register(TokenType.TYPE, TokenType.NAME, PrefixOperatorParselet.INSTANCE);
+            register(TokenType.NAME, SIGNATURE, AtomicParselet.of(t -> {
+                return new Node(SIGNATURE, t.text());
+            }));
             register(TokenType.NAME, AtomicParselet.of(t -> {
-                String name = t.text();
-                Variable var = var(name);
-                if (var != null) {
-                    return var;
-                }
-                throw new ParseException("Could not find variable " + t.text() + " at position " + t.position() + ".", t.position());
+                return node(t);
             }));
             register(InfixOperator.of(TYPE_NAME, "::", Type.TYPE().list(), 10, (t, l, r) -> {
                 return new Type((String) l.get(1), ((ListNode) r).elements());
@@ -287,24 +289,9 @@ public final class KnowledgeBase {
                 return new Node(SIGNATURE, l, t.text(), r);
             }));
             register(InfixOperator.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (t, l, r) -> {
-                KnowledgeBase current = KnowledgeBase.CURRENT.get();
+                Type type = (Type) l;
                 for (Node s : ((ListNode) r).elements()) {
-                    if (s.get(1) instanceof String && s.get(2) instanceof List) {
-                        String name = (String) s.get(1);
-                        Functor functor = new Functor((Type) l, name, (List<Type>) s.get(2));
-                        current.register(CallWithArgs.of(name, (tt, ll) -> createNode(functor, ll.toArray()), //
-                                functor.args().toArray(i -> new Type[i])));
-                    } else if (s.get(1) instanceof Type && s.get(2) instanceof String && s.get(3) instanceof Type) {
-                        String operDcl = (String) s.get(2);
-                        int i = operDcl.indexOf("(");
-                        int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
-                        String oper = operDcl.substring(0, i);
-                        Functor functor = new Functor((Type) l, oper, n -> n.toString(1) + oper + n.toString(2), precedence, (Type) s.get(1), (Type) s.get(3));
-                        current.register(InfixOperator.of((Type) s.get(1), oper, (Type) s.get(3), precedence, (tt, ll, rr) -> createNode(functor, ll, rr)));
-                        current.addFunctor(functor);
-                    } else {
-                        throw new ParseException("Invalid signature " + s + " at position " + t.position() + ".", t.position());
-                    }
+                    createFunctor(type, t, s);
                 }
                 return null;
             }));
@@ -360,7 +347,7 @@ public final class KnowledgeBase {
                      N1!=N2 <==  !(N1=N2)
             """;
 
-    private Type type(Token t) throws ParseException {
+    private static Type type(Token t) throws ParseException {
         String name = t.text();
         name = name.substring(1, name.length() - 1);
         Type type = type(name);
@@ -370,8 +357,46 @@ public final class KnowledgeBase {
         throw new ParseException("Could not find type " + t.text() + " at position " + t.position() + ".", t.position());
     }
 
+    private static Node node(Token t) throws ParseException {
+        String name = t.text();
+        Node node = constant(name);
+        if (node != null) {
+            return node;
+        }
+        node = var(name);
+        if (node != null) {
+            return node;
+        }
+        throw new ParseException("Could not find variable nor constant " + t.text() + " at position " + t.position() + ".", t.position());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void createFunctor(Type type, Token token, Node sig) throws ParseException {
+        KnowledgeBase current = KnowledgeBase.CURRENT.get();
+        if (sig.length() == 2 && sig.get(1) instanceof String) {
+            String name = (String) sig.get(1);
+            new Constant(type, name);
+        } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof List) {
+            String name = (String) sig.get(1);
+            Functor functor = new Functor(type, name, (List<Type>) sig.get(2));
+            current.register(CallWithArgs.of(name, (tt, ll) -> createNode(functor, ll.toArray()), //
+                    functor.args().toArray(i -> new Type[i])));
+        } else if (sig.length() == 4 && sig.get(1) instanceof Type && sig.get(2) instanceof String && sig.get(3) instanceof Type) {
+            String operDcl = (String) sig.get(2);
+            int i = operDcl.indexOf("(");
+            int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
+            String oper = operDcl.substring(0, i);
+            Functor functor = new Functor(type, oper, n -> n.toString(1) + oper + n.toString(2), precedence, (Type) sig.get(1), (Type) sig.get(3));
+            current.register(InfixOperator.of((Type) sig.get(1), oper, (Type) sig.get(3), precedence, (tt, ll, rr) -> createNode(functor, ll, rr)));
+            current.addFunctor(functor);
+        } else {
+            throw new ParseException("Invalid signature " + sig + " at position " + token.position() + ".", token.position());
+        }
+    }
+
     private final AtomicReference<Map<String, Type>>                            types;
     private final AtomicReference<Set<Functor>>                                 functors;
+    private final AtomicReference<Map<String, Constant>>                        constants;
     private final AtomicReference<Map<String, Variable>>                        variables;
     private final AtomicReference<Map<Relation, InferResult>>                   facts;
     private final AtomicReference<Map<Relation, Set<Rule>>>                     rules;
@@ -395,6 +420,7 @@ public final class KnowledgeBase {
         types = new AtomicReference<>(init != null ? init.types.get() : Map.of());
         functors = new AtomicReference<>(init != null ? init.functors.get() : Set.of());
         variables = new AtomicReference<>(Map.of());
+        constants = new AtomicReference<>(init != null ? init.constants.get() : Map.of());
         facts = new AtomicReference<>(init != null ? init.facts.get() : Map.of());
         rules = new AtomicReference<>(init != null ? init.rules.get() : Map.of());
 
@@ -457,6 +483,10 @@ public final class KnowledgeBase {
 
     public Map<String, Variable> variables() {
         return variables.get();
+    }
+
+    public Map<String, Constant> constants() {
+        return constants.get();
     }
 
     public Set<Functor> functors() {
@@ -584,6 +614,14 @@ public final class KnowledgeBase {
         return variables.get().get(name);
     }
 
+    public final void addConstant(Constant constant) {
+        constants.updateAndGet(map -> map.put(constant.name(), constant));
+    }
+
+    public final Constant getConstant(String name) {
+        return constants.get().get(name);
+    }
+
     public final void addFunctor(Functor functor) {
         functors.updateAndGet(set -> set.add(functor));
     }
@@ -605,16 +643,22 @@ public final class KnowledgeBase {
         for (Functor e : functors()) {
             System.err.println(e.resultType() + " ::= " + e);
         }
+        for (Entry<String, Constant> e : constants()) {
+            Constant con = e.getValue();
+            System.err.println(con.type() + " ::= " + con.name());
+        }
         for (Entry<String, Variable> e : variables()) {
             Variable var = e.getValue();
             System.err.println(var.type() + " " + var.name());
         }
-        for (Entry<Relation, InferResult> e : facts()) {
-            System.err.println(e.getValue());
-        }
         Set<Rule> rules = rules().flatMap(Entry::getValue).asSet();
         for (Rule r : rules) {
             System.err.println(r);
+        }
+        for (Entry<Relation, InferResult> e : facts()) {
+            if (e.getValue().isTrueCC()) {
+                System.err.println(e.getKey());
+            }
         }
     }
 

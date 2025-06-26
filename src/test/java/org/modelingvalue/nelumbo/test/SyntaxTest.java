@@ -170,6 +170,11 @@ public class SyntaxTest extends NelumboTestBase {
                         p(a)=b  <==  c(b)=a
                         d(a)=b  <==  a=x & b=y & ad(x,y)
                         a(a)=b  <==  d(b)=a
+
+                        <PersonLit> ::= Piet, Jan, Hein
+
+                        pc(Piet,Jan)
+                        pc(Jan, Hein)
                     """;
             try {
                 new Parser(new Tokenizer(example).tokenize()).parse();

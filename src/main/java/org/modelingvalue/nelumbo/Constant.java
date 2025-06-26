@@ -20,26 +20,41 @@
 
 package org.modelingvalue.nelumbo;
 
-public class Terminal extends Node {
-    private static final long serialVersionUID = 7548506547559092927L;
-    public static final Type  TYPE             = new Type(Terminal.class);
+public class Constant extends Terminal {
+    private static final long serialVersionUID = 7635166089400627936L;
+    public static final Type  TYPE             = new Type(Constant.class);
 
-    public Terminal(Type type, Object... args) {
-        super(type, args);
+    public Constant(Type type, String name) {
+        super(TYPE, type, name);
+        KnowledgeBase.CURRENT.get().addConstant(this);
     }
 
-    protected Terminal(Object[] array) {
+    private Constant(Object[] array) {
         super(array);
     }
 
     @Override
-    protected Terminal struct(Object[] array) {
-        return new Terminal(array);
+    public Type type() {
+        return (Type) get(1);
+    }
+
+    public String name() {
+        return get(2).toString();
     }
 
     @Override
-    public Terminal set(int i, Object... a) {
-        return (Terminal) super.set(i, a);
+    public String toString() {
+        return name();
+    }
+
+    @Override
+    protected Constant struct(Object[] array) {
+        return new Constant(array);
+    }
+
+    @Override
+    public Constant set(int i, Object... a) {
+        return (Constant) super.set(i, a);
     }
 
 }
