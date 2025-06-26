@@ -38,7 +38,7 @@ public class NelumboTest extends NelumboTestBase {
 
         System.setProperty("REVERSE_NELUMBO", "false");
         System.setProperty("RANDOM_NELUMBO", "true");
-        System.setProperty("TRACE_NELUMBO", "true");
+        System.setProperty("TRACE_NELUMBO", "false");
     }
 
     @Test
@@ -185,12 +185,26 @@ public class NelumboTest extends NelumboTestBase {
                         pc(Piet,Jan)
                         pc(Jan, Hein)
 
+                        ? p(Piet)=x
+                        ? p(Jan)=x
+                        ? p(Hein)=x
+
+                        ? c(Piet)=x
+                        ? c(Jan)=x
+                        ? c(Hein)=x
+
+                        ? a(Piet)=x
+                        ? a(Jan)=x
                         ? a(Hein)=x
+
+                        ? d(Piet)=x
+                        ? d(Jan)=x
+                        ? d(Hein)=x
 
                     """;
             try {
                 new Parser(new Tokenizer(example).tokenize()).parse();
-                printKnowledgeBase();
+                // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
             }
