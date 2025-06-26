@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo;
 
 public final class Or extends BinaryPredicate {
     private static final long   serialVersionUID = -1732549494864415986L;
-    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Or", n -> n.toString(1) + "|" + n.toString(2), 20, Predicate.TYPE, Predicate.TYPE);
+    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Or", n -> n.toString(1) + " | " + n.toString(2), 20, Predicate.TYPE, Predicate.TYPE);
 
     public Or(Predicate predicate1, Predicate predicate2) {
         super(FUNCTOR, predicate1, predicate2);

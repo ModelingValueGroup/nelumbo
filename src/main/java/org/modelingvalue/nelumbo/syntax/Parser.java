@@ -41,21 +41,22 @@ public final class Parser {
 
     public Node parseNode(int precedence, Type desired) throws ParseException {
         Token token = tokens.poll();
-        Node left;
-        PrefixParselet prefix = knowledgeBase.prefix(token.type(), tokens.peek().text());
+        TokenType type = token.type();
+        Token next = tokens.peek();
+        PrefixParselet prefix = knowledgeBase.prefix(type, next.text());
         if (prefix == null) {
-            prefix = knowledgeBase.prefix(token.type(), tokens.peek().type());
+            prefix = knowledgeBase.prefix(type, next.type());
         }
         if (prefix == null) {
-            prefix = knowledgeBase.prefix(token.type(), desired);
+            prefix = knowledgeBase.prefix(type, desired);
         }
         if (prefix == null) {
-            prefix = knowledgeBase.prefix(token.type());
+            prefix = knowledgeBase.prefix(type);
         }
         if (prefix == null) {
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
-        left = prefix.parse(this, token);
+        Node left = prefix.parse(this, token);
         while (precedence < precedence(left)) {
             token = tokens.poll();
             InfixParselet infix = knowledgeBase.infix(token.type());
