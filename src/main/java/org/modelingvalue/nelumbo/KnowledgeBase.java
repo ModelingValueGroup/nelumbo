@@ -591,7 +591,7 @@ public final class KnowledgeBase {
         }
         for (Entry<String, Variable> e : variables()) {
             Variable var = e.getValue();
-            System.err.println(var.type() + " : " + var.name());
+            System.err.println(var.type() + " " + var.name());
         }
         for (Entry<Relation, InferResult> e : facts()) {
             System.err.println(e.getValue());
