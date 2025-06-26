@@ -26,11 +26,11 @@ import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
-public final class PrefixperatorParselet extends PrefixParselet {
+public final class PrefixOperatorParselet extends PrefixParselet {
 
-    public final static PrefixperatorParselet INSTANCE = new PrefixperatorParselet();
+    public final static PrefixOperatorParselet INSTANCE = new PrefixOperatorParselet();
 
-    private PrefixperatorParselet() {
+    private PrefixOperatorParselet() {
     }
 
     @Override

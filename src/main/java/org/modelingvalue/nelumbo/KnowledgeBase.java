@@ -252,10 +252,11 @@ public final class KnowledgeBase {
             Type VAR_NAME = new Type("VarName");
             Type SIGNATURE = new Type("Signature");
 
-            register(TokenType.OPERATOR, PrefixperatorParselet.INSTANCE);
+            register(TokenType.OPERATOR, PrefixOperatorParselet.INSTANCE);
             register(TokenType.OPERATOR, InfixOperatorParselet.INSTANCE);
+            //register(TokenType.OPERATOR, PostfixOperatorParselet.INSTANCE);
             register(TokenType.OPERATORDCL, InfixOperatorParselet.INSTANCE);
-            // register(TokenType.NAME, UnaryOperatorParselet.INSTANCE);
+            //register(TokenType.NAME, PrefixOperatorParselet.INSTANCE);
             register(TokenType.NAME, InfixOperatorParselet.INSTANCE);
             register(TokenType.NAME, "(", CallWithArgsParselet.INSTANCE);
             register(TokenType.LPAREN, ParenParselet.INSTANCE);
@@ -267,7 +268,7 @@ public final class KnowledgeBase {
             register(TokenType.TYPE, AtomicParselet.of(t -> {
                 return type(t);
             }));
-            register(TokenType.TYPE, TokenType.NAME, PrefixperatorParselet.INSTANCE);
+            register(TokenType.TYPE, TokenType.NAME, PrefixOperatorParselet.INSTANCE);
             register(TokenType.NAME, AtomicParselet.of(t -> {
                 String name = t.text();
                 Variable var = var(name);
