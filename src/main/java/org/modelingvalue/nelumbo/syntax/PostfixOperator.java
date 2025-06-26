@@ -22,56 +22,48 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
-public final class UnaryOperatorParselet extends PrefixParselet {
+public abstract class PostfixOperator {
 
-    public final static UnaryOperatorParselet INSTANCE = new UnaryOperatorParselet();
+    protected static final String WILDCARD = "";
 
-    private UnaryOperatorParselet() {
+    private final Type            left;
+    private final String          oper;
+    private final int             precedence;
+
+    public PostfixOperator(Type left, String oper, int precedence) {
+        this.left = left;
+        this.oper = oper;
+        this.precedence = precedence;
     }
 
-    @Override
-    public Node parse(Parser parser, Token token) throws ParseException {
-        UnaryOperator unaryOperator = operator(parser, token);
-        if (unaryOperator == null) {
-            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
-        }
-        Node right;
-        Type rightType = unaryOperator.right();
-        if (rightType.isList()) {
-            Type elemType = rightType.element();
-            right = new ListNode(elemType);
-            do {
-                int pos = parser.position();
-                Node node = parser.parseNode(unaryOperator.precedence(), elemType);
-                if (!elemType.isAssignableFrom(node.type())) {
-                    throw new ParseException("Expected type " + elemType + " and found " + node + " of type " + node.type(), pos);
-                }
-                right = new ListNode((ListNode) right, node);
-            } while (parser.match(TokenType.COMMA));
-        } else {
-            int pos = parser.position();
-            right = parser.parseNode(unaryOperator.precedence(), rightType);
-            if (!rightType.isAssignableFrom(right.type())) {
-                throw new ParseException("Expected type " + rightType + " and found " + right + " of type " + right.type(), pos);
+    public Type left() {
+        return left;
+    }
+
+    public String oper() {
+        return oper;
+    }
+
+    public int precedence() {
+        return precedence;
+    }
+
+    public abstract Node construct(Token token, Node left) throws ParseException;
+
+    public static PostfixOperator of(Type left, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(left, WILDCARD, precedence, constructor);
+    }
+
+    public static PostfixOperator of(Type left, String text, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return new PostfixOperator(left, text, precedence) {
+            @Override
+            public Node construct(Token token, Node left) throws ParseException {
+                return constructor.apply(token, left);
             }
-        }
-        return unaryOperator.construct(token, right);
-    }
-
-    private UnaryOperator operator(Parser parser, Token token) {
-        UnaryOperator operator = operator(parser, token.text());
-        if (operator == null) {
-            operator = operator(parser, BinaryOperator.WILDCARD);
-        }
-        return operator;
-    }
-
-    private UnaryOperator operator(Parser parser, String text) {
-        return parser.knowledgeBase().unaryOperator(text);
+        };
     }
 
 }

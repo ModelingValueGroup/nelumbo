@@ -25,24 +25,18 @@ import java.text.ParseException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
-public abstract class BinaryOperator {
+public abstract class PrefixOperator {
 
     protected static final String WILDCARD = "";
 
-    private final Type            left;
     private final String          oper;
     private final Type            right;
     private final int             precedence;
 
-    public BinaryOperator(Type left, String oper, Type right, int precedence) {
-        this.left = left;
+    public PrefixOperator(String oper, Type right, int precedence) {
         this.oper = oper;
         this.right = right;
         this.precedence = precedence;
-    }
-
-    public Type left() {
-        return left;
     }
 
     public String oper() {
@@ -57,17 +51,17 @@ public abstract class BinaryOperator {
         return precedence;
     }
 
-    public abstract Node construct(Token token, Node left, Node right) throws ParseException;
+    public abstract Node construct(Token token, Node right) throws ParseException;
 
-    public static BinaryOperator of(Type left, Type right, int precedence, ThrowingTriFunction<Token, Node, Node, Node> constructor) {
-        return of(left, WILDCARD, right, precedence, constructor);
+    public static PrefixOperator of(Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(WILDCARD, right, precedence, constructor);
     }
 
-    public static BinaryOperator of(Type left, String text, Type right, int precedence, ThrowingTriFunction<Token, Node, Node, Node> constructor) {
-        return new BinaryOperator(left, text, right, precedence) {
+    public static PrefixOperator of(String text, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return new PrefixOperator(text, right, precedence) {
             @Override
-            public Node construct(Token token, Node left, Node right) throws ParseException {
-                return constructor.apply(token, left, right);
+            public Node construct(Token token, Node right) throws ParseException {
+                return constructor.apply(token, right);
             }
         };
     }

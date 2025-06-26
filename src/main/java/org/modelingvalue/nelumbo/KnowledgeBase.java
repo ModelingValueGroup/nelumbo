@@ -187,28 +187,41 @@ public final class KnowledgeBase {
         return infixParselets.get().get(token);
     }
 
-    public void register(UnaryOperator operator) {
-        if (unaryOperators.get().containsKey(operator.oper())) {
+    public void register(PrefixOperator operator) {
+        if (prefixOperators.get().containsKey(operator.oper())) {
             throw new IllegalArgumentException();
         }
-        unaryOperators.updateAndGet(map -> map.put(operator.oper(), operator));
+        prefixOperators.updateAndGet(map -> map.put(operator.oper(), operator));
     }
 
-    public UnaryOperator unaryOperator(String oper) {
-        return unaryOperators.get().get(oper);
+    public PrefixOperator prefixOperator(String oper) {
+        return prefixOperators.get().get(oper);
     }
 
-    public void register(BinaryOperator operator) {
+    public void register(PostfixOperator operator) {
         Pair<Type, String> pair = Pair.of(operator.left(), operator.oper());
-        if (binaryOperators.get().containsKey(pair)) {
+        if (postfixOperators.get().containsKey(pair)) {
             throw new IllegalArgumentException();
         }
-        binaryOperators.updateAndGet(map -> map.put(pair, operator));
+        postfixOperators.updateAndGet(map -> map.put(pair, operator));
     }
 
-    public BinaryOperator binaryOperator(Type left, String oper) {
+    public PostfixOperator postfixOperator(Type left, String oper) {
         Pair<Type, String> pair = Pair.of(left, oper);
-        return binaryOperators.get().get(pair);
+        return postfixOperators.get().get(pair);
+    }
+
+    public void register(InfixOperator operator) {
+        Pair<Type, String> pair = Pair.of(operator.left(), operator.oper());
+        if (infixOperators.get().containsKey(pair)) {
+            throw new IllegalArgumentException();
+        }
+        infixOperators.updateAndGet(map -> map.put(pair, operator));
+    }
+
+    public InfixOperator infixOperator(Type left, String oper) {
+        Pair<Type, String> pair = Pair.of(left, oper);
+        return infixOperators.get().get(pair);
     }
 
     public void register(CallWithArgs call) {
@@ -239,11 +252,11 @@ public final class KnowledgeBase {
             Type VAR_NAME = new Type("VarName");
             Type SIGNATURE = new Type("Signature");
 
-            register(TokenType.OPERATOR, UnaryOperatorParselet.INSTANCE);
-            register(TokenType.OPERATOR, BinaryOperatorParselet.INSTANCE);
-            register(TokenType.OPERATORDCL, BinaryOperatorParselet.INSTANCE);
+            register(TokenType.OPERATOR, PrefixperatorParselet.INSTANCE);
+            register(TokenType.OPERATOR, InfixOperatorParselet.INSTANCE);
+            register(TokenType.OPERATORDCL, InfixOperatorParselet.INSTANCE);
             // register(TokenType.NAME, UnaryOperatorParselet.INSTANCE);
-            register(TokenType.NAME, BinaryOperatorParselet.INSTANCE);
+            register(TokenType.NAME, InfixOperatorParselet.INSTANCE);
             register(TokenType.NAME, "(", CallWithArgsParselet.INSTANCE);
             register(TokenType.LPAREN, ParenParselet.INSTANCE);
             register(TokenType.TYPE, "::", AtomicParselet.of(t -> {
@@ -254,7 +267,7 @@ public final class KnowledgeBase {
             register(TokenType.TYPE, AtomicParselet.of(t -> {
                 return type(t);
             }));
-            register(TokenType.TYPE, TokenType.NAME, UnaryOperatorParselet.INSTANCE);
+            register(TokenType.TYPE, TokenType.NAME, PrefixperatorParselet.INSTANCE);
             register(TokenType.NAME, AtomicParselet.of(t -> {
                 String name = t.text();
                 Variable var = var(name);
@@ -263,16 +276,16 @@ public final class KnowledgeBase {
                 }
                 throw new ParseException("Could not find variable " + t.text() + " at position " + t.position() + ".", t.position());
             }));
-            register(BinaryOperator.of(TYPE_NAME, "::", Type.TYPE().list(), 10, (t, l, r) -> {
+            register(InfixOperator.of(TYPE_NAME, "::", Type.TYPE().list(), 10, (t, l, r) -> {
                 return new Type((String) l.get(1), ((ListNode) r).elements());
             }));
             register(CallWithArgs.of((t, l) -> {
                 return new Node(SIGNATURE, t.text(), l);
             }, Type.TYPE().list()));
-            register(BinaryOperator.of(Type.TYPE(), Type.TYPE(), 100, (t, l, r) -> {
+            register(InfixOperator.of(Type.TYPE(), Type.TYPE(), 100, (t, l, r) -> {
                 return new Node(SIGNATURE, l, t.text(), r);
             }));
-            register(BinaryOperator.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (t, l, r) -> {
+            register(InfixOperator.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (t, l, r) -> {
                 KnowledgeBase current = KnowledgeBase.CURRENT.get();
                 for (Node s : ((ListNode) r).elements()) {
                     if (s.get(1) instanceof String && s.get(2) instanceof List) {
@@ -286,7 +299,7 @@ public final class KnowledgeBase {
                         int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
                         String oper = operDcl.substring(0, i);
                         Functor functor = new Functor((Type) l, oper, n -> n.toString(1) + oper + n.toString(2), precedence, (Type) s.get(1), (Type) s.get(3));
-                        current.register(BinaryOperator.of((Type) s.get(1), oper, (Type) s.get(3), precedence, (tt, ll, rr) -> createNode(functor, ll, rr)));
+                        current.register(InfixOperator.of((Type) s.get(1), oper, (Type) s.get(3), precedence, (tt, ll, rr) -> createNode(functor, ll, rr)));
                         current.addFunctor(functor);
                     } else {
                         throw new ParseException("Invalid signature " + s + " at position " + t.position() + ".", t.position());
@@ -298,23 +311,23 @@ public final class KnowledgeBase {
                 String name = t.text();
                 return new Terminal(VAR_NAME, name);
             }));
-            register(UnaryOperator.of(VAR_NAME.list(), 10, (t, l) -> {
+            register(PrefixOperator.of(VAR_NAME.list(), 10, (t, l) -> {
                 Type type = type(t);
                 for (Node v : ((ListNode) l).elements()) {
                     new Variable(type, (String) v.get(1));
                 }
                 return null;
             }));
-            register(BinaryOperator.of(RELATION, "<==", Predicate.TYPE, 10, (t, l, r) -> {
+            register(InfixOperator.of(RELATION, "<==", Predicate.TYPE, 10, (t, l, r) -> {
                 return new Rule((Relation) l, (Predicate) r);
             }));
-            register(UnaryOperator.of("!", Predicate.TYPE, 50, (t, r) -> {
+            register(PrefixOperator.of("!", Predicate.TYPE, 50, (t, r) -> {
                 return new Not((Predicate) r);
             }));
-            register(BinaryOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
+            register(InfixOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
                 return new And((Predicate) l, (Predicate) r);
             }));
-            register(BinaryOperator.of(Predicate.TYPE, "|", Predicate.TYPE, 20, (t, l, r) -> {
+            register(InfixOperator.of(Predicate.TYPE, "|", Predicate.TYPE, 20, (t, l, r) -> {
                 return new Or((Predicate) l, (Predicate) r);
             }));
             register(CallWithArgs.of("eq", (t, l) -> {
@@ -366,8 +379,9 @@ public final class KnowledgeBase {
     private final AtomicReference<Map<TokenType, PrefixParselet>>               prefix1Parselets;
     private final AtomicReference<Map<TokenType, InfixParselet>>                infixParselets;
 
-    private final AtomicReference<Map<String, UnaryOperator>>                   unaryOperators;
-    private final AtomicReference<Map<Pair<Type, String>, BinaryOperator>>      binaryOperators;
+    private final AtomicReference<Map<String, PrefixOperator>>                  prefixOperators;
+    private final AtomicReference<Map<Pair<Type, String>, InfixOperator>>       infixOperators;
+    private final AtomicReference<Map<Pair<Type, String>, PostfixOperator>>     postfixOperators;
     private final AtomicReference<Map<String, List<CallWithArgs>>>              callsWithArgs;
 
     private final AtomicInteger                                                 depth;
@@ -387,8 +401,9 @@ public final class KnowledgeBase {
         prefix1Parselets = new AtomicReference<>(init != null ? init.prefix1Parselets.get() : Map.of());
         infixParselets = new AtomicReference<>(init != null ? init.infixParselets.get() : Map.of());
 
-        unaryOperators = new AtomicReference<>(init != null ? init.unaryOperators.get() : Map.of());
-        binaryOperators = new AtomicReference<>(init != null ? init.binaryOperators.get() : Map.of());
+        prefixOperators = new AtomicReference<>(init != null ? init.prefixOperators.get() : Map.of());
+        infixOperators = new AtomicReference<>(init != null ? init.infixOperators.get() : Map.of());
+        postfixOperators = new AtomicReference<>(init != null ? init.postfixOperators.get() : Map.of());
         callsWithArgs = new AtomicReference<>(init != null ? init.callsWithArgs.get() : Map.of());
 
         memoization = new AtomicReference<>(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});

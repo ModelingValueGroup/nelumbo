@@ -22,48 +22,56 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
+import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
-public abstract class UnaryOperator {
+public final class PrefixperatorParselet extends PrefixParselet {
 
-    protected static final String WILDCARD = "";
+    public final static PrefixperatorParselet INSTANCE = new PrefixperatorParselet();
 
-    private final String          oper;
-    private final Type            right;
-    private final int             precedence;
-
-    public UnaryOperator(String oper, Type right, int precedence) {
-        this.oper = oper;
-        this.right = right;
-        this.precedence = precedence;
+    private PrefixperatorParselet() {
     }
 
-    public String oper() {
-        return oper;
-    }
-
-    public Type right() {
-        return right;
-    }
-
-    public int precedence() {
-        return precedence;
-    }
-
-    public abstract Node construct(Token token, Node right) throws ParseException;
-
-    public static UnaryOperator of(Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
-        return of(WILDCARD, right, precedence, constructor);
-    }
-
-    public static UnaryOperator of(String text, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
-        return new UnaryOperator(text, right, precedence) {
-            @Override
-            public Node construct(Token token, Node right) throws ParseException {
-                return constructor.apply(token, right);
+    @Override
+    public Node parse(Parser parser, Token token) throws ParseException {
+        PrefixOperator operator = operator(parser, token);
+        if (operator == null) {
+            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+        }
+        Node right;
+        Type rightType = operator.right();
+        if (rightType.isList()) {
+            Type elemType = rightType.element();
+            right = new ListNode(elemType);
+            do {
+                int pos = parser.position();
+                Node node = parser.parseNode(operator.precedence(), elemType);
+                if (!elemType.isAssignableFrom(node.type())) {
+                    throw new ParseException("Expected type " + elemType + " and found " + node + " of type " + node.type(), pos);
+                }
+                right = new ListNode((ListNode) right, node);
+            } while (parser.match(TokenType.COMMA));
+        } else {
+            int pos = parser.position();
+            right = parser.parseNode(operator.precedence(), rightType);
+            if (!rightType.isAssignableFrom(right.type())) {
+                throw new ParseException("Expected type " + rightType + " and found " + right + " of type " + right.type(), pos);
             }
-        };
+        }
+        return operator.construct(token, right);
+    }
+
+    private PrefixOperator operator(Parser parser, Token token) {
+        PrefixOperator operator = operator(parser, token.text());
+        if (operator == null) {
+            operator = operator(parser, InfixOperator.WILDCARD);
+        }
+        return operator;
+    }
+
+    private PrefixOperator operator(Parser parser, String text) {
+        return parser.knowledgeBase().prefixOperator(text);
     }
 
 }
