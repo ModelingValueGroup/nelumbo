@@ -36,23 +36,33 @@ public abstract class Predicate extends Node {
     private final Set<Predicate>   singleton        = Set.of(this);
     private final Predicate        declaration;
 
-    private Node                   parent;
+    private Predicate              parent;
     private int                    parentIdx;
 
     protected Predicate(Functor functor, Object... args) {
         super(functor, args);
         this.declaration = this;
+        init();
     }
 
-    protected void init(Node parent, int idx) {
+    private void init() {
+        for (int i = 1; i < length(); i++) {
+            Object e = get(i);
+            if (e instanceof Predicate) {
+                ((Predicate) e).init(this, i);
+            }
+        }
+    }
+
+    protected void init(Predicate parent, int idx) {
         assert (this.parent == null && this.parentIdx == 0);
-        this.parent = parent;
+        this.parent = (Predicate) parent;
         this.parentIdx = idx;
     }
 
-    private Pair<Node, int[]> rootIdx() {
+    private Pair<Predicate, int[]> rootIdx() {
         if (parent != null) {
-            Pair<Node, int[]> root = parent instanceof Predicate ? ((Predicate) parent).rootIdx() : null;
+            Pair<Predicate, int[]> root = ((Predicate) parent).rootIdx();
             if (root != null) {
                 int[] idx = new int[root.b().length + 1];
                 System.arraycopy(root.b(), 0, idx, 1, root.b().length);
@@ -66,8 +76,8 @@ public abstract class Predicate extends Node {
         }
     }
 
-    protected Node root() {
-        Pair<Node, int[]> ri = rootIdx();
+    protected Predicate root() {
+        Pair<Predicate, int[]> ri = rootIdx();
         return ri != null ? ri.a().set(ri.b(), Boolean.TRUE) : null;
     }
 

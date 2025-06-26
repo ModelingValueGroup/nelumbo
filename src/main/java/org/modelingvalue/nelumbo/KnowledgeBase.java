@@ -307,8 +307,11 @@ public final class KnowledgeBase {
                 }
                 return null;
             }));
-            register(InfixOperator.of(RELATION, "<==", Predicate.TYPE, 10, (t, l, r) -> {
-                return new Rule((Relation) l, (Predicate) r);
+            register(InfixOperator.of(RELATION, "<==", Predicate.TYPE.list(), 10, (t, l, r) -> {
+                for (Node s : ((ListNode) r).elements()) {
+                    new Rule((Relation) l, (Predicate) s);
+                }
+                return null;
             }));
             register(PrefixOperator.of("!", Predicate.TYPE, 50, (t, r) -> {
                 return new Not((Predicate) r);
@@ -348,7 +351,7 @@ public final class KnowledgeBase {
                      <Node>     N1, N2
 
                      L1=L2  <==  eq(L1, L2)
-                     F1=F2  <==  F1=L1 & F2=L2 & L1=L2
+                     F1=F2  <==  F1=L1 & F2=L1
                      L1=F1  <==  F1=L1
                      N1!=N2 <==  !(N1=N2)
             """;

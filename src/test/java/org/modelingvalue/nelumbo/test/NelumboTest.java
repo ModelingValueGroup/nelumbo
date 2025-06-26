@@ -172,7 +172,8 @@ public class NelumboTest extends NelumboTestBase {
                         <PersonLit> x, y, z
                         <Person>    a, b, c
 
-                        ad(x,z) <==  pc(x,z) | (ad(x,y) & pc(y, z))
+                        ad(x,z) <==  pc(x,z),
+                                     ad(x,y) & pc(y, z)
 
                         c(a)=b  <==  a=x & b=y & pc(x,y)
                         p(a)=b  <==  c(b)=a
@@ -184,7 +185,7 @@ public class NelumboTest extends NelumboTestBase {
                         pc(Piet,Jan)
                         pc(Jan, Hein)
 
-                        ? a(Hein)=a
+                        ? a(Hein)=x
 
                     """;
             try {

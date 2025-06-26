@@ -40,25 +40,14 @@ public class Node extends StructImpl {
 
     public Node(Functor functor, Object... args) {
         super(array(functor, args));
-        init();
     }
 
     public Node(Type type, Object... args) {
         super(array(type, args));
-        init();
     }
 
     protected Node(Object[] args) {
         super(args);
-    }
-
-    private void init() {
-        for (int i = 1; i < length(); i++) {
-            Object e = get(i);
-            if (e instanceof Predicate) {
-                ((Predicate) e).init(this, i);
-            }
-        }
     }
 
     @Override

@@ -42,7 +42,7 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    protected void init(Node parent, int idx) {
+    protected void init(Predicate parent, int idx) {
     }
 
     public boolean isTrue() {
