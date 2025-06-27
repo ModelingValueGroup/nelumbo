@@ -89,7 +89,7 @@ public abstract class BinaryPredicate extends Predicate {
             } else if (predResult[0].isEmpty() && !predResult[1].isEmpty()) {
                 return predResult[1];
             } else {
-                return predResult[0].add(predResult[1]);
+                return add(predResult);
             }
         }
     }
@@ -105,6 +105,8 @@ public abstract class BinaryPredicate extends Predicate {
     protected abstract boolean isLeft(InferResult[] predResult);
 
     protected abstract boolean isRight(InferResult[] predResult);
+
+    protected abstract InferResult add(InferResult[] predResult);
 
     protected int[] order() {
         if (REVERSE_NELUMBO) {

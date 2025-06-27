@@ -149,7 +149,7 @@ public abstract class Predicate extends Node {
         }
         InferResult result = predicate.resolve(context);
         if (context.trace()) {
-            System.err.println(context.prefix() + "  " + predicate + "\u2192" + result);
+            System.err.println(context.prefix() + "  " + predicate + " " + result);
         }
         return result;
     }
@@ -242,10 +242,6 @@ public abstract class Predicate extends Node {
                     result = predicate.infer(context);
                     if (result.hasStackOverflow()) {
                         return result;
-                    } else if (result.isEmpty()) {
-                        completeFacts = false;
-                        completeFalsehoods = false;
-                        cycles = cycles.addAll(result.cycles());
                     } else {
                         for (Predicate pred : result.facts()) {
                             Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());

@@ -142,7 +142,7 @@ public class Relation extends Predicate {
 
     private InferResult result(InferResult result, InferContext context) {
         if (context.trace()) {
-            System.err.println("\u2192" + result);
+            System.err.println(" " + result);
         }
         return result;
     }

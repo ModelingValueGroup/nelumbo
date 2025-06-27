@@ -71,6 +71,10 @@ public interface InferResult {
         return facts().isEmpty() && falsehoods().isEmpty();
     }
 
+    default boolean isEmptyII() {
+        return facts().isEmpty() && falsehoods().isEmpty() && !completeFacts() && !completeFalsehoods();
+    }
+
     static InferResult of(Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods, Set<Relation> cycles) {
         return new InferResultImpl() {
             @Override
@@ -384,11 +388,20 @@ public interface InferResult {
         };
     }
 
-    default InferResult add(InferResult other) {
+    default InferResult addAnd(InferResult other) {
+        Set<Predicate> facts = facts().addAll(other.facts());
+        boolean completeFacts = completeFacts() || other.completeFacts();
+        Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
+        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
+        Set<Relation> cycles = cycles().addAll(other.cycles());
+        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
+    }
+
+    default InferResult addOr(InferResult other) {
         Set<Predicate> facts = facts().addAll(other.facts());
         boolean completeFacts = completeFacts() && other.completeFacts();
         Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
-        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
+        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
         Set<Relation> cycles = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }

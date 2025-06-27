@@ -78,6 +78,11 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
+    protected InferResult add(InferResult[] predResult) {
+        return predResult[0].addOr(predResult[1]);
+    }
+
+    @Override
     @SuppressWarnings("rawtypes")
     public boolean contains(Predicate cond) {
         return super.contains(cond) || predicate1().contains(cond) || predicate2().contains(cond);

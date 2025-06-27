@@ -78,4 +78,9 @@ public final class And extends BinaryPredicate {
         return predResult[0].isTrueCC();
     }
 
+    @Override
+    protected InferResult add(InferResult[] predResult) {
+        return predResult[0].addAnd(predResult[1]);
+    }
+
 }

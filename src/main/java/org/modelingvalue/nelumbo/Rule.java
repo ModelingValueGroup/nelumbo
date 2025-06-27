@@ -59,7 +59,7 @@ public class Rule extends Node {
         Predicate condition = condition().setBinding(binding);
         Predicate consequence = consequence().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + condition + "\u21D2" + consequence);
+            System.err.println(context.prefix() + consequence + " <== " + condition);
         }
         InferResult condResult = condition.resolve(context);
         InferResult relResult;
@@ -97,7 +97,7 @@ public class Rule extends Node {
             relResult = InferResult.of(relFacts, completeFacts, relFalsehoods, completeFalsehoods, condResult.cycles());
         }
         if (context.trace()) {
-            System.err.println(context.prefix() + relation + "\u2192" + relResult);
+            System.err.println(context.prefix() + relation + " " + relResult);
         }
         return relResult;
     }

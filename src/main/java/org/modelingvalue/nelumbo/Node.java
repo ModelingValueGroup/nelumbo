@@ -87,7 +87,7 @@ public class Node extends StructImpl {
                 Object val = get(i);
                 if (val instanceof Type) {
                     nr++;
-                } else if (val instanceof Node && !(val instanceof Constant)) {
+                } else if (val instanceof Node && !(val instanceof Terminal)) {
                     nr += ((Node) val).nrOfUnbound();
                 }
             }
