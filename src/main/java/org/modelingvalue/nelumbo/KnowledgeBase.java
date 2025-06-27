@@ -324,7 +324,7 @@ public final class KnowledgeBase {
             }));
             register(PrefixOperator.of("?", Predicate.TYPE, 10, (t, r) -> {
                 InferResult result = ((Predicate) r).infer();
-                System.err.println(result);
+                System.err.println(r + " " + result);
                 return null;
             }));
             register(InfixOperator.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (t, l, r) -> {
