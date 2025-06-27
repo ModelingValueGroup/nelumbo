@@ -37,7 +37,7 @@ public class NelumboTest extends NelumboTestBase {
         System.setProperty("PARALLEL_COLLECTIONS", "false");
         System.setProperty("REVERSE_NELUMBO", "false");
         System.setProperty("RANDOM_NELUMBO", "true");
-        System.setProperty("TRACE_NELUMBO", "true");
+        System.setProperty("TRACE_NELUMBO", "false");
     }
 
     @Test
@@ -152,61 +152,61 @@ public class NelumboTest extends NelumboTestBase {
     public void parser3() {
         run(() -> {
             String example = """
-                                            // org.mvg.family ::
-                                            //     nelumbo.logic,
-                                            //     nelumbo.integers
+                        // org.mvg.family ::
+                        //     nelumbo.logic,
+                        //     nelumbo.integers
 
-                                            <Person>    :: <Node>
-                                            <PersonLit> :: <Person>, <Literal>
-                                            <PersonFun> :: <Person>, <Function>
+                        <Person>    :: <Node>
+                        <PersonLit> :: <Person>, <Literal>
+                        <PersonFun> :: <Person>, <Function>
 
-                                            <Relation>  ::= pc(<PersonLit>,<PersonLit>),
-                                                            ad(<PersonLit>,<PersonLit>)
+                        <Relation>  ::= pc(<PersonLit>,<PersonLit>),
+                                        ad(<PersonLit>,<PersonLit>)
 
-                                            <PersonFun> ::= p(<Person>),
-                                                            c(<Person>),
-                                                            a(<Person>),
-                                                            d(<Person>)
+                        <PersonFun> ::= p(<Person>),
+                                        c(<Person>),
+                                        a(<Person>),
+                                        d(<Person>)
 
-                                            <PersonLit> x, y, z
-                                            <Person>    a, b, c
+                        <PersonLit> x, y, z
+                        <Person>    a, b, c
 
-                                            ad(x,z) <==  pc(x,z),
-                                                         ad(x,y) & pc(y, z)
+                        ad(x,z) <==  pc(x,z),
+                                     ad(x,y) & pc(y, z)
 
-                                            c(a)=b  <==  a=x & b=y & pc(x,y)
-                                            p(a)=b  <==  c(b)=a
-                                            d(a)=b  <==  a=x & b=y & ad(x,y)
-                                            a(a)=b  <==  d(b)=a
+                        c(a)=b  <==  a=x & b=y & pc(x,y)
+                        p(a)=b  <==  c(b)=a
+                        d(a)=b  <==  a=x & b=y & ad(x,y)
+                        a(a)=b  <==  d(b)=a
 
-                                            <PersonLit> ::= Piet, Jan, Hein
+                        <PersonLit> ::= Piet, Jan, Hein
 
-                                            pc(Piet,Jan)
-                                            pc(Jan, Hein)
+                        pc(Piet,Jan)
+                        pc(Jan, Hein)
 
-                    //                        ? p(Piet)=Jan
-                    //                        ? p(Jan)=Hein
-                    //
-                    //                        ? p(Hein)=Jan
-                    //                        ? p(Jan)=Piet
-                    //
-                    //                        ? p(Piet)=x
-                    //                        ? p(Jan)=x
-                    //                        ? p(Hein)=x
-                    //
-                    //                        ? c(Piet)=x
-                    //                        ? c(Jan)=x
-                    //                        ? c(Hein)=x
-                    //
-                    //                        ? a(Piet)=x
-                    //                        ? a(Jan)=x
-                                            ? a(Hein)=x
+                        ? p(Piet)=Jan
+                        ? p(Jan)=Hein
 
-                                            ? d(Piet)=x
-                    //                        ? d(Jan)=x
-                    //                        ? d(Hein)=x
+                        ? p(Hein)=Jan
+                        ? p(Jan)=Piet
 
-                                        """;
+                        ? p(Piet)=x
+                        ? p(Jan)=x
+                        ? p(Hein)=x
+
+                        ? c(Piet)=x
+                        ? c(Jan)=x
+                        ? c(Hein)=x
+
+                        ? a(Piet)=x
+                        ? a(Jan)=x
+                        ? a(Hein)=x
+
+                        ? d(Piet)=x
+                        ? d(Jan)=x
+                        ? d(Hein)=x
+
+                    """;
             try {
                 new Parser(new Tokenizer(example).tokenize()).parse();
                 // printKnowledgeBase();
