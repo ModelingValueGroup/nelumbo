@@ -77,10 +77,7 @@ public final class Parser {
     private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
         AtomicParselet prefix = null;
         if (token2 != null) {
-            prefix = knowledgeBase.prefix(expected, token1, token2);
-            if (prefix == null) {
-                prefix = knowledgeBase.prefix(token1, token2);
-            }
+            prefix = knowledgeBase.prefix(token1, token2);
         }
         if (prefix == null) {
             prefix = knowledgeBase.prefix(expected, token1);

@@ -196,7 +196,7 @@ public final class KnowledgeBase {
                 }
                 return list;
             }));
-            register(CallWithArgs.of(SIGNATURE, TokenType.NAME, (t, l) -> {
+            register(CallWithArgs.of(TokenType.NAME, (t, l) -> {
                 return new Node(SIGNATURE, t.text(), l);
             }, Type.TYPE().list()));
             register(AtomicParselet.of(SIGNATURE, TokenType.NAME, t -> {
@@ -642,21 +642,12 @@ public final class KnowledgeBase {
     }
 
     public void register(CallWithArgs call) {
-        Object key = call.expected() != null ? Pair.of(call.expected(), call.key()) : call.key();
-        callsWithArgs.updateAndGet(map -> map.compute(key, (k, v) -> {
+        callsWithArgs.updateAndGet(map -> map.compute(call.key(), (k, v) -> {
             if (v == null) {
-                if (call.expected() != null) {
-                    if (call.name() != null) {
-                        register(new CallWithArgsParselet(call.expected(), call.name()));
-                    } else {
-                        register(new CallWithArgsParselet(call.expected(), call.type()));
-                    }
+                if (call.name() != null) {
+                    register(new CallWithArgsParselet(call.name()));
                 } else {
-                    if (call.name() != null) {
-                        register(new CallWithArgsParselet(call.name()));
-                    } else {
-                        register(new CallWithArgsParselet(call.type()));
-                    }
+                    register(new CallWithArgsParselet(call.type()));
                 }
                 return List.of(call);
             } else {
@@ -668,16 +659,6 @@ public final class KnowledgeBase {
                 return v.append(call);
             }
         }));
-    }
-
-    public List<CallWithArgs> callsWithArgs(Type expected, Token token) {
-        Pair<Type, Object> pair = Pair.of(expected, token.text());
-        List<CallWithArgs> list = callsWithArgs.get().get(pair);
-        if (list != null) {
-            return list;
-        }
-        pair = Pair.of(expected, token.type());
-        return callsWithArgs.get().get(pair);
     }
 
     public List<CallWithArgs> callsWithArgs(Token token) {
@@ -716,27 +697,6 @@ public final class KnowledgeBase {
         }
         pair = Pair.of(token1.type(), token2.type());
         prefix = prefixParselets.get().get(pair);
-        return prefix;
-    }
-
-    public AtomicParselet prefix(Type expected, Token token1, Token token2) {
-        Triple<Type, Object, Object> triple = Triple.of(expected, token1.text(), token2.text());
-        AtomicParselet prefix = prefixParselets.get().get(triple);
-        if (prefix != null) {
-            return prefix;
-        }
-        triple = Triple.of(expected, token1.text(), token2.type());
-        prefix = prefixParselets.get().get(triple);
-        if (prefix != null) {
-            return prefix;
-        }
-        triple = Triple.of(expected, token1.type(), token2.text());
-        prefix = prefixParselets.get().get(triple);
-        if (prefix != null) {
-            return prefix;
-        }
-        triple = Triple.of(expected, token1.type(), token2.type());
-        prefix = prefixParselets.get().get(triple);
         return prefix;
     }
 

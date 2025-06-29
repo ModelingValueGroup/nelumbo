@@ -37,14 +37,6 @@ public final class CallWithArgsParselet extends AtomicParselet {
         super(null, type, null, TokenType.LPAREN, null);
     }
 
-    public CallWithArgsParselet(Type expected, String name) {
-        super(expected, null, name, TokenType.LPAREN, null);
-    }
-
-    public CallWithArgsParselet(Type expected, TokenType type) {
-        super(expected, type, null, TokenType.LPAREN, null);
-    }
-
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
         parser.consume(TokenType.LPAREN);
@@ -59,7 +51,7 @@ public final class CallWithArgsParselet extends AtomicParselet {
 
     private CallWithArgs call(Parser parser, Token token, List<Node> args) throws ParseException {
         KnowledgeBase kb = parser.knowledgeBase();
-        List<CallWithArgs> calls = expected() != null ? kb.callsWithArgs(expected(), token) : kb.callsWithArgs(token);
+        List<CallWithArgs> calls = kb.callsWithArgs(token);
         if (calls != null) {
             for (CallWithArgs call : calls) {
                 if (call.isAssignableFrom(args)) {
