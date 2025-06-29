@@ -23,21 +23,63 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
-public abstract class AtomicParselet extends PrefixParselet {
+public abstract class AtomicParselet extends Parselet {
 
-    private AtomicParselet() {
+    private final Type expected;
+
+    protected AtomicParselet(Type expected, TokenType type1, String oper1, TokenType type2, String oper2) {
+        super(type1, oper1, type2, oper2);
+        this.expected = expected;
     }
 
-    @Override
+    public Type expected() {
+        return expected;
+    }
+
     public Node parse(Parser parser, Token token) throws ParseException {
         return construct(token);
     }
 
-    public abstract Node construct(Token token) throws ParseException;
+    public Node construct(Token token) throws ParseException {
+        throw new UnsupportedOperationException();
+    }
 
-    public static AtomicParselet of(ThrowingFunction<Token, Node> constructor) {
-        return new AtomicParselet() {
+    public static AtomicParselet of(String oper, ThrowingFunction<Token, Node> constructor) {
+        return of(null, null, oper, null, null, constructor);
+    }
+
+    public static AtomicParselet of(TokenType type, ThrowingFunction<Token, Node> constructor) {
+        return of(null, type, null, null, null, constructor);
+    }
+
+    public static AtomicParselet of(Type expected, String oper, ThrowingFunction<Token, Node> constructor) {
+        return of(expected, null, oper, null, null, constructor);
+    }
+
+    public static AtomicParselet of(Type expected, TokenType type, ThrowingFunction<Token, Node> constructor) {
+        return of(expected, type, null, null, null, constructor);
+    }
+
+    public static AtomicParselet of(String oper1, String oper2, ThrowingFunction<Token, Node> constructor) {
+        return of(null, null, oper1, null, oper2, constructor);
+    }
+
+    public static AtomicParselet of(TokenType type1, TokenType type2, ThrowingFunction<Token, Node> constructor) {
+        return of(null, type1, null, type2, null, constructor);
+    }
+
+    public static AtomicParselet of(String oper1, TokenType type2, ThrowingFunction<Token, Node> constructor) {
+        return of(null, null, oper1, type2, null, constructor);
+    }
+
+    public static AtomicParselet of(TokenType type1, String oper2, ThrowingFunction<Token, Node> constructor) {
+        return of(null, type1, null, null, oper2, constructor);
+    }
+
+    private static AtomicParselet of(Type expected, TokenType type1, String oper1, TokenType type2, String oper2, ThrowingFunction<Token, Node> constructor) {
+        return new AtomicParselet(expected, type1, oper1, type2, oper2) {
             @Override
             public Node construct(Token token) throws ParseException {
                 return constructor.apply(token);

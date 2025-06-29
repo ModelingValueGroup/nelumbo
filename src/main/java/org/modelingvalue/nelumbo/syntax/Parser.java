@@ -23,7 +23,9 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 import java.util.LinkedList;
 
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Relation;
 import org.modelingvalue.nelumbo.Type;
@@ -40,30 +42,79 @@ public final class Parser {
         this.tokens = tokens;
     }
 
-    public Node parseNode(int precedence, Type desired) throws ParseException {
-        Token token = tokens.poll();
-        TokenType type = token.type();
-        Token next = tokens.peek();
-        PrefixParselet prefix = knowledgeBase.prefix(type, next.text());
-        if (prefix == null) {
-            prefix = knowledgeBase.prefix(type, next.type());
+    public Node parseNode(int precedence, Type expected) throws ParseException {
+        Node left;
+        int position = tokens.peek().position();
+        if (expected.isList()) {
+            Type elemType = expected.element();
+            left = new ListNode(elemType);
+            do {
+                Node node = parseNode(precedence, elemType);
+                left = new ListNode((ListNode) left, node);
+            } while (match(TokenType.COMMA));
+        } else {
+            Token token1 = tokens.poll();
+            Token token2 = tokens.peek();
+            AtomicParselet prefix = prefix(expected, token1, token2);
+            left = prefix.parse(this, token1);
         }
-        if (prefix == null) {
-            prefix = knowledgeBase.prefix(type, desired);
+        Token token1 = tokens.poll();
+        Token token2 = tokens.peek();
+        PostfixParselet postfix = postfix(left.type(), token1, token2);
+        while (postfix != null && precedence < postfix.precedence()) {
+            left = postfix.parse(this, left, token1);
+            token1 = tokens.poll();
+            token2 = tokens.peek();
+            postfix = postfix(left.type(), token1, token2);
         }
-        if (prefix == null) {
-            prefix = knowledgeBase.prefix(type);
-        }
-        if (prefix == null) {
-            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
-        }
-        Node left = prefix.parse(this, token);
-        while (precedence < precedence(left)) {
-            token = tokens.poll();
-            InfixParselet infix = knowledgeBase.infix(token.type());
-            left = infix.parse(this, left, token);
+        tokens.addFirst(token1);
+        if (!expected.isAssignableFrom(left.type())) {
+            throw new ParseException("Expected type " + expected + " and found " + left + " of type " + left.type(), position);
         }
         return left;
+    }
+
+    private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
+        AtomicParselet prefix = null;
+        if (token2 != null) {
+            prefix = knowledgeBase.prefix(expected, token1, token2);
+            if (prefix == null) {
+                prefix = knowledgeBase.prefix(token1, token2);
+            }
+        }
+        if (prefix == null) {
+            prefix = knowledgeBase.prefix(expected, token1);
+        }
+        if (prefix == null) {
+            prefix = knowledgeBase.prefix(token1);
+        }
+        if (prefix == null) {
+            throw new ParseException("Could not parse \"" + token1.text() + "\" at position " + token1.position() + ".", token1.position());
+        }
+        return prefix;
+    }
+
+    private PostfixParselet postfix(Type left, Token token1, Token token2) throws ParseException {
+        Set<Type> pre, post = Set.of(left);
+        while (!post.isEmpty()) {
+            pre = post;
+            post = Set.of();
+            for (Type type : pre) {
+                PostfixParselet postfix = null;
+                if (token2 != null) {
+                    postfix = knowledgeBase.postfix(type, token1, token2);
+                }
+                if (postfix == null) {
+                    postfix = knowledgeBase.postfix(type, token1);
+                }
+                if (postfix != null) {
+                    return postfix;
+                } else {
+                    post = post.addAll(type.supers());
+                }
+            }
+        }
+        return null;
     }
 
     public KnowledgeBase knowledgeBase() {
@@ -86,10 +137,6 @@ public final class Parser {
             Token token = tokens.peek();
             throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
         }
-    }
-
-    public int position() {
-        return tokens.peek().position();
     }
 
     public boolean next(TokenType expected) {
@@ -123,17 +170,6 @@ public final class Parser {
             throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token.position());
         }
         return token;
-    }
-
-    private int precedence(Node left) throws ParseException {
-        Token token = tokens.peek();
-        if (token != null) {
-            InfixParselet infix = knowledgeBase.infix(token.type());
-            if (infix != null) {
-                return infix.precedence(this, left, token);
-            }
-        }
-        return 0;
     }
 
 }

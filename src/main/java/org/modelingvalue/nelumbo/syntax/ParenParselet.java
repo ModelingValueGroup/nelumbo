@@ -24,11 +24,12 @@ import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Node;
 
-public class ParenParselet extends PrefixParselet {
+public class ParenParselet extends AtomicParselet {
 
     public final static ParenParselet INSTANCE = new ParenParselet();
 
     private ParenParselet() {
+        super(null, TokenType.LPAREN, null, null, null);
     }
 
     @Override

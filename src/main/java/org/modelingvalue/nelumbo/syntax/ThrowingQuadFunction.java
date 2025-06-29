@@ -22,56 +22,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.text.ParseException;
 
-import org.modelingvalue.nelumbo.ListNode;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
-
-public final class PrefixOperatorParselet extends PrefixParselet {
-
-    public final static PrefixOperatorParselet INSTANCE = new PrefixOperatorParselet();
-
-    private PrefixOperatorParselet() {
-    }
-
-    @Override
-    public Node parse(Parser parser, Token token) throws ParseException {
-        PrefixOperator operator = operator(parser, token);
-        if (operator == null) {
-            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
-        }
-        Node right;
-        Type rightType = operator.right();
-        if (rightType.isList()) {
-            Type elemType = rightType.element();
-            right = new ListNode(elemType);
-            do {
-                int pos = parser.position();
-                Node node = parser.parseNode(operator.precedence(), elemType);
-                if (!elemType.isAssignableFrom(node.type())) {
-                    throw new ParseException("Expected type " + elemType + " and found " + node + " of type " + node.type(), pos);
-                }
-                right = new ListNode((ListNode) right, node);
-            } while (parser.match(TokenType.COMMA));
-        } else {
-            int pos = parser.position();
-            right = parser.parseNode(operator.precedence(), rightType);
-            if (!rightType.isAssignableFrom(right.type())) {
-                throw new ParseException("Expected type " + rightType + " and found " + right + " of type " + right.type(), pos);
-            }
-        }
-        return operator.construct(token, right);
-    }
-
-    private PrefixOperator operator(Parser parser, Token token) {
-        PrefixOperator operator = operator(parser, token.text());
-        if (operator == null) {
-            operator = operator(parser, InfixOperator.WILDCARD);
-        }
-        return operator;
-    }
-
-    private PrefixOperator operator(Parser parser, String text) {
-        return parser.knowledgeBase().prefixOperator(text);
-    }
-
+@FunctionalInterface
+public interface ThrowingQuadFunction<T, U, V, W, R> {
+    R apply(T t, U u, V v, W w) throws ParseException;
 }

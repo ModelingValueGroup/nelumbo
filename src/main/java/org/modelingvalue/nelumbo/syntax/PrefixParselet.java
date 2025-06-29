@@ -23,9 +23,76 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
-public abstract class PrefixParselet {
+public abstract class PrefixParselet extends AtomicParselet {
 
-    public abstract Node parse(Parser parser, Token token) throws ParseException;
+    private final Type right;
+    private final int  precedence;
+
+    protected PrefixParselet(Type expected, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence) {
+        super(expected, type1, oper1, type2, oper2);
+        this.right = right;
+        this.precedence = precedence;
+    }
+
+    public Type right() {
+        return right;
+    }
+
+    public int precedence() {
+        return precedence;
+    }
+
+    @Override
+    public Node parse(Parser parser, Token token) throws ParseException {
+        Node right = parser.parseNode(precedence(), right());
+        return construct(token, right);
+    }
+
+    public Node construct(Token token, Node right) throws ParseException {
+        throw new UnsupportedOperationException();
+    }
+
+    public static PrefixParselet of(String oper, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(null, null, oper, null, null, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(TokenType type, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(null, type, null, null, null, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(Type expected, String oper, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(expected, null, oper, null, null, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(Type expected, TokenType type, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(expected, type, null, null, null, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(String oper1, String oper2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(null, null, oper1, null, oper2, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(TokenType type1, TokenType type2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(null, type1, null, type2, null, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(String oper1, TokenType type2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(null, null, oper1, type2, null, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(TokenType type1, String oper2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(null, type1, null, null, oper2, right, precedence, constructor);
+    }
+
+    private static PrefixParselet of(Type expected, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return new PrefixParselet(expected, type1, oper1, type2, oper2, right, precedence) {
+            @Override
+            public Node construct(Token token, Node right) throws ParseException {
+                return constructor.apply(token, right);
+            }
+        };
+    }
 
 }

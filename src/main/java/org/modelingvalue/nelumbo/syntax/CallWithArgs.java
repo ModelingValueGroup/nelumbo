@@ -28,18 +28,32 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class CallWithArgs {
 
-    protected static final String WILDCARD = "";
+    private final Type       expected;
+    private final TokenType  type;
+    private final String     name;
+    private final List<Type> args;
 
-    private final String          name;
-    private final List<Type>      args;
-
-    public CallWithArgs(String name, Type... args) {
+    private CallWithArgs(Type expected, TokenType type, String name, Type... args) {
+        this.expected = expected;
+        this.type = type;
         this.name = name;
         this.args = List.of(args);
     }
 
+    public Type expected() {
+        return expected;
+    }
+
+    public TokenType type() {
+        return type;
+    }
+
     public String name() {
         return name;
+    }
+
+    public Object key() {
+        return name != null ? name : type;
     }
 
     public List<Type> args() {
@@ -48,12 +62,24 @@ public abstract class CallWithArgs {
 
     public abstract Node construct(Token token, List<Node> args) throws ParseException;
 
-    public static CallWithArgs of(ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
-        return of(WILDCARD, constructor, args);
+    public static CallWithArgs of(String name, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
+        return of(null, null, name, constructor, args);
     }
 
-    public static CallWithArgs of(String text, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
-        return new CallWithArgs(text, args) {
+    public static CallWithArgs of(TokenType type, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
+        return of(null, type, null, constructor, args);
+    }
+
+    public static CallWithArgs of(Type expected, String name, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
+        return of(expected, null, name, constructor, args);
+    }
+
+    public static CallWithArgs of(Type expected, TokenType type, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
+        return of(expected, type, null, constructor, args);
+    }
+
+    private static CallWithArgs of(Type expected, TokenType type, String name, ThrowingBiFunction<Token, List<Node>, Node> constructor, Type... args) {
+        return new CallWithArgs(expected, type, name, args) {
             @Override
             public Node construct(Token token, List<Node> args) throws ParseException {
                 return constructor.apply(token, args);

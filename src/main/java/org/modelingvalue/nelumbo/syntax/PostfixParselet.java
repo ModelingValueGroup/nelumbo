@@ -25,19 +25,14 @@ import java.text.ParseException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
-public abstract class InfixOperator {
+public abstract class PostfixParselet extends Parselet {
 
-    protected static final String WILDCARD = "";
+    private final Type left;
+    private final int  precedence;
 
-    private final Type            left;
-    private final String          oper;
-    private final Type            right;
-    private final int             precedence;
-
-    public InfixOperator(Type left, String oper, Type right, int precedence) {
+    protected PostfixParselet(Type left, TokenType type1, String oper1, TokenType type2, String oper2, int precedence) {
+        super(type1, oper1, type2, oper2);
         this.left = left;
-        this.oper = oper;
-        this.right = right;
         this.precedence = precedence;
     }
 
@@ -45,29 +40,47 @@ public abstract class InfixOperator {
         return left;
     }
 
-    public String oper() {
-        return oper;
-    }
-
-    public Type right() {
-        return right;
-    }
-
     public int precedence() {
         return precedence;
     }
 
-    public abstract Node construct(Token token, Node left, Node right) throws ParseException;
-
-    public static InfixOperator of(Type left, Type right, int precedence, ThrowingTriFunction<Token, Node, Node, Node> constructor) {
-        return of(left, WILDCARD, right, precedence, constructor);
+    public Node parse(Parser parser, Node left, Token token) throws ParseException {
+        return construct(left, token);
     }
 
-    public static InfixOperator of(Type left, String oper, Type right, int precedence, ThrowingTriFunction<Token, Node, Node, Node> constructor) {
-        return new InfixOperator(left, oper, right, precedence) {
+    public Node construct(Node left, Token token) throws ParseException {
+        throw new UnsupportedOperationException();
+    }
+
+    public static PostfixParselet of(Type left, String oper, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(left, null, oper, null, null, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type left, TokenType type, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(left, type, null, null, null, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type left, String oper1, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(left, null, oper1, null, oper2, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type left, TokenType type1, TokenType type2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(left, type1, null, type2, null, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type left, String oper1, TokenType type2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(left, null, oper1, type2, null, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type left, TokenType type1, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(left, type1, null, null, oper2, precedence, constructor);
+    }
+
+    private static PostfixParselet of(Type left, TokenType type1, String oper1, TokenType type2, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return new PostfixParselet(left, type1, oper1, type2, oper2, precedence) {
             @Override
-            public Node construct(Token token, Node left, Node right) throws ParseException {
-                return constructor.apply(token, left, right);
+            public Node construct(Node left, Token token) throws ParseException {
+                return constructor.apply(left, token);
             }
         };
     }

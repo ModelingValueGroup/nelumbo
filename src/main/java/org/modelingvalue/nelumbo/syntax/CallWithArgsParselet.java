@@ -23,14 +23,26 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
-public final class CallWithArgsParselet extends PrefixParselet {
+public final class CallWithArgsParselet extends AtomicParselet {
 
-    public final static CallWithArgsParselet INSTANCE = new CallWithArgsParselet();
+    public CallWithArgsParselet(String name) {
+        super(null, null, name, TokenType.LPAREN, null);
+    }
 
-    private CallWithArgsParselet() {
+    public CallWithArgsParselet(TokenType type) {
+        super(null, type, null, TokenType.LPAREN, null);
+    }
+
+    public CallWithArgsParselet(Type expected, String name) {
+        super(expected, null, name, TokenType.LPAREN, null);
+    }
+
+    public CallWithArgsParselet(Type expected, TokenType type) {
+        super(expected, type, null, TokenType.LPAREN, null);
     }
 
     @Override
@@ -46,15 +58,8 @@ public final class CallWithArgsParselet extends PrefixParselet {
     }
 
     private CallWithArgs call(Parser parser, Token token, List<Node> args) throws ParseException {
-        List<CallWithArgs> calls = parser.knowledgeBase().callsWithArgs(token.text());
-        if (calls != null) {
-            for (CallWithArgs call : calls) {
-                if (call.isAssignableFrom(args)) {
-                    return call;
-                }
-            }
-        }
-        calls = parser.knowledgeBase().callsWithArgs(CallWithArgs.WILDCARD);
+        KnowledgeBase kb = parser.knowledgeBase();
+        List<CallWithArgs> calls = expected() != null ? kb.callsWithArgs(expected(), token) : kb.callsWithArgs(token);
         if (calls != null) {
             for (CallWithArgs call : calls) {
                 if (call.isAssignableFrom(args)) {

@@ -23,11 +23,62 @@ package org.modelingvalue.nelumbo.syntax;
 import java.text.ParseException;
 
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
-public abstract class InfixParselet {
+public abstract class InfixParselet extends PostfixParselet {
 
-    public abstract int precedence(Parser parser, Node left, Token token);
+    private final Type right;
 
-    public abstract Node parse(Parser parser, Node left, Token token) throws ParseException;
+    public InfixParselet(Type left, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence) {
+        super(left, type1, oper1, type2, oper2, precedence);
+        this.right = right;
+    }
+
+    public Type right() {
+        return right;
+    }
+
+    @Override
+    public Node parse(Parser parser, Node left, Token token) throws ParseException {
+        Node right = parser.parseNode(precedence(), right());
+        return construct(left, token, right);
+    }
+
+    public Node construct(Node left, Token token, Node right) throws ParseException {
+        throw new UnsupportedOperationException();
+    }
+
+    public static InfixParselet of(Type left, String oper, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(left, null, oper, null, null, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type left, TokenType type, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(left, type, null, null, null, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type left, String oper1, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(left, null, oper1, null, oper2, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type left, TokenType type1, TokenType type2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(left, type1, null, type2, null, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type left, String oper1, TokenType type2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(left, null, oper1, type2, null, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type left, TokenType type1, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(left, type1, null, null, oper2, right, precedence, constructor);
+    }
+
+    private static InfixParselet of(Type left, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return new InfixParselet(left, type1, oper1, type2, oper2, right, precedence) {
+            @Override
+            public Node construct(Node left, Token token, Node right) throws ParseException {
+                return constructor.apply(left, token, right);
+            }
+        };
+    }
 
 }
