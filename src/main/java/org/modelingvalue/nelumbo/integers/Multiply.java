@@ -26,7 +26,7 @@ import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.Relation;
 
-public class Multiply extends Relation {
+public final class Multiply extends Relation {
     private static final long serialVersionUID = 2630128775301942610L;
 
     public Multiply(Functor fuctor, Object[] args) {
@@ -40,11 +40,6 @@ public class Multiply extends Relation {
     @Override
     protected Multiply struct(Object[] array, Predicate declaration) {
         return new Multiply(array, (Multiply) declaration);
-    }
-
-    @Override
-    public Multiply set(int i, Object... a) {
-        return (Multiply) super.set(i, a);
     }
 
     @Override

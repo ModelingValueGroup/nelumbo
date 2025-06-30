@@ -26,7 +26,7 @@ import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.Relation;
 
-public class Add extends Relation {
+public final class Add extends Relation {
     private static final long serialVersionUID = 2384355866476367685L;
 
     public Add(Functor fuctor, Object[] args) {
@@ -40,11 +40,6 @@ public class Add extends Relation {
     @Override
     protected Add struct(Object[] array, Predicate declaration) {
         return new Add(array, (Add) declaration);
-    }
-
-    @Override
-    public Add set(int i, Object... a) {
-        return (Add) super.set(i, a);
     }
 
     @Override

@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.LinkedList;
 
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
@@ -57,99 +58,8 @@ public class NelumboTest extends NelumboTestBase {
         }
     }
 
-    // @Test
-    public void parser1() {
-        run(() -> {
-            String example = """
-                        // org.my.test ::
-                        //     nelumbo.logic,
-                        //     nelumbo.integers
-
-                        <Lit>    :: <Node>
-                        <Rule>   :: <Node>
-                        <Int>    :: <Node>
-                        <IntLit> :: <Int>, <Lit>
-                        <Str>    :: <Node>
-                        <StrLit> :: <Str>, <Lit>
-
-                        <IntLit> ::= <NUMBER>
-                        <StrLit> ::= <STRING>
-
-                        @org.modelingvalue.nelumbo.integers.GreaterThen
-                        <Relation> ::= gt(<IntLit>,<IntLit>)
-
-                        <Relation> ::= <Int> <(30)  <Int>,
-                                       <Int> >(30)  <Int>,
-                                       <Int> <=(30) <Int>,
-                                       <Int> >=(30) <Int>
-
-                         <Int>     ::= <Int> -(40) <Int>,
-                                       <Int> +(40) <Int>,
-                                       -(50) <Int>
-
-                        <Int> : a, b
-                        <IntLit> : x, y
-
-                        a>b   <==  a=x & b=y & gt(x,y)
-                        a<b   <==  b>a
-                        a<=b  <==  a<b | a=b
-                        a>=b  <==  !(a<b)
-                        -a=b  <==  0-a=b
-
-                    """;
-            try {
-                LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-                Parser parser = new Parser(tokens);
-                parser.parse();
-            } catch (ParseException e) {
-                fail(e);
-            }
-        });
-    }
-
-    // @Test
-    public void parser2() {
-        run(() -> {
-            String example = """
-                        // org.mvg.fib ::
-                        //     nelumbo.logic,
-                        //     nelumbo.integers
-
-                        <IntLit> :: <Int>, <Literal>
-                        <IntFun> :: <Int>, <Fun>
-
-                        <Rel>    ::= fib(<IntConst>,<IntConst>)
-                        <IntFun> ::= fib(<Int>)
-
-                        // Literal Integer Variables
-                        <IntLit> : x, y
-
-                        // Int Variables
-                        <Int>    : a, b
-
-                        // Function-like Syntaxtual Suggar
-                        fib(a)=b  <==  a=x & b=y & fib(x,y)
-
-                        // Facts
-                        fib(0,0)
-                        fib(1,1)
-
-                        // Rule
-                        fib(a,b)  <==  a>1 & b=fib(a-1)+fib(a-2)
-
-                    """;
-            try {
-                LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-                Parser parser = new Parser(tokens);
-                parser.parse();
-            } catch (ParseException e) {
-                fail(e);
-            }
-        });
-    }
-
     @Test
-    public void parser3() {
+    public void test1() {
         run(() -> {
             String example = """
                         // org.mvg.family ::
@@ -216,4 +126,45 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
+    @Test
+    public void test2() {
+        run(() -> {
+            String example = """
+                        // org.mvg.fib ::
+                        //     nelumbo.logic,
+                        //     nelumbo.integers
+
+                        <IntLit> :: <Int>, <Literal>
+                        <IntFun> :: <Int>, <Fun>
+
+                        <Rel>    ::= fib(<IntConst>,<IntConst>)
+                        <IntFun> ::= fib(<Int>)
+
+                        // Literal Integer Variables
+                        <IntLit> : x, y
+
+                        // Int Variables
+                        <Int>    : a, b
+
+                        // Function-like Syntaxtual Suggar
+                        fib(a)=b  <==  a=x & b=y & fib(x,y)
+
+                        // Facts
+                        fib(0,0)
+                        fib(1,1)
+
+                        // Rule
+                        fib(a,b)  <==  a>1 & b=fib(a-1)+fib(a-2)
+
+                    """;
+            try {
+                Parser.parse(Integer.class, "integers.nl");
+                //                LinkedList<Token> tokens = new Tokenizer(example).tokenize();
+                //                Parser parser = new Parser(tokens);
+                //                parser.parse();
+            } catch (ParseException e) {
+                fail(e);
+            }
+        });
+    }
 }

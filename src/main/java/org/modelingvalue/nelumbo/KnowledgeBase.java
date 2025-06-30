@@ -169,6 +169,10 @@ public final class KnowledgeBase {
     @SuppressWarnings("unchecked")
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
+            for (TokenType type : TokenType.values()) {
+                new Type(type);
+            }
+
             Type RELATION = Relation.TYPE;
 
             Type TYPE_NAME = new Type("TypeName");
@@ -210,6 +214,10 @@ public final class KnowledgeBase {
             }, Type.TYPE().list()));
             register(AtomicParselet.of(SIGNATURE, TokenType.NAME, t -> {
                 return new Node(SIGNATURE, t.text());
+            }));
+            register(AtomicParselet.of(SIGNATURE, TokenType.TYPE, t -> {
+                Type type = type(t);
+                return type.tokenType() != null ? new Node(SIGNATURE, type) : type;
             }));
             register(PrefixParselet.of(TokenType.OPERATORDCL, Type.TYPE(), 50, (t, r) -> {
                 return new Node(SIGNATURE, t.text(), r);
@@ -315,7 +323,12 @@ public final class KnowledgeBase {
         if (constructor != null) {
             sig = (Node) sig.get(1);
         }
-        if (sig.length() == 2 && sig.get(1) instanceof String) {
+        if (sig.length() == 2 && sig.get(1) instanceof Type && ((Type) sig.get(1)).tokenType() != null) {
+            TokenType tokenType = ((Type) sig.get(1)).tokenType();
+            Functor functor = new Functor(type, constructor.getDeclaringClass().getSimpleName(), new Type(String.class));
+            current.register(AtomicParselet.of(tokenType, (tt) -> createNode(token, constructor, functor, tt.text())));
+            return functor;
+        } else if (sig.length() == 2 && sig.get(1) instanceof String) {
             // Constant
             String name = (String) sig.get(1);
             if (constructor != null) {

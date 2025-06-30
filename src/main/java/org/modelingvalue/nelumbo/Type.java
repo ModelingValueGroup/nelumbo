@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Type extends Node {
     private static final long serialVersionUID = -4583279157841144493L;
@@ -54,6 +55,11 @@ public class Type extends Node {
 
     public Type(Class<?> clss) {
         super(TYPE(), clss, supers(clss));
+        KnowledgeBase.CURRENT.get().addType(this);
+    }
+
+    public Type(TokenType type) {
+        super(TYPE(), type, Set.of());
         KnowledgeBase.CURRENT.get().addType(this);
     }
 
@@ -101,9 +107,14 @@ public class Type extends Node {
         return new Type(this);
     }
 
+    public TokenType tokenType() {
+        Object type = get(1);
+        return type instanceof TokenType ? ((TokenType) type) : null;
+    }
+
     public String name() {
         Object type = get(1);
-        return type instanceof Class ? ((Class<?>) type).getSimpleName() : (String) type;
+        return type instanceof TokenType ? ((TokenType) type).name() : type instanceof Class ? ((Class<?>) type).getSimpleName() : (String) type;
     }
 
     @Override

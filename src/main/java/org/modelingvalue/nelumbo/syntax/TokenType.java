@@ -31,8 +31,8 @@ public enum TokenType {
     LBRACE("\\{", true), //
     RBRACE("\\}", false), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false), //
-    NUMBER("[1-9][0-9]*", false), //
-    DECIMAL("[1-9][0-9]*\\.[0-9]+", false), //
+    NUMBER("[0-9]*", false), //
+    DECIMAL("[0-9]*\\.[0-9]+", false), //
     QNAME("[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)+", false), //
     NAME("[a-zA-Z_][a-zA-Z0-9_]*", false), //
     NAMEDCL("[a-zA-Z_][a-zA-Z0-9_]*+\\([1-9][0-9]*\\)", false), //

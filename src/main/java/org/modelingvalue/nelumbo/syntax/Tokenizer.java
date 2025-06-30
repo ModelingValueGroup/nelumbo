@@ -42,8 +42,8 @@ public class Tokenizer {
             }
         }
         int index = 0;
-        int line = 0;
-        int position = 0;
+        int line = 1;
+        int position = 1;
         while (index < input.length()) {
             String text = null;
             TokenType type = null;
