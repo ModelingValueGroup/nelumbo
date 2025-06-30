@@ -38,7 +38,7 @@ public class NelumboTest extends NelumboTestBase {
         System.setProperty("PARALLEL_COLLECTIONS", "false");
         System.setProperty("REVERSE_NELUMBO", "false");
         System.setProperty("RANDOM_NELUMBO", "true");
-        System.setProperty("TRACE_NELUMBO", "false");
+        System.setProperty("TRACE_NELUMBO", "true");
     }
 
     @Test
@@ -119,7 +119,7 @@ public class NelumboTest extends NelumboTestBase {
                     """;
             try {
                 new Parser(new Tokenizer(example).tokenize()).parse();
-                printKnowledgeBase();
+                // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
             }
@@ -131,40 +131,44 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             String example = """
 
-                    ? 0>1
-                    ? 0<1
-                    ? 0>=1
-                    ? 0<=1
-                    ? 0!=1
-                    ? 0=1
+                        <IntegerLit>  a, b, c
+
+                        ? 0>1
+                        ? 0<1
+                        ? 0>=1
+                        ? 0<=1
+                        ? 0!=1
+                        ? 0=1
+
+                        ? 10+11=22
+                        ? 10+11=21
+                        ? a+11=21
+                        ? 10+a=21
+                        ? 10+11=a
 
                     """;
             try {
                 Parser.parseLogic(Integer.class);
                 new Parser(new Tokenizer(example).tokenize()).parse();
-                printKnowledgeBase();
+                // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
             }
         });
     }
 
-    // @Test
     public void fibTest() {
         run(() -> {
             String example = """
 
-                        <IntLit> :: <Int>, <Literal>
-                        <IntFun> :: <Int>, <Fun>
-
-                        <Rel>    ::= fib(<IntConst>,<IntConst>)
-                        <IntFun> ::= fib(<Int>)
+                        <Relation>    ::= fib(<IntegerLit>,<IntegerLit>)
+                        <IntegerFun>  ::= fib(<Integer>)
 
                         // Literal Integer Variables
-                        <IntLit> : x, y
+                        <IntegerLit> x, y
 
                         // Int Variables
-                        <Int>    : a, b
+                        <Integer>    a, b
 
                         // Function-like Syntaxtual Suggar
                         fib(a)=b  <==  a=x & b=y & fib(x,y)
@@ -180,7 +184,7 @@ public class NelumboTest extends NelumboTestBase {
             try {
                 Parser.parseLogic(Integer.class);
                 new Parser(new Tokenizer(example).tokenize()).parse();
-                printKnowledgeBase();
+                // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
             }

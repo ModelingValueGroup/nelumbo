@@ -312,7 +312,7 @@ public final class KnowledgeBase {
         if (node != null) {
             return node;
         }
-        throw new ParseException("Could not find variable nor constant", t);
+        throw new ParseException("Could not find variable nor constant " + name, t);
     }
 
     @SuppressWarnings("unchecked")
