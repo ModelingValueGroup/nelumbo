@@ -20,6 +20,9 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 
 import org.modelingvalue.collections.Set;
@@ -30,6 +33,17 @@ import org.modelingvalue.nelumbo.Relation;
 import org.modelingvalue.nelumbo.Type;
 
 public final class Parser {
+
+    public static void parse(Class<?> clss, String name) throws ParseException {
+        try {
+            InputStream stream = clss.getResourceAsStream(name);
+            InputStream buffer = new BufferedInputStream(stream);
+            String base = new String(buffer.readAllBytes());
+            new Parser(new Tokenizer(base).tokenize()).parse();
+        } catch (IOException e) {
+            throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), 0, 0, 0, name);
+        }
+    }
 
     // Instance
 
