@@ -46,11 +46,11 @@ public final class KnowledgeBase {
 
     private final static String                                 INIT_BASE           = """
 
-            <Literal>  :: <Node>
-            <Function> :: <Node>
+            <Literal>   :: <Node>
+            <Function>  :: <Node>
 
-            <Relation> ::= <Node>  =(30) <Node>,
-                           <Node> !=(30) <Node>
+            <Relation>  ::= <Node>  =(30) <Node>,
+                            <Node> !=(30) <Node>
 
             <Predicate> ::= eq(<Literal>,<Literal>)         @org.modelingvalue.nelumbo.Equal,
                             true                            @org.modelingvalue.nelumbo.Boolean,
@@ -198,6 +198,7 @@ public final class KnowledgeBase {
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             Type RELATION = Relation.TYPE;
+            Type RULE = new Type(Rule.class);
 
             Type TYPE_NAME = new Type("TypeName");
             Type VAR_NAME = new Type("VarName");
@@ -311,9 +312,14 @@ public final class KnowledgeBase {
     private static Type type(Token t) throws ParseException {
         String name = t.text();
         name = name.substring(1, name.length() - 1);
+        boolean many = false;
+        if (name.endsWith("*") || name.endsWith("+")) {
+            many = true;
+            name = name.substring(0, name.length() - 1);
+        }
         Type type = type(name);
         if (type != null) {
-            return type;
+            return many ? type.list() : type;
         }
         throw new ParseException("Could not find type " + t.text(), t);
     }
