@@ -20,7 +20,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 
@@ -42,17 +41,19 @@ public class Tokenizer {
                 matchers[i] = null;
             }
         }
-        int pos = 0;
-        while (pos < input.length()) {
+        int index = 0;
+        int line = 0;
+        int position = 0;
+        while (index < input.length()) {
             String text = null;
             TokenType type = null;
             for (int i = 0; i < tokenTypes.length; i++) {
-                while (matchers[i] != null && matchers[i].start() < pos) {
+                while (matchers[i] != null && matchers[i].start() < index) {
                     if (!matchers[i].find()) {
                         matchers[i] = null;
                     }
                 }
-                if (matchers[i] != null && matchers[i].start() == pos) {
+                if (matchers[i] != null && matchers[i].start() == index) {
                     String group = matchers[i].group();
                     if (text == null || text.length() < group.length()) {
                         text = group;
@@ -61,12 +62,23 @@ public class Tokenizer {
                 }
             }
             if (text == null) {
-                throw new ParseException("Unexpected character '" + input.charAt(pos) + "' at position " + pos + ".", pos);
+                text = input.substring(index, Math.min(input.length(), index + 8));
+                throw new ParseException("Unexpected input '" + text + "'", line, position, index, text);
             } else {
                 if (type != TokenType.HSPACE && (type != TokenType.NEWLINE || tokens.isEmpty() || !tokens.getLast().type().more())) {
-                    tokens.add(new Token(type, text, pos));
+                    tokens.add(new Token(type, text, line, position, index));
                 }
-                pos += text.length();
+                index += text.length();
+                if (type == TokenType.NEWLINE) {
+                    int i = text.indexOf('\n');
+                    while (i >= 0) {
+                        line++;
+                        i = text.indexOf('\n', i + 1);
+                    }
+                    position = 0;
+                } else {
+                    position += text.length();
+                }
             }
         }
         return tokens;

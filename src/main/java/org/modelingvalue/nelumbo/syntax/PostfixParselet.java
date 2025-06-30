@@ -20,8 +20,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.text.ParseException;
-
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 

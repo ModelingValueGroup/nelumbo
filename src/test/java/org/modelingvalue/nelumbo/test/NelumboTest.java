@@ -23,10 +23,10 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.text.ParseException;
 import java.util.LinkedList;
 
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
@@ -209,7 +209,7 @@ public class NelumboTest extends NelumboTestBase {
                     """;
             try {
                 new Parser(new Tokenizer(example).tokenize()).parse();
-                // printKnowledgeBase();
+                printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
             }

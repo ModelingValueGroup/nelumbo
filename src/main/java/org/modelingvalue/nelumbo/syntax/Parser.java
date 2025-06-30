@@ -20,7 +20,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.text.ParseException;
 import java.util.LinkedList;
 
 import org.modelingvalue.collections.Set;
@@ -44,7 +43,7 @@ public final class Parser {
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
         Node left;
-        int position = tokens.peek().position();
+        Token position = tokens.peek();
         if (expected.isList()) {
             Type elemType = expected.element();
             left = new ListNode(elemType);
@@ -86,7 +85,7 @@ public final class Parser {
             prefix = knowledgeBase.prefix(token1);
         }
         if (prefix == null) {
-            throw new ParseException("Could not parse \"" + token1.text() + "\" at position " + token1.position() + ".", token1.position());
+            throw new ParseException("Could not parse '" + token1.text() + "'", token1);
         }
         return prefix;
     }
@@ -132,7 +131,7 @@ public final class Parser {
         }
         if (!tokens.isEmpty()) {
             Token token = tokens.peek();
-            throw new ParseException("Could not parse \"" + token.text() + "\" at position " + token.position() + ".", token.position());
+            throw new ParseException("Could not parse '" + token.text() + "'", token);
         }
     }
 
@@ -164,7 +163,7 @@ public final class Parser {
     public Token consume(TokenType expected) throws ParseException {
         Token token = tokens.poll();
         if (token.type() != expected) {
-            throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token.position());
+            throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token);
         }
         return token;
     }

@@ -28,7 +28,7 @@ public abstract class BinaryPredicate extends Predicate {
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
     protected static final int[] ONE_ZERO         = new int[]{1, 0};
 
-    protected BinaryPredicate(Functor functor, Predicate predicate1, Predicate predicate2) {
+    protected BinaryPredicate(Functor functor, Object predicate1, Object predicate2) {
         super(functor, predicate1, predicate2);
     }
 

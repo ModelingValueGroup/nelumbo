@@ -24,12 +24,16 @@ public class Token {
 
     private final TokenType type;
     private final String    text;
+    private final int       line;
     private final int       position;
+    private final int       index;
 
-    public Token(TokenType type, String text, int position) {
+    public Token(TokenType type, String text, int line, int position, int index) {
         this.type = type;
         this.text = text;
+        this.line = line;
         this.position = position;
+        this.index = index;
     }
 
     @Override
@@ -45,7 +49,15 @@ public class Token {
         return type;
     }
 
+    public int line() {
+        return line;
+    }
+
     public int position() {
         return position;
+    }
+
+    public int index() {
+        return index;
     }
 }

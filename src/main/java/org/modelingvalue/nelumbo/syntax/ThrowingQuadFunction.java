@@ -20,8 +20,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.text.ParseException;
-
 @FunctionalInterface
 public interface ThrowingQuadFunction<T, U, V, W, R> {
     R apply(T t, U u, V v, W w) throws ParseException;

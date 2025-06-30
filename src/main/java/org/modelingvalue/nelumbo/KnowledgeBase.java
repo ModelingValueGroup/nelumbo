@@ -21,7 +21,8 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.PrintStream;
-import java.text.ParseException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -154,7 +155,14 @@ public final class KnowledgeBase {
         return KnowledgeBase.CURRENT.get().getConstant(name);
     }
 
-    private static Node createNode(Functor functor, Object... args) {
+    private static Node createNode(Token token, Constructor<? extends Node> constructor, Functor functor, Object... args) throws ParseException {
+        if (constructor != null) {
+            try {
+                return constructor.newInstance(functor, args);
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), token);
+            }
+        }
         return Relation.TYPE.isAssignableFrom(functor.resultType()) ? new Relation(functor, args) : new Node(functor, args);
     }
 
@@ -167,6 +175,7 @@ public final class KnowledgeBase {
             Type VAR_NAME = new Type("VarName");
             Type SIGNATURE = new Type("Signature");
             Type RESULT = new Type("Result");
+            Type NATIVE = new Type("Native");
 
             register(ParenParselet.INSTANCE);
 
@@ -188,7 +197,7 @@ public final class KnowledgeBase {
                 return new Type(name, ((ListNode) r).elements());
             }));
 
-            // Signatures
+            // Functors
             register(InfixParselet.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
                 ListNode list = new ListNode(Functor.TYPE);
                 for (Node s : ((ListNode) r).elements()) {
@@ -219,6 +228,16 @@ public final class KnowledgeBase {
             }));
             register(InfixParselet.of(Type.TYPE(), TokenType.NAMEDCL, TokenType.TYPE, Type.TYPE(), 50, (l, t, r) -> {
                 return new Node(SIGNATURE, l, t.text(), r);
+            }));
+            register(InfixParselet.of(SIGNATURE, "@", TokenType.QNAME, NATIVE, 20, (l, t, r) -> {
+                return new Node(SIGNATURE, l, r.get(1));
+            }));
+            register(AtomicParselet.of(NATIVE, TokenType.QNAME, t -> {
+                try {
+                    return new Node(NATIVE, Class.forName(t.text()).getConstructor(Functor.class, Object[].class));
+                } catch (ClassNotFoundException | NoSuchMethodException | SecurityException e) {
+                    throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), t);
+                }
             }));
 
             // Variables
@@ -251,46 +270,38 @@ public final class KnowledgeBase {
                 return new Node(RESULT, r, result);
             }));
 
-            //Predicates
-            register(PrefixParselet.of("!", Predicate.TYPE, 50, (t, r) -> {
-                return new Not((Predicate) r);
-            }));
-            register(InfixParselet.of(Predicate.TYPE, "&", Predicate.TYPE, 20, (l, t, r) -> {
-                return new And((Predicate) l, (Predicate) r);
-            }));
-            register(InfixParselet.of(Predicate.TYPE, "|", Predicate.TYPE, 20, (l, t, r) -> {
-                return new Or((Predicate) l, (Predicate) r);
-            }));
-
-            // Equals
-            register(CallWithArgs.of("eq", (t, l) -> {
-                return new Equal(l.get(0), l.get(1));
-            }, Node.TYPE, Node.TYPE));
-
             try {
                 new Parser(new Tokenizer(INIT_BASE).tokenize()).parse();
             } catch (ParseException e) {
                 throw new IllegalArgumentException(e);
             }
+
         });
         return this;
     }
 
     private final static String INIT_BASE = """
-                     <Literal>  :: <Node>
-                     <Function> :: <Node>
 
-                     <Relation> ::= <Node>  =(30) <Node>,
-                                    <Node> !=(30) <Node>
+            <Literal>  :: <Node>
+            <Function> :: <Node>
 
-                     <Literal>  L1, L2
-                     <Function> F1, F2
-                     <Node>     N1, N2
+            <Relation> ::= <Node>  =(30) <Node>,
+                           <Node> !=(30) <Node>
 
-                     L1=L2  <==  eq(L1, L2)
-                     F1=F2  <==  F1=L1 & F2=L1
-                     L1=F1  <==  F1=L1
-                     N1!=N2 <==  !(N1=N2)
+            <Predicate> ::= eq(<Literal>,<Literal>)        @org.modelingvalue.nelumbo.Equal
+            <Predicate> ::= !(50) <Predicate>              @org.modelingvalue.nelumbo.Not
+            <Predicate> ::= <Predicate> &(20) <Predicate>  @org.modelingvalue.nelumbo.And
+            <Predicate> ::= <Predicate> |(20) <Predicate>  @org.modelingvalue.nelumbo.Or
+
+            <Literal>  L1, L2
+            <Function> F1, F2
+            <Node>     N1, N2
+
+            L1=L2  <==  eq(L1, L2)
+            F1=F2  <==  F1=L1 & F2=L1
+            L1=F1  <==  F1=L1
+            N1!=N2 <==  !(N1=N2)
+
             """;
 
     private static Type type(Token t) throws ParseException {
@@ -300,7 +311,7 @@ public final class KnowledgeBase {
         if (type != null) {
             return type;
         }
-        throw new ParseException("Could not find type " + t.text() + " at position " + t.position() + ".", t.position());
+        throw new ParseException("Could not find type " + t.text(), t);
     }
 
     private static Node node(Token t) throws ParseException {
@@ -313,12 +324,17 @@ public final class KnowledgeBase {
         if (node != null) {
             return node;
         }
-        throw new ParseException("Could not find variable nor constant " + t.text() + " at position " + t.position() + ".", t.position());
+        throw new ParseException("Could not find variable nor constant", t);
     }
 
     @SuppressWarnings("unchecked")
     private Node createFunctor(Type type, Token token, Node sig) throws ParseException {
         KnowledgeBase current = KnowledgeBase.CURRENT.get();
+        Constructor<? extends Node> constructor = sig.length() == 3 && sig.get(1) instanceof Node && sig.get(2) instanceof Constructor ? //
+                (Constructor<? extends Node>) sig.get(2) : null;
+        if (constructor != null) {
+            sig = (Node) sig.get(1);
+        }
         if (sig.length() == 2 && sig.get(1) instanceof String) {
             // Constant
             String name = (String) sig.get(1);
@@ -327,7 +343,7 @@ public final class KnowledgeBase {
             // CallWithArgs
             String name = (String) sig.get(1);
             Functor functor = new Functor(type, name, (List<Type>) sig.get(2));
-            current.register(CallWithArgs.of(name, (tt, ll) -> createNode(functor, ll.toArray()), //
+            current.register(CallWithArgs.of(name, (tt, ll) -> createNode(token, constructor, functor, ll.toArray()), //
                     functor.args().toArray(i -> new Type[i])));
             return functor;
         } else if (sig.length() == 3 && sig.get(1) instanceof Type && sig.get(2) instanceof String) {
@@ -337,7 +353,7 @@ public final class KnowledgeBase {
             int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
             String oper = operDcl.substring(0, i);
             Functor functor = new Functor(type, oper, n -> n.toString(1) + oper, precedence, (Type) sig.get(1));
-            current.register(PostfixParselet.of((Type) sig.get(1), oper, precedence, (ll, tt) -> createNode(functor, ll)));
+            current.register(PostfixParselet.of((Type) sig.get(1), oper, precedence, (ll, tt) -> createNode(token, constructor, functor, ll)));
             current.addFunctor(functor);
             return functor;
         } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof Type) {
@@ -347,7 +363,7 @@ public final class KnowledgeBase {
             int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
             String oper = operDcl.substring(0, i);
             Functor functor = new Functor(type, oper, n -> oper + n.toString(1), precedence, (Type) sig.get(2));
-            current.register(PrefixParselet.of(oper, (Type) sig.get(2), precedence, (tt, rr) -> createNode(functor, rr)));
+            current.register(PrefixParselet.of(oper, (Type) sig.get(2), precedence, (tt, rr) -> createNode(token, constructor, functor, rr)));
             current.addFunctor(functor);
             return functor;
         } else if (sig.length() == 4 && sig.get(1) instanceof Type && sig.get(2) instanceof String && sig.get(3) instanceof Type) {
@@ -357,11 +373,11 @@ public final class KnowledgeBase {
             int precedence = Integer.parseInt(operDcl.substring(i + 1, operDcl.length() - 1));
             String oper = operDcl.substring(0, i);
             Functor functor = new Functor(type, oper, n -> n.toString(1) + oper + n.toString(2), precedence, (Type) sig.get(1), (Type) sig.get(3));
-            current.register(InfixParselet.of((Type) sig.get(1), oper, (Type) sig.get(3), precedence, (ll, tt, rr) -> createNode(functor, ll, rr)));
+            current.register(InfixParselet.of((Type) sig.get(1), oper, (Type) sig.get(3), precedence, (ll, tt, rr) -> createNode(token, constructor, functor, ll, rr)));
             current.addFunctor(functor);
             return functor;
         } else {
-            throw new ParseException("Invalid signature " + sig + " at position " + token.position() + ".", token.position());
+            throw new ParseException("Invalid signature " + sig, token);
         }
     }
 

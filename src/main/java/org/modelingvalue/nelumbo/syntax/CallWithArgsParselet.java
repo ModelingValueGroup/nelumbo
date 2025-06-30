@@ -20,8 +20,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.text.ParseException;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
@@ -61,7 +59,7 @@ public final class CallWithArgsParselet extends AtomicParselet {
         }
         List<Type> types = args.replaceAll(Node::type);
         String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
-        throw new ParseException("Could not call " + token.text() + signature + ", at position " + token.position() + ".", token.position());
+        throw new ParseException("Could not call " + token.text() + signature, token);
     }
 
 }

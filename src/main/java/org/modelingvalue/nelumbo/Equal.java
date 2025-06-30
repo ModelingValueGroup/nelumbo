@@ -22,14 +22,11 @@ package org.modelingvalue.nelumbo;
 
 import java.util.Objects;
 
-import org.modelingvalue.collections.List;
-
 public class Equal extends Relation {
-    private static final long   serialVersionUID = -5516286818572134367L;
-    public static final Functor FUNCTOR          = new Functor(Relation.TYPE, "eq", List.of(Node.TYPE, Node.TYPE));
+    private static final long serialVersionUID = -5516286818572134367L;
 
-    public Equal(Node left, Node right) {
-        super(FUNCTOR, left, right);
+    public Equal(Functor fuctor, Object[] args) {
+        super(fuctor, args[0], args[1]);
     }
 
     private Equal(Object[] array, Equal declaration) {
