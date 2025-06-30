@@ -10,7 +10,7 @@ public class GreaterThan extends Relation {
     private static final long serialVersionUID = 5338681256251602011L;
 
     public GreaterThan(Functor fuctor, Object[] args) {
-        super(fuctor, args[0], args[1], args[2]);
+        super(fuctor, args[0], args[1]);
     }
 
     private GreaterThan(Object[] array, GreaterThan declaration) {
