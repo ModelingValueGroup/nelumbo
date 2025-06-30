@@ -26,9 +26,13 @@ import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.Terminal;
 
 public final class Integer extends Terminal {
-    private static final long serialVersionUID = 2454372545442550574L;
 
-    public static Integer     ZERO;
+    private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
+
+    private static final long       serialVersionUID = 2454372545442550574L;
+
+    public static Integer           ZERO;
 
     public Integer(Functor functor, Object... args) {
         super(functor, parse((String) args[0]));
@@ -69,7 +73,8 @@ public final class Integer extends Terminal {
 
     @Override
     public String toString() {
-        return value().toString();
+        BigInteger value = value();
+        return value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? value.toString(Character.MAX_RADIX) : value.toString();
     }
 
 }
