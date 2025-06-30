@@ -28,6 +28,10 @@ public class Terminal extends Node {
         super(type, args);
     }
 
+    public Terminal(Functor functor, Object... args) {
+        super(functor, args);
+    }
+
     protected Terminal(Object[] array) {
         super(array);
     }
