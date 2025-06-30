@@ -354,7 +354,6 @@ public final class KnowledgeBase {
             String oper = operDcl.substring(0, i);
             Functor functor = new Functor(type, oper, n -> n.toString(1) + oper, precedence, (Type) sig.get(1));
             current.register(PostfixParselet.of((Type) sig.get(1), oper, precedence, (ll, tt) -> createNode(token, constructor, functor, ll)));
-            current.addFunctor(functor);
             return functor;
         } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof Type) {
             // PrefixOperator
@@ -364,7 +363,6 @@ public final class KnowledgeBase {
             String oper = operDcl.substring(0, i);
             Functor functor = new Functor(type, oper, n -> oper + n.toString(1), precedence, (Type) sig.get(2));
             current.register(PrefixParselet.of(oper, (Type) sig.get(2), precedence, (tt, rr) -> createNode(token, constructor, functor, rr)));
-            current.addFunctor(functor);
             return functor;
         } else if (sig.length() == 4 && sig.get(1) instanceof Type && sig.get(2) instanceof String && sig.get(3) instanceof Type) {
             // InfixOperator
@@ -374,7 +372,6 @@ public final class KnowledgeBase {
             String oper = operDcl.substring(0, i);
             Functor functor = new Functor(type, oper, n -> n.toString(1) + oper + n.toString(2), precedence, (Type) sig.get(1), (Type) sig.get(3));
             current.register(InfixParselet.of((Type) sig.get(1), oper, (Type) sig.get(3), precedence, (ll, tt, rr) -> createNode(token, constructor, functor, ll, rr)));
-            current.addFunctor(functor);
             return functor;
         } else {
             throw new ParseException("Invalid signature " + sig, token);
