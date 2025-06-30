@@ -130,9 +130,6 @@ public class NelumboTest extends NelumboTestBase {
     public void test2() {
         run(() -> {
             String example = """
-                        // org.mvg.fib ::
-                        //     nelumbo.logic,
-                        //     nelumbo.integers
 
                         <IntLit> :: <Int>, <Literal>
                         <IntFun> :: <Int>, <Fun>

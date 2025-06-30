@@ -388,7 +388,7 @@ public final class KnowledgeBase {
 
     private final AtomicInteger                                        depth;
     private final AtomicReference<QualifiedSet<Relation, Inference>[]> memoization;
-    private final InferContext                                         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
+    private final InferContext                                         context;
     private boolean                                                    stopped;
 
     @SuppressWarnings("unchecked")
@@ -404,6 +404,7 @@ public final class KnowledgeBase {
         postfixParselets = new AtomicReference<>(init != null ? init.postfixParselets.get() : Map.of());
         callsWithArgs = new AtomicReference<>(init != null ? init.callsWithArgs.get() : Map.of());
 
+        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
         memoization = new AtomicReference<>(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
         depth = new AtomicInteger(0);
     }
