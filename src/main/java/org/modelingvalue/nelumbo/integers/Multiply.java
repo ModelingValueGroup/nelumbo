@@ -20,6 +20,8 @@
 
 package org.modelingvalue.nelumbo.integers;
 
+import java.math.BigInteger;
+
 import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
@@ -44,7 +46,27 @@ public final class Multiply extends Relation {
 
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        return falsehoodCC();
+        if (nrOfUnbound > 1) {
+            return unknown();
+        }
+        BigInteger factor1 = getVal(1, 1);
+        BigInteger factor2 = getVal(2, 1);
+        BigInteger product = getVal(3, 1);
+        if (factor1 != null && factor2 != null) {
+            BigInteger p = factor1.multiply(factor2);
+            if (product != null) {
+                boolean eq = p.equals(product);
+                return eq ? factCC() : falsehoodCC();
+            } else {
+                return set(3, Integer.of(p)).factCI();
+            }
+        } else if (factor1 != null && product != null) {
+            return set(2, Integer.of(product.divide(factor1))).factCI();
+        } else if (factor2 != null && product != null) {
+            return set(1, Integer.of(product.divide(factor2))).factCI();
+        } else {
+            return unknown();
+        }
     }
 
 }

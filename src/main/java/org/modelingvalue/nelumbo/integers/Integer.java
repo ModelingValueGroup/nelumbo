@@ -28,8 +28,21 @@ import org.modelingvalue.nelumbo.Terminal;
 public final class Integer extends Terminal {
     private static final long serialVersionUID = 2454372545442550574L;
 
+    public static Integer     ZERO;
+
     public Integer(Functor functor, Object... args) {
         super(functor, parse((String) args[0]));
+        if (ZERO == null) {
+            ZERO = new Integer(functor, BigInteger.ZERO);
+        }
+    }
+
+    private Integer(Functor functor, BigInteger val) {
+        super(functor, val);
+    }
+
+    public static Integer of(BigInteger val) {
+        return new Integer(ZERO.functor(), val);
     }
 
     private static BigInteger parse(String string) {
@@ -43,6 +56,11 @@ public final class Integer extends Terminal {
     @Override
     protected Integer struct(Object[] array) {
         return new Integer(array);
+    }
+
+    @Override
+    public Integer set(int i, Object... a) {
+        return (Integer) super.set(i, a);
     }
 
     public BigInteger value() {
