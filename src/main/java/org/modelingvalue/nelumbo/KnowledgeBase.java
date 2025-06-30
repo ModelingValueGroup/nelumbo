@@ -44,6 +44,34 @@ import org.modelingvalue.nelumbo.syntax.*;
 @SuppressWarnings("rawtypes")
 public final class KnowledgeBase {
 
+    private final static String                                 INIT_BASE           = """
+
+            <Literal>  :: <Node>
+            <Function> :: <Node>
+
+            <Relation> ::= <Node>  =(30) <Node>,
+                           <Node> !=(30) <Node>
+
+            <Predicate> ::= eq(<Literal>,<Literal>)         @org.modelingvalue.nelumbo.Equal,
+                            true                            @org.modelingvalue.nelumbo.Boolean,
+                            false                           @org.modelingvalue.nelumbo.Boolean,
+                            !(50) <Predicate>               @org.modelingvalue.nelumbo.Not,
+                            <Predicate> &(20) <Predicate>   @org.modelingvalue.nelumbo.And,
+                            <Predicate> |(20) <Predicate>   @org.modelingvalue.nelumbo.Or,
+                            <Predicate> -->(15) <Predicate> @org.modelingvalue.nelumbo.Collect
+
+
+            <Literal>  L1, L2
+            <Function> F1, F2
+            <Node>     N1, N2
+
+            L1=L2  <==  eq(L1, L2)
+            F1=F2  <==  F1=L1 & F2=L1
+            L1=F1  <==  F1=L1
+            N1!=N2 <==  !(N1=N2)
+
+            """;
+
     protected static final boolean                              TRACE_NELUMBO       = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
 
     public static final Context<KnowledgeBase>                  CURRENT             = Context.of();
@@ -151,7 +179,7 @@ public final class KnowledgeBase {
         return KnowledgeBase.CURRENT.get().getVar(name);
     }
 
-    private static Constant constant(String name) {
+    private static Node constant(String name) {
         return KnowledgeBase.CURRENT.get().getConstant(name);
     }
 
@@ -280,30 +308,6 @@ public final class KnowledgeBase {
         return this;
     }
 
-    private final static String INIT_BASE = """
-
-            <Literal>  :: <Node>
-            <Function> :: <Node>
-
-            <Relation> ::= <Node>  =(30) <Node>,
-                           <Node> !=(30) <Node>
-
-            <Predicate> ::= eq(<Literal>,<Literal>)        @org.modelingvalue.nelumbo.Equal
-            <Predicate> ::= !(50) <Predicate>              @org.modelingvalue.nelumbo.Not
-            <Predicate> ::= <Predicate> &(20) <Predicate>  @org.modelingvalue.nelumbo.And
-            <Predicate> ::= <Predicate> |(20) <Predicate>  @org.modelingvalue.nelumbo.Or
-
-            <Literal>  L1, L2
-            <Function> F1, F2
-            <Node>     N1, N2
-
-            L1=L2  <==  eq(L1, L2)
-            F1=F2  <==  F1=L1 & F2=L1
-            L1=F1  <==  F1=L1
-            N1!=N2 <==  !(N1=N2)
-
-            """;
-
     private static Type type(Token t) throws ParseException {
         String name = t.text();
         name = name.substring(1, name.length() - 1);
@@ -338,6 +342,10 @@ public final class KnowledgeBase {
         if (sig.length() == 2 && sig.get(1) instanceof String) {
             // Constant
             String name = (String) sig.get(1);
+            if (constructor != null) {
+                Functor functor = new Functor(type, constructor.getDeclaringClass().getSimpleName(), new Type(String.class));
+                current.addConstant(name, createNode(token, constructor, functor, name));
+            }
             return new Constant(type, name);
         } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof List) {
             // CallWithArgs
@@ -380,7 +388,7 @@ public final class KnowledgeBase {
 
     private final AtomicReference<Map<String, Type>>                   types;
     private final AtomicReference<Set<Functor>>                        functors;
-    private final AtomicReference<Map<String, Constant>>               constants;
+    private final AtomicReference<Map<String, Node>>                   constants;
     private final AtomicReference<Map<String, Variable>>               variables;
     private final AtomicReference<Map<Relation, InferResult>>          facts;
     private final AtomicReference<Map<Relation, Set<Rule>>>            rules;
@@ -459,7 +467,7 @@ public final class KnowledgeBase {
         return variables.get();
     }
 
-    public Map<String, Constant> constants() {
+    public Map<String, Node> constants() {
         return constants.get();
     }
 
@@ -588,11 +596,11 @@ public final class KnowledgeBase {
         return variables.get().get(name);
     }
 
-    public final void addConstant(Constant constant) {
-        constants.updateAndGet(map -> map.put(constant.name(), constant));
+    public final void addConstant(String name, Node constant) {
+        constants.updateAndGet(map -> map.put(name, constant));
     }
 
-    public final Constant getConstant(String name) {
+    public final Node getConstant(String name) {
         return constants.get().get(name);
     }
 
@@ -617,9 +625,9 @@ public final class KnowledgeBase {
         for (Functor e : functors()) {
             stream.println(e.resultType() + " ::= " + e);
         }
-        for (Entry<String, Constant> e : constants()) {
-            Constant con = e.getValue();
-            stream.println(con.type() + " ::= " + con.name());
+        for (Entry<String, Node> e : constants()) {
+            Node con = e.getValue();
+            stream.println(con.type() + " ::= " + e.getValue());
         }
         for (Entry<String, Variable> e : variables()) {
             Variable var = e.getValue();

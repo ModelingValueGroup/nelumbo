@@ -23,18 +23,20 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.Map;
 
 public final class Boolean extends Predicate {
-    private static final long          serialVersionUID = -8515171118744898263L;
-    public static final Type           BOOLEAN_TYPE     = new Type(java.lang.Boolean.class);
-    public static final Functor        FUNCTOR          = new Functor(Predicate.TYPE, "Boolean", n -> n.toString(1), 100, BOOLEAN_TYPE);
+    private static final long serialVersionUID = -8515171118744898263L;
 
-    public static final Boolean        TRUE             = new Boolean(true);
-    public static final Boolean        FALSE            = new Boolean(false);
+    public static Boolean     TRUE;
+    public static Boolean     FALSE;
 
-    protected static final InferResult TRUE_CONCLUSION  = TRUE.factCC();
-    protected static final InferResult FALSE_CONCLUSION = FALSE.falsehoodCC();
+    private InferResult       result;
 
-    private Boolean(boolean val) {
-        super(FUNCTOR, val);
+    public Boolean(Functor functor, Object[] args) {
+        super(functor, java.lang.Boolean.valueOf((String) args[0]));
+        if (TRUE == null && isTrue()) {
+            TRUE = this;
+        } else if (FALSE == null && !isTrue()) {
+            FALSE = this;
+        }
     }
 
     private Boolean(Object[] args, Boolean declaration) {
@@ -49,6 +51,10 @@ public final class Boolean extends Predicate {
         return (java.lang.Boolean) get(1);
     }
 
+    public InferResult result() {
+        return infer(null);
+    }
+
     @Override
     protected Boolean struct(Object[] array, Predicate declaration) {
         return new Boolean(array, (Boolean) declaration);
@@ -56,7 +62,10 @@ public final class Boolean extends Predicate {
 
     @Override
     protected InferResult infer(InferContext context) {
-        return isTrue() ? TRUE_CONCLUSION : FALSE_CONCLUSION;
+        if (result == null) {
+            result = isTrue() ? factCC() : falsehoodCC();
+        }
+        return result;
     }
 
     @Override

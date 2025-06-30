@@ -54,9 +54,9 @@ public final class Not extends Predicate {
             return predResult;
         } else if (context.reduce()) {
             if (predResult.isFalseCC()) {
-                return Boolean.TRUE_CONCLUSION;
+                return Boolean.TRUE.result();
             } else if (predResult.isTrueCC()) {
-                return Boolean.FALSE_CONCLUSION;
+                return Boolean.FALSE.result();
             } else {
                 return set(1, predResult.unknown()).unknown();
             }

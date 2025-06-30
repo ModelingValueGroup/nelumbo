@@ -65,17 +65,17 @@ public abstract class BinaryPredicate extends Predicate {
                 return predResult[i];
             } else if (context.reduce()) {
                 if (isTrue(predResult[i])) {
-                    return Boolean.TRUE_CONCLUSION;
+                    return Boolean.TRUE.result();
                 } else if (isFalse(predResult[i])) {
-                    return Boolean.FALSE_CONCLUSION;
+                    return Boolean.FALSE.result();
                 }
             }
         }
         if (context.reduce()) {
             if (isTrue(predResult)) {
-                return Boolean.TRUE_CONCLUSION;
+                return Boolean.TRUE.result();
             } else if (isFalse(predResult)) {
-                return Boolean.FALSE_CONCLUSION;
+                return Boolean.FALSE.result();
             } else if (isLeft(predResult)) {
                 return predResult[0];
             } else if (isRight(predResult)) {

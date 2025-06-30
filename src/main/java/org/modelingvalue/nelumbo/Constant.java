@@ -26,7 +26,7 @@ public class Constant extends Terminal {
 
     public Constant(Type type, String name) {
         super(TYPE, type, name);
-        KnowledgeBase.CURRENT.get().addConstant(this);
+        KnowledgeBase.CURRENT.get().addConstant(name, this);
     }
 
     private Constant(Object[] array) {

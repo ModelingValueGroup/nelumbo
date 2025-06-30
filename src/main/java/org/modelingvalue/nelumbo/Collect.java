@@ -24,19 +24,18 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 
 public final class Collect extends Predicate {
-    private static final long   serialVersionUID = -3084545514049410749L;
-    public static final Functor FUNCTOR          = new Functor(Predicate.TYPE, "Collect", n -> n.toString(1) + "\u03BB" + n.toString(2), 15, Predicate.TYPE, Predicate.TYPE);
+    private static final long serialVersionUID = -3084545514049410749L;
 
-    private Variable            resultVar;
-    private Variable            iteratorVar;
-    private Variable            contextVar;
-    private Node                identityCons;
-    private int[]               identityIdx;
-    private Predicate           identityPred;
-    private Predicate           emptyCollector;
+    private Variable          resultVar;
+    private Variable          iteratorVar;
+    private Variable          contextVar;
+    private Node              identityCons;
+    private int[]             identityIdx;
+    private Predicate         identityPred;
+    private Predicate         emptyCollector;
 
-    public Collect(Predicate condition, Predicate collector) {
-        super(FUNCTOR, condition, collector);
+    public Collect(Functor functor, Object[] args) {
+        super(functor, args[0], args[1]);
     }
 
     private Collect(Object[] args, Collect declaration) {
