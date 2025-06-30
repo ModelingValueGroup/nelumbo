@@ -465,7 +465,7 @@ public interface InferResult {
             } else {
                 String cycleString = "";
                 if (!cycles().isEmpty()) {
-                    cycleString = toString(cycles(), true);
+                    cycleString = cycles().toString().substring(3);
                     cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
                 }
                 return toString(facts(), completeFacts()) + toString(falsehoods(), completeFalsehoods()) + cycleString;
@@ -473,7 +473,7 @@ public interface InferResult {
         }
 
         @SuppressWarnings({"rawtypes", "unchecked"})
-        private String toString(Set<? extends Predicate> predicates, boolean complete) {
+        private String toString(Set<Predicate> predicates, boolean complete) {
             Set<String> set = predicates.replaceAll(InferResultImpl::toString);
             String result = set.toString().substring(3);
             return complete ? result : result.substring(0, result.length() - 1) + (set.isEmpty() ? "" : ",") + "\u2026]";
