@@ -131,6 +131,29 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             String example = """
 
+                    ? 0>1
+                    ? 0<1
+                    ? 0>=1
+                    ? 0<=1
+                    ? 0!=1
+                    ? 0=1
+
+                    """;
+            try {
+                Parser.parseLogic(Integer.class);
+                new Parser(new Tokenizer(example).tokenize()).parse();
+                printKnowledgeBase();
+            } catch (ParseException e) {
+                fail(e);
+            }
+        });
+    }
+
+    // @Test
+    public void fibTest() {
+        run(() -> {
+            String example = """
+
                         <IntLit> :: <Int>, <Literal>
                         <IntFun> :: <Int>, <Fun>
 
@@ -156,9 +179,8 @@ public class NelumboTest extends NelumboTestBase {
                     """;
             try {
                 Parser.parseLogic(Integer.class);
-                //                LinkedList<Token> tokens = new Tokenizer(example).tokenize();
-                //                Parser parser = new Parser(tokens);
-                //                parser.parse();
+                new Parser(new Tokenizer(example).tokenize()).parse();
+                printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
             }

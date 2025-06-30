@@ -45,4 +45,13 @@ public final class Integer extends Terminal {
         return new Integer(array);
     }
 
+    public BigInteger value() {
+        return (BigInteger) get(1);
+    }
+
+    @Override
+    public String toString() {
+        return value().toString();
+    }
+
 }

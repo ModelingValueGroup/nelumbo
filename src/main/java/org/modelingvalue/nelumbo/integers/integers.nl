@@ -1,8 +1,9 @@
 
     <Integer>    :: <Terminal>
     <IntegerLit> :: <Integer>, <Literal>
+    <IntegerFun> :: <Integer>, <Function>
     
-    <IntegerLit> ::= <NUMBER> @org.modelingvalue.nelumbo.integers.Integer
+    <IntegerLit> ::= <NUMBER>                          @org.modelingvalue.nelumbo.integers.Integer
   
     <Relation>   ::= gt(<IntegerLit>,<IntegerLit>)     @org.modelingvalue.nelumbo.integers.GreaterThan,
                      add(<IntegerLit>,<IntegerLit>)    @org.modelingvalue.nelumbo.integers.Add,
@@ -13,7 +14,7 @@
                      <Integer> <=(30) <Integer>,
                      <Integer> >=(30) <Integer>
 
-    <Integer>    ::= <Integer> -(40)  <Integer>,
+    <IntegerFun> ::= <Integer> -(40)  <Integer>,
                      <Integer> +(40)  <Integer>,
                                -(60)  <Integer>,
                      <Integer> *(50)  <Integer>,

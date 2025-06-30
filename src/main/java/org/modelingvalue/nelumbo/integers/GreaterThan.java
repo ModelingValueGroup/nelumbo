@@ -20,6 +20,8 @@
 
 package org.modelingvalue.nelumbo.integers;
 
+import java.math.BigInteger;
+
 import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
@@ -44,7 +46,12 @@ public final class GreaterThan extends Relation {
 
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        return falsehoodCC();
+        if (nrOfUnbound > 0) {
+            return unknown();
+        }
+        BigInteger l = getVal(1, 1);
+        BigInteger r = getVal(2, 1);
+        return l.compareTo(r) > 0 ? factCC() : falsehoodCC();
     }
 
 }
