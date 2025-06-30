@@ -34,9 +34,14 @@ import org.modelingvalue.nelumbo.Type;
 
 public final class Parser {
 
-    public static void parse(Class<?> clss, String name) throws ParseException {
+    public static void parseLogic(Class<?> clss) throws ParseException {
+        String packageName = clss.getPackageName();
+        String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
         try {
             InputStream stream = clss.getResourceAsStream(name);
+            if (stream == null) {
+                throw new ParseException("Nelumbo resource " + name + " does not exist", 0, 0, 0, name);
+            }
             InputStream buffer = new BufferedInputStream(stream);
             String base = new String(buffer.readAllBytes());
             new Parser(new Tokenizer(base).tokenize()).parse();

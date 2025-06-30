@@ -158,7 +158,7 @@ public class NelumboTest extends NelumboTestBase {
 
                     """;
             try {
-                Parser.parse(Integer.class, "integers.nl");
+                Parser.parseLogic(Integer.class);
                 //                LinkedList<Token> tokens = new Tokenizer(example).tokenize();
                 //                Parser parser = new Parser(tokens);
                 //                parser.parse();

@@ -279,7 +279,7 @@ public final class KnowledgeBase {
             }));
 
             try {
-                Parser.parse(KnowledgeBase.class, "logic.nl");
+                Parser.parseLogic(KnowledgeBase.class);
             } catch (ParseException e) {
                 throw new IllegalArgumentException(e);
             }
