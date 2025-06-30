@@ -198,7 +198,6 @@ public final class KnowledgeBase {
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             Type RELATION = Relation.TYPE;
-            Type RULE = new Type(Rule.class);
 
             Type TYPE_NAME = new Type("TypeName");
             Type VAR_NAME = new Type("VarName");
