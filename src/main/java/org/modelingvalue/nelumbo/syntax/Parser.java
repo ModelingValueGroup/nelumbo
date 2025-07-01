@@ -100,7 +100,27 @@ public final class Parser {
         return prefix;
     }
 
-    private PostfixParselet postfix(Type expected, Type left, Token token1, Token token2) throws ParseException {
+    private PostfixParselet postfix(Type expected, Type left, Token token1, Token token2) {
+        PostfixParselet postfix = doPostfix(expected, left, token1, token2);
+        if (postfix == null && token1.type() == TokenType.OPERATOR) {
+            String text = token1.text();
+            int len = text.length();
+            while (len-- > 1 && !knowledgeBase.isOperator(text)) {
+                token1 = new Token(token1.type(), text.substring(0, len), token1.line(), //
+                        token1.position(), token1.index(), token1.fileName());
+                token2 = new Token(token1.type(), text.substring(len), token1.line(), //
+                        token1.position(), token1.index(), token1.fileName());
+                postfix = doPostfix(expected, left, token1, token2);
+                if (postfix != null) {
+                    tokens.addFirst(token2);
+                    return postfix;
+                }
+            }
+        }
+        return postfix;
+    }
+
+    private PostfixParselet doPostfix(Type expected, Type left, Token token1, Token token2) {
         Set<Type> pre, post = Set.of(left);
         while (!post.isEmpty()) {
             pre = post;

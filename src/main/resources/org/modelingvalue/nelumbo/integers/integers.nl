@@ -29,7 +29,7 @@
     a<=b     <==  a<b | a=b
     a>=b     <==  !(a<b)
     -a=b     <==  0-a=b
-    abs(a)=b <==  (a>=0 & b=a) | (a<0 & b= -a)
+    abs(a)=b <==  (a>=0 & b=a) | (a<0 & b=-a)
     
     
     a+b=c <==  a=x & b=y & c=z & add(x,y,z)

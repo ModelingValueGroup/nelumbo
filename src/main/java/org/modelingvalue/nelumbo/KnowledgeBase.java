@@ -408,6 +408,8 @@ public final class KnowledgeBase {
     private final AtomicReference<Map<Object, PostfixParselet>>        postfixParselets;
     private final AtomicReference<Map<Object, List<CallWithArgs>>>     callsWithArgs;
 
+    private final AtomicReference<Set<String>>                         allOperators;
+
     private final AtomicInteger                                        depth;
     private final AtomicReference<QualifiedSet<Relation, Inference>[]> memoization;
     private final InferContext                                         context;
@@ -425,6 +427,8 @@ public final class KnowledgeBase {
         prefixParselets = new AtomicReference<>(init != null ? init.prefixParselets.get() : Map.of());
         postfixParselets = new AtomicReference<>(init != null ? init.postfixParselets.get() : Map.of());
         callsWithArgs = new AtomicReference<>(init != null ? init.callsWithArgs.get() : Map.of());
+
+        allOperators = new AtomicReference<>(init != null ? init.allOperators.get() : Set.of());
 
         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
         memoization = new AtomicReference<>(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
@@ -668,6 +672,9 @@ public final class KnowledgeBase {
             throw new IllegalArgumentException();
         }
         prefixParselets.updateAndGet(map -> map.put(key, parselet));
+        if (parselet.oper1() != null) {
+            allOperators.updateAndGet(set -> set.add(parselet.oper1()));
+        }
     }
 
     public void register(PostfixParselet parselet) {
@@ -683,6 +690,9 @@ public final class KnowledgeBase {
             throw new IllegalArgumentException();
         }
         postfixParselets.updateAndGet(map -> map.put(key, parselet));
+        if (parselet.oper1() != null) {
+            allOperators.updateAndGet(set -> set.add(parselet.oper1()));
+        }
     }
 
     public void register(CallWithArgs call) {
@@ -841,6 +851,10 @@ public final class KnowledgeBase {
         }
         pair = Pair.of(left, token1.type());
         return postfixParselets.get().get(pair);
+    }
+
+    public boolean isOperator(String oper) {
+        return allOperators.get().contains(oper);
     }
 
 }
