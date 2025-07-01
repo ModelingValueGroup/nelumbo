@@ -38,7 +38,7 @@ public class NelumboTest extends NelumboTestBase {
         System.setProperty("PARALLEL_COLLECTIONS", "false");
         System.setProperty("REVERSE_NELUMBO", "false");
         System.setProperty("RANDOM_NELUMBO", "true");
-        System.setProperty("TRACE_NELUMBO", "true");
+        System.setProperty("TRACE_NELUMBO", "false");
     }
 
     @Test
