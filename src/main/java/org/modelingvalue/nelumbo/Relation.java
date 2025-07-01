@@ -25,7 +25,7 @@ import org.modelingvalue.collections.Set;
 
 public class Relation extends Predicate {
     private static final long serialVersionUID   = 1032898038061287135L;
-    public static final Type  TYPE               = new Type(Relation.class);
+    public static final Type  TYPE               = new Type(Relation.class, Predicate.TYPE);
 
     static final int          MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
     private static final int  MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;

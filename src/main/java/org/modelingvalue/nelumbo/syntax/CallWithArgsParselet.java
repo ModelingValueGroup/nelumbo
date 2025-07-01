@@ -44,7 +44,7 @@ public final class CallWithArgsParselet extends AtomicParselet {
     }
 
     @Override
-    public Node parse(Parser parser, Token token) throws ParseException {
+    public Node parse(Type expected, Parser parser, Token token) throws ParseException {
         parser.consume(TokenType.LPAREN);
         List<Node> args = List.of();
         do {

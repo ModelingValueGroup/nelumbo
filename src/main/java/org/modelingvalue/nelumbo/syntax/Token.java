@@ -40,7 +40,7 @@ public class Token {
 
     @Override
     public String toString() {
-        return "'" + text + "' " + type + " @" + position;
+        return text;
     }
 
     public String text() {

@@ -33,6 +33,7 @@ public class Type extends Node {
         if (TYPE == null) {
             TYPE = new Type() {
                 private static final long serialVersionUID = -2303866849518548877L;
+                private Set<Type>         supers           = Set.of(Node.ROOT);
 
                 @Override
                 public Object get(int i) {
@@ -42,6 +43,11 @@ public class Type extends Node {
                 @Override
                 public int hashCode() {
                     return 0;
+                }
+
+                @Override
+                public Set<Type> supers() {
+                    return supers;
                 }
             };
         }
@@ -53,24 +59,14 @@ public class Type extends Node {
         KnowledgeBase.CURRENT.get().addType(this);
     }
 
-    public Type(Class<?> clss) {
-        super(TYPE(), clss, supers(clss));
+    public Type(Class<?> clss, Type... supers) {
+        super(TYPE(), clss, Set.of(supers));
         KnowledgeBase.CURRENT.get().addType(this);
     }
 
     public Type(TokenType type) {
         super(TYPE(), type, Set.of());
         KnowledgeBase.CURRENT.get().addType(this);
-    }
-
-    private static Set<Type> supers(Class<?> clss) {
-        if (Node.class.isAssignableFrom(clss) && clss != Node.class) {
-            java.lang.reflect.Type gen = clss.getGenericSuperclass();
-            if (gen instanceof Class) {
-                return Set.of(new Type((Class<?>) gen));
-            }
-        }
-        return Set.of();
     }
 
     public Type(String name, Collection<Type> supers) {
@@ -84,7 +80,7 @@ public class Type extends Node {
     }
 
     private Type(Type element) {
-        super(TYPE(), "List", Set.of(Node.TYPE), element);
+        super(TYPE(), "List", element.supers(), element);
     }
 
     private Type(Object[] array) {
@@ -119,6 +115,9 @@ public class Type extends Node {
 
     @Override
     public String toString() {
+        if (isList()) {
+            return "<" + element().name() + "*>";
+        }
         return "<" + name() + ">";
     }
 

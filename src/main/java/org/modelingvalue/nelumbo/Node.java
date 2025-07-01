@@ -32,7 +32,9 @@ import org.modelingvalue.collections.util.StringUtil;
 
 public class Node extends StructImpl {
     private static final long     serialVersionUID = 7315776001191198132L;
+
     public static final Type      TYPE             = new Type(Node.class);
+    public static final Type      ROOT             = new Type("Root", Node.TYPE);
 
     private int                   hashCode         = 0;
     private Map<Variable, Object> variables;

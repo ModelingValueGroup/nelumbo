@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo;
 
 public class Constant extends Terminal {
     private static final long serialVersionUID = 7635166089400627936L;
-    public static final Type  TYPE             = new Type(Constant.class);
+    public static final Type  TYPE             = new Type(Constant.class, Terminal.TYPE);
 
     public Constant(Type type, String name) {
         super(TYPE, type, name);

@@ -43,7 +43,7 @@ public abstract class PrefixParselet extends AtomicParselet {
     }
 
     @Override
-    public Node parse(Parser parser, Token token) throws ParseException {
+    public Node parse(Type expected, Parser parser, Token token) throws ParseException {
         Node right = parser.parseNode(precedence(), right());
         return construct(token, right);
     }

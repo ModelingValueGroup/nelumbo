@@ -74,7 +74,7 @@ public final class Parser {
             Token token1 = tokens.poll();
             Token token2 = tokens.peek();
             AtomicParselet prefix = prefix(expected, token1, token2);
-            left = prefix.parse(this, token1);
+            left = prefix.parse(expected, this, token1);
         }
         Token token1 = tokens.poll();
         Token token2 = tokens.peek();
@@ -93,10 +93,7 @@ public final class Parser {
     }
 
     private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
-        AtomicParselet prefix = null;
-        if (token2 != null) {
-            prefix = knowledgeBase.prefix(expected, token1, token2);
-        }
+        AtomicParselet prefix = knowledgeBase.prefix(expected, token1, token2);
         if (prefix == null) {
             throw new ParseException("Could not parse '" + token1.text() + "'", token1);
         }
@@ -109,10 +106,7 @@ public final class Parser {
             pre = post;
             post = Set.of();
             for (Type type : pre) {
-                PostfixParselet postfix = null;
-                if (token2 != null) {
-                    postfix = knowledgeBase.postfix(expected, type, token1, token2);
-                }
+                PostfixParselet postfix = knowledgeBase.postfix(expected, type, token1, token2);
                 if (postfix != null) {
                     return postfix;
                 } else {
@@ -132,7 +126,7 @@ public final class Parser {
             while (match(TokenType.NEWLINE)) {
             }
             if (!tokens.isEmpty()) {
-                Node node = parseNode(0, Node.TYPE);
+                Node node = parseNode(0, Node.ROOT);
                 if (node instanceof Relation) {
                     knowledgeBase.addFact((Relation) node);
                 }

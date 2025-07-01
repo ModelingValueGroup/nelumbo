@@ -36,7 +36,7 @@ public abstract class AtomicParselet extends Parselet {
         return expected;
     }
 
-    public Node parse(Parser parser, Token token) throws ParseException {
+    public Node parse(Type expected, Parser parser, Token token) throws ParseException {
         return construct(token);
     }
 

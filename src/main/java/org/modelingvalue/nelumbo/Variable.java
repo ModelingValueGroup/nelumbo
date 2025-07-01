@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo;
 
 public class Variable extends Node {
     private static final long serialVersionUID = -8998368070388908726L;
-    public static final Type  TYPE             = new Type(Variable.class);
+    public static final Type  TYPE             = new Type(Variable.class, Node.ROOT);
 
     public Variable(Type type, String name) {
         super(TYPE, type, name, new Object());

@@ -176,12 +176,12 @@ public final class KnowledgeBase {
 
             Type RELATION = Relation.TYPE;
 
-            Type TYPE_NAME = new Type("TypeName");
-            Type VAR_NAME = new Type("VarName");
-            Type SIGNATURE = new Type("Signature");
-            Type RESULT = new Type("Result");
-            Type NATIVE = new Type("Native");
-            Type PRECEDENCE = new Type("Precedence");
+            Type TYPE_NAME = new Type("TypeName", Node.TYPE);
+            Type VAR_NAME = new Type("VarName", Node.TYPE);
+            Type SIGNATURE = new Type("Signature", Node.TYPE);
+            Type RESULT = new Type("Result", Node.ROOT);
+            Type NATIVE = new Type("Native", Node.TYPE);
+            Type PRECEDENCE = new Type("Precedence", Node.TYPE);
 
             register(ParenParselet.INSTANCE);
 
@@ -193,18 +193,18 @@ public final class KnowledgeBase {
             }));
 
             // Types
-            register(AtomicParselet.of(TokenType.TYPE, "::", t -> {
+            register(AtomicParselet.of(Node.ROOT, TokenType.TYPE, "::", t -> {
                 String name = t.text();
                 name = name.substring(1, name.length() - 1);
                 return new Terminal(TYPE_NAME, name);
             }));
-            register(InfixParselet.of(TYPE_NAME, "::", Type.TYPE().list(), 10, (l, t, r) -> {
+            register(InfixParselet.of(Node.ROOT, TYPE_NAME, "::", Type.TYPE().list(), 10, (l, t, r) -> {
                 String name = l.getVal(1);
                 return new Type(name, ((ListNode) r).elements());
             }));
 
             // Functors
-            register(InfixParselet.of(Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
+            register(InfixParselet.of(Node.ROOT, Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
                 ListNode list = new ListNode(Functor.TYPE);
                 for (Node s : ((ListNode) r).elements()) {
                     list = new ListNode(list, createFunctor((Type) l, t, s));
@@ -257,7 +257,7 @@ public final class KnowledgeBase {
             }));
 
             // Variables
-            register(PrefixParselet.of(TokenType.TYPE, TokenType.NAME, VAR_NAME.list(), 10, (t, l) -> {
+            register(PrefixParselet.of(Node.ROOT, TokenType.TYPE, TokenType.NAME, VAR_NAME.list(), 10, (t, l) -> {
                 ListNode list = new ListNode(Variable.TYPE);
                 Type type = type(t);
                 for (Node v : ((ListNode) l).elements()) {
@@ -271,7 +271,7 @@ public final class KnowledgeBase {
             }));
 
             // Rules
-            register(InfixParselet.of(RELATION, "<==", Predicate.TYPE.list(), 10, (l, t, r) -> {
+            register(InfixParselet.of(Node.ROOT, RELATION, "<==", Predicate.TYPE.list(), 10, (l, t, r) -> {
                 ListNode list = new ListNode(Rule.TYPE);
                 for (Node s : ((ListNode) r).elements()) {
                     list = new ListNode(list, new Rule((Relation) l, (Predicate) s));
@@ -280,7 +280,7 @@ public final class KnowledgeBase {
             }));
 
             // Queries
-            register(PrefixParselet.of("?", Predicate.TYPE, 10, (t, r) -> {
+            register(PrefixParselet.of(Node.ROOT, "?", Predicate.TYPE, 10, (t, r) -> {
                 InferResult result = ((Predicate) r).infer();
                 System.err.println(r + " " + result);
                 return new Node(RESULT, r, result);
@@ -722,48 +722,50 @@ public final class KnowledgeBase {
     }
 
     public AtomicParselet prefix(Type expected, Token token1, Token token2) {
-        Triple<Type, Object, Object> triple = Triple.of(expected, token1.text(), token2.text());
-        AtomicParselet prefix = prefixParselets.get().get(triple);
-        if (prefix != null) {
-            return prefix;
+        if (token2 != null) {
+            Triple<Type, Object, Object> triple = Triple.of(expected, token1.text(), token2.text());
+            AtomicParselet prefix = prefixParselets.get().get(triple);
+            if (prefix != null) {
+                return prefix;
+            }
+            triple = Triple.of(expected, token1.text(), token2.type());
+            prefix = prefixParselets.get().get(triple);
+            if (prefix != null) {
+                return prefix;
+            }
+            triple = Triple.of(expected, token1.type(), token2.text());
+            prefix = prefixParselets.get().get(triple);
+            if (prefix != null) {
+                return prefix;
+            }
+            triple = Triple.of(expected, token1.type(), token2.type());
+            prefix = prefixParselets.get().get(triple);
+            if (prefix != null) {
+                return prefix;
+            }
+            Pair<Object, Object> pair = Pair.of(token1.text(), token2.text());
+            prefix = prefixParselets.get().get(pair);
+            if (prefix != null) {
+                return prefix;
+            }
+            pair = Pair.of(token1.text(), token2.type());
+            prefix = prefixParselets.get().get(pair);
+            if (prefix != null) {
+                return prefix;
+            }
+            pair = Pair.of(token1.type(), token2.text());
+            prefix = prefixParselets.get().get(pair);
+            if (prefix != null) {
+                return prefix;
+            }
+            pair = Pair.of(token1.type(), token2.type());
+            prefix = prefixParselets.get().get(pair);
+            if (prefix != null) {
+                return prefix;
+            }
         }
-        triple = Triple.of(expected, token1.text(), token2.type());
-        prefix = prefixParselets.get().get(triple);
-        if (prefix != null) {
-            return prefix;
-        }
-        triple = Triple.of(expected, token1.type(), token2.text());
-        prefix = prefixParselets.get().get(triple);
-        if (prefix != null) {
-            return prefix;
-        }
-        triple = Triple.of(expected, token1.type(), token2.type());
-        prefix = prefixParselets.get().get(triple);
-        if (prefix != null) {
-            return prefix;
-        }
-        Pair<Object, Object> pair = Pair.of(token1.text(), token2.text());
-        prefix = prefixParselets.get().get(pair);
-        if (prefix != null) {
-            return prefix;
-        }
-        pair = Pair.of(token1.text(), token2.type());
-        prefix = prefixParselets.get().get(pair);
-        if (prefix != null) {
-            return prefix;
-        }
-        pair = Pair.of(token1.type(), token2.text());
-        prefix = prefixParselets.get().get(pair);
-        if (prefix != null) {
-            return prefix;
-        }
-        pair = Pair.of(token1.type(), token2.type());
-        prefix = prefixParselets.get().get(pair);
-        if (prefix != null) {
-            return prefix;
-        }
-        pair = Pair.of(expected, token1.text());
-        prefix = prefixParselets.get().get(pair);
+        Pair<Object, Object> pair = Pair.of(expected, token1.text());
+        AtomicParselet prefix = prefixParselets.get().get(pair);
         if (prefix != null) {
             return prefix;
         }
@@ -780,48 +782,50 @@ public final class KnowledgeBase {
     }
 
     public PostfixParselet postfix(Type expected, Type left, Token token1, Token token2) {
-        Quadruple<Type, Type, Object, Object> quadruple = Quadruple.of(expected, left, token1.text(), token2.text());
-        PostfixParselet postfix = postfixParselets.get().get(quadruple);
-        if (postfix != null) {
-            return postfix;
+        if (token2 != null) {
+            Quadruple<Type, Type, Object, Object> quadruple = Quadruple.of(expected, left, token1.text(), token2.text());
+            PostfixParselet postfix = postfixParselets.get().get(quadruple);
+            if (postfix != null) {
+                return postfix;
+            }
+            quadruple = Quadruple.of(expected, left, token1.text(), token2.type());
+            postfix = postfixParselets.get().get(quadruple);
+            if (postfix != null) {
+                return postfix;
+            }
+            quadruple = Quadruple.of(expected, left, token1.type(), token2.text());
+            postfix = postfixParselets.get().get(quadruple);
+            if (postfix != null) {
+                return postfix;
+            }
+            quadruple = Quadruple.of(expected, left, token1.type(), token2.type());
+            postfix = postfixParselets.get().get(quadruple);
+            if (postfix != null) {
+                return postfix;
+            }
+            Triple<Type, Object, Object> triple = Triple.of(left, token1.text(), token2.text());
+            postfix = postfixParselets.get().get(triple);
+            if (postfix != null) {
+                return postfix;
+            }
+            triple = Triple.of(left, token1.text(), token2.type());
+            postfix = postfixParselets.get().get(triple);
+            if (postfix != null) {
+                return postfix;
+            }
+            triple = Triple.of(left, token1.type(), token2.text());
+            postfix = postfixParselets.get().get(triple);
+            if (postfix != null) {
+                return postfix;
+            }
+            triple = Triple.of(left, token1.type(), token2.type());
+            postfix = postfixParselets.get().get(triple);
+            if (postfix != null) {
+                return postfix;
+            }
         }
-        quadruple = Quadruple.of(expected, left, token1.text(), token2.type());
-        postfix = postfixParselets.get().get(quadruple);
-        if (postfix != null) {
-            return postfix;
-        }
-        quadruple = Quadruple.of(expected, left, token1.type(), token2.text());
-        postfix = postfixParselets.get().get(quadruple);
-        if (postfix != null) {
-            return postfix;
-        }
-        quadruple = Quadruple.of(expected, left, token1.type(), token2.type());
-        postfix = postfixParselets.get().get(quadruple);
-        if (postfix != null) {
-            return postfix;
-        }
-        Triple<Type, Object, Object> triple = Triple.of(left, token1.text(), token2.text());
-        postfix = postfixParselets.get().get(triple);
-        if (postfix != null) {
-            return postfix;
-        }
-        triple = Triple.of(left, token1.text(), token2.type());
-        postfix = postfixParselets.get().get(triple);
-        if (postfix != null) {
-            return postfix;
-        }
-        triple = Triple.of(left, token1.type(), token2.text());
-        postfix = postfixParselets.get().get(triple);
-        if (postfix != null) {
-            return postfix;
-        }
-        triple = Triple.of(left, token1.type(), token2.type());
-        postfix = postfixParselets.get().get(triple);
-        if (postfix != null) {
-            return postfix;
-        }
-        triple = Triple.of(expected, left, token1.text());
-        postfix = postfixParselets.get().get(triple);
+        Triple<Type, Object, Object> triple = Triple.of(expected, left, token1.text());
+        PostfixParselet postfix = postfixParselets.get().get(triple);
         if (postfix != null) {
             return postfix;
         }

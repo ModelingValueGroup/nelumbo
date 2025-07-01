@@ -21,6 +21,7 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
 public class ParenParselet extends AtomicParselet {
 
@@ -31,8 +32,8 @@ public class ParenParselet extends AtomicParselet {
     }
 
     @Override
-    public Node parse(Parser parser, Token token) throws ParseException {
-        Node node = parser.parseNode(0, Node.TYPE);
+    public Node parse(Type expected, Parser parser, Token token) throws ParseException {
+        Node node = parser.parseNode(0, expected);
         parser.consume(TokenType.RPAREN);
         return node;
     }
