@@ -27,8 +27,8 @@ public abstract class InfixParselet extends PostfixParselet {
 
     private final Type right;
 
-    public InfixParselet(Type left, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence) {
-        super(left, type1, oper1, type2, oper2, precedence);
+    public InfixParselet(Type expected, Type left, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence) {
+        super(expected, left, type1, oper1, type2, oper2, precedence);
         this.right = right;
     }
 
@@ -47,31 +47,55 @@ public abstract class InfixParselet extends PostfixParselet {
     }
 
     public static InfixParselet of(Type left, String oper, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
-        return of(left, null, oper, null, null, right, precedence, constructor);
+        return of(null, left, null, oper, null, null, right, precedence, constructor);
     }
 
     public static InfixParselet of(Type left, TokenType type, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
-        return of(left, type, null, null, null, right, precedence, constructor);
+        return of(null, left, type, null, null, null, right, precedence, constructor);
     }
 
     public static InfixParselet of(Type left, String oper1, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
-        return of(left, null, oper1, null, oper2, right, precedence, constructor);
+        return of(null, left, null, oper1, null, oper2, right, precedence, constructor);
     }
 
     public static InfixParselet of(Type left, TokenType type1, TokenType type2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
-        return of(left, type1, null, type2, null, right, precedence, constructor);
+        return of(null, left, type1, null, type2, null, right, precedence, constructor);
     }
 
     public static InfixParselet of(Type left, String oper1, TokenType type2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
-        return of(left, null, oper1, type2, null, right, precedence, constructor);
+        return of(null, left, null, oper1, type2, null, right, precedence, constructor);
     }
 
     public static InfixParselet of(Type left, TokenType type1, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
-        return of(left, type1, null, null, oper2, right, precedence, constructor);
+        return of(null, left, type1, null, null, oper2, right, precedence, constructor);
     }
 
-    private static InfixParselet of(Type left, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
-        return new InfixParselet(left, type1, oper1, type2, oper2, right, precedence) {
+    public static InfixParselet of(Type expected, Type left, String oper, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(expected, left, null, oper, null, null, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type expected, Type left, TokenType type, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(expected, left, type, null, null, null, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type expected, Type left, String oper1, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(expected, left, null, oper1, null, oper2, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type expected, Type left, TokenType type1, TokenType type2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(expected, left, type1, null, type2, null, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type expected, Type left, String oper1, TokenType type2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(expected, left, null, oper1, type2, null, right, precedence, constructor);
+    }
+
+    public static InfixParselet of(Type expected, Type left, TokenType type1, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return of(expected, left, type1, null, null, oper2, right, precedence, constructor);
+    }
+
+    private static InfixParselet of(Type expected, Type left, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence, ThrowingTriFunction<Node, Token, Node, Node> constructor) {
+        return new InfixParselet(expected, left, type1, oper1, type2, oper2, right, precedence) {
             @Override
             public Node construct(Node left, Token token, Node right) throws ParseException {
                 return constructor.apply(left, token, right);

@@ -50,12 +50,27 @@ public class NelumboTest extends NelumboTestBase {
                     e = 8.9 / 2
                 """;
         try {
-            LinkedList<Token> tokens = new Tokenizer(example).tokenize();
+            LinkedList<Token> tokens = new Tokenizer(example, "tokenizer").tokenize();
             // printTokens(tokens);
             assertEquals(16, tokens.size());
         } catch (ParseException e) {
             fail(e);
         }
+    }
+
+    @Test
+    public void test0() {
+        run(() -> {
+            String example = """
+                    // Dummy example to test plumming
+                    """;
+            try {
+                new Parser(new Tokenizer(example, "test0").tokenize()).parse();
+                // printKnowledgeBase();
+            } catch (ParseException e) {
+                fail(e);
+            }
+        });
     }
 
     @Test
@@ -118,7 +133,7 @@ public class NelumboTest extends NelumboTestBase {
 
                     """;
             try {
-                new Parser(new Tokenizer(example).tokenize()).parse();
+                new Parser(new Tokenizer(example, "test1").tokenize()).parse();
                 // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
@@ -146,10 +161,16 @@ public class NelumboTest extends NelumboTestBase {
                         ? 10+a=21
                         ? 10+11=a
 
+                        ? abs(-10) = 10
+                        ? abs(a) = 10
+                        ? abs(10) = a
+                        ? abs(10) = 10
+
+
                     """;
             try {
                 Parser.parseLogic(Integer.class);
-                new Parser(new Tokenizer(example).tokenize()).parse();
+                new Parser(new Tokenizer(example, "test2").tokenize()).parse();
                 // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
@@ -183,7 +204,7 @@ public class NelumboTest extends NelumboTestBase {
                     """;
             try {
                 Parser.parseLogic(Integer.class);
-                new Parser(new Tokenizer(example).tokenize()).parse();
+                new Parser(new Tokenizer(example, "fibTest").tokenize()).parse();
                 // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);

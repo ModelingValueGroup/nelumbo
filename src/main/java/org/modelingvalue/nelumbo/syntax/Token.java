@@ -27,13 +27,15 @@ public class Token {
     private final int       line;
     private final int       position;
     private final int       index;
+    private final String    fileName;
 
-    public Token(TokenType type, String text, int line, int position, int index) {
+    public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         this.type = type;
         this.text = text;
         this.line = line;
         this.position = position;
         this.index = index;
+        this.fileName = fileName;
     }
 
     @Override
@@ -59,5 +61,9 @@ public class Token {
 
     public int index() {
         return index;
+    }
+
+    public String fileName() {
+        return fileName;
     }
 }

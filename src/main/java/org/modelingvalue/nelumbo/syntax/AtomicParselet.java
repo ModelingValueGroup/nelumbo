@@ -76,6 +76,22 @@ public abstract class AtomicParselet extends Parselet {
         return of(null, type1, null, null, oper2, constructor);
     }
 
+    public static AtomicParselet of(Type expected, String oper1, String oper2, ThrowingFunction<Token, Node> constructor) {
+        return of(expected, null, oper1, null, oper2, constructor);
+    }
+
+    public static AtomicParselet of(Type expected, TokenType type1, TokenType type2, ThrowingFunction<Token, Node> constructor) {
+        return of(expected, type1, null, type2, null, constructor);
+    }
+
+    public static AtomicParselet of(Type expected, String oper1, TokenType type2, ThrowingFunction<Token, Node> constructor) {
+        return of(expected, null, oper1, type2, null, constructor);
+    }
+
+    public static AtomicParselet of(Type expected, TokenType type1, String oper2, ThrowingFunction<Token, Node> constructor) {
+        return of(expected, type1, null, null, oper2, constructor);
+    }
+
     private static AtomicParselet of(Type expected, TokenType type1, String oper1, TokenType type2, String oper2, ThrowingFunction<Token, Node> constructor) {
         return new AtomicParselet(expected, type1, oper1, type2, oper2) {
             @Override

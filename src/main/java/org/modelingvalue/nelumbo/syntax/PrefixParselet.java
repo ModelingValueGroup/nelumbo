@@ -84,6 +84,22 @@ public abstract class PrefixParselet extends AtomicParselet {
         return of(null, type1, null, null, oper2, right, precedence, constructor);
     }
 
+    public static PrefixParselet of(Type expected, String oper1, String oper2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(expected, null, oper1, null, oper2, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(Type expected, TokenType type1, TokenType type2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(expected, type1, null, type2, null, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(Type expected, String oper1, TokenType type2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(expected, null, oper1, type2, null, right, precedence, constructor);
+    }
+
+    public static PrefixParselet of(Type expected, TokenType type1, String oper2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
+        return of(expected, type1, null, null, oper2, right, precedence, constructor);
+    }
+
     private static PrefixParselet of(Type expected, TokenType type1, String oper1, TokenType type2, String oper2, Type right, int precedence, ThrowingBiFunction<Token, Node, Node> constructor) {
         return new PrefixParselet(expected, type1, oper1, type2, oper2, right, precedence) {
             @Override

@@ -27,17 +27,19 @@ public class ParseException extends Exception {
     private final int         position;
     private final int         index;
     private final String      text;
+    private final String      fileName;
 
     public ParseException(String s, Token token) {
-        this(s, token.line(), token.position(), token.index(), token.text());
+        this(s, token.line(), token.position(), token.index(), token.text(), token.fileName());
     }
 
-    public ParseException(String s, int line, int position, int index, String text) {
-        super(s + ", line=" + line + ", position=" + position);
+    public ParseException(String s, int line, int position, int index, String text, String fileName) {
+        super(s + ", line=" + line + ", position=" + position + ", file=" + fileName);
         this.line = line;
         this.position = position;
         this.index = index;
         this.text = text;
+        this.fileName = fileName;
     }
 
     public int line() {
@@ -54,6 +56,10 @@ public class ParseException extends Exception {
 
     public String text() {
         return text;
+    }
+
+    public String fileName() {
+        return fileName;
     }
 
 }

@@ -25,13 +25,19 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class PostfixParselet extends Parselet {
 
+    private final Type expected;
     private final Type left;
     private final int  precedence;
 
-    protected PostfixParselet(Type left, TokenType type1, String oper1, TokenType type2, String oper2, int precedence) {
+    protected PostfixParselet(Type expected, Type left, TokenType type1, String oper1, TokenType type2, String oper2, int precedence) {
         super(type1, oper1, type2, oper2);
+        this.expected = expected;
         this.left = left;
         this.precedence = precedence;
+    }
+
+    public Type expected() {
+        return expected;
     }
 
     public Type left() {
@@ -51,31 +57,55 @@ public abstract class PostfixParselet extends Parselet {
     }
 
     public static PostfixParselet of(Type left, String oper, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
-        return of(left, null, oper, null, null, precedence, constructor);
+        return of(null, left, null, oper, null, null, precedence, constructor);
     }
 
     public static PostfixParselet of(Type left, TokenType type, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
-        return of(left, type, null, null, null, precedence, constructor);
+        return of(null, left, type, null, null, null, precedence, constructor);
     }
 
     public static PostfixParselet of(Type left, String oper1, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
-        return of(left, null, oper1, null, oper2, precedence, constructor);
+        return of(null, left, null, oper1, null, oper2, precedence, constructor);
     }
 
     public static PostfixParselet of(Type left, TokenType type1, TokenType type2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
-        return of(left, type1, null, type2, null, precedence, constructor);
+        return of(null, left, type1, null, type2, null, precedence, constructor);
     }
 
     public static PostfixParselet of(Type left, String oper1, TokenType type2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
-        return of(left, null, oper1, type2, null, precedence, constructor);
+        return of(null, left, null, oper1, type2, null, precedence, constructor);
     }
 
     public static PostfixParselet of(Type left, TokenType type1, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
-        return of(left, type1, null, null, oper2, precedence, constructor);
+        return of(null, left, type1, null, null, oper2, precedence, constructor);
     }
 
-    private static PostfixParselet of(Type left, TokenType type1, String oper1, TokenType type2, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
-        return new PostfixParselet(left, type1, oper1, type2, oper2, precedence) {
+    public static PostfixParselet of(Type expected, Type left, String oper, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(expected, left, null, oper, null, null, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type expected, Type left, TokenType type, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(expected, left, type, null, null, null, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type expected, Type left, String oper1, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(expected, left, null, oper1, null, oper2, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type expected, Type left, TokenType type1, TokenType type2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(expected, left, type1, null, type2, null, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type expected, Type left, String oper1, TokenType type2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(expected, left, null, oper1, type2, null, precedence, constructor);
+    }
+
+    public static PostfixParselet of(Type expected, Type left, TokenType type1, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return of(expected, left, type1, null, null, oper2, precedence, constructor);
+    }
+
+    private static PostfixParselet of(Type expected, Type left, TokenType type1, String oper1, TokenType type2, String oper2, int precedence, ThrowingBiFunction<Node, Token, Node> constructor) {
+        return new PostfixParselet(expected, left, type1, oper1, type2, oper2, precedence) {
             @Override
             public Node construct(Node left, Token token) throws ParseException {
                 return constructor.apply(left, token);

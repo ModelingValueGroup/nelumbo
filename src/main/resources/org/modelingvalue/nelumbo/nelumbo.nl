@@ -3,16 +3,16 @@
     <Literal>   :: <Node>
     <Function>  :: <Node>
 
-    <Relation>  ::= eq(<Literal>,<Literal>)         @org.modelingvalue.nelumbo.Equal,
-                    <Node>  =(30) <Node>,
-                    <Node> !=(30) <Node>
+    <Relation>  ::= eq(<Literal>,<Literal>)          @org.modelingvalue.nelumbo.Equal,
+                    <Node> = <Node>             #30,
+                    <Node> != <Node>            #30  
 
-    <Predicate> ::= true                            @org.modelingvalue.nelumbo.Boolean,
-                    false                           @org.modelingvalue.nelumbo.Boolean,
-                    !(50) <Predicate>               @org.modelingvalue.nelumbo.Not,
-                    <Predicate> &(20) <Predicate>   @org.modelingvalue.nelumbo.And,
-                    <Predicate> |(20) <Predicate>   @org.modelingvalue.nelumbo.Or,
-                    <Predicate> -->(15) <Predicate> @org.modelingvalue.nelumbo.Collect
+    <Predicate> ::= true                             @org.modelingvalue.nelumbo.Boolean,
+                    false                            @org.modelingvalue.nelumbo.Boolean,
+                    ! <Predicate>               #50  @org.modelingvalue.nelumbo.Not,
+                    <Predicate> & <Predicate>   #20  @org.modelingvalue.nelumbo.And,
+                    <Predicate> | <Predicate>   #20  @org.modelingvalue.nelumbo.Or,
+                    <Predicate> --> <Predicate> #15  @org.modelingvalue.nelumbo.Collect
 
     <Literal>  L1, L2
     <Function> F1, F2

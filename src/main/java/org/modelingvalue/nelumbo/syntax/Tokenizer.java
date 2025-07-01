@@ -26,9 +26,11 @@ import java.util.regex.Matcher;
 public class Tokenizer {
 
     private final String input;
+    private final String fileName;
 
-    public Tokenizer(String input) {
+    public Tokenizer(String input, String fileName) {
         this.input = input;
+        this.fileName = fileName;
     }
 
     public LinkedList<Token> tokenize() throws ParseException {
@@ -63,10 +65,10 @@ public class Tokenizer {
             }
             if (text == null) {
                 text = input.substring(index, Math.min(input.length(), index + 8));
-                throw new ParseException("Unexpected input '" + text + "'", line, position, index, text);
+                throw new ParseException("Unexpected input '" + text + "'", line, position, index, text, fileName);
             } else {
                 if (type != TokenType.HSPACE && (type != TokenType.NEWLINE || tokens.isEmpty() || !tokens.getLast().type().more())) {
-                    tokens.add(new Token(type, text, line, position, index));
+                    tokens.add(new Token(type, text, line, position, index, fileName));
                 }
                 index += text.length();
                 if (type == TokenType.NEWLINE) {

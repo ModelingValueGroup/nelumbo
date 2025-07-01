@@ -35,6 +35,14 @@ public final class CallWithArgsParselet extends AtomicParselet {
         super(null, type, null, TokenType.LPAREN, null);
     }
 
+    public CallWithArgsParselet(Type expected, String name) {
+        super(expected, null, name, TokenType.LPAREN, null);
+    }
+
+    public CallWithArgsParselet(Type expected, TokenType type) {
+        super(expected, type, null, TokenType.LPAREN, null);
+    }
+
     @Override
     public Node parse(Parser parser, Token token) throws ParseException {
         parser.consume(TokenType.LPAREN);
