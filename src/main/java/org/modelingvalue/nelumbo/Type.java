@@ -33,7 +33,6 @@ public class Type extends Node {
         if (TYPE == null) {
             TYPE = new Type() {
                 private static final long serialVersionUID = -2303866849518548877L;
-                private Set<Type>         supers           = Set.of(Node.ROOT);
 
                 @Override
                 public Object get(int i) {
@@ -47,12 +46,16 @@ public class Type extends Node {
 
                 @Override
                 public Set<Type> supers() {
-                    return supers;
+                    return Set.of(Node.ROOT);
                 }
             };
         }
         return TYPE;
     }
+
+    private Type list;
+    private Type literal;
+    private Type function;
 
     private Type() {
         super((Type) null, Type.class, null);
@@ -99,8 +102,37 @@ public class Type extends Node {
         return length() == 4;
     }
 
+    public Type function() {
+        if (isFunction()) {
+            return this;
+        } else if (function == null) {
+            return function = new Type(name() + "()", this, Node.FUNCTION);
+        }
+        return function;
+    }
+
+    public boolean isFunction() {
+        return Node.FUNCTION.isAssignableFrom(this);
+    }
+
+    public Type literal() {
+        if (isLiteral()) {
+            return this;
+        } else if (literal == null) {
+            return literal = new Type(name() + "''", this, Node.LITERAL);
+        }
+        return literal;
+    }
+
+    public boolean isLiteral() {
+        return Node.LITERAL.isAssignableFrom(this);
+    }
+
     public Type list() {
-        return new Type(this);
+        if (list == null) {
+            list = new Type(this);
+        }
+        return list;
     }
 
     public TokenType tokenType() {

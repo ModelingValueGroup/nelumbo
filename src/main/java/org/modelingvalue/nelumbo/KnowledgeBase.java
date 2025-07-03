@@ -298,14 +298,17 @@ public final class KnowledgeBase {
     private static Type type(Token t) throws ParseException {
         String name = t.text();
         name = name.substring(1, name.length() - 1);
-        boolean many = false;
         if (name.endsWith("*") || name.endsWith("+")) {
-            many = true;
             name = name.substring(0, name.length() - 1);
-        }
-        Type type = type(name);
-        if (type != null) {
-            return many ? type.list() : type;
+            Type type = type(name);
+            if (type != null) {
+                return type.list();
+            }
+        } else {
+            Type type = type(name);
+            if (type != null) {
+                return type;
+            }
         }
         throw new ParseException("Could not find type " + t.text(), t);
     }

@@ -1,8 +1,4 @@
 
-
-    <Literal>   :: <Node>
-    <Function>  :: <Node>
-
     <Relation>  ::= eq(<Literal>,<Literal>)          @org.modelingvalue.nelumbo.Equal,
                     <Node> = <Node>             #30,
                     <Node> != <Node>            #30  
