@@ -87,7 +87,7 @@ public class NelumboTest extends NelumboTestBase {
                         <PersonLit> :: <Person>, <Literal>
                         <PersonFun> :: <Person>, <Function>
 
-                        <Relation>  ::= pc(<PersonLit>,<PersonLit>),
+                        <Fact>      ::= pc(<PersonLit>,<PersonLit>),
                                         ad(<PersonLit>,<PersonLit>)
 
                         <PersonFun> ::= p(<Person>),
@@ -198,7 +198,7 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             String example = """
 
-                        <Relation>    ::= fib(<IntegerLit>,<IntegerLit>)
+                        <Fact>        ::= fib(<IntegerLit>,<IntegerLit>)
                         <IntegerFun>  ::= fib(<Integer>)
 
                         // Literal Integer Variables

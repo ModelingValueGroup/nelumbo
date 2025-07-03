@@ -5,7 +5,7 @@
     
     <IntegerLit> ::= <NUMBER>                                      @org.modelingvalue.nelumbo.integers.Integer
   
-    <Relation>   ::= gt(<IntegerLit>,<IntegerLit>)                 @org.modelingvalue.nelumbo.integers.GreaterThan,
+    <Fact>       ::= gt(<IntegerLit>,<IntegerLit>)                 @org.modelingvalue.nelumbo.integers.GreaterThan,
                      add(<IntegerLit>,<IntegerLit>,<IntegerLit>)   @org.modelingvalue.nelumbo.integers.Add,
                      mult(<IntegerLit>,<IntegerLit>,<IntegerLit>)  @org.modelingvalue.nelumbo.integers.Multiply
 

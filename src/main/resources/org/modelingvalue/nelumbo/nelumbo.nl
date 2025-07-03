@@ -1,6 +1,7 @@
 
-    <Relation>  ::= eq(<Literal>,<Literal>)          @org.modelingvalue.nelumbo.Equal,
-                    <Node> = <Node>             #30,
+    <Fact>      ::= eq(<Literal>,<Literal>)          @org.modelingvalue.nelumbo.Equal
+
+    <Relation>  ::= <Node> = <Node>             #30,
                     <Node> != <Node>            #30  
 
     <Predicate> ::= true                             @org.modelingvalue.nelumbo.Boolean,

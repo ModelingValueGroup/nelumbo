@@ -31,7 +31,7 @@ public abstract class Predicate extends Node {
     protected static final boolean REVERSE_NELUMBO  = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
 
     private static final long      serialVersionUID = -1605559565948158856L;
-    public static final Type       TYPE             = new Type(Predicate.class, Node.ROOT);
+    public static final Type       TYPE             = new Type(Predicate.class, Node.TYPE);
 
     private final Set<Predicate>   singleton        = Set.of(this);
     private final Predicate        declaration;

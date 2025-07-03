@@ -37,6 +37,7 @@ public class Node extends StructImpl {
     public static final Type      FUNCTION         = new Type("Function", Node.TYPE);
     public static final Type      LITERAL          = new Type("Literal", Terminal.TYPE);
     public static final Type      ROOT             = new Type("Root", Node.TYPE);
+    public static final Type      FACT             = new Type("Fact", Relation.TYPE, ROOT);
 
     private int                   hashCode         = 0;
     private Map<Variable, Object> variables;
