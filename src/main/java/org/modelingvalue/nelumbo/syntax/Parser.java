@@ -182,7 +182,7 @@ public final class Parser {
             while (match(TokenType.NEWLINE)) {
             }
             if (!tokens.isEmpty()) {
-                Node node = parseNode(0, Node.ROOT);
+                Node node = parseNode(0, Type.ROOT);
                 if (node instanceof Relation) {
                     knowledgeBase.addFact((Relation) node);
                 }

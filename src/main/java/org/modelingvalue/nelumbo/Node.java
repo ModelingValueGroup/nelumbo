@@ -34,10 +34,6 @@ public class Node extends StructImpl {
     private static final long     serialVersionUID = 7315776001191198132L;
 
     public static final Type      TYPE             = new Type(Node.class);
-    public static final Type      FUNCTION         = new Type("Function", Node.TYPE);
-    public static final Type      LITERAL          = new Type("Literal", Terminal.TYPE);
-    public static final Type      ROOT             = new Type("Root", Node.TYPE);
-    public static final Type      FACT             = new Type("Fact", Relation.TYPE, ROOT);
 
     private int                   hashCode         = 0;
     private Map<Variable, Object> variables;

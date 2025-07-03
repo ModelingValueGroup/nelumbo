@@ -27,6 +27,11 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 public class Type extends Node {
     private static final long serialVersionUID = -4583279157841144493L;
 
+    public static final Type  FUNCTION         = new Type("Function", Node.TYPE);
+    public static final Type  LITERAL          = new Type("Literal", Terminal.TYPE);
+    public static final Type  ROOT             = new Type("Root", Node.TYPE);
+    public static final Type  FACT             = new Type("Fact", Relation.TYPE, ROOT);
+
     private static Type       TYPE             = null;
 
     public static final Type TYPE() {
@@ -46,7 +51,7 @@ public class Type extends Node {
 
                 @Override
                 public Set<Type> supers() {
-                    return Set.of(Node.ROOT);
+                    return Set.of(Type.ROOT);
                 }
             };
         }
@@ -106,26 +111,26 @@ public class Type extends Node {
         if (isFunction()) {
             return this;
         } else if (function == null) {
-            return function = new Type(name() + "Fun", this, Node.FUNCTION);
+            return function = new Type(name() + "Fun", this, Type.FUNCTION);
         }
         return function;
     }
 
     public boolean isFunction() {
-        return Node.FUNCTION.isAssignableFrom(this);
+        return Type.FUNCTION.isAssignableFrom(this);
     }
 
     public Type literal() {
         if (isLiteral()) {
             return this;
         } else if (literal == null) {
-            return literal = new Type(name() + "Lit", this, Node.LITERAL);
+            return literal = new Type(name() + "Lit", this, Type.LITERAL);
         }
         return literal;
     }
 
     public boolean isLiteral() {
-        return Node.LITERAL.isAssignableFrom(this);
+        return Type.LITERAL.isAssignableFrom(this);
     }
 
     public Type list() {

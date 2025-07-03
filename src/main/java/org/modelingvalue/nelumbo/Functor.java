@@ -27,7 +27,7 @@ import org.modelingvalue.collections.util.SerializableFunction;
 
 public final class Functor extends Node {
     private static final long serialVersionUID = 285147889847599160L;
-    public static final Type  TYPE             = new Type(Functor.class, Node.ROOT);
+    public static final Type  TYPE             = new Type(Functor.class, Type.ROOT);
 
     public Functor(Type resultType, String oper, Type... args) {
         super(TYPE, resultType, oper, List.of(args));

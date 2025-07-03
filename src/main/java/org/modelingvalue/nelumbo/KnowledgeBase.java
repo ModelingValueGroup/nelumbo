@@ -179,7 +179,7 @@ public final class KnowledgeBase {
             Type TYPE_NAME = new Type("TypeName", Node.TYPE);
             Type VAR_NAME = new Type("VarName", Node.TYPE);
             Type SIGNATURE = new Type("Signature", Node.TYPE);
-            Type RESULT = new Type("Result", Node.ROOT);
+            Type RESULT = new Type("Result", Type.ROOT);
             Type NATIVE = new Type("Native", Node.TYPE);
             Type PRECEDENCE = new Type("Precedence", Node.TYPE);
 
@@ -193,18 +193,18 @@ public final class KnowledgeBase {
             }));
 
             // Types
-            register(AtomicParselet.of(Node.ROOT, TokenType.TYPE, "::", t -> {
+            register(AtomicParselet.of(Type.ROOT, TokenType.TYPE, "::", t -> {
                 String name = t.text();
                 name = name.substring(1, name.length() - 1);
                 return new Terminal(TYPE_NAME, name);
             }));
-            register(InfixParselet.of(Node.ROOT, TYPE_NAME, "::", Type.TYPE().list(), 10, (l, t, r) -> {
+            register(InfixParselet.of(Type.ROOT, TYPE_NAME, "::", Type.TYPE().list(), 10, (l, t, r) -> {
                 String name = l.getVal(1);
                 return new Type(name, ((ListNode) r).elements());
             }));
 
             // Functors
-            register(InfixParselet.of(Node.ROOT, Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
+            register(InfixParselet.of(Type.ROOT, Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
                 ListNode list = new ListNode(Functor.TYPE);
                 for (Node s : ((ListNode) r).elements()) {
                     list = new ListNode(list, createFunctor((Type) l, t, s));
@@ -257,7 +257,7 @@ public final class KnowledgeBase {
             }));
 
             // Variables
-            register(PrefixParselet.of(Node.ROOT, TokenType.TYPE, TokenType.NAME, VAR_NAME.list(), 10, (t, l) -> {
+            register(PrefixParselet.of(Type.ROOT, TokenType.TYPE, TokenType.NAME, VAR_NAME.list(), 10, (t, l) -> {
                 ListNode list = new ListNode(Variable.TYPE);
                 Type type = type(t);
                 for (Node v : ((ListNode) l).elements()) {
@@ -271,7 +271,7 @@ public final class KnowledgeBase {
             }));
 
             // Rules
-            register(InfixParselet.of(Node.ROOT, RELATION, "<==", Predicate.TYPE.list(), 10, (l, t, r) -> {
+            register(InfixParselet.of(Type.ROOT, RELATION, "<==", Predicate.TYPE.list(), 10, (l, t, r) -> {
                 ListNode list = new ListNode(Rule.TYPE);
                 for (Node s : ((ListNode) r).elements()) {
                     list = new ListNode(list, new Rule((Relation) l, (Predicate) s));
@@ -280,7 +280,7 @@ public final class KnowledgeBase {
             }));
 
             // Queries
-            register(PrefixParselet.of(Node.ROOT, "?", Predicate.TYPE, 10, (t, r) -> {
+            register(PrefixParselet.of(Type.ROOT, "?", Predicate.TYPE, 10, (t, r) -> {
                 InferResult result = ((Predicate) r).infer();
                 System.err.println(r + " " + result);
                 return new Node(RESULT, r, result);
