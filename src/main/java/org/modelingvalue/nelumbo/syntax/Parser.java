@@ -78,12 +78,12 @@ public final class Parser {
         }
         Token token1 = tokens.poll();
         Token token2 = tokens.peek();
-        PostfixParselet postfix = postfix(expected, left.type(), token1, token2);
-        while (postfix != null && precedence < postfix.precedence()) {
+        PostfixParselet postfix = postfix(expected, left.type(), token1, token2, precedence);
+        while (postfix != null) {
             left = postfix.parse(this, left, token1);
             token1 = tokens.poll();
             token2 = tokens.peek();
-            postfix = postfix(expected, left.type(), token1, token2);
+            postfix = postfix(expected, left.type(), token1, token2, precedence);
         }
         tokens.addFirst(token1);
         if (!expected.isAssignableFrom(left.type())) {
@@ -93,14 +93,38 @@ public final class Parser {
     }
 
     private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
-        AtomicParselet prefix = knowledgeBase.prefix(expected, token1, token2);
-        if (prefix == null) {
-            throw new ParseException("Could not parse '" + token1.text() + "'", token1);
+        AtomicParselet prefix = doPrefix(expected, token1, token2);
+        if (prefix == null && token1.type() == TokenType.OPERATOR) {
+            String text = token1.text();
+            int len = text.length();
+            while (len-- > 1 && !knowledgeBase.isOperator(text)) {
+                token1 = new Token(token1.type(), text.substring(0, len), token1.line(), //
+                        token1.position(), token1.index(), token1.fileName());
+                token2 = new Token(token1.type(), text.substring(len), token1.line(), //
+                        token1.position() + len, token1.index() + len, token1.fileName());
+                prefix = doPrefix(expected, token1, token2);
+                if (prefix != null) {
+                    tokens.addFirst(token2);
+                    return prefix;
+                } else if (len == 1) {
+                    token1 = new Token(token1.type(), token1.text() + token2.text(), token1.line(), //
+                            token1.position(), token1.index(), token1.fileName());
+                    throw new ParseException("Operator " + token1.text() + " not defined", token1);
+                }
+            }
         }
         return prefix;
     }
 
-    private PostfixParselet postfix(Type expected, Type left, Token token1, Token token2) {
+    private AtomicParselet doPrefix(Type expected, Token token1, Token token2) throws ParseException {
+        AtomicParselet prefix = knowledgeBase.prefix(expected, token1, token2);
+        if (prefix == null) {
+            throw new ParseException("Prefix " + token1.text() + " not defined", token1);
+        }
+        return prefix;
+    }
+
+    private PostfixParselet postfix(Type expected, Type left, Token token1, Token token2, int precedence) throws ParseException {
         PostfixParselet postfix = doPostfix(expected, left, token1, token2);
         if (postfix == null && token1.type() == TokenType.OPERATOR) {
             String text = token1.text();
@@ -109,15 +133,27 @@ public final class Parser {
                 token1 = new Token(token1.type(), text.substring(0, len), token1.line(), //
                         token1.position(), token1.index(), token1.fileName());
                 token2 = new Token(token1.type(), text.substring(len), token1.line(), //
-                        token1.position(), token1.index(), token1.fileName());
+                        token1.position() + len, token1.index() + len, token1.fileName());
                 postfix = doPostfix(expected, left, token1, token2);
                 if (postfix != null) {
-                    tokens.addFirst(token2);
-                    return postfix;
+                    if (precedence < postfix.precedence()) {
+                        tokens.addFirst(token2);
+                        return postfix;
+                    } else {
+                        return null;
+                    }
+                } else if (len == 1) {
+                    token1 = new Token(token1.type(), token1.text() + token2.text(), token1.line(), //
+                            token1.position(), token1.index(), token1.fileName());
+                    throw new ParseException("Operator " + token1.text() + " not defined", token1);
                 }
             }
         }
-        return postfix;
+        if (postfix != null && precedence < postfix.precedence()) {
+            return postfix;
+        } else {
+            return null;
+        }
     }
 
     private PostfixParselet doPostfix(Type expected, Type left, Token token1, Token token2) {

@@ -16,7 +16,7 @@
 
     <IntegerFun> ::= <Integer> -  <Integer>  #40,
                      <Integer> +  <Integer>  #40,
-                               -  <Integer>  #60,
+                               -  <Integer>  #80,
                      <Integer> *  <Integer>  #50,
                      <Integer> /  <Integer>  #50,
                      abs(<Integer>)

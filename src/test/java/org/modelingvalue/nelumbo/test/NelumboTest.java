@@ -42,7 +42,7 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @Test
-    public void tokenizer() {
+    public void tokenizerTest() {
         String example = """
                 // COMMEND
                     -abb + bcc *
@@ -50,7 +50,7 @@ public class NelumboTest extends NelumboTestBase {
                     e = 8.9 / 2
                 """;
         try {
-            LinkedList<Token> tokens = new Tokenizer(example, "tokenizer").tokenize();
+            LinkedList<Token> tokens = new Tokenizer(example, "tokenizerTest").tokenize();
             // printTokens(tokens);
             assertEquals(16, tokens.size());
         } catch (ParseException e) {
@@ -59,13 +59,15 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @Test
-    public void test0() {
+    public void initTest() {
         run(() -> {
             String example = """
-                    // Dummy example to test plumming
+
+                    // Init only
+
                     """;
             try {
-                new Parser(new Tokenizer(example, "test0").tokenize()).parse();
+                new Parser(new Tokenizer(example, "initTest").tokenize()).parse();
                 // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
@@ -74,7 +76,7 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @Test
-    public void test1() {
+    public void familyTest() {
         run(() -> {
             String example = """
                         // org.mvg.family ::
@@ -133,7 +135,7 @@ public class NelumboTest extends NelumboTestBase {
 
                     """;
             try {
-                new Parser(new Tokenizer(example, "test1").tokenize()).parse();
+                new Parser(new Tokenizer(example, "familyTest").tokenize()).parse();
                 // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
@@ -142,11 +144,13 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @Test
-    public void test2() {
+    public void integersTest() {
         run(() -> {
             String example = """
 
                         <IntegerLit>  a, b, c
+
+                        ? -1=-1
 
                         ? 0>1
                         ? 0<1
@@ -161,6 +165,18 @@ public class NelumboTest extends NelumboTestBase {
                         ? 10+a=21
                         ? 10+11=a
 
+                        ? 10-11=1
+                        ? 10-11=-1
+                        ? a-11=-1
+                        ? 10-a=-1
+                        ? 10-11=a
+
+                        ? 10*11=120
+                        ? 10*11=110
+                        ? a*11=110
+                        ? 10*a=110
+                        ? 10*11=a
+
                         ? abs(-10) = 10
                         ? abs(a) = 10
                         ? abs(10) = a
@@ -170,7 +186,7 @@ public class NelumboTest extends NelumboTestBase {
                     """;
             try {
                 Parser.parseLogic(Integer.class);
-                new Parser(new Tokenizer(example, "test2").tokenize()).parse();
+                new Parser(new Tokenizer(example, "integersTest").tokenize()).parse();
                 // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
