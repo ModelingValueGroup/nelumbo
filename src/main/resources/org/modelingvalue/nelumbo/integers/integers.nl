@@ -1,5 +1,5 @@
 
-    <Integer>    :: <Terminal>
+    <Integer>    :: <Node>
     <IntegerLit> :: <Integer>, <Literal>
     <IntegerFun> :: <Integer>, <Function>
     
