@@ -106,7 +106,7 @@ public class Type extends Node {
         if (isFunction()) {
             return this;
         } else if (function == null) {
-            return function = new Type(name() + "()", this, Node.FUNCTION);
+            return function = new Type(name() + "Fun", this, Node.FUNCTION);
         }
         return function;
     }
@@ -119,7 +119,7 @@ public class Type extends Node {
         if (isLiteral()) {
             return this;
         } else if (literal == null) {
-            return literal = new Type(name() + "''", this, Node.LITERAL);
+            return literal = new Type(name() + "Lit", this, Node.LITERAL);
         }
         return literal;
     }
