@@ -88,7 +88,7 @@ public class Type extends Node {
     }
 
     private Type(Type element) {
-        super(TYPE(), "List", element.supers(), element);
+        super(TYPE(), "List", Set.of(Node.TYPE), element);
     }
 
     private Type(Object[] array) {
@@ -118,6 +118,14 @@ public class Type extends Node {
 
     public boolean isFunction() {
         return Type.FUNCTION.isAssignableFrom(this);
+    }
+
+    public Type nonLiteral() {
+        if (isLiteral()) {
+            return supers().findFirst(s -> s != LITERAL).get();
+        } else {
+            return this;
+        }
     }
 
     public Type literal() {

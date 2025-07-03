@@ -152,10 +152,6 @@ public final class KnowledgeBase {
         return KnowledgeBase.CURRENT.get().getVar(name);
     }
 
-    private static Node constant(String name) {
-        return KnowledgeBase.CURRENT.get().getConstant(name);
-    }
-
     private static Node createNode(boolean relation, Token token, Constructor<? extends Node> constructor, Functor functor, Object... args) throws ParseException {
         if (constructor != null) {
             try {
@@ -189,7 +185,7 @@ public final class KnowledgeBase {
                 return type(t);
             }));
             register(AtomicParselet.of(TokenType.NAME, t -> {
-                return node(t);
+                return variable(t);
             }));
 
             // Types
@@ -313,17 +309,12 @@ public final class KnowledgeBase {
         throw new ParseException("Could not find type " + t.text(), t);
     }
 
-    private static Node node(Token t) throws ParseException {
-        String name = t.text();
-        Node node = constant(name);
-        if (node != null) {
-            return node;
+    private static Variable variable(Token token) throws ParseException {
+        Variable var = var(token.text());
+        if (var != null) {
+            return var;
         }
-        node = var(name);
-        if (node != null) {
-            return node;
-        }
-        throw new ParseException("Could not find variable nor constant " + name, t);
+        throw new ParseException("Could not find variable " + token.text(), token);
     }
 
     @SuppressWarnings("unchecked")
@@ -351,8 +342,9 @@ public final class KnowledgeBase {
                 type = type.literal();
             }
             TokenType tokenType = ((Type) sig.get(1)).tokenType();
-            Functor functor = new Functor(type, constructor.getDeclaringClass().getSimpleName(), new Type(String.class));
-            current.register(AtomicParselet.of(tokenType, (tt) -> createNode(relation, token, constructor, functor, tt.text())));
+            String funtorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
+            Functor functor = new Functor(type, funtorName, new Type(String.class));
+            current.register(AtomicParselet.of(tokenType, tt -> createNode(relation, token, constructor, functor, tt.text())));
             return functor;
         } else if (sig.length() == 2 && sig.get(1) instanceof String) {
             // Constant
@@ -363,11 +355,11 @@ public final class KnowledgeBase {
                 type = type.literal();
             }
             String name = (String) sig.get(1);
-            if (constructor != null) {
-                Functor functor = new Functor(type, constructor.getDeclaringClass().getSimpleName(), new Type(String.class));
-                current.addConstant(name, createNode(relation, token, constructor, functor, name));
-            }
-            return new Constant(type, name);
+            String funtorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
+            Functor functor = new Functor(type, funtorName, n -> n.toString(1), 100, new Type(String.class));
+            Node node = createNode(relation, token, constructor, functor, name);
+            current.register(AtomicParselet.of(name, tt -> node));
+            return functor;
         } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof List) {
             // CallWithArgs
             if (precedence != null) {
@@ -442,7 +434,6 @@ public final class KnowledgeBase {
 
     private final AtomicReference<Map<String, Type>>                   types;
     private final AtomicReference<Set<Functor>>                        functors;
-    private final AtomicReference<Map<String, Node>>                   constants;
     private final AtomicReference<Map<String, Variable>>               variables;
     private final AtomicReference<Map<Relation, InferResult>>          facts;
     private final AtomicReference<Map<Relation, Set<Rule>>>            rules;
@@ -463,7 +454,6 @@ public final class KnowledgeBase {
         types = new AtomicReference<>(init != null ? init.types.get() : Map.of());
         functors = new AtomicReference<>(init != null ? init.functors.get() : Set.of());
         variables = new AtomicReference<>(Map.of());
-        constants = new AtomicReference<>(init != null ? init.constants.get() : Map.of());
         facts = new AtomicReference<>(init != null ? init.facts.get() : Map.of());
         rules = new AtomicReference<>(init != null ? init.rules.get() : Map.of());
 
@@ -524,10 +514,6 @@ public final class KnowledgeBase {
 
     public Map<String, Variable> variables() {
         return variables.get();
-    }
-
-    public Map<String, Node> constants() {
-        return constants.get();
     }
 
     public Set<Functor> functors() {
@@ -655,14 +641,6 @@ public final class KnowledgeBase {
         return variables.get().get(name);
     }
 
-    public final void addConstant(String name, Node constant) {
-        constants.updateAndGet(map -> map.put(name, constant));
-    }
-
-    public final Node getConstant(String name) {
-        return constants.get().get(name);
-    }
-
     public final void addFunctor(Functor functor) {
         functors.updateAndGet(set -> set.add(functor));
     }
@@ -683,10 +661,6 @@ public final class KnowledgeBase {
         }
         for (Functor e : functors()) {
             stream.println(e.resultType() + " ::= " + e);
-        }
-        for (Entry<String, Node> e : constants()) {
-            Node con = e.getValue();
-            stream.println(con.type() + " ::= " + e.getValue());
         }
         for (Entry<String, Variable> e : variables()) {
             Variable var = e.getValue();

@@ -20,8 +20,12 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.nelumbo.And;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.Relation;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 
 public abstract class PostfixParselet extends Parselet {
 
@@ -42,7 +46,12 @@ public abstract class PostfixParselet extends Parselet {
         return precedence;
     }
 
-    public Node parse(Parser parser, Node left, Token token) throws ParseException {
+    public Node parse(Type expected, Parser parser, Node left, Token token) throws ParseException {
+        if (expected == Predicate.TYPE && !left().isAssignableFrom(left.type()) && left().isAssignableFrom(left.type().literal())) {
+            Variable var = new Variable(left.type().literal());
+            Relation eq = new Relation(parser.eqFunctor(), left, var);
+            return And.of(eq, construct(var, token));
+        }
         return construct(left, token);
     }
 
