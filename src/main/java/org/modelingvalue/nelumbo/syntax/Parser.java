@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.util.LinkedList;
 
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
@@ -54,6 +55,8 @@ public final class Parser {
 
     private final KnowledgeBase     knowledgeBase;
     private final LinkedList<Token> tokens;
+
+    private Functor                 eqFunctor;
 
     public Parser(LinkedList<Token> tokens) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
@@ -226,6 +229,13 @@ public final class Parser {
             throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token);
         }
         return token;
+    }
+
+    public Functor eqFunctor() {
+        if (eqFunctor == null) {
+            eqFunctor = knowledgeBase.functors().get(new Functor(Relation.TYPE, "=", null, 30, Node.TYPE, Node.TYPE));
+        }
+        return eqFunctor;
     }
 
 }

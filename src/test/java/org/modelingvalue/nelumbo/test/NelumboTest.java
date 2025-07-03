@@ -83,28 +83,26 @@ public class NelumboTest extends NelumboTestBase {
                         //     nelumbo.logic,
                         //     nelumbo.integers
 
-                        <Person>    :: <Node>
-                        <PersonLit> :: <Person>, <Literal>
-                        <PersonFun> :: <Person>, <Function>
+                        <Person>   :: <Node>
 
-                        <Fact>      ::= pc(<PersonLit>,<PersonLit>),
-                                        ad(<PersonLit>,<PersonLit>)
+                        <Fact>     ::= pc(<Person>,<Person>)
 
-                        <PersonFun> ::= p(<Person>),
-                                        c(<Person>),
-                                        a(<Person>),
-                                        d(<Person>)
+                        <Relation> ::= ad(<Person>,<Person>)
 
-                        <PersonLit> x, y, z
-                        <Person>    a, b, c
+                        <Person>   ::= p(<Person>),
+                                       c(<Person>),
+                                       a(<Person>),
+                                       d(<Person>)
 
-                        ad(x,z) <==  pc(x,z),
-                                     ad(x,y) & pc(y, z)
+                        <Person> a, b, c
 
-                        c(a)=b  <==  a=x & b=y & pc(x,y)
-                        p(a)=b  <==  c(b)=a
-                        d(a)=b  <==  a=x & b=y & ad(x,y)
-                        a(a)=b  <==  d(b)=a
+                        ad(a,c) <==  pc(a,c),
+                                     ad(a,b) & pc(b, c)
+
+                        c(a)=b  <==  pc(a,b)
+                        p(a)=b  <==  pc(b,a)
+                        d(a)=b  <==  ad(a,b)
+                        a(a)=b  <==  ad(b,a)
 
                         <PersonLit> ::= Piet, Jan, Hein
 
@@ -117,21 +115,21 @@ public class NelumboTest extends NelumboTestBase {
                         ? p(Hein)=Jan
                         ? p(Jan)=Piet
 
-                        ? p(Piet)=x
-                        ? p(Jan)=x
-                        ? p(Hein)=x
+                        ? p(Piet)=a
+                        ? p(Jan)=a
+                        ? p(Hein)=a
 
-                        ? c(Piet)=x
-                        ? c(Jan)=x
-                        ? c(Hein)=x
+                        ? c(Piet)=a
+                        ? c(Jan)=a
+                        ? c(Hein)=a
 
-                        ? a(Piet)=x
-                        ? a(Jan)=x
-                        ? a(Hein)=x
+                        ? a(Piet)=a
+                        ? a(Jan)=a
+                        ? a(Hein)=a
 
-                        ? d(Piet)=x
-                        ? d(Jan)=x
-                        ? d(Hein)=x
+                        ? d(Piet)=a
+                        ? d(Jan)=a
+                        ? d(Hein)=a
 
                     """;
             try {
@@ -148,7 +146,7 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             String example = """
 
-                        <IntegerLit>  a, b, c
+                        <Integer> a, b, c
 
                         ? -1=-1
 
@@ -182,7 +180,6 @@ public class NelumboTest extends NelumboTestBase {
                         ? abs(10) = a
                         ? abs(10) = 10
 
-
                     """;
             try {
                 Parser.parseLogic(Integer.class);
@@ -198,17 +195,12 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             String example = """
 
-                        <Fact>        ::= fib(<IntegerLit>,<IntegerLit>)
-                        <IntegerFun>  ::= fib(<Integer>)
+                        <Fact>    ::= fib(<Integer>,<Integer>)
+                        <Integer> ::= fib(<Integer>)
 
-                        // Literal Integer Variables
-                        <IntegerLit> x, y
+                        <Integer> a, b
 
-                        // Int Variables
-                        <Integer>    a, b
-
-                        // Function-like Syntaxtual Suggar
-                        fib(a)=b  <==  a=x & b=y & fib(x,y)
+                        fib(a)=b  <== fib(a,b)
 
                         // Facts
                         fib(0,0)

@@ -339,11 +339,16 @@ public final class KnowledgeBase {
         if (precedence != null) {
             sig = (Node) sig.get(1);
         }
-        boolean relation = Relation.TYPE.isAssignableFrom(type);
+        boolean fact = Type.FACT.isAssignableFrom(type);
+        boolean relation = fact || Relation.TYPE.isAssignableFrom(type);
+        boolean predicate = relation || Predicate.TYPE.isAssignableFrom(type);
         if (sig.length() == 2 && sig.get(1) instanceof Type && ((Type) sig.get(1)).tokenType() != null) {
             // Literal
             if (precedence != null) {
                 throw new ParseException("Precedence should not be defined " + sig, token);
+            }
+            if (!predicate) {
+                type = type.literal();
             }
             TokenType tokenType = ((Type) sig.get(1)).tokenType();
             Functor functor = new Functor(type, constructor.getDeclaringClass().getSimpleName(), new Type(String.class));
@@ -353,6 +358,9 @@ public final class KnowledgeBase {
             // Constant
             if (precedence != null) {
                 throw new ParseException("Precedence should not be defined " + sig, token);
+            }
+            if (!predicate) {
+                type = type.literal();
             }
             String name = (String) sig.get(1);
             if (constructor != null) {
@@ -365,8 +373,14 @@ public final class KnowledgeBase {
             if (precedence != null) {
                 throw new ParseException("Precedence should not be defined " + sig, token);
             }
+            if (!predicate) {
+                type = type.function();
+            }
             String name = (String) sig.get(1);
             List<Type> args = (List<Type>) sig.get(2);
+            if (fact) {
+                args = args.replaceAll(Type::literal);
+            }
             Functor functor = new Functor(type, name, args);
             current.register(CallWithArgs.of(name, (tt, ll) -> createNode(relation, token, constructor, functor, ll.toArray()), //
                     args.toArray(i -> new Type[i])));
@@ -376,8 +390,14 @@ public final class KnowledgeBase {
             if (precedence == null) {
                 throw new ParseException("No precedence defined " + sig, token);
             }
+            if (!predicate) {
+                type = type.function();
+            }
             Type pre = (Type) sig.get(1);
             String oper = (String) sig.get(2);
+            if (fact) {
+                pre = pre.literal();
+            }
             Functor functor = new Functor(type, oper, n -> n.toString(1) + oper, precedence, pre);
             current.register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(relation, token, constructor, functor, ll)));
             return functor;
@@ -386,8 +406,14 @@ public final class KnowledgeBase {
             if (precedence == null) {
                 throw new ParseException("No precedence defined " + sig, token);
             }
+            if (!predicate) {
+                type = type.function();
+            }
             String oper = (String) sig.get(1);
             Type post = (Type) sig.get(2);
+            if (fact) {
+                post = post.literal();
+            }
             Functor functor = new Functor(type, oper, n -> oper + n.toString(1), precedence, post);
             current.register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(relation, token, constructor, functor, rr)));
             return functor;
@@ -396,9 +422,16 @@ public final class KnowledgeBase {
             if (precedence == null) {
                 throw new ParseException("No precedence defined " + sig, token);
             }
+            if (!predicate) {
+                type = type.function();
+            }
             Type pre = (Type) sig.get(1);
             String oper = (String) sig.get(2);
             Type post = (Type) sig.get(3);
+            if (fact) {
+                pre = pre.literal();
+                post = post.literal();
+            }
             Functor functor = new Functor(type, oper, n -> n.toString(1) + oper + n.toString(2), precedence, pre, post);
             current.register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(relation, token, constructor, functor, ll, rr)));
             return functor;

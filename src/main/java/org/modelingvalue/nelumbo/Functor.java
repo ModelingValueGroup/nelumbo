@@ -23,29 +23,34 @@ package org.modelingvalue.nelumbo;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.util.SerializableFunction;
 
 public final class Functor extends Node {
-    private static final long serialVersionUID = 285147889847599160L;
-    public static final Type  TYPE             = new Type(Functor.class, Type.ROOT);
+    private static final long            serialVersionUID = 285147889847599160L;
+    public static final Type             TYPE             = new Type(Functor.class, Type.ROOT);
+
+    private final Function<Node, String> render;
 
     public Functor(Type resultType, String oper, Type... args) {
         super(TYPE, resultType, oper, List.of(args));
+        this.render = null;
         KnowledgeBase.CURRENT.get().addFunctor(this);
     }
 
-    public Functor(Type resultType, String oper, SerializableFunction<Node, String> render, int precedence, Type... args) {
-        super(TYPE, resultType, oper, List.of(args), render.of(), precedence);
+    public Functor(Type resultType, String oper, Function<Node, String> render, int precedence, Type... args) {
+        super(TYPE, resultType, oper, List.of(args), precedence);
+        this.render = render;
         KnowledgeBase.CURRENT.get().addFunctor(this);
     }
 
     public Functor(Type resultType, String name, List<Type> args) {
         super(TYPE, resultType, name, args);
+        this.render = null;
         KnowledgeBase.CURRENT.get().addFunctor(this);
     }
 
-    private Functor(Object[] array) {
+    private Functor(Object[] array, Function<Node, String> render) {
         super(array);
+        this.render = render;
     }
 
     public Type resultType() {
@@ -74,17 +79,17 @@ public final class Functor extends Node {
     @Override
     @SuppressWarnings("unchecked")
     public Function<Node, String> render() {
-        return length() > 5 ? ((Function<Node, String>) get(4)) : null;
+        return render;
     }
 
     @Override
     public int precedence() {
-        return (Integer) get(5);
+        return (Integer) get(4);
     }
 
     @Override
     protected Functor struct(Object[] array) {
-        return new Functor(array);
+        return new Functor(array, render);
     }
 
     @Override

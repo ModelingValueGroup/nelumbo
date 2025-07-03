@@ -25,15 +25,8 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class AtomicParselet extends Parselet {
 
-    private final Type expected;
-
     protected AtomicParselet(Type expected, TokenType type1, String oper1, TokenType type2, String oper2) {
-        super(type1, oper1, type2, oper2);
-        this.expected = expected;
-    }
-
-    public Type expected() {
-        return expected;
+        super(expected, type1, oper1, type2, oper2);
     }
 
     public Node parse(Type expected, Parser parser, Token token) throws ParseException {

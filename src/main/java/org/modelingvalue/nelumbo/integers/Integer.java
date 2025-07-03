@@ -32,12 +32,12 @@ public final class Integer extends Terminal {
 
     private static final long       serialVersionUID = 2454372545442550574L;
 
-    public static Integer           ZERO;
+    private static Functor          FUNCTOR;
 
-    public Integer(Functor functor, Object... args) {
+    public Integer(Functor functor, Object[] args) {
         super(functor, parse((String) args[0]));
-        if (ZERO == null) {
-            ZERO = new Integer(functor, BigInteger.ZERO);
+        if (FUNCTOR == null) {
+            FUNCTOR = functor;
         }
     }
 
@@ -46,7 +46,7 @@ public final class Integer extends Terminal {
     }
 
     public static Integer of(BigInteger val) {
-        return new Integer(ZERO.functor(), val);
+        return new Integer(FUNCTOR, val);
     }
 
     private static BigInteger parse(String string) {

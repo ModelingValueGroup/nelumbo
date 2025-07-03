@@ -25,19 +25,13 @@ import org.modelingvalue.nelumbo.Type;
 
 public abstract class PostfixParselet extends Parselet {
 
-    private final Type expected;
     private final Type left;
     private final int  precedence;
 
     protected PostfixParselet(Type expected, Type left, TokenType type1, String oper1, TokenType type2, String oper2, int precedence) {
-        super(type1, oper1, type2, oper2);
-        this.expected = expected;
+        super(expected, type1, oper1, type2, oper2);
         this.left = left;
         this.precedence = precedence;
-    }
-
-    public Type expected() {
-        return expected;
     }
 
     public Type left() {

@@ -23,12 +23,21 @@ package org.modelingvalue.nelumbo;
 public final class And extends BinaryPredicate {
     private static final long serialVersionUID = -7248491569810098948L;
 
+    private static Functor    FUNCTOR;
+
     public And(Functor functor, Object[] args) {
         super(functor, args[0], args[1]);
+        if (FUNCTOR == null) {
+            FUNCTOR = functor;
+        }
     }
 
     private And(Object[] args, And declaration) {
         super(args, declaration);
+    }
+
+    public static And of(Node predicate1, Node predicate2) {
+        return new And(FUNCTOR, new Object[]{predicate1, predicate2});
     }
 
     @Override

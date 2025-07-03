@@ -97,11 +97,11 @@ public abstract class CallWithArgs {
         return true;
     }
 
-    public boolean isAssignableFrom(List<Node> args) {
+    public boolean isAssignableFrom(List<Type> args) {
         if (args().size() == 1 && args().first().isList()) {
             Type type = args().first().element();
             for (int i = 0; i < args.size(); i++) {
-                if (!type.isAssignableFrom(args.get(i).type())) {
+                if (!type.isAssignableFrom(args.get(i))) {
                     return false;
                 }
             }
@@ -110,7 +110,7 @@ public abstract class CallWithArgs {
                 return false;
             }
             for (int i = 0; i < args.size(); i++) {
-                if (!args().get(i).isAssignableFrom(args.get(i).type())) {
+                if (!args().get(i).isAssignableFrom(args.get(i))) {
                     return false;
                 }
             }

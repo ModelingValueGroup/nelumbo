@@ -21,9 +21,7 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.*;
 
 public final class CallWithArgsParselet extends AtomicParselet {
 
@@ -51,11 +49,29 @@ public final class CallWithArgsParselet extends AtomicParselet {
             args = args.add(parser.parseNode(0, Node.TYPE));
         } while (parser.match(TokenType.COMMA));
         parser.consume(TokenType.RPAREN);
-        CallWithArgs call = call(parser, token, args);
-        return call.construct(token, args);
+        List<Type> types = args.replaceAll(Node::type);
+        CallWithArgs call = call(parser, token, types);
+        if (call != null) {
+            return call.construct(token, args);
+        }
+        if (expected == Predicate.TYPE && !args.isEmpty()) {
+            List<Type> literals = types.replaceAll(Type::literal);
+            call = call(parser, token, literals);
+            if (call != null) {
+                Functor eq = parser.eqFunctor();
+                List<Node> vars = literals.replaceAll(l -> new Variable(l));
+                Node result = call.construct(token, vars);
+                for (int i = 0; i < args.size(); i++) {
+                    result = And.of(new Relation(eq, args.get(i), vars.get(i)), result);
+                }
+                return result;
+            }
+        }
+        String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
+        throw new ParseException("Could not call " + token.text() + signature, token);
     }
 
-    private CallWithArgs call(Parser parser, Token token, List<Node> args) throws ParseException {
+    private CallWithArgs call(Parser parser, Token token, List<Type> args) throws ParseException {
         KnowledgeBase kb = parser.knowledgeBase();
         List<CallWithArgs> calls = kb.callsWithArgs(token);
         if (calls != null) {
@@ -65,9 +81,7 @@ public final class CallWithArgsParselet extends AtomicParselet {
                 }
             }
         }
-        List<Type> types = args.replaceAll(Node::type);
-        String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
-        throw new ParseException("Could not call " + token.text() + signature, token);
+        return null;
     }
 
 }

@@ -20,18 +20,26 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.nelumbo.Type;
+
 public abstract class Parselet {
 
+    private final Type      expected;
     private final TokenType type1;
     private final String    oper1;
     private final TokenType type2;
     private final String    oper2;
 
-    protected Parselet(TokenType type1, String oper1, TokenType type2, String oper2) {
+    protected Parselet(Type expected, TokenType type1, String oper1, TokenType type2, String oper2) {
+        this.expected = expected;
         this.type1 = type1;
         this.oper1 = oper1;
         this.type2 = type2;
         this.oper2 = oper2;
+    }
+
+    public Type expected() {
+        return expected;
     }
 
     public TokenType type1() {
