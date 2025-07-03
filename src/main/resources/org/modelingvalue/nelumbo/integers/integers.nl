@@ -27,7 +27,7 @@
     a>b      <==  a=x & b=y & gt(x,y)
     a<b      <==  b>a
     a<=b     <==  a<b | a=b
-    a>=b     <==  !(a<b)
+    a>=b     <==  a>b | a=b
     -a=b     <==  0-a=b
     abs(a)=b <==  (a>=0 & b=a) | (a<0 & b=-a)
     
