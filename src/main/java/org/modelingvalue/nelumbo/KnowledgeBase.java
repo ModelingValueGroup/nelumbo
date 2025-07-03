@@ -156,7 +156,7 @@ public final class KnowledgeBase {
         return KnowledgeBase.CURRENT.get().getConstant(name);
     }
 
-    private static Node createNode(Token token, Constructor<? extends Node> constructor, Functor functor, Object... args) throws ParseException {
+    private static Node createNode(boolean relation, Token token, Constructor<? extends Node> constructor, Functor functor, Object... args) throws ParseException {
         if (constructor != null) {
             try {
                 return constructor.newInstance(functor, args);
@@ -164,7 +164,7 @@ public final class KnowledgeBase {
                 throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), token);
             }
         }
-        return Relation.TYPE.isAssignableFrom(functor.resultType()) ? new Relation(functor, args) : new Node(functor, args);
+        return relation ? new Relation(functor, args) : new Node(functor, args);
     }
 
     @SuppressWarnings("unchecked")
@@ -339,13 +339,15 @@ public final class KnowledgeBase {
         if (precedence != null) {
             sig = (Node) sig.get(1);
         }
+        boolean relation = Relation.TYPE.isAssignableFrom(type);
         if (sig.length() == 2 && sig.get(1) instanceof Type && ((Type) sig.get(1)).tokenType() != null) {
+            // Literal
             if (precedence != null) {
                 throw new ParseException("Precedence should not be defined " + sig, token);
             }
             TokenType tokenType = ((Type) sig.get(1)).tokenType();
             Functor functor = new Functor(type, constructor.getDeclaringClass().getSimpleName(), new Type(String.class));
-            current.register(AtomicParselet.of(tokenType, (tt) -> createNode(token, constructor, functor, tt.text())));
+            current.register(AtomicParselet.of(tokenType, (tt) -> createNode(relation, token, constructor, functor, tt.text())));
             return functor;
         } else if (sig.length() == 2 && sig.get(1) instanceof String) {
             // Constant
@@ -355,7 +357,7 @@ public final class KnowledgeBase {
             String name = (String) sig.get(1);
             if (constructor != null) {
                 Functor functor = new Functor(type, constructor.getDeclaringClass().getSimpleName(), new Type(String.class));
-                current.addConstant(name, createNode(token, constructor, functor, name));
+                current.addConstant(name, createNode(relation, token, constructor, functor, name));
             }
             return new Constant(type, name);
         } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof List) {
@@ -364,18 +366,20 @@ public final class KnowledgeBase {
                 throw new ParseException("Precedence should not be defined " + sig, token);
             }
             String name = (String) sig.get(1);
-            Functor functor = new Functor(type, name, (List<Type>) sig.get(2));
-            current.register(CallWithArgs.of(name, (tt, ll) -> createNode(token, constructor, functor, ll.toArray()), //
-                    functor.args().toArray(i -> new Type[i])));
+            List<Type> args = (List<Type>) sig.get(2);
+            Functor functor = new Functor(type, name, args);
+            current.register(CallWithArgs.of(name, (tt, ll) -> createNode(relation, token, constructor, functor, ll.toArray()), //
+                    args.toArray(i -> new Type[i])));
             return functor;
         } else if (sig.length() == 3 && sig.get(1) instanceof Type && sig.get(2) instanceof String) {
             // PostfixOperator
             if (precedence == null) {
                 throw new ParseException("No precedence defined " + sig, token);
             }
+            Type pre = (Type) sig.get(1);
             String oper = (String) sig.get(2);
-            Functor functor = new Functor(type, oper, n -> n.toString(1) + oper, precedence, (Type) sig.get(1));
-            current.register(PostfixParselet.of((Type) sig.get(1), oper, precedence, (ll, tt) -> createNode(token, constructor, functor, ll)));
+            Functor functor = new Functor(type, oper, n -> n.toString(1) + oper, precedence, pre);
+            current.register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(relation, token, constructor, functor, ll)));
             return functor;
         } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof Type) {
             // PrefixOperator
@@ -383,17 +387,20 @@ public final class KnowledgeBase {
                 throw new ParseException("No precedence defined " + sig, token);
             }
             String oper = (String) sig.get(1);
-            Functor functor = new Functor(type, oper, n -> oper + n.toString(1), precedence, (Type) sig.get(2));
-            current.register(PrefixParselet.of(oper, (Type) sig.get(2), precedence, (tt, rr) -> createNode(token, constructor, functor, rr)));
+            Type post = (Type) sig.get(2);
+            Functor functor = new Functor(type, oper, n -> oper + n.toString(1), precedence, post);
+            current.register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(relation, token, constructor, functor, rr)));
             return functor;
         } else if (sig.length() == 4 && sig.get(1) instanceof Type && sig.get(2) instanceof String && sig.get(3) instanceof Type) {
             // InfixOperator
             if (precedence == null) {
                 throw new ParseException("No precedence defined " + sig, token);
             }
+            Type pre = (Type) sig.get(1);
             String oper = (String) sig.get(2);
-            Functor functor = new Functor(type, oper, n -> n.toString(1) + oper + n.toString(2), precedence, (Type) sig.get(1), (Type) sig.get(3));
-            current.register(InfixParselet.of((Type) sig.get(1), oper, (Type) sig.get(3), precedence, (ll, tt, rr) -> createNode(token, constructor, functor, ll, rr)));
+            Type post = (Type) sig.get(3);
+            Functor functor = new Functor(type, oper, n -> n.toString(1) + oper + n.toString(2), precedence, pre, post);
+            current.register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(relation, token, constructor, functor, ll, rr)));
             return functor;
         } else {
             throw new ParseException("Invalid signature " + sig, token);
