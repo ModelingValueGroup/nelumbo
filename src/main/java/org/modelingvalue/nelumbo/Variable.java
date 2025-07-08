@@ -20,25 +20,20 @@
 
 package org.modelingvalue.nelumbo;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 public final class Variable extends Node {
-    private static final long          serialVersionUID = -8998368070388908726L;
-    public static final Type           TYPE             = new Type(Variable.class, Type.ROOT);
-    private static final AtomicInteger ID               = new AtomicInteger(0);
+    private static final long serialVersionUID = -8998368070388908726L;
 
     public Variable(Type type, String name) {
-        super(TYPE, type, name);
-        KnowledgeBase.CURRENT.get().addVar(this);
-    }
-
-    public Variable(Type type) {
-        super(TYPE, type, "_" + ID.incrementAndGet());
-        KnowledgeBase.CURRENT.get().addVar(this);
+        super(Type.VARIABLE, type, name);
     }
 
     private Variable(Object[] array) {
         super(array);
+    }
+
+    public Variable literal() {
+        Type type = type();
+        return type.isLiteral() ? this : new Variable(type.literal(), name());
     }
 
     @Override

@@ -26,9 +26,8 @@ import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.Relation;
 
-public final class Multiply extends Relation {
+public final class Multiply extends Predicate {
     private static final long serialVersionUID = 2630128775301942610L;
 
     public Multiply(Functor fuctor, Object[] args) {

@@ -24,10 +24,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.LinkedList;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class NelumboTestBase {
@@ -69,10 +72,17 @@ public class NelumboTestBase {
         KnowledgeBase.CURRENT.get().print(System.err);
     }
 
-    @SuppressWarnings("unused")
     public static void printTokens(LinkedList<Token> tokens) {
         for (Token token : tokens) {
             System.out.println("Token: " + token);
+        }
+    }
+
+    public static void printResults(List<Node> roots) {
+        for (Node root : roots) {
+            if (root.type() == Type.RESULT) {
+                System.out.println(root.toString(1) + " " + root.toString(2));
+            }
         }
     }
 }

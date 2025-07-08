@@ -74,7 +74,7 @@ public final class Integer extends Terminal {
     @Override
     public String toString() {
         BigInteger value = value();
-        return value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? value.toString(Character.MAX_RADIX) : value.toString();
+        return value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? (value.toString(Character.MAX_RADIX) + "#" + Character.MAX_RADIX) : value.toString();
     }
 
 }

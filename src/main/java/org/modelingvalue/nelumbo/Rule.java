@@ -25,12 +25,10 @@ import org.modelingvalue.collections.Set;
 
 public class Rule extends Node {
     private static final long   serialVersionUID = -4602043866952049391L;
-    public static final Type    TYPE             = new Type(Rule.class, Type.ROOT);
-    public static final Functor FUNCTOR          = new Functor(TYPE, "Rule", n -> n.toString(1) + " <== " + n.toString(2), 10, Relation.TYPE, Predicate.TYPE);
+    public static final Functor FUNCTOR          = new Functor(Type.RULE, "Rule", n -> n.toString(1) + " <== " + n.toString(2), 10, Type.PREDICATE, Type.PREDICATE);
 
-    public Rule(Relation consequence, Predicate condition) {
+    public Rule(Predicate consequence, Predicate condition) {
         super(FUNCTOR, consequence, condition);
-        KnowledgeBase.CURRENT.get().addRule(this);
     }
 
     private Rule(Object[] args) {
@@ -42,16 +40,16 @@ public class Rule extends Node {
         return new Rule(array);
     }
 
-    public final Relation consequence() {
-        return (Relation) get(1);
+    public final Predicate consequence() {
+        return (Predicate) get(1);
     }
 
     public final Predicate condition() {
         return (Predicate) get(2);
     }
 
-    protected final InferResult imply(Relation relation, InferContext context) {
-        Map<Variable, Object> binding = relation.getBinding(consequence(), Map.of(), true);
+    protected final InferResult imply(Predicate proven, InferContext context) {
+        Map<Variable, Object> binding = proven.getBinding(consequence(), Map.of(), true);
         if (binding == null) {
             return null;
         }
@@ -62,44 +60,44 @@ public class Rule extends Node {
             System.err.println(context.prefix() + consequence + " <== " + condition);
         }
         InferResult condResult = condition.resolve(context);
-        InferResult relResult;
+        InferResult proResult;
         if (condResult.hasStackOverflow()) {
-            relResult = condResult;
+            proResult = condResult;
         } else {
-            Set<Predicate> relFacts = Set.of(), relFalsehoods = Set.of();
+            Set<Predicate> proFacts = Set.of(), proFalsehoods = Set.of();
             boolean completeFacts = true, completeFalsehoods = true;
             for (Predicate condFact : condResult.facts()) {
-                Predicate relFact = relation.castFrom(consequence.setBinding(condFact.getBinding()));
-                relFacts = relFacts.add(relFact);
+                Predicate proFact = proven.castFrom(consequence.setBinding(condFact.getBinding()));
+                proFacts = proFacts.add(proFact);
             }
             for (Predicate condFalsehood : condResult.falsehoods()) {
-                Predicate relFalsehood = relation.castFrom(consequence.setBinding(condFalsehood.getBinding()));
-                if (!relFacts.contains(relFalsehood)) {
-                    relFalsehoods = relFalsehoods.add(relFalsehood);
+                Predicate proFalsehood = proven.castFrom(consequence.setBinding(condFalsehood.getBinding()));
+                if (!proFacts.contains(proFalsehood)) {
+                    proFalsehoods = proFalsehoods.add(proFalsehood);
                 }
             }
-            if (relation.isFullyBound()) {
-                if (relFacts.isEmpty() && relFalsehoods.isEmpty()) {
-                    relFalsehoods = relation.singleton();
+            if (proven.isFullyBound()) {
+                if (proFacts.isEmpty() && proFalsehoods.isEmpty()) {
+                    proFalsehoods = proven.singleton();
                 }
             } else {
                 boolean condFullyBound = condition.isFullyBound();
-                if (condFullyBound ? relFacts.isEmpty() : !condResult.completeFacts()) {
+                if (condFullyBound ? proFacts.isEmpty() : !condResult.completeFacts()) {
                     completeFacts = false;
                 }
-                if (condFullyBound ? relFalsehoods.isEmpty() : !condResult.completeFalsehoods()) {
+                if (condFullyBound ? proFalsehoods.isEmpty() : !condResult.completeFalsehoods()) {
                     completeFalsehoods = false;
                 }
-                if (!completeFacts && !relFalsehoods.isEmpty()) {
-                    relFalsehoods = Set.of();
+                if (!completeFacts && !proFalsehoods.isEmpty()) {
+                    proFalsehoods = Set.of();
                 }
             }
-            relResult = InferResult.of(relFacts, completeFacts, relFalsehoods, completeFalsehoods, condResult.cycles());
+            proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());
         }
         if (context.trace()) {
-            System.err.println(context.prefix() + relation + " " + relResult);
+            System.err.println(context.prefix() + proven + " " + proResult);
         }
-        return relResult;
+        return proResult;
     }
 
     @Override

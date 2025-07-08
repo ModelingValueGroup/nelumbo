@@ -35,9 +35,9 @@ public interface InferResult {
 
     Predicate unknown();
 
-    Set<Relation> cycles();
+    Set<Predicate> cycles();
 
-    List<Relation> stackOverflow();
+    List<Predicate> stackOverflow();
 
     default boolean hasCycleWith(Predicate predicate) {
         return cycles().contains(predicate);
@@ -75,7 +75,7 @@ public interface InferResult {
         return facts().isEmpty() && falsehoods().isEmpty() && !completeFacts() && !completeFalsehoods();
     }
 
-    static InferResult of(Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods, Set<Relation> cycles) {
+    static InferResult of(Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods, Set<Predicate> cycles) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -103,12 +103,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<Relation> cycles() {
+            public Set<Predicate> cycles() {
                 return cycles;
             }
 
             @Override
-            public List<Relation> stackOverflow() {
+            public List<Predicate> stackOverflow() {
                 return null;
             }
         };
@@ -142,12 +142,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<Relation> cycles() {
+            public Set<Predicate> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<Relation> stackOverflow() {
+            public List<Predicate> stackOverflow() {
                 return null;
             }
         };
@@ -181,12 +181,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<Relation> cycles() {
+            public Set<Predicate> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<Relation> stackOverflow() {
+            public List<Predicate> stackOverflow() {
                 return null;
             }
         };
@@ -220,12 +220,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<Relation> cycles() {
+            public Set<Predicate> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<Relation> stackOverflow() {
+            public List<Predicate> stackOverflow() {
                 return null;
             }
         };
@@ -259,12 +259,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<Relation> cycles() {
+            public Set<Predicate> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<Relation> stackOverflow() {
+            public List<Predicate> stackOverflow() {
                 return null;
             }
         };
@@ -298,19 +298,19 @@ public interface InferResult {
             }
 
             @Override
-            public Set<Relation> cycles() {
+            public Set<Predicate> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<Relation> stackOverflow() {
+            public List<Predicate> stackOverflow() {
                 return null;
             }
         };
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    static InferResult cycle(Set<Predicate> facts, Set<Predicate> falsehoods, Relation relation) {
+    static InferResult cycle(Set<Predicate> facts, Set<Predicate> falsehoods, Predicate Predicate) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -338,18 +338,18 @@ public interface InferResult {
             }
 
             @Override
-            public Set<Relation> cycles() {
-                return (Set) relation.singleton();
+            public Set<Predicate> cycles() {
+                return (Set) Predicate.singleton();
             }
 
             @Override
-            public List<Relation> stackOverflow() {
+            public List<Predicate> stackOverflow() {
                 return null;
             }
         };
     }
 
-    static InferResult overflow(List<Relation> overflow) {
+    static InferResult overflow(List<Predicate> overflow) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -377,12 +377,12 @@ public interface InferResult {
             }
 
             @Override
-            public Set<Relation> cycles() {
+            public Set<Predicate> cycles() {
                 return Set.of();
             }
 
             @Override
-            public List<Relation> stackOverflow() {
+            public List<Predicate> stackOverflow() {
                 return overflow;
             }
         };
@@ -393,7 +393,7 @@ public interface InferResult {
         boolean completeFacts = completeFacts() || other.completeFacts();
         Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
-        Set<Relation> cycles = cycles().addAll(other.cycles());
+        Set<Predicate> cycles = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
@@ -402,7 +402,7 @@ public interface InferResult {
         boolean completeFacts = completeFacts() && other.completeFacts();
         Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
         boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
-        Set<Relation> cycles = cycles().addAll(other.cycles());
+        Set<Predicate> cycles = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
@@ -419,7 +419,7 @@ public interface InferResult {
         boolean completeFacts = completeFacts() && other.completeFacts();
         Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
-        Set<Relation> cycles = cycles().addAll(other.cycles());
+        Set<Predicate> cycles = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
@@ -428,7 +428,7 @@ public interface InferResult {
         boolean completeFacts = completeFacts() && other.completeFacts();
         Set<Predicate> falsehoods = falsehoods().retainAll(other.falsehoods());
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
-        Set<Relation> cycles = cycles().addAll(other.cycles());
+        Set<Predicate> cycles = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
@@ -459,7 +459,7 @@ public interface InferResult {
     static abstract class InferResultImpl implements InferResult {
         @Override
         public String toString() {
-            List<Relation> overflow = stackOverflow();
+            List<Predicate> overflow = stackOverflow();
             if (overflow != null) {
                 return overflow.toString().substring(4);
             } else {

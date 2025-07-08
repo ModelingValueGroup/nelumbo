@@ -130,7 +130,7 @@ public final class Collect extends Predicate {
     private InferResult collect(InferResult condResult, InferContext context) {
         Predicate condColl;
         Set<Predicate> prev, next = Set.of();
-        Set<Relation> cycles = condResult.cycles();
+        Set<Predicate> cycles = condResult.cycles();
         boolean complete = condResult.completeFacts();
         if (complete) {
             next = identityPred.singleton();

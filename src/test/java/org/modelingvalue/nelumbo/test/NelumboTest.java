@@ -51,7 +51,6 @@ public class NelumboTest extends NelumboTestBase {
                 """;
         try {
             LinkedList<Token> tokens = new Tokenizer(example, "tokenizerTest").tokenize();
-            // printTokens(tokens);
             assertEquals(16, tokens.size());
         } catch (ParseException e) {
             fail(e);
@@ -62,13 +61,10 @@ public class NelumboTest extends NelumboTestBase {
     public void initTest() {
         run(() -> {
             String example = """
-
                     // Init only
-
                     """;
             try {
                 new Parser(new Tokenizer(example, "initTest").tokenize()).parse();
-                // printKnowledgeBase();
             } catch (ParseException e) {
                 fail(e);
             }
@@ -78,63 +74,8 @@ public class NelumboTest extends NelumboTestBase {
     @Test
     public void familyTest() {
         run(() -> {
-            String example = """
-                        // org.mvg.family ::
-                        //     nelumbo.logic,
-                        //     nelumbo.integers
-
-                        <Person>   :: <Node>
-
-                        <Fact>     ::= pc(<Person>,<Person>)
-
-                        <Relation> ::= ad(<Person>,<Person>)
-
-                        <Person>   ::= p(<Person>),
-                                       c(<Person>),
-                                       a(<Person>),
-                                       d(<Person>)
-
-                        <Person> a, b, c
-
-                        ad(a,c) <==  pc(a,c),
-                                     ad(a,b) & pc(b, c)
-
-                        c(a)=b  <==  pc(a,b)
-                        p(a)=b  <==  pc(b,a)
-                        d(a)=b  <==  ad(a,b)
-                        a(a)=b  <==  ad(b,a)
-
-                        <PersonLit> ::= Piet, Jan, Hein
-
-                        pc(Piet,Jan)
-                        pc(Jan, Hein)
-
-                        ? p(Piet)=Jan
-                        ? p(Jan)=Hein
-
-                        ? p(Hein)=Jan
-                        ? p(Jan)=Piet
-
-                        ? p(Piet)=a
-                        ? p(Jan)=a
-                        ? p(Hein)=a
-
-                        ? c(Piet)=a
-                        ? c(Jan)=a
-                        ? c(Hein)=a
-
-                        ? a(Piet)=a
-                        ? a(Jan)=a
-                        ? a(Hein)=a
-
-                        ? d(Piet)=a
-                        ? d(Jan)=a
-                        ? d(Hein)=a
-
-                    """;
             try {
-                new Parser(new Tokenizer(example, "familyTest").tokenize()).parse();
-                // printKnowledgeBase();
+                printResults(Parser.parse(NelumboTest.class, "familyTest.nl"));
             } catch (ParseException e) {
                 fail(e);
             }
@@ -144,76 +85,21 @@ public class NelumboTest extends NelumboTestBase {
     @Test
     public void integersTest() {
         run(() -> {
-            String example = """
-
-                        <Integer> a, b, c
-
-                        ? -1=-1
-
-                        ? 0>1
-                        ? 0<1
-                        ? 0>=1
-                        ? 0<=1
-                        ? 0!=1
-                        ? 0=1
-
-                        ? 10+11=22
-                        ? 10+11=21
-                        ? a+11=21
-                        ? 10+a=21
-                        ? 10+11=a
-
-                        ? 10-11=1
-                        ? 10-11=-1
-                        ? a-11=-1
-                        ? 10-a=-1
-                        ? 10-11=a
-
-                        ? 10*11=120
-                        ? 10*11=110
-                        ? a*11=110
-                        ? 10*a=110
-                        ? 10*11=a
-
-                        ? abs(-10) = 10
-                        ? abs(a) = 10
-                        ? abs(10) = a
-                        ? abs(10) = 10
-
-                    """;
             try {
-                Parser.parseLogic(Integer.class);
-                new Parser(new Tokenizer(example, "integersTest").tokenize()).parse();
-                // printKnowledgeBase();
+                Parser.parse(Integer.class);
+                printResults(Parser.parse(NelumboTest.class, "integersTest.nl"));
             } catch (ParseException e) {
                 fail(e);
             }
         });
     }
 
-    public void fibTest() {
+    @Test
+    public void fibonacciTest() {
         run(() -> {
-            String example = """
-
-                        <Fact>    ::= fib(<Integer>,<Integer>)
-                        <Integer> ::= fib(<Integer>)
-
-                        <Integer> a, b
-
-                        fib(a)=b  <== fib(a,b)
-
-                        // Facts
-                        fib(0,0)
-                        fib(1,1)
-
-                        // Rule
-                        fib(a,b)  <==  a>1 & b=fib(a-1)+fib(a-2)
-
-                    """;
             try {
-                Parser.parseLogic(Integer.class);
-                new Parser(new Tokenizer(example, "fibTest").tokenize()).parse();
-                // printKnowledgeBase();
+                Parser.parse(Integer.class);
+                printResults(Parser.parse(NelumboTest.class, "fibonacciTest.nl"));
             } catch (ParseException e) {
                 fail(e);
             }

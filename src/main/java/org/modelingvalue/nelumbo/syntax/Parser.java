@@ -27,13 +27,22 @@ import java.util.LinkedList;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.ListNode;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 
 public final class Parser {
 
-    public static void parseLogic(Class<?> clss) throws ParseException {
+    public static List<Node> parse(Class<?> clss) throws ParseException {
         String packageName = clss.getPackageName();
         String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
+        return parse(clss, name);
+    }
+
+    public static List<Node> parse(Class<?> clss, String name) throws ParseException {
         try {
             InputStream stream = clss.getResourceAsStream(name);
             if (stream == null) {
@@ -41,7 +50,7 @@ public final class Parser {
             }
             InputStream buffer = new BufferedInputStream(stream);
             String base = new String(buffer.readAllBytes());
-            new Parser(new Tokenizer(base, name).tokenize()).parse();
+            return new Parser(new Tokenizer(base, name).tokenize()).parse();
         } catch (IOException e) {
             throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), 0, 0, 0, "", name);
         }
@@ -51,8 +60,6 @@ public final class Parser {
 
     private final KnowledgeBase     knowledgeBase;
     private final LinkedList<Token> tokens;
-
-    private Functor                 eqFunctor;
 
     public Parser(LinkedList<Token> tokens) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
@@ -65,10 +72,10 @@ public final class Parser {
             Type elemType = expected.element();
             left = new ListNode(elemType);
             do {
-                Token token = tokens.peek();
+                Token position = tokens.peek();
                 Node node = parseNode(precedence, elemType);
                 if (!elemType.isAssignableFrom(node.type())) {
-                    throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), token);
+                    throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), position);
                 }
                 left = new ListNode((ListNode) left, node);
             } while (match(TokenType.COMMA));
@@ -165,7 +172,7 @@ public final class Parser {
                 if (postfix != null) {
                     return postfix;
                 }
-                if (expected == Predicate.TYPE && !type.isLiteral()) {
+                if (expected == Type.PREDICATE && !type.isLiteral()) {
                     postfix = knowledgeBase.postfix(expected, type.literal(), token1, token2);
                 }
                 if (postfix != null) {
@@ -191,8 +198,8 @@ public final class Parser {
             if (!tokens.isEmpty()) {
                 Token token = tokens.peek();
                 Node node = parseNode(0, Type.ROOT);
-                if (node.type() == Type.FACT) {
-                    knowledgeBase.addFact((Relation) node);
+                if (node.type() == Type.RELATION) {
+                    knowledgeBase.addFact((Predicate) node);
                 }
                 if (node instanceof ListNode) {
                     for (Node e : ((ListNode) node).elements()) {
@@ -214,10 +221,14 @@ public final class Parser {
     }
 
     private void checkRoot(Token token, Node node) throws ParseException {
-        Type type = node instanceof Variable ? Variable.TYPE : node.type();
+        Type type = node instanceof Variable ? Type.VARIABLE : node.type();
         if (!Type.ROOT.isAssignableFrom(type)) {
-            throw new ParseException("Expected type, functor, variable, rule, fact or query and found " + node + " of type " + type, token);
+            throw new ParseException("Expected type, functor, variable, rule, fact or query. Found " + node + " of type " + type, token);
         }
+    }
+
+    public Token peek() {
+        return tokens.peek();
     }
 
     public boolean next(TokenType expected) {
@@ -251,13 +262,6 @@ public final class Parser {
             throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token);
         }
         return token;
-    }
-
-    public Functor eqFunctor() {
-        if (eqFunctor == null) {
-            eqFunctor = knowledgeBase.functors().get(new Functor(Relation.TYPE, "=", null, 30, Node.TYPE, Node.TYPE));
-        }
-        return eqFunctor;
     }
 
 }

@@ -61,6 +61,11 @@ public final class Boolean extends Predicate {
     }
 
     @Override
+    protected InferResult resolve(InferContext context) {
+        return infer(context);
+    }
+
+    @Override
     protected InferResult infer(InferContext context) {
         if (result == null) {
             result = isTrue() ? factCC() : falsehoodCC();

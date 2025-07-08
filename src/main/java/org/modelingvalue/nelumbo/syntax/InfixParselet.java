@@ -20,12 +20,8 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import org.modelingvalue.nelumbo.And;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.Relation;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
 
 public abstract class InfixParselet extends PostfixParselet {
 
@@ -42,16 +38,10 @@ public abstract class InfixParselet extends PostfixParselet {
 
     @Override
     public Node parse(Type expected, Parser parser, Node left, Token token) throws ParseException {
+        Token position = parser.peek();
         Node right = parser.parseNode(precedence(), right());
-        if (!left().isAssignableFrom(left.type()) || !right().isAssignableFrom(right.type())) {
-            if (expected == Predicate.TYPE && left().isAssignableFrom(left.type().literal()) && right().isAssignableFrom(right.type().literal())) {
-                Variable varLeft = new Variable(left.type().literal());
-                Variable varRight = new Variable(left.type().literal());
-                Relation eqLeft = new Relation(parser.eqFunctor(), left, varLeft);
-                Relation eqRight = new Relation(parser.eqFunctor(), right, varRight);
-                return And.of(eqLeft, And.of(eqRight, construct(varLeft, token, right)));
-            }
-            throw new ParseException("Expected element of type " + right() + " and found " + right + " of type " + right.type(), token);
+        if (!right().isAssignableFrom(right.type())) {
+            throw new ParseException("Expected right of type " + right() + " and found " + right + " of type " + right.type(), position);
         }
         return construct(left, token, right);
     }

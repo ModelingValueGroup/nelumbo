@@ -21,7 +21,9 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 
 public final class CallWithArgsParselet extends AtomicParselet {
 
@@ -46,7 +48,7 @@ public final class CallWithArgsParselet extends AtomicParselet {
         parser.consume(TokenType.LPAREN);
         List<Node> args = List.of();
         do {
-            args = args.add(parser.parseNode(0, Node.TYPE));
+            args = args.add(parser.parseNode(0, Type.NODE));
         } while (parser.match(TokenType.COMMA));
         parser.consume(TokenType.RPAREN);
         List<Type> types = args.replaceAll(Node::type);
@@ -54,26 +56,13 @@ public final class CallWithArgsParselet extends AtomicParselet {
         if (call != null) {
             return call.construct(token, args);
         }
-        if (expected == Predicate.TYPE && !args.isEmpty()) {
-            List<Type> literals = types.replaceAll(Type::literal);
-            call = call(parser, token, literals);
-            if (call != null) {
-                Functor eq = parser.eqFunctor();
-                List<Node> vars = literals.replaceAll(l -> new Variable(l));
-                Node result = call.construct(token, vars);
-                for (int i = 0; i < args.size(); i++) {
-                    result = And.of(new Relation(eq, args.get(i), vars.get(i)), result);
-                }
-                return result;
-            }
-        }
         String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
         throw new ParseException("Could not call " + token.text() + signature, token);
     }
 
     private CallWithArgs call(Parser parser, Token token, List<Type> args) throws ParseException {
         KnowledgeBase kb = parser.knowledgeBase();
-        List<CallWithArgs> calls = kb.callsWithArgs(token);
+        List<CallWithArgs> calls = kb.callsWithArgs(expected(), token);
         if (calls != null) {
             for (CallWithArgs call : calls) {
                 if (call.isAssignableFrom(args)) {

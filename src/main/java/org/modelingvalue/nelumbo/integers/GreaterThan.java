@@ -26,9 +26,8 @@ import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.Relation;
 
-public final class GreaterThan extends Relation {
+public final class GreaterThan extends Predicate {
     private static final long serialVersionUID = 5338681256251602011L;
 
     public GreaterThan(Functor fuctor, Object[] args) {

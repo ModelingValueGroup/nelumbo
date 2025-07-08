@@ -33,8 +33,6 @@ import org.modelingvalue.collections.util.StringUtil;
 public class Node extends StructImpl {
     private static final long     serialVersionUID = 7315776001191198132L;
 
-    public static final Type      TYPE             = new Type(Node.class);
-
     private int                   hashCode         = 0;
     private Map<Variable, Object> variables;
     private int                   nrOfUnbound      = -1;
@@ -220,27 +218,6 @@ public class Node extends StructImpl {
             array[idx[ii]] = val;
         }
         return struct(array);
-    }
-
-    protected Node replace(Node from, Node to) {
-        if (equals(from)) {
-            return to;
-        } else {
-            Object[] array = null;
-            for (int i = 0; i < length(); i++) {
-                Object thisVal = get(i);
-                if (thisVal instanceof Node && !(thisVal instanceof Type)) {
-                    Node toVal = ((Node) thisVal).replace(from, to);
-                    if (toVal != thisVal) {
-                        if (array == null) {
-                            array = toArray();
-                        }
-                        array[i] = toVal;
-                    }
-                }
-            }
-            return array != null ? struct(array) : this;
-        }
     }
 
     @SuppressWarnings("unchecked")

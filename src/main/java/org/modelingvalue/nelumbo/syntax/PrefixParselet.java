@@ -20,12 +20,8 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import org.modelingvalue.nelumbo.And;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.Relation;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
 
 public abstract class PrefixParselet extends AtomicParselet {
 
@@ -48,14 +44,10 @@ public abstract class PrefixParselet extends AtomicParselet {
 
     @Override
     public Node parse(Type expected, Parser parser, Token token) throws ParseException {
+        Token position = parser.peek();
         Node right = parser.parseNode(precedence(), right());
         if (!right().isAssignableFrom(right.type())) {
-            if (expected == Predicate.TYPE && right().isAssignableFrom(right.type().literal())) {
-                Variable var = new Variable(right.type().literal());
-                Relation eq = new Relation(parser.eqFunctor(), right, var);
-                return And.of(eq, construct(token, var));
-            }
-            throw new ParseException("Expected element of type " + right() + " and found " + right + " of type " + right.type(), token);
+            throw new ParseException("Expected right of type " + right() + " and found " + right + " of type " + right.type(), position);
         }
         return construct(token, right);
     }

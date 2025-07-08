@@ -20,7 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
-public final class Not extends Predicate {
+public final class Not extends CompoundPredicate {
     private static final long serialVersionUID = -4543178470298951866L;
 
     public Not(Functor functor, Object[] args) {

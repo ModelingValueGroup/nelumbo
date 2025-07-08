@@ -22,7 +22,6 @@ package org.modelingvalue.nelumbo;
 
 public class Terminal extends Node {
     private static final long serialVersionUID = 7548506547559092927L;
-    public static final Type  TYPE             = new Type(Terminal.class, Node.TYPE);
 
     public Terminal(Type type, Object... args) {
         super(type, args);

@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public abstract class BinaryPredicate extends Predicate {
+public abstract class BinaryPredicate extends CompoundPredicate {
     private static final long    serialVersionUID = -928776822979604743L;
 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};

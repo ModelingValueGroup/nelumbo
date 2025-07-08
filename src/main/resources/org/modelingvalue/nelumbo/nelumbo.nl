@@ -1,22 +1,20 @@
 
-    <Fact>      ::= eq(<Literal>,<Literal>)          @org.modelingvalue.nelumbo.Equal
-
-    <Relation>  ::= <Node> = <Node>             #30,
-                    <Node> != <Node>            #30  
-
     <Predicate> ::= true                             @org.modelingvalue.nelumbo.Boolean,
                     false                            @org.modelingvalue.nelumbo.Boolean,
                     ! <Predicate>               #25  @org.modelingvalue.nelumbo.Not,
                     <Predicate> & <Predicate>   #20  @org.modelingvalue.nelumbo.And,
                     <Predicate> | <Predicate>   #20  @org.modelingvalue.nelumbo.Or,
-                    <Predicate> --> <Predicate> #15  @org.modelingvalue.nelumbo.Collect
+                    <Predicate> --> <Predicate> #15  @org.modelingvalue.nelumbo.Collect,
+                    eq(<Node>,<Node>)                @org.modelingvalue.nelumbo.Equal,
+                    <Node> = <Node>             #30,
+                    <Node> != <Node>            #30
 
-    <Literal>  L1, L2
-    <Function> F1, F2
-    <Node>     N1, N2
+    <Literal>  l, l1, l2
+    <Function> f1, f2
+    <Node>     n1, n2
 
-    L1=L2  <==  eq(L1, L2)
-    F1=F2  <==  F1=L1 & F2=L1
-    L1=F1  <==  F1=L1
-    N1!=N2 <==  !(N1=N2)
+    l1=l2  <==  eq(l1, l2)
+    f1=f2  <==  f1=l & f2=l
+    l1=f1  <==  f1=l1
+    n1!=n2 <==  !(n1=n2)
 

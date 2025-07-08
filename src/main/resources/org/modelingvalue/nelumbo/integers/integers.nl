@@ -1,23 +1,23 @@
 
-    <Integer>  :: <Node>
+    <Integer>   :: <Node>
    
-    <Integer>  ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.Integer
+    <Integer>   ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.Integer
   
-    <Fact>     ::= gt(<Integer>,<Integer>)              @org.modelingvalue.nelumbo.integers.GreaterThan,
-                   add(<Integer>,<Integer>,<Integer>)   @org.modelingvalue.nelumbo.integers.Add,
-                   mult(<Integer>,<Integer>,<Integer>)  @org.modelingvalue.nelumbo.integers.Multiply
+    <Relation>  ::= gt(<Integer>,<Integer>)              @org.modelingvalue.nelumbo.integers.GreaterThan,
+                    add(<Integer>,<Integer>,<Integer>)   @org.modelingvalue.nelumbo.integers.Add,
+                    mult(<Integer>,<Integer>,<Integer>)  @org.modelingvalue.nelumbo.integers.Multiply
 
-    <Relation> ::= <Integer> <  <Integer>  #30,
-                   <Integer> >  <Integer>  #30,
-                   <Integer> <= <Integer>  #30,
-                   <Integer> >= <Integer>  #30
+    <Predicate> ::= <Integer> <  <Integer>  #30,
+                    <Integer> >  <Integer>  #30,
+                    <Integer> <= <Integer>  #30,
+                    <Integer> >= <Integer>  #30
 
-    <Integer>  ::= <Integer> -  <Integer>  #40,
-                   <Integer> +  <Integer>  #40,
-                             -  <Integer>  #80,
-                   <Integer> *  <Integer>  #50,
-                   <Integer> /  <Integer>  #50,
-                   abs(<Integer>)
+    <Integer>   ::= <Integer> -  <Integer>  #40,
+                    <Integer> +  <Integer>  #40,
+                              -  <Integer>  #80,
+                    <Integer> *  <Integer>  #50,
+                    <Integer> /  <Integer>  #50,
+                    abs(<Integer>)
 
     <Integer>  a, b, c
     

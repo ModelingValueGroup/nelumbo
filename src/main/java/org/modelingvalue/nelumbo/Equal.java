@@ -22,7 +22,7 @@ package org.modelingvalue.nelumbo;
 
 import java.util.Objects;
 
-public class Equal extends Relation {
+public class Equal extends Predicate {
     private static final long serialVersionUID = -5516286818572134367L;
 
     public Equal(Functor fuctor, Object[] args) {
