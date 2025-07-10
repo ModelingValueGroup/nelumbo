@@ -36,6 +36,10 @@ import org.modelingvalue.nelumbo.Variable;
 
 public final class Parser {
 
+    public static List<Node> parse(String string) throws ParseException {
+        return new Parser(new Tokenizer(string + "\n", string).tokenize()).parse();
+    }
+
     public static List<Node> parse(Class<?> clss) throws ParseException {
         String packageName = clss.getPackageName();
         String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
