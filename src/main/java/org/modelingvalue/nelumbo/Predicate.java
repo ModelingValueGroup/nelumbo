@@ -37,7 +37,6 @@ public class Predicate extends Node {
 
     private final InferResult      cycleResult        = InferResult.cycle(Set.of(), Set.of(), this);
 
-    private final Set<Predicate>   singleton          = Set.of(this);
     private final Predicate        declaration;
 
     private Predicate              parent;
@@ -256,23 +255,23 @@ public class Predicate extends Node {
     }
 
     public final InferResult factCC() {
-        return InferResult.factsCC(singleton);
+        return InferResult.factsCC(singleton());
     }
 
     public final InferResult falsehoodCC() {
-        return InferResult.falsehoodsCC(singleton);
+        return InferResult.falsehoodsCC(singleton());
     }
 
     public final InferResult factCI() {
-        return InferResult.factsCI(singleton);
+        return InferResult.factsCI(singleton());
     }
 
     public final InferResult falsehoodIC() {
-        return InferResult.falsehoodsCC(singleton);
+        return InferResult.falsehoodsCC(singleton());
     }
 
     public final Set<Predicate> singleton() {
-        return singleton;
+        return Set.of(this);
     }
 
     @Override

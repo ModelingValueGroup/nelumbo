@@ -61,11 +61,11 @@ public abstract class CompoundPredicate extends Predicate {
                     } else {
                         for (Predicate pred : result.facts()) {
                             Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
-                            next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.TRUE));
+                            next = next.put(binding, predicate.setBinding(binding)); // .replace(pred, Boolean.TRUE));
                         }
                         for (Predicate pred : result.falsehoods()) {
                             Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
-                            next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.FALSE));
+                            next = next.put(binding, predicate.setBinding(binding)); // .replace(pred, Boolean.FALSE));
                         }
                         completeFacts &= result.completeFacts();
                         completeFalsehoods &= result.completeFalsehoods();

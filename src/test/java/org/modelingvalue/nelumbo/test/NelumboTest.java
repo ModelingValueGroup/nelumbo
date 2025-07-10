@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.LinkedList;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -41,7 +41,7 @@ public class NelumboTest extends NelumboTestBase {
         System.setProperty("TRACE_NELUMBO", "false");
     }
 
-    @Test
+    @RepeatedTest(100)
     public void tokenizerTest() {
         String example = """
                 // COMMEND
@@ -58,7 +58,7 @@ public class NelumboTest extends NelumboTestBase {
         }
     }
 
-    @Test
+    @RepeatedTest(100)
     public void initTest() {
         run(() -> {
             String example = """
@@ -73,7 +73,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @Test
+    @RepeatedTest(10)
     public void familyTest() {
         run(() -> {
             try {
@@ -85,7 +85,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @Test
+    @RepeatedTest(10)
     public void integersTest() {
         run(() -> {
             try {
@@ -98,7 +98,7 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @Test
+    @RepeatedTest(10)
     public void fibonacciTest() {
         run(() -> {
             try {

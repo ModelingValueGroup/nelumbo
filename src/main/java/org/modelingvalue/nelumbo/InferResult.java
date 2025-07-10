@@ -474,7 +474,8 @@ public interface InferResult {
 
         @SuppressWarnings({"rawtypes", "unchecked"})
         private String toString(Set<Predicate> predicates, boolean complete) {
-            String result = predicates.toString().substring(3);
+            List<String> stringList = predicates.map(Object::toString).sorted().asList();
+            String result = stringList.toString().substring(4);
             return complete ? result : result.substring(0, result.length() - 1) + (predicates.isEmpty() ? "..]" : ",..]");
         }
 
