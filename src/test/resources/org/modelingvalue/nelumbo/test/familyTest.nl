@@ -1,5 +1,7 @@
 
     <Person>    :: <Node>
+    <Male>      :: <Person>
+    <Female>    :: <Person>
 
     <Relation>  ::= pc(<Person>,<Person>)
 
@@ -9,40 +11,37 @@
                     c(<Person>),
                     a(<Person>),
                     d(<Person>)
+                    
+    <Female>    ::= m(<Person>)
+    <Male>      ::= f(<Person>)
 
     <Person> a, b, c
+    <Male>   y
+    <Female> x
 
     ad(a,c) <==  pc(a,c),
                  ad(a,b) & pc(b, c)
-
+               
     c(a)=b  <==  pc(a,b)
     p(a)=b  <==  pc(b,a)
     d(a)=b  <==  ad(a,b)
     a(a)=b  <==  ad(b,a)
+    m(a)=b  <==  pc(x,a) & b=x
+    f(a)=b  <==  pc(y,a) & b=y
 
-    <Person> ::= Piet, Jan, Hein
+    <Male>   ::= Hendrik, Bernhard, Claus, Willem
+    <Female> ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
 
-    pc(Piet,Jan)
-    pc(Jan, Hein)
+    pc(Hendrik, Juliana)
+    pc(Wilhelmina, Juliana)
+    pc(Juliana, Beatrix)
+    pc(Bernhard, Beatrix)
+    pc(Beatrix, Willem)
+    pc(Claus, Willem)
+    pc(Willem, Amalia)
+    pc(Maxima, Amalia)
+    
+    ? m(Amalia)=a
+    ? a(Amalia)=a
 
-    ? p(Piet)=Jan
-    ? p(Jan)=Hein
 
-    ? p(Hein)=Jan
-    ? p(Jan)=Piet
-
-    ? p(Piet)=a
-    ? p(Jan)=a
-    ? p(Hein)=a
-
-    ? c(Piet)=a
-    ? c(Jan)=a
-    ? c(Hein)=a
-
-    ? a(Piet)=a
-    ? a(Jan)=a
-    ? a(Hein)=a
-
-    ? d(Piet)=a
-    ? d(Jan)=a
-    ? d(Hein)=a

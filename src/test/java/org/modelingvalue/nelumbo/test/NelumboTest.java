@@ -53,6 +53,7 @@ public class NelumboTest extends NelumboTestBase {
             LinkedList<Token> tokens = new Tokenizer(example, "tokenizerTest").tokenize();
             assertEquals(16, tokens.size());
         } catch (ParseException e) {
+            System.err.println(e.getMessage());
             fail(e);
         }
     }
@@ -66,6 +67,7 @@ public class NelumboTest extends NelumboTestBase {
             try {
                 new Parser(new Tokenizer(example, "initTest").tokenize()).parse();
             } catch (ParseException e) {
+                System.err.println(e.getMessage());
                 fail(e);
             }
         });
@@ -77,6 +79,7 @@ public class NelumboTest extends NelumboTestBase {
             try {
                 printResults(Parser.parse(NelumboTest.class, "familyTest.nl"));
             } catch (ParseException e) {
+                System.err.println(e.getMessage());
                 fail(e);
             }
         });
@@ -89,6 +92,7 @@ public class NelumboTest extends NelumboTestBase {
                 Parser.parse(Integer.class);
                 printResults(Parser.parse(NelumboTest.class, "integersTest.nl"));
             } catch (ParseException e) {
+                System.err.println(e.getMessage());
                 fail(e);
             }
         });
@@ -101,6 +105,7 @@ public class NelumboTest extends NelumboTestBase {
                 Parser.parse(Integer.class);
                 printResults(Parser.parse(NelumboTest.class, "fibonacciTest.nl"));
             } catch (ParseException e) {
+                System.err.println(e.getMessage());
                 fail(e);
             }
         });

@@ -100,6 +100,12 @@ public class Type extends Node {
         super(TYPE(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers));
     }
 
+    public Type(Type super1, Type super2) {
+        super(TYPE(), Set.of(super1, super2), Set.of(super1, super2).//
+                addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))).//
+                addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))));
+    }
+
     private Type(Type element) {
         super(TYPE(), "List", Set.of(NODE), element);
     }
@@ -112,15 +118,24 @@ public class Type extends Node {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public Set<Type> many() {
+        return (Set<Type>) get(1);
+    }
+
     public boolean isList() {
         return length() == 4;
+    }
+
+    public boolean isMany() {
+        return get(1) instanceof Set;
     }
 
     public Type function() {
         if (isFunction()) {
             return this;
         } else if (function == null) {
-            return function = new Type(name() + "Fun", this, FUNCTION);
+            return function = this == NODE ? FUNCTION : new Type(this, FUNCTION);
         }
         return function;
     }
@@ -141,7 +156,7 @@ public class Type extends Node {
         if (isLiteral()) {
             return this;
         } else if (literal == null) {
-            return literal = new Type(name() + "Lit", this, LITERAL);
+            return literal = this == NODE ? LITERAL : new Type(this, LITERAL);
         }
         return literal;
     }
@@ -164,14 +179,21 @@ public class Type extends Node {
 
     public String name() {
         Object type = get(1);
-        return type instanceof TokenType ? ((TokenType) type).name() : type instanceof Class ? ((Class<?>) type).getSimpleName() : (String) type;
+        if (type instanceof Set) {
+            String many = many().toString();
+            return many.substring(5, many.length() - 2).replace(">,<", "");
+        }
+        if (type instanceof TokenType) {
+            return ((TokenType) type).name();
+        }
+        if (type instanceof Class) {
+            return ((Class<?>) type).getSimpleName();
+        }
+        return (String) type;
     }
 
     @Override
     public String toString() {
-        if (isList()) {
-            return "<" + element().name() + "*>";
-        }
         return "<" + name() + ">";
     }
 
@@ -191,6 +213,9 @@ public class Type extends Node {
     }
 
     public boolean isAssignableFrom(Type type) {
+        if (isMany()) {
+            return many().allMatch(s -> s.isAssignableFrom(type));
+        }
         return equals(type) || type.supers().anyMatch(this::isAssignableFrom);
     }
 
