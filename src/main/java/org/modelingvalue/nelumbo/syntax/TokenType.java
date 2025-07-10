@@ -23,6 +23,7 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.regex.Pattern;
 
 public enum TokenType {
+    SEMICOLON(";", true), //
     COMMA(",", true), //
     LPAREN("\\(", true), //
     RPAREN("\\)", false), //
@@ -36,7 +37,7 @@ public enum TokenType {
     QNAME("[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)+", false), //
     NAME("[a-zA-Z_][a-zA-Z0-9_]*", false), //
     TYPE("<[a-zA-Z_][a-zA-Z0-9_]*([\\*|\\+])?>", false), //
-    OPERATOR("[:\\=\\-\\*\\+<>/!?@#$%^&|~]+", true), //
+    OPERATOR("[:\\=\\-\\*\\+\\.<>/!?@#$%^&|]+", true), //
     HSPACE("\\h+", false), //
     NEWLINE("((//[^\\v]*)?\\v)+", false);
 

@@ -3,17 +3,17 @@
     <Male>      :: <Person>
     <Female>    :: <Person>
 
-    <Relation>  ::= pc(<Person>,<Person>)
+    <Relation>  ::= pc(<Person>,<Person>)   // parent-child
 
-    <Predicate> ::= ad(<Person>,<Person>)
+    <Predicate> ::= ad(<Person>,<Person>)   // ancestor-descendant
 
-    <Person>    ::= p(<Person>),
-                    c(<Person>),
-                    a(<Person>),
-                    d(<Person>)
+    <Person>    ::= p(<Person>),   // parent
+                    c(<Person>),   // child
+                    a(<Person>),   // ancestor
+                    d(<Person>)    // descendant
                     
-    <Female>    ::= m(<Person>)
-    <Male>      ::= f(<Person>)
+    <Female>    ::= m(<Person>)    // mother
+    <Male>      ::= f(<Person>)    // father
 
     <Person> a, b, c
     <Male>   y
@@ -41,7 +41,11 @@
     pc(Willem, Amalia)
     pc(Maxima, Amalia)
     
-    ? m(Amalia)=a
-    ? a(Amalia)=a
+    ? m(Amalia)=Maxima    // [()][]
+    ? m(Amalia)=Willem    // [][()]
+    ? m(Amalia)=a         // [(a=Maxima)][..]
+    ? a(Amalia)=a         // [(a=Juliana)(a=Bernhard)(a=Beatrix)(a=Claus)(a=Wilhelmina)(a=Maxima)(a=Willem)(a=Hendrik)][..]
+    ? f(m(f(Amalia)))=a   // [(a=Bernhard)][..]
+    
 
 
