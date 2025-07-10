@@ -32,7 +32,7 @@ public enum TokenType {
     LBRACE("\\{", true, false), //
     RBRACE("\\}", false, true), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, false), //
-    NUMBER("[0-9]+", false, false), //
+    NUMBER("[0-9]+(#[0-9a-z]+)?", false, false), //
     DECIMAL("[0-9]+\\.[0-9]+", false, false), //
     QNAME("[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)+", false, false), //
     NAME("[a-zA-Z_][a-zA-Z0-9_]*", false, false), //

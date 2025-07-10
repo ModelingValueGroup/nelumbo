@@ -50,7 +50,12 @@ public final class Integer extends Terminal {
     }
 
     private static BigInteger parse(String string) {
-        return BigInteger.valueOf(Long.parseLong(string));
+        int i = string.indexOf('#');
+        if (i > 0) {
+            int radix = java.lang.Integer.parseInt(string.substring(0, i));
+            return new BigInteger(string.substring(i + 1), radix);
+        }
+        return new BigInteger(string);
     }
 
     private Integer(Object[] array) {
@@ -74,7 +79,7 @@ public final class Integer extends Terminal {
     @Override
     public String toString() {
         BigInteger value = value();
-        return value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? (value.toString(Character.MAX_RADIX) + "#" + Character.MAX_RADIX) : value.toString();
+        return value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX)) : value.toString();
     }
 
 }

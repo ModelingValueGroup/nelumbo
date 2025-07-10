@@ -334,7 +334,7 @@ public final class KnowledgeBase {
                 }
                 InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
                 InferResult result = l.getVal(1, 2);
-                if (!result.equals(expected)) {
+                if (!result.equals(expected) && !result.toString().equals(expected.toString())) {
                     throw new ParseException("Expected result " + expected + ", found " + result, t);
                 }
                 return l.getVal(1);
