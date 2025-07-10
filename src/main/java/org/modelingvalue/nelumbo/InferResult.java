@@ -474,14 +474,8 @@ public interface InferResult {
 
         @SuppressWarnings({"rawtypes", "unchecked"})
         private String toString(Set<Predicate> predicates, boolean complete) {
-            Set<String> set = predicates.replaceAll(InferResultImpl::toString);
-            String result = set.toString().substring(3).replaceAll(",", "");
-            return complete ? result : result.substring(0, result.length() - 1) + "..]";
-        }
-
-        private static String toString(Predicate pred) {
-            String map = pred.getBinding().toString();
-            return "(" + map.substring(4, map.length() - 1) + ")";
+            String result = predicates.toString().substring(3);
+            return complete ? result : result.substring(0, result.length() - 1) + (predicates.isEmpty() ? "..]" : ",..]");
         }
 
         @Override

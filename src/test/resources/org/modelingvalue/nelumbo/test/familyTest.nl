@@ -41,11 +41,12 @@
     pc(Willem, Amalia)
     pc(Maxima, Amalia)
     
-    ? m(Amalia)=Maxima    // [()][]
-    ? m(Amalia)=Willem    // [][()]
-    ? m(Amalia)=a         // [(a=Maxima)][..]
-    ? a(Amalia)=a         // [(a=Juliana)(a=Bernhard)(a=Beatrix)(a=Claus)(a=Wilhelmina)(a=Maxima)(a=Willem)(a=Hendrik)][..]
-    ? f(m(f(Amalia)))=a   // [(a=Bernhard)][..]
+    ? m(Amalia)=Maxima    // [m(Amalia)=Maxima][]
+    ? m(Amalia)=Willem    // [][m(Amalia)=Willem]
+    ? m(Amalia)=a         // [m(Amalia)=Maxima][..]
+    ? a(Amalia)=a         // [a(Amalia)=Beatrix,a(Amalia)=Maxima,a(Amalia)=Hendrik,a(Amalia)=Bernhard,a(Amalia)=Juliana,a(Amalia)=Claus,a(Amalia)=Willem,a(Amalia)=Wilhelmina][..]
+    ? f(m(f(Amalia)))=a   // [f(m(f(Amalia)))=Bernhard][..]
+
     
 
 
