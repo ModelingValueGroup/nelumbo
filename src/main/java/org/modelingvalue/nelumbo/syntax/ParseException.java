@@ -33,13 +33,22 @@ public class ParseException extends Exception {
         this(s, token.line(), token.position(), token.index(), token.text(), token.fileName());
     }
 
-    public ParseException(String s, int line, int position, int index, String text, String fileName) {
-        super(s + ", line=" + line + ", position=" + position + ", file=" + fileName);
+    public ParseException(String message, int line, int position, int index, String text, String fileName) {
+        super(message);
         this.line = line;
         this.position = position;
         this.index = index;
         this.text = text;
         this.fileName = fileName;
+    }
+
+    @Override
+    public String getMessage() {
+        return super.getMessage() + ", line=" + line + ", position=" + position + ", file=" + fileName;
+    }
+
+    public String getShortMessage() {
+        return super.getMessage() + ", position=" + position;
     }
 
     public int line() {

@@ -54,7 +54,7 @@ public final class Main {
                         }
                     }
                 } catch (ParseException e) {
-                    System.err.println(ERROR + e.getMessage());
+                    System.err.println(ERROR + e.getShortMessage());
                 }
                 System.out.print(READ);
                 line = scanner.next();
