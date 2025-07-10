@@ -187,6 +187,9 @@ public final class KnowledgeBase {
             Type SIGNATURE = new Type("Signature", Type.NODE);
             Type NATIVE = new Type("Native", Type.NODE);
             Type PRECEDENCE = new Type("Precedence", Type.NODE);
+            Type FACTS = new Type("Facts", Type.NODE);
+            Type FALSEHOODS = new Type("Falsehoods", Type.NODE);
+            Node INCOMPLETE = new Predicate(Type.PREDICATE, "..");
 
             register(ParenParselet.INSTANCE);
 
@@ -304,6 +307,40 @@ public final class KnowledgeBase {
                     list = new ListNode(list, rule);
                 }
                 return list;
+            }));
+
+            // Expectations
+            register(InfixParselet.of(Type.ROOT, Type.RESULT, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
+                return new Node(FACTS, l, ((ListNode) r).elements());
+            }));
+            register(InfixParselet.of(Type.ROOT, FACTS, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
+                return new Node(FALSEHOODS, l.get(1), l.get(2), ((ListNode) r).elements());
+            }));
+            register(PostfixParselet.of(Type.ROOT, FACTS, "]", 8, (l, t) -> {
+                return l;
+            }));
+            register(PostfixParselet.of(Type.ROOT, FALSEHOODS, "]", 8, (l, t) -> {
+                Set<Predicate> facts = ((List<Predicate>) l.get(2)).asSet();
+                boolean completeFacts = true;
+                if (facts.contains(INCOMPLETE)) {
+                    completeFacts = false;
+                    facts = facts.remove(INCOMPLETE);
+                }
+                Set<Predicate> falsehoods = ((List<Predicate>) l.get(3)).asSet();
+                boolean completeFalsehoods = true;
+                if (falsehoods.contains(INCOMPLETE)) {
+                    completeFalsehoods = false;
+                    falsehoods = falsehoods.remove(INCOMPLETE);
+                }
+                InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
+                InferResult result = l.getVal(1, 2);
+                if (!result.equals(expected)) {
+                    throw new ParseException("Expected result " + expected + ", found " + result, t);
+                }
+                return l.getVal(1);
+            }));
+            register(AtomicParselet.of(Type.PREDICATE, "..", t -> {
+                return INCOMPLETE;
             }));
 
             // Queries

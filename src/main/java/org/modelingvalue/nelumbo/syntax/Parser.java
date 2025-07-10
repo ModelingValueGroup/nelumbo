@@ -71,14 +71,16 @@ public final class Parser {
         if (expected.isList()) {
             Type elemType = expected.element();
             left = new ListNode(elemType);
-            do {
-                Token position = tokens.peek();
-                Node node = parseNode(precedence, elemType);
-                if (!elemType.isAssignableFrom(node.type())) {
-                    throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), position);
-                }
-                left = new ListNode((ListNode) left, node);
-            } while (match(TokenType.COMMA));
+            if (!tokens.peek().type().end()) {
+                do {
+                    Token position = tokens.peek();
+                    Node node = parseNode(precedence, elemType);
+                    if (!elemType.isAssignableFrom(node.type())) {
+                        throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), position);
+                    }
+                    left = new ListNode((ListNode) left, node);
+                } while (match(TokenType.COMMA));
+            }
         } else {
             Token token1 = tokens.poll();
             Token token2 = tokens.peek();

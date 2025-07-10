@@ -49,6 +49,12 @@ public class Predicate extends Node {
         init();
     }
 
+    protected Predicate(Type type, Object... args) {
+        super(type, args);
+        this.declaration = this;
+        init();
+    }
+
     protected Predicate(Object[] args, Predicate declaration) {
         super(args);
         this.declaration = declaration == null ? this : declaration;

@@ -23,34 +23,40 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.regex.Pattern;
 
 public enum TokenType {
-    SEMICOLON(";", true), //
-    COMMA(",", true), //
-    LPAREN("\\(", true), //
-    RPAREN("\\)", false), //
-    LBRACKET("\\[", true), //
-    RBRACKET("\\]", false), //
-    LBRACE("\\{", true), //
-    RBRACE("\\}", false), //
-    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false), //
-    NUMBER("[0-9]+", false), //
-    DECIMAL("[0-9]+\\.[0-9]+", false), //
-    QNAME("[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)+", false), //
-    NAME("[a-zA-Z_][a-zA-Z0-9_]*", false), //
-    TYPE("<[a-zA-Z_][a-zA-Z0-9_]*([\\*|\\+])?>", false), //
-    OPERATOR("[:\\=\\-\\*\\+\\.<>/!?@#$%^&|]+", true), //
-    HSPACE("\\h+", false), //
-    NEWLINE("((//[^\\v]*)?\\v)+", false);
+    SEMICOLON(";", true, false), //
+    COMMA(",", true, false), //
+    LPAREN("\\(", true, false), //
+    RPAREN("\\)", false, true), //
+    LBRACKET("\\[", true, false), //
+    RBRACKET("\\]", false, true), //
+    LBRACE("\\{", true, false), //
+    RBRACE("\\}", false, true), //
+    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, false), //
+    NUMBER("[0-9]+", false, false), //
+    DECIMAL("[0-9]+\\.[0-9]+", false, false), //
+    QNAME("[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)+", false, false), //
+    NAME("[a-zA-Z_][a-zA-Z0-9_]*", false, false), //
+    TYPE("<[a-zA-Z_][a-zA-Z0-9_]*([\\*|\\+])?>", false, false), //
+    OPERATOR("[:\\=\\-\\*\\+\\.<>/!?@#$%^&|]+", true, false), //
+    HSPACE("\\h+", false, false), //
+    NEWLINE("((//[^\\v]*)?\\v)+", false, true);
 
     private final Pattern pattern;
     private final boolean more;
+    private final boolean end;
 
-    private TokenType(String regexp, boolean more) {
+    private TokenType(String regexp, boolean more, boolean end) {
         this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
         this.more = more;
+        this.end = end;
     }
 
     public boolean more() {
         return more;
+    }
+
+    public boolean end() {
+        return end;
     }
 
     public Pattern pattern() {
