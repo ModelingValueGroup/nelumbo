@@ -563,42 +563,49 @@ public final class KnowledgeBase {
         }
     }
 
-    private final AtomicReference<Map<String, Type>>                    types;
-    private final AtomicReference<Set<Functor>>                         functors;
-    private final AtomicReference<Map<String, Variable>>                variables;
-    private final AtomicReference<Map<Predicate, InferResult>>          facts;
-    private final AtomicReference<Map<Predicate, Set<Rule>>>            rules;
+    private final AtomicReference<Map<String, Type>>                    types            = new AtomicReference<>();
+    private final AtomicReference<Set<Functor>>                         functors         = new AtomicReference<>();
+    private final AtomicReference<Map<String, Variable>>                variables        = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, InferResult>>          facts            = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, Set<Rule>>>            rules            = new AtomicReference<>();
 
-    private final AtomicReference<Map<Object, AtomicParselet>>          prefixParselets;
-    private final AtomicReference<Map<Object, PostfixParselet>>         postfixParselets;
-    private final AtomicReference<Map<Object, List<CallWithArgs>>>      callsWithArgs;
+    private final AtomicReference<Map<Object, AtomicParselet>>          prefixParselets  = new AtomicReference<>();
+    private final AtomicReference<Map<Object, PostfixParselet>>         postfixParselets = new AtomicReference<>();
+    private final AtomicReference<Map<Object, List<CallWithArgs>>>      callsWithArgs    = new AtomicReference<>();
 
-    private final AtomicReference<Set<String>>                          allOperators;
-    private final AtomicReference<Map<Functor, Functor>>                relations;
+    private final AtomicReference<Set<String>>                          allOperators     = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>>                relations        = new AtomicReference<>();
 
-    private final AtomicInteger                                         depth;
-    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization;
+    private final AtomicInteger                                         depth            = new AtomicInteger();
+    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization      = new AtomicReference<>();
     private final InferContext                                          context;
+    private final KnowledgeBase                                         init;
     private boolean                                                     stopped;
 
     @SuppressWarnings("unchecked")
     public KnowledgeBase(KnowledgeBase init) {
-        types = new AtomicReference<>(init != null ? init.types.get() : Map.of());
-        functors = new AtomicReference<>(init != null ? init.functors.get() : Set.of());
-        variables = new AtomicReference<>(Map.of());
-        facts = new AtomicReference<>(init != null ? init.facts.get() : Map.of());
-        rules = new AtomicReference<>(init != null ? init.rules.get() : Map.of());
-
-        prefixParselets = new AtomicReference<>(init != null ? init.prefixParselets.get() : Map.of());
-        postfixParselets = new AtomicReference<>(init != null ? init.postfixParselets.get() : Map.of());
-        callsWithArgs = new AtomicReference<>(init != null ? init.callsWithArgs.get() : Map.of());
-
-        allOperators = new AtomicReference<>(init != null ? init.allOperators.get() : Set.of());
-        relations = new AtomicReference<>(init != null ? init.relations.get() : Map.of());
-
+        this.init = init;
         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
-        memoization = new AtomicReference<>(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
-        depth = new AtomicInteger(0);
+        init();
+    }
+
+    @SuppressWarnings("unchecked")
+    public void init() {
+        types.set(init != null ? init.types.get() : Map.of());
+        functors.set(init != null ? init.functors.get() : Set.of());
+        variables.set(Map.of());
+        facts.set(init != null ? init.facts.get() : Map.of());
+        rules.set(init != null ? init.rules.get() : Map.of());
+
+        prefixParselets.set(init != null ? init.prefixParselets.get() : Map.of());
+        postfixParselets.set(init != null ? init.postfixParselets.get() : Map.of());
+        callsWithArgs.set(init != null ? init.callsWithArgs.get() : Map.of());
+
+        allOperators.set(init != null ? init.allOperators.get() : Set.of());
+        relations.set(init != null ? init.relations.get() : Map.of());
+
+        memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
+        depth.set(init != null ? init.depth.get() : 0);
     }
 
     public InferResult getFacts(Predicate predicate, InferContext context) {
