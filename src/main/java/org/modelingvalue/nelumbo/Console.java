@@ -50,17 +50,16 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 
 public class Console extends WindowAdapter implements WindowListener, ActionListener, Runnable, DocumentListener, CaretListener {
 
-    private final static String           READ             = "    ";
-    private final static String           WRITE            = "    ";
-    private final static String           ERROR            = "    ERROR: ";
+    private final static String           READ        = "    ";
+    private final static String           WRITE       = "    ";
+    private final static String           ERROR       = "    ERROR: ";
 
-    private final DefaultHighlightPainter pinkPainter      = new DefaultHighlighter.DefaultHighlightPainter(Color.pink);
-    private final DefaultHighlightPainter lightGrayPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.lightGray);
+    private final DefaultHighlightPainter pinkPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.pink);
 
     private JFrame                        frame;
     private JTextArea                     textArea;
     private boolean                       quit;
-    private int                           lineCount        = -1;
+    private int                           lineCount   = -1;
     private KnowledgeBase                 knowledgeBase;
 
     public Console() {
@@ -87,7 +86,13 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
 
         quit = false; // signals the Threads that they should exit
 
-        KnowledgeBase.run(this);
+        KnowledgeBase.run(this, KnowledgeBase.run(() -> {
+            try {
+                Parser.parse(Integer.class);
+            } catch (ParseException e) {
+                textArea.append(ERROR + e.getMessage() + "\n");
+            }
+        }));
     }
 
     @Override
@@ -119,11 +124,6 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     @Override
     public synchronized void run() {
         knowledgeBase = KnowledgeBase.CURRENT.get();
-        try {
-            Parser.parse(Integer.class);
-        } catch (ParseException e) {
-            textArea.append(ERROR + e.getMessage() + "\n");
-        }
         String line = readLine();
         while (line != null) {
             try {
