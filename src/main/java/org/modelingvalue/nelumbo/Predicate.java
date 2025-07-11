@@ -307,7 +307,11 @@ public class Predicate extends Node {
         if (nrOfUnbound > 0 && context.reduce()) {
             return unknown();
         }
-        return infer(nrOfUnbound, context);
+        InferResult result = infer(nrOfUnbound, context);
+        if (context.trace() && getClass() != Predicate.class && !result.isEmpty()) {
+            System.err.println(context.prefix() + "  " + this + " " + result);
+        }
+        return result;
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
