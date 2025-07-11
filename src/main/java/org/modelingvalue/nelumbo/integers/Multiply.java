@@ -60,9 +60,11 @@ public final class Multiply extends Predicate {
                 return set(3, Integer.of(p)).factCI();
             }
         } else if (factor1 != null && product != null) {
-            return set(2, Integer.of(product.divide(factor1))).factCI();
+            BigInteger[] dr = product.divideAndRemainder(factor1);
+            return dr[1].equals(BigInteger.ZERO) ? set(2, Integer.of(dr[0])).factCI() : unknown();
         } else if (factor2 != null && product != null) {
-            return set(1, Integer.of(product.divide(factor2))).factCI();
+            BigInteger[] dr = product.divideAndRemainder(factor2);
+            return dr[1].equals(BigInteger.ZERO) ? set(1, Integer.of(dr[0])).factCI() : unknown();
         } else {
             return unknown();
         }
