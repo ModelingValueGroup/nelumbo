@@ -30,10 +30,13 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
@@ -63,7 +66,26 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     private KnowledgeBase                 knowledgeBase;
 
     public Console() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+        init();
+        quit = false; // signals the Threads that they should exit
+        KnowledgeBase.run(this, KnowledgeBase.run(() -> {
+            try {
+                Parser.parse(Integer.class);
+            } catch (ParseException e) {
+                error(e.getMessage());
+            }
+        }));
+    }
+
+    private void init() {
+        ImageIcon icon = new ImageIcon(getClass().getResource("nelumbo.png"));
         frame = new JFrame("Nelumbo");
+        frame.setIconImage(icon.getImage());
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Dimension frameSize = new Dimension((int) (screenSize.width / 2), (int) (screenSize.height / 2));
         int x = (int) (frameSize.width / 2);
@@ -83,16 +105,6 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         frame.addWindowListener(this);
         clear.addActionListener(this);
         textArea.getDocument().addDocumentListener(this);
-
-        quit = false; // signals the Threads that they should exit
-
-        KnowledgeBase.run(this, KnowledgeBase.run(() -> {
-            try {
-                Parser.parse(Integer.class);
-            } catch (ParseException e) {
-                textArea.append(ERROR + e.getMessage() + "\n");
-            }
-        }));
     }
 
     @Override
@@ -110,6 +122,11 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
 
     @Override
     public synchronized void actionPerformed(ActionEvent evt) {
+        clear();
+    }
+
+    private void clear() {
+        textArea.getHighlighter().removeAllHighlights();
         knowledgeBase.init();
         textArea.setText("");
         prepareRead();
@@ -121,6 +138,14 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         textArea.setCaretPosition(textArea.getDocument().getLength());
     }
 
+    private void write(String output) {
+        textArea.append(WRITE + output + "\n");
+    }
+
+    private void error(String error) {
+        textArea.append(ERROR + error + "\n");
+    }
+
     @Override
     public synchronized void run() {
         knowledgeBase = KnowledgeBase.CURRENT.get();
@@ -129,20 +154,24 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             try {
                 for (Node root : Parser.parse(line)) {
                     if (root.type() == Type.RESULT) {
-                        textArea.append(WRITE + root.toString(2) + "\n");
+                        write(root.toString(2));
                     }
                 }
             } catch (ParseException pe) {
-                int start = getStartLength()[0] + pe.position() - 1;
-                try {
-                    textArea.getHighlighter().addHighlight(start, start + pe.text().length(), pinkPainter);
-                } catch (BadLocationException ble) {
-                    textArea.append(ERROR + ble.getMessage() + "\n");
-                }
-                textArea.append(ERROR + pe.getShortMessage() + "\n");
+                parseError(pe);
             }
             line = readLine();
         }
+    }
+
+    private void parseError(ParseException pe) {
+        int start = getStartLength()[0] + pe.position() - 1;
+        try {
+            textArea.getHighlighter().addHighlight(start, start + pe.text().length(), pinkPainter);
+        } catch (BadLocationException ble) {
+            error(ble.getMessage());
+        }
+        error(pe.getShortMessage());
     }
 
     private String readLine() {
@@ -158,7 +187,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                     try {
                         return textArea.getText(sl[0], sl[1]);
                     } catch (BadLocationException ble) {
-                        textArea.append(ERROR + ble.getMessage() + "\n");
+                        error(ble.getMessage());
                     }
                 }
             }
