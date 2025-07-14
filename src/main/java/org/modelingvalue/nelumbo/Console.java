@@ -54,7 +54,8 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 
 public class Console extends WindowAdapter implements WindowListener, ActionListener, Runnable, DocumentListener, CaretListener {
 
-    private final static String           PREFIX               = "        ";
+    private final int                     COMMEND_POSITION     = 32;
+    private final static String           PREFIX               = "    ";
 
     private final static String           INCREASE             = "INCREASE";
     private final static String           DECREASE             = "DECREASE";
@@ -101,7 +102,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         frame.setBounds(x, y, frameSize.width, frameSize.height);
 
         textArea = new JTextArea();
-        textArea.setFont(frame.getFont());
+        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, textArea.getFont().getSize() + 2));
         textArea.setEditable(true);
         textArea.addCaretListener(this);
         JButton clear = new JButton("clear");
@@ -161,8 +162,8 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             public void actionPerformed(ActionEvent e) {
                 if (textArea == getTextComponent(e)) {
                     Caret caret = textArea.getCaret();
-                    int[] sl = getStartLength();
-                    if (sl[0] + PREFIX.length() < caret.getMark()) {
+                    int[] se = getStartEnd();
+                    if (se[0] + PREFIX.length() < caret.getMark()) {
                         deletePreviousAction.actionPerformed(e);
                     }
                 }
@@ -176,8 +177,8 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 if (textArea == getTextComponent(e)) {
                     if (currentLineInHistory > 0) {
                         String line = lineHistory.get(--currentLineInHistory);
-                        int[] sl = getStartLength();
-                        textArea.replaceRange(line, sl[0] + PREFIX.length(), sl[0] + sl[1] - 1);
+                        int[] se = getStartEnd();
+                        textArea.replaceRange(line, se[0] + PREFIX.length(), se[1] - 1);
                     }
                 }
             }
@@ -190,8 +191,8 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 if (textArea == getTextComponent(e)) {
                     if (currentLineInHistory < lineHistory.size()) {
                         String line = lineHistory.get(currentLineInHistory++);
-                        int[] sl = getStartLength();
-                        textArea.replaceRange(line, sl[0] + PREFIX.length(), sl[0] + sl[1] - 1);
+                        int[] se = getStartEnd();
+                        textArea.replaceRange(line, se[0] + PREFIX.length(), se[1] - 1);
                     }
                 }
             }
@@ -240,13 +241,15 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     }
 
     private void write(String output) {
-        int[] sl = getStartLength();
-        textArea.insert("    // " + output, sl[0] + sl[1] - 1);
+        int[] se = getStartEnd();
+        int pos = Math.max(1, COMMEND_POSITION - (se[1] - se[0]));
+        textArea.insert(" ".repeat(pos) + "// " + output, se[1] - 1);
     }
 
     private void error(String error) {
-        int[] sl = getStartLength();
-        textArea.insert("    // " + error, sl[0] + sl[1] - 1);
+        int[] se = getStartEnd();
+        int pos = Math.max(1, COMMEND_POSITION - (se[1] - se[0]));
+        textArea.insert(" ".repeat(pos) + "// " + error, se[1] - 1);
     }
 
     @Override
@@ -271,7 +274,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
 
     private void parseError(ParseException pe) {
         error(pe.getShortMessage());
-        int start = getStartLength()[0] + pe.position() - 1;
+        int start = getStartEnd()[0] + pe.position() - 1;
         try {
             textArea.getHighlighter().addHighlight(start, start + pe.text().length(), pinkPainter);
         } catch (BadLocationException ble) {
@@ -287,10 +290,10 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             } catch (InterruptedException ie) {
             }
             if (lineCount < textArea.getLineCount()) {
-                int[] sl = getStartLength();
-                if (sl[1] > 0) {
+                int[] se = getStartEnd();
+                if (se[1] > 0) {
                     try {
-                        return textArea.getText(sl[0], sl[1]);
+                        return textArea.getText(se[0], se[1] - se[0]);
                     } catch (BadLocationException ble) {
                         error(ble.getMessage());
                     }
@@ -302,13 +305,13 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         }
     }
 
-    private int[] getStartLength() {
+    private int[] getStartEnd() {
         Document doc = textArea.getDocument();
         Element root = doc.getDefaultRootElement();
         Element line = root.getElement(lineCount - 1);
         int start = line.getStartOffset();
-        int length = line.getEndOffset() - start;
-        return new int[]{start, length};
+        int end = line.getEndOffset();
+        return new int[]{start, end};
     }
 
     public static void main(String[] arg) {
@@ -330,9 +333,9 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
 
     @Override
     public void caretUpdate(CaretEvent e) {
-        int[] sl = getStartLength();
-        if (e.getMark() < sl[0] + PREFIX.length()) {
-            textArea.setCaretPosition(sl[0] + PREFIX.length());
+        int[] se = getStartEnd();
+        if (e.getMark() < se[0] + PREFIX.length()) {
+            textArea.setCaretPosition(se[0] + PREFIX.length());
         }
     }
 }
