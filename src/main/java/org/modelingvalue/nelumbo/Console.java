@@ -257,7 +257,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         knowledgeBase = KnowledgeBase.CURRENT.get();
         String line = readLine();
         while (line != null) {
-            lineHistory.addLast(line.substring(PREFIX.length(), line.length() - 1));
+            lineHistory.add(line.substring(PREFIX.length(), line.length() - 1));
             currentLineInHistory = lineHistory.size();
             try {
                 for (Node root : Parser.parse(line)) {
