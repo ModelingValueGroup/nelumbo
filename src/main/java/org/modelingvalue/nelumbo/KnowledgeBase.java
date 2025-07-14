@@ -405,9 +405,7 @@ public final class KnowledgeBase {
             if (precedence != null) {
                 throw new ParseException("Precedence should not be defined " + sig, token);
             }
-            if (!predicate) {
-                type = type.literal();
-            }
+            type = type.literal();
             TokenType tokenType = ((Type) sig.get(1)).tokenType();
             String funtorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
             Functor functor = new Functor(type, funtorName, Type.STRING);
@@ -419,9 +417,7 @@ public final class KnowledgeBase {
             if (precedence != null) {
                 throw new ParseException("Precedence should not be defined " + sig, token);
             }
-            if (!predicate) {
-                type = type.literal();
-            }
+            type = type.literal();
             String name = (String) sig.get(1);
             String funtorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
             Functor functor = new Functor(type, funtorName, n -> n.toString(1), 100, Type.STRING);

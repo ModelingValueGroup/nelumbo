@@ -55,7 +55,7 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 public class Console extends WindowAdapter implements WindowListener, ActionListener, Runnable, DocumentListener, CaretListener {
 
     private final int                     COMMEND_POSITION     = 32;
-    private final static String           PREFIX               = "    ";
+    private final static String           PREFIX               = "  ";
 
     private final static String           INCREASE             = "INCREASE";
     private final static String           DECREASE             = "DECREASE";
