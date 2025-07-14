@@ -276,7 +276,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         error(pe.getShortMessage());
         int start = getStartEnd()[0] + pe.position() - 1;
         try {
-            textArea.getHighlighter().addHighlight(start, start + pe.text().length(), pinkPainter);
+            textArea.getHighlighter().addHighlight(start, start + pe.length(), pinkPainter);
         } catch (BadLocationException ble) {
             error(ble.getMessage());
         }

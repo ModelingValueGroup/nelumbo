@@ -64,8 +64,7 @@ public class Tokenizer {
                 }
             }
             if (text == null) {
-                text = input.substring(index, Math.min(input.length(), index + 8));
-                throw new ParseException("Unexpected input '" + text + "'", line, position, index, text, fileName);
+                throw new ParseException("Unexpected input '" + text + "'", line, position, index, 8, fileName);
             } else {
                 if (type != TokenType.HSPACE && (type != TokenType.NEWLINE || tokens.isEmpty() || !tokens.getLast().type().more())) {
                     tokens.add(new Token(type, text, line, position, index, fileName));

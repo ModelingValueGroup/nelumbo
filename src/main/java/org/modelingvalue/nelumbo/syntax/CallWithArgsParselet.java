@@ -56,8 +56,9 @@ public final class CallWithArgsParselet extends AtomicParselet {
         if (call != null) {
             return call.construct(token, args);
         }
+
         String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
-        throw new ParseException("Could not call " + token.text() + signature, token);
+        throw new ParseException("Could not call " + token.text() + signature, token, parser.last());
     }
 
     private CallWithArgs call(Parser parser, Token token, List<Type> args) throws ParseException {

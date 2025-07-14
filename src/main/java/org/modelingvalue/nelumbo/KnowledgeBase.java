@@ -311,33 +311,34 @@ public final class KnowledgeBase {
 
             // Expectations
             register(InfixParselet.of(Type.ROOT, Type.RESULT, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
-                return new Node(FACTS, l, ((ListNode) r).elements());
+                return new Node(FACTS, t, l, ((ListNode) r).elements());
             }));
             register(InfixParselet.of(Type.ROOT, FACTS, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
-                return new Node(FALSEHOODS, l.get(1), l.get(2), ((ListNode) r).elements());
+                return new Node(FALSEHOODS, l.get(1), l.get(2), l.get(3), ((ListNode) r).elements());
             }));
             register(PostfixParselet.of(Type.ROOT, FACTS, "]", 8, (l, t) -> {
                 return l;
             }));
             register(PostfixParselet.of(Type.ROOT, FALSEHOODS, "]", 8, (l, t) -> {
-                Set<Predicate> facts = ((List<Predicate>) l.get(2)).asSet();
+                Token pos = l.getVal(1);
+                Set<Predicate> facts = ((List<Predicate>) l.get(3)).asSet();
                 boolean completeFacts = true;
                 if (facts.contains(INCOMPLETE)) {
                     completeFacts = false;
                     facts = facts.remove(INCOMPLETE);
                 }
-                Set<Predicate> falsehoods = ((List<Predicate>) l.get(3)).asSet();
+                Set<Predicate> falsehoods = ((List<Predicate>) l.get(4)).asSet();
                 boolean completeFalsehoods = true;
                 if (falsehoods.contains(INCOMPLETE)) {
                     completeFalsehoods = false;
                     falsehoods = falsehoods.remove(INCOMPLETE);
                 }
                 InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
-                InferResult result = l.getVal(1, 2);
+                InferResult result = l.getVal(2, 2);
                 if (!result.equals(expected) && !result.toString().equals(expected.toString())) {
-                    throw new ParseException("Expected result " + expected + ", found " + result, t);
+                    throw new ParseException("Expected result " + expected + ", found " + result, pos, t);
                 }
-                return l.getVal(1);
+                return l.getVal(2);
             }));
             register(AtomicParselet.of(Type.PREDICATE, "..", t -> {
                 return INCOMPLETE;
