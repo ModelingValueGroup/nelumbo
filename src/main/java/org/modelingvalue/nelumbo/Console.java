@@ -23,20 +23,16 @@ package org.modelingvalue.nelumbo;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
@@ -57,6 +53,9 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     private final static String           WRITE       = "    ";
     private final static String           ERROR       = "    ERROR: ";
 
+    private final static String           INCREASE    = "INCREASE";
+    private final static String           DECREASE    = "DECREASE";
+
     private final DefaultHighlightPainter pinkPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.pink);
 
     private JFrame                        frame;
@@ -72,6 +71,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             e.printStackTrace();
         }
         init();
+        actions();
         quit = false; // signals the Threads that they should exit
         KnowledgeBase.run(this, KnowledgeBase.run(() -> {
             try {
@@ -93,6 +93,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         frame.setBounds(x, y, frameSize.width, frameSize.height);
 
         textArea = new JTextArea();
+        textArea.setFont(frame.getFont());
         textArea.setEditable(true);
         textArea.addCaretListener(this);
         JButton clear = new JButton("clear");
@@ -105,6 +106,39 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         frame.addWindowListener(this);
         clear.addActionListener(this);
         textArea.getDocument().addDocumentListener(this);
+    }
+
+    private void actions() {
+        textArea.getInputMap().put(KeyStroke.getKeyStroke('+', InputEvent.CTRL_DOWN_MASK), INCREASE);
+        textArea.getInputMap().put(KeyStroke.getKeyStroke('=', InputEvent.CTRL_DOWN_MASK), INCREASE);
+        textArea.getInputMap().put(KeyStroke.getKeyStroke('-', InputEvent.CTRL_DOWN_MASK), DECREASE);
+        textArea.getInputMap().put(KeyStroke.getKeyStroke('_', InputEvent.CTRL_DOWN_MASK), DECREASE);
+        textArea.getActionMap().put(INCREASE, new AbstractAction() {
+            private static final long serialVersionUID = -425923171136898022L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                increase();
+            }
+        });
+        textArea.getActionMap().put(DECREASE, new AbstractAction() {
+            private static final long serialVersionUID = 3357017446274657221L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                decrease();
+            }
+        });
+    }
+
+    private void increase() {
+        Font font = textArea.getFont();
+        textArea.setFont(font.deriveFont(font.getSize() + 2.0f));
+    }
+
+    private void decrease() {
+        Font font = textArea.getFont();
+        textArea.setFont(font.deriveFont(font.getSize() - 2.0f));
     }
 
     @Override
