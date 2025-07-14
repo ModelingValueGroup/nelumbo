@@ -31,6 +31,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
@@ -38,10 +40,13 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Caret;
+import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
+import javax.swing.text.TextAction;
 
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -49,20 +54,23 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 
 public class Console extends WindowAdapter implements WindowListener, ActionListener, Runnable, DocumentListener, CaretListener {
 
-    private final static String           READ        = "    ";
-    private final static String           WRITE       = "    ";
-    private final static String           ERROR       = "    ERROR: ";
+    private final static String           PREFIX               = "        ";
 
-    private final static String           INCREASE    = "INCREASE";
-    private final static String           DECREASE    = "DECREASE";
+    private final static String           INCREASE             = "INCREASE";
+    private final static String           DECREASE             = "DECREASE";
+    private final static String           UP_HISTORY           = "UP_HISTORY";
+    private final static String           DOWN_HISTORY         = "DOWN_HISTORY";
 
-    private final DefaultHighlightPainter pinkPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+    private final DefaultHighlightPainter pinkPainter          = new DefaultHighlighter.DefaultHighlightPainter(Color.pink);
 
     private JFrame                        frame;
     private JTextArea                     textArea;
     private boolean                       quit;
-    private int                           lineCount   = -1;
+    private int                           lineCount            = -1;
     private KnowledgeBase                 knowledgeBase;
+    private Action                        deletePreviousAction;
+    private List<String>                  lineHistory          = new ArrayList<>();
+    private int                           currentLineInHistory = 0;
 
     public Console() {
         try {
@@ -113,20 +121,79 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         textArea.getInputMap().put(KeyStroke.getKeyStroke('=', InputEvent.CTRL_DOWN_MASK), INCREASE);
         textArea.getInputMap().put(KeyStroke.getKeyStroke('-', InputEvent.CTRL_DOWN_MASK), DECREASE);
         textArea.getInputMap().put(KeyStroke.getKeyStroke('_', InputEvent.CTRL_DOWN_MASK), DECREASE);
-        textArea.getActionMap().put(INCREASE, new AbstractAction() {
+        textArea.getInputMap().put(KeyStroke.getKeyStroke("UP"), UP_HISTORY);
+        textArea.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), DOWN_HISTORY);
+        textArea.getActionMap().put(INCREASE, new TextAction(INCREASE) {
             private static final long serialVersionUID = -425923171136898022L;
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                increase();
+                if (textArea == getTextComponent(e)) {
+                    increase();
+                }
             }
         });
-        textArea.getActionMap().put(DECREASE, new AbstractAction() {
+        textArea.getActionMap().put(DECREASE, new TextAction(DECREASE) {
             private static final long serialVersionUID = 3357017446274657221L;
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                decrease();
+                if (textArea == getTextComponent(e)) {
+                    decrease();
+                }
+            }
+        });
+        textArea.getActionMap().put(DefaultEditorKit.insertBreakAction, new TextAction(DefaultEditorKit.insertBreakAction) {
+            private static final long serialVersionUID = -6025045977165493128L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (textArea == getTextComponent(e)) {
+                    textArea.append("\n");
+                }
+            }
+        });
+        deletePreviousAction = textArea.getActionMap().get(DefaultEditorKit.deletePrevCharAction);
+        textArea.getActionMap().put(DefaultEditorKit.deletePrevCharAction, new TextAction(DefaultEditorKit.deletePrevCharAction) {
+            private static final long serialVersionUID = 846926090871223832L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (textArea == getTextComponent(e)) {
+                    Caret caret = textArea.getCaret();
+                    int[] sl = getStartLength();
+                    if (sl[0] + PREFIX.length() < caret.getMark()) {
+                        deletePreviousAction.actionPerformed(e);
+                    }
+                }
+            }
+        });
+        textArea.getActionMap().put(UP_HISTORY, new TextAction(UP_HISTORY) {
+            private static final long serialVersionUID = -8886848398049220330L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (textArea == getTextComponent(e)) {
+                    if (currentLineInHistory > 0) {
+                        String line = lineHistory.get(--currentLineInHistory);
+                        int[] sl = getStartLength();
+                        textArea.replaceRange(line, sl[0] + PREFIX.length(), sl[0] + sl[1] - 1);
+                    }
+                }
+            }
+        });
+        textArea.getActionMap().put(DOWN_HISTORY, new TextAction(DOWN_HISTORY) {
+            private static final long serialVersionUID = -5674886754830419207L;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (textArea == getTextComponent(e)) {
+                    if (currentLineInHistory < lineHistory.size()) {
+                        String line = lineHistory.get(currentLineInHistory++);
+                        int[] sl = getStartLength();
+                        textArea.replaceRange(line, sl[0] + PREFIX.length(), sl[0] + sl[1] - 1);
+                    }
+                }
             }
         });
     }
@@ -168,16 +235,18 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
 
     private void prepareRead() {
         lineCount = textArea.getLineCount();
-        textArea.append(READ);
+        textArea.append(PREFIX);
         textArea.setCaretPosition(textArea.getDocument().getLength());
     }
 
     private void write(String output) {
-        textArea.append(WRITE + output + "\n");
+        int[] sl = getStartLength();
+        textArea.insert("    // " + output, sl[0] + sl[1] - 1);
     }
 
     private void error(String error) {
-        textArea.append(ERROR + error + "\n");
+        int[] sl = getStartLength();
+        textArea.insert("    // " + error, sl[0] + sl[1] - 1);
     }
 
     @Override
@@ -185,6 +254,8 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         knowledgeBase = KnowledgeBase.CURRENT.get();
         String line = readLine();
         while (line != null) {
+            lineHistory.addLast(line.substring(PREFIX.length(), line.length() - 1));
+            currentLineInHistory = lineHistory.size();
             try {
                 for (Node root : Parser.parse(line)) {
                     if (root.type() == Type.RESULT) {
@@ -199,13 +270,13 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     }
 
     private void parseError(ParseException pe) {
+        error(pe.getShortMessage());
         int start = getStartLength()[0] + pe.position() - 1;
         try {
             textArea.getHighlighter().addHighlight(start, start + pe.text().length(), pinkPainter);
         } catch (BadLocationException ble) {
             error(ble.getMessage());
         }
-        error(pe.getShortMessage());
     }
 
     private String readLine() {
@@ -259,5 +330,9 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
 
     @Override
     public void caretUpdate(CaretEvent e) {
+        int[] sl = getStartLength();
+        if (e.getMark() < sl[0] + PREFIX.length()) {
+            textArea.setCaretPosition(sl[0] + PREFIX.length());
+        }
     }
 }
