@@ -77,27 +77,27 @@ public final class Parser {
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
-        FirstPattern first = first(expected);
-        Token[] tokens = poll(first.tokens().length());
-        Node left = first.parse(this, expected, tokens);
-        nodePosition.put(left, Pair.of(tokens[0], last));
-        NextPattern next = next(expected, left.type());
-        while (next != null && precedence < next.precedence()) {
-            tokens = poll(next.tokens().length());
+        LanguagePattern pattern = first(expected);
+        List<Token> tokens = poll(pattern.tokens().size());
+        Node left = pattern.parse(this, expected, tokens);
+        nodePosition.put(left, Pair.of(tokens.get(0), last));
+        pattern = next(expected, left.type());
+        while (pattern != null && precedence < pattern.precedence()) {
+            tokens = poll(pattern.tokens().size());
             Pair<Token, Token> pos = nodePosition.get(left);
-            left = next.parse(this, expected, left, tokens);
+            left = pattern.parse(this, expected, left, tokens);
             nodePosition.put(left, Pair.of(pos.a(), last));
-            next = next(expected, left.type());
+            pattern = next(expected, left.type());
         }
         return left;
     }
 
-    private Token[] poll(int len) {
-        Token[] tokens = new Token[len];
+    private List<Token> poll(int len) {
+        List<Token> list = List.of();
         for (int i = 0; i < len; i++) {
-            tokens[0] = poll();
+            list = list.add(poll());
         }
-        return tokens;
+        return list;
     }
 
     public Token peek() {
@@ -113,8 +113,8 @@ public final class Parser {
         return last;
     }
 
-    private FirstPattern first(Type expected) throws ParseException {
-        FirstPattern prefix = knowledgeBase.first(expected, tokens);
+    private LanguagePattern first(Type expected) throws ParseException {
+        LanguagePattern prefix = knowledgeBase.first(expected, tokens);
         if (prefix == null) {
             Token token = tokens.peek();
             throw new ParseException("Prefix " + token.text() + " not defined", token);
@@ -122,13 +122,13 @@ public final class Parser {
         return prefix;
     }
 
-    private NextPattern next(Type expected, Type left) {
+    private LanguagePattern next(Type expected, Type left) {
         Set<Type> pre, post = Set.of(left);
         while (!post.isEmpty()) {
             pre = post;
             post = Set.of();
             for (Type type : pre) {
-                NextPattern postfix = knowledgeBase.next(expected, type, tokens);
+                LanguagePattern postfix = knowledgeBase.next(expected, type, tokens);
                 if (postfix != null) {
                     return postfix;
                 } else {
@@ -199,8 +199,8 @@ public final class Parser {
         return result;
     }
 
-    public Token[] match(TokenPattern expected) {
-        int len = expected.length();
+    public List<Token> match(List<Object> expected) {
+        int len = expected.size();
         for (int i = 0; i < len; i++) {
             Object e = expected.get(i);
             Token token = tokens.get(i);
@@ -220,13 +220,13 @@ public final class Parser {
         }
     }
 
-    public Token[] consume(TokenPattern expected) throws ParseException {
-        int len = expected.length();
-        Token[] tokens = new Token[len];
+    public List<Token> consume(List<Object> expected) throws ParseException {
+        int len = expected.size();
+        List<Token> list = List.of();
         for (int i = 0; i < len; i++) {
-            tokens[i] = consume(expected.get(i));
+            list = list.add(consume(expected.get(i)));
         }
-        return tokens;
+        return list;
     }
 
     public Token consume(Object expected) throws ParseException {

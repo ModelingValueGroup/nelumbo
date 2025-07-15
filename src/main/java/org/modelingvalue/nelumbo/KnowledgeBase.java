@@ -42,7 +42,11 @@ import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.collections.util.Triple;
-import org.modelingvalue.nelumbo.syntax.*;
+import org.modelingvalue.nelumbo.syntax.LanguagePattern;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 @SuppressWarnings("rawtypes")
 public final class KnowledgeBase {
@@ -814,28 +818,22 @@ public final class KnowledgeBase {
         }
     }
 
-    public void register(FirstPattern pattern) {
-        Type expected = pattern.expected();
-        TokenPattern tokens = pattern.tokens();
-        Object part = tokens.get(0);
-        Object key = expected != null ? Pair.of(expected, part) : part;
-        firstPatterns.updateAndGet(map -> map.compute(key, (k, v) -> {
-            return value(1, v, pattern);
-        }));
-        if (part instanceof String) {
-            allOperators.updateAndGet(set -> set.add((String) part));
-        }
-    }
-
-    public void register(NextPattern pattern) {
+    public void register(LanguagePattern pattern) {
         Type expected = pattern.expected();
         Type left = pattern.left();
-        TokenPattern tokens = pattern.tokens();
+        List<Object> tokens = pattern.tokens();
         Object part = tokens.get(0);
-        Object key = expected != null ? Triple.of(expected, left, part) : Pair.of(left, part);
-        nextPatterns.updateAndGet(map -> map.compute(key, (k, v) -> {
-            return value(1, v, pattern);
-        }));
+        if (left != null) {
+            Object key = expected != null ? Triple.of(expected, left, part) : Pair.of(left, part);
+            nextPatterns.updateAndGet(map -> map.compute(key, (k, v) -> {
+                return value(1, v, pattern);
+            }));
+        } else {
+            Object key = expected != null ? Pair.of(expected, part) : part;
+            firstPatterns.updateAndGet(map -> map.compute(key, (k, v) -> {
+                return value(1, v, pattern);
+            }));
+        }
         if (part instanceof String) {
             allOperators.updateAndGet(set -> set.add((String) part));
         }
@@ -843,7 +841,7 @@ public final class KnowledgeBase {
 
     @SuppressWarnings("unchecked")
     private Object value(int i, Object v, LanguagePattern pattern) {
-        if (pattern.tokens().length() == i) {
+        if (pattern.tokens().size() == i) {
             if (v == null) {
                 return pattern;
             } else if (v instanceof Map) {
@@ -869,51 +867,7 @@ public final class KnowledgeBase {
         }
     }
 
-    public void register(FirstPattern pattern, WithArgs call) {
-        Type expected = pattern.expected();
-        TokenPattern tokens = pattern.tokens();
-        Object part = pattern.get(0);
-        Object key = expected != null ? Pair.of(expected, part) : part;
-        Object val = firstPatterns.get().get(key);
-        FirstPattern found = val != null ? (FirstPattern) get(val, 1, pattern) : null;
-        if (found == null) {
-            register(pattern);
-            found = pattern;
-        }
-        found.addCallWithArgs(call);
-    }
-
-    public void register(NextPattern pattern, WithArgs call) {
-        Type expected = pattern.expected();
-        Type left = pattern.left();
-        TokenPattern tokens = pattern.tokens();
-        Object part = pattern.get(0);
-        Object key = expected != null ? Triple.of(expected, left, part) : Pair.of(left, part);
-        Object val = nextPatterns.get().get(key);
-        NextPattern found = val != null ? (NextPattern) get(val, 1, pattern) : null;
-        if (found == null) {
-            register(pattern);
-            found = pattern;
-        }
-        found.addCallWithArgs(call);
-    }
-
-    private LanguagePattern get(Object val, int i, LanguagePattern pattern) {
-        if (i < pattern.tokens().length()) {
-            if (val instanceof Map) {
-                return get(((Map) val).get(1), i + 1, pattern);
-            } else if (val instanceof Pair) {
-                return get(((Map) ((Pair) val).b()).get(1), i + 1, pattern);
-            }
-        } else if (val instanceof LanguagePattern && pattern.equals(val)) {
-            return (LanguagePattern) val;
-        } else if (val instanceof Pair && pattern.equals(((Pair) val).a())) {
-            return (LanguagePattern) ((Pair) val).a();
-        }
-        return null;
-    }
-
-    public FirstPattern first(Type expected, LinkedList<Token> tokens) {
+    public LanguagePattern first(Type expected, LinkedList<Token> tokens) {
         Token token = tokens.getLast();
         Object v = firstPatterns.get().get(Pair.of(expected, token.text()));
         if (v == null) {
@@ -925,10 +879,10 @@ public final class KnowledgeBase {
         if (v == null) {
             v = firstPatterns.get().get(token.type());
         }
-        return v != null ? (FirstPattern) pattern(v, 1, tokens) : null;
+        return v != null ? pattern(v, 1, tokens) : null;
     }
 
-    public NextPattern next(Type expected, Type left, LinkedList<Token> tokens) {
+    public LanguagePattern next(Type expected, Type left, LinkedList<Token> tokens) {
         Token token = tokens.getLast();
         Object v = nextPatterns.get().get(Triple.of(expected, left, token.text()));
         if (v == null) {
@@ -940,7 +894,7 @@ public final class KnowledgeBase {
         if (v == null) {
             v = nextPatterns.get().get(Pair.of(left, token.type()));
         }
-        return v != null ? (NextPattern) pattern(v, 1, tokens) : null;
+        return v != null ? pattern(v, 1, tokens) : null;
     }
 
     @SuppressWarnings("unchecked")

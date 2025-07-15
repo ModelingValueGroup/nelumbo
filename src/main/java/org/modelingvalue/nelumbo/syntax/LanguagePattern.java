@@ -20,8 +20,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.Pair;
@@ -29,13 +27,73 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
 public abstract class LanguagePattern extends StructImpl {
-    private static final long                     serialVersionUID = 3273746815229326265L;
+    private static final long serialVersionUID = 3273746815229326265L;
 
-    private final AtomicReference<List<WithArgs>> withArgs;
+    protected LanguagePattern(Type expected, Integer precedence, Object... parts) {
+        super(expected, left(parts), tokens(parts), parts(parts), precedence);
+    }
 
-    protected LanguagePattern(Type expected, Type left, TokenPattern tokens, Integer precedence, RightPattern... rights) {
-        super(expected, left, tokens, precedence, List.of(rights));
-        this.withArgs = isCall() ? new AtomicReference<>() : null;
+    private static Type left(Object... parts) {
+        return parts[0] instanceof Type && ((Type) parts[0]).tokenType() == null ? (Type) parts[0] : null;
+    }
+
+    private static List<Object> tokens(Object... parts) {
+        List<Object> tokens = List.of();
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i] instanceof Type && ((Type) parts[i]).tokenType() == null) {
+                if (i > 0) {
+                    break;
+                }
+            } else if (parts[i] instanceof Type && ((Type) parts[i]).tokenType() != null) {
+                tokens = tokens.add(((Type) parts[i]).tokenType());
+            } else if (parts[i] instanceof String) {
+                tokens = tokens.add(parts[i]);
+            } else {
+                throw new IllegalArgumentException("Illegal pattern part " + parts[i]);
+            }
+        }
+        if (tokens.isEmpty()) {
+            throw new IllegalArgumentException("A pattern must contain tokens");
+        }
+        return tokens;
+    }
+
+    private static List<Object> parts(Object... parts) {
+        List<Object> result = List.of();
+        List<Object> tokens = List.of();
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i] instanceof Type && ((Type) parts[i]).tokenType() == null) {
+                if (i > 0) {
+                    if (!result.isEmpty()) {
+                        if (tokens.isEmpty()) {
+                            throw new IllegalArgumentException("Types must be seperated by tokens");
+                        } else {
+                            result = result.add(tokens);
+                        }
+                    }
+                    tokens = List.of();
+                    result = result.add(parts[i]);
+                }
+            } else if (parts[i] instanceof Type && ((Type) parts[i]).tokenType() != null) {
+                if (result.last() instanceof Type && ((Type) result.last()).isList()) {
+                    result = result.add(((Type) parts[i]).tokenType());
+                } else {
+                    tokens = tokens.add(((Type) parts[i]).tokenType());
+                }
+            } else if (parts[i] instanceof String) {
+                if (result.last() instanceof Type && ((Type) result.last()).isList()) {
+                    result = result.add(parts[i]);
+                } else {
+                    tokens = tokens.add(parts[i]);
+                }
+            } else {
+                throw new IllegalArgumentException("Illegal pattern part " + parts[i]);
+            }
+        }
+        if (!tokens.isEmpty()) {
+            result = result.add(tokens);
+        }
+        return result;
     }
 
     public final Type expected() {
@@ -46,118 +104,82 @@ public abstract class LanguagePattern extends StructImpl {
         return (Type) get(1);
     }
 
-    public final TokenPattern tokens() {
-        return (TokenPattern) get(2);
+    @SuppressWarnings("unchecked")
+    public final List<Object> tokens() {
+        return (List<Object>) get(2);
     }
 
     @SuppressWarnings("unchecked")
-    public final List<RightPattern> rights() {
-        return (List<RightPattern>) get(3);
+    public final List<Object> parts() {
+        return (List<Object>) get(3);
     }
 
     public final Integer precedence() {
         return (Integer) get(4);
     }
 
-    public boolean isCall() {
-        return false;
+    @SuppressWarnings("unchecked")
+    public final List<Type> args() {
+        return parts().filter(Type.class).asList();
     }
 
-    public Node construct(Token[] tokens) throws ParseException {
+    public Node construct(List<Token> tokens, List<Node> nodes) throws ParseException {
         throw new UnsupportedOperationException();
     }
 
-    public Node construct(Token[] tokens, Node rigth, Token[] end) throws ParseException {
+    public Node construct(Node left, List<Token> tokens, List<Node> nodes) throws ParseException {
         throw new UnsupportedOperationException();
     }
 
-    public Node construct(Token[] tokens, List<Node> rigth, Token[] end) throws ParseException {
-        throw new UnsupportedOperationException();
-    }
-
-    public Node construct(Node left, Token[] tokens) throws ParseException {
-        throw new UnsupportedOperationException();
-    }
-
-    public Node construct(Node left, Token[] tokens, Node rigth, Token[] end) throws ParseException {
-        throw new UnsupportedOperationException();
-    }
-
-    public Node construct(Node left, Token[] tokens, List<Node> rigth, Token[] end) throws ParseException {
-        throw new UnsupportedOperationException();
-    }
-
-    public Node parse(Parser parser, Type expected, Token[] tokens) throws ParseException {
+    public Node parse(Parser parser, Type expected, List<Token> tokens) throws ParseException {
         return parse(parser, expected, null, tokens);
     }
 
-    public Node parse(Parser parser, Type expected, Node left, Token[] tokens) throws ParseException {
-        if (seperator() != null) {
-            List<Node> list = List.of();
-            Token[] end;
-            Type type = right() != null ? right() : expected;
-            if ((end = parser.match(end())) == null) {
-                do {
-                    Node node = parser.parseNode(0, isCall() ? Type.NODE : right());
-                    if (!isCall() && !type.isAssignableFrom(node.type())) {
-                        Pair<Token, Token> pos = parser.nodePosition.get(node);
-                        throw new ParseException("Expected type " + type + " and found " + node + " of type " + node.type(), pos.a(), pos.b());
+    @SuppressWarnings("unchecked")
+    public Node parse(Parser parser, Type expected, Node left, List<Token> tokens) throws ParseException {
+        List<Node> nodes = List.of();
+        Integer precedence = precedence();
+        List<Object> parts = parts();
+        for (int i = 0; i < parts.size(); i++) {
+            Object part = parts.get(i);
+            if (part instanceof Type) {
+                Type type = (Type) part;
+                if (type.isList()) {
+                    type = type.element();
+                    Object separator = parts.get(++i);
+                    List<Object> end = (List<Object>) parts.get(++i);
+                    List<Token> stop = parser.match(end);
+                    if (stop == null) {
+                        do {
+                            Node node = parser.parseNode(precedence, type);
+                            checkType(parser, type, node);
+                            nodes = nodes.add(node);
+                            Token sep = parser.match(separator);
+                            if (sep != null) {
+                                tokens = tokens.add(sep);
+                            } else {
+                                break;
+                            }
+                        } while (true);
+                        stop = parser.consume(end);
                     }
-                    list = list.add(node);
-                } while (parser.match(seperator()) != null);
-                end = parser.consume(end());
-            }
-            if (isCall()) {
-                List<Type> types = list.replaceAll(Node::type);
-                WithArgs call = call(types);
-                if (call != null) {
-                    return left != null ? call.construct(left, tokens, list, end) : call.construct(tokens, list, end);
+                    tokens = tokens.addAll(stop);
+                } else {
+                    Node node = parser.parseNode(precedence, type);
+                    checkType(parser, type, node);
+                    nodes = nodes.add(node);
                 }
-                String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
-                throw new ParseException("Could not call " + parser.toString(tokens) + signature, tokens[0], parser.last());
             } else {
-                return left != null ? construct(left, tokens, list, end) : construct(tokens, list, end);
-            }
-        } else if (end() != null) {
-            Type type = right() != null ? right() : expected;
-            Node right = parser.parseNode(precedence(), type);
-            if (!type.isAssignableFrom(right.type())) {
-                Pair<Token, Token> pos = parser.nodePosition.get(right);
-                throw new ParseException("Expected type " + type + " and found " + right + " of type " + right.type(), pos.a(), pos.b());
-            }
-            Token[] end = parser.consume(end());
-            return left != null ? construct(left, tokens, right, end) : construct(tokens, right, end);
-        } else {
-            return left != null ? construct(left, tokens) : construct(tokens);
-        }
-    }
-
-    private WithArgs call(List<Type> args) throws ParseException {
-        List<WithArgs> calls = withArgs.get();
-        if (calls != null) {
-            for (WithArgs call : calls) {
-                if (call.isAssignableFrom(args)) {
-                    return call;
-                }
+                tokens = tokens.addAll(parser.consume((List<Object>) part));
             }
         }
-        return null;
+        return left != null ? construct(left, tokens, nodes) : construct(tokens, nodes);
     }
 
-    public void addCallWithArgs(WithArgs withArgs) {
-        this.withArgs.updateAndGet(calls -> addCall(withArgs, calls));
-    }
-
-    private List<WithArgs> addCall(WithArgs withArgs, List<WithArgs> list) {
-        if (list == null) {
-            return List.of(withArgs);
-        } else {
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).isAssignableFrom(withArgs)) {
-                    return list.insert(i, withArgs);
-                }
-            }
-            return list.append(withArgs);
+    private void checkType(Parser parser, Type type, Node node) throws ParseException {
+        if (!type.isAssignableFrom(node.type())) {
+            Pair<Token, Token> pos = parser.nodePosition.get(node);
+            throw new ParseException("Expected type " + type + " and found " + node + " of type " + node.type(), pos.a(), pos.b());
         }
     }
 
