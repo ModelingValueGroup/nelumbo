@@ -20,50 +20,67 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.struct.impl.StructImpl;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
-public abstract class Parselet {
+public abstract class WithArgs extends StructImpl {
+    private static final long serialVersionUID = -3715793473520345160L;
 
-    private final Type      expected;
-    private final TokenType type1;
-    private final String    oper1;
-    private final TokenType type2;
-    private final String    oper2;
+    public static WithArgs of(ThrowingTriFunction<Token[], List<Node>, Token[], Node> constructor, Type... args) {
+        return new WithArgs(args) {
+            private static final long serialVersionUID = 4861999019838252134L;
 
-    protected Parselet(Type expected, TokenType type1, String oper1, TokenType type2, String oper2) {
-        this.expected = expected;
-        this.type1 = type1;
-        this.oper1 = oper1;
-        this.type2 = type2;
-        this.oper2 = oper2;
+            @Override
+            public Node construct(Token[] token, List<Node> args, Token[] end) throws ParseException {
+                return constructor.apply(token, args, end);
+            }
+        };
     }
 
-    public Type expected() {
-        return expected;
+    public static WithArgs of(ThrowingQuadFunction<Node, Token[], List<Node>, Token[], Node> constructor, Type... args) {
+        return new WithArgs(args) {
+            private static final long serialVersionUID = -3034299516226643893L;
+
+            @Override
+            public Node construct(Node left, Token[] token, List<Node> args, Token[] end) throws ParseException {
+                return constructor.apply(left, token, args, end);
+            }
+        };
     }
 
-    public TokenType type1() {
-        return type1;
+    private WithArgs(Type[] args) {
+        super(List.of(args));
     }
 
-    public String oper1() {
-        return oper1;
+    @SuppressWarnings("unchecked")
+    public List<Type> args() {
+        return (List<Type>) get(0);
     }
 
-    public TokenType type2() {
-        return type2;
+    public Node construct(Token[] tokens, List<Node> args, Token[] end) throws ParseException {
+        throw new UnsupportedOperationException();
     }
 
-    public String oper2() {
-        return oper2;
+    public Node construct(Node left, Token[] tokens, List<Node> args, Token[] end) throws ParseException {
+        throw new UnsupportedOperationException();
     }
 
-    public Object key1() {
-        return oper1 != null ? oper1 : type1;
+    public boolean isAssignableFrom(WithArgs sub) {
+        return isAssignableFrom(sub.args());
     }
 
-    public Object key2() {
-        return oper2 != null ? oper2 : type2;
+    public boolean isAssignableFrom(List<Type> args) {
+        if (args.size() != args().size()) {
+            return false;
+        }
+        for (int i = 0; i < args.size(); i++) {
+            if (!args().get(i).isAssignableFrom(args.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

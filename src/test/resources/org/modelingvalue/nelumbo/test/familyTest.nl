@@ -3,9 +3,9 @@
     <Male>      :: <Person>
     <Female>    :: <Person>
 
-    <Relation>  ::= pc(<Person>,<Person>)   // parent-child
+    <Relation>  ::= "pc" "(" <Person> "," <Person> ")"   // parent-child
 
-    <Predicate> ::= ad(<Person>,<Person>)   // ancestor-descendant
+    <Predicate> ::= "ad" "(" <Person> "," <Person> ")"   // ancestor-descendant
 
     <Person>    ::= p(<Person>),   // parent
                     c(<Person>),   // child
