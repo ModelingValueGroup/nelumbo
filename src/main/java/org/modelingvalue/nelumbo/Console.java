@@ -309,6 +309,9 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         Document doc = textArea.getDocument();
         Element root = doc.getDefaultRootElement();
         Element line = root.getElement(lineCount - 1);
+        if (line == null) {
+            return null;
+        }
         int start = line.getStartOffset();
         int end = line.getEndOffset();
         return new int[]{start, end};
@@ -334,7 +337,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     @Override
     public void caretUpdate(CaretEvent e) {
         int[] se = getStartEnd();
-        if (e.getMark() < se[0] + PREFIX.length()) {
+        if (se != null && e.getMark() < se[0] + PREFIX.length()) {
             textArea.setCaretPosition(se[0] + PREFIX.length());
         }
     }
