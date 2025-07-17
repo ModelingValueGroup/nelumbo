@@ -405,7 +405,10 @@ public class Predicate extends Node {
                 } else if (ruleResult.isTrueCC()) {
                     return ruleResult;
                 } else if (ruleResult.hasCycleWith(this)) {
-                    result = result.or(ruleResult.complete());
+                    ruleResult = ruleResult.complete();
+                }
+                if (rule.symmetric()) {
+                    return ruleResult;
                 } else {
                     result = result.or(ruleResult);
                 }

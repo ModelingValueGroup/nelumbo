@@ -19,15 +19,15 @@
     <Male>   y
     <Female> x
 
-    ad(a,c) <==  pc(a,c),
-                 ad(a,b) & pc(b, c)
+    ad(a,c) <==   pc(a,c),
+                  ad(a,b) & pc(b, c)
                
-    c(a)=b  <==  pc(a,b)
-    p(a)=b  <==  pc(b,a)
-    d(a)=b  <==  ad(a,b)
-    a(a)=b  <==  ad(b,a)
-    m(a)=b  <==  pc(x,a) & b=x
-    f(a)=b  <==  pc(y,a) & b=y
+    c(a)=b  <==>  pc(a,b)
+    p(a)=b  <==>  pc(b,a)
+    d(a)=b  <==>  ad(a,b)
+    a(a)=b  <==>  ad(b,a)
+    m(a)=b  <==>  pc(x,a) & b=x
+    f(a)=b  <==>  pc(y,a) & b=y
 
     <Male>   ::= Hendrik, Bernhard, Claus, Willem
     <Female> ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia

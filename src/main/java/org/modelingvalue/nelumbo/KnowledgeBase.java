@@ -286,27 +286,10 @@ public final class KnowledgeBase {
 
             // Rules
             register(InfixParselet.of(Type.ROOT, Type.PREDICATE, "<==", Type.PREDICATE.list(), 10, (l, t, r) -> {
-                ListNode list = new ListNode(Type.RULE);
-                KnowledgeBase current = KnowledgeBase.CURRENT.get();
-                for (Node s : ((ListNode) r).elements()) {
-                    Predicate cons = (Predicate) l;
-                    Predicate cond = (Predicate) s;
-                    Functor rel = current.relations.get().get(cons.functor());
-                    if (rel != null) {
-                        Map<Variable, Object> vars = Predicate.literals(new Rule(cons, cond).variables());
-                        cons = cons.setFunctor(rel).setVariables(vars);
-                        cond = cond.setVariables(vars);
-                    } else {
-                        Map<Variable, Object> local = cond.variables().removeAllKey(cons.variables());
-                        if (!local.isEmpty()) {
-                            cond = cond.setVariables(Predicate.literals(local));
-                        }
-                    }
-                    Rule rule = new Rule(cons, cond);
-                    current.addRule(rule);
-                    list = new ListNode(list, rule);
-                }
-                return list;
+                return rule(l, r, false);
+            }));
+            register(InfixParselet.of(Type.ROOT, Type.PREDICATE, "<==>", Type.PREDICATE.list(), 10, (l, t, r) -> {
+                return rule(l, r, true);
             }));
 
             // Expectations
@@ -359,6 +342,32 @@ public final class KnowledgeBase {
             }
         });
         return this;
+    }
+
+    private static Node rule(Node l, Node r, boolean symmetric) {
+        ListNode list = new ListNode(Type.RULE);
+        KnowledgeBase current = KnowledgeBase.CURRENT.get();
+        for (Node s : ((ListNode) r).elements()) {
+            Predicate cons = (Predicate) l;
+            Predicate cond = (Predicate) s;
+            Functor rel = current.relations.get().get(cons.functor());
+            if (rel != null) {
+                Rule rule = new Rule(cons, cond, symmetric);
+                // current.addRule(rule);
+                Map<Variable, Object> vars = Predicate.literals(rule.variables());
+                cons = cons.setFunctor(rel).setVariables(vars);
+                cond = cond.setVariables(vars);
+            } else {
+                Map<Variable, Object> local = cond.variables().removeAllKey(cons.variables());
+                if (!local.isEmpty()) {
+                    cond = cond.setVariables(Predicate.literals(local));
+                }
+            }
+            Rule rule = new Rule(cons, cond, symmetric);
+            current.addRule(rule);
+            list = new ListNode(list, rule);
+        }
+        return list;
     }
 
     private static Type type(Token t) throws ParseException {
@@ -460,7 +469,7 @@ public final class KnowledgeBase {
                     Predicate eq = new Predicate(eqFunctor(), nodVars[i], litVars[i]);
                     condition = And.of(eq, condition);
                 }
-                addRule(new Rule(conclusion, condition));
+                addRule(new Rule(conclusion, condition, false));
             }
             return functor;
         } else if (sig.length() == 3 && sig.get(1) instanceof Type && sig.get(2) instanceof String) {
@@ -489,7 +498,7 @@ public final class KnowledgeBase {
                 Predicate condition = (Predicate) createNode(true, token, constructor, relFunctor, litVar);
                 Predicate eq = new Predicate(eqFunctor(), nodVar, litVar);
                 condition = And.of(eq, condition);
-                addRule(new Rule(conclusion, condition));
+                addRule(new Rule(conclusion, condition, false));
             }
             return functor;
         } else if (sig.length() == 3 && sig.get(1) instanceof String && sig.get(2) instanceof Type) {
@@ -518,7 +527,7 @@ public final class KnowledgeBase {
                 Predicate condition = (Predicate) createNode(true, token, constructor, relFunctor, litVar);
                 Predicate eq = new Predicate(eqFunctor(), nodVar, litVar);
                 condition = And.of(eq, condition);
-                addRule(new Rule(conclusion, condition));
+                addRule(new Rule(conclusion, condition, false));
             }
             return functor;
         } else if (sig.length() == 4 && sig.get(1) instanceof Type && sig.get(2) instanceof String && sig.get(3) instanceof Type) {
@@ -552,7 +561,7 @@ public final class KnowledgeBase {
                 Predicate eq0 = new Predicate(eqFunctor(), nodVar0, litVar0);
                 Predicate eq1 = new Predicate(eqFunctor(), nodVar1, litVar1);
                 condition = And.of(eq0, And.of(eq1, condition));
-                addRule(new Rule(conclusion, condition));
+                addRule(new Rule(conclusion, condition, false));
             }
             return functor;
         } else {

@@ -23,12 +23,12 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 
-public class Rule extends Node {
+public final class Rule extends Node {
     private static final long   serialVersionUID = -4602043866952049391L;
     public static final Functor FUNCTOR          = new Functor(Type.RULE, "Rule", n -> n.toString(1) + " <== " + n.toString(2), 10, Type.PREDICATE, Type.PREDICATE);
 
-    public Rule(Predicate consequence, Predicate condition) {
-        super(FUNCTOR, consequence, condition);
+    public Rule(Predicate consequence, Predicate condition, boolean symmetric) {
+        super(FUNCTOR, consequence, condition, symmetric);
     }
 
     private Rule(Object[] args) {
@@ -48,16 +48,21 @@ public class Rule extends Node {
         return (Predicate) get(2);
     }
 
+    public final boolean symmetric() {
+        return (java.lang.Boolean) get(3);
+    }
+
     protected final InferResult imply(Predicate proven, InferContext context) {
         Map<Variable, Object> binding = proven.getBinding(consequence(), Map.of(), true);
         if (binding == null) {
             return null;
         }
+        boolean symmetric = symmetric();
         binding = variables().putAll(binding);
         Predicate condition = condition().setBinding(binding);
         Predicate consequence = consequence().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + consequence + " <== " + condition);
+            System.err.println(context.prefix() + consequence + (symmetric ? " <==> " : " <== ") + condition);
         }
         InferResult condResult = condition.resolve(context);
         InferResult proResult;
@@ -72,7 +77,7 @@ public class Rule extends Node {
             }
             for (Predicate condFalsehood : condResult.falsehoods()) {
                 Predicate proFalsehood = proven.castFrom(consequence.setBinding(condFalsehood.getBinding()));
-                if (!proFacts.contains(proFalsehood)) {
+                if (symmetric || !proFacts.contains(proFalsehood)) {
                     proFalsehoods = proFalsehoods.add(proFalsehood);
                 }
             }
@@ -88,7 +93,7 @@ public class Rule extends Node {
                 if (condFullyBound ? proFalsehoods.isEmpty() : !condResult.completeFalsehoods()) {
                     completeFalsehoods = false;
                 }
-                if (!completeFacts && !proFalsehoods.isEmpty()) {
+                if (!symmetric && !completeFacts && !proFalsehoods.isEmpty()) {
                     proFalsehoods = Set.of();
                 }
             }

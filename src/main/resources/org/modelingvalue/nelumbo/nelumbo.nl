@@ -13,8 +13,8 @@
     <Function> f1, f2
     <Node>     n1, n2
 
-    l1=l2  <==  eq(l1, l2)
-    f1=f2  <==  f1=l & f2=l
-    l1=f1  <==  f1=l1
-    n1!=n2 <==  !(n1=n2)
+    l1=l2  <==>  eq(l1, l2)
+    f1=f2  <==>  f1=l & f2=l
+    l1=f1  <==>  f1=l1
+    n1!=n2 <==>  !(n1=n2)
 
