@@ -44,9 +44,9 @@ public class NelumboTest extends NelumboTestBase {
     @RepeatedTest(100)
     public void tokenizerTest() {
         String example = """
-                // COMMEND
+                // COMMENT
                     -abb + bcc *
-                       c - dee // MORE COMMEND
+                       c - dee // ANOTHER COMMENT
                     e = 8.9 / 2
                 """;
         try {

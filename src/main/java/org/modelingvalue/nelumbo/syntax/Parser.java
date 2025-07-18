@@ -42,7 +42,7 @@ public final class Parser {
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
         String packageName = clss.getPackageName();
-        String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
+        String name        = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
         return parse(clss, name);
     }
 
@@ -53,7 +53,7 @@ public final class Parser {
                 throw new ParseException("Nelumbo resource " + name + " does not exist", 0, 0, 0, 0, name);
             }
             InputStream buffer = new BufferedInputStream(stream);
-            String base = new String(buffer.readAllBytes());
+            String      base   = new String(buffer.readAllBytes());
             return new Parser(new Tokenizer(base, name).tokenize()).parse();
         } catch (IOException e) {
             throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), 0, 0, 0, 0, name);
@@ -64,10 +64,11 @@ public final class Parser {
 
     private final KnowledgeBase     knowledgeBase;
     private final LinkedList<Token> tokens;
+    private final LinkedList<Token>               tokens;
 
     public Parser(LinkedList<Token> tokens) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
-        this.tokens = tokens;
+        this.tokens        = tokens;
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
@@ -77,7 +78,8 @@ public final class Parser {
             Token start = peek();
             left = new ListNode(Token.EMPTY, elemType);
             if (!start.type().end()) {
-                do {
+                do
+                {
                     Node node = parseNode(precedence, elemType);
                     if (!elemType.isAssignableFrom(node.type())) {
                         throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), node.tokens());
@@ -86,18 +88,18 @@ public final class Parser {
                 } while (match(TokenType.COMMA));
             }
         } else {
-            Token token1 = poll();
-            Token token2 = peek();
+            Token          token1 = poll();
+            Token          token2 = peek();
             AtomicParselet prefix = prefix(expected, token1, token2);
             left = prefix.parse(expected, this, token1);
         }
-        Token token1 = poll();
-        Token token2 = peek();
+        Token           token1  = poll();
+        Token           token2  = peek();
         PostfixParselet postfix = postfix(expected, left.type(), token1, token2, precedence);
         while (postfix != null) {
             left = postfix.parse(expected, this, left, token1);
-            token1 = poll();
-            token2 = peek();
+            token1  = poll();
+            token2  = peek();
             postfix = postfix(expected, left.type(), token1, token2, precedence);
         }
         tokens.addFirst(token1);
@@ -112,6 +114,7 @@ public final class Parser {
         return tokens.poll();
     }
 
+    @SuppressWarnings("CommentedOutCode")
     private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
         AtomicParselet prefix = doPrefix(expected, token1, token2);
         if (prefix == null && token1.type() == TokenType.OPERATOR) {
@@ -147,12 +150,12 @@ public final class Parser {
         PostfixParselet postfix = doPostfix(expected, left, token1, token2);
         if (postfix == null && token1.type() == TokenType.OPERATOR) {
             String text = token1.text();
-            int len = text.length();
+            int    len  = text.length();
             while (len-- > 1 && !knowledgeBase.isOperator(text)) {
-                token1 = new Token(token1.type(), text.substring(0, len), token1.line(), //
-                        token1.position(), token1.index(), token1.fileName());
-                token2 = new Token(token1.type(), text.substring(len), token1.line(), //
-                        token1.position() + len, token1.index() + len, token1.fileName());
+                token1  = new Token(token1.type(), text.substring(0, len), token1.line(), //
+                                    token1.position(), token1.index(), token1.fileName());
+                token2  = new Token(token1.type(), text.substring(len), token1.line(), //
+                                    token1.position() + len, token1.index() + len, token1.fileName());
                 postfix = doPostfix(expected, left, token1, token2);
                 if (postfix != null) {
                     if (precedence < postfix.precedence()) {
@@ -163,7 +166,7 @@ public final class Parser {
                     }
                 } else if (len == 1) {
                     token1 = new Token(token1.type(), token1.text() + token2.text(), token1.line(), //
-                            token1.position(), token1.index(), token1.fileName());
+                                       token1.position(), token1.index(), token1.fileName());
                     throw new ParseException("Operator " + token1.text() + " not defined", token1);
                 }
             }
@@ -178,7 +181,7 @@ public final class Parser {
     private PostfixParselet doPostfix(Type expected, Type left, Token token1, Token token2) {
         Set<Type> pre, post = Set.of(left);
         while (!post.isEmpty()) {
-            pre = post;
+            pre  = post;
             post = Set.of();
             for (Type type : pre) {
                 PostfixParselet postfix = knowledgeBase.postfix(expected, type, token1, token2);
@@ -206,6 +209,7 @@ public final class Parser {
     public List<Node> parse() throws ParseException {
         List<Node> roots = List.of();
         while (!tokens.isEmpty()) {
+            //noinspection StatementWithEmptyBody
             while (match(TokenType.NEWLINE)) {
             }
             if (!tokens.isEmpty()) {
@@ -225,10 +229,6 @@ public final class Parser {
                 consume(TokenType.NEWLINE);
             }
         }
-        if (!tokens.isEmpty()) {
-            Token token = peek();
-            throw new ParseException("Could not parse '" + token.text() + "'", token);
-        }
         return roots;
     }
 
@@ -242,17 +242,6 @@ public final class Parser {
     public boolean next(TokenType expected) {
         Token token = peek();
         return token != null && token.type() == expected;
-    }
-
-    public boolean findInLine(TokenType expected) {
-        for (Token token : tokens) {
-            if (token.type() == expected) {
-                return true;
-            } else if (token.type() == TokenType.NEWLINE) {
-                return false;
-            }
-        }
-        return false;
     }
 
     public boolean match(TokenType expected) {

@@ -24,30 +24,29 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 
 public class Tokenizer {
-
     private final String input;
     private final String fileName;
 
     public Tokenizer(String input, String fileName) {
-        this.input = input;
+        this.input    = input;
         this.fileName = fileName;
     }
 
     public LinkedList<Token> tokenize() throws ParseException {
-        LinkedList<Token> tokens = new LinkedList<>();
-        TokenType[] tokenTypes = TokenType.values();
-        Matcher[] matchers = new Matcher[tokenTypes.length];
+        LinkedList<Token> tokens     = new LinkedList<>();
+        TokenType[]       tokenTypes = TokenType.values();
+        Matcher[]         matchers   = new Matcher[tokenTypes.length];
         for (int i = 0; i < tokenTypes.length; i++) {
             matchers[i] = tokenTypes[i].pattern().matcher(input);
             if (!matchers[i].find()) {
                 matchers[i] = null;
             }
         }
-        int index = 0;
-        int line = 1;
+        int index    = 0;
+        int line     = 1;
         int position = 1;
         while (index < input.length()) {
-            String text = null;
+            String    text = null;
             TokenType type = null;
             for (int i = 0; i < tokenTypes.length; i++) {
                 while (matchers[i] != null && matchers[i].start() < index) {
@@ -64,24 +63,36 @@ public class Tokenizer {
                 }
             }
             if (text == null) {
-                throw new ParseException("Unexpected input '" + text + "'", line, position, index, 8, fileName);
+                String unexpectedChars = getUnexpectedToken(input, index);
+                throw new ParseException("Unexpected input '" + unexpectedChars + "'", line, position, index, unexpectedChars.length(), fileName);
+            }
+            if (type != TokenType.HSPACE && (type != TokenType.NEWLINE || tokens.isEmpty() || !tokens.getLast().type().more())) {
+                tokens.add(new Token(type, text, line, position, index, fileName));
+            }
+            index += text.length();
+            if (type == TokenType.NEWLINE) {
+                int i = text.indexOf('\n');
+                while (i >= 0) {
+                    line++;
+                    i = text.indexOf('\n', i + 1);
+                }
+                position = 0;
             } else {
-                if (type != TokenType.HSPACE && (type != TokenType.NEWLINE || tokens.isEmpty() || !tokens.getLast().type().more())) {
-                    tokens.add(new Token(type, text, line, position, index, fileName));
-                }
-                index += text.length();
-                if (type == TokenType.NEWLINE) {
-                    int i = text.indexOf('\n');
-                    while (i >= 0) {
-                        line++;
-                        i = text.indexOf('\n', i + 1);
-                    }
-                    position = 0;
-                } else {
-                    position += text.length();
-                }
+                position += text.length();
             }
         }
         return tokens;
+    }
+
+    private String getUnexpectedToken(String text, int at) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = at; i < text.length() && i < at + 8; i++) {
+            char c = text.charAt(i);
+            if (Character.isSpaceChar(c)) {
+                break;
+            }
+            sb.append(c);
+        }
+        return sb.toString();
     }
 }
