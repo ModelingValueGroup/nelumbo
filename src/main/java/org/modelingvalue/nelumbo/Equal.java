@@ -53,16 +53,24 @@ public class Equal extends Predicate {
 
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        Node eq = eq(left(), right());
-        return eq == null ? falsehoodCC() : set(1, eq).set(2, eq).factCC();
+        boolean[] complete = new boolean[]{true};
+        Node eq = eq(left(), right(), complete);
+        if (eq == null) {
+            return complete[0] ? falsehoodCC() : falsehoodCI();
+        } else {
+            Equal r = set(1, eq).set(2, eq);
+            return complete[0] ? r.factCC() : r.factCI();
+        }
     }
 
-    private static Node eq(Node left, Node right) {
+    private static Node eq(Node left, Node right, boolean[] complete) {
         if (left.equals(right)) {
             return left;
         } else if (!(left instanceof Type) && right instanceof Type) {
+            complete[0] = false;
             return ((Type) right).isAssignableFrom(((Node) left).type()) ? left : null;
         } else if (left instanceof Type && !(right instanceof Type)) {
+            complete[0] = false;
             return ((Type) left).isAssignableFrom(((Node) right).type()) ? right : null;
         } else if (left instanceof Type && right instanceof Type) {
             return Objects.equals(left, right) ? left : null;
@@ -72,7 +80,7 @@ public class Equal extends Predicate {
         Object[] array = null;
         for (int i = 0; i < left.length(); i++) {
             Object leftVal = left.get(i);
-            Object eq = eq(leftVal, right.get(i));
+            Object eq = eq(leftVal, right.get(i), complete);
             if (eq == null) {
                 return null;
             } else if (!Objects.equals(eq, leftVal)) {
@@ -85,13 +93,15 @@ public class Equal extends Predicate {
         return array != null ? left.struct(array) : left;
     }
 
-    private static Object eq(Object left, Object right) {
+    private static Object eq(Object left, Object right, boolean[] complete) {
         if (left != right) {
             if (left instanceof Node && right instanceof Node) {
-                return eq((Node) left, (Node) right);
+                return eq((Node) left, (Node) right, complete);
             } else if (right instanceof Type) {
+                complete[0] = false;
                 return ((Type) right).isAssignableFrom(left.getClass()) ? left : null;
             } else if (left instanceof Type) {
+                complete[0] = false;
                 return ((Type) left).isAssignableFrom(right.getClass()) ? right : null;
             } else if (!Objects.equals(left, right)) {
                 return null;

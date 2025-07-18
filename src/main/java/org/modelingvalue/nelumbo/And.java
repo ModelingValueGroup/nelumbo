@@ -23,13 +23,11 @@ package org.modelingvalue.nelumbo;
 public final class And extends BinaryPredicate {
     private static final long serialVersionUID = -7248491569810098948L;
 
+    // Automatically set in addFcuntor in KnowledgeBase
     private static Functor    FUNCTOR;
 
     public And(Functor functor, Object[] args) {
         super(functor, args[0], args[1]);
-        if (FUNCTOR == null) {
-            FUNCTOR = functor;
-        }
     }
 
     private And(Object[] args, And declaration) {

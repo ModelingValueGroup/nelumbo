@@ -25,7 +25,7 @@ import org.modelingvalue.collections.Set;
 
 public final class Rule extends Node {
     private static final long   serialVersionUID = -4602043866952049391L;
-    public static final Functor FUNCTOR          = new Functor(Type.RULE, "Rule", n -> n.toString(1) + " <== " + n.toString(2), 10, Type.PREDICATE, Type.PREDICATE);
+    public static final Functor FUNCTOR          = new Functor(Type.RULE, "Rule", n -> n.toString(1) + (((Rule) n).symmetric() ? " <==> " : " <== ") + n.toString(2), 10, Type.PREDICATE, Type.PREDICATE);
 
     public Rule(Predicate consequence, Predicate condition, boolean symmetric) {
         super(FUNCTOR, consequence, condition, symmetric);

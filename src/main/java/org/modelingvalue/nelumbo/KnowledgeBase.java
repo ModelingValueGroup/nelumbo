@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo;
 
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -419,7 +420,7 @@ public final class KnowledgeBase {
             TokenType tokenType = ((Type) sig.get(1)).tokenType();
             String funtorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
             Functor functor = new Functor(type, funtorName, Type.STRING);
-            addFunctor(functor);
+            addFunctor(functor, token, constructor);
             register(AtomicParselet.of(tokenType, tt -> createNode(predicate, token, constructor, functor, tt.text())));
             return functor;
         } else if (sig.length() == 2 && sig.get(1) instanceof String) {
@@ -431,7 +432,7 @@ public final class KnowledgeBase {
             String name = (String) sig.get(1);
             String funtorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
             Functor functor = new Functor(type, funtorName, n -> n.toString(1), 100, Type.STRING);
-            addFunctor(functor);
+            addFunctor(functor, token, constructor);
             Node node = createNode(predicate, token, constructor, functor, name);
             register(AtomicParselet.of(name, tt -> node));
             return functor;
@@ -447,14 +448,14 @@ public final class KnowledgeBase {
             List<Type> args = (List<Type>) sig.get(2);
             boolean rel = relation && !args.isEmpty() && args.noneMatch(Type::isLiteral);
             Functor functor = new Functor(rel ? Type.PREDICATE : type, name, args);
-            addFunctor(functor);
+            addFunctor(functor, token, rel ? null : constructor);
             register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, token, rel ? null : constructor, functor, ll.toArray()), //
                     args.toArray(i -> new Type[i])));
             if (rel) {
                 List<Type> litArgs = args.replaceAll(Type::literal);
                 Functor relFunctor = new Functor(type, name, litArgs);
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
-                addFunctor(relFunctor);
+                addFunctor(relFunctor, token, constructor);
                 register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, token, constructor, relFunctor, ll.toArray()), //
                         litArgs.toArray(i -> new Type[i])));
                 Object[] nodVars = new Variable[args.size()];
@@ -484,13 +485,13 @@ public final class KnowledgeBase {
             boolean rel = relation && !pre.isLiteral();
             String oper = (String) sig.get(2);
             Functor functor = new Functor(rel ? Type.PREDICATE : type, oper, n -> n.toString(1) + oper, precedence, pre);
-            addFunctor(functor);
+            addFunctor(functor, token, rel ? null : constructor);
             register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(predicate, token, rel ? null : constructor, functor, ll)));
             if (rel) {
                 Type litPre = pre.literal();
                 Functor relFunctor = new Functor(type, oper, n -> n.toString(1) + oper, precedence, litPre);
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
-                addFunctor(relFunctor);
+                addFunctor(relFunctor, token, constructor);
                 register(PostfixParselet.of(litPre, oper, precedence, (ll, tt) -> createNode(predicate, token, constructor, relFunctor, ll)));
                 Variable nodVar = new Variable(pre, "n");
                 Variable litVar = new Variable(litPre, "l");
@@ -513,13 +514,13 @@ public final class KnowledgeBase {
             Type post = (Type) sig.get(2);
             boolean rel = relation && !post.isLiteral();
             Functor functor = new Functor(rel ? Type.PREDICATE : type, oper, n -> oper + n.toString(1), precedence, post);
-            addFunctor(functor);
+            addFunctor(functor, token, rel ? null : constructor);
             register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(predicate, token, rel ? null : constructor, functor, rr)));
             if (rel) {
                 Type litPost = post.literal();
                 Functor relFunctor = new Functor(type, oper, n -> oper + n.toString(1), precedence, litPost);
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
-                addFunctor(relFunctor);
+                addFunctor(relFunctor, token, constructor);
                 register(PrefixParselet.of(oper, litPost, precedence, (tt, rr) -> createNode(predicate, token, constructor, relFunctor, rr)));
                 Variable nodVar = new Variable(post, "n");
                 Variable litVar = new Variable(litPost, "l");
@@ -543,14 +544,14 @@ public final class KnowledgeBase {
             Type post = (Type) sig.get(3);
             boolean rel = relation && !pre.isLiteral() && !post.isLiteral();
             Functor functor = new Functor(rel ? Type.PREDICATE : type, oper, n -> n.toString(1) + oper + n.toString(2), precedence, pre, post);
-            addFunctor(functor);
+            addFunctor(functor, token, rel ? null : constructor);
             register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(predicate, token, rel ? null : constructor, functor, ll, rr)));
             if (rel) {
                 Type litPre = pre.literal();
                 Type litPost = post.literal();
                 Functor relFunctor = new Functor(type, oper, n -> n.toString(1) + oper + n.toString(2), precedence, litPre, litPost);
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
-                addFunctor(relFunctor);
+                addFunctor(relFunctor, token, constructor);
                 register(InfixParselet.of(litPre, oper, litPost, precedence, (ll, tt, rr) -> createNode(predicate, token, constructor, relFunctor, ll, rr)));
                 Variable nodVar0 = new Variable(pre, "n1");
                 Variable litVar0 = new Variable(litPre, "l1");
@@ -794,7 +795,20 @@ public final class KnowledgeBase {
         return variables.get().get(name);
     }
 
-    public final void addFunctor(Functor functor) {
+    public final void addFunctor(Functor functor, Token token, Constructor<? extends Node> constructor) throws ParseException {
+        if (constructor != null) {
+            Class<? extends Node> cls = constructor.getDeclaringClass();
+            try {
+                Field functorField = cls.getDeclaredField("FUNCTOR");
+                try {
+                    functorField.setAccessible(true);
+                    functorField.set(null, functor);
+                } catch (IllegalArgumentException | IllegalAccessException | SecurityException e) {
+                    throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), token);
+                }
+            } catch (NoSuchFieldException | SecurityException e) {
+            }
+        }
         functors.updateAndGet(set -> set.add(functor));
     }
 

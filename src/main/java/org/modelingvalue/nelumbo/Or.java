@@ -23,12 +23,19 @@ package org.modelingvalue.nelumbo;
 public final class Or extends BinaryPredicate {
     private static final long serialVersionUID = -1732549494864415986L;
 
+    // Automatically set in addFcuntor in KnowledgeBase
+    private static Functor    FUNCTOR;
+
     public Or(Functor functor, Object[] args) {
         super(functor, args[0], args[1]);
     }
 
     private Or(Object[] args, Or declaration) {
         super(args, declaration);
+    }
+
+    public static Or of(Node predicate1, Node predicate2) {
+        return new Or(FUNCTOR, new Object[]{predicate1, predicate2});
     }
 
     @Override

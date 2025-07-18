@@ -192,6 +192,45 @@ public interface InferResult {
         };
     }
 
+    static InferResult factsIC(Set<Predicate> facts) {
+        return new InferResultImpl() {
+            @Override
+            public Set<Predicate> facts() {
+                return facts;
+            }
+
+            @Override
+            public Set<Predicate> falsehoods() {
+                return Set.of();
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return false;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return true;
+            }
+
+            @Override
+            public Predicate unknown() {
+                return null;
+            }
+
+            @Override
+            public Set<Predicate> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<Predicate> stackOverflow() {
+                return null;
+            }
+        };
+    }
+
     static InferResult factsCC(Set<Predicate> facts) {
         return new InferResultImpl() {
             @Override
@@ -290,6 +329,45 @@ public interface InferResult {
             @Override
             public boolean completeFalsehoods() {
                 return true;
+            }
+
+            @Override
+            public Predicate unknown() {
+                return null;
+            }
+
+            @Override
+            public Set<Predicate> cycles() {
+                return Set.of();
+            }
+
+            @Override
+            public List<Predicate> stackOverflow() {
+                return null;
+            }
+        };
+    }
+
+    static InferResult falsehoodsCI(Set<Predicate> falsehoods) {
+        return new InferResultImpl() {
+            @Override
+            public Set<Predicate> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<Predicate> falsehoods() {
+                return falsehoods;
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return true;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
             }
 
             @Override

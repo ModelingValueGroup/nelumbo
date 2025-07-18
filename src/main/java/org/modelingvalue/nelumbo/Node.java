@@ -39,6 +39,9 @@ public class Node extends StructImpl {
 
     public Node(Functor functor, Object... args) {
         super(array(functor, args));
+        if (functor == null) {
+            System.err.println();
+        }
     }
 
     public Node(Type type, Object... args) {

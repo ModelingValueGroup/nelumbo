@@ -26,19 +26,16 @@ import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.Terminal;
 
 public final class Integer extends Terminal {
+    private static final long       serialVersionUID = 2454372545442550574L;
 
     private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
     private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
 
-    private static final long       serialVersionUID = 2454372545442550574L;
-
+    // Automatically set in addFcuntor in KnowledgeBase
     private static Functor          FUNCTOR;
 
     public Integer(Functor functor, Object[] args) {
         super(functor, parse((String) args[0]));
-        if (FUNCTOR == null) {
-            FUNCTOR = functor;
-        }
     }
 
     private Integer(Functor functor, BigInteger val) {

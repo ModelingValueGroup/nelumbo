@@ -23,12 +23,19 @@ package org.modelingvalue.nelumbo;
 public final class Not extends CompoundPredicate {
     private static final long serialVersionUID = -4543178470298951866L;
 
+    // Automatically set in addFcuntor in KnowledgeBase
+    private static Functor    FUNCTOR;
+
     public Not(Functor functor, Object[] args) {
         super(functor, args[0]);
     }
 
     private Not(Object[] args, Not declaration) {
         super(args, declaration);
+    }
+
+    public static Not of(Node predicate) {
+        return new Not(FUNCTOR, new Object[]{predicate});
     }
 
     @Override
