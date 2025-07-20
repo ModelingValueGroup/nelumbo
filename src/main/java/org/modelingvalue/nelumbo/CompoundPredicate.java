@@ -23,12 +23,13 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public abstract class CompoundPredicate extends Predicate {
     private static final long serialVersionUID = -4926802375244295351L;
 
-    protected CompoundPredicate(Functor functor, Object... predicates) {
-        super(functor, predicates);
+    protected CompoundPredicate(Functor functor, Token[] tokens, Object... predicates) {
+        super(functor, tokens, predicates);
     }
 
     protected CompoundPredicate(Object[] args, CompoundPredicate declaration) {

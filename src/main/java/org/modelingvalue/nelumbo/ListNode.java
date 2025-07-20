@@ -21,16 +21,17 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class ListNode extends Node {
     private static final long serialVersionUID = 2275866157289787141L;
 
-    public ListNode(Type elementType) {
-        super(elementType.list(), List.of());
+    public ListNode(Token[] tokens, Type elementType) {
+        super(elementType.list(), tokens, List.of());
     }
 
-    public ListNode(ListNode list, Node last) {
-        super(list.type(), list.elements().add(last));
+    public ListNode(Token[] tokens, ListNode list, Node last) {
+        super(list.type(), tokens, list.elements().add(last));
     }
 
     public Type elementType() {
@@ -39,7 +40,7 @@ public class ListNode extends Node {
 
     @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elements() {
-        return (List<T>) get(1);
+        return (List<T>) get(0);
     }
 
     private ListNode(Object[] array) {

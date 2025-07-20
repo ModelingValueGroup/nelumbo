@@ -22,14 +22,16 @@ package org.modelingvalue.nelumbo;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.modelingvalue.nelumbo.syntax.Token;
+
 public abstract class BinaryPredicate extends CompoundPredicate {
     private static final long    serialVersionUID = -928776822979604743L;
 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
     protected static final int[] ONE_ZERO         = new int[]{1, 0};
 
-    protected BinaryPredicate(Functor functor, Object predicate1, Object predicate2) {
-        super(functor, predicate1, predicate2);
+    protected BinaryPredicate(Functor functor, Token[] tokens, Object predicate1, Object predicate2) {
+        super(functor, tokens, predicate1, predicate2);
     }
 
     protected BinaryPredicate(Object[] args, BinaryPredicate declaration) {
@@ -50,7 +52,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     }
 
     private Predicate predicate(int i) {
-        Predicate p = getVal(i + 1);
+        Predicate p = getVal(i);
         return p != null ? p : Boolean.UNKNOWN;
     }
 
@@ -82,7 +84,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
             } else if (isRight(predResult)) {
                 return predResult[1];
             } else {
-                return set(1, predResult[0].unknown(), predResult[1].unknown()).unknown();
+                return set(0, predResult[0].unknown(), predResult[1].unknown()).unknown();
             }
         } else {
             if (!predResult[0].isEmpty() && predResult[1].isEmpty()) {

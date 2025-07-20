@@ -26,12 +26,13 @@ import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Add extends Predicate {
     private static final long serialVersionUID = 2384355866476367685L;
 
-    public Add(Functor fuctor, Object[] args) {
-        super(fuctor, args[0], args[1], args[2]);
+    public Add(Functor fuctor, Token[] tokens, Object[] args) {
+        super(fuctor, tokens, args[0], args[1], args[2]);
     }
 
     private Add(Object[] array, Add declaration) {
@@ -48,21 +49,21 @@ public final class Add extends Predicate {
         if (nrOfUnbound > 1) {
             return unknown();
         }
-        BigInteger addend1 = getVal(1, 1);
-        BigInteger addend2 = getVal(2, 1);
-        BigInteger sum = getVal(3, 1);
+        BigInteger addend1 = getVal(0, 0);
+        BigInteger addend2 = getVal(1, 0);
+        BigInteger sum = getVal(2, 0);
         if (addend1 != null && addend2 != null) {
             BigInteger s = addend1.add(addend2);
             if (sum != null) {
                 boolean eq = s.equals(sum);
                 return eq ? factCC() : falsehoodCC();
             } else {
-                return set(3, Integer.of(s)).factCI();
+                return set(2, Integer.of(s)).factCI();
             }
         } else if (addend1 != null && sum != null) {
-            return set(2, Integer.of(sum.subtract(addend1))).factCI();
+            return set(1, Integer.of(sum.subtract(addend1))).factCI();
         } else if (addend2 != null && sum != null) {
-            return set(1, Integer.of(sum.subtract(addend2))).factCI();
+            return set(0, Integer.of(sum.subtract(addend2))).factCI();
         } else {
             return unknown();
         }

@@ -49,8 +49,8 @@ public final class Main {
             while (line != null) {
                 try {
                     for (Node root : Parser.parse(line)) {
-                        if (root.type() == Type.RESULT) {
-                            System.out.println(WRITE + root.toString(2));
+                        if (root.type().equals(Type.RESULT)) {
+                            System.out.println(WRITE + root.toString(1));
                         }
                     }
                 } catch (ParseException e) {

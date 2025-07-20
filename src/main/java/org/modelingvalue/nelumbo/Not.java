@@ -20,14 +20,16 @@
 
 package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.nelumbo.syntax.Token;
+
 public final class Not extends CompoundPredicate {
     private static final long serialVersionUID = -4543178470298951866L;
 
     // Automatically set in addFcuntor in KnowledgeBase
     private static Functor    FUNCTOR;
 
-    public Not(Functor functor, Object[] args) {
-        super(functor, args[0]);
+    public Not(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0]);
     }
 
     private Not(Object[] args, Not declaration) {
@@ -35,7 +37,7 @@ public final class Not extends CompoundPredicate {
     }
 
     public static Not of(Node predicate) {
-        return new Not(FUNCTOR, new Object[]{predicate});
+        return new Not(FUNCTOR, Token.EMPTY, new Object[]{predicate});
     }
 
     @Override
@@ -50,7 +52,7 @@ public final class Not extends CompoundPredicate {
     }
 
     public final Predicate predicate() {
-        Predicate p = getVal(1);
+        Predicate p = getVal(0);
         return p != null ? p : Boolean.UNKNOWN;
     }
 

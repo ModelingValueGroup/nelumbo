@@ -22,11 +22,13 @@ package org.modelingvalue.nelumbo;
 
 import java.util.Objects;
 
+import org.modelingvalue.nelumbo.syntax.Token;
+
 public class Equal extends Predicate {
     private static final long serialVersionUID = -5516286818572134367L;
 
-    public Equal(Functor fuctor, Object[] args) {
-        super(fuctor, args[0], args[1]);
+    public Equal(Functor fuctor, Token[] tokens, Object[] args) {
+        super(fuctor, tokens, args[0], args[1]);
     }
 
     private Equal(Object[] array, Equal declaration) {
@@ -34,11 +36,11 @@ public class Equal extends Predicate {
     }
 
     public Node left() {
-        return (Node) get(1);
+        return (Node) get(0);
     }
 
     public Node right() {
-        return (Node) get(2);
+        return (Node) get(1);
     }
 
     @Override
@@ -58,7 +60,7 @@ public class Equal extends Predicate {
         if (eq == null) {
             return complete[0] ? falsehoodCC() : falsehoodCI();
         } else {
-            Equal r = set(1, eq).set(2, eq);
+            Equal r = set(0, eq).set(1, eq);
             return complete[0] ? r.factCC() : r.factCI();
         }
     }
@@ -87,7 +89,7 @@ public class Equal extends Predicate {
                 if (array == null) {
                     array = left.toArray();
                 }
-                array[i] = eq;
+                array[i + left.start()] = eq;
             }
         }
         return array != null ? left.struct(array) : left;

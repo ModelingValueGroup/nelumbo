@@ -24,6 +24,7 @@ import java.math.BigInteger;
 
 import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.Terminal;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Integer extends Terminal {
     private static final long       serialVersionUID = 2454372545442550574L;
@@ -34,16 +35,16 @@ public final class Integer extends Terminal {
     // Automatically set in addFcuntor in KnowledgeBase
     private static Functor          FUNCTOR;
 
-    public Integer(Functor functor, Object[] args) {
-        super(functor, parse((String) args[0]));
+    public Integer(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, parse((String) args[0]));
     }
 
-    private Integer(Functor functor, BigInteger val) {
-        super(functor, val);
+    private Integer(Functor functor, Token[] tokens, BigInteger val) {
+        super(functor, tokens, val);
     }
 
     public static Integer of(BigInteger val) {
-        return new Integer(FUNCTOR, val);
+        return new Integer(FUNCTOR, Token.EMPTY, val);
     }
 
     private static BigInteger parse(String string) {
@@ -70,7 +71,7 @@ public final class Integer extends Terminal {
     }
 
     public BigInteger value() {
-        return (BigInteger) get(1);
+        return (BigInteger) get(0);
     }
 
     @Override

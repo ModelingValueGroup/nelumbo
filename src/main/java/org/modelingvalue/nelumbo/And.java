@@ -20,14 +20,16 @@
 
 package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.nelumbo.syntax.Token;
+
 public final class And extends BinaryPredicate {
     private static final long serialVersionUID = -7248491569810098948L;
 
     // Automatically set in addFcuntor in KnowledgeBase
     private static Functor    FUNCTOR;
 
-    public And(Functor functor, Object[] args) {
-        super(functor, args[0], args[1]);
+    public And(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
     private And(Object[] args, And declaration) {
@@ -35,7 +37,7 @@ public final class And extends BinaryPredicate {
     }
 
     public static And of(Node predicate1, Node predicate2) {
-        return new And(FUNCTOR, new Object[]{predicate1, predicate2});
+        return new And(FUNCTOR, Token.EMPTY, new Object[]{predicate1, predicate2});
     }
 
     @Override

@@ -50,7 +50,7 @@ public final class CallWithArgsParselet extends AtomicParselet {
         do {
             args = args.add(parser.parseNode(0, Type.NODE));
         } while (parser.match(TokenType.COMMA));
-        parser.consume(TokenType.RPAREN);
+        Token last = parser.consume(TokenType.RPAREN);
         List<Type> types = args.replaceAll(Node::type);
         CallWithArgs call = call(parser, token, types);
         if (call != null) {
@@ -58,7 +58,7 @@ public final class CallWithArgsParselet extends AtomicParselet {
         }
 
         String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
-        throw new ParseException("Could not call " + token.text() + signature, token, parser.last());
+        throw new ParseException("Could not call " + token.text() + signature, token, last);
     }
 
     private CallWithArgs call(Parser parser, Token token, List<Type> args) throws ParseException {

@@ -25,6 +25,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.Pair;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class Predicate extends Node {
     private static final long      serialVersionUID   = -1605559565948158856L;
@@ -42,14 +43,14 @@ public class Predicate extends Node {
     private Predicate              parent;
     private int                    parentIdx;
 
-    public Predicate(Functor functor, Object... args) {
-        super(functor, args);
+    public Predicate(Functor functor, Token[] tokens, Object... args) {
+        super(functor, tokens, args);
         this.declaration = this;
         init();
     }
 
-    protected Predicate(Type type, Object... args) {
-        super(type, args);
+    protected Predicate(Type type, Token[] tokens, Object... args) {
+        super(type, tokens, args);
         this.declaration = this;
         init();
     }
@@ -60,7 +61,7 @@ public class Predicate extends Node {
     }
 
     private void init() {
-        for (int i = 1; i < length(); i++) {
+        for (int i = 0; i < length(); i++) {
             Object e = get(i);
             if (e instanceof Predicate) {
                 ((Predicate) e).init(this, i);
@@ -113,7 +114,7 @@ public class Predicate extends Node {
 
     private Predicate resetDeclaration() {
         Object[] array = toArray();
-        for (int i = 1; i < array.length; i++) {
+        for (int i = start(); i < array.length; i++) {
             if (array[i] instanceof Predicate) {
                 array[i] = ((Predicate) array[i]).resetDeclaration();
             }
@@ -212,7 +213,7 @@ public class Predicate extends Node {
         } else {
             Predicate decl = declaration;
             Object[] array = null;
-            for (int i = 1; i < length(); i++) {
+            for (int i = 0; i < length(); i++) {
                 Object thisVal = get(i);
                 if (thisVal instanceof Predicate) {
                     Predicate fromDecl = (Predicate) thisVal;
@@ -222,7 +223,7 @@ public class Predicate extends Node {
                         if (array == null) {
                             array = toArray();
                         }
-                        array[i] = toDecl;
+                        array[i + start()] = toDecl;
                     }
                 }
             }
@@ -241,6 +242,7 @@ public class Predicate extends Node {
 
     @SuppressWarnings("unchecked")
     protected final Predicate set(int i, Predicate... a) {
+        i += start();
         Object[] predArray = toArray();
         Object[] declArray = declaration.toArray();
         for (int x = 0; x < a.length; x++) {

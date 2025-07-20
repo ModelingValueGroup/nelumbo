@@ -20,15 +20,17 @@
 
 package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.nelumbo.syntax.Token;
+
 public class Terminal extends Node {
     private static final long serialVersionUID = 7548506547559092927L;
 
-    public Terminal(Type type, Object... args) {
-        super(type, args);
+    public Terminal(Functor functor, Token[] tokens, Object... args) {
+        super(functor, tokens, args);
     }
 
-    public Terminal(Functor functor, Object... args) {
-        super(functor, args);
+    public Terminal(Type type, Token[] tokens, Object... args) {
+        super(type, tokens, args);
     }
 
     protected Terminal(Object[] array) {

@@ -20,11 +20,13 @@
 
 package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.nelumbo.syntax.Token;
+
 public final class Variable extends Node {
     private static final long serialVersionUID = -8998368070388908726L;
 
-    public Variable(Type type, String name) {
-        super(Type.VARIABLE, type, name);
+    public Variable(Token[] tokens, Type type, String name) {
+        super(Type.VARIABLE, tokens, type, name);
     }
 
     private Variable(Object[] array) {
@@ -33,16 +35,16 @@ public final class Variable extends Node {
 
     public Variable literal() {
         Type type = type();
-        return type.isLiteral() ? this : new Variable(type.literal(), name());
+        return type.isLiteral() ? this : new Variable(tokens(), type.literal(), name());
     }
 
     @Override
     public Type type() {
-        return (Type) get(1);
+        return (Type) get(0);
     }
 
     public String name() {
-        return (String) get(2);
+        return (String) get(1);
     }
 
     @Override

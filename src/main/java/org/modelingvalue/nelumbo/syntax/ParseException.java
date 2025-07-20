@@ -29,12 +29,8 @@ public class ParseException extends Exception {
     private final int         length;
     private final String      fileName;
 
-    public ParseException(String s, Token token) {
-        this(s, token.line(), token.position(), token.index(), token.text().length(), token.fileName());
-    }
-
-    public ParseException(String s, Token token, Token last) {
-        this(s, token.line(), token.position(), token.index(), last.position() - token.position() + last.text().length(), token.fileName());
+    public ParseException(String s, Token... tokens) {
+        this(s, tokens[0].line(), tokens[0].position(), tokens[0].index(), tokens[tokens.length - 1].position() - tokens[0].position() + tokens[tokens.length - 1].text().length(), tokens[0].fileName());
     }
 
     public ParseException(String message, int line, int position, int index, int length, String fileName) {

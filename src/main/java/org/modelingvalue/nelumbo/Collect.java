@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Collect extends Predicate {
     private static final long serialVersionUID = -3084545514049410749L;
@@ -34,8 +35,8 @@ public final class Collect extends Predicate {
     private Predicate         identityPred;
     private Predicate         emptyCollector;
 
-    public Collect(Functor functor, Object[] args) {
-        super(functor, args[0], args[1]);
+    public Collect(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
     private Collect(Object[] args, Collect declaration) {
@@ -106,11 +107,11 @@ public final class Collect extends Predicate {
     }
 
     public final Predicate condition() {
-        return (Predicate) get(1);
+        return (Predicate) get(0);
     }
 
     public final Predicate collector() {
-        return (Predicate) get(2);
+        return (Predicate) get(1);
     }
 
     @Override

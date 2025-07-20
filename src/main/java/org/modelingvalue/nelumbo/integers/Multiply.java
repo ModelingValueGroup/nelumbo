@@ -26,12 +26,13 @@ import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Multiply extends Predicate {
     private static final long serialVersionUID = 2630128775301942610L;
 
-    public Multiply(Functor fuctor, Object[] args) {
-        super(fuctor, args[0], args[1], args[2]);
+    public Multiply(Functor fuctor, Token[] tokens, Object[] args) {
+        super(fuctor, tokens, args[0], args[1], args[2]);
     }
 
     private Multiply(Object[] array, Multiply declaration) {
@@ -48,23 +49,23 @@ public final class Multiply extends Predicate {
         if (nrOfUnbound > 1) {
             return unknown();
         }
-        BigInteger factor1 = getVal(1, 1);
-        BigInteger factor2 = getVal(2, 1);
-        BigInteger product = getVal(3, 1);
+        BigInteger factor1 = getVal(0, 0);
+        BigInteger factor2 = getVal(1, 0);
+        BigInteger product = getVal(2, 0);
         if (factor1 != null && factor2 != null) {
             BigInteger p = factor1.multiply(factor2);
             if (product != null) {
                 boolean eq = p.equals(product);
                 return eq ? factCC() : falsehoodCC();
             } else {
-                return set(3, Integer.of(p)).factCI();
+                return set(2, Integer.of(p)).factCI();
             }
         } else if (factor1 != null && product != null) {
             BigInteger[] dr = product.divideAndRemainder(factor1);
-            return dr[1].equals(BigInteger.ZERO) ? set(2, Integer.of(dr[0])).factCI() : unknown();
+            return dr[1].equals(BigInteger.ZERO) ? set(1, Integer.of(dr[0])).factCI() : unknown();
         } else if (factor2 != null && product != null) {
             BigInteger[] dr = product.divideAndRemainder(factor2);
-            return dr[1].equals(BigInteger.ZERO) ? set(1, Integer.of(dr[0])).factCI() : unknown();
+            return dr[1].equals(BigInteger.ZERO) ? set(0, Integer.of(dr[0])).factCI() : unknown();
         } else {
             return unknown();
         }

@@ -261,8 +261,8 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             currentLineInHistory = lineHistory.size();
             try {
                 for (Node root : Parser.parse(line)) {
-                    if (root.type() == Type.RESULT) {
-                        write(root.toString(2));
+                    if (root.type().equals(Type.RESULT)) {
+                        write(root.toString(1));
                     }
                 }
             } catch (ParseException pe) {

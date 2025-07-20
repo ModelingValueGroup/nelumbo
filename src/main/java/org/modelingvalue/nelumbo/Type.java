@@ -23,6 +23,7 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Type extends Node {
@@ -54,8 +55,8 @@ public class Type extends Node {
                 private static final long serialVersionUID = -2303866849518548877L;
 
                 @Override
-                public Object get(int i) {
-                    return i == 0 ? this : i == 2 ? Set.of(NODE) : super.get(i);
+                public Node typeOrFunctor() {
+                    return this;
                 }
 
                 @Override
@@ -77,7 +78,7 @@ public class Type extends Node {
     private Type function;
 
     private Type() {
-        super((Type) null, Type.class, null);
+        super((Type) null, Token.EMPTY, Type.class, null);
     }
 
     private Type(Object[] array) {
@@ -85,34 +86,34 @@ public class Type extends Node {
     }
 
     private Type(Class<?> clss, Type... supers) {
-        super(TYPE(), clss, Set.of(supers));
+        super(TYPE(), Token.EMPTY, clss, Set.of(supers));
     }
 
     protected Type(TokenType type) {
-        super(TYPE(), type, Set.of());
+        super(TYPE(), Token.EMPTY, type, Set.of());
     }
 
-    public Type(String name, Collection<Type> supers) {
-        super(TYPE(), name, supers.asSet());
+    public Type(Token[] tokens, String name, Collection<Type> supers) {
+        super(TYPE(), tokens, name, supers.asSet());
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers));
+        super(TYPE(), Token.EMPTY, name, supers.length == 0 ? Set.of(NODE) : Set.of(supers));
     }
 
     public Type(Type super1, Type super2) {
-        super(TYPE(), Set.of(super1, super2), Set.of(super1, super2).//
+        super(TYPE(), Token.EMPTY, Set.of(super1, super2), Set.of(super1, super2).//
                 addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))).//
                 addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))));
     }
 
     private Type(Type element) {
-        super(TYPE(), "List", Set.of(NODE), element);
+        super(TYPE(), element.tokens(), "List", Set.of(NODE), element);
     }
 
     public Type element() {
         if (isList()) {
-            return (Type) get(3);
+            return (Type) get(2);
         } else {
             return this;
         }
@@ -120,22 +121,22 @@ public class Type extends Node {
 
     @SuppressWarnings("unchecked")
     public Set<Type> many() {
-        return (Set<Type>) get(1);
+        return (Set<Type>) get(0);
     }
 
     public boolean isList() {
-        return length() == 4;
+        return length() == 3;
     }
 
     public boolean isMany() {
-        return get(1) instanceof Set;
+        return get(0) instanceof Set;
     }
 
     public Type function() {
         if (isFunction()) {
             return this;
         } else if (function == null) {
-            return function = this == NODE ? FUNCTION : new Type(this, FUNCTION);
+            return function = equals(NODE) ? FUNCTION : new Type(this, FUNCTION);
         }
         return function;
     }
@@ -156,7 +157,7 @@ public class Type extends Node {
         if (isLiteral()) {
             return this;
         } else if (literal == null) {
-            return literal = this == NODE ? LITERAL : new Type(this, LITERAL);
+            return literal = equals(NODE) ? LITERAL : new Type(this, LITERAL);
         }
         return literal;
     }
@@ -173,12 +174,12 @@ public class Type extends Node {
     }
 
     public TokenType tokenType() {
-        Object type = get(1);
+        Object type = get(0);
         return type instanceof TokenType ? ((TokenType) type) : null;
     }
 
     public String name() {
-        Object type = get(1);
+        Object type = get(0);
         if (type instanceof Set) {
             String many = many().toString();
             return many.substring(5, many.length() - 2).replace(">,<", "");
@@ -199,7 +200,7 @@ public class Type extends Node {
 
     @SuppressWarnings("unchecked")
     public Set<Type> supers() {
-        return (Set<Type>) get(2);
+        return (Set<Type>) get(1);
     }
 
     @Override
@@ -220,7 +221,7 @@ public class Type extends Node {
     }
 
     public boolean isAssignableFrom(Class<?> type) {
-        Object clss = get(1);
+        Object clss = get(0);
         return clss instanceof Class && ((Class<?>) clss).isAssignableFrom(type);
     }
 

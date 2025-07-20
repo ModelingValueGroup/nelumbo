@@ -22,13 +22,14 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Rule extends Node {
     private static final long   serialVersionUID = -4602043866952049391L;
-    public static final Functor FUNCTOR          = new Functor(Type.RULE, "Rule", n -> n.toString(1) + (((Rule) n).symmetric() ? " <==> " : " <== ") + n.toString(2), 10, Type.PREDICATE, Type.PREDICATE);
+    public static final Functor FUNCTOR          = new Functor(Token.EMPTY, Type.RULE, "Rule", n -> n.toString(0) + (((Rule) n).symmetric() ? " <==> " : " <== ") + n.toString(1), 10, Type.PREDICATE, Type.PREDICATE);
 
-    public Rule(Predicate consequence, Predicate condition, boolean symmetric) {
-        super(FUNCTOR, consequence, condition, symmetric);
+    public Rule(Token[] tokens, Predicate consequence, Predicate condition, boolean symmetric) {
+        super(FUNCTOR, tokens, consequence, condition, symmetric);
     }
 
     private Rule(Object[] args) {
@@ -41,15 +42,15 @@ public final class Rule extends Node {
     }
 
     public final Predicate consequence() {
-        return (Predicate) get(1);
+        return (Predicate) get(0);
     }
 
     public final Predicate condition() {
-        return (Predicate) get(2);
+        return (Predicate) get(1);
     }
 
     public final boolean symmetric() {
-        return (java.lang.Boolean) get(3);
+        return (java.lang.Boolean) get(2);
     }
 
     protected final InferResult imply(Predicate proven, InferContext context) {

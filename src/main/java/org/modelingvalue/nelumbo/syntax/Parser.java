@@ -23,13 +23,10 @@ package org.modelingvalue.nelumbo.syntax;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
@@ -65,54 +62,44 @@ public final class Parser {
 
     // Instance
 
-    private final KnowledgeBase                   knowledgeBase;
-    private final LinkedList<Token>               tokens;
-    protected final Map<Node, Pair<Token, Token>> nodePosition;
-    private Token                                 lastLast = null;
-    private Token                                 last     = null;
+    private final KnowledgeBase     knowledgeBase;
+    private final LinkedList<Token> tokens;
 
     public Parser(LinkedList<Token> tokens) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
         this.tokens = tokens;
-        this.nodePosition = new HashMap<>();
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
         Node left;
         if (expected.isList()) {
             Type elemType = expected.element();
-            left = new ListNode(elemType);
             Token start = peek();
+            left = new ListNode(Token.EMPTY, elemType);
             if (!start.type().end()) {
                 do {
                     Node node = parseNode(precedence, elemType);
                     if (!elemType.isAssignableFrom(node.type())) {
-                        Pair<Token, Token> pos = nodePosition.get(node);
-                        throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), pos.a(), pos.b());
+                        throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), node.tokens());
                     }
-                    left = new ListNode((ListNode) left, node);
+                    left = new ListNode(Token.EMPTY, (ListNode) left, node);
                 } while (match(TokenType.COMMA));
             }
-            nodePosition.put(left, Pair.of(start, last));
         } else {
             Token token1 = poll();
             Token token2 = peek();
             AtomicParselet prefix = prefix(expected, token1, token2);
             left = prefix.parse(expected, this, token1);
-            nodePosition.put(left, Pair.of(token1, last));
         }
         Token token1 = poll();
         Token token2 = peek();
         PostfixParselet postfix = postfix(expected, left.type(), token1, token2, precedence);
         while (postfix != null) {
-            Pair<Token, Token> pos = nodePosition.get(left);
             left = postfix.parse(expected, this, left, token1);
-            nodePosition.put(left, Pair.of(pos.a(), last));
             token1 = poll();
             token2 = peek();
             postfix = postfix(expected, left.type(), token1, token2, precedence);
         }
-        last = lastLast;
         tokens.addFirst(token1);
         return left;
     }
@@ -121,14 +108,8 @@ public final class Parser {
         return tokens.peek();
     }
 
-    public Token last() {
-        return last;
-    }
-
     private Token poll() {
-        lastLast = last;
-        last = tokens.poll();
-        return last;
+        return tokens.poll();
     }
 
     private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
@@ -229,7 +210,7 @@ public final class Parser {
             }
             if (!tokens.isEmpty()) {
                 Node node = parseNode(0, Type.ROOT);
-                if (node.type() == Type.RELATION) {
+                if (node.type().equals(Type.RELATION)) {
                     knowledgeBase.addFact((Predicate) node);
                 }
                 if (node instanceof ListNode) {
@@ -254,8 +235,7 @@ public final class Parser {
     private void checkRoot(Node node) throws ParseException {
         Type type = node instanceof Variable ? Type.VARIABLE : node.type();
         if (!Type.ROOT.isAssignableFrom(type)) {
-            Pair<Token, Token> pos = nodePosition.get(node);
-            throw new ParseException("Expected type, functor, variable, rule, fact or query. Found " + node + " of type " + type, pos.a(), pos.b());
+            throw new ParseException("Expected type, functor, variable, rule, fact or query. Found " + node + " of type " + type, node.tokens());
         }
     }
 

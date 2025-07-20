@@ -21,6 +21,7 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Boolean extends Predicate {
     private static final long serialVersionUID = -8515171118744898263L;
@@ -31,8 +32,8 @@ public final class Boolean extends Predicate {
 
     private InferResult       result;
 
-    public Boolean(Functor functor, Object[] args) {
-        super(functor, parse((String) args[0]));
+    public Boolean(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, parse((String) args[0]));
         if (TRUE == null && isTrue()) {
             TRUE = this;
         } else if (FALSE == null && isFalse()) {
@@ -56,17 +57,17 @@ public final class Boolean extends Predicate {
     }
 
     public boolean isTrue() {
-        java.lang.Boolean b = (java.lang.Boolean) get(1);
+        java.lang.Boolean b = (java.lang.Boolean) get(0);
         return b != null && b.booleanValue();
     }
 
     public boolean isFalse() {
-        java.lang.Boolean b = (java.lang.Boolean) get(1);
+        java.lang.Boolean b = (java.lang.Boolean) get(0);
         return b != null && !b.booleanValue();
     }
 
     public boolean isUnknown() {
-        java.lang.Boolean b = (java.lang.Boolean) get(1);
+        java.lang.Boolean b = (java.lang.Boolean) get(0);
         return b == null;
     }
 
@@ -104,7 +105,7 @@ public final class Boolean extends Predicate {
 
     @Override
     public String toString() {
-        return isUnknown() ? "unknown" : toString(1);
+        return isUnknown() ? "unknown" : toString(0);
     }
 
 }

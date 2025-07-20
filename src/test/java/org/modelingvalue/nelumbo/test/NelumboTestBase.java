@@ -80,8 +80,8 @@ public class NelumboTestBase {
 
     public static void printResults(List<Node> roots) {
         for (Node root : roots) {
-            if (root.type() == Type.RESULT) {
-                System.out.println(root.toString(2));
+            if (root.type().equals(Type.RESULT)) {
+                System.out.println(root.toString(1));
             }
         }
     }

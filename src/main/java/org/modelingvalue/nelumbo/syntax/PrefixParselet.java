@@ -20,7 +20,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
@@ -47,8 +46,7 @@ public abstract class PrefixParselet extends AtomicParselet {
     public Node parse(Type expected, Parser parser, Token token) throws ParseException {
         Node right = parser.parseNode(precedence(), right());
         if (!right().isAssignableFrom(right.type())) {
-            Pair<Token, Token> pos = parser.nodePosition.get(right);
-            throw new ParseException("Expected right of type " + right() + " and found " + right + " of type " + right.type(), pos.a(), pos.b());
+            throw new ParseException("Expected right of type " + right() + " and found " + right + " of type " + right.type(), right.tokens());
         }
         return construct(token, right);
     }

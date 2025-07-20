@@ -23,24 +23,25 @@ package org.modelingvalue.nelumbo;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Functor extends Node {
     private static final long            serialVersionUID = 285147889847599160L;
 
     private final Function<Node, String> render;
 
-    public Functor(Type resultType, String oper, Type... args) {
-        super(Type.FUNCTOR, resultType, oper, List.of(args));
+    public Functor(Token[] tokens, Type resultType, String oper, Type... args) {
+        super(Type.FUNCTOR, tokens, resultType, oper, List.of(args));
         this.render = null;
     }
 
-    public Functor(Type resultType, String oper, Function<Node, String> render, int precedence, Type... args) {
-        super(Type.FUNCTOR, resultType, oper, List.of(args), precedence);
+    public Functor(Token[] tokens, Type resultType, String oper, Function<Node, String> render, int precedence, Type... args) {
+        super(Type.FUNCTOR, tokens, resultType, oper, List.of(args), precedence);
         this.render = render;
     }
 
-    public Functor(Type resultType, String name, List<Type> args) {
-        super(Type.FUNCTOR, resultType, name, args);
+    public Functor(Token[] tokens, Type resultType, String name, List<Type> args) {
+        super(Type.FUNCTOR, tokens, resultType, name, args);
         this.render = null;
     }
 
@@ -50,26 +51,26 @@ public final class Functor extends Node {
     }
 
     public Type resultType() {
-        return (Type) get(1);
+        return (Type) get(0);
     }
 
     @Override
     public String toString() {
         Function<Node, String> render = render();
         if (render != null) {
-            return render.apply(new Node(this, args().toArray()));
+            return render.apply(new Node(this, Token.EMPTY, args().toArray()));
         }
         String types = args().toString();
         return name() + "(" + types.substring(5, types.length() - 1) + ")";
     }
 
     public String name() {
-        return ((String) get(2));
+        return ((String) get(1));
     }
 
     @SuppressWarnings("unchecked")
     public List<Type> args() {
-        return (List<Type>) get(3);
+        return (List<Type>) get(2);
     }
 
     @Override
@@ -80,7 +81,7 @@ public final class Functor extends Node {
 
     @Override
     public int precedence() {
-        return (Integer) get(4);
+        return (Integer) get(3);
     }
 
     @Override

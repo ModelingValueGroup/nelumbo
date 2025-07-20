@@ -26,12 +26,13 @@ import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class GreaterThan extends Predicate {
     private static final long serialVersionUID = 5338681256251602011L;
 
-    public GreaterThan(Functor fuctor, Object[] args) {
-        super(fuctor, args[0], args[1]);
+    public GreaterThan(Functor fuctor, Token[] tokens, Object[] args) {
+        super(fuctor, tokens, args[0], args[1]);
     }
 
     private GreaterThan(Object[] array, GreaterThan declaration) {
@@ -48,8 +49,8 @@ public final class GreaterThan extends Predicate {
         if (nrOfUnbound > 0) {
             return unknown();
         }
-        BigInteger l = getVal(1, 1);
-        BigInteger r = getVal(2, 1);
+        BigInteger l = getVal(0, 0);
+        BigInteger r = getVal(1, 0);
         return l.compareTo(r) > 0 ? factCC() : falsehoodCC();
     }
 
