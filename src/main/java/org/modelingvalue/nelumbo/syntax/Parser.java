@@ -152,15 +152,14 @@ public final class Parser {
                 }
             }
         }
-        return prefix;
-    }
-
-    private AtomicParselet doPrefix(Type expected, Token token1, Token token2) throws ParseException {
-        AtomicParselet prefix = knowledgeBase.prefix(expected, token1, token2);
         if (prefix == null) {
             throw new ParseException("Prefix " + token1.text() + " not defined", token1);
         }
         return prefix;
+    }
+
+    private AtomicParselet doPrefix(Type expected, Token token1, Token token2) {
+        return knowledgeBase.prefix(expected, token1, token2);
     }
 
     private PostfixParselet postfix(Type expected, Type left, Token token1, Token token2, int precedence) throws ParseException {
