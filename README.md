@@ -1,6 +1,6 @@
 # Nelumbo
 
-Nelumbo is a powerful and extensible declarative logic programming language designed for defining and executing custom syntax and semantics. As a meta-language, Nelumbo is easily extendable, making it suitable for a wide range of applications. The language is implemented in Java for seamless integration and performance.
+Nelumbo is a powerful and extensible declarative logic programming language designed for defining and executing custom syntax and semantics. As a meta-language, Nelumbo is easily extensible, making it suitable for a wide range of applications. The language is implemented in Java for seamless integration and performance.
 
 ---
 
@@ -14,6 +14,13 @@ Nelumbo is a powerful and extensible declarative logic programming language desi
 ---
 
 ## Features
+* Define and parse syntaxes
+* Define and execute semantics
+* Purely declarative semantics
+* Define and run tests
+* Easily extensible
+* Easily integrable
+* Written in Java
 
 ## Examples
 
