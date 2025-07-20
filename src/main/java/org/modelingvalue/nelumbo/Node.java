@@ -39,9 +39,6 @@ public class Node extends StructImpl {
 
     public Node(Functor functor, Object... args) {
         super(array(functor, args));
-        if (functor == null) {
-            System.err.println();
-        }
     }
 
     public Node(Type type, Object... args) {
@@ -50,6 +47,13 @@ public class Node extends StructImpl {
 
     protected Node(Object[] args) {
         super(args);
+    }
+
+    private static final Object[] array(Object functor, Object[] args) {
+        Object[] result = new Object[args.length + 1];
+        result[0] = functor;
+        System.arraycopy(args, 0, result, 1, args.length);
+        return result;
     }
 
     @Override
@@ -137,15 +141,6 @@ public class Node extends StructImpl {
             }
         }
         return string;
-    }
-
-    private static final Object[] array(Object functor, Object[] args) {
-        Object[] result = new Object[args.length + 1];
-        result[0] = functor;
-        for (int i = 0; i < args.length; i++) {
-            result[i + 1] = args[i];
-        }
-        return result;
     }
 
     public Type type() {
