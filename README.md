@@ -1,6 +1,6 @@
 # Nelumbo
 
-Nelumbo is a pure declarative logic programming language.
+Nelumbo is a powerful and extensible declarative logic programming language designed for defining and executing custom syntax and semantics. As a meta-language, Nelumbo is easily extendable, making it suitable for a wide range of applications. The language is implemented in Java for seamless integration and performance.
 
 ---
 
@@ -68,9 +68,7 @@ fib(1,1)
 fib(a)=b  <==> fib(a,b)
 fib(a,b)  <==  a>1 & b=fib(a-1)+fib(a-2)
 ? fib(0)=a        [fib(0)=0][..]
-? fib(1)=a        [fib(1)=1][..]
 ? fib(2)=a        [fib(2)=1][..]
-? fib(3)=a        [fib(3)=2][..]
 ? fib(5)=a        [fib(5)=5][..]
 ? fib(10)=a       [fib(10)=55][..]
 ? fib(100)=a      [fib(100)=36#22r8fozas3n8w3][..]
