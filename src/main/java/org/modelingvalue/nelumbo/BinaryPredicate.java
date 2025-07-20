@@ -42,15 +42,16 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     }
 
     public final Predicate predicate1() {
-        return (Predicate) get(1);
+        return predicate(0);
     }
 
     public final Predicate predicate2() {
-        return (Predicate) get(2);
+        return predicate(1);
     }
 
     private Predicate predicate(int i) {
-        return (Predicate) get(i + 1);
+        Predicate p = getVal(i + 1);
+        return p != null ? p : Boolean.UNKNOWN;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

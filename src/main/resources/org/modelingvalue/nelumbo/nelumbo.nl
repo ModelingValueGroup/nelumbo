@@ -1,6 +1,7 @@
 
     <Predicate> ::= true                             @org.modelingvalue.nelumbo.Boolean,
                     false                            @org.modelingvalue.nelumbo.Boolean,
+                    unknown                          @org.modelingvalue.nelumbo.Boolean,
                     ! <Predicate>               #25  @org.modelingvalue.nelumbo.Not,
                     <Predicate> & <Predicate>   #20  @org.modelingvalue.nelumbo.And,
                     <Predicate> | <Predicate>   #20  @org.modelingvalue.nelumbo.Or,

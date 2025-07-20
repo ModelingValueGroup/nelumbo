@@ -27,16 +27,24 @@ public final class Boolean extends Predicate {
 
     public static Boolean     TRUE;
     public static Boolean     FALSE;
+    public static Boolean     UNKNOWN;
 
     private InferResult       result;
 
     public Boolean(Functor functor, Object[] args) {
-        super(functor, java.lang.Boolean.valueOf((String) args[0]));
+        super(functor, parse((String) args[0]));
         if (TRUE == null && isTrue()) {
             TRUE = this;
-        } else if (FALSE == null && !isTrue()) {
+        } else if (FALSE == null && isFalse()) {
             FALSE = this;
+        } else if (UNKNOWN == null && isUnknown()) {
+            UNKNOWN = this;
         }
+    }
+
+    private static java.lang.Boolean parse(String arg) {
+        return "true".equalsIgnoreCase(arg) ? java.lang.Boolean.TRUE : //
+                "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
     }
 
     private Boolean(Object[] args, Boolean declaration) {
@@ -48,7 +56,18 @@ public final class Boolean extends Predicate {
     }
 
     public boolean isTrue() {
-        return (java.lang.Boolean) get(1);
+        java.lang.Boolean b = (java.lang.Boolean) get(1);
+        return b != null && b.booleanValue();
+    }
+
+    public boolean isFalse() {
+        java.lang.Boolean b = (java.lang.Boolean) get(1);
+        return b != null && !b.booleanValue();
+    }
+
+    public boolean isUnknown() {
+        java.lang.Boolean b = (java.lang.Boolean) get(1);
+        return b == null;
     }
 
     public InferResult result() {
@@ -68,7 +87,7 @@ public final class Boolean extends Predicate {
     @Override
     protected InferResult infer(InferContext context) {
         if (result == null) {
-            result = isTrue() ? factCC() : falsehoodCC();
+            result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
         }
         return result;
     }
@@ -81,6 +100,11 @@ public final class Boolean extends Predicate {
     @Override
     public Boolean set(int i, Object... a) {
         return (Boolean) super.set(i, a);
+    }
+
+    @Override
+    public String toString() {
+        return isUnknown() ? "unknown" : toString(1);
     }
 
 }
