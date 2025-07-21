@@ -257,9 +257,6 @@ public final class KnowledgeBase {
             register(AtomicParselet.of(PRECEDENCE, TokenType.NUMBER, t -> {
                 return new Node(PRECEDENCE, t.singleton(), Integer.parseInt(t.text()));
             }));
-            register(AtomicParselet.of(PRECEDENCE, TokenType.STRING, t -> {
-                return new Node(PRECEDENCE, t.singleton(), t.text());
-            }));
             register(InfixParselet.of(SIGNATURE, "@", TokenType.QNAME, NATIVE, 50, (l, t, r) -> {
                 return new Node(SIGNATURE, t.append(r.tokens()), l, r.get(0));
             }));

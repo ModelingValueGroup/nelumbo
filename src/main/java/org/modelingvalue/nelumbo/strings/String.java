@@ -33,13 +33,11 @@ public final class String extends Terminal {
 
     private static final java.lang.String DELIM = "\"";
 
+    // Automatically set in addFcuntor in KnowledgeBase
     private static Functor FUNCTOR;
 
     public String(Functor functor, Token[] tokens, Object[] args) {
         super(functor, tokens, parse((java.lang.String) args[0]));
-        if (FUNCTOR == null) {
-            FUNCTOR = functor;
-        }
     }
 
     private String(Functor functor, Token[] tokens, java.lang.String val) {
