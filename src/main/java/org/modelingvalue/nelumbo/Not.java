@@ -32,8 +32,8 @@ public final class Not extends CompoundPredicate {
         super(functor, tokens, args[0]);
     }
 
-    private Not(Object[] args, Not declaration) {
-        super(args, declaration);
+    private Not(Object[] args, int start, Not declaration) {
+        super(args, start, declaration);
     }
 
     public static Not of(Node predicate) {
@@ -42,8 +42,8 @@ public final class Not extends CompoundPredicate {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected Not struct(Object[] array, Predicate declaration) {
-        return new Not(array, (Not) declaration);
+    protected Not struct(Object[] array, int start, Predicate declaration) {
+        return new Not(array, start, (Not) declaration);
     }
 
     @Override

@@ -32,13 +32,13 @@ public final class Rule extends Node {
         super(FUNCTOR, tokens, consequence, condition, symmetric);
     }
 
-    private Rule(Object[] args) {
-        super(args);
+    private Rule(Object[] args, int start) {
+        super(args, start);
     }
 
     @Override
-    protected Rule struct(Object[] array) {
-        return new Rule(array);
+    protected Rule struct(Object[] array, int start) {
+        return new Rule(array, start);
     }
 
     public final Predicate consequence() {

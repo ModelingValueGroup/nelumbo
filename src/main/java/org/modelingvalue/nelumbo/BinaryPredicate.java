@@ -34,8 +34,8 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         super(functor, tokens, predicate1, predicate2);
     }
 
-    protected BinaryPredicate(Object[] args, BinaryPredicate declaration) {
-        super(args, declaration);
+    protected BinaryPredicate(Object[] args, int start, BinaryPredicate declaration) {
+        super(args, start, declaration);
     }
 
     @Override

@@ -35,13 +35,13 @@ public final class Add extends Predicate {
         super(fuctor, tokens, args[0], args[1], args[2]);
     }
 
-    private Add(Object[] array, Add declaration) {
-        super(array, declaration);
+    private Add(Object[] array, int start, Add declaration) {
+        super(array, start, declaration);
     }
 
     @Override
-    protected Add struct(Object[] array, Predicate declaration) {
-        return new Add(array, (Add) declaration);
+    protected Add struct(Object[] array, int start, Predicate declaration) {
+        return new Add(array, start, (Add) declaration);
     }
 
     @Override

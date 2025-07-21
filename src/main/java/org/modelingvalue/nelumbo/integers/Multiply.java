@@ -35,13 +35,13 @@ public final class Multiply extends Predicate {
         super(fuctor, tokens, args[0], args[1], args[2]);
     }
 
-    private Multiply(Object[] array, Multiply declaration) {
-        super(array, declaration);
+    private Multiply(Object[] array, int start, Multiply declaration) {
+        super(array, start, declaration);
     }
 
     @Override
-    protected Multiply struct(Object[] array, Predicate declaration) {
-        return new Multiply(array, (Multiply) declaration);
+    protected Multiply struct(Object[] array, int start, Predicate declaration) {
+        return new Multiply(array, start, (Multiply) declaration);
     }
 
     @Override

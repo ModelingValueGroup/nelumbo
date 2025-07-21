@@ -56,13 +56,13 @@ public final class Integer extends Terminal {
         return new BigInteger(string);
     }
 
-    private Integer(Object[] array) {
-        super(array);
+    private Integer(Object[] array, int start) {
+        super(array, start);
     }
 
     @Override
-    protected Integer struct(Object[] array) {
-        return new Integer(array);
+    protected Integer struct(Object[] array, int start) {
+        return new Integer(array, start);
     }
 
     @Override

@@ -29,8 +29,8 @@ public final class Variable extends Node {
         super(Type.VARIABLE, tokens, type, name);
     }
 
-    private Variable(Object[] array) {
-        super(array);
+    private Variable(Object[] array, int start) {
+        super(array, start);
     }
 
     public Variable literal() {
@@ -53,8 +53,8 @@ public final class Variable extends Node {
     }
 
     @Override
-    protected Variable struct(Object[] array) {
-        return new Variable(array);
+    protected Variable struct(Object[] array, int start) {
+        return new Variable(array, start);
     }
 
     @Override

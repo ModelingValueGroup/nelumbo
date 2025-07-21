@@ -35,13 +35,13 @@ public final class GreaterThan extends Predicate {
         super(fuctor, tokens, args[0], args[1]);
     }
 
-    private GreaterThan(Object[] array, GreaterThan declaration) {
-        super(array, declaration);
+    private GreaterThan(Object[] array, int start, GreaterThan declaration) {
+        super(array, start, declaration);
     }
 
     @Override
-    protected GreaterThan struct(Object[] array, Predicate declaration) {
-        return new GreaterThan(array, (GreaterThan) declaration);
+    protected GreaterThan struct(Object[] array, int start, Predicate declaration) {
+        return new GreaterThan(array, start, (GreaterThan) declaration);
     }
 
     @Override

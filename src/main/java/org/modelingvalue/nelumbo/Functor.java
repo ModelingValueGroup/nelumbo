@@ -45,8 +45,8 @@ public final class Functor extends Node {
         this.render = null;
     }
 
-    private Functor(Object[] array, Function<Node, String> render) {
-        super(array);
+    private Functor(Object[] array, int start, Function<Node, String> render) {
+        super(array, start);
         this.render = render;
     }
 
@@ -85,8 +85,8 @@ public final class Functor extends Node {
     }
 
     @Override
-    protected Functor struct(Object[] array) {
-        return new Functor(array, render);
+    protected Functor struct(Object[] array, int start) {
+        return new Functor(array, start, render);
     }
 
     @Override

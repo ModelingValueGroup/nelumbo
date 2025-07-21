@@ -32,8 +32,8 @@ public final class And extends BinaryPredicate {
         super(functor, tokens, args[0], args[1]);
     }
 
-    private And(Object[] args, And declaration) {
-        super(args, declaration);
+    private And(Object[] args, int start, And declaration) {
+        super(args, start, declaration);
     }
 
     public static And of(Node predicate1, Node predicate2) {
@@ -47,8 +47,8 @@ public final class And extends BinaryPredicate {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected And struct(Object[] array, Predicate declaration) {
-        return new And(array, (And) declaration);
+    protected And struct(Object[] array, int start, Predicate declaration) {
+        return new And(array, start, (And) declaration);
     }
 
     @Override
