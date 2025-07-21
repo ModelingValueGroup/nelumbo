@@ -619,7 +619,7 @@ public final class KnowledgeBase {
         if (result != null) {
             result = result.cast(predicate);
             if (context.trace()) {
-                System.err.println(context.prefix() + "  " + predicate + " " + result);
+                System.out.println(context.prefix() + "  " + predicate + " " + result);
             }
             return result;
         }

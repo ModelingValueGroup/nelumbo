@@ -63,7 +63,7 @@ public final class Rule extends Node {
         Predicate condition = condition().setBinding(binding);
         Predicate consequence = consequence().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + consequence + (symmetric ? " <==> " : " <== ") + condition);
+            System.out.println(context.prefix() + consequence + (symmetric ? " <==> " : " <== ") + condition);
         }
         InferResult condResult = condition.resolve(context);
         InferResult proResult;
@@ -101,7 +101,7 @@ public final class Rule extends Node {
             proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());
         }
         if (context.trace()) {
-            System.err.println(context.prefix() + proven + " " + proResult);
+            System.out.println(context.prefix() + proven + " " + proResult);
         }
         return proResult;
     }

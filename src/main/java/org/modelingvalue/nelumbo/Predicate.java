@@ -185,11 +185,11 @@ public class Predicate extends Node {
         InferContext context = KnowledgeBase.CURRENT.get().context();
         Predicate predicate = setBinding(variables());
         if (context.trace()) {
-            System.err.println(context.prefix() + predicate);
+            System.out.println(context.prefix() + predicate);
         }
         InferResult result = predicate.resolve(context);
         if (context.trace()) {
-            System.err.println(context.prefix() + predicate + " " + result);
+            System.out.println(context.prefix() + predicate + " " + result);
         }
         return result;
     }
@@ -319,7 +319,7 @@ public class Predicate extends Node {
         }
         InferResult result = infer(nrOfUnbound, context);
         if (context.trace() && getClass() != Predicate.class && !result.isEmpty()) {
-            System.err.println(context.prefix() + "  " + this + " " + result);
+            System.out.println(context.prefix() + "  " + this + " " + result);
         }
         return result;
     }
