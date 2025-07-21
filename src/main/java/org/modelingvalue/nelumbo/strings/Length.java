@@ -28,22 +28,23 @@ import org.modelingvalue.nelumbo.syntax.Token;
 
 import java.io.Serial;
 import java.lang.String;
+import java.math.BigInteger;
 
-public final class Concat extends Predicate {
+public final class Length extends Predicate {
     @Serial
-    private static final long serialVersionUID = -317279750710781401L;
+    private static final long serialVersionUID = 4405805306602130025L;
 
-    public Concat(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1], args[2]);
+    public Length(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
-    private Concat(Object[] array, int start, Concat declaration) {
+    private Length(Object[] array, int start, Length declaration) {
         super(array, start, declaration);
     }
 
     @Override
-    protected Concat struct(Object[] array, int start, Predicate declaration) {
-        return new Concat(array, start, (Concat) declaration);
+    protected Length struct(Object[] array, int start, Predicate declaration) {
+        return new Length(array, start, (Length) declaration);
     }
 
     @Override
@@ -51,32 +52,20 @@ public final class Concat extends Predicate {
         if (nrOfUnbound > 1) {
             return unknown();
         }
-        String addend1 = getVal(0, 0);
-        String addend2 = getVal(1, 0);
-        String sum = getVal(2, 0);
-        if (addend1 != null && addend2 != null) {
-            String s = addend1 + addend2;
-            if (sum != null) {
-                boolean eq = s.equals(sum);
+
+        String string = getVal(0, 0);
+        BigInteger length = getVal(1, 0);
+        if (string != null) {
+            BigInteger actual = BigInteger.valueOf(string.length());
+            if (length != null) {
+                boolean eq = length.equals(actual);
                 return eq ? factCC() : falsehoodCC();
             } else {
-                return set(2, org.modelingvalue.nelumbo.strings.String.of(s)).factCI();
+                return set(1, org.modelingvalue.nelumbo.integers.Integer.of(actual)).factCI();
             }
-        } else if (addend1 != null && sum != null) {
-            if (sum.startsWith(addend1)) {
-                return set(1, org.modelingvalue.nelumbo.strings.String.of(sum.substring(addend1.length()))).factCI();
-            } else {
-                return falsehoodCC();
-            }
-        } else if (addend2 != null && sum != null) {
-            if (sum.endsWith(addend2)) {
-                return set(0, org.modelingvalue.nelumbo.strings.String.of(sum.substring(0, addend2.length()))).factCI();
-            } else {
-                return falsehoodCC();
-            }
-        } else {
-            return unknown();
         }
+
+        return unknown();
     }
 
 }

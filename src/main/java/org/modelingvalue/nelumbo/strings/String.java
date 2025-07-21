@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo.strings;
 
 import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.Terminal;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 import java.io.Serial;
 
@@ -34,19 +35,19 @@ public final class String extends Terminal {
 
     private static Functor FUNCTOR;
 
-    public String(Functor functor, Object[] args) {
-        super(functor, parse((java.lang.String) args[0]));
+    public String(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, parse((java.lang.String) args[0]));
         if (FUNCTOR == null) {
             FUNCTOR = functor;
         }
     }
 
-    private String(Functor functor, java.lang.String val) {
-        super(functor, val);
+    private String(Functor functor, Token[] tokens, java.lang.String val) {
+        super(functor, tokens, val);
     }
 
     public static String of(java.lang.String val) {
-        return new String(FUNCTOR, val);
+        return new String(FUNCTOR, Token.EMPTY, val);
     }
 
     public static java.lang.String strip(java.lang.String val) {
@@ -57,13 +58,13 @@ public final class String extends Terminal {
         return strip(string);
     }
 
-    private String(Object[] array) {
-        super(array);
+    private String(Object[] array, int start) {
+        super(array, start);
     }
 
     @Override
-    protected String struct(Object[] array) {
-        return new String(array);
+    protected Terminal struct(Object[] array, int start) {
+        return new String(array, start);
     }
 
     @Override
@@ -72,7 +73,7 @@ public final class String extends Terminal {
     }
 
     public java.lang.String value() {
-        return (java.lang.String) get(1);
+        return (java.lang.String) get(0);
     }
 
     @Override

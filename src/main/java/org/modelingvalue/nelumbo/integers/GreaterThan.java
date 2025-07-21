@@ -31,8 +31,8 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public final class GreaterThan extends Predicate {
     private static final long serialVersionUID = 5338681256251602011L;
 
-    public GreaterThan(Functor fuctor, Token[] tokens, Object[] args) {
-        super(fuctor, tokens, args[0], args[1]);
+    public GreaterThan(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
     private GreaterThan(Object[] array, int start, GreaterThan declaration) {

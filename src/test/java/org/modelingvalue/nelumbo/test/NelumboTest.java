@@ -103,6 +103,7 @@ public class NelumboTest extends NelumboTestBase {
     public void stringsTest() {
         run(() -> {
             try {
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);  // ?
                 Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
                 printResults(Parser.parse(NelumboTest.class, "stringsTest.nl"));
             } catch (ParseException e) {

@@ -27,8 +27,8 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public class Equal extends Predicate {
     private static final long serialVersionUID = -5516286818572134367L;
 
-    public Equal(Functor fuctor, Token[] tokens, Object[] args) {
-        super(fuctor, tokens, args[0], args[1]);
+    public Equal(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
     private Equal(Object[] array, int start, Equal declaration) {
