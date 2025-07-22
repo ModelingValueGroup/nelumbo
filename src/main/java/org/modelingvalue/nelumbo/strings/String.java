@@ -18,55 +18,65 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.integers;
-
-import java.math.BigInteger;
+package org.modelingvalue.nelumbo.strings;
 
 import org.modelingvalue.nelumbo.Functor;
-import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.InferResult;
-import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public final class Add extends Predicate {
-    private static final long serialVersionUID = 2384355866476367685L;
+import java.io.Serial;
 
-    public Add(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1], args[2]);
+public final class String extends Terminal {
+
+    @Serial
+    private static final long serialVersionUID = 8360866611309554234L;
+
+    private static final java.lang.String DELIM = "\"";
+
+    // Automatically set in addFcuntor in KnowledgeBase
+    private static Functor FUNCTOR;
+
+    public String(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, parse((java.lang.String) args[0]));
     }
 
-    private Add(Object[] array, int start, Add declaration) {
-        super(array, start, declaration);
+    private String(Functor functor, Token[] tokens, java.lang.String val) {
+        super(functor, tokens, val);
+    }
+
+    public static String of(java.lang.String val) {
+        return new String(FUNCTOR, Token.EMPTY, val);
+    }
+
+    public static java.lang.String strip(java.lang.String val) {
+        return val != null && val.startsWith(DELIM) ? val.substring(1, val.length() - 1) : null;
+    }
+
+    private static java.lang.String parse(java.lang.String string) {
+        return strip(string);
+    }
+
+    private String(Object[] array, int start) {
+        super(array, start);
     }
 
     @Override
-    protected Add struct(Object[] array, int start, Predicate declaration) {
-        return new Add(array, start, (Add) declaration);
+    protected Terminal struct(Object[] array, int start) {
+        return new String(array, start);
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
-            return unknown();
-        }
-        BigInteger addend1 = getVal(0, 0);
-        BigInteger addend2 = getVal(1, 0);
-        BigInteger sum = getVal(2, 0);
-        if (addend1 != null && addend2 != null) {
-            BigInteger s = addend1.add(addend2);
-            if (sum != null) {
-                boolean eq = s.equals(sum);
-                return eq ? factCC() : falsehoodCC();
-            } else {
-                return set(2, Integer.of(s)).factCI();
-            }
-        } else if (addend1 != null && sum != null) {
-            return set(1, Integer.of(sum.subtract(addend1))).factCI();
-        } else if (addend2 != null && sum != null) {
-            return set(0, Integer.of(sum.subtract(addend2))).factCI();
-        } else {
-            return unknown();
-        }
+    public String set(int i, Object... a) {
+        return (String) super.set(i, a);
+    }
+
+    public java.lang.String value() {
+        return (java.lang.String) get(0);
+    }
+
+    @Override
+    public java.lang.String toString() {
+        return DELIM + value() + DELIM;
     }
 
 }

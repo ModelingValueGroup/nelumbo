@@ -31,8 +31,8 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public final class Multiply extends Predicate {
     private static final long serialVersionUID = 2630128775301942610L;
 
-    public Multiply(Functor fuctor, Token[] tokens, Object[] args) {
-        super(fuctor, tokens, args[0], args[1], args[2]);
+    public Multiply(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1], args[2]);
     }
 
     private Multiply(Object[] array, int start, Multiply declaration) {

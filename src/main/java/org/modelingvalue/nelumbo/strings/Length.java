@@ -18,9 +18,7 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.integers;
-
-import java.math.BigInteger;
+package org.modelingvalue.nelumbo.strings;
 
 import org.modelingvalue.nelumbo.Functor;
 import org.modelingvalue.nelumbo.InferContext;
@@ -28,20 +26,25 @@ import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public final class Add extends Predicate {
-    private static final long serialVersionUID = 2384355866476367685L;
+import java.io.Serial;
+import java.lang.String;
+import java.math.BigInteger;
 
-    public Add(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1], args[2]);
+public final class Length extends Predicate {
+    @Serial
+    private static final long serialVersionUID = 4405805306602130025L;
+
+    public Length(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
-    private Add(Object[] array, int start, Add declaration) {
+    private Length(Object[] array, int start, Length declaration) {
         super(array, start, declaration);
     }
 
     @Override
-    protected Add struct(Object[] array, int start, Predicate declaration) {
-        return new Add(array, start, (Add) declaration);
+    protected Length struct(Object[] array, int start, Predicate declaration) {
+        return new Length(array, start, (Length) declaration);
     }
 
     @Override
@@ -49,24 +52,20 @@ public final class Add extends Predicate {
         if (nrOfUnbound > 1) {
             return unknown();
         }
-        BigInteger addend1 = getVal(0, 0);
-        BigInteger addend2 = getVal(1, 0);
-        BigInteger sum = getVal(2, 0);
-        if (addend1 != null && addend2 != null) {
-            BigInteger s = addend1.add(addend2);
-            if (sum != null) {
-                boolean eq = s.equals(sum);
+
+        String string = getVal(0, 0);
+        BigInteger length = getVal(1, 0);
+        if (string != null) {
+            BigInteger actual = BigInteger.valueOf(string.length());
+            if (length != null) {
+                boolean eq = length.equals(actual);
                 return eq ? factCC() : falsehoodCC();
             } else {
-                return set(2, Integer.of(s)).factCI();
+                return set(1, org.modelingvalue.nelumbo.integers.Integer.of(actual)).factCI();
             }
-        } else if (addend1 != null && sum != null) {
-            return set(1, Integer.of(sum.subtract(addend1))).factCI();
-        } else if (addend2 != null && sum != null) {
-            return set(0, Integer.of(sum.subtract(addend2))).factCI();
-        } else {
-            return unknown();
         }
+
+        return unknown();
     }
 
 }

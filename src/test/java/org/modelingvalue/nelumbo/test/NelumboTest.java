@@ -98,6 +98,21 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
+
+    @RepeatedTest(10)
+    public void stringsTest() {
+        run(() -> {
+            try {
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);  // ?
+                Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
+                printResults(Parser.parse(NelumboTest.class, "stringsTest.nl"));
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
     @RepeatedTest(10)
     public void fibonacciTest() {
         run(() -> {

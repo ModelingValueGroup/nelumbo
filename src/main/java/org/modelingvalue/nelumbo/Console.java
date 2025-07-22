@@ -20,11 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -48,7 +44,6 @@ import javax.swing.text.Document;
 import javax.swing.text.Element;
 import javax.swing.text.TextAction;
 
-import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 
@@ -84,7 +79,8 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         quit = false; // signals the Threads that they should exit
         KnowledgeBase.run(this, KnowledgeBase.run(() -> {
             try {
-                Parser.parse(Integer.class);
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
+                Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
             } catch (ParseException e) {
                 error(e.getMessage());
             }
@@ -95,6 +91,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         ImageIcon icon = new ImageIcon(getClass().getResource("nelumbo.png"));
         frame = new JFrame("Nelumbo");
         frame.setIconImage(icon.getImage());
+        Taskbar.getTaskbar().setIconImage(icon.getImage());
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Dimension frameSize = new Dimension((int) (screenSize.width / 2), (int) (screenSize.height / 2));
         int x = (int) (frameSize.width / 2);
