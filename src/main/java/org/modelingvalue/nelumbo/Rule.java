@@ -82,20 +82,13 @@ public final class Rule extends Node {
                     proFalsehoods = proFalsehoods.add(proFalsehood);
                 }
             }
-            if (proven.isFullyBound()) {
-                if (proFacts.isEmpty() && proFalsehoods.isEmpty()) {
-                    proFalsehoods = proven.singleton();
-                }
-            } else {
+            if (!proven.isFullyBound()) {
                 boolean condFullyBound = condition.isFullyBound();
                 if (condFullyBound ? proFacts.isEmpty() : !condResult.completeFacts()) {
                     completeFacts = false;
                 }
                 if (condFullyBound ? proFalsehoods.isEmpty() : !condResult.completeFalsehoods()) {
                     completeFalsehoods = false;
-                }
-                if (!symmetric && !completeFacts && !proFalsehoods.isEmpty()) {
-                    proFalsehoods = Set.of();
                 }
             }
             proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());

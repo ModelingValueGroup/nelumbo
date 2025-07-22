@@ -388,7 +388,7 @@ public interface InferResult {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    static InferResult cycle(Set<Predicate> facts, Set<Predicate> falsehoods, Predicate Predicate) {
+    static InferResult cycle(Set<Predicate> facts, Set<Predicate> falsehoods, Predicate predicate) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -417,7 +417,7 @@ public interface InferResult {
 
             @Override
             public Set<Predicate> cycles() {
-                return (Set) Predicate.singleton();
+                return (Set) predicate.singleton();
             }
 
             @Override
@@ -488,23 +488,15 @@ public interface InferResult {
         return of(facts(), completeFalsehoods(), falsehoods(), completeFacts(), cycles());
     }
 
-    default InferResult not() {
-        return of(falsehoods(), completeFalsehoods(), facts(), completeFacts(), cycles());
-    }
-
-    default InferResult and(InferResult other) {
-        Set<Predicate> facts = facts().retainAll(other.facts());
-        boolean completeFacts = completeFacts() && other.completeFacts();
-        Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
-        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
     default InferResult or(InferResult other) {
         Set<Predicate> facts = facts().addAll(other.facts());
+        Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
+        if (facts.anyMatch(Predicate::isFullyBound) || falsehoods.anyMatch(Predicate::isFullyBound)) {
+            facts = facts.retainAll(Predicate::isFullyBound);
+            falsehoods = falsehoods.retainAll(Predicate::isFullyBound);
+        }
+        falsehoods = falsehoods.removeAll(facts);
         boolean completeFacts = completeFacts() && other.completeFacts();
-        Set<Predicate> falsehoods = falsehoods().retainAll(other.falsehoods());
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<Predicate> cycles = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
