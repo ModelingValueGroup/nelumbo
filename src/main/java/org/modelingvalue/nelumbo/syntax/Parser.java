@@ -64,7 +64,6 @@ public final class Parser {
 
     private final KnowledgeBase     knowledgeBase;
     private final LinkedList<Token> tokens;
-    private final LinkedList<Token>               tokens;
 
     public Parser(LinkedList<Token> tokens) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
@@ -114,7 +113,6 @@ public final class Parser {
         return tokens.poll();
     }
 
-    @SuppressWarnings("CommentedOutCode")
     private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
         AtomicParselet prefix = doPrefix(expected, token1, token2);
         if (prefix == null && token1.type() == TokenType.OPERATOR) {
