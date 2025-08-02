@@ -31,17 +31,17 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public final class Multiply extends Predicate {
     private static final long serialVersionUID = 2630128775301942610L;
 
-    public Multiply(Functor fuctor, Token[] tokens, Object[] args) {
-        super(fuctor, tokens, args[0], args[1], args[2]);
+    public Multiply(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1], args[2]);
     }
 
-    private Multiply(Object[] array, Multiply declaration) {
-        super(array, declaration);
+    private Multiply(Object[] array, int start, Multiply declaration) {
+        super(array, start, declaration);
     }
 
     @Override
-    protected Multiply struct(Object[] array, Predicate declaration) {
-        return new Multiply(array, (Multiply) declaration);
+    protected Multiply struct(Object[] array, int start, Predicate declaration) {
+        return new Multiply(array, start, (Multiply) declaration);
     }
 
     @Override

@@ -26,8 +26,8 @@
     p(a)=b  <==>  pc(b,a)
     d(a)=b  <==>  ad(a,b)
     a(a)=b  <==>  ad(b,a)
-    m(a)=b  <==>  pc(x,a) & b=x
-    f(a)=b  <==>  pc(y,a) & b=y
+    m(a)=b  <==   pc(x,a) & b=x
+    f(a)=b  <==   pc(y,a) & b=y
 
     <Male>   ::= Hendrik, Bernhard, Claus, Willem
     <Female> ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia

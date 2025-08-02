@@ -31,17 +31,17 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public final class GreaterThan extends Predicate {
     private static final long serialVersionUID = 5338681256251602011L;
 
-    public GreaterThan(Functor fuctor, Token[] tokens, Object[] args) {
-        super(fuctor, tokens, args[0], args[1]);
+    public GreaterThan(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
-    private GreaterThan(Object[] array, GreaterThan declaration) {
-        super(array, declaration);
+    private GreaterThan(Object[] array, int start, GreaterThan declaration) {
+        super(array, start, declaration);
     }
 
     @Override
-    protected GreaterThan struct(Object[] array, Predicate declaration) {
-        return new GreaterThan(array, (GreaterThan) declaration);
+    protected GreaterThan struct(Object[] array, int start, Predicate declaration) {
+        return new GreaterThan(array, start, (GreaterThan) declaration);
     }
 
     @Override

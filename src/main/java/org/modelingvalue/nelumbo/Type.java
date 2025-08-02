@@ -81,8 +81,8 @@ public class Type extends Node {
         super((Type) null, Token.EMPTY, Type.class, null);
     }
 
-    private Type(Object[] array) {
-        super(array);
+    private Type(Object[] array, int start) {
+        super(array, start);
     }
 
     private Type(Class<?> clss, Type... supers) {
@@ -204,8 +204,8 @@ public class Type extends Node {
     }
 
     @Override
-    protected Type struct(Object[] array) {
-        return new Type(array);
+    protected Type struct(Object[] array, int start) {
+        return new Type(array, start);
     }
 
     @Override

@@ -43,13 +43,13 @@ public class ListNode extends Node {
         return (List<T>) get(0);
     }
 
-    private ListNode(Object[] array) {
-        super(array);
+    private ListNode(Object[] array, int start) {
+        super(array, start);
     }
 
     @Override
-    protected ListNode struct(Object[] array) {
-        return new ListNode(array);
+    protected ListNode struct(Object[] array, int start) {
+        return new ListNode(array, start);
     }
 
     @Override

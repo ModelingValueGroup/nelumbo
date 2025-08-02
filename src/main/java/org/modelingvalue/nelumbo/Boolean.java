@@ -48,8 +48,8 @@ public final class Boolean extends Predicate {
                 "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
     }
 
-    private Boolean(Object[] args, Boolean declaration) {
-        super(args, declaration);
+    private Boolean(Object[] args, int start, Boolean declaration) {
+        super(args, start, declaration);
     }
 
     @Override
@@ -76,8 +76,8 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    protected Boolean struct(Object[] array, Predicate declaration) {
-        return new Boolean(array, (Boolean) declaration);
+    protected Boolean struct(Object[] array, int start, Predicate declaration) {
+        return new Boolean(array, start, (Boolean) declaration);
     }
 
     @Override

@@ -37,7 +37,7 @@ public class Node extends StructImpl {
     private int                   hashCode         = 0;
     private Map<Variable, Object> variables;
     private int                   nrOfUnbound      = -1;
-    private final int             start;
+    protected final int           start;
 
     public Node(Functor functor, Token[] tokens, Object... args) {
         super(array(functor, tokens, args));
@@ -57,17 +57,12 @@ public class Node extends StructImpl {
         return result;
     }
 
-    protected Node(Object[] args) {
+    protected Node(Object[] args, int start) {
         super(args);
-        start = start(args);
-    }
-
-    private static final int start(Object[] array) {
-        int i = 1;
-        while (i < array.length && array[i] instanceof Token) {
-            i++;
+        this.start = start;
+        if (get(0) instanceof Token) {
+            System.err.println();
         }
-        return i;
     }
 
     public Node setTokens(Token... tokens) {
@@ -77,21 +72,17 @@ public class Node extends StructImpl {
         for (int i = 0; i < length(); i++) {
             result[1 + tokens.length + i] = get(i);
         }
-        return struct(result);
-    }
-
-    public final int start() {
-        return start;
+        return struct(result, tokens.length + 1);
     }
 
     @Override
     public int length() {
-        return super.length() - start();
+        return super.length() - start;
     }
 
     @Override
     public Object get(int i) {
-        return super.get(i + start());
+        return super.get(i + start);
     }
 
     public Type type() {
@@ -109,8 +100,8 @@ public class Node extends StructImpl {
     }
 
     public Token[] tokens() {
-        Token[] tokens = new Token[start() - 1];
-        for (int i = 1; i < start(); i++) {
+        Token[] tokens = new Token[start - 1];
+        for (int i = 1; i < start; i++) {
             tokens[i - 1] = (Token) super.get(i);
         }
         return tokens;
@@ -268,7 +259,7 @@ public class Node extends StructImpl {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + f + start()] = a[i];
+                array[i + f + start] = a[i];
             }
         }
         return array;
@@ -276,7 +267,7 @@ public class Node extends StructImpl {
 
     public Node set(int f, Object... a) {
         Object[] array = setArray(f, a);
-        return array != null ? struct(array) : this;
+        return array != null ? struct(array, start) : this;
     }
 
     public Node set(int[] idx, Object val) {
@@ -285,19 +276,19 @@ public class Node extends StructImpl {
 
     private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
-        int i = idx[ii] + start();
+        int i = idx[ii] + start;
         if (ii < idx.length - 1) {
             Node s = (Node) array[i];
             array[i] = s.set(ii + 1, idx, val);
         } else {
             array[i] = val;
         }
-        return struct(array);
+        return struct(array, start);
     }
 
     @SuppressWarnings("unchecked")
-    protected Node struct(Object[] array) {
-        return new Node(array);
+    protected Node struct(Object[] array, int start) {
+        return new Node(array, start);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -393,10 +384,10 @@ public class Node extends StructImpl {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + start()] = bound;
+                array[i + start] = bound;
             }
         }
-        return array != null ? struct(array) : this;
+        return array != null ? struct(array, start) : this;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -441,7 +432,7 @@ public class Node extends StructImpl {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + start()] = r;
+                array[i + start] = r;
             }
         }
         return array;
@@ -449,7 +440,7 @@ public class Node extends StructImpl {
 
     protected Node signature(int depth) {
         Object[] array = signatureArray(depth);
-        return array != null ? struct(array) : this;
+        return array != null ? struct(array, start) : this;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

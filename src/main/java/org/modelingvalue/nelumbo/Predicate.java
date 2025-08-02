@@ -55,8 +55,8 @@ public class Predicate extends Node {
         init();
     }
 
-    protected Predicate(Object[] args, Predicate declaration) {
-        super(args);
+    protected Predicate(Object[] args, int start, Predicate declaration) {
+        super(args, start);
         this.declaration = declaration == null ? this : declaration;
     }
 
@@ -103,27 +103,27 @@ public class Predicate extends Node {
     protected Predicate castFrom(Predicate from) {
         Object[] array = from.toArray();
         array[0] = functor();
-        return from.struct(array, declaration());
+        return from.struct(array, from.start, declaration());
     }
 
     protected Predicate setFunctor(Functor functor) {
         Object[] array = toArray();
         array[0] = functor;
-        return struct(array, null);
+        return struct(array, start, null);
     }
 
     private Predicate resetDeclaration() {
         Object[] array = toArray();
-        for (int i = start(); i < array.length; i++) {
+        for (int i = start; i < array.length; i++) {
             if (array[i] instanceof Predicate) {
                 array[i] = ((Predicate) array[i]).resetDeclaration();
             }
         }
-        return struct(array, null);
+        return struct(array, start, null);
     }
 
     protected Predicate clearDeclaration() {
-        return struct(toArray(), (Predicate) null);
+        return struct(toArray(), start, (Predicate) null);
     }
 
     @Override
@@ -167,13 +167,13 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected final Predicate struct(Object[] array) {
-        return struct(array, declaration);
+    protected final Predicate struct(Object[] array, int start) {
+        return struct(array, start, declaration);
     }
 
     @SuppressWarnings("unchecked")
-    protected Predicate struct(Object[] array, Predicate declaration) {
-        return new Predicate(array, declaration);
+    protected Predicate struct(Object[] array, int start, Predicate declaration) {
+        return new Predicate(array, start, declaration);
     }
 
     public Type getType(int i) {
@@ -185,11 +185,11 @@ public class Predicate extends Node {
         InferContext context = KnowledgeBase.CURRENT.get().context();
         Predicate predicate = setBinding(variables());
         if (context.trace()) {
-            System.err.println(context.prefix() + predicate);
+            System.out.println(context.prefix() + predicate);
         }
         InferResult result = predicate.resolve(context);
         if (context.trace()) {
-            System.err.println(context.prefix() + predicate + " " + result);
+            System.out.println(context.prefix() + predicate + " " + result);
         }
         return result;
     }
@@ -223,11 +223,11 @@ public class Predicate extends Node {
                         if (array == null) {
                             array = toArray();
                         }
-                        array[i + start()] = toDecl;
+                        array[i + start] = toDecl;
                     }
                 }
             }
-            return array != null ? struct(array, decl) : this;
+            return array != null ? struct(array, start, decl) : this;
         }
     }
 
@@ -242,14 +242,14 @@ public class Predicate extends Node {
 
     @SuppressWarnings("unchecked")
     protected final Predicate set(int i, Predicate... a) {
-        i += start();
+        i += start;
         Object[] predArray = toArray();
         Object[] declArray = declaration.toArray();
         for (int x = 0; x < a.length; x++) {
             predArray[i + x] = a[x];
             declArray[i + x] = a[x].declaration;
         }
-        return struct(predArray, declaration.struct(declArray, null));
+        return struct(predArray, start, declaration.struct(declArray, start, null));
     }
 
     public final InferResult unknown() {
@@ -287,19 +287,19 @@ public class Predicate extends Node {
     @Override
     protected Predicate setType(int i, Type type) {
         Object[] array = setArray(i, type);
-        return array != null ? struct(array, null) : this;
+        return array != null ? struct(array, start, null) : this;
     }
 
     @Override
     protected Predicate setTyped(int i, Node typed) {
         Object[] array = setArray(i, typed);
-        return array != null ? struct(array, null) : this;
+        return array != null ? struct(array, start, null) : this;
     }
 
     @Override
     protected Predicate signature(int depth) {
         Object[] array = signatureArray(depth);
-        return array != null ? struct(array, null) : this;
+        return array != null ? struct(array, start, null) : this;
     }
 
     @SuppressWarnings("unchecked")
@@ -319,7 +319,7 @@ public class Predicate extends Node {
         }
         InferResult result = infer(nrOfUnbound, context);
         if (context.trace() && getClass() != Predicate.class && !result.isEmpty()) {
-            System.err.println(context.prefix() + "  " + this + " " + result);
+            System.out.println(context.prefix() + "  " + this + " " + result);
         }
         return result;
     }

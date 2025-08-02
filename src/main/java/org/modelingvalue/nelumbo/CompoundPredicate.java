@@ -32,8 +32,8 @@ public abstract class CompoundPredicate extends Predicate {
         super(functor, tokens, predicates);
     }
 
-    protected CompoundPredicate(Object[] args, CompoundPredicate declaration) {
-        super(args, declaration);
+    protected CompoundPredicate(Object[] args, int start, CompoundPredicate declaration) {
+        super(args, start, declaration);
     }
 
     @Override

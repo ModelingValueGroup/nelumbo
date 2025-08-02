@@ -18,33 +18,61 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.strings;
 
+import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class Terminal extends Node {
-    private static final long serialVersionUID = 7548506547559092927L;
+import java.io.Serial;
+import java.lang.String;
+import java.math.BigInteger;
 
-    public Terminal(Functor functor, Token[] tokens, Object... args) {
-        super(functor, tokens, args);
+public final class Integer extends Predicate {
+    @Serial
+    private static final long serialVersionUID = -2874326869672600959L;
+
+    public Integer(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
-    public Terminal(Type type, Token[] tokens, Object... args) {
-        super(type, tokens, args);
-    }
-
-    protected Terminal(Object[] array, int start) {
-        super(array, start);
-    }
-
-    @Override
-    protected Terminal struct(Object[] array, int start) {
-        return new Terminal(array, start);
+    private Integer(Object[] array, int start, Integer declaration) {
+        super(array, start, declaration);
     }
 
     @Override
-    public Terminal set(int i, Object... a) {
-        return (Terminal) super.set(i, a);
+    protected Integer struct(Object[] array, int start, Predicate declaration) {
+        return new Integer(array, start, (Integer) declaration);
+    }
+
+    @Override
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        if (nrOfUnbound > 1) {
+            return unknown();
+        }
+
+        BigInteger integer = getVal(0, 0);
+        String string = getVal(1, 0);
+        if (string != null) {
+            try {
+                BigInteger parsed = BigInteger.valueOf(java.lang.Integer.parseInt(string));
+                if (integer != null) {
+                    boolean eq = integer.equals(parsed);
+                    return eq ? factCC() : falsehoodCC();
+                } else {
+                    return set(0, org.modelingvalue.nelumbo.integers.Integer.of(parsed)).factCI();
+                }
+            } catch (NumberFormatException e) {
+                return falsehoodCC();
+            }
+        } else if(integer != null) {
+            String s = integer.toString();
+            return set(1, org.modelingvalue.nelumbo.strings.String.of(s)).factCI();
+        }
+
+        return unknown();
     }
 
 }

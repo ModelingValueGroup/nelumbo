@@ -31,17 +31,17 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public final class Add extends Predicate {
     private static final long serialVersionUID = 2384355866476367685L;
 
-    public Add(Functor fuctor, Token[] tokens, Object[] args) {
-        super(fuctor, tokens, args[0], args[1], args[2]);
+    public Add(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1], args[2]);
     }
 
-    private Add(Object[] array, Add declaration) {
-        super(array, declaration);
+    private Add(Object[] array, int start, Add declaration) {
+        super(array, start, declaration);
     }
 
     @Override
-    protected Add struct(Object[] array, Predicate declaration) {
-        return new Add(array, (Add) declaration);
+    protected Add struct(Object[] array, int start, Predicate declaration) {
+        return new Add(array, start, (Add) declaration);
     }
 
     @Override

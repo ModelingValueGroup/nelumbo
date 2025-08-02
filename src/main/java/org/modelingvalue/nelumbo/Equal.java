@@ -27,12 +27,12 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public class Equal extends Predicate {
     private static final long serialVersionUID = -5516286818572134367L;
 
-    public Equal(Functor fuctor, Token[] tokens, Object[] args) {
-        super(fuctor, tokens, args[0], args[1]);
+    public Equal(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
-    private Equal(Object[] array, Equal declaration) {
-        super(array, declaration);
+    private Equal(Object[] array, int start, Equal declaration) {
+        super(array, start, declaration);
     }
 
     public Node left() {
@@ -44,8 +44,8 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected Equal struct(Object[] array, Predicate declaration) {
-        return new Equal(array, (Equal) declaration);
+    protected Equal struct(Object[] array, int start, Predicate declaration) {
+        return new Equal(array, start, (Equal) declaration);
     }
 
     @Override
@@ -89,10 +89,10 @@ public class Equal extends Predicate {
                 if (array == null) {
                     array = left.toArray();
                 }
-                array[i + left.start()] = eq;
+                array[i + left.start] = eq;
             }
         }
-        return array != null ? left.struct(array) : left;
+        return array != null ? left.struct(array, left.start) : left;
     }
 
     private static Object eq(Object left, Object right, boolean[] complete) {

@@ -18,33 +18,54 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.strings;
 
+import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class Terminal extends Node {
-    private static final long serialVersionUID = 7548506547559092927L;
+import java.io.Serial;
+import java.lang.String;
+import java.math.BigInteger;
 
-    public Terminal(Functor functor, Token[] tokens, Object... args) {
-        super(functor, tokens, args);
+public final class Length extends Predicate {
+    @Serial
+    private static final long serialVersionUID = 4405805306602130025L;
+
+    public Length(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, args[0], args[1]);
     }
 
-    public Terminal(Type type, Token[] tokens, Object... args) {
-        super(type, tokens, args);
-    }
-
-    protected Terminal(Object[] array, int start) {
-        super(array, start);
-    }
-
-    @Override
-    protected Terminal struct(Object[] array, int start) {
-        return new Terminal(array, start);
+    private Length(Object[] array, int start, Length declaration) {
+        super(array, start, declaration);
     }
 
     @Override
-    public Terminal set(int i, Object... a) {
-        return (Terminal) super.set(i, a);
+    protected Length struct(Object[] array, int start, Predicate declaration) {
+        return new Length(array, start, (Length) declaration);
+    }
+
+    @Override
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        if (nrOfUnbound > 1) {
+            return unknown();
+        }
+
+        String string = getVal(0, 0);
+        BigInteger length = getVal(1, 0);
+        if (string != null) {
+            BigInteger actual = BigInteger.valueOf(string.length());
+            if (length != null) {
+                boolean eq = length.equals(actual);
+                return eq ? factCC() : falsehoodCC();
+            } else {
+                return set(1, org.modelingvalue.nelumbo.integers.Integer.of(actual)).factCI();
+            }
+        }
+
+        return unknown();
     }
 
 }

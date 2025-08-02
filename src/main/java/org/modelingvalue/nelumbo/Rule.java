@@ -32,13 +32,13 @@ public final class Rule extends Node {
         super(FUNCTOR, tokens, consequence, condition, symmetric);
     }
 
-    private Rule(Object[] args) {
-        super(args);
+    private Rule(Object[] args, int start) {
+        super(args, start);
     }
 
     @Override
-    protected Rule struct(Object[] array) {
-        return new Rule(array);
+    protected Rule struct(Object[] array, int start) {
+        return new Rule(array, start);
     }
 
     public final Predicate consequence() {
@@ -63,7 +63,7 @@ public final class Rule extends Node {
         Predicate condition = condition().setBinding(binding);
         Predicate consequence = consequence().setBinding(binding);
         if (context.trace()) {
-            System.err.println(context.prefix() + consequence + (symmetric ? " <==> " : " <== ") + condition);
+            System.out.println(context.prefix() + consequence + (symmetric ? " <==> " : " <== ") + condition);
         }
         InferResult condResult = condition.resolve(context);
         InferResult proResult;
@@ -82,11 +82,7 @@ public final class Rule extends Node {
                     proFalsehoods = proFalsehoods.add(proFalsehood);
                 }
             }
-            if (proven.isFullyBound()) {
-                if (proFacts.isEmpty() && proFalsehoods.isEmpty()) {
-                    proFalsehoods = proven.singleton();
-                }
-            } else {
+            if (!proven.isFullyBound()) {
                 boolean condFullyBound = condition.isFullyBound();
                 if (condFullyBound ? proFacts.isEmpty() : !condResult.completeFacts()) {
                     completeFacts = false;
@@ -94,14 +90,11 @@ public final class Rule extends Node {
                 if (condFullyBound ? proFalsehoods.isEmpty() : !condResult.completeFalsehoods()) {
                     completeFalsehoods = false;
                 }
-                if (!symmetric && !completeFacts && !proFalsehoods.isEmpty()) {
-                    proFalsehoods = Set.of();
-                }
             }
             proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());
         }
         if (context.trace()) {
-            System.err.println(context.prefix() + proven + " " + proResult);
+            System.out.println(context.prefix() + proven + " " + proResult);
         }
         return proResult;
     }

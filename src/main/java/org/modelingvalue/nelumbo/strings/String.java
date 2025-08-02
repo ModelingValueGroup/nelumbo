@@ -18,33 +18,65 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.strings;
 
+import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class Terminal extends Node {
-    private static final long serialVersionUID = 7548506547559092927L;
+import java.io.Serial;
 
-    public Terminal(Functor functor, Token[] tokens, Object... args) {
-        super(functor, tokens, args);
+public final class String extends Terminal {
+
+    @Serial
+    private static final long serialVersionUID = 8360866611309554234L;
+
+    private static final java.lang.String DELIM = "\"";
+
+    // Automatically set in addFcuntor in KnowledgeBase
+    private static Functor FUNCTOR;
+
+    public String(Functor functor, Token[] tokens, Object[] args) {
+        super(functor, tokens, parse((java.lang.String) args[0]));
     }
 
-    public Terminal(Type type, Token[] tokens, Object... args) {
-        super(type, tokens, args);
+    private String(Functor functor, Token[] tokens, java.lang.String val) {
+        super(functor, tokens, val);
     }
 
-    protected Terminal(Object[] array, int start) {
+    public static String of(java.lang.String val) {
+        return new String(FUNCTOR, Token.EMPTY, val);
+    }
+
+    public static java.lang.String strip(java.lang.String val) {
+        return val != null && val.startsWith(DELIM) ? val.substring(1, val.length() - 1) : null;
+    }
+
+    private static java.lang.String parse(java.lang.String string) {
+        return strip(string);
+    }
+
+    private String(Object[] array, int start) {
         super(array, start);
     }
 
     @Override
     protected Terminal struct(Object[] array, int start) {
-        return new Terminal(array, start);
+        return new String(array, start);
     }
 
     @Override
-    public Terminal set(int i, Object... a) {
-        return (Terminal) super.set(i, a);
+    public String set(int i, Object... a) {
+        return (String) super.set(i, a);
+    }
+
+    public java.lang.String value() {
+        return (java.lang.String) get(0);
+    }
+
+    @Override
+    public java.lang.String toString() {
+        return DELIM + value() + DELIM;
     }
 
 }

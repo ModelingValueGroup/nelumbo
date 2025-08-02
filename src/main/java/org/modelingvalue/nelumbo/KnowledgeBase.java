@@ -344,26 +344,27 @@ public final class KnowledgeBase {
         return this;
     }
 
-    private static Node rule(Node l, Token t, Node r, boolean symmetric) {
+    private static Node rule(Node l, Token t, Node r, boolean symmetric) throws ParseException {
         ListNode list = new ListNode(Token.EMPTY, Type.RULE);
         KnowledgeBase current = KnowledgeBase.CURRENT.get();
         Predicate cons = (Predicate) l;
-        for (Node s : ((ListNode) r).elements()) {
-            Predicate cond = (Predicate) s;
+        Map<Variable, Object> consVars = cons.variables();
+        for (Node c : ((ListNode) r).elements()) {
+            Predicate cond = (Predicate) c;
+            Map<Variable, Object> condVars = cond.variables();
             Functor rel = current.relations.get().get(cons.functor());
+            Map<Variable, Object> local = condVars.removeAllKey(consVars);
+            if (symmetric && !local.isEmpty()) {
+                throw new ParseException("No local variables allowed in condition of a symmetric rule. Found: " + local.get(0).getKey().name(), local.get(0).getKey().tokens());
+            }
             if (rel != null) {
-                Rule rule = new Rule(s.tokens(), cons, cond, symmetric);
-                // current.addRule(rule);
-                Map<Variable, Object> vars = Predicate.literals(rule.variables());
+                Map<Variable, Object> vars = Predicate.literals(condVars.putAll(consVars));
                 cons = cons.setFunctor(rel).setVariables(vars);
                 cond = cond.setVariables(vars);
-            } else {
-                Map<Variable, Object> local = cond.variables().removeAllKey(cons.variables());
-                if (!local.isEmpty()) {
-                    cond = cond.setVariables(Predicate.literals(local));
-                }
+            } else if (!local.isEmpty()) {
+                cond = cond.setVariables(Predicate.literals(local));
             }
-            Rule rule = new Rule(s.tokens(), cons, cond, symmetric);
+            Rule rule = new Rule(c.tokens(), cons, cond, symmetric);
             current.addRule(rule);
             list = new ListNode(Token.EMPTY, list, rule);
         }
@@ -619,7 +620,7 @@ public final class KnowledgeBase {
         if (result != null) {
             result = result.cast(predicate);
             if (context.trace()) {
-                System.err.println(context.prefix() + "  " + predicate + " " + result);
+                System.out.println(context.prefix() + "  " + predicate + " " + result);
             }
             return result;
         }
@@ -654,12 +655,12 @@ public final class KnowledgeBase {
         return result;
     }
 
-    public InferResult getMemoiz(Predicate Predicate) {
+    public InferResult getMemoiz(Predicate predicate) {
         for (QualifiedSet<Predicate, Inference> m : memoization.get()) {
-            Inference memoiz = m.get(Predicate);
+            Inference memoiz = m.get(predicate);
             if (memoiz != null) {
                 memoiz.count++;
-                return memoiz.result().cast(Predicate);
+                return memoiz.result().cast(predicate);
             }
         }
         return null;
@@ -686,22 +687,18 @@ public final class KnowledgeBase {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected void memoization(Predicate Predicate, InferResult result) {
+    protected void memoization(Predicate predicate, InferResult result) {
         boolean known = result.cycles().isEmpty() && result.isComplete();
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();
             if (known) {
-                array[0] = array[0].put(new Inference(Predicate, result));
+                array[0] = array[0].put(new Inference(predicate, result));
             }
             for (Predicate fact : result.facts()) {
-                if (fact instanceof Predicate) {
-                    array[0] = array[0].put(new Inference((Predicate) fact, fact.factCC()));
-                }
+                array[0] = array[0].put(new Inference(fact, fact.factCC()));
             }
             for (Predicate falsehood : result.falsehoods()) {
-                if (falsehood instanceof Predicate) {
-                    array[0] = array[0].put(new Inference((Predicate) falsehood, falsehood.falsehoodCC()));
-                }
+                array[0] = array[0].put(new Inference(falsehood, falsehood.falsehoodCC()));
             }
             if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
                 array[2] = array[2].putAll(array[1]);

@@ -39,8 +39,8 @@ public final class Collect extends Predicate {
         super(functor, tokens, args[0], args[1]);
     }
 
-    private Collect(Object[] args, Collect declaration) {
-        super(args, declaration);
+    private Collect(Object[] args, int start, Collect declaration) {
+        super(args, start, declaration);
     }
 
     private void initDeclaration() {
@@ -97,8 +97,8 @@ public final class Collect extends Predicate {
     }
 
     @Override
-    protected Collect struct(Object[] array, Predicate declaration) {
-        return new Collect(array, (Collect) declaration);
+    protected Collect struct(Object[] array, int start, Predicate declaration) {
+        return new Collect(array, start, (Collect) declaration);
     }
 
     @Override
