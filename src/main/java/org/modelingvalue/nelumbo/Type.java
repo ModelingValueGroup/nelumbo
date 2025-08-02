@@ -20,6 +20,9 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+import java.util.Optional;
+
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
@@ -27,31 +30,33 @@ import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Type extends Node {
+    @Serial
     private static final long serialVersionUID = -4583279157841144493L;
+    //
+    public static final  Type NODE             = new Type(Node.class);
+    public static final  Type FUNCTION         = new Type("Function", NODE);
+    public static final  Type TERMINAL         = new Type(Terminal.class, NODE);
+    public static final  Type LITERAL          = new Type("Literal", TERMINAL);
+    public static final  Type ROOT             = new Type("Root", NODE);
+    public static final  Type PREDICATE        = new Type(Predicate.class, NODE);
+    public static final  Type RELATION         = new Type("Relation", PREDICATE, ROOT);
+    public static final  Type RESULT           = new Type("Result", ROOT);
+    public static final  Type VARIABLE         = new Type(Variable.class, ROOT);
+    public static final  Type RULE             = new Type(Rule.class, ROOT);
+    public static final  Type FUNCTOR          = new Type(Functor.class, ROOT);
+    public static final  Type STRING           = new Type(String.class);
 
-    public static final Type  NODE             = new Type(Node.class);
-    public static final Type  FUNCTION         = new Type("Function", NODE);
-    public static final Type  TERMINAL         = new Type(Terminal.class, NODE);
-    public static final Type  LITERAL          = new Type("Literal", TERMINAL);
-    public static final Type  ROOT             = new Type("Root", NODE);
-    public static final Type  PREDICATE        = new Type(Predicate.class, NODE);
-    public static final Type  RELATION         = new Type("Relation", PREDICATE, ROOT);
-    public static final Type  RESULT           = new Type("Result", ROOT);
-    public static final Type  VARIABLE         = new Type(Variable.class, ROOT);
-    public static final Type  RULE             = new Type(Rule.class, ROOT);
-    public static final Type  FUNCTOR          = new Type(Functor.class, ROOT);
-    public static final Type  STRING           = new Type(String.class);
-
-    public static final List<Type> predefined() {
+    public static List<Type> predefined() {
         return List.of(TYPE(), NODE, FUNCTION, TERMINAL, LITERAL, ROOT, PREDICATE, //
-                RELATION, RESULT, VARIABLE, RULE, FUNCTOR, STRING);
+                       RELATION, RESULT, VARIABLE, RULE, FUNCTOR, STRING);
     }
 
     private static Type TYPE = null;
 
-    public static final Type TYPE() {
+    public static Type TYPE() {
         if (TYPE == null) {
             TYPE = new Type() {
+                @Serial
                 private static final long serialVersionUID = -2303866849518548877L;
 
                 @Override
@@ -103,8 +108,8 @@ public class Type extends Node {
 
     public Type(Type super1, Type super2) {
         super(TYPE(), Token.EMPTY, Set.of(super1, super2), Set.of(super1, super2).//
-                addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))).//
-                addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))));
+                                                                                          addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))).//
+                                                                                                                                                                              addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))));
     }
 
     private Type(Type element) {
@@ -145,9 +150,14 @@ public class Type extends Node {
         return FUNCTION.isAssignableFrom(this);
     }
 
+    @SuppressWarnings("unused")
     public Type nonLiteral() {
         if (isLiteral()) {
-            return supers().findFirst(s -> s != LITERAL).get();
+            Optional<Type> first = supers().findFirst(s -> s != LITERAL);
+            if (first.isEmpty()) {
+                throw new IllegalStateException("No non-literal supertype for " + this);
+            }
+            return first.get();
         } else {
             return this;
         }

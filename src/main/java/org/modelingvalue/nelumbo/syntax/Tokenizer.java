@@ -23,13 +23,20 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 
+@SuppressWarnings("ClassCanBeRecord")
 public class Tokenizer {
-    private final String input;
-    private final String fileName;
+    private final String  input;
+    private final String  fileName;
+    private final boolean includeAllTokens;
 
     public Tokenizer(String input, String fileName) {
-        this.input    = input;
-        this.fileName = fileName;
+        this(input, fileName, false);
+    }
+
+    public Tokenizer(String input, String fileName, boolean includeAllTokens) {
+        this.input            = input;
+        this.fileName         = fileName;
+        this.includeAllTokens = includeAllTokens;
     }
 
     public LinkedList<Token> tokenize() throws ParseException {
@@ -43,19 +50,22 @@ public class Tokenizer {
             }
         }
         int index    = 0;
-        int line     = 1;
-        int position = 1;
+        int line     = 0;
+        int position = 0;
         while (index < input.length()) {
             String    text = null;
             TokenType type = null;
             for (int i = 0; i < tokenTypes.length; i++) {
-                while (matchers[i] != null && matchers[i].start() < index) {
-                    if (!matchers[i].find()) {
-                        matchers[i] = null;
-                    }
+                final Matcher m = matchers[i];
+                if (m == null) {
+                    continue;
                 }
-                if (matchers[i] != null && matchers[i].start() == index) {
-                    String group = matchers[i].group();
+                if (!m.find(index)) {
+                    matchers[i] = null;
+                    continue;
+                }
+                if (m.start() == index) {
+                    String group = m.group();
                     if (text == null || text.length() < group.length()) {
                         text = group;
                         type = tokenTypes[i];
@@ -66,22 +76,43 @@ public class Tokenizer {
                 String unexpectedChars = getUnexpectedToken(input, index);
                 throw new ParseException("Unexpected input '" + unexpectedChars + "'", line, position, index, unexpectedChars.length(), fileName);
             }
-            if (type != TokenType.HSPACE && (type != TokenType.NEWLINE || tokens.isEmpty() || !tokens.getLast().type().more())) {
-                tokens.add(new Token(type, text, line, position, index, fileName));
-            }
+            addToken(tokens, type, text, line, position, index);
+            // adjust index:
             index += text.length();
-            if (type == TokenType.NEWLINE) {
-                int i = text.indexOf('\n');
-                while (i >= 0) {
-                    line++;
-                    i = text.indexOf('\n', i + 1);
-                }
+            // adjust line:
+            int lineInc = text.replaceAll("\\V", "").length();
+            if (0 < lineInc) {
+                line += lineInc;
                 position = 0;
-            } else {
-                position += text.length();
             }
+            //adjust position:
+            position += text.replaceAll(".*\\v", "").length();
         }
         return tokens;
+    }
+
+    private void addToken(LinkedList<Token> tokens, TokenType type, String text, int line, int position, int index) {
+        if (!includeAllTokens) {
+            if (type.comment()) {
+                // ignore comments
+                return;
+            }
+            if (type == TokenType.HSPACE) {
+                // ignore whitespace
+                return;
+            }
+            if (type == TokenType.NEWLINE) {
+                if (tokens.isEmpty()) {
+                    // ignore newlines at the start of the input
+                    return;
+                }
+                if (tokens.getLast().type().more()) {
+                    // ignore newlines after a token that can be continued
+                    return;
+                }
+            }
+        }
+        tokens.add(new Token(type, text, line, position, index, fileName));
     }
 
     private String getUnexpectedToken(String text, int at) {

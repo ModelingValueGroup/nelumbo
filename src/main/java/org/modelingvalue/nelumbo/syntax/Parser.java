@@ -35,9 +35,10 @@ import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 
 public final class Parser {
-
     public static List<Node> parse(String string) throws ParseException {
-        return new Parser(new Tokenizer(string + "\n", string).tokenize()).parse();
+        Tokenizer         tokenizer = new Tokenizer(string + "\n", string);
+        LinkedList<Token> tokens    = tokenizer.tokenize();
+        return new Parser(tokens).parse();
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
@@ -46,17 +47,18 @@ public final class Parser {
         return parse(clss, name);
     }
 
-    public static List<Node> parse(Class<?> clss, String name) throws ParseException {
+    public static List<Node> parse(Class<?> clss, String fileName) throws ParseException {
         try {
-            InputStream stream = clss.getResourceAsStream(name);
+            InputStream stream = clss.getResourceAsStream(fileName);
             if (stream == null) {
-                throw new ParseException("Nelumbo resource " + name + " does not exist", 0, 0, 0, 0, name);
+                throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
-            InputStream buffer = new BufferedInputStream(stream);
-            String      base   = new String(buffer.readAllBytes());
-            return new Parser(new Tokenizer(base, name).tokenize()).parse();
+            InputStream       buffer = new BufferedInputStream(stream);
+            String            base   = new String(buffer.readAllBytes());
+            LinkedList<Token> tokens = new Tokenizer(base, fileName).tokenize();
+            return new Parser(tokens).parse();
         } catch (IOException e) {
-            throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), 0, 0, 0, 0, name);
+            throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), fileName);
         }
     }
 
@@ -73,22 +75,28 @@ public final class Parser {
     public Node parseNode(int precedence, Type expected) throws ParseException {
         Node left;
         if (expected.isList()) {
-            Type elemType = expected.element();
-            Token start = peek();
+            Type  elemType = expected.element();
+            Token start    = peek();
             left = new ListNode(Token.EMPTY, elemType);
             if (!start.type().end()) {
                 do
                 {
                     Node node = parseNode(precedence, elemType);
                     if (!elemType.isAssignableFrom(node.type())) {
-                        throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), node.tokens());
+                        throw new ParseException("Expected element of type " + elemType + " but found " + node + " of type " + node.type(), node.tokens());
                     }
                     left = new ListNode(Token.EMPTY, (ListNode) left, node);
                 } while (match(TokenType.COMMA));
             }
         } else {
-            Token          token1 = poll();
-            Token          token2 = peek();
+            Token token1 = poll();
+            Token token2 = peek();
+            if (token1 == null) {
+                throw new ParseException("Expected something but found nothing");
+            }
+            if (token2 == null) {
+                throw new ParseException("Expected something after " + token1.text() + " but found nothing", token1);
+            }
             AtomicParselet prefix = prefix(expected, token1, token2);
             left = prefix.parse(expected, this, token1);
         }
@@ -96,7 +104,7 @@ public final class Parser {
         Token           token2  = peek();
         PostfixParselet postfix = postfix(expected, left.type(), token1, token2, precedence);
         while (postfix != null) {
-            left = postfix.parse(expected, this, left, token1);
+            left    = postfix.parse(expected, this, left, token1);
             token1  = poll();
             token2  = peek();
             postfix = postfix(expected, left.type(), token1, token2, precedence);
@@ -106,36 +114,50 @@ public final class Parser {
     }
 
     public Token peek() {
-        return tokens.peek();
+        Token t = tokens.peek();
+        while (t != null && t.isCommentOrHspace()) {
+            tokens.poll();
+            t = tokens.peek();
+        }
+        return t;
     }
 
     private Token poll() {
-        return tokens.poll();
+        Token t = tokens.poll();
+        while (t != null && t.isCommentOrHspace()) {
+            t = tokens.poll();
+        }
+        return t;
     }
 
-    private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
-        AtomicParselet prefix = doPrefix(expected, token1, token2);
-        if (prefix == null && token1.type() == TokenType.OPERATOR) {
-            String text = token1.text();
-            int len = text.length();
-            while (len-- > 1 && !knowledgeBase.isOperator(text)) {
-                token1 = new Token(token1.type(), text.substring(0, len), token1.line(), //
-                        token1.position(), token1.index(), token1.fileName());
-                token2 = new Token(token1.type(), text.substring(len), token1.line(), //
-                        token1.position() + len, token1.index() + len, token1.fileName());
-                prefix = doPrefix(expected, token1, token2);
+    private AtomicParselet prefix(Type expected, Token t1, Token t2) throws ParseException {
+        AtomicParselet prefix = doPrefix(expected, t1, t2);
+        if (prefix == null && t1.type() == TokenType.OPERATOR) {
+
+            // no prefix found, but we might chop the operator so we have one from the knowledgeBase:
+            String text = t1.text();
+            int    line = t1.line();
+            int    pos  = t1.position();
+            int    ind  = t1.index();
+            String file = t1.fileName();
+
+            for (int len = text.length() - 1; 0 < len && !knowledgeBase.isOperator(text); len--) {
+                String beg = text.substring(0, len);
+                String end = text.substring(len);
+                t1     = new Token(TokenType.OPERATOR, beg, line, pos, ind, file);
+                t2     = new Token(TokenType.OPERATOR, end, line, pos + len, ind + len, file);
+                prefix = doPrefix(expected, t1, t2);
                 if (prefix != null) {
-                    tokens.addFirst(token2);
+                    tokens.addFirst(t2);
                     return prefix;
                 } else if (len == 1) {
-                    token1 = new Token(token1.type(), token1.text() + token2.text(), token1.line(), //
-                            token1.position(), token1.index(), token1.fileName());
-                    throw new ParseException("Operator " + token1.text() + " not defined", token1);
+                    t1 = new Token(TokenType.OPERATOR, t1.text() + t2.text(), line, pos, ind, file);
+                    throw new ParseException("Operator " + t1.text() + " not defined", t1);
                 }
             }
         }
         if (prefix == null) {
-            throw new ParseException("Prefix " + token1.text() + " not defined", token1);
+            throw new ParseException("Prefix " + t1.text() + " not defined", t1);
         }
         return prefix;
     }
