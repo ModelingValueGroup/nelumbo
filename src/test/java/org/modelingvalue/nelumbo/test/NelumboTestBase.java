@@ -36,6 +36,10 @@ import org.modelingvalue.nelumbo.syntax.Token;
 
 @SuppressWarnings("unused")
 public class NelumboTestBase {
+    static void setProp(String name, String def) {
+        String env = System.getenv(name);
+        System.setProperty(name, env != null ? env : System.getProperty(name, def));
+    }
     // Utilities
 
     public KnowledgeBase run(Runnable test) {

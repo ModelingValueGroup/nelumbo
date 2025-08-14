@@ -83,9 +83,9 @@ public class Token {
 
     public String textTraced() {
         return text//
-                .replace(' ', '.')//
-                .replace('\n', 'L')//
-                .replace('\r', 'R');
+                .replaceAll(" ", "\\\\.")//
+                .replaceAll("\n", "\\\\n")//
+                .replaceAll("\r", "\\\\r");
     }
 
     public int line() {

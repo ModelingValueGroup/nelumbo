@@ -20,25 +20,31 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.*;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
+import java.util.ListIterator;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.ListNode;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 
 public final class Parser {
     public static List<Node> parse(String string) throws ParseException {
-        Tokenizer tokenizer = new Tokenizer(string + "\n", string);
-        LinkedList<Token> tokens = tokenizer.tokenize();
+        Tokenizer         tokenizer = new Tokenizer(string + "\n", string);
+        LinkedList<Token> tokens    = tokenizer.tokenize();
         return new Parser(tokens).parse();
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
         String packageName = clss.getPackageName();
-        String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
+        String name        = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
         return parse(clss, name);
     }
 
@@ -48,8 +54,8 @@ public final class Parser {
             if (stream == null) {
                 throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
-            InputStream buffer = new BufferedInputStream(stream);
-            String base = new String(buffer.readAllBytes());
+            InputStream       buffer = new BufferedInputStream(stream);
+            String            base   = new String(buffer.readAllBytes());
             LinkedList<Token> tokens = new Tokenizer(base, fileName).tokenize();
             return new Parser(tokens).parse();
         } catch (IOException e) {
@@ -59,22 +65,50 @@ public final class Parser {
 
     // Instance
 
-    private final KnowledgeBase knowledgeBase;
-    private final LinkedList<Token> tokens;
+    private final KnowledgeBase       knowledgeBase;
+    private final ListIterator<Token> iterator;
 
     public Parser(LinkedList<Token> tokens) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
-        this.tokens = tokens;
+        this.iterator      = tokens.listIterator();
+    }
+
+    public Token peek() {
+        Token t = poll();
+        if (t != null) {
+            iterator.previous();
+        }
+        return t;
+    }
+
+    private Token poll() {
+        Token t;
+        do
+        {
+            t = iterator.hasNext() ? iterator.next() : null;
+        } while (t != null && t.isCommentOrHspace());
+        return t;
+    }
+
+    private void splitCurrentToken(Token t1, Token t2) {
+        // iterator is positioned just after current (it was consumed).
+        // Move back to the position of current, replace with t2, insert t1 before it,
+        if (iterator.hasPrevious()) {
+            iterator.previous();
+            iterator.set(t2);
+            iterator.add(t1);
+        }
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
         Node left;
         if (expected.isList()) {
-            Type elemType = expected.element();
-            Token start = peek();
+            Type  elemType = expected.element();
+            Token start    = peek();
             left = new ListNode(Token.EMPTY, elemType);
             if (!start.type().end()) {
-                do {
+                do
+                {
                     Node node = parseNode(precedence, elemType);
                     if (!elemType.isAssignableFrom(node.type())) {
                         throw new ParseException("Expected element of type " + elemType + " but found " + node + " of type " + node.type(), node.tokens());
@@ -94,34 +128,20 @@ public final class Parser {
             AtomicParselet prefix = prefix(expected, token1, token2);
             left = prefix.parse(expected, this, token1);
         }
-        Token token1 = poll();
-        Token token2 = peek();
+        Token           token1  = poll();
+        Token           token2  = peek();
         PostfixParselet postfix = postfix(expected, left.type(), token1, token2, precedence);
         while (postfix != null) {
-            left = postfix.parse(expected, this, left, token1);
-            token1 = poll();
-            token2 = peek();
+            left    = postfix.parse(expected, this, left, token1);
+            token1  = poll();
+            token2  = peek();
             postfix = postfix(expected, left.type(), token1, token2, precedence);
         }
-        tokens.addFirst(token1);
+        if (token1 != null) {
+            // unread the token that ended the postfix chain
+            iterator.previous();
+        }
         return left;
-    }
-
-    public Token peek() {
-        Token t = tokens.peek();
-        while (t != null && t.isCommentOrHspace()) {
-            tokens.poll();
-            t = tokens.peek();
-        }
-        return t;
-    }
-
-    private Token poll() {
-        Token t = tokens.poll();
-        while (t != null && t.isCommentOrHspace()) {
-            t = tokens.poll();
-        }
-        return t;
     }
 
     private AtomicParselet prefix(Type expected, Token t1, Token t2) throws ParseException {
@@ -130,11 +150,11 @@ public final class Parser {
             Token t1Init = t1;
             // no prefix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
             for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
-                t1 = t1Init.splitGet1(len);
-                t2 = t1Init.splitGet2(len);
+                t1     = t1Init.splitGet1(len);
+                t2     = t1Init.splitGet2(len);
                 prefix = doPrefix(expected, t1, t2);
                 if (prefix != null) {
-                    tokens.addFirst(t2);
+                    splitCurrentToken(t1, t2);
                     return prefix;
                 }
                 if (len == 1) {
@@ -158,12 +178,12 @@ public final class Parser {
             Token t1Init = t1;
             // no prefix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
             for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
-                t1 = t1Init.splitGet1(len);
-                t2 = t1Init.splitGet2(len);
+                t1      = t1Init.splitGet1(len);
+                t2      = t1Init.splitGet2(len);
                 postfix = doPostfix(expected, left, t1, t2);
                 if (postfix != null) {
                     if (precedence < postfix.precedence()) {
-                        tokens.addFirst(t2);
+                        splitCurrentToken(t1, t2);
                         return postfix;
                     } else {
                         return null;
@@ -183,7 +203,7 @@ public final class Parser {
     private PostfixParselet doPostfix(Type expected, Type left, Token token1, Token token2) {
         Set<Type> pre, post = Set.of(left);
         while (!post.isEmpty()) {
-            pre = post;
+            pre  = post;
             post = Set.of();
             for (Type type : pre) {
                 PostfixParselet postfix = knowledgeBase.postfix(expected, type, token1, token2);
@@ -210,11 +230,11 @@ public final class Parser {
 
     public List<Node> parse() throws ParseException {
         List<Node> roots = List.of();
-        while (!tokens.isEmpty()) {
+        while (iterator.hasNext()) {
             //noinspection StatementWithEmptyBody
             while (match(TokenType.NEWLINE)) {
             }
-            if (!tokens.isEmpty()) {
+            if (iterator.hasNext()) {
                 Node node = parseNode(0, Type.ROOT);
                 if (node.type().equals(Type.RELATION)) {
                     knowledgeBase.addFact((Predicate) node);
