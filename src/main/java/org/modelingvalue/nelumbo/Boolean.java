@@ -20,17 +20,20 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Boolean extends Predicate {
-    private static final long serialVersionUID = -8515171118744898263L;
-
-    public static Boolean     TRUE;
-    public static Boolean     FALSE;
-    public static Boolean     UNKNOWN;
-
-    private InferResult       result;
+    @Serial
+    private static final long        serialVersionUID = -8515171118744898263L;
+    //
+    public static        Boolean     TRUE;
+    public static        Boolean     FALSE;
+    public static        Boolean     UNKNOWN;
+    //
+    private              InferResult result;
 
     public Boolean(Functor functor, Token[] tokens, Object[] args) {
         super(functor, tokens, parse((String) args[0]));
@@ -45,7 +48,7 @@ public final class Boolean extends Predicate {
 
     private static java.lang.Boolean parse(String arg) {
         return "true".equalsIgnoreCase(arg) ? java.lang.Boolean.TRUE : //
-                "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
+               "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
     }
 
     private Boolean(Object[] args, int start, Boolean declaration) {
@@ -58,12 +61,12 @@ public final class Boolean extends Predicate {
 
     public boolean isTrue() {
         java.lang.Boolean b = (java.lang.Boolean) get(0);
-        return b != null && b.booleanValue();
+        return b != null && b;
     }
 
     public boolean isFalse() {
         java.lang.Boolean b = (java.lang.Boolean) get(0);
-        return b != null && !b.booleanValue();
+        return b != null && !b;
     }
 
     public boolean isUnknown() {

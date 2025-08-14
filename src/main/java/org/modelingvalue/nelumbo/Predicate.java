@@ -20,6 +20,8 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -28,7 +30,8 @@ import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class Predicate extends Node {
-    private static final long      serialVersionUID   = -1605559565948158856L;
+    @Serial
+    private static final long serialVersionUID = -1605559565948158856L;
 
     protected static final boolean RANDOM_NELUMBO     = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");
     protected static final boolean REVERSE_NELUMBO    = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
@@ -71,13 +74,13 @@ public class Predicate extends Node {
 
     protected void init(Predicate parent, int idx) {
         assert (this.parent == null && this.parentIdx == 0);
-        this.parent = (Predicate) parent;
+        this.parent = parent;
         this.parentIdx = idx;
     }
 
     private Pair<Predicate, int[]> rootIdx() {
         if (parent != null) {
-            Pair<Predicate, int[]> root = ((Predicate) parent).rootIdx();
+            Pair<Predicate, int[]> root = parent.rootIdx();
             if (root != null) {
                 int[] idx = new int[root.b().length + 1];
                 System.arraycopy(root.b(), 0, idx, 1, root.b().length);
@@ -122,8 +125,9 @@ public class Predicate extends Node {
         return struct(array, start, null);
     }
 
+    @SuppressWarnings("unused")
     protected Predicate clearDeclaration() {
-        return struct(toArray(), start, (Predicate) null);
+        return struct(toArray(), start, null);
     }
 
     @Override
@@ -171,7 +175,6 @@ public class Predicate extends Node {
         return struct(array, start, declaration);
     }
 
-    @SuppressWarnings("unchecked")
     protected Predicate struct(Object[] array, int start, Predicate declaration) {
         return new Predicate(array, start, declaration);
     }
@@ -194,6 +197,7 @@ public class Predicate extends Node {
         return result;
     }
 
+    @SuppressWarnings("unused")
     protected InferResult expand(InferContext context) {
         throw new UnsupportedOperationException();
     }
@@ -215,8 +219,7 @@ public class Predicate extends Node {
             Object[] array = null;
             for (int i = 0; i < length(); i++) {
                 Object thisVal = get(i);
-                if (thisVal instanceof Predicate) {
-                    Predicate fromDecl = (Predicate) thisVal;
+                if (thisVal instanceof Predicate fromDecl) {
                     Predicate toDecl = fromDecl.replace(from, to);
                     if (toDecl != fromDecl) {
                         decl = decl.set(i, toDecl.declaration);
@@ -240,7 +243,6 @@ public class Predicate extends Node {
         return (Predicate) super.set(to, get(from));
     }
 
-    @SuppressWarnings("unchecked")
     protected final Predicate set(int i, Predicate... a) {
         i += start;
         Object[] predArray = toArray();
@@ -268,10 +270,12 @@ public class Predicate extends Node {
         return InferResult.factsCI(singleton());
     }
 
+    @SuppressWarnings("unused")
     public final InferResult falsehoodIC() {
         return InferResult.falsehoodsIC(singleton());
     }
 
+    @SuppressWarnings("unused")
     public final InferResult factIC() {
         return InferResult.factsIC(singleton());
     }
@@ -363,7 +367,7 @@ public class Predicate extends Node {
     private static InferResult flatten(InferResult result, List<Predicate> overflow, InferContext context) {
         int stackSize = context.stack().size();
         List<Predicate> todo = overflow.sublist(stackSize, overflow.size());
-        while (todo.size() > 0) {
+        while (!todo.isEmpty()) {
             Predicate predicate = todo.last();
             result = predicate.fixpoint(context.pushOnStack(predicate));
             overflow = result.stackOverflow();

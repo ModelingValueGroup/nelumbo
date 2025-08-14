@@ -20,13 +20,16 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Rule extends Node {
-    private static final long   serialVersionUID = -4602043866952049391L;
-    public static final Functor FUNCTOR          = new Functor(Token.EMPTY, Type.RULE, "Rule", n -> n.toString(0) + (((Rule) n).symmetric() ? " <==> " : " <== ") + n.toString(1), 10, Type.PREDICATE, Type.PREDICATE);
+    @Serial
+    private static final long    serialVersionUID = -4602043866952049391L;
+    public static final  Functor FUNCTOR          = new Functor(Token.EMPTY, Type.RULE, "Rule", n -> n.toString(0) + (((Rule) n).symmetric() ? " <==> " : " <== ") + n.toString(1), 10, Type.PREDICATE, Type.PREDICATE);
 
     public Rule(Token[] tokens, Predicate consequence, Predicate condition, boolean symmetric) {
         super(FUNCTOR, tokens, consequence, condition, symmetric);

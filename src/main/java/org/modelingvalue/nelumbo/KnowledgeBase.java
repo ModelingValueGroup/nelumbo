@@ -23,12 +23,12 @@ package org.modelingvalue.nelumbo;
 import java.io.PrintStream;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -57,14 +57,14 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 @SuppressWarnings("DuplicatedCode")
 public final class KnowledgeBase {
 
-    private static final boolean                                TRACE_NELUMBO       = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
-    public static final  Context<KnowledgeBase>                 CURRENT             = Context.of();
-    private static final ContextPool                            POOL                = ContextThread.createPool();
-    private static final QualifiedSet<Predicate, Inference>     EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
-    private static final int                                    MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
-    private static final int                                    MAX_LOGIC_MEMOIZ_D4 = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
-    private static final int                                    INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
-    private static final BiFunction<Set<Rule>, Rule, Set<Rule>> ADD_RULE            = (l, e) -> {
+    private static final boolean                                                        TRACE_NELUMBO        = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
+    public static final  Context<KnowledgeBase>                                         CURRENT              = Context.of();
+    private static final ContextPool                                                    POOL                 = ContextThread.createPool();
+    private static final QualifiedSet<Predicate, Inference>                             EMPTY_MEMOIZ         = QualifiedSet.of(Inference::premise);
+    private static final int                                                            MAX_LOGIC_MEMOIZ     = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
+    private static final int                                                            MAX_LOGIC_MEMOIZ_D4  = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
+    private static final int                                                            INITIAL_USAGE_COUNT  = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
+    private static final BiFunction<Set<Rule>, Rule, Set<Rule>>                         ADD_RULE             = (l, e) -> {
         if (l == null) {
             return Set.of(e);
         } else {
@@ -78,8 +78,12 @@ public final class KnowledgeBase {
             return l.add(e);
         }
     };
+    private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
+    public static final  KnowledgeBase                                                  BASE                 = new KnowledgeBase(null).initBase();
 
-    public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
+    public static void registerFunctorSetter(Class<? extends Node> clazz, Consumer<Functor> setter) {
+        FUNCTOR_REGISTRATION.updateAndGet(map -> map.put(clazz, setter));
+    }
 
     private static class Inference extends Struct2Impl<Predicate, InferResult> {
         @Serial
@@ -794,21 +798,12 @@ public final class KnowledgeBase {
     }
 
     public void addFunctor(Functor functor, Token[] tokens, Constructor<? extends Node> constructor) throws ParseException {
-        if (constructor != null) {
-            Class<? extends Node> cls = constructor.getDeclaringClass();
-            try {
-                Field functorField = cls.getDeclaredField("FUNCTOR");
-                try {
-                    functorField.setAccessible(true);
-                    functorField.set(null, functor);
-                } catch (IllegalArgumentException |
-                         IllegalAccessException |
-                         SecurityException e) {
-                    throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), tokens);
-                }
-            } catch (NoSuchFieldException |
-                     SecurityException e) {
-                // TODO: ignored?
+        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
+            Class<? extends Node> cls    = constructor.getDeclaringClass();
+            Consumer<Functor>     setter = FUNCTOR_REGISTRATION.get().get(cls);
+            if (setter != null) {
+                setter.accept(functor);
+                FUNCTOR_REGISTRATION.updateAndGet(map -> map.remove(cls));
             }
         }
         functors.updateAndGet(set -> set.add(functor));

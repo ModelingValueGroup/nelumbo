@@ -20,13 +20,15 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Functor extends Node {
-    private static final long            serialVersionUID = 285147889847599160L;
+    @Serial
+    private static final long serialVersionUID = 285147889847599160L;
 
     private final Function<Node, String> render;
 

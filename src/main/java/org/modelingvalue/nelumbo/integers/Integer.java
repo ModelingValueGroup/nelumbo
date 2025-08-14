@@ -20,20 +20,26 @@
 
 package org.modelingvalue.nelumbo.integers;
 
+import java.io.Serial;
 import java.math.BigInteger;
 
 import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Integer extends Terminal {
-    private static final long       serialVersionUID = 2454372545442550574L;
+    @Serial
+    private static final long serialVersionUID = 2454372545442550574L;
 
-    private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
-    private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigInteger MIN = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigInteger MAX = BigInteger.valueOf(Long.MAX_VALUE);
 
-    // Automatically set in addFcuntor in KnowledgeBase
-    private static Functor          FUNCTOR;
+    private static Functor FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(Integer.class, f -> FUNCTOR = f);
+    }
 
     public Integer(Functor functor, Token[] tokens, Object[] args) {
         super(functor, tokens, parse((String) args[0]));

@@ -20,13 +20,19 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Or extends BinaryPredicate {
+    @Serial
     private static final long serialVersionUID = -1732549494864415986L;
 
-    // Automatically set in addFcuntor in KnowledgeBase
     private static Functor    FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(Or.class, f -> FUNCTOR = f);
+    }
 
     public Or(Functor functor, Token[] tokens, Object[] args) {
         super(functor, tokens, args[0], args[1]);
