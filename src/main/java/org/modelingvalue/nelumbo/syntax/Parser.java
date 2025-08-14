@@ -73,35 +73,37 @@ public final class Parser {
         this.iterator      = tokens.listIterator();
     }
 
-    public Token peek() {
-        Token t = poll();
-        if (t != null) {
-            iterator.previous();
+    public List<Node> parse() throws ParseException {
+        List<Node> roots = List.of();
+        while (iterator.hasNext()) {
+            //noinspection StatementWithEmptyBody
+            while (match(TokenType.NEWLINE)) {
+            }
+            if (iterator.hasNext()) {
+                Node node = parseNode(0, Type.ROOT);
+                if (node.type().equals(Type.RELATION)) {
+                    knowledgeBase.addFact((Predicate) node);
+                }
+                if (node instanceof ListNode) {
+                    for (Node e : ((ListNode) node).elements()) {
+                        checkRootOrThrow(e);
+                        roots = roots.add(e);
+                    }
+                } else {
+                    checkRootOrThrow(node);
+                    roots = roots.add(node);
+                }
+                consume(TokenType.NEWLINE);
+            }
         }
-        return t;
-    }
-
-    private Token poll() {
-        Token t;
-        do
-        {
-            t = iterator.hasNext() ? iterator.next() : null;
-        } while (t != null && t.isCommentOrHspace());
-        return t;
-    }
-
-    private void splitCurrentToken(Token t1, Token t2) {
-        // iterator is positioned just after current (it was consumed).
-        // Move back to the position of current, replace with t2, insert t1 before it,
-        if (iterator.hasPrevious()) {
-            iterator.previous();
-            iterator.set(t2);
-            iterator.add(t1);
-        }
+        return roots;
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
-        Node left;
+        // made this an array so that prefix() 'postfix()can return new values in case a token was split
+        // otherwise the unsplit Token is put in the Node
+        Token[] t12 = new Token[2];
+        Node    left;
         if (expected.isList()) {
             Type  elemType = expected.element();
             Token start    = peek();
@@ -117,34 +119,34 @@ public final class Parser {
                 } while (match(TokenType.COMMA));
             }
         } else {
-            Token token1 = poll();
-            Token token2 = peek();
-            if (token1 == null) {
+            t12[0] = consume();
+            t12[1] = peek();
+            if (t12[0] == null) {
                 throw new ParseException("Expected something but found nothing");
             }
-            if (token2 == null) {
-                throw new ParseException("Expected something after " + token1.text() + " but found nothing", token1);
+            if (t12[1] == null) {
+                throw new ParseException("Expected something after " + t12[0].text() + " but found nothing", t12[0]);
             }
-            AtomicParselet prefix = prefix(expected, token1, token2);
-            left = prefix.parse(expected, this, token1);
+            AtomicParselet prefix = prefix(expected, t12);
+            left = prefix.parse(expected, this, t12[0]);
         }
-        Token           token1  = poll();
-        Token           token2  = peek();
-        PostfixParselet postfix = postfix(expected, left.type(), token1, token2, precedence);
+        t12[0] = consume();
+        t12[1] = peek();
+        PostfixParselet postfix = postfix(expected, left.type(), t12, precedence);
         while (postfix != null) {
-            left    = postfix.parse(expected, this, left, token1);
-            token1  = poll();
-            token2  = peek();
-            postfix = postfix(expected, left.type(), token1, token2, precedence);
+            left    = postfix.parse(expected, this, left, t12[0]);
+            t12[0]  = consume();
+            t12[1]  = peek();
+            postfix = postfix(expected, left.type(), t12, precedence);
         }
-        if (token1 != null) {
-            // unread the token that ended the postfix chain
-            iterator.previous();
-        }
+        // unread the token that ended the postfix chain
+        unconsume(t12[0]);
         return left;
     }
 
-    private AtomicParselet prefix(Type expected, Token t1, Token t2) throws ParseException {
+    private AtomicParselet prefix(Type expected, Token[] t12) throws ParseException {
+        Token          t1     = t12[0];
+        Token          t2     = t12[1];
         AtomicParselet prefix = doPrefix(expected, t1, t2);
         if (prefix == null && t1.type() == TokenType.OPERATOR) {
             Token t1Init = t1;
@@ -172,7 +174,9 @@ public final class Parser {
         return knowledgeBase.prefix(expected, token1, token2);
     }
 
-    private PostfixParselet postfix(Type expected, Type left, Token t1, Token t2, int precedence) throws ParseException {
+    private PostfixParselet postfix(Type expected, Type left, Token[] t12, int precedence) throws ParseException {
+        Token           t1      = t12[0];
+        Token           t2      = t12[1];
         PostfixParselet postfix = doPostfix(expected, left, t1, t2);
         if (postfix == null && t1.type() == TokenType.OPERATOR) {
             Token t1Init = t1;
@@ -184,6 +188,8 @@ public final class Parser {
                 if (postfix != null) {
                     if (precedence < postfix.precedence()) {
                         splitCurrentToken(t1, t2);
+                        t12[0] = t1;
+                        t12[1] = t2;
                         return postfix;
                     } else {
                         return null;
@@ -228,59 +234,66 @@ public final class Parser {
         return knowledgeBase;
     }
 
-    public List<Node> parse() throws ParseException {
-        List<Node> roots = List.of();
-        while (iterator.hasNext()) {
-            //noinspection StatementWithEmptyBody
-            while (match(TokenType.NEWLINE)) {
-            }
-            if (iterator.hasNext()) {
-                Node node = parseNode(0, Type.ROOT);
-                if (node.type().equals(Type.RELATION)) {
-                    knowledgeBase.addFact((Predicate) node);
-                }
-                if (node instanceof ListNode) {
-                    for (Node e : ((ListNode) node).elements()) {
-                        checkRoot(e);
-                        roots = roots.add(e);
-                    }
-                } else {
-                    checkRoot(node);
-                    roots = roots.add(node);
-                }
-                consume(TokenType.NEWLINE);
-            }
-        }
-        return roots;
+    public Token peek() {
+        Token t = consume();
+        unconsume(t);
+        return t;
     }
 
-    private void checkRoot(Node node) throws ParseException {
-        Type type = node instanceof Variable ? Type.VARIABLE : node.type();
-        if (!Type.ROOT.isAssignableFrom(type)) {
-            throw new ParseException("Expected type, functor, variable, rule, fact or query. Found " + node + " of type " + type, node.tokens());
-        }
-    }
-
-    public boolean next(TokenType expected) {
+    public boolean peekTypeIs(TokenType expected) {
         Token token = peek();
         return token != null && token.type() == expected;
     }
 
-    public boolean match(TokenType expected) {
-        if (next(expected)) {
-            poll();
-            return true;
-        } else {
-            return false;
+    private Token consume() {
+        Token t;
+        do
+        {
+            t = iterator.hasNext() ? iterator.next() : null;
+        } while (t != null && t.isCommentOrHspace());
+        return t;
+    }
+
+    private void unconsume(Token t) {
+        if (t != null) {
+            Token un = iterator.previous();
+            if (un != t) {
+                System.err.println("WARNING: unconsume did not find the right token: " + un + " instaed of " + t);
+            }
         }
     }
 
+    public boolean match(TokenType expected) {
+        boolean isType = peekTypeIs(expected);
+        if (isType) {
+            consume();
+        }
+        return isType;
+    }
+
     public Token consume(TokenType expected) throws ParseException {
-        Token token = poll();
+        Token token = consume();
         if (token.type() != expected) {
             throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token);
         }
         return token;
+    }
+
+    private void splitCurrentToken(Token t1, Token t2) {
+        // iterator is positioned just after current (it was consumed).
+        // Move back to the position of current, replace with t2, insert t1 before it,
+        if (iterator.hasPrevious()) {
+            iterator.previous();
+            iterator.set(t2);
+            iterator.add(t1);
+        }
+    }
+
+    private void checkRootOrThrow(Node node) throws ParseException {
+        Type type = node instanceof Variable ? Type.VARIABLE : node.type();
+        if (!Type.ROOT.isAssignableFrom(type)) {
+            throw new ParseException("Expected type, functor, variable, rule, fact or query. Found " + node + " of type " + type, node.tokens());
+        }
     }
 
 }

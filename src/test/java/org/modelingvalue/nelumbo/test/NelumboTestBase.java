@@ -23,6 +23,7 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.modelingvalue.collections.List;
@@ -95,6 +96,16 @@ public class NelumboTestBase {
                 if (root.type().equals(Type.RESULT)) {
                     System.out.println(root.toString(1));
                 }
+            }
+        }
+    }
+
+    public static void printCompleteResults(String msg, List<Node> roots) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+            System.out.println(msg + ":");
+            for (Node root : roots) {
+                System.out.println("  - " + root);
+                printTokens("===", new LinkedList<>(Arrays.asList(root.tokens())));
             }
         }
     }

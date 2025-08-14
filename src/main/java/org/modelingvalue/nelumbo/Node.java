@@ -63,7 +63,7 @@ public class Node extends StructImpl {
         super(args);
         this.start = start;
         if (get(0) instanceof Token) {
-            System.err.println();
+            System.err.println("WARNING: Node.get(0) is a Token... is this an error??");
         }
     }
 

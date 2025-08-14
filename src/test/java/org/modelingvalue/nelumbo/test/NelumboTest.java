@@ -118,15 +118,15 @@ public class NelumboTest extends NelumboTestBase {
             try {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);  // ?
                 String nl = """
-                            ? -2=-2
+                            ? -2=-(2+2)
                             """;
                 LinkedList<Token> tokens = new Tokenizer(nl, "initTest", true).tokenize();
                 printTokens("before-parse", tokens);
-                assertEquals(7, tokens.size(), "wrong number of tokens returned by tokenize()");
+                assertEquals(11, tokens.size(), "wrong number of tokens returned by tokenize()");
                 List<Node> result = new Parser(tokens).parse();
                 printTokens("after-parse", tokens);
-                assertEquals(8, tokens.size(), "wrong number of tokens after parse()");
-                printResults(result);
+                assertEquals(12, tokens.size(), "wrong number of tokens after parse()");
+                printCompleteResults("all result nodes", result);
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
