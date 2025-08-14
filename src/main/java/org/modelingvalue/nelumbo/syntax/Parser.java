@@ -20,30 +20,25 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.*;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.ListNode;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
-
 public final class Parser {
     public static List<Node> parse(String string) throws ParseException {
-        Tokenizer         tokenizer = new Tokenizer(string + "\n", string);
-        LinkedList<Token> tokens    = tokenizer.tokenize();
+        Tokenizer tokenizer = new Tokenizer(string + "\n", string);
+        LinkedList<Token> tokens = tokenizer.tokenize();
         return new Parser(tokens).parse();
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
         String packageName = clss.getPackageName();
-        String name        = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
+        String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
         return parse(clss, name);
     }
 
@@ -53,8 +48,8 @@ public final class Parser {
             if (stream == null) {
                 throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
-            InputStream       buffer = new BufferedInputStream(stream);
-            String            base   = new String(buffer.readAllBytes());
+            InputStream buffer = new BufferedInputStream(stream);
+            String base = new String(buffer.readAllBytes());
             LinkedList<Token> tokens = new Tokenizer(base, fileName).tokenize();
             return new Parser(tokens).parse();
         } catch (IOException e) {
@@ -64,23 +59,22 @@ public final class Parser {
 
     // Instance
 
-    private final KnowledgeBase     knowledgeBase;
+    private final KnowledgeBase knowledgeBase;
     private final LinkedList<Token> tokens;
 
     public Parser(LinkedList<Token> tokens) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
-        this.tokens        = tokens;
+        this.tokens = tokens;
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
         Node left;
         if (expected.isList()) {
-            Type  elemType = expected.element();
-            Token start    = peek();
+            Type elemType = expected.element();
+            Token start = peek();
             left = new ListNode(Token.EMPTY, elemType);
             if (!start.type().end()) {
-                do
-                {
+                do {
                     Node node = parseNode(precedence, elemType);
                     if (!elemType.isAssignableFrom(node.type())) {
                         throw new ParseException("Expected element of type " + elemType + " but found " + node + " of type " + node.type(), node.tokens());
@@ -100,13 +94,13 @@ public final class Parser {
             AtomicParselet prefix = prefix(expected, token1, token2);
             left = prefix.parse(expected, this, token1);
         }
-        Token           token1  = poll();
-        Token           token2  = peek();
+        Token token1 = poll();
+        Token token2 = peek();
         PostfixParselet postfix = postfix(expected, left.type(), token1, token2, precedence);
         while (postfix != null) {
-            left    = postfix.parse(expected, this, left, token1);
-            token1  = poll();
-            token2  = peek();
+            left = postfix.parse(expected, this, left, token1);
+            token1 = poll();
+            token2 = peek();
             postfix = postfix(expected, left.type(), token1, token2, precedence);
         }
         tokens.addFirst(token1);
@@ -133,26 +127,18 @@ public final class Parser {
     private AtomicParselet prefix(Type expected, Token t1, Token t2) throws ParseException {
         AtomicParselet prefix = doPrefix(expected, t1, t2);
         if (prefix == null && t1.type() == TokenType.OPERATOR) {
-
-            // no prefix found, but we might chop the operator so we have one from the knowledgeBase:
-            String text = t1.text();
-            int    line = t1.line();
-            int    pos  = t1.position();
-            int    ind  = t1.index();
-            String file = t1.fileName();
-
-            for (int len = text.length() - 1; 0 < len && !knowledgeBase.isOperator(text); len--) {
-                String beg = text.substring(0, len);
-                String end = text.substring(len);
-                t1     = new Token(TokenType.OPERATOR, beg, line, pos, ind, file);
-                t2     = new Token(TokenType.OPERATOR, end, line, pos + len, ind + len, file);
+            Token t1Init = t1;
+            // no prefix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
+            for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
+                t1 = t1Init.splitGet1(len);
+                t2 = t1Init.splitGet2(len);
                 prefix = doPrefix(expected, t1, t2);
                 if (prefix != null) {
                     tokens.addFirst(t2);
                     return prefix;
-                } else if (len == 1) {
-                    t1 = new Token(TokenType.OPERATOR, t1.text() + t2.text(), line, pos, ind, file);
-                    throw new ParseException("Operator " + t1.text() + " not defined", t1);
+                }
+                if (len == 1) {
+                    throw new ParseException("Operator " + t1Init.text() + " not defined", t1Init);
                 }
             }
         }
@@ -166,28 +152,24 @@ public final class Parser {
         return knowledgeBase.prefix(expected, token1, token2);
     }
 
-    private PostfixParselet postfix(Type expected, Type left, Token token1, Token token2, int precedence) throws ParseException {
-        PostfixParselet postfix = doPostfix(expected, left, token1, token2);
-        if (postfix == null && token1.type() == TokenType.OPERATOR) {
-            String text = token1.text();
-            int    len  = text.length();
-            while (len-- > 1 && !knowledgeBase.isOperator(text)) {
-                token1  = new Token(token1.type(), text.substring(0, len), token1.line(), //
-                                    token1.position(), token1.index(), token1.fileName());
-                token2  = new Token(token1.type(), text.substring(len), token1.line(), //
-                                    token1.position() + len, token1.index() + len, token1.fileName());
-                postfix = doPostfix(expected, left, token1, token2);
+    private PostfixParselet postfix(Type expected, Type left, Token t1, Token t2, int precedence) throws ParseException {
+        PostfixParselet postfix = doPostfix(expected, left, t1, t2);
+        if (postfix == null && t1.type() == TokenType.OPERATOR) {
+            Token t1Init = t1;
+            // no prefix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
+            for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
+                t1 = t1Init.splitGet1(len);
+                t2 = t1Init.splitGet2(len);
+                postfix = doPostfix(expected, left, t1, t2);
                 if (postfix != null) {
                     if (precedence < postfix.precedence()) {
-                        tokens.addFirst(token2);
+                        tokens.addFirst(t2);
                         return postfix;
                     } else {
                         return null;
                     }
                 } else if (len == 1) {
-                    token1 = new Token(token1.type(), token1.text() + token2.text(), token1.line(), //
-                                       token1.position(), token1.index(), token1.fileName());
-                    throw new ParseException("Operator " + token1.text() + " not defined", token1);
+                    throw new ParseException("Operator " + t1Init.text() + " not defined", t1Init);
                 }
             }
         }
@@ -201,7 +183,7 @@ public final class Parser {
     private PostfixParselet doPostfix(Type expected, Type left, Token token1, Token token2) {
         Set<Type> pre, post = Set.of(left);
         while (!post.isEmpty()) {
-            pre  = post;
+            pre = post;
             post = Set.of();
             for (Type type : pre) {
                 PostfixParselet postfix = knowledgeBase.postfix(expected, type, token1, token2);

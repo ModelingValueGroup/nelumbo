@@ -27,11 +27,11 @@ public class Token {
     public static final Token[] EMPTY = new Token[0];
 
     private final TokenType type;
-    private final String    text;
-    private final int       line;       // line number in the input file (0-based)
-    private final int       position;   // position (column) in the line (0-based)
-    private final int       index;      // position in the input stream (0-based)
-    private final String    fileName;
+    private final String text;
+    private final int line;       // line number in the input file (0-based)
+    private final int position;   // position (column) in the line (0-based)
+    private final int index;      // position in the input stream (0-based)
+    private final String fileName;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -40,11 +40,11 @@ public class Token {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type     = type;
-        this.text     = text;
-        this.line     = line;
+        this.type = type;
+        this.text = text;
+        this.line = line;
         this.position = position;
-        this.index    = index;
+        this.index = index;
         this.fileName = fileName;
     }
 
@@ -83,9 +83,9 @@ public class Token {
 
     public String textTraced() {
         return text//
-                     .replace(' ', '.')//
-                     .replace('\n', 'L')//
-                     .replace('\r', 'R');
+                .replace(' ', '.')//
+                .replace('\n', 'L')//
+                .replace('\r', 'R');
     }
 
     public int line() {
@@ -106,6 +106,14 @@ public class Token {
 
     public boolean isCommentOrHspace() {
         return type.comment() || type == TokenType.HSPACE;
+    }
+
+    public Token splitGet1(int len) {
+        return new Token(type, text.substring(0, len), line, position, index, fileName);
+    }
+
+    public Token splitGet2(int len) {
+        return new Token(type, text.substring(len), line, position + len, index + len, fileName);
     }
 
     @Override
