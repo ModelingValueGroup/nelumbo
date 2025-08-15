@@ -580,21 +580,21 @@ public final class KnowledgeBase {
         }
     }
 
-    private final AtomicReference<Map<String, Type>>           types     = new AtomicReference<>();
-    private final AtomicReference<Set<Functor>>                functors  = new AtomicReference<>();
-    private final AtomicReference<Map<String, Variable>>       variables = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, InferResult>> facts     = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, Set<Rule>>>   rules     = new AtomicReference<>();
-
-    private final AtomicReference<Map<Object, AtomicParselet>>     prefixParselets  = new AtomicReference<>();
-    private final AtomicReference<Map<Object, PostfixParselet>>    postfixParselets = new AtomicReference<>();
-    private final AtomicReference<Map<Object, List<CallWithArgs>>> callsWithArgs    = new AtomicReference<>();
-
-    private final AtomicReference<Set<String>>           allOperators = new AtomicReference<>();
-    private final AtomicReference<Map<Functor, Functor>> relations    = new AtomicReference<>();
-
-    private final AtomicInteger                                         depth       = new AtomicInteger();
-    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization = new AtomicReference<>();
+    private final AtomicReference<Map<String, Type>>                    types            = new AtomicReference<>();
+    private final AtomicReference<Set<Functor>>                         functors         = new AtomicReference<>();
+    private final AtomicReference<Map<String, Variable>>                variables        = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, InferResult>>          facts            = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, Set<Rule>>>            rules            = new AtomicReference<>();
+    //
+    private final AtomicReference<Map<Object, AtomicParselet>>          prefixParselets  = new AtomicReference<>();
+    private final AtomicReference<Map<Object, PostfixParselet>>         postfixParselets = new AtomicReference<>();
+    private final AtomicReference<Map<Object, List<CallWithArgs>>>      callsWithArgs    = new AtomicReference<>();
+    //
+    private final AtomicReference<Set<String>>                          allOperators     = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>>                relations        = new AtomicReference<>();
+    //
+    private final AtomicInteger                                         depth            = new AtomicInteger();
+    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization      = new AtomicReference<>();
     private final InferContext                                          context;
     private final KnowledgeBase                                         init;
     private       boolean                                               stopped;
@@ -797,7 +797,7 @@ public final class KnowledgeBase {
         return variables.get().get(name);
     }
 
-    public void addFunctor(Functor functor, Token[] tokens, Constructor<? extends Node> constructor) throws ParseException {
+    public void addFunctor(Functor functor, @SuppressWarnings("unused") Token[] tokens, Constructor<? extends Node> constructor) {
         if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
             Class<? extends Node> cls    = constructor.getDeclaringClass();
             Consumer<Functor>     setter = FUNCTOR_REGISTRATION.get().get(cls);
@@ -843,54 +843,72 @@ public final class KnowledgeBase {
 
     public void register(AtomicParselet parselet) {
         Type   expected = parselet.expected();
+        Object k1       = parselet.key1();
+        Object k2       = parselet.key2();
+        String o1       = parselet.oper1();
         Object key;
-        if (expected != null) {
-            key = parselet.key2() != null ? Triple.of(parselet.expected(), parselet.key1(), parselet.key2()) : Pair.of(parselet.expected(), parselet.key1());
+        if (expected != null && k2 != null) {
+            key = Triple.of(expected, k1, k2);
+        } else if (expected != null) {
+            key = Pair.of(expected, k1);
+        } else if (k2 != null) {
+            key = Pair.of(k1, k2);
         } else {
-            key = parselet.key2() != null ? Pair.of(parselet.key1(), parselet.key2()) : parselet.key1();
+            key = k1;
         }
         if (prefixParselets.get().containsKey(key)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("prefixParselet already registered " + key);
         }
         prefixParselets.updateAndGet(map -> map.put(key, parselet));
-        if (parselet.oper1() != null) {
-            allOperators.updateAndGet(set -> set.add(parselet.oper1()));
+        if (o1 != null) {
+            allOperators.updateAndGet(set -> set.add(o1));
         }
     }
 
     public void register(PostfixParselet parselet) {
         Type   expected = parselet.expected();
         Type   left     = parselet.left();
+        Object k1       = parselet.key1();
+        Object k2       = parselet.key2();
+        String o1       = parselet.oper1();
         Object key;
-        if (expected != null) {
-            key = parselet.key2() != null ? Quadruple.of(expected, left, parselet.key1(), parselet.key2()) : Triple.of(expected, left, parselet.key1());
+        if (expected != null && k2 != null) {
+            key = Quadruple.of(expected, left, k1, k2);
+        } else if (expected != null) {
+            key = Triple.of(expected, left, k1);
+        } else if (k2 != null) {
+            key = Triple.of(left, k1, k2);
         } else {
-            key = parselet.key2() != null ? Triple.of(left, parselet.key1(), parselet.key2()) : Pair.of(left, parselet.key1());
+            key = Pair.of(left, k1);
         }
         if (postfixParselets.get().containsKey(key)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("postfixParselet already registered " + key);
         }
         postfixParselets.updateAndGet(map -> map.put(key, parselet));
-        if (parselet.oper1() != null) {
-            allOperators.updateAndGet(set -> set.add(parselet.oper1()));
+        if (o1 != null) {
+            allOperators.updateAndGet(set -> set.add(o1));
         }
     }
 
     public void register(CallWithArgs call) {
-        Object key = call.expected() != null ? Pair.of(call.expected(), call.key()) : call.key();
-        callsWithArgs.updateAndGet(map -> map.compute(key, (k, v) -> {
+        String    name = call.name();
+        TokenType type = call.type();
+        Type      exp  = call.expected();
+        Object    k    = call.key();
+        Object    key  = exp != null ? Pair.of(exp, k) : k;
+        callsWithArgs.updateAndGet(map -> map.compute(key, (__, v) -> {
             if (v == null) {
-                if (call.expected() != null) {
-                    if (call.name() != null) {
-                        register(new CallWithArgsParselet(call.expected(), call.name()));
+                if (exp != null) {
+                    if (name != null) {
+                        register(new CallWithArgsParselet(exp, name));
                     } else {
-                        register(new CallWithArgsParselet(call.expected(), call.type()));
+                        register(new CallWithArgsParselet(exp, type));
                     }
                 } else {
-                    if (call.name() != null) {
-                        register(new CallWithArgsParselet(call.name()));
+                    if (name != null) {
+                        register(new CallWithArgsParselet(name));
                     } else {
-                        register(new CallWithArgsParselet(call.type()));
+                        register(new CallWithArgsParselet(type));
                     }
                 }
                 return List.of(call);
@@ -906,141 +924,144 @@ public final class KnowledgeBase {
     }
 
     public List<CallWithArgs> callsWithArgs(Type expected, Token token) {
-        List<CallWithArgs> list = callsWithArgs.get().get(Pair.of(expected, token.text()));
+        String                          text   = token.text();
+        TokenType                       type   = token.type();
+        Map<Object, List<CallWithArgs>> swaMap = callsWithArgs.get();
+        List<CallWithArgs>              list;
+
+        list = swaMap.get(Pair.of(expected, text));
         if (list != null) {
             return list;
         }
-        list = callsWithArgs.get().get(Pair.of(expected, token.type()));
+        list = swaMap.get(Pair.of(expected, type));
         if (list != null) {
             return list;
         }
-        list = callsWithArgs.get().get(token.text());
+        list = swaMap.get(text);
         if (list != null) {
             return list;
         }
-        return callsWithArgs.get().get(token.type());
+        return swaMap.get(type);
     }
 
     public AtomicParselet prefix(Type expected, Token token1, Token token2) {
+        assert token1 != null;
+
+        Map<Object, AtomicParselet> ppMap = prefixParselets.get();
+        AtomicParselet              pp;
+
+        String    text1 = token1.text();
+        TokenType type1 = token1.type();
         if (token2 != null) {
-            Triple<Type, Object, Object> triple = Triple.of(expected, token1.text(), token2.text());
-            AtomicParselet               prefix = prefixParselets.get().get(triple);
-            if (prefix != null) {
-                return prefix;
+            String    text2 = token2.text();
+            TokenType type2 = token2.type();
+
+            pp = ppMap.get(Triple.of(expected, text1, text2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(expected, token1.text(), token2.type());
-            prefix = prefixParselets.get().get(triple);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Triple.of(expected, text1, type2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(expected, token1.type(), token2.text());
-            prefix = prefixParselets.get().get(triple);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Triple.of(expected, type1, text2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(expected, token1.type(), token2.type());
-            prefix = prefixParselets.get().get(triple);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Triple.of(expected, type1, type2));
+            if (pp != null) {
+                return pp;
             }
-            Pair<Object, Object> pair = Pair.of(token1.text(), token2.text());
-            prefix = prefixParselets.get().get(pair);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Pair.of(text1, text2));
+            if (pp != null) {
+                return pp;
             }
-            pair   = Pair.of(token1.text(), token2.type());
-            prefix = prefixParselets.get().get(pair);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Pair.of(text1, type2));
+            if (pp != null) {
+                return pp;
             }
-            pair   = Pair.of(token1.type(), token2.text());
-            prefix = prefixParselets.get().get(pair);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Pair.of(type1, text2));
+            if (pp != null) {
+                return pp;
             }
-            pair   = Pair.of(token1.type(), token2.type());
-            prefix = prefixParselets.get().get(pair);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Pair.of(type1, type2));
+            if (pp != null) {
+                return pp;
             }
         }
-        Pair<Object, Object> pair   = Pair.of(expected, token1.text());
-        AtomicParselet       prefix = prefixParselets.get().get(pair);
-        if (prefix != null) {
-            return prefix;
+        pp = ppMap.get(Pair.of(expected, text1));
+        if (pp != null) {
+            return pp;
         }
-        pair   = Pair.of(expected, token1.type());
-        prefix = prefixParselets.get().get(pair);
-        if (prefix != null) {
-            return prefix;
+        pp = ppMap.get(Pair.of(expected, type1));
+        if (pp != null) {
+            return pp;
         }
-        prefix = prefixParselets.get().get(token1.text());
-        if (prefix != null) {
-            return prefix;
+        pp = ppMap.get(text1);
+        if (pp != null) {
+            return pp;
         }
-        return prefixParselets.get().get(token1.type());
+        return ppMap.get(type1);
     }
 
     public PostfixParselet postfix(Type expected, Type left, Token token1, Token token2) {
+        assert token1 != null;
+
+        PostfixParselet              pp;
+        Map<Object, PostfixParselet> ppMap = postfixParselets.get();
+
+        String    text1 = token1.text();
+        TokenType type1 = token1.type();
         if (token2 != null) {
-            Quadruple<Type, Type, Object, Object> quadruple = Quadruple.of(expected, left, token1.text(), token2.text());
-            PostfixParselet                       postfix   = postfixParselets.get().get(quadruple);
-            if (postfix != null) {
-                return postfix;
+            String    text2 = token2.text();
+            TokenType type2 = token2.type();
+
+            pp = ppMap.get(Quadruple.of(expected, left, text1, text2));
+            if (pp != null) {
+                return pp;
             }
-            quadruple = Quadruple.of(expected, left, token1.text(), token2.type());
-            postfix   = postfixParselets.get().get(quadruple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Quadruple.of(expected, left, text1, type2));
+            if (pp != null) {
+                return pp;
             }
-            quadruple = Quadruple.of(expected, left, token1.type(), token2.text());
-            postfix   = postfixParselets.get().get(quadruple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Quadruple.of(expected, left, type1, text2));
+            if (pp != null) {
+                return pp;
             }
-            quadruple = Quadruple.of(expected, left, token1.type(), token2.type());
-            postfix   = postfixParselets.get().get(quadruple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Quadruple.of(expected, left, type1, type2));
+            if (pp != null) {
+                return pp;
             }
-            Triple<Type, Object, Object> triple = Triple.of(left, token1.text(), token2.text());
-            postfix = postfixParselets.get().get(triple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Triple.of(left, text1, text2));
+            if (pp != null) {
+                return pp;
             }
-            triple  = Triple.of(left, token1.text(), token2.type());
-            postfix = postfixParselets.get().get(triple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Triple.of(left, text1, type2));
+            if (pp != null) {
+                return pp;
             }
-            triple  = Triple.of(left, token1.type(), token2.text());
-            postfix = postfixParselets.get().get(triple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Triple.of(left, type1, text2));
+            if (pp != null) {
+                return pp;
             }
-            triple  = Triple.of(left, token1.type(), token2.type());
-            postfix = postfixParselets.get().get(triple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Triple.of(left, type1, type2));
+            if (pp != null) {
+                return pp;
             }
         }
-        Triple<Type, Object, Object> triple  = Triple.of(expected, left, token1.text());
-        PostfixParselet              postfix = postfixParselets.get().get(triple);
-        if (postfix != null) {
-            return postfix;
+        pp = ppMap.get(Triple.of(expected, left, text1));
+        if (pp != null) {
+            return pp;
         }
-        triple  = Triple.of(expected, left, token1.type());
-        postfix = postfixParselets.get().get(triple);
-        if (postfix != null) {
-            return postfix;
+        pp = ppMap.get(Triple.of(expected, left, type1));
+        if (pp != null) {
+            return pp;
         }
-        Pair<Type, Object> pair = Pair.of(left, token1.text());
-        postfix = postfixParselets.get().get(pair);
-        if (postfix != null) {
-            return postfix;
+        pp = ppMap.get(Pair.of(left, text1));
+        if (pp != null) {
+            return pp;
         }
-        pair = Pair.of(left, token1.type());
-        return postfixParselets.get().get(pair);
+        return ppMap.get(Pair.of(left, type1));
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

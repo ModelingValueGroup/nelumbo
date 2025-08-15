@@ -22,6 +22,8 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.util.Objects;
 
+import org.modelingvalue.nelumbo.U;
+
 @SuppressWarnings("ClassCanBeRecord")
 public class Token {
     public static final Token[] EMPTY = new Token[0];
@@ -82,10 +84,7 @@ public class Token {
     }
 
     public String textTraced() {
-        return text//
-                .replaceAll(" ", "\\\\.")//
-                .replaceAll("\n", "\\\\n")//
-                .replaceAll("\r", "\\\\r");
+        return U.traceable(text);
     }
 
     public int line() {

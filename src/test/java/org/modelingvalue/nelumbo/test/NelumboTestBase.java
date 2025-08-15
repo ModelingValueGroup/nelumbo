@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Collection;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
@@ -81,7 +81,7 @@ public class NelumboTestBase {
         }
     }
 
-    public static void printTokens(String msg, LinkedList<Token> tokens) {
+    public static void printTokens(String msg, Collection<Token> tokens) {
         if (Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println(msg + ":");
             for (Token token : tokens) {
@@ -100,12 +100,14 @@ public class NelumboTestBase {
         }
     }
 
-    public static void printCompleteResults(String msg, List<Node> roots) {
+    public static void printNode(String msg, List<Node> roots) {
         if (Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println(msg + ":");
+            System.err.println("\u001B[42m" + " ".repeat(80) + "\u001B[0m");
             for (Node root : roots) {
-                System.out.println("  - " + root);
-                printTokens("===", new LinkedList<>(Arrays.asList(root.tokens())));
+                System.out.println("  - " + root.toString());
+                printTokens("===tokens===", Arrays.asList(root.tokens()));
+                System.err.println("\u001B[42m" + " ".repeat(80) + "\u001B[0m");
             }
         }
     }

@@ -67,7 +67,7 @@ public final class Functor extends Node {
     }
 
     public String name() {
-        return ((String) get(1));
+        return (String) get(1);
     }
 
     @SuppressWarnings("unchecked")
@@ -76,7 +76,6 @@ public final class Functor extends Node {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Function<Node, String> render() {
         return render;
     }

@@ -75,32 +75,38 @@ public final class Parser {
 
     public List<Node> parse() throws ParseException {
         List<Node> roots = List.of();
-        while (iterator.hasNext()) {
+        while (true) {
             //noinspection StatementWithEmptyBody
             while (match(TokenType.NEWLINE)) {
             }
-            if (iterator.hasNext()) {
-                Node node = parseNode(0, Type.ROOT);
-                if (node.type().equals(Type.RELATION)) {
-                    knowledgeBase.addFact((Predicate) node);
-                }
-                if (node instanceof ListNode) {
-                    for (Node e : ((ListNode) node).elements()) {
-                        checkRootOrThrow(e);
-                        roots = roots.add(e);
-                    }
-                } else {
-                    checkRootOrThrow(node);
-                    roots = roots.add(node);
-                }
-                consume(TokenType.NEWLINE);
+            if (noMoreTokens()) {
+                return roots;
             }
+            Node node = parseNode(0, Type.ROOT);
+            if (node.type().equals(Type.RELATION)) {
+                knowledgeBase.addFact((Predicate) node);
+            }
+            if (node instanceof ListNode list) {
+                for (Node e : list.elements()) {
+                    mustBeRoot(e);
+                    roots = roots.add(e);
+                }
+            } else {
+                mustBeRoot(node);
+                roots = roots.add(node);
+            }
+            if (noMoreTokens()) {
+                return roots;
+            }
+            consume(TokenType.NEWLINE);
         }
-        return roots;
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
-        // made this an array so that prefix() 'postfix()can return new values in case a token was split
+        if (noMoreTokens()) {
+            throw new ParseException("premature end of input while expecting a " + expected.name());
+        }
+        // made this an array so that prefix() and postfix() can return new values in case a token was split
         // otherwise the unsplit Token is put in the Node
         Token[] t12 = new Token[2];
         Node    left;
@@ -121,20 +127,22 @@ public final class Parser {
         } else {
             t12[0] = consume();
             t12[1] = peek();
-            if (t12[0] == null) {
-                throw new ParseException("Expected something but found nothing");
-            }
-            if (t12[1] == null) {
-                throw new ParseException("Expected something after " + t12[0].text() + " but found nothing", t12[0]);
-            }
+            assert t12[0] != null;
             AtomicParselet prefix = prefix(expected, t12);
             left = prefix.parse(expected, this, t12[0]);
         }
+        if (noMoreTokens()) {
+            return left;
+        }
         t12[0] = consume();
         t12[1] = peek();
+        assert t12[0] != null;
         PostfixParselet postfix = postfix(expected, left.type(), t12, precedence);
         while (postfix != null) {
             left    = postfix.parse(expected, this, left, t12[0]);
+            if (noMoreTokens()) {
+                return left;
+            }
             t12[0]  = consume();
             t12[1]  = peek();
             postfix = postfix(expected, left.type(), t12, precedence);
@@ -147,16 +155,21 @@ public final class Parser {
     private AtomicParselet prefix(Type expected, Token[] t12) throws ParseException {
         Token          t1     = t12[0];
         Token          t2     = t12[1];
-        AtomicParselet prefix = doPrefix(expected, t1, t2);
-        if (prefix == null && t1.type() == TokenType.OPERATOR) {
-            Token t1Init = t1;
+        AtomicParselet prefix = knowledgeBase.prefix(expected, t1, t2);
+        if (prefix != null) {
+            return prefix;
+        }
+        if (t1.type() == TokenType.OPERATOR) {
             // no prefix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
+            Token t1Init = t1;
             for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
                 t1     = t1Init.splitGet1(len);
                 t2     = t1Init.splitGet2(len);
-                prefix = doPrefix(expected, t1, t2);
+                prefix = knowledgeBase.prefix(expected, t1, t2);
                 if (prefix != null) {
                     splitCurrentToken(t1, t2);
+                    t12[0] = t1;
+                    t12[1] = t2;
                     return prefix;
                 }
                 if (len == 1) {
@@ -164,23 +177,23 @@ public final class Parser {
                 }
             }
         }
-        if (prefix == null) {
-            throw new ParseException("Prefix " + t1.text() + " not defined", t1);
-        }
-        return prefix;
-    }
-
-    private AtomicParselet doPrefix(Type expected, Token token1, Token token2) {
-        return knowledgeBase.prefix(expected, token1, token2);
+        throw new ParseException("Prefix " + t1.text() + " not defined", t1);
     }
 
     private PostfixParselet postfix(Type expected, Type left, Token[] t12, int precedence) throws ParseException {
         Token           t1      = t12[0];
         Token           t2      = t12[1];
         PostfixParselet postfix = doPostfix(expected, left, t1, t2);
-        if (postfix == null && t1.type() == TokenType.OPERATOR) {
+        if (postfix != null) {
+            if (precedence < postfix.precedence()) {
+                return postfix;
+            } else {
+                return null;
+            }
+        }
+        if (t1.type() == TokenType.OPERATOR) {
+            // no postfix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
             Token t1Init = t1;
-            // no prefix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
             for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
                 t1      = t1Init.splitGet1(len);
                 t2      = t1Init.splitGet2(len);
@@ -199,11 +212,7 @@ public final class Parser {
                 }
             }
         }
-        if (postfix != null && precedence < postfix.precedence()) {
-            return postfix;
-        } else {
-            return null;
-        }
+        return null;
     }
 
     private PostfixParselet doPostfix(Type expected, Type left, Token token1, Token token2) {
@@ -227,7 +236,6 @@ public final class Parser {
             }
         }
         return null;
-
     }
 
     public KnowledgeBase knowledgeBase() {
@@ -246,12 +254,19 @@ public final class Parser {
     }
 
     private Token consume() {
-        Token t;
-        do
-        {
-            t = iterator.hasNext() ? iterator.next() : null;
-        } while (t != null && t.isCommentOrHspace());
-        return t;
+        while (true) {
+            if (noMoreTokens()) {
+                return null;
+            }
+            Token t = iterator.next();
+            if (!t.isCommentOrHspace()) {
+                return t;
+            }
+        }
+    }
+
+    private boolean noMoreTokens() {
+        return !iterator.hasNext();
     }
 
     private void unconsume(Token t) {
@@ -273,8 +288,11 @@ public final class Parser {
 
     public Token consume(TokenType expected) throws ParseException {
         Token token = consume();
+        if (token == null) {
+            throw new ParseException("Expected token " + expected + " but found end of input");
+        }
         if (token.type() != expected) {
-            throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token);
+            throw new ParseException("Expected token " + expected + " but found " + token.text() + " of type " + token.type(), token);
         }
         return token;
     }
@@ -289,7 +307,7 @@ public final class Parser {
         }
     }
 
-    private void checkRootOrThrow(Node node) throws ParseException {
+    private void mustBeRoot(Node node) throws ParseException {
         Type type = node instanceof Variable ? Type.VARIABLE : node.type();
         if (!Type.ROOT.isAssignableFrom(type)) {
             throw new ParseException("Expected type, functor, variable, rule, fact or query. Found " + node + " of type " + type, node.tokens());

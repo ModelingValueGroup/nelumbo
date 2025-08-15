@@ -52,7 +52,7 @@ public class NelumboTest extends NelumboTestBase {
                              // Init only
                              """;
             try {
-                new Parser(new Tokenizer(example, "initTest").tokenize()).parse();
+                new Parser(new Tokenizer(example, "NelumboTest.initTest").tokenize()).parse();
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -118,15 +118,38 @@ public class NelumboTest extends NelumboTestBase {
             try {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);  // ?
                 String nl = """
-                            ? -2=-(2+2)
+                            ? -4=-(2+2)
                             """;
-                LinkedList<Token> tokens = new Tokenizer(nl, "initTest", true).tokenize();
-                printTokens("before-parse", tokens);
+
+                LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.tokenSplitTest", true).tokenize();
+                //printTokens("before-parse", tokens);
                 assertEquals(11, tokens.size(), "wrong number of tokens returned by tokenize()");
+
                 List<Node> result = new Parser(tokens).parse();
-                printTokens("after-parse", tokens);
+                //printTokens("after-parse", tokens);
                 assertEquals(12, tokens.size(), "wrong number of tokens after parse()");
-                printCompleteResults("all result nodes", result);
+
+                printNode("all result nodes", result);
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    @Test
+    public void research() {
+        run(() -> {
+            try {
+                //String nl = "<Predicate> p";
+                String nl = """
+                            <Predicate> p
+                            ? p=true""";
+
+                LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.research", true).tokenize();
+                List<Node> result = new Parser(tokens).parse();
+
+                printNode("all result nodes", result);
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);

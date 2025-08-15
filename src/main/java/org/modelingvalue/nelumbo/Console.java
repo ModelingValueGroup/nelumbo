@@ -348,7 +348,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     }
 
     private void applySyntaxColors(String line) throws ParseException {
-        System.err.println("line=[" + line.replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r") + "]");
+        System.err.println("line=[" + U.traceable(line) + "]");
         textArea.insert(" ", getEnd() - 1);
         Tokenizer tokenizer = new Tokenizer(line, line, true);
         for (Token token : tokenizer.tokenize()) {

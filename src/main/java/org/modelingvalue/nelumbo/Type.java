@@ -47,8 +47,20 @@ public class Type extends Node {
     public static final  Type STRING           = new Type(String.class);
 
     public static List<Type> predefined() {
-        return List.of(TYPE(), NODE, FUNCTION, TERMINAL, LITERAL, ROOT, PREDICATE, //
-                       RELATION, RESULT, VARIABLE, RULE, FUNCTOR, STRING);
+        return List.of(TYPE(),//
+                       NODE,//
+                       FUNCTION,//
+                       TERMINAL,//
+                       LITERAL,//
+                       ROOT,//
+                       PREDICATE,//
+                       RELATION,//
+                       RESULT,//
+                       VARIABLE,//
+                       RULE,//
+                       FUNCTOR,//
+                       STRING//
+                      );
     }
 
     private static Type TYPE = null;
@@ -107,9 +119,13 @@ public class Type extends Node {
     }
 
     public Type(Type super1, Type super2) {
-        super(TYPE(), Token.EMPTY, Set.of(super1, super2), Set.of(super1, super2).//
-                                                                                          addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))).//
-                                                                                                                                                                              addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))));
+        super(TYPE(), //
+              Token.EMPTY, //
+              Set.of(super1, super2), //
+              Set.of(super1, super2) //
+                 .addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))) //
+                 .addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))) //
+             );
     }
 
     private Type(Type element) {

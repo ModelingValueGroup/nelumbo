@@ -201,13 +201,20 @@ public class Node extends StructImpl {
             return render.apply(this);
         }
         Functor       functor = functor();
-        StringBuilder sb      = new StringBuilder((functor != null ? functor.name() : type().name()) + "(");
-        String        sep     = "";
+        StringBuilder sb      = new StringBuilder();
+        if (functor != null) {
+            sb.append("F#").append(functor.name());
+        } else {
+            sb.append("T#").append(type().name());
+        }
+        sb.append('(');
+        String sep = "";
         for (int i = 0; i < length(); i++) {
             sb.append(sep).append(toString(i));
-            sep = ",";
+            sep = ", ";
         }
-        return sb.append(")").toString();
+        sb.append(')');
+        return sb.toString();
     }
 
     public final String toString(int i) {
