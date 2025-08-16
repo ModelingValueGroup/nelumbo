@@ -29,11 +29,11 @@ public class Token {
     public static final Token[] EMPTY = new Token[0];
 
     private final TokenType type;
-    private final String text;
-    private final int line;       // line number in the input file (0-based)
-    private final int position;   // position (column) in the line (0-based)
-    private final int index;      // position in the input stream (0-based)
-    private final String fileName;
+    private final String    text;
+    private final int       line;       // line number in the input file (0-based)
+    private final int       position;   // position (column) in the line (0-based)
+    private final int       index;      // position in the input stream (0-based)
+    private final String    fileName;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -42,11 +42,11 @@ public class Token {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type = type;
-        this.text = text;
-        this.line = line;
+        this.type     = type;
+        this.text     = text;
+        this.line     = line;
         this.position = position;
-        this.index = index;
+        this.index    = index;
         this.fileName = fileName;
     }
 
@@ -54,18 +54,12 @@ public class Token {
         return new Token[]{this};
     }
 
-    public Token[] prepend(Token[] tokens) {
-        Token[] result = new Token[tokens.length + 1];
-        System.arraycopy(tokens, 0, result, 0, tokens.length);
-        result[tokens.length] = this;
-        return result;
+    public static Token[] concat(Token token1, Token[] tokens2) {
+        return concat(token1.singleton(), tokens2);
     }
 
-    public Token[] append(Token[] tokens) {
-        Token[] result = new Token[tokens.length + 1];
-        result[0] = this;
-        System.arraycopy(tokens, 0, result, 1, tokens.length);
-        return result;
+    public static Token[] concat(Token[] tokens1, Token token2) {
+        return concat(tokens1, token2.singleton());
     }
 
     public static Token[] concat(Token[] tokens1, Token[] tokens2) {

@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.Token;
@@ -61,9 +62,10 @@ public final class Functor extends Node {
         Function<Node, String> render = render();
         if (render != null) {
             return render.apply(new Node(this, Token.EMPTY, args().toArray()));
+        } else {
+            String types = args().map(Type::toString).collect(Collectors.joining(", "));
+            return name() + "(" + types + ")";
         }
-        String types = args().toString();
-        return name() + "(" + types.substring(5, types.length() - 1) + ")";
     }
 
     public String name() {

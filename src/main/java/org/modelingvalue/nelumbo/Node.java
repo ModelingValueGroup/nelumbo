@@ -44,11 +44,22 @@ public class Node extends StructImpl {
     public Node(Functor functor, Token[] tokens, Object... args) {
         super(array(functor, tokens, args));
         start = tokens.length + 1;
+        //U.printTokens("A MAKE NODE " + getClass().getSimpleName() + " " /*+ functor*/, Arrays.asList(tokens));
     }
 
     public Node(Type type, Token[] tokens, Object... args) {
         super(array(type, tokens, args));
         start = tokens.length + 1;
+        //U.printTokens("B MAKE NODE " + getClass().getSimpleName() + " " + type, Arrays.asList(tokens));
+    }
+
+    protected Node(Object[] args, int start) {
+        super(args);
+        //U.printTokens("C MAKE NODE " + getClass().getSimpleName() + " " + args[0], Arrays.asList(args).subList(1, start).stream().map(Token.class::cast).toList());
+        this.start = start;
+        if (get(0) instanceof Token) {
+            System.err.println("WARNING: Node.get(0) is a Token... is this an error??");
+        }
     }
 
     private static Object[] array(Object functor, Token[] tokens, Object[] args) {
@@ -59,22 +70,19 @@ public class Node extends StructImpl {
         return result;
     }
 
-    protected Node(Object[] args, int start) {
-        super(args);
-        this.start = start;
-        if (get(0) instanceof Token) {
-            System.err.println("WARNING: Node.get(0) is a Token... is this an error??");
-        }
-    }
-
     public Node setTokens(Token... tokens) {
-        Object[] result = new Object[1 + tokens.length + length()];
-        result[0] = typeOrFunctor();
-        System.arraycopy(tokens, 0, result, 1, tokens.length);
+        int      newStart = 1 + tokens.length;
+        Object[] newData  = new Object[newStart + length()];
+        // add type to array
+        newData[0] = typeOrFunctor();
+        // add new tokens to array
+        System.arraycopy(tokens, 0, newData, 1, tokens.length);
+        // add args to array
         for (int i = 0; i < length(); i++) {
-            result[1 + tokens.length + i] = get(i);
+            newData[newStart + i] = get(i);
         }
-        return struct(result, tokens.length + 1);
+        // make new node
+        return struct(newData, newStart);
     }
 
     @Override

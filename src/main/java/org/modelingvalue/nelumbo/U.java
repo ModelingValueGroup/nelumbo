@@ -20,6 +20,13 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.lang.Boolean;
+import java.util.Arrays;
+import java.util.Collection;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.syntax.Token;
+
 public class U {
     public static String traceable(String s) {
         return s//
@@ -27,5 +34,43 @@ public class U {
                 .replaceAll("\n", "\\\\n")//
                 .replaceAll("\r", "\\\\r");
 
+    }
+
+    public static void printKnowledgeBase(String msg, boolean withTokens) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+            System.out.println(msg + ":");
+            KnowledgeBase.CURRENT.get().print(System.out, withTokens);
+        }
+    }
+
+    public static void printTokens(String msg, Collection<Token> tokens) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+            System.out.println(msg + ":");
+            for (Token token : tokens) {
+                System.out.println("    Token: " + token);
+            }
+        }
+    }
+
+    public static void printResults(List<Node> roots) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+            for (Node root : roots) {
+                if (root.type().equals(Type.RESULT)) {
+                    System.out.println(root.toString(1));
+                }
+            }
+        }
+    }
+
+    public static void printNode(String msg, List<Node> roots) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+            System.out.println(msg + ":");
+            System.err.println("\u001B[42m" + " ".repeat(80) + "\u001B[0m");
+            for (Node root : roots) {
+                System.out.println("  - " + root.toString());
+                printTokens("    :::tokens::", Arrays.asList(root.tokens()));
+                System.err.println("\u001B[42m" + " ".repeat(80) + "\u001B[0m");
+            }
+        }
     }
 }

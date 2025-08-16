@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -55,8 +56,8 @@ public class TokenizerTest extends NelumboTestBase {
         String            types         = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
         String            expectedTypes = "END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE";
 
-        printTokens("tokens", tokens);
-        printTokens("all", all);
+        U.printTokens("tokens", tokens);
+        U.printTokens("all", all);
 
         assertEquals(15, tokens.size(), "wrong number of tokens returned by tokenize()");
         assertEquals(32, all.size(), "wrong number of tokens returned by tokenize(all)");
@@ -116,8 +117,8 @@ public class TokenizerTest extends NelumboTestBase {
         String            types         = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
         String            expectedTypes = "OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME";
 
-        printTokens("tokens", tokens);
-        printTokens("all", all);
+        U.printTokens("tokens", tokens);
+        U.printTokens("all", all);
 
         assertEquals(5, tokens.size(), "wrong number of tokens returned by tokenize()");
         assertEquals(6, all.size(), "wrong number of tokens returned by tokenize(all)");

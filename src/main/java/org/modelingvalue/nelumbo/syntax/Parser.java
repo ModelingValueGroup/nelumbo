@@ -59,7 +59,7 @@ public final class Parser {
             LinkedList<Token> tokens = new Tokenizer(base, fileName).tokenize();
             return new Parser(tokens).parse();
         } catch (IOException e) {
-            throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), fileName);
+            throw new ParseException(e, "IOException during parse", fileName);
         }
     }
 
@@ -69,8 +69,13 @@ public final class Parser {
     private final ListIterator<Token> iterator;
 
     public Parser(LinkedList<Token> tokens) {
+        this(tokens, false);
+    }
+
+    public Parser(LinkedList<Token> tokens, boolean noInfer) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
         this.iterator      = tokens.listIterator();
+        knowledgeBase.noInfer(noInfer);
     }
 
     public List<Node> parse() throws ParseException {
@@ -131,24 +136,23 @@ public final class Parser {
             AtomicParselet prefix = prefix(expected, t12);
             left = prefix.parse(expected, this, t12[0]);
         }
-        if (noMoreTokens()) {
-            return left;
-        }
-        t12[0] = consume();
-        t12[1] = peek();
-        assert t12[0] != null;
-        PostfixParselet postfix = postfix(expected, left.type(), t12, precedence);
-        while (postfix != null) {
-            left    = postfix.parse(expected, this, left, t12[0]);
-            if (noMoreTokens()) {
-                return left;
+        if (moreTokens()) {
+            t12[0] = consume();
+            t12[1] = peek();
+            assert t12[0] != null;
+            PostfixParselet postfix = postfix(expected, left.type(), t12, precedence);
+            while (postfix != null) {
+                left = postfix.parse(expected, this, left, t12[0]);
+                if (noMoreTokens()) {
+                    return left;
+                }
+                t12[0]  = consume();
+                t12[1]  = peek();
+                postfix = postfix(expected, left.type(), t12, precedence);
             }
-            t12[0]  = consume();
-            t12[1]  = peek();
-            postfix = postfix(expected, left.type(), t12, precedence);
+            // unread the token that ended the postfix chain
+            unconsume(t12[0]);
         }
-        // unread the token that ended the postfix chain
-        unconsume(t12[0]);
         return left;
     }
 
@@ -263,6 +267,10 @@ public final class Parser {
                 return t;
             }
         }
+    }
+
+    private boolean moreTokens() {
+        return iterator.hasNext();
     }
 
     private boolean noMoreTokens() {

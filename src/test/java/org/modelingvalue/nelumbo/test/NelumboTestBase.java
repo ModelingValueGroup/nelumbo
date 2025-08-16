@@ -23,17 +23,10 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
-import java.util.Collection;
-
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Token;
 
 @SuppressWarnings("unused")
 public class NelumboTestBase {
@@ -75,40 +68,4 @@ public class NelumboTestBase {
         assertEquals(expectedResult, queryResult);
     }
 
-    public static void printKnowledgeBase() {
-        if (Boolean.getBoolean("VERBOSE_TESTS")) {
-            KnowledgeBase.CURRENT.get().print(System.err);
-        }
-    }
-
-    public static void printTokens(String msg, Collection<Token> tokens) {
-        if (Boolean.getBoolean("VERBOSE_TESTS")) {
-            System.out.println(msg + ":");
-            for (Token token : tokens) {
-                System.out.println("    Token: " + token);
-            }
-        }
-    }
-
-    public static void printResults(List<Node> roots) {
-        if (Boolean.getBoolean("VERBOSE_TESTS")) {
-            for (Node root : roots) {
-                if (root.type().equals(Type.RESULT)) {
-                    System.out.println(root.toString(1));
-                }
-            }
-        }
-    }
-
-    public static void printNode(String msg, List<Node> roots) {
-        if (Boolean.getBoolean("VERBOSE_TESTS")) {
-            System.out.println(msg + ":");
-            System.err.println("\u001B[42m" + " ".repeat(80) + "\u001B[0m");
-            for (Node root : roots) {
-                System.out.println("  - " + root.toString());
-                printTokens("===tokens===", Arrays.asList(root.tokens()));
-                System.err.println("\u001B[42m" + " ".repeat(80) + "\u001B[0m");
-            }
-        }
-    }
 }

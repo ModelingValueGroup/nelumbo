@@ -23,12 +23,16 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -64,7 +68,7 @@ public class NelumboTest extends NelumboTestBase {
     public void familyTest() {
         run(() -> {
             try {
-                printResults(Parser.parse(NelumboTest.class, "familyTest.nl"));
+                U.printResults(Parser.parse(NelumboTest.class, "familyTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -77,7 +81,7 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             try {
                 Parser.parse(Integer.class);
-                printResults(Parser.parse(NelumboTest.class, "integersTest.nl"));
+                U.printResults(Parser.parse(NelumboTest.class, "integersTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -91,7 +95,7 @@ public class NelumboTest extends NelumboTestBase {
             try {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);  // ?
                 Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
-                printResults(Parser.parse(NelumboTest.class, "stringsTest.nl"));
+                U.printResults(Parser.parse(NelumboTest.class, "stringsTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -104,7 +108,7 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             try {
                 Parser.parse(Integer.class);
-                printResults(Parser.parse(NelumboTest.class, "fibonacciTest.nl"));
+                U.printResults(Parser.parse(NelumboTest.class, "fibonacciTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -116,20 +120,32 @@ public class NelumboTest extends NelumboTestBase {
     public void tokenSplitTest() {
         run(() -> {
             try {
-                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);  // ?
-                String nl = """
-                            ? -4=-(2+2)
-                            """;
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
+                String nl = "? -4=-(2+2)";
 
                 LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.tokenSplitTest", true).tokenize();
                 //printTokens("before-parse", tokens);
-                assertEquals(11, tokens.size(), "wrong number of tokens returned by tokenize()");
+                assertEquals(10, tokens.size(), "wrong number of tokens returned by tokenize()");
+                assertEquals("?, ,-,4,=-,(,2,+,2,)", // why does the ? appear at the end?
+                             tokens.stream().map(Token::text).collect(Collectors.joining(",")), //
+                             "token texts before-parse not as expected");
 
                 List<Node> result = new Parser(tokens).parse();
                 //printTokens("after-parse", tokens);
-                assertEquals(12, tokens.size(), "wrong number of tokens after parse()");
+                assertEquals(11, tokens.size(), "wrong number of tokens after parse()");
+                assertEquals("?, ,-,4,=,-,(,2,+,2,)", // why does the ? appear at the end?
+                             tokens.stream().map(Token::text).collect(Collectors.joining(",")), //
+                             "token texts after-parse not as expected");
+                assertEquals(1, result.size(), "wrong number of result nodes");
 
-                printNode("all result nodes", result);
+                assertEquals("?,-,4,=,-,2,+,2",
+                             Arrays.stream(result.first().tokens()).map(Token::text).collect(Collectors.joining(",")), //
+                             "result tokens text not as expected");
+                assertEquals("OPERATOR,OPERATOR,NUMBER,OPERATOR,OPERATOR,NUMBER,OPERATOR,NUMBER", //
+                             Arrays.stream(result.first().tokens()).map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
+                             "result tokens type not as expected");
+
+                U.printNode("all result nodes", result);
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -140,16 +156,20 @@ public class NelumboTest extends NelumboTestBase {
     @Test
     public void research() {
         run(() -> {
+            KnowledgeBase.CURRENT.get().noInfer(true);
             try {
                 //String nl = "<Predicate> p";
                 String nl = """
+                            <TOM> :: <String>
+                            <Predicate> ::= <TOM> = <TOM> #66
                             <Predicate> p
                             ? p=true""";
 
                 LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.research", true).tokenize();
-                List<Node> result = new Parser(tokens).parse();
+                List<Node>        result = new Parser(tokens).parse();
 
-                printNode("all result nodes", result);
+                U.printNode("all result nodes", result);
+                U.printKnowledgeBase("KNOWLEDGE-BASE", true);
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);

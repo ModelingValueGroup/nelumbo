@@ -251,4 +251,22 @@ public class Type extends Node {
         return clss instanceof Class && ((Class<?>) clss).isAssignableFrom(type);
     }
 
+    /**
+     * only for tracing purposes
+     *
+     * @return a string representing where this type was declared
+     */
+    public String source() {
+        if (Type.predefined().contains(this)) {
+            return "pre";
+        }
+        if (get(0) instanceof TokenType) {
+            return "token-type";
+        }
+        Token[] tokens = tokens();
+        if (0 < tokens.length) {
+            return tokens[0].fileName();
+        }
+        return "????";
+    }
 }
