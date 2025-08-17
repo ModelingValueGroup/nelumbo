@@ -280,8 +280,11 @@ public final class Parser {
     private void unconsume(Token t) {
         if (t != null) {
             Token un = iterator.previous();
+            while (un != null && un.isCommentOrHspace()) {
+                un = iterator.previous();
+            }
             if (un != t) {
-                System.err.println("WARNING: unconsume did not find the right token: " + un + " instaed of " + t);
+                System.err.println("WARNING: unconsume did not find the right token: found " + un + " instead of " + t);
             }
         }
     }

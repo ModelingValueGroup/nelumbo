@@ -834,7 +834,7 @@ public final class KnowledgeBase {
     }
 
     public void print(PrintStream stream, boolean withTokens) {
-        stream.println("    types:");
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "types", U.Colors.code(0));
         for (Entry<String, Type> e : types().sortedBy(e -> (Type.predefined().contains(e.getValue()) || e.getValue().get(0) instanceof TokenType ? "0" : "1") + e.getValue().name())) {
             Type   type   = e.getValue();
             String supers = type.supers().isEmpty() ? "" : ":: " + type.supers().map(Type::toString).collect(Collectors.joining(", "));
@@ -845,7 +845,7 @@ public final class KnowledgeBase {
                 }
             }
         }
-        stream.println("    functors:");
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "functors", U.Colors.code(0));
         for (Functor e : functors()) {
             stream.printf("        %-20s ::= %s%n", e.resultType(), e);
             if (withTokens) {
@@ -854,7 +854,7 @@ public final class KnowledgeBase {
                 }
             }
         }
-        stream.println("    variables:");
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "variables", U.Colors.code(0));
         for (Entry<String, Variable> e : variables()) {
             Variable var = e.getValue();
             stream.println("        " + var.type() + " " + var.name());
@@ -864,7 +864,7 @@ public final class KnowledgeBase {
                 }
             }
         }
-        stream.println("    rules:");
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "rules", U.Colors.code(0));
         Set<Rule> rules = rules().flatMap(Entry::getValue).asSet();
         for (Rule r : rules) {
             stream.println("        " + r);
@@ -874,7 +874,7 @@ public final class KnowledgeBase {
                 }
             }
         }
-        stream.println("    facts:");
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "facts", U.Colors.code(0));
         for (Entry<Predicate, InferResult> e : facts()) {
             if (e.getValue().isTrueCC()) {
                 stream.println("        " + e.getKey());

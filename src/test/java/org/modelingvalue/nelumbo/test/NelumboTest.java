@@ -161,9 +161,9 @@ public class NelumboTest extends NelumboTestBase {
                 //String nl = "<Predicate> p";
                 String nl = """
                             <TOM> :: <String>
-                            <Predicate> ::= <TOM> = <TOM> #66
-                            <Predicate> p
-                            ? p=true""";
+                            //<Predicate> ::= <TOM> = <TOM> #66
+                            //<Predicate> p
+                            //? p=true""";
 
                 LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.research", true).tokenize();
                 List<Node>        result = new Parser(tokens).parse();
