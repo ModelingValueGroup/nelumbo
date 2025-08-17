@@ -117,9 +117,8 @@ public final class Parser {
         Node    left;
         if (expected.isList()) {
             Type  elemType = expected.element();
-            Token start    = peek();
             left = new ListNode(Token.EMPTY, elemType);
-            if (!start.type().end()) {
+            if (!peek().type().end()) {
                 do
                 {
                     Node node = parseNode(precedence, elemType);

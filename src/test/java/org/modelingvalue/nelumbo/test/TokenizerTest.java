@@ -108,7 +108,25 @@ public class TokenizerTest extends NelumboTestBase {
     }
 
     @Test
-    public void tokenizerCommentTest() throws ParseException {
+    public void tokenizerComment1Test() throws ParseException {
+        String example = "/* unterminated comment";
+
+        LinkedList<Token> tokens        = new Tokenizer(example, "tokenizerCommentTest").tokenize();
+        LinkedList<Token> all           = new Tokenizer(example, "tokenizerCommentTest.all", true).tokenize();
+
+        U.printTokens("tokens", tokens);
+        U.printTokens("all", all);
+
+        assertEquals(0, tokens.size(), "wrong number of tokens returned by tokenize()");
+        assertEquals(1, all.size(), "wrong number of tokens returned by tokenize(all)");
+
+        assertEquals(TokenType.IN_LINE_COMMENT, all.get(0).type());
+        assertEquals(0, all.get(0).line());
+        assertEquals(0, all.get(0).position());
+    }
+
+    @Test
+    public void tokenizerComment2Test() throws ParseException {
         String example = "<a/*a*/>•a";
 
         LinkedList<Token> tokens        = new Tokenizer(example, "tokenizerCommentTest").tokenize();

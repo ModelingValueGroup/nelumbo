@@ -124,14 +124,14 @@ public class NelumboTest extends NelumboTestBase {
                 String nl = "? -4=-(2+2)";
 
                 LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.tokenSplitTest", true).tokenize();
-                //printTokens("before-parse", tokens);
+                //U.printTokens("before-parse", tokens);
                 assertEquals(10, tokens.size(), "wrong number of tokens returned by tokenize()");
                 assertEquals("?, ,-,4,=-,(,2,+,2,)", // why does the ? appear at the end?
                              tokens.stream().map(Token::text).collect(Collectors.joining(",")), //
                              "token texts before-parse not as expected");
 
                 List<Node> result = new Parser(tokens).parse();
-                //printTokens("after-parse", tokens);
+                //U.printTokens("after-parse", tokens);
                 assertEquals(11, tokens.size(), "wrong number of tokens after parse()");
                 assertEquals("?, ,-,4,=,-,(,2,+,2,)", // why does the ? appear at the end?
                              tokens.stream().map(Token::text).collect(Collectors.joining(",")), //
@@ -158,14 +158,16 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             KnowledgeBase.CURRENT.get().noInfer(true);
             try {
-                //String nl = "<Predicate> p";
+                //Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
                 String nl = """
-                            <TOM> :: <String>
-                            //<Predicate> ::= <TOM> = <TOM> #66
+                            <Predicate> ::= <String> ~~~~~~~~~~~~~~~~~~~ <String> #66
+                            //<TOM> :: <String>
                             //<Predicate> p
                             //? p=true""";
 
                 LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.research", true).tokenize();
+                U.printTokens("after-parse", tokens);
+
                 List<Node>        result = new Parser(tokens).parse();
 
                 U.printNode("all result nodes", result);

@@ -22,6 +22,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.util.Objects;
 
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
 
 @SuppressWarnings("ClassCanBeRecord")
@@ -54,12 +55,16 @@ public class Token {
         return new Token[]{this};
     }
 
-    public static Token[] concat(Token token1, Token[] tokens2) {
-        return concat(token1.singleton(), tokens2);
+    public static Token[] concat(Node n1, Token t, Node n2) {
+        return concat(concat(n1.tokens(), t.singleton()), n2.tokens());
     }
 
-    public static Token[] concat(Token[] tokens1, Token token2) {
-        return concat(tokens1, token2.singleton());
+    public static Token[] concat(Token t, Node n) {
+        return concat(t.singleton(), n.tokens());
+    }
+
+    public static Token[] concat(Node n, Token t) {
+        return concat(n.tokens(), t.singleton());
     }
 
     public static Token[] concat(Token[] tokens1, Token[] tokens2) {

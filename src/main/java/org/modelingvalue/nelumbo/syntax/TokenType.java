@@ -32,16 +32,16 @@ public enum TokenType {
     LBRACE("\\{", true, false, false), //
     RBRACE("\\}", false, true, false), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, false, false), //
-    NUMBER("[0-9]+(#[0-9a-z]+)?", false, false, false), //
+    NUMBER("[0-9]+(#[0-9a-zA-Z]+)?", false, false, false), //
     DECIMAL("[0-9]+\\.[0-9]+", false, false, false), //
-    QNAME("[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)+", false, false, false), //
-    NAME("[a-zA-Z_][a-zA-Z0-9_]*", false, false, false), //
-    TYPE("<[a-zA-Z_][a-zA-Z0-9_]*([\\*|\\+])?>", false, false, false), //
-    OPERATOR("[:\\=\\-\\*\\+\\.<>/!?@#$%^&|]+", true, false, false), //
+    QNAME("[a-zA-Z_][0-9a-zA-Z_]*(\\.[a-zA-Z_][0-9a-zA-Z_]*)+", false, false, false), //
+    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, false, false), //
+    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*([*|+])?>", false, false, false), //
+    OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", true, false, false), //
     HSPACE("\\h+", false, false, false), //
     NEWLINE("\\v", false, true, false), //
     END_LINE_COMMENT("//[^\\v]*", false, false, true), //
-    IN_LINE_COMMENT("/\\*.*\\*/", false, false, true), //
+    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)",false,false,true), //
     ERROR(".", false, false, false),//
     ;
 

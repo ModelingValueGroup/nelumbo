@@ -222,8 +222,9 @@ public final class KnowledgeBase {
                 return new Terminal(TYPE_NAME, t.singleton(), name);
             }));
             register(InfixParselet.of(Type.ROOT, TYPE_NAME, "::", Type.TYPE().list(), 10, (l, t, r) -> {
-                String name = l.getVal(0);
-                Type   type = new Type(Token.concat(t, l.tokens()), name, ((ListNode) r).elements());
+                String   name  = l.getVal(0);
+                ListNode rList = (ListNode) r;
+                Type     type  = new Type(Token.concat(l, t, r), name, rList.elements());
                 KnowledgeBase.CURRENT.get().addType(type);
                 return type;
             }));
@@ -232,8 +233,8 @@ public final class KnowledgeBase {
             register(InfixParselet.of(Type.ROOT, Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
                 ListNode      list    = new ListNode(Token.EMPTY, Type.FUNCTOR);
                 KnowledgeBase current = KnowledgeBase.CURRENT.get();
-                for (Node s : ((ListNode) r).elements()) {
-                    list = new ListNode(Token.EMPTY, list, current.createFunctor((Type) l, s.tokens(), s));
+                for (Node rr : ((ListNode) r).elements()) {
+                    list = new ListNode(Token.EMPTY, list, current.createFunctor((Type) l, Token.concat(l, t, rr), rr));
                 }
                 return list;
             }));
@@ -245,34 +246,34 @@ public final class KnowledgeBase {
             }));
             register(AtomicParselet.of(SIGNATURE, TokenType.TYPE, t -> {
                 Type type = type(t);
-                return type.tokenType() != null ? new Node(SIGNATURE, t.singleton(), type) : type;
+                return type.tokenType() != null ? new Node(SIGNATURE, t.singleton(), type) : type.setTokens(t.singleton());
             }));
             register(PrefixParselet.of(SIGNATURE, TokenType.OPERATOR, TokenType.TYPE, Type.TYPE(), 50, (t, r) -> {
-                return new Node(SIGNATURE, t.singleton(), t.text(), r);
+                return new Node(SIGNATURE, Token.concat(t, r), t.text(), r);
             }));
             register(PrefixParselet.of(SIGNATURE, TokenType.NAME, TokenType.TYPE, Type.TYPE(), 50, (t, r) -> {
-                return new Node(SIGNATURE, t.singleton(), t.text(), r);
+                return new Node(SIGNATURE, Token.concat(t, r), t.text(), r);
             }));
             register(PostfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.OPERATOR, 50, (l, t) -> {
-                return new Node(SIGNATURE, t.singleton(), l, t.text());
+                return new Node(SIGNATURE, Token.concat(l, t), l, t.text());
             }));
             register(PostfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.NAME, 50, (l, t) -> {
-                return new Node(SIGNATURE, t.singleton(), l, t.text());
+                return new Node(SIGNATURE, Token.concat(l, t), l, t.text());
             }));
             register(InfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.OPERATOR, TokenType.TYPE, Type.TYPE(), 50, (l, t, r) -> {
-                return new Node(SIGNATURE, t.singleton(), l, t.text(), r);
+                return new Node(SIGNATURE, Token.concat(l, t, r), l, t.text(), r);
             }));
             register(InfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.NAME, TokenType.TYPE, Type.TYPE(), 50, (l, t, r) -> {
-                return new Node(SIGNATURE, t.singleton(), l, t.text(), r);
+                return new Node(SIGNATURE, Token.concat(l, t, r), l, t.text(), r);
             }));
             register(InfixParselet.of(SIGNATURE, "#", TokenType.NUMBER, PRECEDENCE, 50, (l, t, r) -> {
-                return new Node(SIGNATURE, Token.concat(t, r.tokens()), l, r.get(0));
+                return new Node(SIGNATURE, Token.concat(l, t, r), l, r.get(0));
             }));
             register(AtomicParselet.of(PRECEDENCE, TokenType.NUMBER, t -> {
                 return new Node(PRECEDENCE, t.singleton(), Integer.parseInt(t.text()));
             }));
             register(InfixParselet.of(SIGNATURE, "@", TokenType.QNAME, NATIVE, 50, (l, t, r) -> {
-                return new Node(SIGNATURE, Token.concat(t, r.tokens()), l, r.get(0));
+                return new Node(SIGNATURE, Token.concat(l, t, r), l, r.get(0));
             }));
             register(AtomicParselet.of(NATIVE, TokenType.QNAME, t -> {
                 try {
@@ -311,13 +312,13 @@ public final class KnowledgeBase {
 
             // Expectations
             register(InfixParselet.of(Type.ROOT, Type.RESULT, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
-                return new Node(FACTS, t.singleton(), l, ((ListNode) r).elements());
+                return new Node(FACTS, Token.concat(l, t, r), l, ((ListNode) r).elements());
             }));
             register(InfixParselet.of(Type.ROOT, FACTS, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
-                return new Node(FALSEHOODS, l.tokens(), l.get(0), l.get(1), ((ListNode) r).elements());
+                return new Node(FALSEHOODS, Token.concat(l, t, r), l.get(0), l.get(1), ((ListNode) r).elements());
             }));
             register(PostfixParselet.of(Type.ROOT, FACTS, "]", 8, (l, t) -> {
-                return l.setTokens(Token.concat(l.tokens(), t));
+                return l.setTokens(Token.concat(l, t));
             }));
             register(PostfixParselet.of(Type.ROOT, FALSEHOODS, "]", 8, (l, t) -> {
                 Set<Predicate> facts         = ((List<Predicate>) l.get(1)).asSet();
@@ -335,7 +336,7 @@ public final class KnowledgeBase {
                 InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
                 InferResult result   = l.getVal(0, 1);
                 if (!result.equals(expected) && !result.toString().equals(expected.toString())) {
-                    throw new ParseException("Expected result " + expected + ", found " + result, Token.concat(l.tokens(), t));
+                    throw new ParseException("Expected result " + expected + ", found " + result, Token.concat(l, t));
                 }
                 return l.getVal(0);
             }));
@@ -348,7 +349,7 @@ public final class KnowledgeBase {
                 Predicate predicate = (Predicate) r;
                 predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
                 InferResult result = predicate.infer();
-                return new Node(Type.RESULT, Token.concat(t, r.tokens()), predicate, result);
+                return new Node(Type.RESULT, Token.concat(t, r), predicate, result);
             }));
 
             try {
@@ -391,7 +392,7 @@ public final class KnowledgeBase {
     private static Type type(Token t) throws ParseException {
         String name = t.text();
         name = name.substring(1, name.length() - 1);
-        if (name.endsWith("*") || name.endsWith("+")) {
+        if (name.endsWith("*") || name.endsWith("+")) { // TODO: @WIM the TokenType also includes '|', should that not be checked here? What does */+ do?
             name = name.substring(0, name.length() - 1);
             Type type = type(name);
             if (type != null) {
@@ -466,7 +467,7 @@ public final class KnowledgeBase {
             Functor    functor = new Functor(tokens, rel ? Type.PREDICATE : type, name, args);
             addFunctor(functor, tokens, rel ? null : constructor);
             register(CallWithArgs.of(name, //
-                                     (tt, ll) -> createNode(predicate, Token.concat(ll.last().tokens(), tt), rel ? null : constructor, functor, ll.toArray()), //
+                                     (tt, ll) -> createNode(predicate, Token.concat(ll.last(), tt), rel ? null : constructor, functor, ll.toArray()), //
                                      args.toArray(Type[]::new) //
                                     ));
             if (rel) {
@@ -474,7 +475,7 @@ public final class KnowledgeBase {
                 Functor    relFunctor = new Functor(tokens, type, name, litArgs);
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
                 addFunctor(relFunctor, tokens, constructor);
-                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, Token.concat(ll.last().tokens(), tt), constructor, relFunctor, ll.toArray()), //
+                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, Token.concat(ll.last(), tt), constructor, relFunctor, ll.toArray()), //
                                          litArgs.toArray(Type[]::new)));
                 Object[] nodVars = new Variable[args.size()];
                 Object[] litVars = new Variable[args.size()];
@@ -502,14 +503,14 @@ public final class KnowledgeBase {
             boolean rel     = relation && !pre.isLiteral();
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> n.toString(0) + oper, precedence, pre);
             addFunctor(functor, tokens, rel ? null : constructor);
-            register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(predicate, Token.concat(ll.tokens(), tt), rel ? null : constructor, functor, ll)));
+            register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(predicate, Token.concat(ll, tt), rel ? null : constructor, functor, ll)));
             if (rel) {
                 Type    litPre     = pre.literal();
                 Functor relFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper, precedence, litPre);
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
                 addFunctor(relFunctor, tokens, constructor);
                 //noinspection ConstantValue (predicate is always true)
-                register(PostfixParselet.of(litPre, oper, precedence, (ll, tt) -> createNode(predicate, Token.concat(ll.tokens(), tt), constructor, relFunctor, ll)));
+                register(PostfixParselet.of(litPre, oper, precedence, (ll, tt) -> createNode(predicate, Token.concat(ll, tt), constructor, relFunctor, ll)));
                 Variable  nodVar     = new Variable(pre.tokens(), pre, "n");
                 Variable  litVar     = new Variable(litPre.tokens(), litPre, "l");
                 Predicate conclusion = new Predicate(functor, tokens, nodVar);
@@ -530,14 +531,14 @@ public final class KnowledgeBase {
             boolean rel     = relation && !post.isLiteral();
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> oper + n.toString(0), precedence, post);
             addFunctor(functor, tokens, rel ? null : constructor);
-            register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(predicate, Token.concat(tt, rr.tokens()), rel ? null : constructor, functor, rr)));
+            register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(predicate, Token.concat(tt, rr), rel ? null : constructor, functor, rr)));
             if (rel) {
                 Type    litPost    = post.literal();
                 Functor relFunctor = new Functor(tokens, type, oper, n -> oper + n.toString(0), precedence, litPost);
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
                 addFunctor(relFunctor, tokens, constructor);
                 //noinspection ConstantValue (predicate is always true)
-                register(PrefixParselet.of(oper, litPost, precedence, (tt, rr) -> createNode(predicate, Token.concat(tt, rr.tokens()), constructor, relFunctor, rr)));
+                register(PrefixParselet.of(oper, litPost, precedence, (tt, rr) -> createNode(predicate, Token.concat(tt, rr), constructor, relFunctor, rr)));
                 Variable  nodVar     = new Variable(post.tokens(), post, "n");
                 Variable  litVar     = new Variable(litPost.tokens(), litPost, "l");
                 Predicate conclusion = new Predicate(functor, tokens, nodVar);
@@ -558,7 +559,7 @@ public final class KnowledgeBase {
             boolean rel     = relation && !pre.isLiteral() && !post.isLiteral();
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> n.toString(0) + oper + n.toString(1), precedence, pre, post);
             addFunctor(functor, tokens, rel ? null : constructor);
-            register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), Token.concat(tt, rr.tokens())), rel ? null : constructor, functor, ll, rr)));
+            register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), Token.concat(tt, rr)), rel ? null : constructor, functor, ll, rr)));
             if (rel) {
                 Type    litPre     = pre.literal();
                 Type    litPost    = post.literal();
@@ -566,7 +567,7 @@ public final class KnowledgeBase {
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
                 addFunctor(relFunctor, tokens, constructor);
                 //noinspection ConstantValue (predicate is always true)
-                register(InfixParselet.of(litPre, oper, litPost, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), Token.concat(tt, rr.tokens())), constructor, relFunctor, ll, rr)));
+                register(InfixParselet.of(litPre, oper, litPost, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), Token.concat(tt, rr)), constructor, relFunctor, ll, rr)));
                 Variable  nodVar0    = new Variable(pre.tokens(), pre, "n1");
                 Variable  litVar0    = new Variable(litPre.tokens(), litPre, "l1");
                 Variable  nodVar1    = new Variable(post.tokens(), post, "n2");
