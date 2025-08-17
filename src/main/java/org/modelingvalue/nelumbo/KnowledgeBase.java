@@ -239,7 +239,7 @@ public final class KnowledgeBase {
                 return list;
             }));
             register(CallWithArgs.of(SIGNATURE, TokenType.NAME, (t, l) -> {
-                return new Node(SIGNATURE, t.singleton(), t.text(), l);
+                return new Node(SIGNATURE, Token.concat(t, l), t.text(), l);
             }, Type.TYPE().list()));
             register(AtomicParselet.of(SIGNATURE, TokenType.NAME, t -> {
                 return new Node(SIGNATURE, t.singleton(), t.text());
@@ -304,10 +304,10 @@ public final class KnowledgeBase {
 
             // Rules
             register(InfixParselet.of(Type.ROOT, Type.PREDICATE, "<==", Type.PREDICATE.list(), 10, (l, t, r) -> {
-                return rule(l, t, r, false);
+                return rule(l, Token.concat(l, t), (ListNode) r, false);
             }));
             register(InfixParselet.of(Type.ROOT, Type.PREDICATE, "<==>", Type.PREDICATE.list(), 10, (l, t, r) -> {
-                return rule(l, t, r, true);
+                return rule(l, Token.concat(l, t), (ListNode) r, true);
             }));
 
             // Expectations
@@ -362,12 +362,12 @@ public final class KnowledgeBase {
     }
 
     @SuppressWarnings("unused")
-    private static Node rule(Node l, Token t, Node r, boolean symmetric) throws ParseException {
+    private static Node rule(Node l, Token[] tokens, ListNode r, boolean symmetric) throws ParseException {
         ListNode              list     = new ListNode(Token.EMPTY, Type.RULE);
         KnowledgeBase         current  = KnowledgeBase.CURRENT.get();
         Predicate             cons     = (Predicate) l;
         Map<Variable, Object> consVars = cons.variables();
-        for (Node c : ((ListNode) r).elements()) {
+        for (Node c : r.elements()) {
             Predicate             cond     = (Predicate) c;
             Map<Variable, Object> condVars = cond.variables();
             Functor               rel      = current.relations.get().get(cons.functor());
@@ -382,7 +382,7 @@ public final class KnowledgeBase {
             } else if (!local.isEmpty()) {
                 cond = cond.setVariables(Predicate.literals(local));
             }
-            Rule rule = new Rule(c.tokens(), cons, cond, symmetric);
+            Rule rule = new Rule(Token.concat(tokens, c.tokens()), cons, cond, symmetric);
             current.addRule(rule);
             list = new ListNode(Token.EMPTY, list, rule);
         }
@@ -467,7 +467,7 @@ public final class KnowledgeBase {
             Functor    functor = new Functor(tokens, rel ? Type.PREDICATE : type, name, args);
             addFunctor(functor, tokens, rel ? null : constructor);
             register(CallWithArgs.of(name, //
-                                     (tt, ll) -> createNode(predicate, Token.concat(ll.last(), tt), rel ? null : constructor, functor, ll.toArray()), //
+                                     (tt, ll) -> createNode(predicate, Token.concat(tt, ll), rel ? null : constructor, functor, ll.toArray()), //
                                      args.toArray(Type[]::new) //
                                     ));
             if (rel) {
@@ -475,7 +475,7 @@ public final class KnowledgeBase {
                 Functor    relFunctor = new Functor(tokens, type, name, litArgs);
                 relations.updateAndGet(map -> map.put(functor, relFunctor));
                 addFunctor(relFunctor, tokens, constructor);
-                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, Token.concat(ll.last(), tt), constructor, relFunctor, ll.toArray()), //
+                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, Token.concat(tt, ll), constructor, relFunctor, ll.toArray()), //
                                          litArgs.toArray(Type[]::new)));
                 Object[] nodVars = new Variable[args.size()];
                 Object[] litVars = new Variable[args.size()];
@@ -973,22 +973,22 @@ public final class KnowledgeBase {
     public List<CallWithArgs> callsWithArgs(Type expected, Token token) {
         String                          text   = token.text();
         TokenType                       type   = token.type();
-        Map<Object, List<CallWithArgs>> swaMap = callsWithArgs.get();
+        Map<Object, List<CallWithArgs>> cwaMap = callsWithArgs.get();
         List<CallWithArgs>              list;
 
-        list = swaMap.get(Pair.of(expected, text));
+        list = cwaMap.get(Pair.of(expected, text));
         if (list != null) {
             return list;
         }
-        list = swaMap.get(Pair.of(expected, type));
+        list = cwaMap.get(Pair.of(expected, type));
         if (list != null) {
             return list;
         }
-        list = swaMap.get(text);
+        list = cwaMap.get(text);
         if (list != null) {
             return list;
         }
-        return swaMap.get(type);
+        return cwaMap.get(type);
     }
 
     public AtomicParselet prefix(Type expected, Token token1, Token token2) {

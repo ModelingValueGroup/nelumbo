@@ -34,8 +34,9 @@ public class ParenParselet extends AtomicParselet {
     @Override
     public Node parse(Type expected, Parser parser, Token token) throws ParseException {
         Node node = parser.parseNode(0, expected);
-        parser.consume(TokenType.RPAREN);
-        return node;
+        Token rparen = parser.consume(TokenType.RPAREN);
+        return node.setTokens(Token.concat(token, node, rparen));
     }
+
 
 }

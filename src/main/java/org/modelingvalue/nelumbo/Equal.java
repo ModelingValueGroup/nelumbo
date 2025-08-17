@@ -20,11 +20,13 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
 import java.util.Objects;
 
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class Equal extends Predicate {
+    @Serial
     private static final long serialVersionUID = -5516286818572134367L;
 
     public Equal(Functor functor, Token[] tokens, Object[] args) {
@@ -56,7 +58,7 @@ public class Equal extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         boolean[] complete = new boolean[]{true};
-        Node eq = eq(left(), right(), complete);
+        Node      eq       = eq(left(), right(), complete);
         if (eq == null) {
             return complete[0] ? falsehoodCC() : falsehoodCI();
         } else {
@@ -70,11 +72,11 @@ public class Equal extends Predicate {
             return left;
         } else if (!(left instanceof Type) && right instanceof Type) {
             complete[0] = false;
-            return ((Type) right).isAssignableFrom(((Node) left).type()) ? left : null;
+            return ((Type) right).isAssignableFrom((left).type()) ? left : null;
         } else if (left instanceof Type && !(right instanceof Type)) {
             complete[0] = false;
-            return ((Type) left).isAssignableFrom(((Node) right).type()) ? right : null;
-        } else if (left instanceof Type && right instanceof Type) {
+            return ((Type) left).isAssignableFrom((right).type()) ? right : null;
+        } else if (left instanceof Type && right instanceof Type) { // right always a Type here!
             return Objects.equals(left, right) ? left : null;
         } else if (left.length() != right.length()) {
             return null;
@@ -82,7 +84,7 @@ public class Equal extends Predicate {
         Object[] array = null;
         for (int i = 0; i < left.length(); i++) {
             Object leftVal = left.get(i);
-            Object eq = eq(leftVal, right.get(i), complete);
+            Object eq      = eq(leftVal, right.get(i), complete);
             if (eq == null) {
                 return null;
             } else if (!Objects.equals(eq, leftVal)) {

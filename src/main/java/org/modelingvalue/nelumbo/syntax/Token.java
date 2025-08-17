@@ -21,7 +21,9 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
 
@@ -51,12 +53,24 @@ public class Token {
         this.fileName = fileName;
     }
 
+
     public Token[] singleton() {
         return new Token[]{this};
     }
 
+    public static Token[] concat(Token t1, Node n, Token t2) {
+        return concat(t1.singleton(),n.tokens(),t2.singleton());
+    }
+
+    public static Token[] concat(Token t1, Token t2, List<Node> l, Token t3) {
+        return concat(t1.singleton(), t2.singleton(), toTokenArray(l), t3.singleton());
+    }
+    public static Token[] concat(Token t, List<Node> l) {
+        return concat(t.singleton(), toTokenArray(l));
+    }
+
     public static Token[] concat(Node n1, Token t, Node n2) {
-        return concat(concat(n1.tokens(), t.singleton()), n2.tokens());
+        return concat(n1.tokens(), t.singleton(), n2.tokens());
     }
 
     public static Token[] concat(Token t, Node n) {
@@ -67,10 +81,19 @@ public class Token {
         return concat(n.tokens(), t.singleton());
     }
 
-    public static Token[] concat(Token[] tokens1, Token[] tokens2) {
-        Token[] result = new Token[tokens1.length + tokens2.length];
-        System.arraycopy(tokens1, 0, result, 0, tokens1.length);
-        System.arraycopy(tokens2, 0, result, tokens1.length, tokens2.length);
+    private static Token[] toTokenArray(List<Node> l) {
+        return l.flatMap(n -> Stream.of(n.tokens())).toArray(Token[]::new);
+    }
+
+    public static Token[] concat(Token[]... all) {
+        int     totalLength = Stream.of(all).mapToInt(t -> t.length).reduce(0, Integer::sum);
+        Token[] result      = new Token[totalLength];
+        int     i           = 0;
+        for (Token[] tokens : all) {
+            System.arraycopy(tokens, 0, result, i, tokens.length);
+            i += tokens.length;
+        }
+        assert i == totalLength;
         return result;
     }
 

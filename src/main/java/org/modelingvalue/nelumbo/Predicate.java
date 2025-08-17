@@ -244,15 +244,17 @@ public class Predicate extends Node {
         return (Predicate) super.set(to, get(from));
     }
 
-    protected final Predicate set(int i, Predicate... a) {
-        i += start;
-        Object[] predArray = toArray();
+    protected final Predicate set(int from, Predicate... a) {
         Object[] declArray = declaration.toArray();
+        int i = from + declaration.start;
         for (int x = 0; x < a.length; x++) {
-            predArray[i + x] = a[x];
             declArray[i + x] = a[x].declaration;
         }
-        return struct(predArray, start, declaration.struct(declArray, start, null));
+        Predicate newDeclaration = declaration.struct(declArray, declaration.start, null);
+
+        Object[] predArray = toArray();
+        System.arraycopy(a, 0, predArray, from + start , a.length);
+        return struct(predArray, start, newDeclaration);
     }
 
     public final InferResult unknown() {

@@ -116,7 +116,7 @@ public final class Parser {
         Token[] t12 = new Token[2];
         Node    left;
         if (expected.isList()) {
-            Type  elemType = expected.element();
+            Type elemType = expected.element();
             left = new ListNode(Token.EMPTY, elemType);
             if (!peek().type().end()) {
                 do
@@ -230,12 +230,11 @@ public final class Parser {
                 }
                 if (expected == Type.PREDICATE && !type.isLiteral()) {
                     postfix = knowledgeBase.postfix(expected, type.literal(), token1, token2);
+                    if (postfix != null) {
+                        return postfix;
+                    }
                 }
-                if (postfix != null) {
-                    return postfix;
-                } else {
-                    post = post.addAll(type.supers());
-                }
+                post = post.addAll(type.supers());
             }
         }
         return null;

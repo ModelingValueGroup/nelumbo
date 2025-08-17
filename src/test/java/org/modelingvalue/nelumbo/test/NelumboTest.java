@@ -138,10 +138,10 @@ public class NelumboTest extends NelumboTestBase {
                              "token texts after-parse not as expected");
                 assertEquals(1, result.size(), "wrong number of result nodes");
 
-                assertEquals("?,-,4,=,-,2,+,2",
+                assertEquals("?,-,4,=,-,(,2,+,2,)",
                              Arrays.stream(result.first().tokens()).map(Token::text).collect(Collectors.joining(",")), //
                              "result tokens text not as expected");
-                assertEquals("OPERATOR,OPERATOR,NUMBER,OPERATOR,OPERATOR,NUMBER,OPERATOR,NUMBER", //
+                assertEquals("OPERATOR,OPERATOR,NUMBER,OPERATOR,OPERATOR,LPAREN,NUMBER,OPERATOR,NUMBER,RPAREN", //
                              Arrays.stream(result.first().tokens()).map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
                              "result tokens type not as expected");
 
@@ -158,9 +158,11 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             KnowledgeBase.CURRENT.get().noInfer(true);
             try {
-                //Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
                 String nl = """
-                            <Predicate> ::= <String> ~~~~~~~~~~~~~~~~~~~ <String> #66
+                            <Relation>  ::= xx(<Integer>,<Integer>)
+                            true  <==>  xx(1,2),xx(2,3)
+                            //<Predicate> ::= <String> ~~~~~~~~~~~~~~~~~~~ <String> #66
                             //<TOM> :: <String>
                             //<Predicate> p
                             //? p=true""";
