@@ -1,6 +1,6 @@
 
-    <Relation> ::= fib(<Integer>,<Integer>)
-    <Integer>  ::= fib(<Integer>)
+    <Boolean> ::= fib(<Integer>,<Integer>)
+    <Integer> ::= fib(<Integer>)
 
     <Integer> a, b
 

@@ -1,19 +1,18 @@
 
-    <Person>    :: <Node>
-    <Male>      :: <Person>
-    <Female>    :: <Person>
+    <Person>   :: <Node>
+    <Male>     :: <Person>
+    <Female>   :: <Person>
 
-    <Relation>  ::= pc(<Person>,<Person>)   // parent-child
+    <Boolean>  ::= pc(<Person>,<Person>),  // parent-child
+                   ad(<Person>,<Person>)   // ancestor-descendant
 
-    <Predicate> ::= ad(<Person>,<Person>)   // ancestor-descendant
-
-    <Person>    ::= p(<Person>),   // parent
-                    c(<Person>),   // child
-                    a(<Person>),   // ancestor
-                    d(<Person>)    // descendant
+    <Person>   ::= p(<Person>),   // parent
+                   c(<Person>),   // child
+                   a(<Person>),   // ancestor
+                   d(<Person>)    // descendant
                     
-    <Female>    ::= m(<Person>)    // mother
-    <Male>      ::= f(<Person>)    // father
+    <Female>   ::= m(<Person>)    // mother
+    <Male>     ::= f(<Person>)    // father
 
     <Person> a, b, c
     <Male>   y

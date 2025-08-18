@@ -352,14 +352,14 @@ public final class KnowledgeBase {
         for (Node c : ((ListNode) r).elements()) {
             Predicate cond = (Predicate) c;
             Map<Variable, Object> condVars = cond.variables();
-            Functor rel = current.relations.get().get(cons.functor());
+            Functor bool = current.booleans.get().get(cons.functor());
             Map<Variable, Object> local = condVars.removeAllKey(consVars);
             if (symmetric && !local.isEmpty()) {
                 throw new ParseException("No local variables allowed in condition of a symmetric rule. Found: " + local.get(0).getKey().name(), local.get(0).getKey().tokens());
             }
-            if (rel != null) {
+            if (bool != null && symmetric) {
                 Map<Variable, Object> vars = Predicate.literals(condVars.putAll(consVars));
-                cons = cons.setFunctor(rel).setVariables(vars);
+                cons = cons.setFunctor(bool).setVariables(vars);
                 cond = cond.setVariables(vars);
             } else if (!local.isEmpty()) {
                 cond = cond.setVariables(Predicate.literals(local));
@@ -409,8 +409,8 @@ public final class KnowledgeBase {
         if (precedence != null) {
             sig = (Node) sig.get(0);
         }
-        boolean relation = Type.RELATION.isAssignableFrom(type);
-        boolean predicate = relation || Type.PREDICATE.isAssignableFrom(type);
+        boolean bool = Type.BOOLEAN.isAssignableFrom(type);
+        boolean predicate = bool || Type.PREDICATE.isAssignableFrom(type);
         if (sig.length() == 1 && sig.get(0) instanceof Type && ((Type) sig.get(0)).tokenType() != null) {
             // Literal
             if (precedence != null) {
@@ -446,17 +446,17 @@ public final class KnowledgeBase {
             }
             String name = (String) sig.get(0);
             List<Type> args = (List<Type>) sig.get(1);
-            boolean rel = relation && !args.isEmpty() && args.noneMatch(Type::isLiteral);
+            boolean rel = bool && !args.isEmpty() && args.noneMatch(Type::isLiteral);
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, name, args);
             addFunctor(functor, tokens, rel ? null : constructor);
             register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, tt.prepend(ll.last().tokens()), rel ? null : constructor, functor, ll.toArray()), //
                     args.toArray(i -> new Type[i])));
             if (rel) {
                 List<Type> litArgs = args.replaceAll(Type::literal);
-                Functor relFunctor = new Functor(tokens, type, name, litArgs);
-                relations.updateAndGet(map -> map.put(functor, relFunctor));
-                addFunctor(relFunctor, tokens, constructor);
-                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, tt.prepend(ll.last().tokens()), constructor, relFunctor, ll.toArray()), //
+                Functor boolFunctor = new Functor(tokens, type, name, litArgs);
+                booleans.updateAndGet(map -> map.put(functor, boolFunctor));
+                addFunctor(boolFunctor, tokens, constructor);
+                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, tt.prepend(ll.last().tokens()), constructor, boolFunctor, ll.toArray()), //
                         litArgs.toArray(i -> new Type[i])));
                 Object[] nodVars = new Variable[args.size()];
                 Object[] litVars = new Variable[args.size()];
@@ -465,7 +465,7 @@ public final class KnowledgeBase {
                     litVars[i] = new Variable(litArgs.get(i).tokens(), litArgs.get(i), "l" + (i + 1));
                 }
                 Predicate conclusion = new Predicate(functor, tokens, nodVars);
-                Predicate condition = (Predicate) createNode(true, tokens, constructor, relFunctor, litVars);
+                Predicate condition = (Predicate) createNode(true, tokens, constructor, boolFunctor, litVars);
                 for (int i = 0; i < args.size(); i++) {
                     Predicate eq = new Predicate(eqFunctor(), tokens, nodVars[i], litVars[i]);
                     condition = And.of(eq, condition);
@@ -482,21 +482,21 @@ public final class KnowledgeBase {
                 type = type.function();
             }
             Type pre = (Type) sig.get(0);
-            boolean rel = relation && !pre.isLiteral();
+            boolean rel = bool && !pre.isLiteral();
             String oper = (String) sig.get(1);
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> n.toString(0) + oper, precedence, pre);
             addFunctor(functor, tokens, rel ? null : constructor);
             register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(predicate, tt.prepend(ll.tokens()), rel ? null : constructor, functor, ll)));
             if (rel) {
                 Type litPre = pre.literal();
-                Functor relFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper, precedence, litPre);
-                relations.updateAndGet(map -> map.put(functor, relFunctor));
-                addFunctor(relFunctor, tokens, constructor);
-                register(PostfixParselet.of(litPre, oper, precedence, (ll, tt) -> createNode(predicate, tt.prepend(ll.tokens()), constructor, relFunctor, ll)));
+                Functor boolFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper, precedence, litPre);
+                booleans.updateAndGet(map -> map.put(functor, boolFunctor));
+                addFunctor(boolFunctor, tokens, constructor);
+                register(PostfixParselet.of(litPre, oper, precedence, (ll, tt) -> createNode(predicate, tt.prepend(ll.tokens()), constructor, boolFunctor, ll)));
                 Variable nodVar = new Variable(pre.tokens(), pre, "n");
                 Variable litVar = new Variable(litPre.tokens(), litPre, "l");
                 Predicate conclusion = new Predicate(functor, tokens, nodVar);
-                Predicate condition = (Predicate) createNode(true, tokens, constructor, relFunctor, litVar);
+                Predicate condition = (Predicate) createNode(true, tokens, constructor, boolFunctor, litVar);
                 Predicate eq = new Predicate(eqFunctor(), tokens, nodVar, litVar);
                 condition = And.of(eq, condition);
                 addRule(new Rule(tokens, conclusion, condition, false));
@@ -512,20 +512,20 @@ public final class KnowledgeBase {
             }
             String oper = (String) sig.get(0);
             Type post = (Type) sig.get(1);
-            boolean rel = relation && !post.isLiteral();
+            boolean rel = bool && !post.isLiteral();
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> oper + n.toString(0), precedence, post);
             addFunctor(functor, tokens, rel ? null : constructor);
             register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(predicate, tt.append(rr.tokens()), rel ? null : constructor, functor, rr)));
             if (rel) {
                 Type litPost = post.literal();
-                Functor relFunctor = new Functor(tokens, type, oper, n -> oper + n.toString(0), precedence, litPost);
-                relations.updateAndGet(map -> map.put(functor, relFunctor));
-                addFunctor(relFunctor, tokens, constructor);
-                register(PrefixParselet.of(oper, litPost, precedence, (tt, rr) -> createNode(predicate, tt.append(rr.tokens()), constructor, relFunctor, rr)));
+                Functor boolFunctor = new Functor(tokens, type, oper, n -> oper + n.toString(0), precedence, litPost);
+                booleans.updateAndGet(map -> map.put(functor, boolFunctor));
+                addFunctor(boolFunctor, tokens, constructor);
+                register(PrefixParselet.of(oper, litPost, precedence, (tt, rr) -> createNode(predicate, tt.append(rr.tokens()), constructor, boolFunctor, rr)));
                 Variable nodVar = new Variable(post.tokens(), post, "n");
                 Variable litVar = new Variable(litPost.tokens(), litPost, "l");
                 Predicate conclusion = new Predicate(functor, tokens, nodVar);
-                Predicate condition = (Predicate) createNode(true, tokens, constructor, relFunctor, litVar);
+                Predicate condition = (Predicate) createNode(true, tokens, constructor, boolFunctor, litVar);
                 Predicate eq = new Predicate(eqFunctor(), tokens, nodVar, litVar);
                 condition = And.of(eq, condition);
                 addRule(new Rule(tokens, conclusion, condition, false));
@@ -542,23 +542,23 @@ public final class KnowledgeBase {
             Type pre = (Type) sig.get(0);
             String oper = (String) sig.get(1);
             Type post = (Type) sig.get(2);
-            boolean rel = relation && !pre.isLiteral() && !post.isLiteral();
+            boolean rel = bool && !pre.isLiteral() && !post.isLiteral();
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> n.toString(0) + oper + n.toString(1), precedence, pre, post);
             addFunctor(functor, tokens, rel ? null : constructor);
             register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), tt.append(rr.tokens())), rel ? null : constructor, functor, ll, rr)));
             if (rel) {
                 Type litPre = pre.literal();
                 Type litPost = post.literal();
-                Functor relFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper + n.toString(1), precedence, litPre, litPost);
-                relations.updateAndGet(map -> map.put(functor, relFunctor));
-                addFunctor(relFunctor, tokens, constructor);
-                register(InfixParselet.of(litPre, oper, litPost, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), tt.append(rr.tokens())), constructor, relFunctor, ll, rr)));
+                Functor boolFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper + n.toString(1), precedence, litPre, litPost);
+                booleans.updateAndGet(map -> map.put(functor, boolFunctor));
+                addFunctor(boolFunctor, tokens, constructor);
+                register(InfixParselet.of(litPre, oper, litPost, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), tt.append(rr.tokens())), constructor, boolFunctor, ll, rr)));
                 Variable nodVar0 = new Variable(pre.tokens(), pre, "n1");
                 Variable litVar0 = new Variable(litPre.tokens(), litPre, "l1");
                 Variable nodVar1 = new Variable(post.tokens(), post, "n2");
                 Variable litVar1 = new Variable(litPost.tokens(), litPost, "l2");
                 Predicate conclusion = new Predicate(functor, tokens, nodVar0, nodVar1);
-                Predicate condition = (Predicate) createNode(true, tokens, constructor, relFunctor, litVar0, litVar1);
+                Predicate condition = (Predicate) createNode(true, tokens, constructor, boolFunctor, litVar0, litVar1);
                 Predicate eq0 = new Predicate(eqFunctor(), tokens, nodVar0, litVar0);
                 Predicate eq1 = new Predicate(eqFunctor(), tokens, nodVar1, litVar1);
                 condition = And.of(eq0, And.of(eq1, condition));
@@ -581,7 +581,7 @@ public final class KnowledgeBase {
     private final AtomicReference<Map<Object, List<CallWithArgs>>>      callsWithArgs    = new AtomicReference<>();
 
     private final AtomicReference<Set<String>>                          allOperators     = new AtomicReference<>();
-    private final AtomicReference<Map<Functor, Functor>>                relations        = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>>                booleans         = new AtomicReference<>();
 
     private final AtomicInteger                                         depth            = new AtomicInteger();
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization      = new AtomicReference<>();
@@ -609,7 +609,7 @@ public final class KnowledgeBase {
         callsWithArgs.set(init != null ? init.callsWithArgs.get() : Map.of());
 
         allOperators.set(init != null ? init.allOperators.get() : Set.of());
-        relations.set(init != null ? init.relations.get() : Map.of());
+        booleans.set(init != null ? init.booleans.get() : Map.of());
 
         memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
         depth.set(init != null ? init.depth.get() : 0);
@@ -732,17 +732,17 @@ public final class KnowledgeBase {
         }
     }
 
-    public void addRule(Rule ruleImpl) {
-        Predicate signature = ruleImpl.consequence().signature(Integer.MAX_VALUE);
-        rules.updateAndGet(m -> addRule(ruleImpl, signature, m));
+    public void addRule(Rule rule) {
+        Predicate signature = rule.consequence().signature(Integer.MAX_VALUE);
+        rules.updateAndGet(m -> addRule(rule, signature, m));
         int signDepth = signature.depth();
         depth.accumulateAndGet(signDepth, Math::max);
     }
 
-    private static Map<Predicate, Set<Rule>> addRule(Rule ruleImpl, Predicate signature, Map<Predicate, Set<Rule>> map) {
-        map = map.put(signature, ADD_RULE.apply(map.get(signature), ruleImpl));
+    private static Map<Predicate, Set<Rule>> addRule(Rule rule, Predicate signature, Map<Predicate, Set<Rule>> map) {
+        map = map.put(signature, ADD_RULE.apply(map.get(signature), rule));
         for (Predicate gen : signature.generalize(false)) {
-            map = addRule(ruleImpl, gen, map);
+            map = addRule(rule, gen, map);
         }
         return map;
     }

@@ -210,7 +210,7 @@ public final class Parser {
             }
             if (!tokens.isEmpty()) {
                 Node node = parseNode(0, Type.ROOT);
-                if (node.type().equals(Type.RELATION)) {
+                if (node.type().equals(Type.BOOLEAN)) {
                     knowledgeBase.addFact((Predicate) node);
                 }
                 if (node instanceof ListNode) {

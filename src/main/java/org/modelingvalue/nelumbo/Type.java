@@ -35,7 +35,7 @@ public class Type extends Node {
     public static final Type  LITERAL          = new Type("Literal", TERMINAL);
     public static final Type  ROOT             = new Type("Root", NODE);
     public static final Type  PREDICATE        = new Type(Predicate.class, NODE);
-    public static final Type  RELATION         = new Type("Relation", PREDICATE, ROOT);
+    public static final Type  BOOLEAN         = new Type("Boolean", PREDICATE, ROOT);
     public static final Type  RESULT           = new Type("Result", ROOT);
     public static final Type  VARIABLE         = new Type(Variable.class, ROOT);
     public static final Type  RULE             = new Type(Rule.class, ROOT);
@@ -44,7 +44,7 @@ public class Type extends Node {
 
     public static final List<Type> predefined() {
         return List.of(TYPE(), NODE, FUNCTION, TERMINAL, LITERAL, ROOT, PREDICATE, //
-                RELATION, RESULT, VARIABLE, RULE, FUNCTOR, STRING);
+                BOOLEAN, RESULT, VARIABLE, RULE, FUNCTOR, STRING);
     }
 
     private static Type TYPE = null;
