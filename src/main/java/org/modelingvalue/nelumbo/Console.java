@@ -58,6 +58,8 @@ import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 public class Console extends WindowAdapter implements WindowListener, ActionListener, Runnable, DocumentListener, CaretListener {
 
+    private final boolean                        COLOR_CONSOLE    = java.lang.Boolean.getBoolean("COLOR_CONSOLE_NELUMBO");
+
     private final static int                     COMMENT_POSITION = 32;
     private final static String                  PREFIX           = "  ";
     //
@@ -319,7 +321,9 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
 
     private void executeLine(String line) {
         try {
-            applySyntaxColors(line);
+            if (COLOR_CONSOLE) {
+                applySyntaxColors(line);
+            }
             Tokenizer tokenizer = new Tokenizer(line, line);
             Parser parser = new Parser(tokenizer.tokenize());
             for (Node root : parser.parse()) {
@@ -331,7 +335,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             error(pe.getShortMessage());
             try {
                 int start = getStart() + pe.position();
-                textArea.getHighlighter().addHighlight(start, start + pe.length(), pinkPainter);
+                textArea.getHighlighter().addHighlight(start, start + pe.length(), redPainter);
             } catch (BadLocationException ble) {
                 error(ble.getMessage());
             }
@@ -353,10 +357,10 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 case QNAME, NAME -> yellowPainter;
                 case SEMICOLON, OPERATOR, LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE -> greyPainter;
                 case COMMA -> purplePainter;
-                case TYPE -> redPainter;
+                case TYPE -> pinkPainter;
                 case END_LINE_COMMENT, IN_LINE_COMMENT -> lightGreyPainter;
                 case HSPACE, NEWLINE -> whitePainter;
-                case ERROR -> pinkPainter;
+                case ERROR -> redPainter;
                 };
                 if (hp != null) {
                     textArea.getHighlighter().addHighlight(beg, end, hp);
