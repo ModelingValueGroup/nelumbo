@@ -20,27 +20,6 @@
 
 package org.modelingvalue.nelumbo;
 
-import javax.swing.Action;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.KeyStroke;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Caret;
-import javax.swing.text.DefaultEditorKit;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.Element;
-import javax.swing.text.Highlighter;
-import javax.swing.text.TextAction;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -57,6 +36,19 @@ import java.io.Serial;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Caret;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.Element;
+import javax.swing.text.Highlighter;
+import javax.swing.text.TextAction;
 
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -89,14 +81,14 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     }
 
     //===========================================================================================================================================
-    private       JFrame        frame;
-    private       JTextArea     textArea;
-    private       boolean       quit                 = false;
-    private       int           lineCount            = -1;
-    private       KnowledgeBase knowledgeBase;
-    private       Action        deletePreviousAction;
-    private final List<String>  lineHistory          = new ArrayList<>();
-    private       int           currentLineInHistory = 0;
+    private JFrame             frame;
+    private JTextArea          textArea;
+    private boolean            quit                 = false;
+    private int                lineCount            = -1;
+    private KnowledgeBase      knowledgeBase;
+    private Action             deletePreviousAction;
+    private final List<String> lineHistory          = new ArrayList<>();
+    private int                currentLineInHistory = 0;
 
     public Console() {
         initWindow();
@@ -107,10 +99,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     private void initWindow() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException |
-                 InstantiationException |
-                 IllegalAccessException |
-                 UnsupportedLookAndFeelException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             JOptionPane.showMessageDialog(null, "Unable to set system look and feel", "Warning", JOptionPane.WARNING_MESSAGE);
         }
         URL resource = getClass().getResource("nelumbo.png");
@@ -118,11 +107,13 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         ImageIcon icon = new ImageIcon(resource);
         frame = new JFrame("Nelumbo");
         frame.setIconImage(icon.getImage());
-        Taskbar.getTaskbar().setIconImage(icon.getImage());
+        if (Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE)) {
+            Taskbar.getTaskbar().setIconImage(icon.getImage());
+        }
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension frameSize  = new Dimension(screenSize.width / 2, screenSize.height / 2);
-        int       x          = frameSize.width / 2;
-        int       y          = frameSize.height / 2;
+        Dimension frameSize = new Dimension(screenSize.width / 2, screenSize.height / 2);
+        int x = frameSize.width / 2;
+        int y = frameSize.height / 2;
         frame.setBounds(x, y, frameSize.width, frameSize.height);
 
         textArea = new JTextArea();
@@ -245,13 +236,13 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     }
 
     private void increase() {
-        Font  font    = textArea.getFont();
+        Font font = textArea.getFont();
         float newSize = Math.min(100f, font.getSize() * 1.2f);
         textArea.setFont(font.deriveFont(newSize));
     }
 
     private void decrease() {
-        Font  font    = textArea.getFont();
+        Font font = textArea.getFont();
         float newSize = Math.max(7f, font.getSize() / 1.2f);
         textArea.setFont(font.deriveFont(newSize));
     }
@@ -330,7 +321,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         try {
             applySyntaxColors(line);
             Tokenizer tokenizer = new Tokenizer(line, line);
-            Parser    parser    = new Parser(tokenizer.tokenize());
+            Parser parser = new Parser(tokenizer.tokenize());
             for (Node root : parser.parse()) {
                 if (root.type().equals(Type.RESULT)) {
                     write(root.toString(1));
@@ -357,26 +348,15 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 int end = beg + token.text().length();
                 System.err.printf("  - [%2d...%2d]: '%s'\n", beg, end, token);
                 Highlighter.HighlightPainter hp = switch (token.type()) {
-                    case STRING -> bluePainter;
-                    case NUMBER,
-                         DECIMAL -> greenPainter;
-                    case QNAME,
-                         NAME -> yellowPainter;
-                    case SEMICOLON,
-                         OPERATOR,
-                         LPAREN,
-                         RPAREN,
-                         LBRACKET,
-                         RBRACKET,
-                         LBRACE,
-                         RBRACE -> greyPainter;
-                    case COMMA -> purplePainter;
-                    case TYPE -> redPainter;
-                    case END_LINE_COMMENT,
-                         IN_LINE_COMMENT -> lightGreyPainter;
-                    case HSPACE,
-                         NEWLINE -> whitePainter;
-                    case ERROR -> pinkPainter;
+                case STRING -> bluePainter;
+                case NUMBER, DECIMAL -> greenPainter;
+                case QNAME, NAME -> yellowPainter;
+                case SEMICOLON, OPERATOR, LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE -> greyPainter;
+                case COMMA -> purplePainter;
+                case TYPE -> redPainter;
+                case END_LINE_COMMENT, IN_LINE_COMMENT -> lightGreyPainter;
+                case HSPACE, NEWLINE -> whitePainter;
+                case ERROR -> pinkPainter;
                 };
                 if (hp != null) {
                     textArea.getHighlighter().addHighlight(beg, end, hp);
