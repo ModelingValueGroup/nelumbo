@@ -24,6 +24,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
@@ -35,9 +36,10 @@ import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 
 public final class Parser {
-
     public static List<Node> parse(String string) throws ParseException {
-        return new Parser(new Tokenizer(string + "\n", string).tokenize()).parse();
+        Tokenizer tokenizer = new Tokenizer(string + "\n", string);
+        LinkedList<Token> tokens = tokenizer.tokenize();
+        return new Parser(tokens).parse();
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
@@ -46,133 +48,173 @@ public final class Parser {
         return parse(clss, name);
     }
 
-    public static List<Node> parse(Class<?> clss, String name) throws ParseException {
+    public static List<Node> parse(Class<?> clss, String fileName) throws ParseException {
         try {
-            InputStream stream = clss.getResourceAsStream(name);
+            InputStream stream = clss.getResourceAsStream(fileName);
             if (stream == null) {
-                throw new ParseException("Nelumbo resource " + name + " does not exist", 0, 0, 0, 0, name);
+                throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
             InputStream buffer = new BufferedInputStream(stream);
             String base = new String(buffer.readAllBytes());
-            return new Parser(new Tokenizer(base, name).tokenize()).parse();
+            LinkedList<Token> tokens = new Tokenizer(base, fileName).tokenize();
+            return new Parser(tokens).parse();
         } catch (IOException e) {
-            throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), 0, 0, 0, 0, name);
+            throw new ParseException(e, "IOException during parse", fileName);
         }
     }
 
     // Instance
 
-    private final KnowledgeBase     knowledgeBase;
-    private final LinkedList<Token> tokens;
+    private final KnowledgeBase       knowledgeBase;
+    private final ListIterator<Token> iterator;
 
     public Parser(LinkedList<Token> tokens) {
+        this(tokens, false);
+    }
+
+    public Parser(LinkedList<Token> tokens, boolean noInfer) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
-        this.tokens = tokens;
+        this.iterator = tokens.listIterator();
+        knowledgeBase.noInfer(noInfer);
+    }
+
+    public List<Node> parse() throws ParseException {
+        List<Node> roots = List.of();
+        while (true) {
+            //noinspection StatementWithEmptyBody
+            while (match(TokenType.NEWLINE)) {
+            }
+            if (noMoreTokens()) {
+                return roots;
+            }
+            Node node = parseNode(0, Type.ROOT);
+            if (node.type().equals(Type.BOOLEAN)) {
+                knowledgeBase.addFact((Predicate) node);
+            }
+            if (node instanceof ListNode list) {
+                for (Node e : list.elements()) {
+                    mustBeRoot(e);
+                    roots = roots.add(e);
+                }
+            } else {
+                mustBeRoot(node);
+                roots = roots.add(node);
+            }
+            if (noMoreTokens()) {
+                return roots;
+            }
+            consume(TokenType.NEWLINE);
+        }
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
+        if (noMoreTokens()) {
+            throw new ParseException("premature end of input while expecting a " + expected.name());
+        }
+        // made this an array so that prefix() and postfix() can return new values in case a token was split
+        // otherwise the unsplit Token is put in the Node
+        Token[] t12 = new Token[2];
         Node left;
         if (expected.isList()) {
             Type elemType = expected.element();
-            Token start = peek();
             left = new ListNode(Token.EMPTY, elemType);
-            if (!start.type().end()) {
+            if (!peek().type().end()) {
                 do {
                     Node node = parseNode(precedence, elemType);
                     if (!elemType.isAssignableFrom(node.type())) {
-                        throw new ParseException("Expected element of type " + elemType + " and found " + node + " of type " + node.type(), node.tokens());
+                        throw new ParseException("Expected element of type " + elemType + " but found " + node + " of type " + node.type(), node.tokens());
                     }
                     left = new ListNode(Token.EMPTY, (ListNode) left, node);
                 } while (match(TokenType.COMMA));
             }
         } else {
-            Token token1 = poll();
-            Token token2 = peek();
-            AtomicParselet prefix = prefix(expected, token1, token2);
-            left = prefix.parse(expected, this, token1);
+            t12[0] = consume();
+            t12[1] = peek();
+            assert t12[0] != null;
+            AtomicParselet prefix = prefix(expected, t12);
+            left = prefix.parse(expected, this, t12[0]);
         }
-        Token token1 = poll();
-        Token token2 = peek();
-        PostfixParselet postfix = postfix(expected, left.type(), token1, token2, precedence);
-        while (postfix != null) {
-            left = postfix.parse(expected, this, left, token1);
-            token1 = poll();
-            token2 = peek();
-            postfix = postfix(expected, left.type(), token1, token2, precedence);
+        if (moreTokens()) {
+            t12[0] = consume();
+            t12[1] = peek();
+            assert t12[0] != null;
+            PostfixParselet postfix = postfix(expected, left.type(), t12, precedence);
+            while (postfix != null) {
+                left = postfix.parse(expected, this, left, t12[0]);
+                if (noMoreTokens()) {
+                    return left;
+                }
+                t12[0] = consume();
+                t12[1] = peek();
+                postfix = postfix(expected, left.type(), t12, precedence);
+            }
+            // unread the token that ended the postfix chain
+            unconsume(t12[0]);
         }
-        tokens.addFirst(token1);
         return left;
     }
 
-    public Token peek() {
-        return tokens.peek();
-    }
-
-    private Token poll() {
-        return tokens.poll();
-    }
-
-    private AtomicParselet prefix(Type expected, Token token1, Token token2) throws ParseException {
-        AtomicParselet prefix = doPrefix(expected, token1, token2);
-        if (prefix == null && token1.type() == TokenType.OPERATOR) {
-            String text = token1.text();
-            int len = text.length();
-            while (len-- > 1 && !knowledgeBase.isOperator(text)) {
-                token1 = new Token(token1.type(), text.substring(0, len), token1.line(), //
-                        token1.position(), token1.index(), token1.fileName());
-                token2 = new Token(token1.type(), text.substring(len), token1.line(), //
-                        token1.position() + len, token1.index() + len, token1.fileName());
-                prefix = doPrefix(expected, token1, token2);
+    private AtomicParselet prefix(Type expected, Token[] t12) throws ParseException {
+        Token t1 = t12[0];
+        Token t2 = t12[1];
+        AtomicParselet prefix = knowledgeBase.prefix(expected, t1, t2);
+        if (prefix != null) {
+            return prefix;
+        }
+        if (t1.type() == TokenType.OPERATOR) {
+            // no prefix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
+            Token t1Init = t1;
+            for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
+                t1 = t1Init.splitGet1(len);
+                t2 = t1Init.splitGet2(len);
+                prefix = knowledgeBase.prefix(expected, t1, t2);
                 if (prefix != null) {
-                    tokens.addFirst(token2);
+                    splitCurrentToken(t1, t2);
+                    t12[0] = t1;
+                    t12[1] = t2;
                     return prefix;
-                } else if (len == 1) {
-                    token1 = new Token(token1.type(), token1.text() + token2.text(), token1.line(), //
-                            token1.position(), token1.index(), token1.fileName());
-                    throw new ParseException("Operator " + token1.text() + " not defined", token1);
+                }
+                if (len == 1) {
+                    throw new ParseException("Operator " + t1Init.text() + " not defined", t1Init);
                 }
             }
         }
-        if (prefix == null) {
-            throw new ParseException("Prefix " + token1.text() + " not defined", token1);
+        throw new ParseException("Prefix " + t1.text() + " not defined", t1);
+    }
+
+    private PostfixParselet postfix(Type expected, Type left, Token[] t12, int precedence) throws ParseException {
+        Token t1 = t12[0];
+        Token t2 = t12[1];
+        PostfixParselet postfix = doPostfix(expected, left, t1, t2);
+        if (postfix != null) {
+            if (precedence < postfix.precedence()) {
+                return postfix;
+            } else {
+                return null;
+            }
         }
-        return prefix;
-    }
-
-    private AtomicParselet doPrefix(Type expected, Token token1, Token token2) {
-        return knowledgeBase.prefix(expected, token1, token2);
-    }
-
-    private PostfixParselet postfix(Type expected, Type left, Token token1, Token token2, int precedence) throws ParseException {
-        PostfixParselet postfix = doPostfix(expected, left, token1, token2);
-        if (postfix == null && token1.type() == TokenType.OPERATOR) {
-            String text = token1.text();
-            int len = text.length();
-            while (len-- > 1 && !knowledgeBase.isOperator(text)) {
-                token1 = new Token(token1.type(), text.substring(0, len), token1.line(), //
-                        token1.position(), token1.index(), token1.fileName());
-                token2 = new Token(token1.type(), text.substring(len), token1.line(), //
-                        token1.position() + len, token1.index() + len, token1.fileName());
-                postfix = doPostfix(expected, left, token1, token2);
+        if (t1.type() == TokenType.OPERATOR) {
+            // no postfix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
+            Token t1Init = t1;
+            for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
+                t1 = t1Init.splitGet1(len);
+                t2 = t1Init.splitGet2(len);
+                postfix = doPostfix(expected, left, t1, t2);
                 if (postfix != null) {
                     if (precedence < postfix.precedence()) {
-                        tokens.addFirst(token2);
+                        splitCurrentToken(t1, t2);
+                        t12[0] = t1;
+                        t12[1] = t2;
                         return postfix;
                     } else {
                         return null;
                     }
                 } else if (len == 1) {
-                    token1 = new Token(token1.type(), token1.text() + token2.text(), token1.line(), //
-                            token1.position(), token1.index(), token1.fileName());
-                    throw new ParseException("Operator " + token1.text() + " not defined", token1);
+                    throw new ParseException("Operator " + t1Init.text() + " not defined", t1Init);
                 }
             }
         }
-        if (postfix != null && precedence < postfix.precedence()) {
-            return postfix;
-        } else {
-            return null;
-        }
+        return null;
     }
 
     private PostfixParselet doPostfix(Type expected, Type left, Token token1, Token token2) {
@@ -187,89 +229,97 @@ public final class Parser {
                 }
                 if (expected == Type.PREDICATE && !type.isLiteral()) {
                     postfix = knowledgeBase.postfix(expected, type.literal(), token1, token2);
+                    if (postfix != null) {
+                        return postfix;
+                    }
                 }
-                if (postfix != null) {
-                    return postfix;
-                } else {
-                    post = post.addAll(type.supers());
-                }
+                post = post.addAll(type.supers());
             }
         }
         return null;
-
     }
 
     public KnowledgeBase knowledgeBase() {
         return knowledgeBase;
     }
 
-    public List<Node> parse() throws ParseException {
-        List<Node> roots = List.of();
-        while (!tokens.isEmpty()) {
-            while (match(TokenType.NEWLINE)) {
-            }
-            if (!tokens.isEmpty()) {
-                Node node = parseNode(0, Type.ROOT);
-                if (node.type().equals(Type.BOOLEAN)) {
-                    knowledgeBase.addFact((Predicate) node);
-                }
-                if (node instanceof ListNode) {
-                    for (Node e : ((ListNode) node).elements()) {
-                        checkRoot(e);
-                        roots = roots.add(e);
-                    }
-                } else {
-                    checkRoot(node);
-                    roots = roots.add(node);
-                }
-                consume(TokenType.NEWLINE);
-            }
-        }
-        if (!tokens.isEmpty()) {
-            Token token = peek();
-            throw new ParseException("Could not parse '" + token.text() + "'", token);
-        }
-        return roots;
+    public Token peek() {
+        Token t = consume();
+        unconsume(t);
+        return t;
     }
 
-    private void checkRoot(Node node) throws ParseException {
-        Type type = node instanceof Variable ? Type.VARIABLE : node.type();
-        if (!Type.ROOT.isAssignableFrom(type)) {
-            throw new ParseException("Expected type, functor, variable, rule, fact or query. Found " + node + " of type " + type, node.tokens());
-        }
-    }
-
-    public boolean next(TokenType expected) {
+    public boolean peekTypeIs(TokenType expected) {
         Token token = peek();
         return token != null && token.type() == expected;
     }
 
-    public boolean findInLine(TokenType expected) {
-        for (Token token : tokens) {
-            if (token.type() == expected) {
-                return true;
-            } else if (token.type() == TokenType.NEWLINE) {
-                return false;
+    private Token consume() {
+        while (true) {
+            if (noMoreTokens()) {
+                return null;
+            }
+            Token t = iterator.next();
+            if (!t.isCommentOrHspace()) {
+                return t;
             }
         }
-        return false;
+    }
+
+    private boolean moreTokens() {
+        return iterator.hasNext();
+    }
+
+    private boolean noMoreTokens() {
+        return !iterator.hasNext();
+    }
+
+    private void unconsume(Token t) {
+        if (t != null) {
+            Token un = iterator.previous();
+            while (un != null && un.isCommentOrHspace()) {
+                un = iterator.previous();
+            }
+            if (un != t) {
+                System.err.println("WARNING: unconsume did not find the right token: found " + un + " instead of " + t);
+            }
+        }
     }
 
     public boolean match(TokenType expected) {
-        if (next(expected)) {
-            poll();
-            return true;
-        } else {
-            return false;
+        boolean isType = peekTypeIs(expected);
+        if (isType) {
+            consume();
         }
+        return isType;
     }
 
     public Token consume(TokenType expected) throws ParseException {
-        Token token = poll();
+        Token token = consume();
+        if (token == null) {
+            throw new ParseException("Expected token " + expected + " but found end of input");
+        }
         if (token.type() != expected) {
-            throw new ParseException("Expected token " + expected + " and found " + token.text() + " of type " + token.type(), token);
+            throw new ParseException("Expected token " + expected + " but found " + token.text() + " of type " + token.type(), token);
         }
         return token;
+    }
+
+    private void splitCurrentToken(Token t1, Token t2) {
+        // iterator is positioned just after current (it was consumed).
+        // Move back to the position of current, replace with t2, insert t1 before it,
+        if (iterator.hasPrevious()) {
+            iterator.previous();
+            iterator.set(t2);
+            iterator.add(t1);
+        }
+    }
+
+    private void mustBeRoot(Node node) throws ParseException {
+        Type type = node instanceof Variable ? Type.VARIABLE : node.type();
+        if (!Type.ROOT.isAssignableFrom(type)) {
+            throw new ParseException("Expected type, functor, variable, rule, fact or query. Found " + node + " of type " + type, node.tokens());
+        }
     }
 
 }

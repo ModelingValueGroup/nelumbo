@@ -21,13 +21,15 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.PrintStream;
+import java.io.Serial;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -43,39 +45,39 @@ import org.modelingvalue.collections.util.Quadruple;
 import org.modelingvalue.collections.util.Triple;
 import org.modelingvalue.nelumbo.syntax.*;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings("DuplicatedCode")
 public final class KnowledgeBase {
 
-    protected static final boolean                              TRACE_NELUMBO       = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
+    private static final boolean                                                        TRACE_NELUMBO        = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
+    public static final Context<KnowledgeBase>                                          CURRENT              = Context.of();
+    private static final ContextPool                                                    POOL                 = ContextThread.createPool();
+    private static final QualifiedSet<Predicate, Inference>                             EMPTY_MEMOIZ         = QualifiedSet.of(Inference::premise);
+    private static final int                                                            MAX_LOGIC_MEMOIZ     = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
+    private static final int                                                            MAX_LOGIC_MEMOIZ_D4  = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
+    private static final int                                                            INITIAL_USAGE_COUNT  = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
+    private static final BiFunction<Set<Rule>, Rule, Set<Rule>>                         ADD_RULE             = (l, e) -> {
+                                                                                                                 if (l == null) {
+                                                                                                                     return Set.of(e);
+                                                                                                                 } else {
+                                                                                                                     for (int i = 0; i < l.size(); i++) {
+                                                                                                                         Rule r = l.get(i);
+                                                                                                                         if (r.consequence().equals(e.consequence()) &&   //
+                                                                                                                                 r.condition().contains(e.condition())) {
+                                                                                                                             return l;
+                                                                                                                         }
+                                                                                                                     }
+                                                                                                                     return l.add(e);
+                                                                                                                 }
+                                                                                                             };
+    private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
+    public static final KnowledgeBase                                                   BASE                 = new KnowledgeBase(null).initBase();
 
-    public static final Context<KnowledgeBase>                  CURRENT             = Context.of();
+    public static void registerFunctorSetter(Class<? extends Node> clazz, Consumer<Functor> setter) {
+        FUNCTOR_REGISTRATION.updateAndGet(map -> map.put(clazz, setter));
+    }
 
-    private static final ContextPool                            POOL                = ContextThread.createPool();
-    @SuppressWarnings("rawtypes")
-    private static final QualifiedSet<Predicate, Inference>     EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
-    private static final int                                    MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
-    private static final int                                    MAX_LOGIC_MEMOIZ_D4 = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
-    private static final int                                    INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
-    @SuppressWarnings("unchecked")
-    private static final BiFunction<Set<Rule>, Rule, Set<Rule>> ADD_RULE            = (l, e) -> {
-                                                                                        if (l == null) {
-                                                                                            return Set.of(e);
-                                                                                        } else {
-                                                                                            for (int i = 0; i < l.size(); i++) {
-                                                                                                Rule r = l.get(i);
-                                                                                                if (r.consequence().equals(e.consequence()) &&   //
-                                                                                                        r.condition().contains(e.condition())) {
-                                                                                                    return l;
-                                                                                                }
-                                                                                            }
-                                                                                            return l.add(e);
-                                                                                        }
-                                                                                    };
-
-    public static final KnowledgeBase                           BASE                = new KnowledgeBase(null).initBase();
-
-    @SuppressWarnings("rawtypes")
     private static class Inference extends Struct2Impl<Predicate, InferResult> {
+        @Serial
         private static final long serialVersionUID = 1531759272582548244L;
 
         public int                count            = INITIAL_USAGE_COUNT;
@@ -98,6 +100,7 @@ public final class KnowledgeBase {
     }
 
     private static final class LogicTask extends ForkJoinTask<KnowledgeBase> {
+        @Serial
         private static final long   serialVersionUID = -1375078574164947441L;
 
         private final Runnable      runnable;
@@ -126,15 +129,14 @@ public final class KnowledgeBase {
 
     }
 
-    public static final KnowledgeBase run(Runnable runnable) {
+    public static KnowledgeBase run(Runnable runnable) {
         return run(runnable, BASE);
     }
 
-    public static final KnowledgeBase run(Runnable runnable, KnowledgeBase init) {
+    public static KnowledgeBase run(Runnable runnable, KnowledgeBase init) {
         return POOL.invoke(new LogicTask(runnable, init));
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public static Set<Type> generalizations(Type type, Type top) {
         Set<Type> result = Set.of();
         for (Type g : type.supers()) {
@@ -157,8 +159,8 @@ public final class KnowledgeBase {
         if (constructor != null) {
             try {
                 return constructor.newInstance(functor, tokens, args);
-            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), tokens);
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
+                throw new ParseException(e, "Exception during createNode()", tokens);
             }
         }
         return predicate ? new Predicate(functor, tokens, args) : new Node(functor, tokens, args);
@@ -173,15 +175,18 @@ public final class KnowledgeBase {
         return eqFunctor;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "CodeBlock2Expr"})
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             for (Type predefined : Type.predefined()) {
                 addType(predefined);
             }
-            for (TokenType type : TokenType.values()) {
-                addType(new Type(type));
-            }
+            // TODO: Wim? waarom alle TokenType-s? <NUMBER> en <STRING> begrijp ik, maar wat kan ik bv met <HSPACE> of <LBRACE>?
+            //for (TokenType type : TokenType.values()) {
+            //    addType(new Type(type));
+            //}
+            addType(new Type(TokenType.NUMBER));
+            addType(new Type(TokenType.STRING));
 
             Type TYPE_NAME = new Type("TypeName", Type.NODE);
             Type VAR_NAME = new Type("VarName", Type.NODE);
@@ -194,12 +199,8 @@ public final class KnowledgeBase {
 
             register(ParenParselet.INSTANCE);
 
-            register(AtomicParselet.of(TokenType.TYPE, t -> {
-                return type(t).setTokens(t.singleton());
-            }));
-            register(AtomicParselet.of(TokenType.NAME, t -> {
-                return variable(t).setTokens(t.singleton());
-            }));
+            register(AtomicParselet.of(TokenType.TYPE, t -> type(t).setTokens(t.singleton())));
+            register(AtomicParselet.of(TokenType.NAME, t -> variable(t).setTokens(t.singleton())));
 
             // Types
             register(AtomicParselet.of(Type.ROOT, TokenType.TYPE, "::", t -> {
@@ -209,7 +210,8 @@ public final class KnowledgeBase {
             }));
             register(InfixParselet.of(Type.ROOT, TYPE_NAME, "::", Type.TYPE().list(), 10, (l, t, r) -> {
                 String name = l.getVal(0);
-                Type type = new Type(t.prepend(l.tokens()), name, ((ListNode) r).elements());
+                ListNode rList = (ListNode) r;
+                Type type = new Type(Token.concat(l, t, r), name, rList.elements());
                 KnowledgeBase.CURRENT.get().addType(type);
                 return type;
             }));
@@ -218,53 +220,53 @@ public final class KnowledgeBase {
             register(InfixParselet.of(Type.ROOT, Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
                 ListNode list = new ListNode(Token.EMPTY, Type.FUNCTOR);
                 KnowledgeBase current = KnowledgeBase.CURRENT.get();
-                for (Node s : ((ListNode) r).elements()) {
-                    list = new ListNode(Token.EMPTY, list, current.createFunctor((Type) l, s.tokens(), s));
+                for (Node rr : ((ListNode) r).elements()) {
+                    list = new ListNode(Token.EMPTY, list, current.createFunctor((Type) l, Token.concat(l, t, rr), rr));
                 }
                 return list;
             }));
             register(CallWithArgs.of(SIGNATURE, TokenType.NAME, (t, l) -> {
-                return new Node(SIGNATURE, t.singleton(), t.text(), l);
+                return new Node(SIGNATURE, Token.concat(t, l), t.text(), l);
             }, Type.TYPE().list()));
             register(AtomicParselet.of(SIGNATURE, TokenType.NAME, t -> {
                 return new Node(SIGNATURE, t.singleton(), t.text());
             }));
             register(AtomicParselet.of(SIGNATURE, TokenType.TYPE, t -> {
                 Type type = type(t);
-                return type.tokenType() != null ? new Node(SIGNATURE, t.singleton(), type) : type;
+                return type.tokenType() != null ? new Node(SIGNATURE, t.singleton(), type) : type.setTokens(t.singleton());
             }));
             register(PrefixParselet.of(SIGNATURE, TokenType.OPERATOR, TokenType.TYPE, Type.TYPE(), 50, (t, r) -> {
-                return new Node(SIGNATURE, t.singleton(), t.text(), r);
+                return new Node(SIGNATURE, Token.concat(t, r), t.text(), r);
             }));
             register(PrefixParselet.of(SIGNATURE, TokenType.NAME, TokenType.TYPE, Type.TYPE(), 50, (t, r) -> {
-                return new Node(SIGNATURE, t.singleton(), t.text(), r);
+                return new Node(SIGNATURE, Token.concat(t, r), t.text(), r);
             }));
             register(PostfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.OPERATOR, 50, (l, t) -> {
-                return new Node(SIGNATURE, t.singleton(), l, t.text());
+                return new Node(SIGNATURE, Token.concat(l, t), l, t.text());
             }));
             register(PostfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.NAME, 50, (l, t) -> {
-                return new Node(SIGNATURE, t.singleton(), l, t.text());
+                return new Node(SIGNATURE, Token.concat(l, t), l, t.text());
             }));
             register(InfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.OPERATOR, TokenType.TYPE, Type.TYPE(), 50, (l, t, r) -> {
-                return new Node(SIGNATURE, t.singleton(), l, t.text(), r);
+                return new Node(SIGNATURE, Token.concat(l, t, r), l, t.text(), r);
             }));
             register(InfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.NAME, TokenType.TYPE, Type.TYPE(), 50, (l, t, r) -> {
-                return new Node(SIGNATURE, t.singleton(), l, t.text(), r);
+                return new Node(SIGNATURE, Token.concat(l, t, r), l, t.text(), r);
             }));
             register(InfixParselet.of(SIGNATURE, "#", TokenType.NUMBER, PRECEDENCE, 50, (l, t, r) -> {
-                return new Node(SIGNATURE, t.append(r.tokens()), l, r.get(0));
+                return new Node(SIGNATURE, Token.concat(l, t, r), l, r.get(0));
             }));
             register(AtomicParselet.of(PRECEDENCE, TokenType.NUMBER, t -> {
                 return new Node(PRECEDENCE, t.singleton(), Integer.parseInt(t.text()));
             }));
             register(InfixParselet.of(SIGNATURE, "@", TokenType.QNAME, NATIVE, 50, (l, t, r) -> {
-                return new Node(SIGNATURE, t.append(r.tokens()), l, r.get(0));
+                return new Node(SIGNATURE, Token.concat(l, t, r), l, r.get(0));
             }));
             register(AtomicParselet.of(NATIVE, TokenType.QNAME, t -> {
                 try {
                     return new Node(NATIVE, t.singleton(), Class.forName(t.text()).getConstructor(Functor.class, Token[].class, Object[].class));
                 } catch (ClassNotFoundException | NoSuchMethodException | SecurityException e) {
-                    throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), t);
+                    throw new ParseException(e, "Exception during constructor of new Node", t);
                 }
             }));
 
@@ -287,21 +289,21 @@ public final class KnowledgeBase {
 
             // Rules
             register(InfixParselet.of(Type.ROOT, Type.PREDICATE, "<==", Type.PREDICATE.list(), 10, (l, t, r) -> {
-                return rule(l, t, r, false);
+                return rule(l, Token.concat(l, t), (ListNode) r, false);
             }));
             register(InfixParselet.of(Type.ROOT, Type.PREDICATE, "<==>", Type.PREDICATE.list(), 10, (l, t, r) -> {
-                return rule(l, t, r, true);
+                return rule(l, Token.concat(l, t), (ListNode) r, true);
             }));
 
             // Expectations
             register(InfixParselet.of(Type.ROOT, Type.RESULT, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
-                return new Node(FACTS, t.singleton(), l, ((ListNode) r).elements());
+                return new Node(FACTS, Token.concat(l, t, r), l, ((ListNode) r).elements());
             }));
             register(InfixParselet.of(Type.ROOT, FACTS, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
-                return new Node(FALSEHOODS, l.tokens(), l.get(0), l.get(1), ((ListNode) r).elements());
+                return new Node(FALSEHOODS, Token.concat(l, t, r), l.get(0), l.get(1), ((ListNode) r).elements());
             }));
             register(PostfixParselet.of(Type.ROOT, FACTS, "]", 8, (l, t) -> {
-                return l.setTokens(t.prepend(l.tokens()));
+                return l.setTokens(Token.concat(l, t));
             }));
             register(PostfixParselet.of(Type.ROOT, FALSEHOODS, "]", 8, (l, t) -> {
                 Set<Predicate> facts = ((List<Predicate>) l.get(1)).asSet();
@@ -319,7 +321,7 @@ public final class KnowledgeBase {
                 InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
                 InferResult result = l.getVal(0, 1);
                 if (!result.equals(expected) && !result.toString().equals(expected.toString())) {
-                    throw new ParseException("Expected result " + expected + ", found " + result, t.prepend(l.tokens()));
+                    throw new ParseException("Expected result " + expected + ", found " + result, Token.concat(l, t));
                 }
                 return l.getVal(0);
             }));
@@ -332,7 +334,7 @@ public final class KnowledgeBase {
                 Predicate predicate = (Predicate) r;
                 predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
                 InferResult result = predicate.infer();
-                return new Node(Type.RESULT, t.prepend(r.tokens()), predicate, result);
+                return new Node(Type.RESULT, Token.concat(t, r), predicate, result);
             }));
 
             try {
@@ -344,12 +346,13 @@ public final class KnowledgeBase {
         return this;
     }
 
-    private static Node rule(Node l, Token t, Node r, boolean symmetric) throws ParseException {
+    @SuppressWarnings("unused")
+    private static Node rule(Node l, Token[] tokens, ListNode r, boolean symmetric) throws ParseException {
         ListNode list = new ListNode(Token.EMPTY, Type.RULE);
         KnowledgeBase current = KnowledgeBase.CURRENT.get();
         Predicate cons = (Predicate) l;
         Map<Variable, Object> consVars = cons.variables();
-        for (Node c : ((ListNode) r).elements()) {
+        for (Node c : r.elements()) {
             Predicate cond = (Predicate) c;
             Map<Variable, Object> condVars = cond.variables();
             Functor bool = current.booleans.get().get(cons.functor());
@@ -364,7 +367,7 @@ public final class KnowledgeBase {
             } else if (!local.isEmpty()) {
                 cond = cond.setVariables(Predicate.literals(local));
             }
-            Rule rule = new Rule(c.tokens(), cons, cond, symmetric);
+            Rule rule = new Rule(Token.concat(tokens, c.tokens()), cons, cond, symmetric);
             current.addRule(rule);
             list = new ListNode(Token.EMPTY, list, rule);
         }
@@ -374,7 +377,7 @@ public final class KnowledgeBase {
     private static Type type(Token t) throws ParseException {
         String name = t.text();
         name = name.substring(1, name.length() - 1);
-        if (name.endsWith("*") || name.endsWith("+")) {
+        if (name.endsWith("*") || name.endsWith("+")) { // TODO: @WIM the TokenType also includes '|', should that not be checked here? What does */+ do?
             name = name.substring(0, name.length() - 1);
             Type type = type(name);
             if (type != null) {
@@ -397,7 +400,8 @@ public final class KnowledgeBase {
         throw new ParseException("Could not find variable " + token.text(), token);
     }
 
-    @SuppressWarnings("unchecked")
+    // NB: ConstantValue because Intellij concludes that rel is always false, but it is not !!
+    @SuppressWarnings({"unchecked", "ConstantValue", "DataFlowIssue"})
     private Node createFunctor(Type type, Token[] tokens, Node sig) throws ParseException {
         Constructor<? extends Node> constructor = sig.length() == 2 && sig.get(0) instanceof Node && sig.get(1) instanceof Constructor ? //
                 (Constructor<? extends Node>) sig.get(1) : null;
@@ -418,25 +422,24 @@ public final class KnowledgeBase {
             }
             type = type.literal();
             TokenType tokenType = ((Type) sig.get(0)).tokenType();
-            String funtorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
-            Functor functor = new Functor(tokens, type, funtorName, Type.STRING);
+            String functorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
+            Functor functor = new Functor(tokens, type, functorName, Type.STRING);
             addFunctor(functor, tokens, constructor);
             register(AtomicParselet.of(tokenType, tt -> createNode(predicate, tt.singleton(), constructor, functor, tt.text())));
             return functor;
-        } else if (sig.length() == 1 && sig.get(0) instanceof String) {
+        } else if (sig.length() == 1 && sig.get(0) instanceof String name) {
             // Constant
             if (precedence != null) {
                 throw new ParseException("Precedence should not be defined " + sig, tokens);
             }
             type = type.literal();
-            String name = (String) sig.get(0);
-            String funtorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
-            Functor functor = new Functor(tokens, type, funtorName, n -> n.toString(0), 100, Type.STRING);
+            String functorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
+            Functor functor = new Functor(tokens, type, functorName, n -> n.toString(0), 100, Type.STRING);
             addFunctor(functor, tokens, constructor);
             Node node = createNode(predicate, tokens, constructor, functor, name);
             register(AtomicParselet.of(name, tt -> node.setTokens(tt.singleton())));
             return functor;
-        } else if (sig.length() == 2 && sig.get(0) instanceof String && sig.get(1) instanceof List) {
+        } else if (sig.length() == 2 && sig.get(0) instanceof String name && sig.get(1) instanceof List) {
             // CallWithArgs
             if (precedence != null) {
                 throw new ParseException("Precedence should not be defined " + sig, tokens);
@@ -444,20 +447,21 @@ public final class KnowledgeBase {
             if (!predicate) {
                 type = type.function();
             }
-            String name = (String) sig.get(0);
             List<Type> args = (List<Type>) sig.get(1);
             boolean rel = bool && !args.isEmpty() && args.noneMatch(Type::isLiteral);
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, name, args);
             addFunctor(functor, tokens, rel ? null : constructor);
-            register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, tt.prepend(ll.last().tokens()), rel ? null : constructor, functor, ll.toArray()), //
-                    args.toArray(i -> new Type[i])));
+            register(CallWithArgs.of(name, //
+                    (tt, ll) -> createNode(predicate, Token.concat(tt, ll), rel ? null : constructor, functor, ll.toArray()), //
+                    args.toArray(Type[]::new) //
+            ));
             if (rel) {
                 List<Type> litArgs = args.replaceAll(Type::literal);
                 Functor boolFunctor = new Functor(tokens, type, name, litArgs);
                 booleans.updateAndGet(map -> map.put(functor, boolFunctor));
                 addFunctor(boolFunctor, tokens, constructor);
-                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, tt.prepend(ll.last().tokens()), constructor, boolFunctor, ll.toArray()), //
-                        litArgs.toArray(i -> new Type[i])));
+                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, Token.concat(tt, ll), constructor, boolFunctor, ll.toArray()), //
+                        litArgs.toArray(Type[]::new)));
                 Object[] nodVars = new Variable[args.size()];
                 Object[] litVars = new Variable[args.size()];
                 for (int i = 0; i < args.size(); i++) {
@@ -473,7 +477,7 @@ public final class KnowledgeBase {
                 addRule(new Rule(tokens, conclusion, condition, false));
             }
             return functor;
-        } else if (sig.length() == 2 && sig.get(0) instanceof Type && sig.get(1) instanceof String) {
+        } else if (sig.length() == 2 && sig.get(0) instanceof Type pre && sig.get(1) instanceof String oper) {
             // PostfixOperator
             if (precedence == null) {
                 throw new ParseException("No precedence defined " + sig, tokens);
@@ -481,18 +485,17 @@ public final class KnowledgeBase {
             if (!predicate) {
                 type = type.function();
             }
-            Type pre = (Type) sig.get(0);
             boolean rel = bool && !pre.isLiteral();
-            String oper = (String) sig.get(1);
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> n.toString(0) + oper, precedence, pre);
             addFunctor(functor, tokens, rel ? null : constructor);
-            register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(predicate, tt.prepend(ll.tokens()), rel ? null : constructor, functor, ll)));
+            register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(predicate, Token.concat(ll, tt), rel ? null : constructor, functor, ll)));
             if (rel) {
                 Type litPre = pre.literal();
                 Functor boolFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper, precedence, litPre);
                 booleans.updateAndGet(map -> map.put(functor, boolFunctor));
                 addFunctor(boolFunctor, tokens, constructor);
-                register(PostfixParselet.of(litPre, oper, precedence, (ll, tt) -> createNode(predicate, tt.prepend(ll.tokens()), constructor, boolFunctor, ll)));
+                //noinspection ConstantValue (predicate is always true)
+                register(PostfixParselet.of(litPre, oper, precedence, (ll, tt) -> createNode(predicate, Token.concat(ll, tt), constructor, boolFunctor, ll)));
                 Variable nodVar = new Variable(pre.tokens(), pre, "n");
                 Variable litVar = new Variable(litPre.tokens(), litPre, "l");
                 Predicate conclusion = new Predicate(functor, tokens, nodVar);
@@ -502,7 +505,7 @@ public final class KnowledgeBase {
                 addRule(new Rule(tokens, conclusion, condition, false));
             }
             return functor;
-        } else if (sig.length() == 2 && sig.get(0) instanceof String && sig.get(1) instanceof Type) {
+        } else if (sig.length() == 2 && sig.get(0) instanceof String oper && sig.get(1) instanceof Type post) {
             // PrefixOperator
             if (precedence == null) {
                 throw new ParseException("No precedence defined " + sig, tokens);
@@ -510,18 +513,17 @@ public final class KnowledgeBase {
             if (!predicate) {
                 type = type.function();
             }
-            String oper = (String) sig.get(0);
-            Type post = (Type) sig.get(1);
             boolean rel = bool && !post.isLiteral();
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> oper + n.toString(0), precedence, post);
             addFunctor(functor, tokens, rel ? null : constructor);
-            register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(predicate, tt.append(rr.tokens()), rel ? null : constructor, functor, rr)));
+            register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(predicate, Token.concat(tt, rr), rel ? null : constructor, functor, rr)));
             if (rel) {
                 Type litPost = post.literal();
                 Functor boolFunctor = new Functor(tokens, type, oper, n -> oper + n.toString(0), precedence, litPost);
                 booleans.updateAndGet(map -> map.put(functor, boolFunctor));
                 addFunctor(boolFunctor, tokens, constructor);
-                register(PrefixParselet.of(oper, litPost, precedence, (tt, rr) -> createNode(predicate, tt.append(rr.tokens()), constructor, boolFunctor, rr)));
+                //noinspection ConstantValue (predicate is always true)
+                register(PrefixParselet.of(oper, litPost, precedence, (tt, rr) -> createNode(predicate, Token.concat(tt, rr), constructor, boolFunctor, rr)));
                 Variable nodVar = new Variable(post.tokens(), post, "n");
                 Variable litVar = new Variable(litPost.tokens(), litPost, "l");
                 Predicate conclusion = new Predicate(functor, tokens, nodVar);
@@ -531,7 +533,7 @@ public final class KnowledgeBase {
                 addRule(new Rule(tokens, conclusion, condition, false));
             }
             return functor;
-        } else if (sig.length() == 3 && sig.get(0) instanceof Type && sig.get(1) instanceof String && sig.get(2) instanceof Type) {
+        } else if (sig.length() == 3 && sig.get(0) instanceof Type pre && sig.get(1) instanceof String oper && sig.get(2) instanceof Type post) {
             // InfixOperator
             if (precedence == null) {
                 throw new ParseException("No precedence defined " + sig, tokens);
@@ -539,20 +541,18 @@ public final class KnowledgeBase {
             if (!predicate) {
                 type = type.function();
             }
-            Type pre = (Type) sig.get(0);
-            String oper = (String) sig.get(1);
-            Type post = (Type) sig.get(2);
             boolean rel = bool && !pre.isLiteral() && !post.isLiteral();
             Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> n.toString(0) + oper + n.toString(1), precedence, pre, post);
             addFunctor(functor, tokens, rel ? null : constructor);
-            register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), tt.append(rr.tokens())), rel ? null : constructor, functor, ll, rr)));
+            register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), Token.concat(tt, rr)), rel ? null : constructor, functor, ll, rr)));
             if (rel) {
                 Type litPre = pre.literal();
                 Type litPost = post.literal();
                 Functor boolFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper + n.toString(1), precedence, litPre, litPost);
                 booleans.updateAndGet(map -> map.put(functor, boolFunctor));
                 addFunctor(boolFunctor, tokens, constructor);
-                register(InfixParselet.of(litPre, oper, litPost, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), tt.append(rr.tokens())), constructor, boolFunctor, ll, rr)));
+                //noinspection ConstantValue (predicate is always true)
+                register(InfixParselet.of(litPre, oper, litPost, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), Token.concat(tt, rr)), constructor, boolFunctor, ll, rr)));
                 Variable nodVar0 = new Variable(pre.tokens(), pre, "n1");
                 Variable litVar0 = new Variable(litPre.tokens(), litPre, "l1");
                 Variable nodVar1 = new Variable(post.tokens(), post, "n2");
@@ -575,21 +575,21 @@ public final class KnowledgeBase {
     private final AtomicReference<Map<String, Variable>>                variables        = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, InferResult>>          facts            = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, Set<Rule>>>            rules            = new AtomicReference<>();
-
+    //
     private final AtomicReference<Map<Object, AtomicParselet>>          prefixParselets  = new AtomicReference<>();
     private final AtomicReference<Map<Object, PostfixParselet>>         postfixParselets = new AtomicReference<>();
     private final AtomicReference<Map<Object, List<CallWithArgs>>>      callsWithArgs    = new AtomicReference<>();
-
+    //
     private final AtomicReference<Set<String>>                          allOperators     = new AtomicReference<>();
     private final AtomicReference<Map<Functor, Functor>>                booleans         = new AtomicReference<>();
-
+    //
     private final AtomicInteger                                         depth            = new AtomicInteger();
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization      = new AtomicReference<>();
     private final InferContext                                          context;
     private final KnowledgeBase                                         init;
     private boolean                                                     stopped;
+    private boolean                                                     noInfer;
 
-    @SuppressWarnings("unchecked")
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
@@ -686,8 +686,18 @@ public final class KnowledgeBase {
         return facts.get();
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected void memoization(Predicate predicate, InferResult result) {
+    public boolean noInfer() {
+        return noInfer;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean noInfer(boolean b) {
+        boolean old = noInfer;
+        noInfer = b;
+        return old;
+    }
+
+    void memoization(Predicate predicate, InferResult result) {
         boolean known = result.cycles().isEmpty() && result.isComplete();
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();
@@ -747,8 +757,7 @@ public final class KnowledgeBase {
         return map;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public final void addFact(Predicate fact) {
+    public void addFact(Predicate fact) {
         Functor functor = fact.functor();
         List<Type> args = functor.args();
         facts.updateAndGet(map -> {
@@ -760,7 +769,6 @@ public final class KnowledgeBase {
         });
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact, Predicate predicate, int i, Type cls) {
         Type type = predicate.getType(i);
         if (cls.isAssignableFrom(type)) {
@@ -775,34 +783,29 @@ public final class KnowledgeBase {
         return map;
     }
 
-    public final void addType(Type type) {
+    public void addType(Type type) {
         types.updateAndGet(map -> map.put(type.name(), type));
     }
 
-    public final Type getType(String name) {
+    public Type getType(String name) {
         return types.get().get(name);
     }
 
-    public final void addVar(Variable var) {
+    public void addVar(Variable var) {
         variables.updateAndGet(map -> map.put(var.name(), var));
     }
 
-    public final Variable getVar(String name) {
+    public Variable getVar(String name) {
         return variables.get().get(name);
     }
 
-    public final void addFunctor(Functor functor, Token[] tokens, Constructor<? extends Node> constructor) throws ParseException {
-        if (constructor != null) {
+    public void addFunctor(Functor functor, @SuppressWarnings("unused") Token[] tokens, Constructor<? extends Node> constructor) {
+        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
             Class<? extends Node> cls = constructor.getDeclaringClass();
-            try {
-                Field functorField = cls.getDeclaredField("FUNCTOR");
-                try {
-                    functorField.setAccessible(true);
-                    functorField.set(null, functor);
-                } catch (IllegalArgumentException | IllegalAccessException | SecurityException e) {
-                    throw new ParseException(e.getClass().getSimpleName() + ": " + e.getMessage(), tokens);
-                }
-            } catch (NoSuchFieldException | SecurityException e) {
+            Consumer<Functor> setter = FUNCTOR_REGISTRATION.get().get(cls);
+            if (setter != null) {
+                setter.accept(functor);
+                FUNCTOR_REGISTRATION.updateAndGet(map -> map.remove(cls));
             }
         }
         functors.updateAndGet(set -> set.add(functor));
@@ -816,80 +819,128 @@ public final class KnowledgeBase {
         return depth.get();
     }
 
-    public void print(PrintStream stream) {
-        for (Entry<String, Type> e : types()) {
+    public void print(PrintStream stream, boolean withTokens) {
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "types", U.Colors.code(0));
+        for (Entry<String, Type> e : types().sortedBy(e -> (Type.predefined().contains(e.getValue()) || e.getValue().get(0) instanceof TokenType ? "0" : "1") + e.getValue().name())) {
             Type type = e.getValue();
-            String supers = type.supers().toString();
-            stream.println(type + " :: " + supers.substring(4, supers.length() - 1));
+            String supers = type.supers().isEmpty() ? "" : ":: " + type.supers().map(Type::toString).collect(Collectors.joining(", "));
+            stream.printf("        %-20s %-25s %s%n", type, supers, type.source());
+            if (withTokens) {
+                for (Token token : type.tokens()) {
+                    stream.println("            " + token);
+                }
+            }
         }
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "functors", U.Colors.code(0));
         for (Functor e : functors()) {
-            stream.println(e.resultType() + " ::= " + e);
+            stream.printf("        %-20s ::= %s%n", e.resultType(), e);
+            if (withTokens) {
+                for (Token token : e.tokens()) {
+                    stream.println("            " + token);
+                }
+            }
         }
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "variables", U.Colors.code(0));
         for (Entry<String, Variable> e : variables()) {
             Variable var = e.getValue();
-            stream.println(var.type() + " " + var.name());
+            stream.println("        " + var.type() + " " + var.name());
+            if (withTokens) {
+                for (Token token : var.tokens()) {
+                    stream.println("            " + token);
+                }
+            }
         }
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "rules", U.Colors.code(0));
         Set<Rule> rules = rules().flatMap(Entry::getValue).asSet();
         for (Rule r : rules) {
-            stream.println(r);
+            stream.println("        " + r);
+            if (withTokens) {
+                for (Token token : r.tokens()) {
+                    stream.println("            " + token);
+                }
+            }
         }
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "facts", U.Colors.code(0));
         for (Entry<Predicate, InferResult> e : facts()) {
             if (e.getValue().isTrueCC()) {
-                stream.println(e.getKey());
+                stream.println("        " + e.getKey());
+                if (withTokens) {
+                    for (Token token : e.getKey().tokens()) {
+                        stream.println("            " + token);
+                    }
+                }
             }
         }
     }
 
     public void register(AtomicParselet parselet) {
         Type expected = parselet.expected();
+        Object k1 = parselet.key1();
+        Object k2 = parselet.key2();
+        String o1 = parselet.oper1();
         Object key;
-        if (expected != null) {
-            key = parselet.key2() != null ? Triple.of(parselet.expected(), parselet.key1(), parselet.key2()) : Pair.of(parselet.expected(), parselet.key1());
+        if (expected != null && k2 != null) {
+            key = Triple.of(expected, k1, k2);
+        } else if (expected != null) {
+            key = Pair.of(expected, k1);
+        } else if (k2 != null) {
+            key = Pair.of(k1, k2);
         } else {
-            key = parselet.key2() != null ? Pair.of(parselet.key1(), parselet.key2()) : parselet.key1();
+            key = k1;
         }
         if (prefixParselets.get().containsKey(key)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("prefixParselet already registered " + key);
         }
         prefixParselets.updateAndGet(map -> map.put(key, parselet));
-        if (parselet.oper1() != null) {
-            allOperators.updateAndGet(set -> set.add(parselet.oper1()));
+        if (o1 != null) {
+            allOperators.updateAndGet(set -> set.add(o1));
         }
     }
 
     public void register(PostfixParselet parselet) {
         Type expected = parselet.expected();
         Type left = parselet.left();
+        Object k1 = parselet.key1();
+        Object k2 = parselet.key2();
+        String o1 = parselet.oper1();
         Object key;
-        if (expected != null) {
-            key = parselet.key2() != null ? Quadruple.of(expected, left, parselet.key1(), parselet.key2()) : Triple.of(expected, left, parselet.key1());
+        if (expected != null && k2 != null) {
+            key = Quadruple.of(expected, left, k1, k2);
+        } else if (expected != null) {
+            key = Triple.of(expected, left, k1);
+        } else if (k2 != null) {
+            key = Triple.of(left, k1, k2);
         } else {
-            key = parselet.key2() != null ? Triple.of(left, parselet.key1(), parselet.key2()) : Pair.of(left, parselet.key1());
+            key = Pair.of(left, k1);
         }
         if (postfixParselets.get().containsKey(key)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("postfixParselet already registered " + key);
         }
         postfixParselets.updateAndGet(map -> map.put(key, parselet));
-        if (parselet.oper1() != null) {
-            allOperators.updateAndGet(set -> set.add(parselet.oper1()));
+        if (o1 != null) {
+            allOperators.updateAndGet(set -> set.add(o1));
         }
     }
 
     public void register(CallWithArgs call) {
-        Object key = call.expected() != null ? Pair.of(call.expected(), call.key()) : call.key();
-        callsWithArgs.updateAndGet(map -> map.compute(key, (k, v) -> {
+        String name = call.name();
+        TokenType type = call.type();
+        Type exp = call.expected();
+        Object k = call.key();
+        Object key = exp != null ? Pair.of(exp, k) : k;
+        callsWithArgs.updateAndGet(map -> map.compute(key, (__, v) -> {
             if (v == null) {
-                if (call.expected() != null) {
-                    if (call.name() != null) {
-                        register(new CallWithArgsParselet(call.expected(), call.name()));
+                if (exp != null) {
+                    if (name != null) {
+                        register(new CallWithArgsParselet(exp, name));
                     } else {
-                        register(new CallWithArgsParselet(call.expected(), call.type()));
+                        register(new CallWithArgsParselet(exp, type));
                     }
                 } else {
-                    if (call.name() != null) {
-                        register(new CallWithArgsParselet(call.name()));
+                    if (name != null) {
+                        register(new CallWithArgsParselet(name));
                     } else {
-                        register(new CallWithArgsParselet(call.type()));
+                        register(new CallWithArgsParselet(type));
                     }
                 }
                 return List.of(call);
@@ -905,143 +956,147 @@ public final class KnowledgeBase {
     }
 
     public List<CallWithArgs> callsWithArgs(Type expected, Token token) {
-        List<CallWithArgs> list = callsWithArgs.get().get(Pair.of(expected, token.text()));
+        String text = token.text();
+        TokenType type = token.type();
+        Map<Object, List<CallWithArgs>> cwaMap = callsWithArgs.get();
+        List<CallWithArgs> list;
+
+        list = cwaMap.get(Pair.of(expected, text));
         if (list != null) {
             return list;
         }
-        list = callsWithArgs.get().get(Pair.of(expected, token.type()));
+        list = cwaMap.get(Pair.of(expected, type));
         if (list != null) {
             return list;
         }
-        list = callsWithArgs.get().get(token.text());
+        list = cwaMap.get(text);
         if (list != null) {
             return list;
         }
-        return callsWithArgs.get().get(token.type());
+        return cwaMap.get(type);
     }
 
     public AtomicParselet prefix(Type expected, Token token1, Token token2) {
+        assert token1 != null;
+
+        Map<Object, AtomicParselet> ppMap = prefixParselets.get();
+        AtomicParselet pp;
+
+        String text1 = token1.text();
+        TokenType type1 = token1.type();
         if (token2 != null) {
-            Triple<Type, Object, Object> triple = Triple.of(expected, token1.text(), token2.text());
-            AtomicParselet prefix = prefixParselets.get().get(triple);
-            if (prefix != null) {
-                return prefix;
+            String text2 = token2.text();
+            TokenType type2 = token2.type();
+
+            pp = ppMap.get(Triple.of(expected, text1, text2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(expected, token1.text(), token2.type());
-            prefix = prefixParselets.get().get(triple);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Triple.of(expected, text1, type2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(expected, token1.type(), token2.text());
-            prefix = prefixParselets.get().get(triple);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Triple.of(expected, type1, text2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(expected, token1.type(), token2.type());
-            prefix = prefixParselets.get().get(triple);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Triple.of(expected, type1, type2));
+            if (pp != null) {
+                return pp;
             }
-            Pair<Object, Object> pair = Pair.of(token1.text(), token2.text());
-            prefix = prefixParselets.get().get(pair);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Pair.of(text1, text2));
+            if (pp != null) {
+                return pp;
             }
-            pair = Pair.of(token1.text(), token2.type());
-            prefix = prefixParselets.get().get(pair);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Pair.of(text1, type2));
+            if (pp != null) {
+                return pp;
             }
-            pair = Pair.of(token1.type(), token2.text());
-            prefix = prefixParselets.get().get(pair);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Pair.of(type1, text2));
+            if (pp != null) {
+                return pp;
             }
-            pair = Pair.of(token1.type(), token2.type());
-            prefix = prefixParselets.get().get(pair);
-            if (prefix != null) {
-                return prefix;
+            pp = ppMap.get(Pair.of(type1, type2));
+            if (pp != null) {
+                return pp;
             }
         }
-        Pair<Object, Object> pair = Pair.of(expected, token1.text());
-        AtomicParselet prefix = prefixParselets.get().get(pair);
-        if (prefix != null) {
-            return prefix;
+        pp = ppMap.get(Pair.of(expected, text1));
+        if (pp != null) {
+            return pp;
         }
-        pair = Pair.of(expected, token1.type());
-        prefix = prefixParselets.get().get(pair);
-        if (prefix != null) {
-            return prefix;
+        pp = ppMap.get(Pair.of(expected, type1));
+        if (pp != null) {
+            return pp;
         }
-        prefix = prefixParselets.get().get(token1.text());
-        if (prefix != null) {
-            return prefix;
+        pp = ppMap.get(text1);
+        if (pp != null) {
+            return pp;
         }
-        return prefixParselets.get().get(token1.type());
+        return ppMap.get(type1);
     }
 
     public PostfixParselet postfix(Type expected, Type left, Token token1, Token token2) {
+        assert token1 != null;
+
+        PostfixParselet pp;
+        Map<Object, PostfixParselet> ppMap = postfixParselets.get();
+
+        String text1 = token1.text();
+        TokenType type1 = token1.type();
         if (token2 != null) {
-            Quadruple<Type, Type, Object, Object> quadruple = Quadruple.of(expected, left, token1.text(), token2.text());
-            PostfixParselet postfix = postfixParselets.get().get(quadruple);
-            if (postfix != null) {
-                return postfix;
+            String text2 = token2.text();
+            TokenType type2 = token2.type();
+
+            pp = ppMap.get(Quadruple.of(expected, left, text1, text2));
+            if (pp != null) {
+                return pp;
             }
-            quadruple = Quadruple.of(expected, left, token1.text(), token2.type());
-            postfix = postfixParselets.get().get(quadruple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Quadruple.of(expected, left, text1, type2));
+            if (pp != null) {
+                return pp;
             }
-            quadruple = Quadruple.of(expected, left, token1.type(), token2.text());
-            postfix = postfixParselets.get().get(quadruple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Quadruple.of(expected, left, type1, text2));
+            if (pp != null) {
+                return pp;
             }
-            quadruple = Quadruple.of(expected, left, token1.type(), token2.type());
-            postfix = postfixParselets.get().get(quadruple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Quadruple.of(expected, left, type1, type2));
+            if (pp != null) {
+                return pp;
             }
-            Triple<Type, Object, Object> triple = Triple.of(left, token1.text(), token2.text());
-            postfix = postfixParselets.get().get(triple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Triple.of(left, text1, text2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(left, token1.text(), token2.type());
-            postfix = postfixParselets.get().get(triple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Triple.of(left, text1, type2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(left, token1.type(), token2.text());
-            postfix = postfixParselets.get().get(triple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Triple.of(left, type1, text2));
+            if (pp != null) {
+                return pp;
             }
-            triple = Triple.of(left, token1.type(), token2.type());
-            postfix = postfixParselets.get().get(triple);
-            if (postfix != null) {
-                return postfix;
+            pp = ppMap.get(Triple.of(left, type1, type2));
+            if (pp != null) {
+                return pp;
             }
         }
-        Triple<Type, Object, Object> triple = Triple.of(expected, left, token1.text());
-        PostfixParselet postfix = postfixParselets.get().get(triple);
-        if (postfix != null) {
-            return postfix;
+        pp = ppMap.get(Triple.of(expected, left, text1));
+        if (pp != null) {
+            return pp;
         }
-        triple = Triple.of(expected, left, token1.type());
-        postfix = postfixParselets.get().get(triple);
-        if (postfix != null) {
-            return postfix;
+        pp = ppMap.get(Triple.of(expected, left, type1));
+        if (pp != null) {
+            return pp;
         }
-        Pair<Type, Object> pair = Pair.of(left, token1.text());
-        postfix = postfixParselets.get().get(pair);
-        if (postfix != null) {
-            return postfix;
+        pp = ppMap.get(Pair.of(left, text1));
+        if (pp != null) {
+            return pp;
         }
-        pair = Pair.of(left, token1.type());
-        return postfixParselets.get().get(pair);
+        return ppMap.get(Pair.of(left, type1));
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isOperator(String oper) {
         return allOperators.get().contains(oper);
     }

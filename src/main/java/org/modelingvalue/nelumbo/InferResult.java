@@ -71,6 +71,7 @@ public interface InferResult {
         return facts().isEmpty() && falsehoods().isEmpty();
     }
 
+    @SuppressWarnings("unused")
     default boolean isEmptyII() {
         return facts().isEmpty() && falsehoods().isEmpty() && !completeFacts() && !completeFalsehoods();
     }
@@ -387,7 +388,6 @@ public interface InferResult {
         };
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     static InferResult cycle(Set<Predicate> facts, Set<Predicate> falsehoods, Predicate predicate) {
         return new InferResultImpl() {
             @Override
@@ -417,7 +417,7 @@ public interface InferResult {
 
             @Override
             public Set<Predicate> cycles() {
-                return (Set) predicate.singleton();
+                return predicate.singleton();
             }
 
             @Override
@@ -467,20 +467,20 @@ public interface InferResult {
     }
 
     default InferResult addAnd(InferResult other) {
-        Set<Predicate> facts = facts().addAll(other.facts());
-        boolean completeFacts = completeFacts() || other.completeFacts();
-        Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
-        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(other.cycles());
+        Set<Predicate> facts              = facts().addAll(other.facts());
+        boolean        completeFacts      = completeFacts() || other.completeFacts();
+        Set<Predicate> falsehoods         = falsehoods().addAll(other.falsehoods());
+        boolean        completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
+        Set<Predicate> cycles             = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
     default InferResult addOr(InferResult other) {
-        Set<Predicate> facts = facts().addAll(other.facts());
-        boolean completeFacts = completeFacts() && other.completeFacts();
-        Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
-        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(other.cycles());
+        Set<Predicate> facts              = facts().addAll(other.facts());
+        boolean        completeFacts      = completeFacts() && other.completeFacts();
+        Set<Predicate> falsehoods         = falsehoods().addAll(other.falsehoods());
+        boolean        completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
+        Set<Predicate> cycles             = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
@@ -489,16 +489,16 @@ public interface InferResult {
     }
 
     default InferResult or(InferResult other) {
-        Set<Predicate> facts = facts().addAll(other.facts());
+        Set<Predicate> facts      = facts().addAll(other.facts());
         Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
         if (facts.anyMatch(Predicate::isFullyBound) || falsehoods.anyMatch(Predicate::isFullyBound)) {
-            facts = facts.retainAll(Predicate::isFullyBound);
+            facts      = facts.retainAll(Predicate::isFullyBound);
             falsehoods = falsehoods.retainAll(Predicate::isFullyBound);
         }
         falsehoods = falsehoods.removeAll(facts);
-        boolean completeFacts = completeFacts() && other.completeFacts();
-        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(other.cycles());
+        boolean        completeFacts      = completeFacts() && other.completeFacts();
+        boolean        completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
+        Set<Predicate> cycles             = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
@@ -506,6 +506,7 @@ public interface InferResult {
         return completeFacts() && completeFalsehoods() ? this : of(facts(), true, falsehoods(), true, cycles());
     }
 
+    @SuppressWarnings("unused")
     default InferResult bind(Predicate from, Predicate to) {
         return of(bind(facts(), from, to), completeFacts(), bind(falsehoods(), from, to), completeFalsehoods(), cycles());
     }
@@ -526,7 +527,7 @@ public interface InferResult {
         return set.replaceAll(p -> p.equals(to) ? to : to.castFrom(p));
     }
 
-    static abstract class InferResultImpl implements InferResult {
+    abstract class InferResultImpl implements InferResult {
         @Override
         public String toString() {
             List<Predicate> overflow = stackOverflow();
@@ -542,10 +543,9 @@ public interface InferResult {
             }
         }
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
         private String toString(Set<Predicate> predicates, boolean complete) {
             List<String> stringList = predicates.map(Object::toString).sorted().asList();
-            String result = stringList.toString().substring(4);
+            String       result     = stringList.toString().substring(4);
             return complete ? result : result.substring(0, result.length() - 1) + (predicates.isEmpty() ? "..]" : ",..]");
         }
 
@@ -561,13 +561,12 @@ public interface InferResult {
                 return true;
             } else if (obj == null) {
                 return false;
-            } else if (!(obj instanceof InferResult)) {
+            } else if (!(obj instanceof InferResult other)) {
                 return false;
             } else {
-                InferResult other = (InferResult) obj;
                 return facts().equals(other.facts()) && completeFacts() == other.completeFacts() && //
-                        falsehoods().equals(other.falsehoods()) && completeFalsehoods() == other.completeFalsehoods() && //
-                        cycles().equals(other.cycles());
+                       falsehoods().equals(other.falsehoods()) && completeFalsehoods() == other.completeFalsehoods() && //
+                       cycles().equals(other.cycles());
             }
         }
     }

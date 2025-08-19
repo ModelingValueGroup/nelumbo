@@ -20,25 +20,59 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import java.io.Serial;
+
 public class ParseException extends Exception {
+    @Serial
     private static final long serialVersionUID = -8359192414582977261L;
 
-    private final int         line;
-    private final int         position;
-    private final int         index;
-    private final int         length;
-    private final String      fileName;
+    private final int    line;
+    private final int    position;
+    private final int    index;
+    private final int    length;
+    private final String fileName;
 
     public ParseException(String s, Token... tokens) {
-        this(s, tokens[0].line(), tokens[0].position(), tokens[0].index(), tokens[tokens.length - 1].position() - tokens[0].position() + tokens[tokens.length - 1].text().length(), tokens[0].fileName());
+        this(null, s, tokens);
+    }
+
+    public ParseException(Throwable cause, String s, Token... tokens) {
+        this(cause, s, tokens[0], tokens[tokens.length - 1]);
+    }
+
+    public ParseException(String s, Token firstToken, Token lastToken) {
+        this(null, s, firstToken, lastToken);
+    }
+
+    private ParseException(Throwable cause, String s, Token firstToken, Token lastToken) {
+        this(cause, //
+             s,//
+             firstToken.line(),//
+             firstToken.position(),//
+             firstToken.index(),//
+             lastToken.position() - firstToken.position() + lastToken.text().length(),//
+             firstToken.fileName()//
+            );
+    }
+
+    public ParseException(String message, String fileName) {
+        this(null, message, fileName);
+    }
+
+    public ParseException(Throwable cause, String message, String fileName) {
+        this(cause, message, 0, 0, 0, 0, fileName);
     }
 
     public ParseException(String message, int line, int position, int index, int length, String fileName) {
-        super(message);
-        this.line = line;
+        this(null, message, line, position, index, length, fileName);
+    }
+
+    public ParseException(Throwable cause, String message, int line, int position, int index, int length, String fileName) {
+        super(message, cause);
+        this.line     = line;
         this.position = position;
-        this.index = index;
-        this.length = length;
+        this.index    = index;
+        this.length   = length;
         this.fileName = fileName;
     }
 
@@ -67,8 +101,8 @@ public class ParseException extends Exception {
         return length;
     }
 
+    @SuppressWarnings("unused")
     public String fileName() {
         return fileName;
     }
-
 }

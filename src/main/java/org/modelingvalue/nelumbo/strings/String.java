@@ -21,6 +21,7 @@
 package org.modelingvalue.nelumbo.strings;
 
 import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.syntax.Token;
 
@@ -33,8 +34,11 @@ public final class String extends Terminal {
 
     private static final java.lang.String DELIM = "\"";
 
-    // Automatically set in addFcuntor in KnowledgeBase
     private static Functor FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(String.class, f -> FUNCTOR = f);
+    }
 
     public String(Functor functor, Token[] tokens, Object[] args) {
         super(functor, tokens, parse((java.lang.String) args[0]));

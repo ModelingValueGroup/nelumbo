@@ -20,12 +20,15 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public abstract class CompoundPredicate extends Predicate {
+    @Serial
     private static final long serialVersionUID = -4926802375244295351L;
 
     protected CompoundPredicate(Functor functor, Token[] tokens, Object... predicates) {

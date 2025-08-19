@@ -20,9 +20,12 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class Terminal extends Node {
+    @Serial
     private static final long serialVersionUID = 7548506547559092927L;
 
     public Terminal(Functor functor, Token[] tokens, Object... args) {

@@ -20,12 +20,14 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
-    private static final long    serialVersionUID = -928776822979604743L;
+    @Serial
+    private static final long serialVersionUID = -928776822979604743L;
 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
     protected static final int[] ONE_ZERO         = new int[]{1, 0};
@@ -56,7 +58,6 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         return p != null ? p : Boolean.UNKNOWN;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     protected final InferResult infer(InferContext context) {
         Predicate[] predicate = new Predicate[2];

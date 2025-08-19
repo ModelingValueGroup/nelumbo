@@ -20,6 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -32,24 +33,36 @@ import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class Node extends StructImpl {
-    private static final long     serialVersionUID = 7315776001191198132L;
+    @Serial
+    private static final long serialVersionUID = 7315776001191198132L;
 
-    private int                   hashCode         = 0;
-    private Map<Variable, Object> variables;
-    private int                   nrOfUnbound      = -1;
-    protected final int           start;
+    private         int                   hashCode    = 0;
+    private         Map<Variable, Object> variables;
+    private         int                   nrOfUnbound = -1;
+    protected final int                   start;
 
     public Node(Functor functor, Token[] tokens, Object... args) {
         super(array(functor, tokens, args));
         start = tokens.length + 1;
+        //U.printTokens("A MAKE NODE " + getClass().getSimpleName() + " " /*+ functor*/, Arrays.asList(tokens));
     }
 
     public Node(Type type, Token[] tokens, Object... args) {
         super(array(type, tokens, args));
         start = tokens.length + 1;
+        //U.printTokens("B MAKE NODE " + getClass().getSimpleName() + " " + type, Arrays.asList(tokens));
     }
 
-    private static final Object[] array(Object functor, Token[] tokens, Object[] args) {
+    protected Node(Object[] args, int start) {
+        super(args);
+        //U.printTokens("C MAKE NODE " + getClass().getSimpleName() + " " + args[0], Arrays.asList(args).subList(1, start).stream().map(Token.class::cast).toList());
+        this.start = start;
+        if (get(0) instanceof Token) {
+            System.err.println("WARNING: Node.get(0) is a Token... is this an error??");
+        }
+    }
+
+    private static Object[] array(Object functor, Token[] tokens, Object[] args) {
         Object[] result = new Object[1 + tokens.length + args.length];
         result[0] = functor;
         System.arraycopy(tokens, 0, result, 1, tokens.length);
@@ -57,22 +70,19 @@ public class Node extends StructImpl {
         return result;
     }
 
-    protected Node(Object[] args, int start) {
-        super(args);
-        this.start = start;
-        if (get(0) instanceof Token) {
-            System.err.println();
-        }
-    }
-
     public Node setTokens(Token... tokens) {
-        Object[] result = new Object[1 + tokens.length + length()];
-        result[0] = typeOrFunctor();
-        System.arraycopy(tokens, 0, result, 1, tokens.length);
+        int      newStart = 1 + tokens.length;
+        Object[] newData  = new Object[newStart + length()];
+        // add type to array
+        newData[0] = typeOrFunctor();
+        // add new tokens to array
+        System.arraycopy(tokens, 0, newData, 1, tokens.length);
+        // add args to array
         for (int i = 0; i < length(); i++) {
-            result[1 + tokens.length + i] = get(i);
+            newData[newStart + i] = get(i);
         }
-        return struct(result, tokens.length + 1);
+        // make new node
+        return struct(newData, newStart);
     }
 
     @Override
@@ -115,7 +125,7 @@ public class Node extends StructImpl {
                 Object e = get(i);
                 r = 31 * r + (e == null ? 0 : e.hashCode());
             }
-            r = 31 * r + super.get(0).hashCode();
+            r        = 31 * r + super.get(0).hashCode();
             hashCode = r == 0 ? 1 : r;
         }
         return hashCode;
@@ -198,19 +208,25 @@ public class Node extends StructImpl {
         if (render != null) {
             return render.apply(this);
         }
-        Functor functor = functor();
-        String string = (functor != null ? functor.name() : type().name()) + "(";
-        for (int i = 0; i < length(); i++) {
-            if (i > 0) {
-                string += ",";
-            }
-            string += toString(i);
+        Functor       functor = functor();
+        StringBuilder sb      = new StringBuilder();
+        if (functor != null) {
+            sb.append("F#").append(functor.name());
+        } else {
+            sb.append("T#").append(type().name());
         }
-        return string + ")";
+        sb.append('(');
+        String sep = "";
+        for (int i = 0; i < length(); i++) {
+            sb.append(sep).append(toString(i));
+            sep = ", ";
+        }
+        sb.append(')');
+        return sb.toString();
     }
 
     public final String toString(int i) {
-        Object v = get(i);
+        Object v      = get(i);
         String string = StringUtil.toString(v);
         if (v instanceof Node && render() != null && ((Node) v).render() != null) {
             if (!functor().equals(((Node) v).functor()) && precedence() >= ((Node) v).precedence()) {
@@ -276,7 +292,7 @@ public class Node extends StructImpl {
 
     private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
-        int i = idx[ii] + start;
+        int      i     = idx[ii] + start;
         if (ii < idx.length - 1) {
             Node s = (Node) array[i];
             array[i] = s.set(ii + 1, idx, val);
@@ -286,12 +302,10 @@ public class Node extends StructImpl {
         return struct(array, start);
     }
 
-    @SuppressWarnings("unchecked")
     protected Node struct(Object[] array, int start) {
         return new Node(array, start);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     protected final Object get(Node declaration, Variable var) {
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
@@ -308,7 +322,6 @@ public class Node extends StructImpl {
         return null;
     }
 
-    @SuppressWarnings("rawtypes")
     protected final Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars, boolean check) {
         if (typeOrFunctor().equals(declaration.typeOrFunctor())) {
             for (int i = 0; i < length(); i++) {
@@ -323,14 +336,12 @@ public class Node extends StructImpl {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private static Map<Variable, Object> getBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, boolean check) {
         Type thisType = typeOf(thisVal);
         thisVal = thisVal instanceof Type ? null : thisVal;
-        if (declVal instanceof Variable) {
-            Variable var = (Variable) declVal;
-            Object varVal = vars.get(var);
-            Type varType = typeOf(varVal);
+        if (declVal instanceof Variable var) {
+            Object varVal  = vars.get(var);
+            Type   varType = typeOf(varVal);
             varVal = varVal instanceof Type ? null : varVal;
             if (varVal != null) {
                 if (thisVal != null && !thisVal.equals(varVal)) {
@@ -349,8 +360,7 @@ public class Node extends StructImpl {
             } else {
                 vars = vars.put(var, thisType);
             }
-        } else if (declVal instanceof Node && !(declVal instanceof Type)) {
-            Node declStruct = (Node) declVal;
+        } else if (declVal instanceof Node declStruct && !(declVal instanceof Type)) {
             if (thisVal != null) {
                 if (thisVal instanceof Node && !(thisVal instanceof Type)) {
                     vars = ((Node) thisVal).getBinding(declStruct, vars, check);
@@ -374,12 +384,11 @@ public class Node extends StructImpl {
         return setBinding(declaration, Map.of(Entry.of(var, val)));
     }
 
-    @SuppressWarnings("rawtypes")
     protected final Node setBinding(Node declaration, Map<Variable, Object> vars) {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
-            Object bound = setBinding(declaration.get(i), thisVal, vars);
+            Object bound   = setBinding(declaration.get(i), thisVal, vars);
             if (!Objects.equals(bound, thisVal)) {
                 if (array == null) {
                     array = toArray();
@@ -390,7 +399,6 @@ public class Node extends StructImpl {
         return array != null ? struct(array, start) : this;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private static Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars) {
         if (declVal instanceof Variable) {
             Object varVal = vars.get((Variable) declVal);
@@ -422,7 +430,7 @@ public class Node extends StructImpl {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object v = get(i);
-            Object r = v;
+            Object r;
             if (depth > 1 && v instanceof Node && !(v instanceof Type) && !((Node) v).atomic()) {
                 r = ((Node) v).signature(depth - 1);
             } else {
@@ -443,7 +451,6 @@ public class Node extends StructImpl {
         return array != null ? struct(array, start) : this;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     protected Set<? extends Node> generalize(boolean full) {
         Set<Node> result = Set.of();
         for (int i = 0; i < length(); i++) {

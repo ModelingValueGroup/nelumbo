@@ -75,6 +75,7 @@ public interface InferContext {
         return of(knowledgebase(), stack(), cycleResult(), reduce, trace());
     }
 
+    @SuppressWarnings("unused")
     default InferContext trace(boolean trace) {
         return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), reduce(), trace);
     }

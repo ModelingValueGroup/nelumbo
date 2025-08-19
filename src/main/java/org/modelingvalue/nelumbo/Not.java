@@ -20,13 +20,19 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Not extends CompoundPredicate {
+    @Serial
     private static final long serialVersionUID = -4543178470298951866L;
 
-    // Automatically set in addFcuntor in KnowledgeBase
-    private static Functor    FUNCTOR;
+    private static Functor FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(Not.class, f -> FUNCTOR = f);
+    }
 
     public Not(Functor functor, Token[] tokens, Object[] args) {
         super(functor, tokens, args[0]);
@@ -41,7 +47,6 @@ public final class Not extends CompoundPredicate {
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
     protected Not struct(Object[] array, int start, Predicate declaration) {
         return new Not(array, start, (Not) declaration);
     }
@@ -58,7 +63,7 @@ public final class Not extends CompoundPredicate {
 
     @Override
     protected InferResult infer(InferContext context) {
-        Predicate predicate = predicate();
+        Predicate   predicate  = predicate();
         InferResult predResult = predicate.infer(context);
         if (predResult.hasStackOverflow()) {
             return predResult;

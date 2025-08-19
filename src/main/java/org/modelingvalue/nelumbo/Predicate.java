@@ -20,6 +20,8 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -28,20 +30,18 @@ import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class Predicate extends Node {
-    private static final long      serialVersionUID   = -1605559565948158856L;
+    @Serial
+    private static final long serialVersionUID = -1605559565948158856L;
 
-    protected static final boolean RANDOM_NELUMBO     = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");
-    protected static final boolean REVERSE_NELUMBO    = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
-    protected static final int     MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
-
-    private static final int       MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
-
-    private final InferResult      cycleResult        = InferResult.cycle(Set.of(), Set.of(), this);
-
-    private final Predicate        declaration;
-
-    private Predicate              parent;
-    private int                    parentIdx;
+    protected static final boolean     RANDOM_NELUMBO     = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");
+    protected static final boolean     REVERSE_NELUMBO    = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
+    protected static final int         MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
+    private static final   int         MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
+    //
+    private final          InferResult cycleResult        = InferResult.cycle(Set.of(), Set.of(), this);
+    private final          Predicate   declaration;
+    private                Predicate   parent;
+    private                int         parentIdx;
 
     public Predicate(Functor functor, Token[] tokens, Object... args) {
         super(functor, tokens, args);
@@ -71,13 +71,13 @@ public class Predicate extends Node {
 
     protected void init(Predicate parent, int idx) {
         assert (this.parent == null && this.parentIdx == 0);
-        this.parent = (Predicate) parent;
+        this.parent    = parent;
         this.parentIdx = idx;
     }
 
     private Pair<Predicate, int[]> rootIdx() {
         if (parent != null) {
-            Pair<Predicate, int[]> root = ((Predicate) parent).rootIdx();
+            Pair<Predicate, int[]> root = parent.rootIdx();
             if (root != null) {
                 int[] idx = new int[root.b().length + 1];
                 System.arraycopy(root.b(), 0, idx, 1, root.b().length);
@@ -122,8 +122,9 @@ public class Predicate extends Node {
         return struct(array, start, null);
     }
 
+    @SuppressWarnings("unused")
     protected Predicate clearDeclaration() {
-        return struct(toArray(), start, (Predicate) null);
+        return struct(toArray(), start, null);
     }
 
     @Override
@@ -171,7 +172,6 @@ public class Predicate extends Node {
         return struct(array, start, declaration);
     }
 
-    @SuppressWarnings("unchecked")
     protected Predicate struct(Object[] array, int start, Predicate declaration) {
         return new Predicate(array, start, declaration);
     }
@@ -182,8 +182,12 @@ public class Predicate extends Node {
     }
 
     public InferResult infer() {
-        InferContext context = KnowledgeBase.CURRENT.get().context();
-        Predicate predicate = setBinding(variables());
+        KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+        if (knowledgeBase.noInfer()) {
+            return unknown();
+        }
+        InferContext context   = knowledgeBase.context();
+        Predicate    predicate = setBinding(variables());
         if (context.trace()) {
             System.out.println(context.prefix() + predicate);
         }
@@ -194,6 +198,7 @@ public class Predicate extends Node {
         return result;
     }
 
+    @SuppressWarnings("unused")
     protected InferResult expand(InferContext context) {
         throw new UnsupportedOperationException();
     }
@@ -211,12 +216,11 @@ public class Predicate extends Node {
         if (equals(from)) {
             return to;
         } else {
-            Predicate decl = declaration;
-            Object[] array = null;
+            Predicate decl  = declaration;
+            Object[]  array = null;
             for (int i = 0; i < length(); i++) {
                 Object thisVal = get(i);
-                if (thisVal instanceof Predicate) {
-                    Predicate fromDecl = (Predicate) thisVal;
+                if (thisVal instanceof Predicate fromDecl) {
                     Predicate toDecl = fromDecl.replace(from, to);
                     if (toDecl != fromDecl) {
                         decl = decl.set(i, toDecl.declaration);
@@ -240,16 +244,17 @@ public class Predicate extends Node {
         return (Predicate) super.set(to, get(from));
     }
 
-    @SuppressWarnings("unchecked")
-    protected final Predicate set(int i, Predicate... a) {
-        i += start;
-        Object[] predArray = toArray();
+    protected final Predicate set(int from, Predicate... a) {
         Object[] declArray = declaration.toArray();
+        int i = from + declaration.start;
         for (int x = 0; x < a.length; x++) {
-            predArray[i + x] = a[x];
             declArray[i + x] = a[x].declaration;
         }
-        return struct(predArray, start, declaration.struct(declArray, start, null));
+        Predicate newDeclaration = declaration.struct(declArray, declaration.start, null);
+
+        Object[] predArray = toArray();
+        System.arraycopy(a, 0, predArray, from + start , a.length);
+        return struct(predArray, start, newDeclaration);
     }
 
     public final InferResult unknown() {
@@ -268,10 +273,12 @@ public class Predicate extends Node {
         return InferResult.factsCI(singleton());
     }
 
+    @SuppressWarnings("unused")
     public final InferResult falsehoodIC() {
         return InferResult.falsehoodsIC(singleton());
     }
 
+    @SuppressWarnings("unused")
     public final InferResult factIC() {
         return InferResult.factsIC(singleton());
     }
@@ -325,6 +332,9 @@ public class Predicate extends Node {
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
+        if (KnowledgeBase.CURRENT.get().noInfer()) {
+            return unknown();
+        }
         Functor functor = functor();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
             return unknown();
@@ -361,11 +371,11 @@ public class Predicate extends Node {
     }
 
     private static InferResult flatten(InferResult result, List<Predicate> overflow, InferContext context) {
-        int stackSize = context.stack().size();
-        List<Predicate> todo = overflow.sublist(stackSize, overflow.size());
-        while (todo.size() > 0) {
+        int             stackSize = context.stack().size();
+        List<Predicate> todo      = overflow.sublist(stackSize, overflow.size());
+        while (!todo.isEmpty()) {
             Predicate predicate = todo.last();
-            result = predicate.fixpoint(context.pushOnStack(predicate));
+            result   = predicate.fixpoint(context.pushOnStack(predicate));
             overflow = result.stackOverflow();
             if (overflow != null) {
                 todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
@@ -379,7 +389,8 @@ public class Predicate extends Node {
 
     private InferResult fixpoint(InferContext context) {
         InferResult previousResult = null, cycleResult = this.cycleResult, nextResult;
-        do {
+        do
+        {
             nextResult = inferRules(context.putCycleResult(this, cycleResult));
             if (nextResult.hasStackOverflow()) {
                 return nextResult;
@@ -387,13 +398,13 @@ public class Predicate extends Node {
             if (nextResult.hasCycleWith(this)) {
                 if (!nextResult.equals(previousResult)) {
                     previousResult = nextResult;
-                    cycleResult = InferResult.cycle(nextResult.facts(), nextResult.falsehoods(), this);
+                    cycleResult    = InferResult.cycle(nextResult.facts(), nextResult.falsehoods(), this);
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
                     return InferResult.of(nextResult.facts(), nextResult.completeFacts(), //
-                            nextResult.falsehoods(), nextResult.completeFalsehoods(), //
-                            nextResult.cycles().remove(this));
+                                          nextResult.falsehoods(), nextResult.completeFalsehoods(), //
+                                          nextResult.cycles().remove(this));
                 }
             }
             return nextResult;
@@ -402,7 +413,7 @@ public class Predicate extends Node {
 
     private InferResult inferRules(InferContext context) {
         KnowledgeBase knowledgebase = context.knowledgebase();
-        InferResult result = knowledgebase.getFacts(this, context), ruleResult;
+        InferResult   result        = knowledgebase.getFacts(this, context), ruleResult;
         if (result.isTrueCC()) {
             return result;
         }

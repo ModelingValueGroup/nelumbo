@@ -20,13 +20,19 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class And extends BinaryPredicate {
+    @Serial
     private static final long serialVersionUID = -7248491569810098948L;
 
-    // Automatically set in addFcuntor in KnowledgeBase
-    private static Functor    FUNCTOR;
+    private static Functor FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(And.class, f -> FUNCTOR = f);
+    }
 
     public And(Functor functor, Token[] tokens, Object[] args) {
         super(functor, tokens, args[0], args[1]);
@@ -46,7 +52,6 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
     protected And struct(Object[] array, int start, Predicate declaration) {
         return new And(array, start, (And) declaration);
     }

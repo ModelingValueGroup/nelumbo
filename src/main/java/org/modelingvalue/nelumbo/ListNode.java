@@ -20,10 +20,13 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class ListNode extends Node {
+    @Serial
     private static final long serialVersionUID = 2275866157289787141L;
 
     public ListNode(Token[] tokens, Type elementType) {
@@ -34,6 +37,11 @@ public class ListNode extends Node {
         super(list.type(), tokens, list.elements().add(last));
     }
 
+    private ListNode(Object[] array, int start) {
+        super(array, start);
+    }
+
+    @SuppressWarnings("unused")
     public Type elementType() {
         return type().element();
     }
@@ -43,8 +51,14 @@ public class ListNode extends Node {
         return (List<T>) get(0);
     }
 
-    private ListNode(Object[] array, int start) {
-        super(array, start);
+    @Override
+    public Token[] tokens() {
+        assert super.tokens().length == 0;
+        Token[] tokens = Token.EMPTY;
+        for (Node e : elements()) {
+            tokens = Token.concat(tokens, e.tokens());
+        }
+        return tokens;
     }
 
     @Override

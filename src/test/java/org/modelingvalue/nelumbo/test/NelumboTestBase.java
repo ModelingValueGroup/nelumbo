@@ -20,20 +20,20 @@
 
 package org.modelingvalue.nelumbo.test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.LinkedList;
-
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Token;
 
+@SuppressWarnings("unused")
 public class NelumboTestBase {
+    static void setProp(String name, String def) {
+        String env = System.getenv(name);
+        System.setProperty(name, env != null ? env : System.getProperty(name, def));
+    }
     // Utilities
 
     public KnowledgeBase run(Runnable test) {
@@ -51,7 +51,7 @@ public class NelumboTestBase {
 
     public static void isFalse(Predicate pred) {
         InferResult result = getResult(pred);
-        assertFalse(!result.isFalse());
+        assertTrue(result.isFalse());
     }
 
     public static InferResult getResult(Predicate pred) {
@@ -64,25 +64,8 @@ public class NelumboTestBase {
 
     public static void hasResult(Predicate query, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods) {
         InferResult expectedResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
-        InferResult queryResult = getResult(query);
+        InferResult queryResult    = getResult(query);
         assertEquals(expectedResult, queryResult);
     }
 
-    public static void printKnowledgeBase() {
-        KnowledgeBase.CURRENT.get().print(System.err);
-    }
-
-    public static void printTokens(LinkedList<Token> tokens) {
-        for (Token token : tokens) {
-            System.out.println("Token: " + token);
-        }
-    }
-
-    public static void printResults(List<Node> roots) {
-        for (Node root : roots) {
-            if (root.type().equals(Type.RESULT)) {
-                System.out.println(root.toString(1));
-            }
-        }
-    }
 }

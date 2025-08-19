@@ -20,11 +20,14 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Collect extends Predicate {
+    @Serial
     private static final long serialVersionUID = -3084545514049410749L;
 
     private Variable          resultVar;
@@ -106,11 +109,11 @@ public final class Collect extends Predicate {
         return (Collect) super.declaration();
     }
 
-    public final Predicate condition() {
+    public Predicate condition() {
         return (Predicate) get(0);
     }
 
-    public final Predicate collector() {
+    public Predicate collector() {
         return (Predicate) get(1);
     }
 

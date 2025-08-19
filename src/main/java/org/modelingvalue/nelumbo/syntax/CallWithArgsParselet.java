@@ -45,24 +45,24 @@ public final class CallWithArgsParselet extends AtomicParselet {
 
     @Override
     public Node parse(Type expected, Parser parser, Token token) throws ParseException {
-        parser.consume(TokenType.LPAREN);
-        List<Node> args = List.of();
-        do {
+        Token      lparen = parser.consume(TokenType.LPAREN);
+        List<Node> args   = List.of();
+        do
+        {
             args = args.add(parser.parseNode(0, Type.NODE));
         } while (parser.match(TokenType.COMMA));
-        Token last = parser.consume(TokenType.RPAREN);
-        List<Type> types = args.replaceAll(Node::type);
-        CallWithArgs call = call(parser, token, types);
+        Token        rparen = parser.consume(TokenType.RPAREN);
+        List<Type>   types  = args.replaceAll(Node::type);
+        CallWithArgs call   = call(parser, token, types);
         if (call != null) {
-            return call.construct(token, args);
+            return call.construct(token, args).setTokens(Token.concat(token, lparen, args, rparen));
         }
-
         String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
-        throw new ParseException("Could not call " + token.text() + signature, token, last);
+        throw new ParseException("Could not call " + token.text() + signature, token, rparen);
     }
 
-    private CallWithArgs call(Parser parser, Token token, List<Type> args) throws ParseException {
-        KnowledgeBase kb = parser.knowledgeBase();
+    private CallWithArgs call(Parser parser, Token token, List<Type> args) {
+        KnowledgeBase      kb    = parser.knowledgeBase();
         List<CallWithArgs> calls = kb.callsWithArgs(expected(), token);
         if (calls != null) {
             for (CallWithArgs call : calls) {
@@ -73,5 +73,4 @@ public final class CallWithArgsParselet extends AtomicParselet {
         }
         return null;
     }
-
 }

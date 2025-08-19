@@ -20,9 +20,12 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.Serial;
+
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Variable extends Node {
+    @Serial
     private static final long serialVersionUID = -8998368070388908726L;
 
     public Variable(Token[] tokens, Type type, String name) {
