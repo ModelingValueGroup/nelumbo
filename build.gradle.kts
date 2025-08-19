@@ -41,7 +41,7 @@ publishing {
     publications {
         create<MavenPublication>("nelumbo") {
             from(components["java"])
-            artifact(tasks.shadowJar)
+            // artifact(tasks.shadowJar)
         }
     }
 }
