@@ -37,14 +37,14 @@ import org.modelingvalue.nelumbo.Variable;
 
 public final class Parser {
     public static List<Node> parse(String string) throws ParseException {
-        Tokenizer         tokenizer = new Tokenizer(string + "\n", string);
-        LinkedList<Token> tokens    = tokenizer.tokenize();
+        Tokenizer tokenizer = new Tokenizer(string + "\n", string);
+        LinkedList<Token> tokens = tokenizer.tokenize();
         return new Parser(tokens).parse();
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
         String packageName = clss.getPackageName();
-        String name        = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
+        String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
         return parse(clss, name);
     }
 
@@ -54,8 +54,8 @@ public final class Parser {
             if (stream == null) {
                 throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
-            InputStream       buffer = new BufferedInputStream(stream);
-            String            base   = new String(buffer.readAllBytes());
+            InputStream buffer = new BufferedInputStream(stream);
+            String base = new String(buffer.readAllBytes());
             LinkedList<Token> tokens = new Tokenizer(base, fileName).tokenize();
             return new Parser(tokens).parse();
         } catch (IOException e) {
@@ -74,7 +74,7 @@ public final class Parser {
 
     public Parser(LinkedList<Token> tokens, boolean noInfer) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
-        this.iterator      = tokens.listIterator();
+        this.iterator = tokens.listIterator();
         knowledgeBase.noInfer(noInfer);
     }
 
@@ -114,13 +114,13 @@ public final class Parser {
         // made this an array so that prefix() and postfix() can return new values in case a token was split
         // otherwise the unsplit Token is put in the Node
         Token[] t12 = new Token[2];
-        Node    left;
+        Parselet parselet;
+        Node left;
         if (expected.isList()) {
             Type elemType = expected.element();
             left = new ListNode(Token.EMPTY, elemType);
             if (!peek().type().end()) {
-                do
-                {
+                do {
                     Node node = parseNode(precedence, elemType);
                     if (!elemType.isAssignableFrom(node.type())) {
                         throw new ParseException("Expected element of type " + elemType + " but found " + node + " of type " + node.type(), node.tokens());
@@ -132,22 +132,22 @@ public final class Parser {
             t12[0] = consume();
             t12[1] = peek();
             assert t12[0] != null;
-            AtomicParselet prefix = prefix(expected, t12);
-            left = prefix.parse(expected, this, t12[0]);
+            parselet = parselet(expected, null, t12, -1);
+            left = parselet.parse(expected, this, null, t12[0]);
         }
         if (moreTokens()) {
             t12[0] = consume();
             t12[1] = peek();
             assert t12[0] != null;
-            PostfixParselet postfix = postfix(expected, left.type(), t12, precedence);
-            while (postfix != null) {
-                left = postfix.parse(expected, this, left, t12[0]);
+            parselet = parselet(expected, left.type(), t12, precedence);
+            while (parselet != null) {
+                left = parselet.parse(expected, this, left, t12[0]);
                 if (noMoreTokens()) {
                     return left;
                 }
-                t12[0]  = consume();
-                t12[1]  = peek();
-                postfix = postfix(expected, left.type(), t12, precedence);
+                t12[0] = consume();
+                t12[1] = peek();
+                parselet = parselet(expected, left.type(), t12, precedence);
             }
             // unread the token that ended the postfix chain
             unconsume(t12[0]);
@@ -155,58 +155,30 @@ public final class Parser {
         return left;
     }
 
-    private AtomicParselet prefix(Type expected, Token[] t12) throws ParseException {
-        Token          t1     = t12[0];
-        Token          t2     = t12[1];
-        AtomicParselet prefix = knowledgeBase.prefix(expected, t1, t2);
-        if (prefix != null) {
-            return prefix;
-        }
-        if (t1.type() == TokenType.OPERATOR) {
-            // no prefix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
-            Token t1Init = t1;
-            for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
-                t1     = t1Init.splitGet1(len);
-                t2     = t1Init.splitGet2(len);
-                prefix = knowledgeBase.prefix(expected, t1, t2);
-                if (prefix != null) {
-                    splitCurrentToken(t1, t2);
-                    t12[0] = t1;
-                    t12[1] = t2;
-                    return prefix;
-                }
-                if (len == 1) {
-                    throw new ParseException("Operator " + t1Init.text() + " not defined", t1Init);
-                }
-            }
-        }
-        throw new ParseException("Prefix " + t1.text() + " not defined", t1);
-    }
-
-    private PostfixParselet postfix(Type expected, Type left, Token[] t12, int precedence) throws ParseException {
-        Token           t1      = t12[0];
-        Token           t2      = t12[1];
-        PostfixParselet postfix = doPostfix(expected, left, t1, t2);
-        if (postfix != null) {
-            if (precedence < postfix.precedence()) {
-                return postfix;
+    private Parselet parselet(Type expected, Type left, Token[] t12, int precedence) throws ParseException {
+        Token t1 = t12[0];
+        Token t2 = t12[1];
+        Parselet parselet = doParselet(expected, left, t1, t2);
+        if (parselet != null) {
+            if (precedence < parselet.precedence()) {
+                return parselet;
             } else {
                 return null;
             }
         }
         if (t1.type() == TokenType.OPERATOR) {
-            // no postfix found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
+            // no parselet found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
             Token t1Init = t1;
             for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
-                t1      = t1Init.splitGet1(len);
-                t2      = t1Init.splitGet2(len);
-                postfix = doPostfix(expected, left, t1, t2);
-                if (postfix != null) {
-                    if (precedence < postfix.precedence()) {
+                t1 = t1Init.splitGet1(len);
+                t2 = t1Init.splitGet2(len);
+                parselet = doParselet(expected, left, t1, t2);
+                if (parselet != null) {
+                    if (precedence < parselet.precedence()) {
                         splitCurrentToken(t1, t2);
                         t12[0] = t1;
                         t12[1] = t2;
-                        return postfix;
+                        return parselet;
                     } else {
                         return null;
                     }
@@ -218,20 +190,23 @@ public final class Parser {
         return null;
     }
 
-    private PostfixParselet doPostfix(Type expected, Type left, Token token1, Token token2) {
+    private Parselet doParselet(Type expected, Type left, Token token1, Token token2) {
+        if (left == null) {
+            return knowledgeBase.parselet(expected, null, token1, token2);
+        }
         Set<Type> pre, post = Set.of(left);
         while (!post.isEmpty()) {
-            pre  = post;
+            pre = post;
             post = Set.of();
             for (Type type : pre) {
-                PostfixParselet postfix = knowledgeBase.postfix(expected, type, token1, token2);
-                if (postfix != null) {
-                    return postfix;
+                Parselet parselet = knowledgeBase.parselet(expected, type, token1, token2);
+                if (parselet != null) {
+                    return parselet;
                 }
                 if (expected == Type.PREDICATE && !type.isLiteral()) {
-                    postfix = knowledgeBase.postfix(expected, type.literal(), token1, token2);
-                    if (postfix != null) {
-                        return postfix;
+                    parselet = knowledgeBase.parselet(expected, type.literal(), token1, token2);
+                    if (parselet != null) {
+                        return parselet;
                     }
                 }
                 post = post.addAll(type.supers());

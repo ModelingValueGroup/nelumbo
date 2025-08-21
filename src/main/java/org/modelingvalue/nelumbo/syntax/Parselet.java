@@ -20,6 +20,7 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
 public abstract class Parselet {
@@ -65,5 +66,11 @@ public abstract class Parselet {
     public Object key2() {
         return oper2 != null ? oper2 : type2;
     }
+
+    public abstract Type left();
+
+    public abstract int precedence();
+
+    public abstract Node parse(Type expected, Parser parser, Node left, Token token) throws ParseException;
 
 }

@@ -29,6 +29,21 @@ public abstract class AtomicParselet extends Parselet {
         super(expected, type1, oper1, type2, oper2);
     }
 
+    @Override
+    public int precedence() {
+        return 0;
+    }
+
+    @Override
+    public Type left() {
+        return null;
+    }
+
+    @Override
+    public final Node parse(Type expected, Parser parser, Node left, Token token) throws ParseException {
+        return parse(expected, parser, token);
+    }
+
     public Node parse(Type expected, Parser parser, Token token) throws ParseException {
         return construct(token);
     }

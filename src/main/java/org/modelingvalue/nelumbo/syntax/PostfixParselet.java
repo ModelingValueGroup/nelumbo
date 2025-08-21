@@ -34,14 +34,17 @@ public abstract class PostfixParselet extends Parselet {
         this.precedence = precedence;
     }
 
+    @Override
     public Type left() {
         return left;
     }
 
+    @Override
     public int precedence() {
         return precedence;
     }
 
+    @Override
     public Node parse(Type expected, Parser parser, Node left, Token token) throws ParseException {
         return construct(left, token);
     }

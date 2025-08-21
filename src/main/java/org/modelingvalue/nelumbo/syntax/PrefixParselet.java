@@ -38,6 +38,7 @@ public abstract class PrefixParselet extends AtomicParselet {
         return right;
     }
 
+    @Override
     public int precedence() {
         return precedence;
     }
