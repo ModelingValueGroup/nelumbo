@@ -42,7 +42,6 @@ import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.collections.util.Quadruple;
-import org.modelingvalue.collections.util.Triple;
 import org.modelingvalue.nelumbo.syntax.*;
 
 @SuppressWarnings("DuplicatedCode")
@@ -558,24 +557,24 @@ public final class KnowledgeBase {
         }
     }
 
-    private final AtomicReference<Map<String, Type>>                    types         = new AtomicReference<>();
-    private final AtomicReference<Set<Functor>>                         functors      = new AtomicReference<>();
-    private final AtomicReference<Map<String, Variable>>                variables     = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, InferResult>>          facts         = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, Set<Rule>>>            rules         = new AtomicReference<>();
+    private final AtomicReference<Map<String, Type>>                                    types         = new AtomicReference<>();
+    private final AtomicReference<Set<Functor>>                                         functors      = new AtomicReference<>();
+    private final AtomicReference<Map<String, Variable>>                                variables     = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, InferResult>>                          facts         = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, Set<Rule>>>                            rules         = new AtomicReference<>();
     //
-    private final AtomicReference<Map<Object, Parselet>>                parselets     = new AtomicReference<>();
-    private final AtomicReference<Map<Object, List<CallWithArgs>>>      callsWithArgs = new AtomicReference<>();
+    private final AtomicReference<Map<Quadruple<Type, Type, Object, Object>, Parselet>> parselets     = new AtomicReference<>();
+    private final AtomicReference<Map<Pair<Type, Object>, List<CallWithArgs>>>          callsWithArgs = new AtomicReference<>();
     //
-    private final AtomicReference<Set<String>>                          allOperators  = new AtomicReference<>();
-    private final AtomicReference<Map<Functor, Functor>>                relations     = new AtomicReference<>();
+    private final AtomicReference<Set<String>>                                          allOperators  = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>>                                relations     = new AtomicReference<>();
     //
-    private final AtomicInteger                                         depth         = new AtomicInteger();
-    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization   = new AtomicReference<>();
-    private final InferContext                                          context;
-    private final KnowledgeBase                                         init;
-    private boolean                                                     stopped;
-    private boolean                                                     noInfer;
+    private final AtomicInteger                                                         depth         = new AtomicInteger();
+    private final AtomicReference<QualifiedSet<Predicate, Inference>[]>                 memoization   = new AtomicReference<>();
+    private final InferContext                                                          context;
+    private final KnowledgeBase                                                         init;
+    private boolean                                                                     stopped;
+    private boolean                                                                     noInfer;
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
@@ -860,25 +859,12 @@ public final class KnowledgeBase {
     }
 
     public void register(Parselet parselet) {
-        Type expected = parselet.expected();
-        Type left = parselet.left();
-        Object k1 = parselet.key1();
-        Object k2 = parselet.key2();
-        String o1 = parselet.oper1();
-        Object key;
-        if (expected != null && k2 != null) {
-            key = Quadruple.of(expected, left, k1, k2);
-        } else if (expected != null) {
-            key = Triple.of(expected, left, k1);
-        } else if (k2 != null) {
-            key = Triple.of(left, k1, k2);
-        } else {
-            key = Pair.of(left, k1);
-        }
+        Quadruple<Type, Type, Object, Object> key = parselet.key();
         if (parselets.get().containsKey(key)) {
-            throw new IllegalArgumentException("postfixParselet already registered " + key);
+            throw new IllegalArgumentException("Parselet already registered " + key);
         }
         parselets.updateAndGet(map -> map.put(key, parselet));
+        String o1 = parselet.oper1();
         if (o1 != null) {
             allOperators.updateAndGet(set -> set.add(o1));
         }
@@ -888,22 +874,13 @@ public final class KnowledgeBase {
         String name = call.name();
         TokenType type = call.type();
         Type exp = call.expected();
-        Object k = call.key();
-        Object key = exp != null ? Pair.of(exp, k) : k;
+        Pair<Type, Object> key = Pair.of(exp, call.key());
         callsWithArgs.updateAndGet(map -> map.compute(key, (__, v) -> {
             if (v == null) {
-                if (exp != null) {
-                    if (name != null) {
-                        register(new CallWithArgsParselet(exp, name));
-                    } else {
-                        register(new CallWithArgsParselet(exp, type));
-                    }
+                if (name != null) {
+                    register(new CallWithArgsParselet(exp, name));
                 } else {
-                    if (name != null) {
-                        register(new CallWithArgsParselet(name));
-                    } else {
-                        register(new CallWithArgsParselet(type));
-                    }
+                    register(new CallWithArgsParselet(exp, type));
                 }
                 return List.of(call);
             } else {
@@ -920,7 +897,7 @@ public final class KnowledgeBase {
     public List<CallWithArgs> callsWithArgs(Type expected, Token token) {
         String text = token.text();
         TokenType type = token.type();
-        Map<Object, List<CallWithArgs>> cwaMap = callsWithArgs.get();
+        Map<Pair<Type, Object>, List<CallWithArgs>> cwaMap = callsWithArgs.get();
         List<CallWithArgs> list;
 
         list = cwaMap.get(Pair.of(expected, text));
@@ -931,18 +908,18 @@ public final class KnowledgeBase {
         if (list != null) {
             return list;
         }
-        list = cwaMap.get(text);
+        list = cwaMap.get(Pair.of(null, type));
         if (list != null) {
             return list;
         }
-        return cwaMap.get(type);
+        return cwaMap.get(Pair.of(null, type));
     }
 
     public Parselet parselet(Type expected, Type left, Token token1, Token token2) {
         assert token1 != null;
 
         Parselet pp;
-        Map<Object, Parselet> ppMap = parselets.get();
+        Map<Quadruple<Type, Type, Object, Object>, Parselet> ppMap = parselets.get();
 
         String text1 = token1.text();
         TokenType type1 = token1.type();
@@ -967,36 +944,36 @@ public final class KnowledgeBase {
             if (pp != null) {
                 return pp;
             }
-            pp = ppMap.get(Triple.of(left, text1, text2));
+            pp = ppMap.get(Quadruple.of(null, left, text1, text2));
             if (pp != null) {
                 return pp;
             }
-            pp = ppMap.get(Triple.of(left, text1, type2));
+            pp = ppMap.get(Quadruple.of(null, left, text1, type2));
             if (pp != null) {
                 return pp;
             }
-            pp = ppMap.get(Triple.of(left, type1, text2));
+            pp = ppMap.get(Quadruple.of(null, left, type1, text2));
             if (pp != null) {
                 return pp;
             }
-            pp = ppMap.get(Triple.of(left, type1, type2));
+            pp = ppMap.get(Quadruple.of(null, left, type1, type2));
             if (pp != null) {
                 return pp;
             }
         }
-        pp = ppMap.get(Triple.of(expected, left, text1));
+        pp = ppMap.get(Quadruple.of(expected, left, text1, null));
         if (pp != null) {
             return pp;
         }
-        pp = ppMap.get(Triple.of(expected, left, type1));
+        pp = ppMap.get(Quadruple.of(expected, left, type1, null));
         if (pp != null) {
             return pp;
         }
-        pp = ppMap.get(Pair.of(left, text1));
+        pp = ppMap.get(Quadruple.of(null, left, text1, null));
         if (pp != null) {
             return pp;
         }
-        return ppMap.get(Pair.of(left, type1));
+        return ppMap.get(Quadruple.of(null, left, type1, null));
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

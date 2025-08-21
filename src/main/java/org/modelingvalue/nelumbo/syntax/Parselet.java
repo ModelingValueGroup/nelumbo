@@ -20,6 +20,7 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.collections.util.Quadruple;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 
@@ -65,6 +66,10 @@ public abstract class Parselet {
 
     public Object key2() {
         return oper2 != null ? oper2 : type2;
+    }
+
+    public Quadruple<Type, Type, Object, Object> key() {
+        return Quadruple.of(expected(), left(), key1(), key2());
     }
 
     public abstract Type left();

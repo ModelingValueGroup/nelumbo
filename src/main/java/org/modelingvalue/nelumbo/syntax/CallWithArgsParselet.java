@@ -27,14 +27,6 @@ import org.modelingvalue.nelumbo.Type;
 
 public final class CallWithArgsParselet extends AtomicParselet {
 
-    public CallWithArgsParselet(String name) {
-        super(null, null, name, TokenType.LPAREN, null);
-    }
-
-    public CallWithArgsParselet(TokenType type) {
-        super(null, type, null, TokenType.LPAREN, null);
-    }
-
     public CallWithArgsParselet(Type expected, String name) {
         super(expected, null, name, TokenType.LPAREN, null);
     }
@@ -45,15 +37,14 @@ public final class CallWithArgsParselet extends AtomicParselet {
 
     @Override
     public Node parse(Type expected, Parser parser, Token token) throws ParseException {
-        Token      lparen = parser.consume(TokenType.LPAREN);
-        List<Node> args   = List.of();
-        do
-        {
+        Token lparen = parser.consume(TokenType.LPAREN);
+        List<Node> args = List.of();
+        do {
             args = args.add(parser.parseNode(0, Type.NODE));
         } while (parser.match(TokenType.COMMA));
-        Token        rparen = parser.consume(TokenType.RPAREN);
-        List<Type>   types  = args.replaceAll(Node::type);
-        CallWithArgs call   = call(parser, token, types);
+        Token rparen = parser.consume(TokenType.RPAREN);
+        List<Type> types = args.replaceAll(Node::type);
+        CallWithArgs call = call(parser, token, types);
         if (call != null) {
             return call.construct(token, args).setTokens(Token.concat(token, lparen, args, rparen));
         }
@@ -62,7 +53,7 @@ public final class CallWithArgsParselet extends AtomicParselet {
     }
 
     private CallWithArgs call(Parser parser, Token token, List<Type> args) {
-        KnowledgeBase      kb    = parser.knowledgeBase();
+        KnowledgeBase kb = parser.knowledgeBase();
         List<CallWithArgs> calls = kb.callsWithArgs(expected(), token);
         if (calls != null) {
             for (CallWithArgs call : calls) {
