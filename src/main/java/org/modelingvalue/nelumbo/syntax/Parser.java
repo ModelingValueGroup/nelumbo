@@ -232,7 +232,7 @@ public final class Parser {
 
     private Token consume() {
         while (true) {
-            if (noMoreTokens()) {
+            if (!iterator.hasNext()) {
                 return null;
             }
             Token t = iterator.next();
@@ -243,11 +243,11 @@ public final class Parser {
     }
 
     private boolean moreTokens() {
-        return iterator.hasNext();
+        return peek() != null;
     }
 
     private boolean noMoreTokens() {
-        return !iterator.hasNext();
+        return peek() == null;
     }
 
     private void unconsume(Token t) {
@@ -257,7 +257,7 @@ public final class Parser {
                 un = iterator.previous();
             }
             if (un != t) {
-                System.err.println("WARNING: unconsume did not find the right token: found " + un + " instead of " + t);
+                throw new IllegalArgumentException("Unconsume did not find the right token: found " + un + " instead of " + t);
             }
         }
     }
