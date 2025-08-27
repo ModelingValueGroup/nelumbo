@@ -27,16 +27,18 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
 
-@SuppressWarnings("ClassCanBeRecord")
+@SuppressWarnings("unused")
 public class Token {
     public static final Token[] EMPTY = new Token[0];
 
     private final TokenType type;
     private final String    text;
-    private final int       line;       // line number in the input file (0-based)
-    private final int       position;   // position (column) in the line (0-based)
-    private final int       index;      // position in the input stream (0-based)
     private final String    fileName;
+    private final int       index;          // position in the input stream (0-based)
+    private final int       line;           // line number in the input file (0-based)
+    private final int       numLines;       // number of lines of this token (1...n)
+    private final int       position;       // position (column) in the line (0-based)
+    private final int       positionEnd;    // position (column) in the line (0-based) after the token
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -45,26 +47,28 @@ public class Token {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type     = type;
-        this.text     = text;
-        this.line     = line;
-        this.position = position;
-        this.index    = index;
-        this.fileName = fileName;
+        this.type        = type;
+        this.text        = text;
+        this.fileName    = fileName;
+        this.line        = line;
+        this.position    = position;
+        this.index       = index;
+        this.numLines    = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
+        this.positionEnd = numLines == 1 ? position + text.length() : text.length() - text.lastIndexOf('\n');
     }
-
 
     public Token[] singleton() {
         return new Token[]{this};
     }
 
     public static Token[] concat(Token t1, Node n, Token t2) {
-        return concat(t1.singleton(),n.tokens(),t2.singleton());
+        return concat(t1.singleton(), n.tokens(), t2.singleton());
     }
 
     public static Token[] concat(Token t1, Token t2, List<Node> l, Token t3) {
         return concat(t1.singleton(), t2.singleton(), toTokenArray(l), t3.singleton());
     }
+
     public static Token[] concat(Token t, List<Node> l) {
         return concat(t.singleton(), toTokenArray(l));
     }
@@ -109,16 +113,36 @@ public class Token {
         return U.traceable(text);
     }
 
+    public int index() {
+        return index;
+    }
+
+    public int indexEnd() {
+        return index + numChars();
+    }
+
     public int line() {
         return line;
+    }
+
+    public int lineEnd() {
+        return line + numLines;
+    }
+
+    public int numLines() {
+        return numLines;
     }
 
     public int position() {
         return position;
     }
 
-    public int index() {
-        return index;
+    public int positionEnd() {
+        return positionEnd;
+    }
+
+    public int numChars() {
+        return text.length();
     }
 
     public String fileName() {
