@@ -145,6 +145,18 @@ public class Token {
         return text.length();
     }
 
+    public boolean contains(int l, int c) {
+        if (numLines == 1) {
+            return line == l && position <= c && c < positionEnd;
+        } else if (l == line) {
+            return position <= c;
+        } else if (l == lineEnd() - 1) {
+            return c < positionEnd;
+        } else {
+            return true;
+        }
+    }
+
     public String fileName() {
         return fileName;
     }
