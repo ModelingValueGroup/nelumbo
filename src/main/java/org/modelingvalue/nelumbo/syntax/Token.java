@@ -126,7 +126,7 @@ public class Token {
     }
 
     public int lineEnd() {
-        return line + numLines;
+        return line + numLines - 1;
     }
 
     public int numLines() {
