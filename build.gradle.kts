@@ -17,6 +17,7 @@
 //      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+import org.gradle.api.publish.maven.MavenPublication
 
 defaultTasks("mvgCorrector", "test", "publish", "mvgTagger")
 
@@ -24,7 +25,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("org.modelingvalue.gradle.mvgplugin") version "1.1.3"
-    id("com.gradleup.shadow") version "9.0.0-beta2"
+    id("com.gradleup.shadow") version "9.1.0"
     idea
     eclipse
 }
