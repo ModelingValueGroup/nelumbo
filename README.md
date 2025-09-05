@@ -9,7 +9,7 @@ Status: active development, unstable, and subject to change. Use at your own ris
 ---
 
 ## Table of Contents
-- [Features](#features)
+- [Roadmap](#Roadmap)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [License](#license)
@@ -17,9 +17,9 @@ Status: active development, unstable, and subject to change. Use at your own ris
 
 ---
 
-## Features
+## Roadmap
 
-Note: The following capabilities are experimental and may change or be incomplete. Backward compatibility is not guaranteed.
+Note: The following goals are exploratory and may change or be incomplete as we iterate. Backward compatibility is not guaranteed.
 
 * Define and parse syntaxes
 * Define and execute semantics
