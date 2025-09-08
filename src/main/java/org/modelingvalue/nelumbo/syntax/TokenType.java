@@ -23,37 +23,36 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.regex.Pattern;
 
 public enum TokenType {
-    SEMICOLON(";", true, false, false), //
-    COMMA(",", true, false, false), //
-    LPAREN("\\(", true, false, false), //
-    RPAREN("\\)", false, true, false), //
-    LBRACKET("\\[", true, false, false), //
-    RBRACKET("\\]", false, true, false), //
-    LBRACE("\\{", true, false, false), //
-    RBRACE("\\}", false, true, false), //
-    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, false, false), //
-    NUMBER("[0-9]+(#[0-9a-zA-Z]+)?", false, false, false), //
-    DECIMAL("[0-9]+\\.[0-9]+", false, false, false), //
-    QNAME("[a-zA-Z_][0-9a-zA-Z_]*(\\.[a-zA-Z_][0-9a-zA-Z_]*)+", false, false, false), //
-    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, false, false), //
-    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, false, false), //
-    OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", true, false, false), //
-    HSPACE("\\h+", false, false, false), //
-    NEWLINE("\\v", false, true, false), //
-    END_LINE_COMMENT("//[^\\v]*", false, false, true), //
-    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", false, false, true), //
-    ERROR(".", false, false, false),//
+    SEMICOLON(";", true, false), //
+    COMMA(",", true, false), //
+    LPAREN("\\(", true, false), //
+    RPAREN("\\)", false, false), //
+    LBRACKET("\\[", true, false), //
+    RBRACKET("\\]", false, false), //
+    LBRACE("\\{", true, false), //
+    RBRACE("\\}", false, false), //
+    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, false), //
+    NUMBER("[0-9]+(#[0-9a-zA-Z]+)?", false, false), //
+    DECIMAL("[0-9]+\\.[0-9]+", false, false), //
+    QNAME("[a-zA-Z_][0-9a-zA-Z_]*(\\.[a-zA-Z_][0-9a-zA-Z_]*)+", false, false), //
+    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, false), //
+    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, false), //
+    OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", true, false), //
+    META_OPERATOR("`[~!@#$%^&*=+|:<>.?/-]+`", true, false), //
+    HSPACE("\\h+", false, false), //
+    NEWLINE("\\v", false, false), //
+    END_LINE_COMMENT("//[^\\v]*", false, true), //
+    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", false, true), //
+    ERROR(".", false, false),//
     ;
 
     private final Pattern pattern; // the pattern that matches tokens of this token type
     private final boolean more;    // indicates that a sequence of NEWLINE tokens after this token is to be ignored when parsing
-    private final boolean end;     // indicates the end of a high precedence construct (RPAREN/RBRACKET/RBRACE/NEWLINE)
     private final boolean comment; // indicates a comment (END_LINE_COMMENT/IN_LINE_COMMENT)
 
-    TokenType(String regexp, boolean more, boolean end, boolean comment) {
+    TokenType(String regexp, boolean more, boolean comment) {
         this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
         this.more = more;
-        this.end = end;
         this.comment = comment;
     }
 
@@ -65,11 +64,11 @@ public enum TokenType {
         return more;
     }
 
-    public boolean end() {
-        return end;
-    }
-
     public boolean comment() {
         return comment;
+    }
+
+    public boolean skip() {
+        return this == HSPACE || this == NEWLINE || this == ERROR || comment();
     }
 }

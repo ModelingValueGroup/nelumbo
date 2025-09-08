@@ -21,22 +21,26 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Element;
 import org.modelingvalue.nelumbo.U;
 
 @SuppressWarnings("ClassCanBeRecord")
-public class Token {
+public class Token implements Element {
     public static final Token[] EMPTY = new Token[0];
 
-    private final TokenType type;
-    private final String    text;
-    private final int       line;       // line number in the input file (0-based)
-    private final int       position;   // position (column) in the line (0-based)
-    private final int       index;      // position in the input stream (0-based)
-    private final String    fileName;
+    private final TokenType     type;
+    private final String        text;
+    private final int           line;                // line number in the input file (0-based)
+    private final int           position;            // position (column) in the line (0-based)
+    private final int           index;               // position in the input stream (0-based)
+    private final String        fileName;
+
+    private Token               next;
+    private Token               previous;
+
+    private Token               nextAll;
+    private Token               previousAll;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -45,56 +49,56 @@ public class Token {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type     = type;
-        this.text     = text;
-        this.line     = line;
+        this.type = type;
+        this.text = text;
+        this.line = line;
         this.position = position;
-        this.index    = index;
+        this.index = index;
         this.fileName = fileName;
     }
 
-
-    public Token[] singleton() {
-        return new Token[]{this};
-    }
-
-    public static Token[] concat(Token t1, Node n, Token t2) {
-        return concat(t1.singleton(),n.tokens(),t2.singleton());
-    }
-
-    public static Token[] concat(Token t1, Token t2, List<Node> l, Token t3) {
-        return concat(t1.singleton(), t2.singleton(), toTokenArray(l), t3.singleton());
-    }
-    public static Token[] concat(Token t, List<Node> l) {
-        return concat(t.singleton(), toTokenArray(l));
-    }
-
-    public static Token[] concat(Node n1, Token t, Node n2) {
-        return concat(n1.tokens(), t.singleton(), n2.tokens());
-    }
-
-    public static Token[] concat(Token t, Node n) {
-        return concat(t.singleton(), n.tokens());
-    }
-
-    public static Token[] concat(Node n, Token t) {
-        return concat(n.tokens(), t.singleton());
-    }
-
-    private static Token[] toTokenArray(List<Node> l) {
-        return l.flatMap(n -> Stream.of(n.tokens())).toArray(Token[]::new);
-    }
-
-    public static Token[] concat(Token[]... all) {
-        int     totalLength = Stream.of(all).mapToInt(t -> t.length).reduce(0, Integer::sum);
-        Token[] result      = new Token[totalLength];
-        int     i           = 0;
-        for (Token[] tokens : all) {
-            System.arraycopy(tokens, 0, result, i, tokens.length);
-            i += tokens.length;
+    public void setNext(Token next) {
+        this.next = next;
+        if (next != null) {
+            next.previous = this;
         }
-        assert i == totalLength;
-        return result;
+    }
+
+    public void setNextAll(Token next) {
+        this.nextAll = next;
+        if (next != null) {
+            next.previousAll = this;
+        }
+    }
+
+    public void setPrevious(Token previous) {
+        this.previous = previous;
+        if (previous != null) {
+            previous.next = this;
+        }
+    }
+
+    public void setPreviousAll(Token previous) {
+        this.previousAll = previous;
+        if (previous != null) {
+            previous.nextAll = this;
+        }
+    }
+
+    public Token next() {
+        return next;
+    }
+
+    public Token previous() {
+        return previous;
+    }
+
+    public Token nextAll() {
+        return nextAll;
+    }
+
+    public Token previousAll() {
+        return previousAll;
     }
 
     public TokenType type() {
@@ -129,11 +133,23 @@ public class Token {
         return type.comment() || type == TokenType.HSPACE;
     }
 
-    public Token splitGet1(int len) {
+    public Token split(int i) {
+        Token t1 = splitGet1(i);
+        Token t2 = splitGet2(i);
+        t1.setPrevious(previous());
+        t1.setPreviousAll(previousAll());
+        t2.setNext(next());
+        t2.setNextAll(nextAll());
+        t1.setNext(t2);
+        t1.setNextAll(t2);
+        return t1;
+    }
+
+    private Token splitGet1(int len) {
         return new Token(type, text.substring(0, len), line, position, index, fileName);
     }
 
-    public Token splitGet2(int len) {
+    private Token splitGet2(int len) {
         return new Token(type, text.substring(len), line, position + len, index + len, fileName);
     }
 

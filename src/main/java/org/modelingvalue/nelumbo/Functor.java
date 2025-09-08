@@ -29,7 +29,7 @@ import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Functor extends Node {
     @Serial
-    private static final long serialVersionUID = 285147889847599160L;
+    private static final long            serialVersionUID = 285147889847599160L;
 
     private final Function<Node, String> render;
 
@@ -82,7 +82,6 @@ public final class Functor extends Node {
         return render;
     }
 
-    @Override
     public int precedence() {
         return (Integer) get(3);
     }

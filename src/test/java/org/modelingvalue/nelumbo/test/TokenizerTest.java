@@ -44,17 +44,17 @@ public class TokenizerTest extends NelumboTestBase {
     @Test
     public void tokenizerTest() throws ParseException {
         String example = """
-                         // COMMENT
-                             -abb + bcc *
-                                c - dee // ANOTHER COMMENT
-                             e = 8.9 / 2
-                         """;
+                // COMMENT
+                    -abb + bcc *
+                       c - dee // ANOTHER COMMENT
+                    e = 8.9 / 2
+                """;
 
-        LinkedList<Token> tokens        = new Tokenizer(example, "tokenizerTest").tokenize();
-        LinkedList<Token> all           = new Tokenizer(example, "tokenizerTest.all", true).tokenize();
-        String            reassembled   = all.stream().map(Token::text).collect(Collectors.joining());
-        String            types         = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String            expectedTypes = "END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE";
+        LinkedList<Token> tokens = new Tokenizer(example, "tokenizerTest").list();
+        LinkedList<Token> all = new Tokenizer(example, "tokenizerTest.all").listAll();
+        String reassembled = all.stream().map(Token::text).collect(Collectors.joining());
+        String types = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
+        String expectedTypes = "END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
@@ -111,8 +111,8 @@ public class TokenizerTest extends NelumboTestBase {
     public void tokenizerComment1Test() throws ParseException {
         String example = "/* unterminated comment";
 
-        LinkedList<Token> tokens        = new Tokenizer(example, "tokenizerCommentTest").tokenize();
-        LinkedList<Token> all           = new Tokenizer(example, "tokenizerCommentTest.all", true).tokenize();
+        LinkedList<Token> tokens = new Tokenizer(example, "tokenizerCommentTest").list();
+        LinkedList<Token> all = new Tokenizer(example, "tokenizerCommentTest.all").listAll();
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
@@ -129,11 +129,11 @@ public class TokenizerTest extends NelumboTestBase {
     public void tokenizerComment2Test() throws ParseException {
         String example = "<a/*a*/>•a";
 
-        LinkedList<Token> tokens        = new Tokenizer(example, "tokenizerCommentTest").tokenize();
-        LinkedList<Token> all           = new Tokenizer(example, "tokenizerCommentTest.all", true).tokenize();
-        String            reassembled   = all.stream().map(Token::text).collect(Collectors.joining());
-        String            types         = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String            expectedTypes = "OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME";
+        LinkedList<Token> tokens = new Tokenizer(example, "tokenizerCommentTest").list();
+        LinkedList<Token> all = new Tokenizer(example, "tokenizerCommentTest.all").listAll();
+        String reassembled = all.stream().map(Token::text).collect(Collectors.joining());
+        String types = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
+        String expectedTypes = "OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);

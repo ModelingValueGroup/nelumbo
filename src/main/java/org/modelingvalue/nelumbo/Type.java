@@ -33,34 +33,42 @@ public class Type extends Node {
     @Serial
     private static final long serialVersionUID = -4583279157841144493L;
     //
-    public static final  Type NODE             = new Type(Node.class);
-    public static final  Type FUNCTION         = new Type("Function", NODE);
-    public static final  Type TERMINAL         = new Type(Terminal.class, NODE);
-    public static final  Type LITERAL          = new Type("Literal", TERMINAL);
-    public static final  Type ROOT             = new Type("Root", NODE);
-    public static final  Type PREDICATE        = new Type(Predicate.class, NODE);
-    public static final  Type RELATION         = new Type("Relation", PREDICATE, ROOT);
-    public static final  Type RESULT           = new Type("Result", ROOT);
-    public static final  Type VARIABLE         = new Type(Variable.class, ROOT);
-    public static final  Type RULE             = new Type(Rule.class, ROOT);
-    public static final  Type FUNCTOR          = new Type(Functor.class, ROOT);
-    public static final  Type STRING           = new Type(String.class);
+    public static final Type  NODE             = new Type(Node.class);
+    public static final Type  FUNCTION         = new Type("Function", NODE);
+    public static final Type  TERMINAL         = new Type(Terminal.class, NODE);
+    public static final Type  LITERAL          = new Type("Literal", TERMINAL);
+    public static final Type  ROOT             = new Type("Root", NODE);
+    public static final Type  PREDICATE        = new Type(Predicate.class, NODE);
+    public static final Type  RELATION         = new Type("Relation", PREDICATE, ROOT);
+    public static final Type  RESULT           = new Type("Result", ROOT);
+    public static final Type  VARIABLE         = new Type(Variable.class, ROOT);
+    public static final Type  RULE             = new Type(Rule.class, ROOT);
+    public static final Type  FUNCTOR          = new Type(Functor.class, ROOT);
+    public static final Type  STRING           = new Type(String.class);
+    public static final Type  PATTERN          = new Type("Pattern", Type.NODE);
+
+    public static final Type  TYPE_NAME        = new Type("TypeName", Type.NODE);
+    public static final Type  VAR_NAME         = new Type("VarName", Type.NODE);
+    public static final Type  NATIVE           = new Type("Native", Type.NODE);
+    public static final Type  PRECEDENCE       = new Type("Precedence", Type.NODE);
+    public static final Type  FACTS            = new Type("Facts", Type.NODE);
+    public static final Type  FALSEHOODS       = new Type("Falsehoods", Type.NODE);
 
     public static List<Type> predefined() {
-        return List.of(TYPE(),//
-                       NODE,//
-                       FUNCTION,//
-                       TERMINAL,//
-                       LITERAL,//
-                       ROOT,//
-                       PREDICATE,//
-                       RELATION,//
-                       RESULT,//
-                       VARIABLE,//
-                       RULE,//
-                       FUNCTOR,//
-                       STRING//
-                      );
+        return List.of(TYPE(), //
+                NODE, //
+                FUNCTION, //
+                TERMINAL, //
+                LITERAL, //
+                ROOT, //
+                PREDICATE, //
+                RELATION, //
+                RESULT, //
+                VARIABLE, //
+                RULE, //
+                FUNCTOR, //
+                STRING //
+        );
     }
 
     private static Type TYPE = null;
@@ -90,9 +98,10 @@ public class Type extends Node {
         return TYPE;
     }
 
-    private Type list;
-    private Type literal;
-    private Type function;
+    private Type       list;
+    private Type       literal;
+    private Type       function;
+    private List<Type> allSupers;
 
     private Type() {
         super((Type) null, Token.EMPTY, Type.class, null);
@@ -120,12 +129,12 @@ public class Type extends Node {
 
     public Type(Type super1, Type super2) {
         super(TYPE(), //
-              Token.EMPTY, //
-              Set.of(super1, super2), //
-              Set.of(super1, super2) //
-                 .addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))) //
-                 .addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))) //
-             );
+                Token.EMPTY, //
+                Set.of(super1, super2), //
+                Set.of(super1, super2) //
+                        .addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))) //
+                        .addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))) //
+        );
     }
 
     private Type(Type element) {
@@ -227,6 +236,21 @@ public class Type extends Node {
     @SuppressWarnings("unchecked")
     public Set<Type> supers() {
         return (Set<Type>) get(1);
+    }
+
+    public List<Type> allsupers() {
+        if (allSupers == null) {
+            List<Type> pre = List.of(), post = List.of(this);
+            do {
+                int i = pre.size();
+                pre = post;
+                for (; i < pre.size(); i++) {
+                    post = post.addAllUnique(pre.get(i).supers());
+                }
+            } while (post.size() > pre.size());
+            allSupers = post;
+        }
+        return allSupers;
     }
 
     @Override

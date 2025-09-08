@@ -18,50 +18,42 @@
 //      but also our friend. "He will live on in many of the lines of code you see below."                               ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.syntax;
+package org.modelingvalue.nelumbo.test;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
+import org.junit.jupiter.api.Test;
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
-public final class CallWithArgsParselet extends AtomicParselet {
+public class SyntaxTest extends NelumboTestBase {
 
-    public CallWithArgsParselet(Type expected, String name) {
-        super(expected, null, name, TokenType.LPAREN, null);
+    static {
+        setProp("PARALLEL_COLLECTIONS", "false");
+        setProp("REVERSE_NELUMBO", "false");
+        setProp("RANDOM_NELUMBO", "true");
+        setProp("TRACE_NELUMBO", "false");
+        setProp("VERBOSE_TESTS", "false");
     }
 
-    public CallWithArgsParselet(Type expected, TokenType type) {
-        super(expected, type, null, TokenType.LPAREN, null);
-    }
-
-    @Override
-    public Node parse(Type expected, Parser parser, Token token) throws ParseException {
-        Token lparen = parser.consume(TokenType.LPAREN);
-        List<Node> args = List.of();
-        do {
-            args = args.add(parser.parseNode(0, Type.NODE));
-        } while (parser.match(TokenType.COMMA));
-        Token rparen = parser.consume(TokenType.RPAREN);
-        List<Type> types = args.replaceAll(Node::type);
-        CallWithArgs call = call(parser, token, types);
-        if (call != null) {
-            return call.construct(token, args).setTokens(Token.concat(token, lparen, args, rparen));
-        }
-        String signature = types.toString().substring(4).replace('[', '(').replace(']', ')');
-        throw new ParseException("Could not call " + token.text() + signature, token, rparen);
-    }
-
-    private CallWithArgs call(Parser parser, Token token, List<Type> args) {
-        KnowledgeBase kb = parser.knowledgeBase();
-        List<CallWithArgs> calls = kb.callsWithArgs(expected(), token);
-        if (calls != null) {
-            for (CallWithArgs call : calls) {
-                if (call.isAssignableFrom(args)) {
-                    return call;
-                }
+    @Test()
+    public void test1() {
+        run(() -> {
+            String example = """
+                    <Set> :: <Node>
+                    <Set> ::= { `[` <Node> `{` , <Node> `}` `]` }
+                    """;
+            try {
+                List<Node> list = new Parser(new Tokenizer(example, "SyntaxTest.test1").first()).parse();
+                System.out.println(list);
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
             }
-        }
-        return null;
+        });
     }
+
 }

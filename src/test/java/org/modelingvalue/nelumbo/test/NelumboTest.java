@@ -53,10 +53,10 @@ public class NelumboTest extends NelumboTestBase {
     public void initTest() {
         run(() -> {
             String example = """
-                             // Init only
-                             """;
+                    // Init only
+                    """;
             try {
-                new Parser(new Tokenizer(example, "NelumboTest.initTest").tokenize()).parse();
+                new Parser(new Tokenizer(example, "NelumboTest.initTest").first()).parse();
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -93,7 +93,7 @@ public class NelumboTest extends NelumboTestBase {
     public void stringsTest() {
         run(() -> {
             try {
-                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);  // ?
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class); // ?
                 Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
                 U.printResults(Parser.parse(NelumboTest.class, "stringsTest.nl"));
             } catch (ParseException e) {
@@ -123,27 +123,28 @@ public class NelumboTest extends NelumboTestBase {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
                 String nl = "? -4=-(2+2)";
 
-                LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.tokenSplitTest", true).tokenize();
+                Token[] tokens = new Tokenizer(nl, "NelumboTest.tokenSplitTest").tokenize();
                 //U.printTokens("before-parse", tokens);
-                assertEquals(10, tokens.size(), "wrong number of tokens returned by tokenize()");
+                LinkedList<Token> all = Tokenizer.listAll(tokens);
+                assertEquals(10, all.size(), "wrong number of tokens returned by tokenize()");
                 assertEquals("?, ,-,4,=-,(,2,+,2,)", // why does the ? appear at the end?
-                             tokens.stream().map(Token::text).collect(Collectors.joining(",")), //
-                             "token texts before-parse not as expected");
+                        all.stream().map(Token::text).collect(Collectors.joining(",")), //
+                        "token texts before-parse not as expected");
 
-                List<Node> result = new Parser(tokens).parse();
+                List<Node> result = new Parser(tokens[Tokenizer.FIRST]).parse();
                 //U.printTokens("after-parse", tokens);
-                assertEquals(11, tokens.size(), "wrong number of tokens after parse()");
+                all = Tokenizer.listAll(tokens);
+                assertEquals(11, all.size(), "wrong number of tokens after parse()");
                 assertEquals("?, ,-,4,=,-,(,2,+,2,)", // why does the ? appear at the end?
-                             tokens.stream().map(Token::text).collect(Collectors.joining(",")), //
-                             "token texts after-parse not as expected");
+                        all.stream().map(Token::text).collect(Collectors.joining(",")), //
+                        "token texts after-parse not as expected");
                 assertEquals(1, result.size(), "wrong number of result nodes");
 
-                assertEquals("?,-,4,=,-,(,2,+,2,)",
-                             Arrays.stream(result.first().tokens()).map(Token::text).collect(Collectors.joining(",")), //
-                             "result tokens text not as expected");
+                assertEquals("?,-,4,=,-,(,2,+,2,)", Arrays.stream(result.first().tokens()).map(Token::text).collect(Collectors.joining(",")), //
+                        "result tokens text not as expected");
                 assertEquals("OPERATOR,OPERATOR,NUMBER,OPERATOR,OPERATOR,LPAREN,NUMBER,OPERATOR,NUMBER,RPAREN", //
-                             Arrays.stream(result.first().tokens()).map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
-                             "result tokens type not as expected");
+                        Arrays.stream(result.first().tokens()).map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
+                        "result tokens type not as expected");
 
                 U.printNode("all result nodes", result);
             } catch (ParseException e) {
@@ -160,17 +161,18 @@ public class NelumboTest extends NelumboTestBase {
             try {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
                 String nl = """
-                            <Relation>  ::= xx(<Integer>,<Integer>)
-                            true  <==>  xx(1,2),xx(2,3)
-                            //<Predicate> ::= <String> ~~~~~~~~~~~~~~~~~~~ <String> #66
-                            //<TOM> :: <String>
-                            //<Predicate> p
-                            //? p=true""";
+                        <Relation>  ::= xx(<Integer>,<Integer>)
+                        true  <==>  xx(1,2),xx(2,3)
+                        //<Predicate> ::= <String> ~~~~~~~~~~~~~~~~~~~ <String> #66
+                        //<TOM> :: <String>
+                        //<Predicate> p
+                        //? p=true""";
 
-                LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.research", true).tokenize();
-                U.printTokens("after-parse", tokens);
+                Token[] tokens = new Tokenizer(nl, "NelumboTest.research").tokenize();
+                LinkedList<Token> all = Tokenizer.listAll(tokens);
+                U.printTokens("after-parse", all);
 
-                List<Node>        result = new Parser(tokens).parse();
+                List<Node> result = new Parser(tokens[Tokenizer.FIRST]).parse();
 
                 U.printNode("all result nodes", result);
                 U.printKnowledgeBase("KNOWLEDGE-BASE", true);

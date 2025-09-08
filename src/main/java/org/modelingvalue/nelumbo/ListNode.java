@@ -52,16 +52,6 @@ public class ListNode extends Node {
     }
 
     @Override
-    public Token[] tokens() {
-        assert super.tokens().length == 0;
-        Token[] tokens = Token.EMPTY;
-        for (Node e : elements()) {
-            tokens = Token.concat(tokens, e.tokens());
-        }
-        return tokens;
-    }
-
-    @Override
     protected ListNode struct(Object[] array, int start) {
         return new ListNode(array, start);
     }

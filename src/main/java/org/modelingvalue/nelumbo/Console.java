@@ -325,7 +325,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 applySyntaxColors(line);
             }
             Tokenizer tokenizer = new Tokenizer(line, line);
-            Parser parser = new Parser(tokenizer.tokenize());
+            Parser parser = new Parser(tokenizer.tokenize()[Tokenizer.FIRST]);
             for (Node root : parser.parse()) {
                 if (root.type().equals(Type.RESULT)) {
                     write(root.toString(1));
@@ -345,8 +345,8 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     private void applySyntaxColors(String line) throws ParseException {
         System.err.println("line=[" + U.traceable(line) + "]");
         textArea.insert(" ", getEnd() - 1);
-        Tokenizer tokenizer = new Tokenizer(line, line, true);
-        for (Token token : tokenizer.tokenize()) {
+        Tokenizer tokenizer = new Tokenizer(line, line);
+        for (Token token = tokenizer.tokenize()[Tokenizer.FIRST_ALL]; token != null; token = token.nextAll()) {
             try {
                 int beg = getStart() + token.position();
                 int end = beg + token.text().length();
@@ -355,7 +355,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 case STRING -> bluePainter;
                 case NUMBER, DECIMAL -> greenPainter;
                 case QNAME, NAME -> yellowPainter;
-                case SEMICOLON, OPERATOR, LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE -> greyPainter;
+                case SEMICOLON, OPERATOR, LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE, META_OPERATOR -> greyPainter;
                 case COMMA -> purplePainter;
                 case TYPE -> pinkPainter;
                 case END_LINE_COMMENT, IN_LINE_COMMENT -> lightGreyPainter;

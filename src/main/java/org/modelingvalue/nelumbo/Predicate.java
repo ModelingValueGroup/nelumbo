@@ -31,17 +31,21 @@ import org.modelingvalue.nelumbo.syntax.Token;
 
 public class Predicate extends Node {
     @Serial
-    private static final long serialVersionUID = -1605559565948158856L;
+    private static final long      serialVersionUID   = -1605559565948158856L;
 
-    protected static final boolean     RANDOM_NELUMBO     = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");
-    protected static final boolean     REVERSE_NELUMBO    = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
-    protected static final int         MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
-    private static final   int         MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
+    protected static final boolean RANDOM_NELUMBO     = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");
+    protected static final boolean REVERSE_NELUMBO    = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
+    protected static final int     MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
+
+    private static final int       MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
+
+    public static Node             INCOMPLETE         = new Predicate(Type.PREDICATE, Token.EMPTY, "..");
+
     //
-    private final          InferResult cycleResult        = InferResult.cycle(Set.of(), Set.of(), this);
-    private final          Predicate   declaration;
-    private                Predicate   parent;
-    private                int         parentIdx;
+    private final InferResult      cycleResult        = InferResult.cycle(Set.of(), Set.of(), this);
+    private final Predicate        declaration;
+    private Predicate              parent;
+    private int                    parentIdx;
 
     public Predicate(Functor functor, Token[] tokens, Object... args) {
         super(functor, tokens, args);
@@ -49,7 +53,7 @@ public class Predicate extends Node {
         init();
     }
 
-    protected Predicate(Type type, Token[] tokens, Object... args) {
+    public Predicate(Type type, Token[] tokens, Object... args) {
         super(type, tokens, args);
         this.declaration = this;
         init();
@@ -71,7 +75,7 @@ public class Predicate extends Node {
 
     protected void init(Predicate parent, int idx) {
         assert (this.parent == null && this.parentIdx == 0);
-        this.parent    = parent;
+        this.parent = parent;
         this.parentIdx = idx;
     }
 
@@ -186,8 +190,8 @@ public class Predicate extends Node {
         if (knowledgeBase.noInfer()) {
             return unknown();
         }
-        InferContext context   = knowledgeBase.context();
-        Predicate    predicate = setBinding(variables());
+        InferContext context = knowledgeBase.context();
+        Predicate predicate = setBinding(variables());
         if (context.trace()) {
             System.out.println(context.prefix() + predicate);
         }
@@ -216,8 +220,8 @@ public class Predicate extends Node {
         if (equals(from)) {
             return to;
         } else {
-            Predicate decl  = declaration;
-            Object[]  array = null;
+            Predicate decl = declaration;
+            Object[] array = null;
             for (int i = 0; i < length(); i++) {
                 Object thisVal = get(i);
                 if (thisVal instanceof Predicate fromDecl) {
@@ -253,7 +257,7 @@ public class Predicate extends Node {
         Predicate newDeclaration = declaration.struct(declArray, declaration.start, null);
 
         Object[] predArray = toArray();
-        System.arraycopy(a, 0, predArray, from + start , a.length);
+        System.arraycopy(a, 0, predArray, from + start, a.length);
         return struct(predArray, start, newDeclaration);
     }
 
@@ -371,11 +375,11 @@ public class Predicate extends Node {
     }
 
     private static InferResult flatten(InferResult result, List<Predicate> overflow, InferContext context) {
-        int             stackSize = context.stack().size();
-        List<Predicate> todo      = overflow.sublist(stackSize, overflow.size());
+        int stackSize = context.stack().size();
+        List<Predicate> todo = overflow.sublist(stackSize, overflow.size());
         while (!todo.isEmpty()) {
             Predicate predicate = todo.last();
-            result   = predicate.fixpoint(context.pushOnStack(predicate));
+            result = predicate.fixpoint(context.pushOnStack(predicate));
             overflow = result.stackOverflow();
             if (overflow != null) {
                 todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
@@ -389,8 +393,7 @@ public class Predicate extends Node {
 
     private InferResult fixpoint(InferContext context) {
         InferResult previousResult = null, cycleResult = this.cycleResult, nextResult;
-        do
-        {
+        do {
             nextResult = inferRules(context.putCycleResult(this, cycleResult));
             if (nextResult.hasStackOverflow()) {
                 return nextResult;
@@ -398,13 +401,13 @@ public class Predicate extends Node {
             if (nextResult.hasCycleWith(this)) {
                 if (!nextResult.equals(previousResult)) {
                     previousResult = nextResult;
-                    cycleResult    = InferResult.cycle(nextResult.facts(), nextResult.falsehoods(), this);
+                    cycleResult = InferResult.cycle(nextResult.facts(), nextResult.falsehoods(), this);
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
                     return InferResult.of(nextResult.facts(), nextResult.completeFacts(), //
-                                          nextResult.falsehoods(), nextResult.completeFalsehoods(), //
-                                          nextResult.cycles().remove(this));
+                            nextResult.falsehoods(), nextResult.completeFalsehoods(), //
+                            nextResult.cycles().remove(this));
                 }
             }
             return nextResult;
@@ -413,7 +416,7 @@ public class Predicate extends Node {
 
     private InferResult inferRules(InferContext context) {
         KnowledgeBase knowledgebase = context.knowledgebase();
-        InferResult   result        = knowledgebase.getFacts(this, context), ruleResult;
+        InferResult result = knowledgebase.getFacts(this, context), ruleResult;
         if (result.isTrueCC()) {
             return result;
         }

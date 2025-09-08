@@ -25,35 +25,68 @@ import java.util.regex.Matcher;
 
 @SuppressWarnings("ClassCanBeRecord")
 public class Tokenizer {
-    private final String  input;
-    private final String  fileName;
-    private final boolean includeAllTokens;
+
+    public static final int FIRST = 0, FIRST_ALL = 1, PREVIOUS = 2, PREVIOUS_ALL = 3;
+
+    private final String    input;
+    private final String    fileName;
 
     public Tokenizer(String input, String fileName) {
-        this(input, fileName, false);
+        this.input = input;
+        this.fileName = fileName;
     }
 
-    public Tokenizer(String input, String fileName, boolean includeAllTokens) {
-        this.input            = input;
-        this.fileName         = fileName;
-        this.includeAllTokens = includeAllTokens;
+    public LinkedList<Token> listAll() throws ParseException {
+        Token[] tokens = tokenize();
+        return listAll(tokens);
     }
 
-    public LinkedList<Token> tokenize() throws ParseException {
-        LinkedList<Token> tokens     = new LinkedList<>();
-        TokenType[]       tokenTypes = TokenType.values();
-        Matcher[]         matchers   = new Matcher[tokenTypes.length];
+    public Token firstAll() throws ParseException {
+        Token[] tokens = tokenize();
+        return tokens[Tokenizer.FIRST_ALL];
+    }
+
+    public static LinkedList<Token> listAll(Token[] tokens) {
+        LinkedList<Token> list = new LinkedList<>();
+        for (Token token = tokens[FIRST_ALL]; token != null; token = token.nextAll()) {
+            list.add(token);
+        }
+        return list;
+    }
+
+    public LinkedList<Token> list() throws ParseException {
+        Token[] tokens = tokenize();
+        return list(tokens);
+    }
+
+    public Token first() throws ParseException {
+        Token[] tokens = tokenize();
+        return tokens[Tokenizer.FIRST];
+    }
+
+    public static LinkedList<Token> list(Token[] tokens) {
+        LinkedList<Token> list = new LinkedList<>();
+        for (Token token = tokens[FIRST]; token != null; token = token.next()) {
+            list.add(token);
+        }
+        return list;
+    }
+
+    public Token[] tokenize() throws ParseException {
+        Token[] tokens = new Token[4];
+        TokenType[] tokenTypes = TokenType.values();
+        Matcher[] matchers = new Matcher[tokenTypes.length];
         for (int i = 0; i < tokenTypes.length; i++) {
             matchers[i] = tokenTypes[i].pattern().matcher(input);
             if (!matchers[i].find()) {
                 matchers[i] = null;
             }
         }
-        int index    = 0;
-        int line     = 0;
+        int index = 0;
+        int line = 0;
         int position = 0;
         while (index < input.length()) {
-            String    text = null;
+            String text = null;
             TokenType type = null;
             for (int i = 0; i < tokenTypes.length; i++) {
                 final Matcher m = matchers[i];
@@ -77,6 +110,7 @@ public class Tokenizer {
                 throw new ParseException("Unexpected input '" + unexpectedChars + "'", line, position, index, unexpectedChars.length(), fileName);
             }
             addToken(tokens, type, text, line, position, index);
+
             // adjust index:
             index += text.length();
             // adjust line:
@@ -91,28 +125,32 @@ public class Tokenizer {
         return tokens;
     }
 
-    private void addToken(LinkedList<Token> tokens, TokenType type, String text, int line, int position, int index) {
-        if (!includeAllTokens) {
-            if (type.comment()) {
-                // ignore comments
+    private void addToken(Token[] tokens, TokenType type, String text, int line, int position, int index) {
+        Token token = new Token(type, text, line, position, index, fileName);
+        if (tokens[FIRST_ALL] == null) {
+            tokens[FIRST_ALL] = token;
+        } else {
+            tokens[PREVIOUS_ALL].setNextAll(token);
+        }
+        tokens[PREVIOUS_ALL] = token;
+        if (type == TokenType.NEWLINE) {
+            if (tokens[FIRST] == null) {
+                // ignore newlines at the start of the input
                 return;
             }
-            if (type == TokenType.HSPACE) {
-                // ignore whitespace
+            if (tokens[PREVIOUS].type().more()) {
+                // ignore newlines after a token that can be continued
                 return;
-            }
-            if (type == TokenType.NEWLINE) {
-                if (tokens.isEmpty()) {
-                    // ignore newlines at the start of the input
-                    return;
-                }
-                if (tokens.getLast().type().more()) {
-                    // ignore newlines after a token that can be continued
-                    return;
-                }
             }
         }
-        tokens.add(new Token(type, text, line, position, index, fileName));
+        if (!token.isCommentOrHspace()) {
+            if (tokens[FIRST] == null) {
+                tokens[FIRST] = token;
+            } else {
+                tokens[PREVIOUS].setNext(token);
+            }
+            tokens[PREVIOUS] = token;
+        }
     }
 
     private String getUnexpectedToken(String text, int at) {

@@ -32,14 +32,14 @@ import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class Node extends StructImpl {
+public class Node extends StructImpl implements Element {
     @Serial
-    private static final long serialVersionUID = 7315776001191198132L;
+    private static final long     serialVersionUID = 7315776001191198132L;
 
-    private         int                   hashCode    = 0;
-    private         Map<Variable, Object> variables;
-    private         int                   nrOfUnbound = -1;
-    protected final int                   start;
+    private int                   hashCode         = 0;
+    private Map<Variable, Object> variables;
+    private int                   nrOfUnbound      = -1;
+    protected final int           start;
 
     public Node(Functor functor, Token[] tokens, Object... args) {
         super(array(functor, tokens, args));
@@ -71,8 +71,8 @@ public class Node extends StructImpl {
     }
 
     public Node setTokens(Token... tokens) {
-        int      newStart = 1 + tokens.length;
-        Object[] newData  = new Object[newStart + length()];
+        int newStart = 1 + tokens.length;
+        Object[] newData = new Object[newStart + length()];
         // add type to array
         newData[0] = typeOrFunctor();
         // add new tokens to array
@@ -109,7 +109,7 @@ public class Node extends StructImpl {
         return (Node) super.get(0);
     }
 
-    public Token[] tokens() {
+    public final Token[] tokens() {
         Token[] tokens = new Token[start - 1];
         for (int i = 1; i < start; i++) {
             tokens[i - 1] = (Token) super.get(i);
@@ -125,7 +125,7 @@ public class Node extends StructImpl {
                 Object e = get(i);
                 r = 31 * r + (e == null ? 0 : e.hashCode());
             }
-            r        = 31 * r + super.get(0).hashCode();
+            r = 31 * r + super.get(0).hashCode();
             hashCode = r == 0 ? 1 : r;
         }
         return hashCode;
@@ -198,22 +198,18 @@ public class Node extends StructImpl {
         return functor != null ? functor.render() : null;
     }
 
-    public int precedence() {
-        return functor().precedence();
-    }
-
     @Override
     public String toString() {
         Function<Node, String> render = render();
         if (render != null) {
             return render.apply(this);
         }
-        Functor       functor = functor();
-        StringBuilder sb      = new StringBuilder();
+        Functor functor = functor();
+        StringBuilder sb = new StringBuilder();
         if (functor != null) {
-            sb.append("F#").append(functor.name());
+            sb.append(functor.name());
         } else {
-            sb.append("T#").append(type().name());
+            sb.append(type().name());
         }
         sb.append('(');
         String sep = "";
@@ -226,10 +222,12 @@ public class Node extends StructImpl {
     }
 
     public final String toString(int i) {
-        Object v      = get(i);
+        Object v = get(i);
         String string = StringUtil.toString(v);
         if (v instanceof Node && render() != null && ((Node) v).render() != null) {
-            if (!functor().equals(((Node) v).functor()) && precedence() >= ((Node) v).precedence()) {
+            Functor tf = functor();
+            Functor vf = ((Node) v).functor();
+            if (!tf.equals(vf) && tf.precedence() >= vf.precedence()) {
                 return "(" + string + ")";
             }
         }
@@ -292,7 +290,7 @@ public class Node extends StructImpl {
 
     private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
-        int      i     = idx[ii] + start;
+        int i = idx[ii] + start;
         if (ii < idx.length - 1) {
             Node s = (Node) array[i];
             array[i] = s.set(ii + 1, idx, val);
@@ -340,8 +338,8 @@ public class Node extends StructImpl {
         Type thisType = typeOf(thisVal);
         thisVal = thisVal instanceof Type ? null : thisVal;
         if (declVal instanceof Variable var) {
-            Object varVal  = vars.get(var);
-            Type   varType = typeOf(varVal);
+            Object varVal = vars.get(var);
+            Type varType = typeOf(varVal);
             varVal = varVal instanceof Type ? null : varVal;
             if (varVal != null) {
                 if (thisVal != null && !thisVal.equals(varVal)) {
@@ -388,7 +386,7 @@ public class Node extends StructImpl {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
-            Object bound   = setBinding(declaration.get(i), thisVal, vars);
+            Object bound = setBinding(declaration.get(i), thisVal, vars);
             if (!Objects.equals(bound, thisVal)) {
                 if (array == null) {
                     array = toArray();
