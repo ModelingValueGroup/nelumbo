@@ -1,10 +1,8 @@
 # Nelumbo
 
-Nelumbo is an experimental, work-in-progress declarative logic programming language that explores ways to define and execute custom syntax and semantics. This repository is a proof of concept intended for research and prototyping rather than production use.
+Nelumbo is a declarative logic programming language that is able to define and execute custom syntax and semantics. The current state of this repository is intended for research and prototyping rather than production use. It can however been seen as a prove of the feasibility of the goals.
 
-As a meta-language, Nelumbo is designed to be extensible, but expect rapid iteration and breaking changes as the project evolves. The language is implemented in Java to simplify integration, but interfaces, behavior, and APIs may change without notice.
-
-Status: active development, unstable, and subject to change. Use at your own risk and please share feedback!
+As a meta-language, Nelumbo is designed to be extensible, but expect rapid iteration and breaking changes in this early state of the project. The language is implemented in Java to simplify integration, but interfaces, behavior, and APIs may change without notice.
 
 ---
 
@@ -19,7 +17,7 @@ Status: active development, unstable, and subject to change. Use at your own ris
 
 ## Roadmap
 
-Note: The following goals are exploratory and may change or be incomplete as we iterate. Backward compatibility is not guaranteed.
+Note: The following goals are exploratory and may change or be incomplete as we iterate.
 
 * Define and parse syntaxes
 * Define and execute semantics
@@ -91,10 +89,10 @@ fib(a,b)  <==  a>1 & b=fib(a-1)+fib(a-2)
 
 ## Contributing
 Feedback and exploratory contributions are very welcome! Please open issues or pull requests on GitHub.
-Given the experimental nature of the project, expect fast iteration, breaking changes, and evolving guidelines. Sharing use cases, ideas, and minimal repros is especially helpful.
+Given the early state of the project, expect fast iteration, possibly breaking changes, and evolving guidelines. Sharing use cases, ideas, and minimal repros is especially helpful.
 
 ## License
 This project is licensed under the terms of the LICENSE file provided in the repository.
 
 ## Support
-This is best-effort support while the project is under active development. For questions or support, please use the GitHub Issues page. Response times may vary, and behavior may change without notice.
+This is best-effort support while the project is under active development. For questions, ideas or support, please use the GitHub Issues page.
