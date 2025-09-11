@@ -28,6 +28,7 @@ import java.util.ListIterator;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
@@ -37,14 +38,14 @@ import org.modelingvalue.nelumbo.Variable;
 
 public final class Parser {
     public static List<Node> parse(String string) throws ParseException {
-        Tokenizer tokenizer = new Tokenizer(string + "\n", string);
-        LinkedList<Token> tokens = tokenizer.tokenize();
+        Tokenizer         tokenizer = new Tokenizer(string + "\n", string);
+        LinkedList<Token> tokens    = tokenizer.tokenize();
         return new Parser(tokens).parse();
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
         String packageName = clss.getPackageName();
-        String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
+        String name        = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
         return parse(clss, name);
     }
 
@@ -54,8 +55,8 @@ public final class Parser {
             if (stream == null) {
                 throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
-            InputStream buffer = new BufferedInputStream(stream);
-            String base = new String(buffer.readAllBytes());
+            InputStream       buffer = new BufferedInputStream(stream);
+            String            base   = new String(buffer.readAllBytes());
             LinkedList<Token> tokens = new Tokenizer(base, fileName).tokenize();
             return new Parser(tokens).parse();
         } catch (IOException e) {
@@ -73,7 +74,14 @@ public final class Parser {
     }
 
     public Parser(LinkedList<Token> tokens, boolean noInfer) {
+        Object[] context = ContextThread.getContext();
+        if (context == null) {
+            throw new IllegalStateException("there is no current Context.");
+        }
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
+        if (knowledgeBase == null) {
+            throw new IllegalStateException("there is no current KnowledgeBase.");
+        }
         this.iterator = tokens.listIterator();
         knowledgeBase.noInfer(noInfer);
     }
@@ -113,9 +121,9 @@ public final class Parser {
         }
         // made this an array so that prefix() and postfix() can return new values in case a token was split
         // otherwise the unsplit Token is put in the Node
-        Token[] t12 = new Token[2];
+        Token[]  t12 = new Token[2];
         Parselet parselet;
-        Node left;
+        Node     left;
         if (expected.isList()) {
             Type elemType = expected.element();
             left = new ListNode(Token.EMPTY, elemType);
@@ -133,7 +141,7 @@ public final class Parser {
             t12[1] = peek();
             assert t12[0] != null;
             parselet = parselet(expected, null, t12, -1);
-            left = parselet.parse(expected, this, null, t12[0]);
+            left     = parselet.parse(expected, this, null, t12[0]);
         }
         if (moreTokens()) {
             t12[0] = consume();
@@ -145,8 +153,8 @@ public final class Parser {
                 if (noMoreTokens()) {
                     return left;
                 }
-                t12[0] = consume();
-                t12[1] = peek();
+                t12[0]   = consume();
+                t12[1]   = peek();
                 parselet = parselet(expected, left.type(), t12, precedence);
             }
             // unread the token that ended the postfix chain
@@ -156,8 +164,8 @@ public final class Parser {
     }
 
     private Parselet parselet(Type expected, Type left, Token[] t12, int precedence) throws ParseException {
-        Token t1 = t12[0];
-        Token t2 = t12[1];
+        Token    t1       = t12[0];
+        Token    t2       = t12[1];
         Parselet parselet = doParselet(expected, left, t1, t2);
         if (parselet != null) {
             if (precedence < parselet.precedence()) {
@@ -170,8 +178,8 @@ public final class Parser {
             // no parselet found, so we try chop some chars from the operator and look for that part in the knowledgeBase:
             Token t1Init = t1;
             for (int len = t1Init.text().length() - 1; 0 < len && !knowledgeBase.isOperator(t1.text()); len--) {
-                t1 = t1Init.splitGet1(len);
-                t2 = t1Init.splitGet2(len);
+                t1       = t1Init.splitGet1(len);
+                t2       = t1Init.splitGet2(len);
                 parselet = doParselet(expected, left, t1, t2);
                 if (parselet != null) {
                     if (precedence < parselet.precedence()) {
@@ -196,7 +204,7 @@ public final class Parser {
         }
         Set<Type> pre, post = Set.of(left);
         while (!post.isEmpty()) {
-            pre = post;
+            pre  = post;
             post = Set.of();
             for (Type type : pre) {
                 Parselet parselet = knowledgeBase.parselet(expected, type, token1, token2);

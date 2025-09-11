@@ -20,6 +20,27 @@
 
 package org.modelingvalue.nelumbo;
 
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Caret;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.Element;
+import javax.swing.text.Highlighter;
+import javax.swing.text.TextAction;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -36,19 +57,6 @@ import java.io.Serial;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.*;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Caret;
-import javax.swing.text.DefaultEditorKit;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.Element;
-import javax.swing.text.Highlighter;
-import javax.swing.text.TextAction;
 
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -95,7 +103,8 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     public Console() {
         initWindow();
         initActions();
-        initKnowledgeBase();
+        runWithKnowledgeBase();
+        // only returns when done
     }
 
     private void initWindow() {
@@ -226,7 +235,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         });
     }
 
-    private void initKnowledgeBase() {
+    private void runWithKnowledgeBase() {
         KnowledgeBase.run(this, KnowledgeBase.run(() -> {
             try {
                 Parser.parse(Integer.class);
@@ -253,7 +262,6 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     public synchronized void windowClosed(WindowEvent evt) {
         quit = true;
         notifyAll();
-        System.exit(0);
     }
 
     @Override
