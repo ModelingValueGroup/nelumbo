@@ -38,23 +38,24 @@ public enum TokenType {
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, false, false), //
     TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, false, false), //
     OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", true, false, false), //
-    HSPACE("\\h+", false, false, false), //
-    NEWLINE("\\v", false, true, false), //
+    NEWLINE("\\v", true, true, false), //
+    HSPACE("\\h+", false, false, true), //
+    VSPACE("\\v", false, false, true), //
     END_LINE_COMMENT("//[^\\v]*", false, false, true), //
     IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", false, false, true), //
-    ERROR(".", false, false, false),//
+    ERROR(".", false, false, false), //
     ;
 
-    private final Pattern pattern; // the pattern that matches tokens of this token type
-    private final boolean more;    // indicates that a sequence of NEWLINE tokens after this token is to be ignored when parsing
-    private final boolean end;     // indicates the end of a high precedence construct (RPAREN/RBRACKET/RBRACE/NEWLINE)
-    private final boolean comment; // indicates a comment (END_LINE_COMMENT/IN_LINE_COMMENT)
+    private final Pattern pattern;          // the pattern that matches tokens of this token type
+    private final boolean more;             // indicates that a sequence of NEWLINE tokens after this token is to be ignored when parsing
+    private final boolean end;              // indicates the end of a high precedence construct (RPAREN/RBRACKET/RBRACE/NEWLINE)
+    private final boolean ignoreForParser;  // indicates that the parser should ignore this token
 
-    TokenType(String regexp, boolean more, boolean end, boolean comment) {
-        this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
-        this.more = more;
-        this.end = end;
-        this.comment = comment;
+    TokenType(String regexp, boolean more, boolean end, boolean ignoreForParser) {
+        this.pattern         = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
+        this.more            = more;
+        this.end             = end;
+        this.ignoreForParser = ignoreForParser;
     }
 
     public Pattern pattern() {
@@ -69,7 +70,7 @@ public enum TokenType {
         return end;
     }
 
-    public boolean comment() {
-        return comment;
+    public boolean isIgnoreForParser() {
+        return ignoreForParser;
     }
 }

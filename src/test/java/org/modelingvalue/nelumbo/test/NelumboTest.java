@@ -76,6 +76,33 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
+    @Test
+    public void allTokensCheckTest() throws ParseException {
+        LinkedList<Token> tokens1 = new Tokenizer(NelumboTest.class, "familyTest.nl", false).tokenize();
+        assertEquals(431, tokens1.size(), "wrong number of tokens returned by tokenize()");
+        U.printTokens("only-parser-tokens", tokens1);
+
+        LinkedList<Token> tokens2 = new Tokenizer(NelumboTest.class, "familyTest.nl", true).tokenize();
+        assertEquals(578, tokens2.size(), "wrong number of tokens returned by tokenize()");
+        U.printTokens("all-tokens", tokens2);
+
+        run(() -> {
+            try {
+                U.printResults(Parser.parse(tokens1));
+            } catch (ParseException e) {
+                fail(e);
+            }
+        });
+
+        run(() -> {
+            try {
+                U.printResults(Parser.parse(tokens2));
+            } catch (ParseException e) {
+                fail(e);
+            }
+        });
+    }
+
     @RepeatedTest(10)
     public void integersTest() {
         run(() -> {
@@ -170,7 +197,7 @@ public class NelumboTest extends NelumboTestBase {
                 LinkedList<Token> tokens = new Tokenizer(nl, "NelumboTest.research", true).tokenize();
                 U.printTokens("after-parse", tokens);
 
-                List<Node>        result = new Parser(tokens).parse();
+                List<Node> result = new Parser(tokens).parse();
 
                 U.printNode("all result nodes", result);
                 U.printKnowledgeBase("KNOWLEDGE-BASE", true);

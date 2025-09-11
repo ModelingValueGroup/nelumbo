@@ -44,18 +44,15 @@ public class Node extends StructImpl {
     public Node(Functor functor, Token[] tokens, Object... args) {
         super(array(functor, tokens, args));
         start = tokens.length + 1;
-        //U.printTokens("A MAKE NODE " + getClass().getSimpleName() + " " /*+ functor*/, Arrays.asList(tokens));
     }
 
     public Node(Type type, Token[] tokens, Object... args) {
         super(array(type, tokens, args));
         start = tokens.length + 1;
-        //U.printTokens("B MAKE NODE " + getClass().getSimpleName() + " " + type, Arrays.asList(tokens));
     }
 
     protected Node(Object[] args, int start) {
         super(args);
-        //U.printTokens("C MAKE NODE " + getClass().getSimpleName() + " " + args[0], Arrays.asList(args).subList(1, start).stream().map(Token.class::cast).toList());
         this.start = start;
         if (get(0) instanceof Token) {
             System.err.println("WARNING: Node.get(0) is a Token... is this an error??");

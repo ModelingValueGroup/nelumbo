@@ -54,7 +54,7 @@ public class TokenizerTest extends NelumboTestBase {
         LinkedList<Token> all           = new Tokenizer(example, "tokenizerTest.all", true).tokenize();
         String            reassembled   = all.stream().map(Token::text).collect(Collectors.joining());
         String            types         = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String            expectedTypes = "END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE";
+        String            expectedTypes = "END_LINE_COMMENT VSPACE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR VSPACE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
@@ -69,7 +69,7 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals(0, all.get(0).line());
         assertEquals(0, all.get(0).position());
 
-        assertEquals(TokenType.NEWLINE, all.get(1).type());
+        assertEquals(TokenType.VSPACE, all.get(1).type());
         assertEquals(0, all.get(1).line());
         assertEquals(10, all.get(1).position());
 

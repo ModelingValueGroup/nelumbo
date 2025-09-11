@@ -20,17 +20,47 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 
-@SuppressWarnings("ClassCanBeRecord")
 public class Tokenizer {
     private final String  input;
     private final String  fileName;
     private final boolean includeAllTokens;
 
+    private Token lastForParser = null;
+
+    public Tokenizer(Class<?> clazz) throws ParseException {
+        this(clazz, false);
+    }
+
+    public Tokenizer(Class<?> clazz, String fileName) throws ParseException {
+        this(clazz, fileName, false);
+    }
+
     public Tokenizer(String input, String fileName) {
         this(input, fileName, false);
+    }
+
+    public Tokenizer(Class<?> clazz, boolean includeAllTokens) throws ParseException {
+        this(clazz, clazz.getPackageName().substring(clazz.getPackageName().lastIndexOf('.') + 1) + ".nl");
+    }
+
+    public Tokenizer(Class<?> clazz, String fileName, boolean includeAllTokens) throws ParseException {
+        try {
+            InputStream stream = clazz.getResourceAsStream(fileName);
+            if (stream == null) {
+                throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
+            }
+            this.input            = new String(new BufferedInputStream(stream).readAllBytes());
+            this.fileName         = fileName;
+            this.includeAllTokens = includeAllTokens;
+        } catch (IOException e) {
+            throw new ParseException(e, "IOException during parse", fileName);
+        }
     }
 
     public Tokenizer(String input, String fileName, boolean includeAllTokens) {
@@ -92,27 +122,16 @@ public class Tokenizer {
     }
 
     private void addToken(LinkedList<Token> tokens, TokenType type, String text, int line, int position, int index) {
-        if (!includeAllTokens) {
-            if (type.comment()) {
-                // ignore comments
-                return;
-            }
-            if (type == TokenType.HSPACE) {
-                // ignore whitespace
-                return;
-            }
-            if (type == TokenType.NEWLINE) {
-                if (tokens.isEmpty()) {
-                    // ignore newlines at the start of the input
-                    return;
-                }
-                if (tokens.getLast().type().more()) {
-                    // ignore newlines after a token that can be continued
-                    return;
-                }
+        if (type == TokenType.NEWLINE && (lastForParser == null || lastForParser.type().more())) {
+            type = TokenType.VSPACE;
+        }
+        if (includeAllTokens || !type.isIgnoreForParser()) {
+            Token newToken = new Token(type, text, line, position, index, fileName);
+            tokens.add(newToken);
+            if (!type.isIgnoreForParser()) {
+                lastForParser = newToken;
             }
         }
-        tokens.add(new Token(type, text, line, position, index, fileName));
     }
 
     private String getUnexpectedToken(String text, int at) {

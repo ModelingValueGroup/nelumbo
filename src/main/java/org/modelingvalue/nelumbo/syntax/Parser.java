@@ -20,9 +20,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -38,30 +35,23 @@ import org.modelingvalue.nelumbo.Variable;
 
 public final class Parser {
     public static List<Node> parse(String string) throws ParseException {
-        Tokenizer         tokenizer = new Tokenizer(string + "\n", string);
-        LinkedList<Token> tokens    = tokenizer.tokenize();
-        return new Parser(tokens).parse();
+        return parse(new Tokenizer(string + "\n", string));
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
-        String packageName = clss.getPackageName();
-        String name        = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
-        return parse(clss, name);
+        return parse(new Tokenizer(clss));
     }
 
     public static List<Node> parse(Class<?> clss, String fileName) throws ParseException {
-        try {
-            InputStream stream = clss.getResourceAsStream(fileName);
-            if (stream == null) {
-                throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
-            }
-            InputStream       buffer = new BufferedInputStream(stream);
-            String            base   = new String(buffer.readAllBytes());
-            LinkedList<Token> tokens = new Tokenizer(base, fileName).tokenize();
-            return new Parser(tokens).parse();
-        } catch (IOException e) {
-            throw new ParseException(e, "IOException during parse", fileName);
-        }
+        return parse(new Tokenizer(clss, fileName));
+    }
+
+    public static List<Node> parse(Tokenizer tokenizer) throws ParseException {
+        return parse(tokenizer.tokenize());
+    }
+
+    public static List<Node> parse(LinkedList<Token> tokens) throws ParseException {
+        return new Parser(tokens).parse();
     }
 
     // Instance
@@ -128,7 +118,8 @@ public final class Parser {
             Type elemType = expected.element();
             left = new ListNode(Token.EMPTY, elemType);
             if (!peek().type().end()) {
-                do {
+                do
+                {
                     Node node = parseNode(precedence, elemType);
                     if (!elemType.isAssignableFrom(node.type())) {
                         throw new ParseException("Expected element of type " + elemType + " but found " + node + " of type " + node.type(), node.tokens());
@@ -141,7 +132,10 @@ public final class Parser {
             t12[1] = peek();
             assert t12[0] != null;
             parselet = parselet(expected, null, t12, -1);
-            left     = parselet.parse(expected, this, null, t12[0]);
+            if (parselet == null) {
+                throw new ParseException("Expected token of type " + expected + " but found " + t12[0], t12[0]);
+            }
+            left = parselet.parse(expected, this, null, t12[0]);
         }
         if (moreTokens()) {
             t12[0] = consume();
@@ -230,12 +224,13 @@ public final class Parser {
     public Token peek() {
         Token t = consume();
         unconsume(t);
+        assert t == null || !t.isIgnoreForParser();
         return t;
     }
 
     public boolean peekTypeIs(TokenType expected) {
-        Token token = peek();
-        return token != null && token.type() == expected;
+        Token t = peek();
+        return t != null && t.type() == expected;
     }
 
     private Token consume() {
@@ -244,7 +239,7 @@ public final class Parser {
                 return null;
             }
             Token t = iterator.next();
-            if (!t.isCommentOrHspace()) {
+            if (!t.isIgnoreForParser()) {
                 return t;
             }
         }
@@ -261,7 +256,7 @@ public final class Parser {
     private void unconsume(Token t) {
         if (t != null) {
             Token un = iterator.previous();
-            while (un != null && un.isCommentOrHspace()) {
+            while (un != null && un.isIgnoreForParser()) {
                 un = iterator.previous();
             }
             if (un != t) {
@@ -273,7 +268,7 @@ public final class Parser {
     public boolean match(TokenType expected) {
         boolean isType = peekTypeIs(expected);
         if (isType) {
-            consume();
+            Token t = consume();
         }
         return isType;
     }

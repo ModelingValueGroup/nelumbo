@@ -367,7 +367,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 case COMMA -> purplePainter;
                 case TYPE -> pinkPainter;
                 case END_LINE_COMMENT, IN_LINE_COMMENT -> lightGreyPainter;
-                case HSPACE, NEWLINE -> whitePainter;
+                case HSPACE, VSPACE, NEWLINE -> whitePainter;
                 case ERROR -> redPainter;
                 };
                 if (hp != null) {

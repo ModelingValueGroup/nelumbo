@@ -163,8 +163,8 @@ public class Token {
         return fileName;
     }
 
-    public boolean isCommentOrHspace() {
-        return type.comment() || type == TokenType.HSPACE;
+    public boolean isIgnoreForParser() {
+        return type.isIgnoreForParser();
     }
 
     public Token splitGet1(int len) {
