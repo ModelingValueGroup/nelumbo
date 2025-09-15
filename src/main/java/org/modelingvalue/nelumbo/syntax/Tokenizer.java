@@ -135,19 +135,19 @@ public class Tokenizer {
         }
 
         public Token firstAll() {
-            return tokens[Tokenizer.FIRST_ALL];
+            return tokens[FIRST_ALL];
         }
 
         public Token first() {
-            return tokens[Tokenizer.FIRST];
+            return tokens[FIRST];
         }
 
         public Token lastAll() {
-            return tokens[Tokenizer.LAST_ALL];
+            return tokens[LAST_ALL];
         }
 
         public Token last() {
-            return tokens[Tokenizer.LAST];
+            return tokens[LAST];
         }
 
         public List<Token> list() {
