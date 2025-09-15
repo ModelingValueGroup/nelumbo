@@ -23,21 +23,22 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
     @Serial
-    private static final long serialVersionUID = -928776822979604743L;
+    private static final long    serialVersionUID = -928776822979604743L;
 
     protected static final int[] ZERO_ONE         = new int[]{0, 1};
     protected static final int[] ONE_ZERO         = new int[]{1, 0};
 
-    protected BinaryPredicate(Functor functor, Token[] tokens, Object predicate1, Object predicate2) {
-        super(functor, tokens, predicate1, predicate2);
+    protected BinaryPredicate(Functor functor, List<AstElement> elements, Object predicate1, Object predicate2) {
+        super(functor, elements, predicate1, predicate2);
     }
 
-    protected BinaryPredicate(Object[] args, int start, BinaryPredicate declaration) {
-        super(args, start, declaration);
+    protected BinaryPredicate(Object[] args, BinaryPredicate declaration) {
+        super(args, declaration);
     }
 
     @Override

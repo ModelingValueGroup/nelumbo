@@ -23,52 +23,51 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.regex.Pattern;
 
 public enum TokenType {
-    SEMICOLON(";", true, false), //
-    COMMA(",", true, false), //
-    LPAREN("\\(", true, false), //
+    SINGLEQUOTE("\'", false, false), //
+    SEMICOLON(";", false, false), //
+    COMMA(",", false, false), //
+    LPAREN("\\(", false, false), //
     RPAREN("\\)", false, false), //
-    LBRACKET("\\[", true, false), //
+    LBRACKET("\\[", false, false), //
     RBRACKET("\\]", false, false), //
-    LBRACE("\\{", true, false), //
+    LBRACE("\\{", false, false), //
     RBRACE("\\}", false, false), //
-    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, false), //
-    NUMBER("[0-9]+(#[0-9a-zA-Z]+)?", false, false), //
-    DECIMAL("[0-9]+\\.[0-9]+", false, false), //
-    QNAME("[a-zA-Z_][0-9a-zA-Z_]*(\\.[a-zA-Z_][0-9a-zA-Z_]*)+", false, false), //
-    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, false), //
-    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, false), //
-    OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", true, false), //
-    META_OPERATOR("`[~!@#$%^&*=+|:<>.?/-]+`", true, false), //
-    HSPACE("\\h+", false, false), //
+    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, true), //
+    NUMBER("[0-9]+(#[0-9a-zA-Z]+)?", false, true), //
+    DECIMAL("[0-9]+\\.[0-9]+", false, true), //
+    QNAME("[a-zA-Z_][0-9a-zA-Z_]*(\\.[a-zA-Z_][0-9a-zA-Z_]*)+", false, true), //
+    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, true), //
+    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, true), //
+    OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", false, true), //
+    META_OPERATOR("<[\\[\\]\\{\\}\\(\\)\\|]>", false, true), //
     NEWLINE("\\v", false, false), //
-    END_LINE_COMMENT("//[^\\v]*", false, true), //
-    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", false, true), //
-    ERROR(".", false, false),//
+    SKIP_NEWLINE("\\\\\\v", true, false), //
+    HSPACE("\\h+", true, false), //
+    END_LINE_COMMENT("//[^\\v]*", true, true), //
+    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", true, true), //
+    ERROR(".", false, false), //
+    ENDOFFILE(".", false, false),//
     ;
 
-    private final Pattern pattern; // the pattern that matches tokens of this token type
-    private final boolean more;    // indicates that a sequence of NEWLINE tokens after this token is to be ignored when parsing
-    private final boolean comment; // indicates a comment (END_LINE_COMMENT/IN_LINE_COMMENT)
+    private final Pattern pattern;  // the pattern that matches tokens of this token type
+    private final boolean skip;     // indicates a non semantic part that may be ignored by the parser
+    private final boolean variable; // indicates a token type that has no singular content
 
-    TokenType(String regexp, boolean more, boolean comment) {
+    TokenType(String regexp, boolean skip, boolean variable) {
         this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
-        this.more = more;
-        this.comment = comment;
+        this.skip = skip;
+        this.variable = variable;
     }
 
     public Pattern pattern() {
         return pattern;
     }
 
-    public boolean more() {
-        return more;
-    }
-
-    public boolean comment() {
-        return comment;
-    }
-
     public boolean skip() {
-        return this == HSPACE || this == NEWLINE || this == ERROR || comment();
+        return skip;
+    }
+
+    public boolean variable() {
+        return variable;
     }
 }

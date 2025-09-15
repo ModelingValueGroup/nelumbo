@@ -20,31 +20,31 @@
 
 package org.modelingvalue.nelumbo.strings;
 
-import org.modelingvalue.nelumbo.Functor;
+import java.io.Serial;
+import java.math.BigInteger;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.syntax.Token;
-
-import java.io.Serial;
-import java.lang.String;
-import java.math.BigInteger;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Integer extends Predicate {
     @Serial
     private static final long serialVersionUID = -2874326869672600959L;
 
-    public Integer(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private Integer(Object[] array, int start, Integer declaration) {
-        super(array, start, declaration);
+    private Integer(Object[] array, Integer declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Integer struct(Object[] array, int start, Predicate declaration) {
-        return new Integer(array, start, (Integer) declaration);
+    protected Integer struct(Object[] array, Predicate declaration) {
+        return new Integer(array, (Integer) declaration);
     }
 
     @Override
@@ -54,7 +54,7 @@ public final class Integer extends Predicate {
         }
 
         BigInteger integer = getVal(0, 0);
-        String string = getVal(1, 0);
+        java.lang.String string = getVal(1, 0);
         if (string != null) {
             try {
                 BigInteger parsed = BigInteger.valueOf(java.lang.Integer.parseInt(string));
@@ -67,8 +67,8 @@ public final class Integer extends Predicate {
             } catch (NumberFormatException e) {
                 return falsehoodCC();
             }
-        } else if(integer != null) {
-            String s = integer.toString();
+        } else if (integer != null) {
+            java.lang.String s = integer.toString();
             return set(1, org.modelingvalue.nelumbo.strings.String.of(s)).factCI();
         }
 

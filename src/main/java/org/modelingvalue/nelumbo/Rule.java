@@ -22,26 +22,32 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Rule extends Node {
     @Serial
-    private static final long    serialVersionUID = -4602043866952049391L;
-    public static final  Functor FUNCTOR          = new Functor(Token.EMPTY, Type.RULE, "Rule", n -> n.toString(0) + (((Rule) n).symmetric() ? " <==> " : " <== ") + n.toString(1), 10, Type.PREDICATE, Type.PREDICATE);
+    private static final long serialVersionUID = -4602043866952049391L;
 
-    public Rule(Token[] tokens, Predicate consequence, Predicate condition, boolean symmetric) {
-        super(FUNCTOR, tokens, consequence, condition, symmetric);
+    private static Functor    FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(Not.class, f -> FUNCTOR = f);
     }
 
-    private Rule(Object[] args, int start) {
-        super(args, start);
+    public Rule(List<AstElement> elements, Predicate consequence, Predicate condition, boolean symmetric) {
+        super(FUNCTOR, elements, consequence, condition, symmetric);
+    }
+
+    private Rule(Object[] args) {
+        super(args);
     }
 
     @Override
-    protected Rule struct(Object[] array, int start) {
-        return new Rule(array, start);
+    protected Rule struct(Object[] array) {
+        return new Rule(array);
     }
 
     public final Predicate consequence() {

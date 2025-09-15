@@ -22,28 +22,29 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class And extends BinaryPredicate {
     @Serial
     private static final long serialVersionUID = -7248491569810098948L;
 
-    private static Functor FUNCTOR;
+    private static Functor    FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(And.class, f -> FUNCTOR = f);
     }
 
-    public And(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public And(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private And(Object[] args, int start, And declaration) {
-        super(args, start, declaration);
+    private And(Object[] args, And declaration) {
+        super(args, declaration);
     }
 
     public static And of(Node predicate1, Node predicate2) {
-        return new And(FUNCTOR, Token.EMPTY, new Object[]{predicate1, predicate2});
+        return new And(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
     }
 
     @Override
@@ -52,8 +53,8 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And struct(Object[] array, int start, Predicate declaration) {
-        return new And(array, start, (And) declaration);
+    protected And struct(Object[] array, Predicate declaration) {
+        return new And(array, (And) declaration);
     }
 
     @Override

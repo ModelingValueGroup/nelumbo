@@ -22,23 +22,23 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.collections.List;
 
 public final class Variable extends Node {
     @Serial
     private static final long serialVersionUID = -8998368070388908726L;
 
-    public Variable(Token[] tokens, Type type, String name) {
-        super(Type.VARIABLE, tokens, type, name);
+    public Variable(List<AstElement> elements, Type type, String name) {
+        super(Type.VARIABLE, elements, type, name);
     }
 
-    private Variable(Object[] array, int start) {
-        super(array, start);
+    private Variable(Object[] array) {
+        super(array);
     }
 
     public Variable literal() {
         Type type = type();
-        return type.isLiteral() ? this : new Variable(tokens(), type.literal(), name());
+        return type.isLiteral() ? this : new Variable(astElements(), type.literal(), name());
     }
 
     @Override
@@ -56,8 +56,8 @@ public final class Variable extends Node {
     }
 
     @Override
-    protected Variable struct(Object[] array, int start) {
-        return new Variable(array, start);
+    protected Variable struct(Object[] array) {
+        return new Variable(array);
     }
 
     @Override

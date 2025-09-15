@@ -6,19 +6,19 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.Quadruple;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.patterns.SyntaxPattern;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
-public class Patterns extends Quadruple<Map<Object, Patterns>, SyntaxPattern, Integer, Type> {
+public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer, Type> {
     @Serial
     private static final long    serialVersionUID = 7933114430825879121L;
 
-    public static final Patterns EMPTY            = new Patterns(Map.of(), null, -1, null);
+    public static final Patterns EMPTY            = new Patterns(Map.of(), null, null, null);
 
-    private Patterns(Map<Object, Patterns> map, SyntaxPattern pattern, Integer precedence, Type expected) {
+    private Patterns(Map<Object, Patterns> map, Functor pattern, Integer precedence, Type expected) {
         super(map, pattern, precedence, expected);
     }
 
-    public Patterns setPattern(SyntaxPattern pattern) {
+    public Patterns setPattern(Functor pattern) {
         if (b() != null) {
             throw new IllegalArgumentException();
         }
@@ -45,7 +45,7 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, SyntaxPattern, In
         return a();
     }
 
-    public SyntaxPattern pattern() {
+    public Functor pattern() {
         return b();
     }
 
@@ -98,7 +98,10 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, SyntaxPattern, In
         }
         if (patterns != null) {
             result.add(parser.consume());
-            return patterns.preParse(result, parser);
+            if (patterns.preParse(result, parser) != null) {
+                return result;
+            }
+            parser.setToken(token);
         }
         return null;
     }
@@ -113,14 +116,14 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, SyntaxPattern, In
                 return patterns.preParse(result, parser);
             }
         }
-        throw new ParseException("no functor found for type " + node.type(), node.tokens());
+        throw new ParseException("no functor found for type " + node.type(), node);
     }
 
     public Patterns merge(Patterns patterns) {
         if (patterns == null) {
             return this;
         }
-        SyntaxPattern s = merge(pattern(), patterns.pattern());
+        Functor s = merge(pattern(), patterns.pattern());
         Integer p = merge(precedence(), patterns.precedence());
         Type e = merge(expected(), patterns.expected());
         Map<Object, Patterns> m = map().addAll(patterns.map(), (a, b) -> a.merge(b));

@@ -20,31 +20,31 @@
 
 package org.modelingvalue.nelumbo.strings;
 
-import org.modelingvalue.nelumbo.Functor;
+import java.io.Serial;
+import java.math.BigInteger;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.syntax.Token;
-
-import java.io.Serial;
-import java.lang.String;
-import java.math.BigInteger;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Length extends Predicate {
     @Serial
     private static final long serialVersionUID = 4405805306602130025L;
 
-    public Length(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public Length(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private Length(Object[] array, int start, Length declaration) {
-        super(array, start, declaration);
+    private Length(Object[] array, Length declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Length struct(Object[] array, int start, Predicate declaration) {
-        return new Length(array, start, (Length) declaration);
+    protected Length struct(Object[] array, Predicate declaration) {
+        return new Length(array, (Length) declaration);
     }
 
     @Override

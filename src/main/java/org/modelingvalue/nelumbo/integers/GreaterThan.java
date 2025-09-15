@@ -22,26 +22,27 @@ package org.modelingvalue.nelumbo.integers;
 
 import java.math.BigInteger;
 
-import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class GreaterThan extends Predicate {
     private static final long serialVersionUID = 5338681256251602011L;
 
-    public GreaterThan(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public GreaterThan(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private GreaterThan(Object[] array, int start, GreaterThan declaration) {
-        super(array, start, declaration);
+    private GreaterThan(Object[] array, GreaterThan declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected GreaterThan struct(Object[] array, int start, Predicate declaration) {
-        return new GreaterThan(array, start, (GreaterThan) declaration);
+    protected GreaterThan struct(Object[] array, Predicate declaration) {
+        return new GreaterThan(array, (GreaterThan) declaration);
     }
 
     @Override

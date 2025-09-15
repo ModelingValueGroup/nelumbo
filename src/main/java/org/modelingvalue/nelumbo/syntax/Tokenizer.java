@@ -20,59 +20,24 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.util.LinkedList;
 import java.util.regex.Matcher;
+
+import org.modelingvalue.collections.List;
 
 @SuppressWarnings("ClassCanBeRecord")
 public class Tokenizer {
 
-    public static final int FIRST = 0, FIRST_ALL = 1, PREVIOUS = 2, PREVIOUS_ALL = 3;
+    private static final int FIRST = 0, FIRST_ALL = 1, LAST = 2, LAST_ALL = 3;
 
-    private final String    input;
-    private final String    fileName;
+    private final String     input;
+    private final String     fileName;
 
     public Tokenizer(String input, String fileName) {
         this.input = input;
         this.fileName = fileName;
     }
 
-    public LinkedList<Token> listAll() throws ParseException {
-        Token[] tokens = tokenize();
-        return listAll(tokens);
-    }
-
-    public Token firstAll() throws ParseException {
-        Token[] tokens = tokenize();
-        return tokens[Tokenizer.FIRST_ALL];
-    }
-
-    public static LinkedList<Token> listAll(Token[] tokens) {
-        LinkedList<Token> list = new LinkedList<>();
-        for (Token token = tokens[FIRST_ALL]; token != null; token = token.nextAll()) {
-            list.add(token);
-        }
-        return list;
-    }
-
-    public LinkedList<Token> list() throws ParseException {
-        Token[] tokens = tokenize();
-        return list(tokens);
-    }
-
-    public Token first() throws ParseException {
-        Token[] tokens = tokenize();
-        return tokens[Tokenizer.FIRST];
-    }
-
-    public static LinkedList<Token> list(Token[] tokens) {
-        LinkedList<Token> list = new LinkedList<>();
-        for (Token token = tokens[FIRST]; token != null; token = token.next()) {
-            list.add(token);
-        }
-        return list;
-    }
-
-    public Token[] tokenize() throws ParseException {
+    public TokenizerResult tokenize() throws ParseException {
         Token[] tokens = new Token[4];
         TokenType[] tokenTypes = TokenType.values();
         Matcher[] matchers = new Matcher[tokenTypes.length];
@@ -122,7 +87,8 @@ public class Tokenizer {
             //adjust position:
             position += text.replaceAll(".*\\v", "").length();
         }
-        return tokens;
+        addToken(tokens, TokenType.ENDOFFILE, "EOF", line, position, index);
+        return new TokenizerResult(tokens);
     }
 
     private void addToken(Token[] tokens, TokenType type, String text, int line, int position, int index) {
@@ -130,27 +96,23 @@ public class Tokenizer {
         if (tokens[FIRST_ALL] == null) {
             tokens[FIRST_ALL] = token;
         } else {
-            tokens[PREVIOUS_ALL].setNextAll(token);
+            tokens[LAST_ALL].setNextAll(token);
         }
-        tokens[PREVIOUS_ALL] = token;
-        if (type == TokenType.NEWLINE) {
-            if (tokens[FIRST] == null) {
-                // ignore newlines at the start of the input
+        tokens[LAST_ALL] = token;
+        if (token.skip()) {
+            return;
+        }
+        if (token.type() == TokenType.NEWLINE) {
+            if (tokens[FIRST] == null || tokens[LAST].type() == TokenType.NEWLINE) {
                 return;
             }
-            if (tokens[PREVIOUS].type().more()) {
-                // ignore newlines after a token that can be continued
-                return;
-            }
         }
-        if (!token.isCommentOrHspace()) {
-            if (tokens[FIRST] == null) {
-                tokens[FIRST] = token;
-            } else {
-                tokens[PREVIOUS].setNext(token);
-            }
-            tokens[PREVIOUS] = token;
+        if (tokens[FIRST] == null) {
+            tokens[FIRST] = token;
+        } else {
+            tokens[LAST].setNext(token);
         }
+        tokens[LAST] = token;
     }
 
     private String getUnexpectedToken(String text, int at) {
@@ -164,4 +126,38 @@ public class Tokenizer {
         }
         return sb.toString();
     }
+
+    public static final class TokenizerResult {
+        private final Token[] tokens;
+
+        public TokenizerResult(Token[] tokens) {
+            this.tokens = tokens;
+        }
+
+        public Token firstAll() {
+            return tokens[Tokenizer.FIRST_ALL];
+        }
+
+        public Token first() {
+            return tokens[Tokenizer.FIRST];
+        }
+
+        public Token lastAll() {
+            return tokens[Tokenizer.LAST_ALL];
+        }
+
+        public Token last() {
+            return tokens[Tokenizer.LAST];
+        }
+
+        public List<Token> list() {
+            return tokens[FIRST].list(tokens[LAST]);
+        }
+
+        public List<Token> listAll() {
+            return tokens[FIRST_ALL].listAll(tokens[LAST_ALL]);
+        }
+
+    }
+
 }

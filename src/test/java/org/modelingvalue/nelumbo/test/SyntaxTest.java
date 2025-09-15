@@ -23,11 +23,11 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
-import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public class SyntaxTest extends NelumboTestBase {
 
@@ -44,11 +44,13 @@ public class SyntaxTest extends NelumboTestBase {
         run(() -> {
             String example = """
                     <Set> :: <Node>
-                    <Set> ::= { `[` <Node> `{` , <Node> `}` `]` }
+                    <Set> ' { <[> <Node> <{> , <Node> <}> <]> } '
                     """;
             try {
-                List<Node> list = new Parser(new Tokenizer(example, "SyntaxTest.test1").first()).parse();
-                System.out.println(list);
+                TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();
+                for (Node root : new Parser(result).parse()) {
+                    System.out.println(root);
+                }
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);

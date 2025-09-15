@@ -22,7 +22,8 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Or extends BinaryPredicate {
     @Serial
@@ -34,16 +35,16 @@ public final class Or extends BinaryPredicate {
         KnowledgeBase.registerFunctorSetter(Or.class, f -> FUNCTOR = f);
     }
 
-    public Or(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public Or(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private Or(Object[] args, int start, Or declaration) {
-        super(args, start, declaration);
+    private Or(Object[] args, Or declaration) {
+        super(args, declaration);
     }
 
     public static Or of(Node predicate1, Node predicate2) {
-        return new Or(FUNCTOR, Token.EMPTY, new Object[]{predicate1, predicate2});
+        return new Or(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
     }
 
     @Override
@@ -52,8 +53,8 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
-    protected Or struct(Object[] array, int start, Predicate declaration) {
-        return new Or(array, start, (Or) declaration);
+    protected Or struct(Object[] array, Predicate declaration) {
+        return new Or(array, (Or) declaration);
     }
 
     @Override

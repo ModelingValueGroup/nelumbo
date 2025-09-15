@@ -20,10 +20,6 @@
 
 package org.modelingvalue.nelumbo;
 
-import java.lang.Boolean;
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.Token;
 
@@ -37,15 +33,15 @@ public class U {
     }
 
     public static void printKnowledgeBase(String msg, boolean withTokens) {
-        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+        if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println();
             System.out.printf("%s %-99s%s%n", Colors.code(42), msg + ":", Colors.code(0));
             KnowledgeBase.CURRENT.get().print(System.out, withTokens);
         }
     }
 
-    public static void printTokens(String msg, Collection<Token> tokens) {
-        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+    public static void printTokens(String msg, List<Token> tokens) {
+        if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println(msg + ":");
             for (Token token : tokens) {
                 System.out.println("    Token: " + token);
@@ -54,7 +50,7 @@ public class U {
     }
 
     public static void printResults(List<Node> roots) {
-        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+        if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
             for (Node root : roots) {
                 if (root.type().equals(Type.RESULT)) {
                     System.out.println(root.toString(1));
@@ -63,13 +59,13 @@ public class U {
         }
     }
 
-    public static void printNode(String msg, List<Node> roots) {
-        if (Boolean.getBoolean("VERBOSE_TESTS")) {
+    public static void printNode(String msg, List<Node> nodes) {
+        if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println();
             System.out.printf("%s %-99s%s%n", Colors.code(42), msg + ":", Colors.code(0));
-            for (Node root : roots) {
-                System.out.printf("    %s%-96s%s%n", Colors.code(46), root.toString(), Colors.code(0));
-                printTokens("    :::tokens::", Arrays.asList(root.tokens()));
+            for (Node node : nodes) {
+                System.out.printf("    %s%-96s%s%n", Colors.code(46), node.toString(), Colors.code(0));
+                printTokens("    :::tokens::", node.tokens());
             }
         }
     }

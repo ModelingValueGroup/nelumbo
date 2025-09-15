@@ -30,69 +30,53 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class Node extends StructImpl implements Element {
+public class Node extends StructImpl implements AstElement {
     @Serial
     private static final long     serialVersionUID = 7315776001191198132L;
+
+    protected static final int    START            = 2;
 
     private int                   hashCode         = 0;
     private Map<Variable, Object> variables;
     private int                   nrOfUnbound      = -1;
-    protected final int           start;
 
-    public Node(Functor functor, Token[] tokens, Object... args) {
-        super(array(functor, tokens, args));
-        start = tokens.length + 1;
-        //U.printTokens("A MAKE NODE " + getClass().getSimpleName() + " " /*+ functor*/, Arrays.asList(tokens));
+    public Node(Functor functor, List<AstElement> elements, Object... args) {
+        super(array(functor, elements, args));
     }
 
-    public Node(Type type, Token[] tokens, Object... args) {
-        super(array(type, tokens, args));
-        start = tokens.length + 1;
-        //U.printTokens("B MAKE NODE " + getClass().getSimpleName() + " " + type, Arrays.asList(tokens));
+    public Node(Type type, List<AstElement> elements, Object... args) {
+        super(array(type, elements, args));
     }
 
-    protected Node(Object[] args, int start) {
+    protected Node(Object[] args) {
         super(args);
-        //U.printTokens("C MAKE NODE " + getClass().getSimpleName() + " " + args[0], Arrays.asList(args).subList(1, start).stream().map(Token.class::cast).toList());
-        this.start = start;
-        if (get(0) instanceof Token) {
-            System.err.println("WARNING: Node.get(0) is a Token... is this an error??");
-        }
     }
 
-    private static Object[] array(Object functor, Token[] tokens, Object[] args) {
-        Object[] result = new Object[1 + tokens.length + args.length];
+    private static Object[] array(Object functor, List<AstElement> elements, Object[] args) {
+        Object[] result = new Object[START + args.length];
         result[0] = functor;
-        System.arraycopy(tokens, 0, result, 1, tokens.length);
-        System.arraycopy(args, 0, result, 1 + tokens.length, args.length);
+        result[1] = elements;
+        System.arraycopy(args, 0, result, START, args.length);
         return result;
     }
 
-    public Node setTokens(Token... tokens) {
-        int newStart = 1 + tokens.length;
-        Object[] newData = new Object[newStart + length()];
-        // add type to array
-        newData[0] = typeOrFunctor();
-        // add new tokens to array
-        System.arraycopy(tokens, 0, newData, 1, tokens.length);
-        // add args to array
-        for (int i = 0; i < length(); i++) {
-            newData[newStart + i] = get(i);
-        }
-        // make new node
-        return struct(newData, newStart);
+    public Node setAstElements(List<AstElement> elements) {
+        Object[] array = toArray();
+        array[1] = elements;
+        return struct(array);
     }
 
     @Override
     public int length() {
-        return super.length() - start;
+        return super.length() - START;
     }
 
     @Override
     public Object get(int i) {
-        return super.get(i + start);
+        return super.get(i + START);
     }
 
     public Type type() {
@@ -109,12 +93,9 @@ public class Node extends StructImpl implements Element {
         return (Node) super.get(0);
     }
 
-    public final Token[] tokens() {
-        Token[] tokens = new Token[start - 1];
-        for (int i = 1; i < start; i++) {
-            tokens[i - 1] = (Token) super.get(i);
-        }
-        return tokens;
+    @SuppressWarnings("unchecked")
+    public final List<AstElement> astElements() {
+        return (List<AstElement>) super.get(1);
     }
 
     @Override
@@ -273,7 +254,7 @@ public class Node extends StructImpl implements Element {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + f + start] = a[i];
+                array[i + f + START] = a[i];
             }
         }
         return array;
@@ -281,7 +262,7 @@ public class Node extends StructImpl implements Element {
 
     public Node set(int f, Object... a) {
         Object[] array = setArray(f, a);
-        return array != null ? struct(array, start) : this;
+        return array != null ? struct(array) : this;
     }
 
     public Node set(int[] idx, Object val) {
@@ -290,18 +271,18 @@ public class Node extends StructImpl implements Element {
 
     private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
-        int i = idx[ii] + start;
+        int i = idx[ii] + START;
         if (ii < idx.length - 1) {
             Node s = (Node) array[i];
             array[i] = s.set(ii + 1, idx, val);
         } else {
             array[i] = val;
         }
-        return struct(array, start);
+        return struct(array);
     }
 
-    protected Node struct(Object[] array, int start) {
-        return new Node(array, start);
+    protected Node struct(Object[] array) {
+        return new Node(array);
     }
 
     protected final Object get(Node declaration, Variable var) {
@@ -391,10 +372,10 @@ public class Node extends StructImpl implements Element {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + start] = bound;
+                array[i + START] = bound;
             }
         }
-        return array != null ? struct(array, start) : this;
+        return array != null ? struct(array) : this;
     }
 
     private static Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars) {
@@ -438,7 +419,7 @@ public class Node extends StructImpl implements Element {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + start] = r;
+                array[i + START] = r;
             }
         }
         return array;
@@ -446,7 +427,7 @@ public class Node extends StructImpl implements Element {
 
     protected Node signature(int depth) {
         Object[] array = signatureArray(depth);
-        return array != null ? struct(array, start) : this;
+        return array != null ? struct(array) : this;
     }
 
     protected Set<? extends Node> generalize(boolean full) {
@@ -489,6 +470,21 @@ public class Node extends StructImpl implements Element {
             }
         }
         return false;
+    }
+
+    @Override
+    public Token firstToken() {
+        return AstElement.firstToken(astElements());
+    }
+
+    @Override
+    public Token lastToken() {
+        return AstElement.lastToken(astElements());
+    }
+
+    public List<Token> tokens() {
+        Token first = firstToken();
+        return first != null ? first.list(lastToken()) : List.of();
     }
 
 }

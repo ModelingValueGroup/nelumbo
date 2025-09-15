@@ -325,7 +325,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 applySyntaxColors(line);
             }
             Tokenizer tokenizer = new Tokenizer(line, line);
-            Parser parser = new Parser(tokenizer.tokenize()[Tokenizer.FIRST]);
+            Parser parser = new Parser(tokenizer.tokenize());
             for (Node root : parser.parse()) {
                 if (root.type().equals(Type.RESULT)) {
                     write(root.toString(1));
@@ -346,7 +346,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         System.err.println("line=[" + U.traceable(line) + "]");
         textArea.insert(" ", getEnd() - 1);
         Tokenizer tokenizer = new Tokenizer(line, line);
-        for (Token token = tokenizer.tokenize()[Tokenizer.FIRST_ALL]; token != null; token = token.nextAll()) {
+        for (Token token = tokenizer.tokenize().firstAll(); token != null; token = token.nextAll()) {
             try {
                 int beg = getStart() + token.position();
                 int end = beg + token.text().length();
@@ -358,9 +358,9 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 case SEMICOLON, OPERATOR, LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE, META_OPERATOR -> greyPainter;
                 case COMMA -> purplePainter;
                 case TYPE -> pinkPainter;
-                case END_LINE_COMMENT, IN_LINE_COMMENT -> lightGreyPainter;
-                case HSPACE, NEWLINE -> whitePainter;
-                case ERROR -> redPainter;
+                case END_LINE_COMMENT, IN_LINE_COMMENT, SINGLEQUOTE -> lightGreyPainter;
+                case HSPACE, NEWLINE, SKIP_NEWLINE -> whitePainter;
+                case ERROR, ENDOFFILE -> redPainter;
                 };
                 if (hp != null) {
                     textArea.getHighlighter().addHighlight(beg, end, hp);

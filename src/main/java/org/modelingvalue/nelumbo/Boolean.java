@@ -22,21 +22,22 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Boolean extends Predicate {
     @Serial
-    private static final long        serialVersionUID = -8515171118744898263L;
+    private static final long serialVersionUID = -8515171118744898263L;
     //
-    public static        Boolean     TRUE;
-    public static        Boolean     FALSE;
-    public static        Boolean     UNKNOWN;
+    public static Boolean     TRUE;
+    public static Boolean     FALSE;
+    public static Boolean     UNKNOWN;
     //
-    private              InferResult result;
+    private InferResult       result;
 
-    public Boolean(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, parse((String) args[0]));
+    public Boolean(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse((String) args[0]));
         if (TRUE == null && isTrue()) {
             TRUE = this;
         } else if (FALSE == null && isFalse()) {
@@ -48,11 +49,11 @@ public final class Boolean extends Predicate {
 
     private static java.lang.Boolean parse(String arg) {
         return "true".equalsIgnoreCase(arg) ? java.lang.Boolean.TRUE : //
-               "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
+                "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
     }
 
-    private Boolean(Object[] args, int start, Boolean declaration) {
-        super(args, start, declaration);
+    private Boolean(Object[] args, Boolean declaration) {
+        super(args, declaration);
     }
 
     @Override
@@ -79,8 +80,8 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    protected Boolean struct(Object[] array, int start, Predicate declaration) {
-        return new Boolean(array, start, (Boolean) declaration);
+    protected Boolean struct(Object[] array, Predicate declaration) {
+        return new Boolean(array, (Boolean) declaration);
     }
 
     @Override

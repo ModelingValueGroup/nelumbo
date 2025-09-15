@@ -23,34 +23,35 @@ package org.modelingvalue.nelumbo.integers;
 import java.io.Serial;
 import java.math.BigInteger;
 
-import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Terminal;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Integer extends Terminal {
     @Serial
-    private static final long serialVersionUID = 2454372545442550574L;
+    private static final long       serialVersionUID = 2454372545442550574L;
 
-    private static final BigInteger MIN = BigInteger.valueOf(Long.MIN_VALUE);
-    private static final BigInteger MAX = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
 
-    private static Functor FUNCTOR;
+    private static Functor          FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(Integer.class, f -> FUNCTOR = f);
     }
 
-    public Integer(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, parse((String) args[0]));
+    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse((String) args[0]));
     }
 
-    private Integer(Functor functor, Token[] tokens, BigInteger val) {
-        super(functor, tokens, val);
+    private Integer(Functor functor, List<AstElement> elements, BigInteger val) {
+        super(functor, elements, val);
     }
 
     public static Integer of(BigInteger val) {
-        return new Integer(FUNCTOR, Token.EMPTY, val);
+        return new Integer(FUNCTOR, List.of(), val);
     }
 
     private static BigInteger parse(String string) {
@@ -62,13 +63,13 @@ public final class Integer extends Terminal {
         return new BigInteger(string);
     }
 
-    private Integer(Object[] array, int start) {
-        super(array, start);
+    private Integer(Object[] array) {
+        super(array);
     }
 
     @Override
-    protected Integer struct(Object[] array, int start) {
-        return new Integer(array, start);
+    protected Integer struct(Object[] array) {
+        return new Integer(array);
     }
 
     @Override

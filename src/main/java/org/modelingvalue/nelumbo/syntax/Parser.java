@@ -26,15 +26,16 @@ import java.io.InputStream;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public final class Parser {
 
     public static List<Node> parse(String string) throws ParseException {
         Tokenizer tokenizer = new Tokenizer(string + "\n", string);
-        Token[] tokens = tokenizer.tokenize();
-        return new Parser(tokens[Tokenizer.FIRST]).parse();
+        return new Parser(tokenizer.tokenize()).parse();
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
@@ -51,7 +52,7 @@ public final class Parser {
             }
             InputStream buffer = new BufferedInputStream(stream);
             String base = new String(buffer.readAllBytes());
-            return new Parser(new Tokenizer(base, fileName).first()).parse();
+            return new Parser(new Tokenizer(base, fileName).tokenize()).parse();
         } catch (IOException e) {
             throw new ParseException(e, "IOException during parse", fileName);
         }
@@ -62,19 +63,22 @@ public final class Parser {
     private final KnowledgeBase knowledgeBase;
     private Token               token;
 
-    public Parser(Token token) {
-        this(token, false);
+    public Parser(TokenizerResult tokenizerResult) {
+        this(tokenizerResult, false);
     }
 
-    public Parser(Token token, boolean noInfer) {
+    public Parser(TokenizerResult tokenizerResult, boolean noInfer) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
-        this.token = token;
+        this.token = tokenizerResult.first();
         knowledgeBase.noInfer(noInfer);
     }
 
     public List<Node> parse() throws ParseException {
-        Node node = parseNode(Integer.MIN_VALUE, Type.ROOT);
-        return node != null ? List.of(node) : List.of();
+        Node node = parseNode(Integer.MIN_VALUE, Type.ROOT.list());
+        if (moreTokens()) {
+            throw new ParseException("Unexpected token " + peek().text() + " after end of input", peek());
+        }
+        return node instanceof ListNode ? ((ListNode) node).elements() : node != null ? List.of(node) : List.of();
     }
 
     public Node parseNode(int precedence, Type expected) throws ParseException {
@@ -83,7 +87,7 @@ public final class Parser {
         }
         ParseResult result = preParse(expected, null);
         if (result == null) {
-            throw new ParseException("No syntaxt pattern found", token);
+            throw new ParseException("No syntax pattern found for " + token.text(), token);
         }
         Node left = result.postParse(expected, this);
         if (moreTokens()) {

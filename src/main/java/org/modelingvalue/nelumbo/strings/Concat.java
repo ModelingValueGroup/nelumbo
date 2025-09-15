@@ -20,30 +20,30 @@
 
 package org.modelingvalue.nelumbo.strings;
 
-import org.modelingvalue.nelumbo.Functor;
+import java.io.Serial;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.syntax.Token;
-
-import java.io.Serial;
-import java.lang.String;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Concat extends Predicate {
     @Serial
     private static final long serialVersionUID = -317279750710781401L;
 
-    public Concat(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1], args[2]);
+    public Concat(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private Concat(Object[] array, int start, Concat declaration) {
-        super(array, start, declaration);
+    private Concat(Object[] array, Concat declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Concat struct(Object[] array, int start, Predicate declaration) {
-        return new Concat(array, start, (Concat) declaration);
+    protected Concat struct(Object[] array, Predicate declaration) {
+        return new Concat(array, (Concat) declaration);
     }
 
     @Override
@@ -51,11 +51,11 @@ public final class Concat extends Predicate {
         if (nrOfUnbound > 1) {
             return unknown();
         }
-        String addend1 = getVal(0, 0);
-        String addend2 = getVal(1, 0);
-        String sum = getVal(2, 0);
+        java.lang.String addend1 = getVal(0, 0);
+        java.lang.String addend2 = getVal(1, 0);
+        java.lang.String sum = getVal(2, 0);
         if (addend1 != null && addend2 != null) {
-            String s = addend1 + addend2;
+            java.lang.String s = addend1 + addend2;
             if (sum != null) {
                 boolean eq = s.equals(sum);
                 return eq ? factCC() : falsehoodCC();

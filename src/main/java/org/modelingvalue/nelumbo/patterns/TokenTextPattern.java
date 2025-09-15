@@ -2,6 +2,8 @@ package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
@@ -13,21 +15,17 @@ public class TokenTextPattern extends AbstractPattern {
     @Serial
     private static final long serialVersionUID = -7116490422223451839L;
 
-    public static TokenTextPattern of(String tokenText) {
-        return new TokenTextPattern(Type.PATTERN, Token.EMPTY, tokenText);
+    public TokenTextPattern(Type type, List<AstElement> elements, Object... args) {
+        super(type, elements, args);
     }
 
-    public TokenTextPattern(Type type, Token[] tokens, Object... args) {
-        super(type, tokens, args);
-    }
-
-    protected TokenTextPattern(Object[] args, int start) {
-        super(args, start);
+    protected TokenTextPattern(Object[] args) {
+        super(args);
     }
 
     @Override
-    protected TokenTextPattern struct(Object[] array, int start) {
-        return new TokenTextPattern(array, start);
+    protected TokenTextPattern struct(Object[] array) {
+        return new TokenTextPattern(array);
     }
 
     public String tokenText() {

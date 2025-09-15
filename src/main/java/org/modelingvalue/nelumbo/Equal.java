@@ -23,18 +23,19 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 import java.util.Objects;
 
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public class Equal extends Predicate {
     @Serial
     private static final long serialVersionUID = -5516286818572134367L;
 
-    public Equal(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public Equal(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private Equal(Object[] array, int start, Equal declaration) {
-        super(array, start, declaration);
+    private Equal(Object[] array, Equal declaration) {
+        super(array, declaration);
     }
 
     public Node left() {
@@ -46,8 +47,8 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected Equal struct(Object[] array, int start, Predicate declaration) {
-        return new Equal(array, start, (Equal) declaration);
+    protected Equal struct(Object[] array, Predicate declaration) {
+        return new Equal(array, (Equal) declaration);
     }
 
     @Override
@@ -58,7 +59,7 @@ public class Equal extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         boolean[] complete = new boolean[]{true};
-        Node      eq       = eq(left(), right(), complete);
+        Node eq = eq(left(), right(), complete);
         if (eq == null) {
             return complete[0] ? falsehoodCC() : falsehoodCI();
         } else {
@@ -84,17 +85,17 @@ public class Equal extends Predicate {
         Object[] array = null;
         for (int i = 0; i < left.length(); i++) {
             Object leftVal = left.get(i);
-            Object eq      = eq(leftVal, right.get(i), complete);
+            Object eq = eq(leftVal, right.get(i), complete);
             if (eq == null) {
                 return null;
             } else if (!Objects.equals(eq, leftVal)) {
                 if (array == null) {
                     array = left.toArray();
                 }
-                array[i + left.start] = eq;
+                array[i + START] = eq;
             }
         }
-        return array != null ? left.struct(array, left.start) : left;
+        return array != null ? left.struct(array) : left;
     }
 
     private static Object eq(Object left, Object right, boolean[] complete) {

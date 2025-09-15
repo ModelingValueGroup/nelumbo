@@ -26,7 +26,7 @@ import java.util.Optional;
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Type extends Node {
@@ -45,7 +45,7 @@ public class Type extends Node {
     public static final Type  RULE             = new Type(Rule.class, ROOT);
     public static final Type  FUNCTOR          = new Type(Functor.class, ROOT);
     public static final Type  STRING           = new Type(String.class);
-    public static final Type  PATTERN          = new Type("Pattern", Type.NODE);
+    public static final Type  PATTERN          = new Type("Pattern", Type.ROOT);
 
     public static final Type  TYPE_NAME        = new Type("TypeName", Type.NODE);
     public static final Type  VAR_NAME         = new Type("VarName", Type.NODE);
@@ -104,32 +104,32 @@ public class Type extends Node {
     private List<Type> allSupers;
 
     private Type() {
-        super((Type) null, Token.EMPTY, Type.class, null);
+        super((Type) null, List.of(), Type.class, null);
     }
 
-    private Type(Object[] array, int start) {
-        super(array, start);
+    private Type(Object[] array) {
+        super(array);
     }
 
     private Type(Class<?> clss, Type... supers) {
-        super(TYPE(), Token.EMPTY, clss, Set.of(supers));
+        super(TYPE(), List.of(), clss, Set.of(supers));
     }
 
     protected Type(TokenType type) {
-        super(TYPE(), Token.EMPTY, type, Set.of());
+        super(TYPE(), List.of(), type, Set.of());
     }
 
-    public Type(Token[] tokens, String name, Collection<Type> supers) {
-        super(TYPE(), tokens, name, supers.asSet());
+    public Type(List<AstElement> elements, String name, Collection<Type> supers) {
+        super(TYPE(), elements, name, supers.asSet());
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE(), Token.EMPTY, name, supers.length == 0 ? Set.of(NODE) : Set.of(supers));
+        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers));
     }
 
     public Type(Type super1, Type super2) {
         super(TYPE(), //
-                Token.EMPTY, //
+                List.of(), //
                 Set.of(super1, super2), //
                 Set.of(super1, super2) //
                         .addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))) //
@@ -138,7 +138,7 @@ public class Type extends Node {
     }
 
     private Type(Type element) {
-        super(TYPE(), element.tokens(), "List", Set.of(NODE), element);
+        super(TYPE(), List.of(element), "List", Set.of(NODE), element);
     }
 
     public Type element() {
@@ -254,8 +254,8 @@ public class Type extends Node {
     }
 
     @Override
-    protected Type struct(Object[] array, int start) {
-        return new Type(array, start);
+    protected Type struct(Object[] array) {
+        return new Type(array);
     }
 
     @Override
@@ -275,22 +275,4 @@ public class Type extends Node {
         return clss instanceof Class && ((Class<?>) clss).isAssignableFrom(type);
     }
 
-    /**
-     * only for tracing purposes
-     *
-     * @return a string representing where this type was declared
-     */
-    public String source() {
-        if (Type.predefined().contains(this)) {
-            return "pre";
-        }
-        if (get(0) instanceof TokenType) {
-            return "token-type";
-        }
-        Token[] tokens = tokens();
-        if (0 < tokens.length) {
-            return tokens[0].fileName();
-        }
-        return "????";
-    }
 }

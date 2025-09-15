@@ -22,26 +22,27 @@ package org.modelingvalue.nelumbo.integers;
 
 import java.math.BigInteger;
 
-import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Add extends Predicate {
     private static final long serialVersionUID = 2384355866476367685L;
 
-    public Add(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1], args[2]);
+    public Add(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private Add(Object[] array, int start, Add declaration) {
-        super(array, start, declaration);
+    private Add(Object[] array, Add declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Add struct(Object[] array, int start, Predicate declaration) {
-        return new Add(array, start, (Add) declaration);
+    protected Add struct(Object[] array, Predicate declaration) {
+        return new Add(array, (Add) declaration);
     }
 
     @Override

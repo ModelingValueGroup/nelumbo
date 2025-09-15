@@ -20,36 +20,37 @@
 
 package org.modelingvalue.nelumbo.strings;
 
-import org.modelingvalue.nelumbo.Functor;
+import java.io.Serial;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Terminal;
-import org.modelingvalue.nelumbo.syntax.Token;
-
-import java.io.Serial;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class String extends Terminal {
 
     @Serial
-    private static final long serialVersionUID = 8360866611309554234L;
+    private static final long             serialVersionUID = 8360866611309554234L;
 
-    private static final java.lang.String DELIM = "\"";
+    private static final java.lang.String DELIM            = "\"";
 
-    private static Functor FUNCTOR;
+    private static Functor                FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(String.class, f -> FUNCTOR = f);
     }
 
-    public String(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, parse((java.lang.String) args[0]));
+    public String(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse((java.lang.String) args[0]));
     }
 
-    private String(Functor functor, Token[] tokens, java.lang.String val) {
-        super(functor, tokens, val);
+    private String(Functor functor, List<AstElement> elements, java.lang.String val) {
+        super(functor, elements, val);
     }
 
     public static String of(java.lang.String val) {
-        return new String(FUNCTOR, Token.EMPTY, val);
+        return new String(FUNCTOR, List.of(), val);
     }
 
     public static java.lang.String strip(java.lang.String val) {
@@ -60,13 +61,13 @@ public final class String extends Terminal {
         return strip(string);
     }
 
-    private String(Object[] array, int start) {
-        super(array, start);
+    private String(Object[] array) {
+        super(array);
     }
 
     @Override
-    protected Terminal struct(Object[] array, int start) {
-        return new String(array, start);
+    protected Terminal struct(Object[] array) {
+        return new String(array);
     }
 
     @Override

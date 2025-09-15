@@ -23,22 +23,21 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.syntax.Token;
 
 public class ListNode extends Node {
     @Serial
     private static final long serialVersionUID = 2275866157289787141L;
 
-    public ListNode(Token[] tokens, Type elementType) {
-        super(elementType.list(), tokens, List.of());
+    public ListNode(List<AstElement> elements, Type elementType) {
+        super(elementType.list(), elements, List.of());
     }
 
-    public ListNode(Token[] tokens, ListNode list, Node last) {
-        super(list.type(), tokens, list.elements().add(last));
+    public ListNode(List<AstElement> elements, ListNode list, Node last) {
+        super(list.type(), elements, list.elements().add(last));
     }
 
-    private ListNode(Object[] array, int start) {
-        super(array, start);
+    private ListNode(Object[] array) {
+        super(array);
     }
 
     @SuppressWarnings("unused")
@@ -52,12 +51,18 @@ public class ListNode extends Node {
     }
 
     @Override
-    protected ListNode struct(Object[] array, int start) {
-        return new ListNode(array, start);
+    protected ListNode struct(Object[] array) {
+        return new ListNode(array);
     }
 
     @Override
     public ListNode set(int i, Object... a) {
         return (ListNode) super.set(i, a);
     }
+
+    @Override
+    public String toString() {
+        return elements().toString().substring(4);
+    }
+
 }

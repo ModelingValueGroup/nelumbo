@@ -22,37 +22,39 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.io.Serial;
 
+import org.modelingvalue.nelumbo.AstElement;
+
 public class ParseException extends Exception {
     @Serial
     private static final long serialVersionUID = -8359192414582977261L;
 
-    private final int    line;
-    private final int    position;
-    private final int    index;
-    private final int    length;
-    private final String fileName;
+    private final int         line;
+    private final int         position;
+    private final int         index;
+    private final int         length;
+    private final String      fileName;
 
-    public ParseException(String s, Token... tokens) {
-        this(null, s, tokens);
+    public ParseException(String s, AstElement... elements) {
+        this(null, s, elements);
     }
 
-    public ParseException(Throwable cause, String s, Token... tokens) {
-        this(cause, s, tokens[0], tokens[tokens.length - 1]);
+    public ParseException(Throwable cause, String s, AstElement... elements) {
+        this(cause, s, elements[0], elements[elements.length - 1]);
     }
 
-    public ParseException(String s, Token firstToken, Token lastToken) {
-        this(null, s, firstToken, lastToken);
+    public ParseException(Throwable cause, String s, AstElement firstElement, AstElement lastElement) {
+        this(cause, s, firstElement.firstToken(), lastElement.lastToken());
     }
 
     private ParseException(Throwable cause, String s, Token firstToken, Token lastToken) {
         this(cause, //
-             s,//
-             firstToken.line(),//
-             firstToken.position(),//
-             firstToken.index(),//
-             lastToken.position() - firstToken.position() + lastToken.text().length(),//
-             firstToken.fileName()//
-            );
+                s, //
+                firstToken.line(), //
+                firstToken.position(), //
+                firstToken.index(), //
+                lastToken.position() - firstToken.position() + lastToken.text().length(), //
+                firstToken.fileName()//
+        );
     }
 
     public ParseException(String message, String fileName) {
@@ -69,10 +71,10 @@ public class ParseException extends Exception {
 
     public ParseException(Throwable cause, String message, int line, int position, int index, int length, String fileName) {
         super(message, cause);
-        this.line     = line;
+        this.line = line;
         this.position = position;
-        this.index    = index;
-        this.length   = length;
+        this.index = index;
+        this.length = length;
         this.fileName = fileName;
     }
 

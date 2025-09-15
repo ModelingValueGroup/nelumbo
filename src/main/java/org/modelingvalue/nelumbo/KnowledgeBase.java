@@ -20,6 +20,9 @@
 
 package org.modelingvalue.nelumbo;
 
+import static org.modelingvalue.nelumbo.patterns.AbstractPattern.*;
+import static org.modelingvalue.nelumbo.syntax.TokenType.*;
+
 import java.io.PrintStream;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
@@ -28,7 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -39,7 +41,10 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
-import org.modelingvalue.nelumbo.patterns.SyntaxPattern;
+import org.modelingvalue.nelumbo.patterns.AbstractPattern;
+import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
+import org.modelingvalue.nelumbo.patterns.TokenTypePattern;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -149,21 +154,19 @@ public final class KnowledgeBase {
         return result;
     }
 
-    private static Type type(String name) {
-        return KnowledgeBase.CURRENT.get().getType(name);
-    }
-
-    private static Variable var(String name) {
-        return KnowledgeBase.CURRENT.get().getVar(name);
-    }
-
     private Functor eqFunctor;
 
     public Functor eqFunctor() {
         if (eqFunctor == null) {
-            eqFunctor = functors().get(new Functor(Token.EMPTY, Type.PREDICATE, "=", null, 30, Type.NODE, Type.NODE));
+            eqFunctor = null; // TODO
         }
         return eqFunctor;
+    }
+
+    private void addType(Type type) {
+        register(Functor.of(t(type.toString()), null, Type.TYPE(), Type.TYPE(), (t, a) -> {
+            return type.setAstElements(t);
+        }));
     }
 
     @SuppressWarnings({"unchecked", "CodeBlock2Expr"})
@@ -172,31 +175,60 @@ public final class KnowledgeBase {
             for (Type predefined : Type.predefined()) {
                 addType(predefined);
             }
-            for (TokenType type : TokenType.values()) {
-                addType(new Type(type));
-            }
+            register(Functor.of(s(t("("), n(Type.NODE), t(")")), null, null, Type.NODE, (t, a) -> {
+                return (Node) a[0];
+            }));
+            register(Functor.of(s(r(n(Type.ROOT)), t(ENDOFFILE)), //
+                    null, Type.ROOT.list(), Type.ROOT.list(), (t, a) -> {
+                        ListNode roots = new ListNode(t, Type.ROOT);
+                        for (int i = 0; i < a.length; i++) {
+                            if (a[i] instanceof Node root) {
+                                roots = new ListNode(t, roots, root);
+                            }
+                        }
+                        return roots;
+                    }));
 
-            register(SyntaxPattern.PATTERN);
+            register(Functor.of(s(t(TYPE), t("::"), o(s(n(Type.TYPE()), r(s(t(","), n(Type.TYPE()))))), t(NEWLINE)), //
+                    null, Type.ROOT, Type.TYPE(), (t, a) -> {
+                        String name = (String) a[0];
+                        name = name.substring(1, name.length() - 1);
+                        Set<Type> supers = Set.of();
+                        for (int i = 1; i < a.length; i++) {
+                            supers = supers.add((Type) a[i]);
+                        }
+                        Type type = new Type(t, name, supers);
+                        CURRENT.get().addType(type);
+                        return type;
+                    }));
 
-            //            register(ParenParselet.INSTANCE);
-            //
-            //            register(AtomicParselet.of(TokenType.TYPE, t -> type(t).setTokens(t.singleton())));
-            //            register(AtomicParselet.of(TokenType.NAME, t -> variable(t).setTokens(t.singleton())));
-            //
-            //            // Types
-            //            register(AtomicParselet.of(Type.ROOT, TokenType.TYPE, "::", t -> {
-            //                String name = t.text();
-            //                name = name.substring(1, name.length() - 1);
-            //                return new Terminal(TYPE_NAME, t.singleton(), name);
-            //            }));
-            //            register(InfixParselet.of(Type.ROOT, TYPE_NAME, "::", Type.TYPE().list(), 10, (l, t, r) -> {
-            //                String name = l.getVal(0);
-            //                ListNode rList = (ListNode) r;
-            //                Type type = new Type(Token.concat(l, t, r), name, rList.elements());
-            //                KnowledgeBase.CURRENT.get().addType(type);
-            //                return type;
-            //            }));
-            //
+            List<TokenTypePattern> tokenTypePatterns = List.of(TokenType.values()).exclude(TokenType.SINGLEQUOTE::equals).exclude(TokenType::skip).map(TokenTypePattern::t).asList();
+            List<AbstractPattern> elementPatterns = List.<AbstractPattern> of(n(Type.PATTERN)).addAll(tokenTypePatterns);
+            RepetitionPattern patternRepetition = r(a(elementPatterns.toArray(i -> new AbstractPattern[i])));
+
+            register(Functor.of(s(t("<(>"), patternRepetition, r(s(t("<|>"), patternRepetition)), t("<)>")), //
+                    null, Type.PATTERN, Type.PATTERN, (t1, a1) -> {
+                        return null;
+                    }));
+
+            register(Functor.of(s(t("<{>"), patternRepetition, t("<}>")), //
+                    null, Type.PATTERN, Type.PATTERN, (t1, a1) -> {
+                        return null;
+                    }));
+
+            register(Functor.of(s(t("<[>"), patternRepetition, t("<]>")), //
+                    null, Type.PATTERN, Type.PATTERN, (t1, a1) -> {
+                        return null;
+                    }));
+
+            register(Functor.of(s(n(Type.TYPE()), t("'"), patternRepetition, t("'"), t(NEWLINE)), //
+                    null, Type.ROOT, Type.FUNCTOR, (t1, a1) -> {
+                        Functor pattern = Functor.of(null, null, null, null, (t2, a2) -> {
+                            return null;
+                        });
+                        return pattern;
+                    }));
+
             //            // Functors
             //            register(InfixParselet.of(Type.ROOT, Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
             //                ListNode list = new ListNode(Token.EMPTY, Type.FUNCTOR);
@@ -328,7 +360,7 @@ public final class KnowledgeBase {
     }
 
     //    @SuppressWarnings("unused")
-    //    private static Node rule(Node l, Token[] tokens, ListNode r, boolean symmetric) throws ParseException {
+    //    private static Node rule(Node l, List<AstElement> elements, ListNode r, boolean symmetric) throws ParseException {
     //        ListNode list = new ListNode(Token.EMPTY, Type.RULE);
     //        KnowledgeBase current = KnowledgeBase.CURRENT.get();
     //        Predicate cons = (Predicate) l;
@@ -355,27 +387,11 @@ public final class KnowledgeBase {
     //        return list;
     //    }
     //
-    //    private static Type type(Token t) throws ParseException {
-    //        String name = t.text();
-    //        name = name.substring(1, name.length() - 1);
-    //        Type type = type(name);
-    //        if (type != null) {
-    //            return type;
-    //        }
-    //        throw new ParseException("Could not find type " + t.text(), t);
-    //    }
-    //
-    //    private static Variable variable(Token token) throws ParseException {
-    //        Variable var = var(token.text());
-    //        if (var != null) {
-    //            return var;
-    //        }
-    //        throw new ParseException("Could not find variable " + token.text(), token);
-    //    }
+
     //
     //    // NB: ConstantValue because Intellij concludes that rel is always false, but it is not !!
     //    @SuppressWarnings({"unchecked", "ConstantValue", "DataFlowIssue"})
-    //    private Node createFunctor(Type type, Token[] tokens, Node sig) throws ParseException {
+    //    private Node createFunctor(Type type, List<AstElement> elements, Node sig) throws ParseException {
     //        Constructor<? extends Node> constructor = sig.length() == 2 && sig.get(0) instanceof Node && sig.get(1) instanceof Constructor ? //
     //                (Constructor<? extends Node>) sig.get(1) : null;
     //        if (constructor != null) {
@@ -543,9 +559,7 @@ public final class KnowledgeBase {
     //        }
     //    }
 
-    private final AtomicReference<Map<String, Type>>                    types       = new AtomicReference<>();
     private final AtomicReference<Set<Functor>>                         functors    = new AtomicReference<>();
-    private final AtomicReference<Map<String, Variable>>                variables   = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, InferResult>>          facts       = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, Set<Rule>>>            rules       = new AtomicReference<>();
     //
@@ -568,9 +582,7 @@ public final class KnowledgeBase {
 
     @SuppressWarnings("unchecked")
     public void init() {
-        types.set(init != null ? init.types.get() : Map.of());
         functors.set(init != null ? init.functors.get() : Set.of());
-        variables.set(Map.of());
         facts.set(init != null ? init.facts.get() : Map.of());
         rules.set(init != null ? init.rules.get() : Map.of());
         patterns.set(init != null ? init.patterns.get() : Map.of());
@@ -630,16 +642,8 @@ public final class KnowledgeBase {
         return null;
     }
 
-    public Map<String, Variable> variables() {
-        return variables.get();
-    }
-
     public Set<Functor> functors() {
         return functors.get();
-    }
-
-    public Map<String, Type> types() {
-        return types.get();
     }
 
     public Map<Predicate, Set<Rule>> rules() {
@@ -747,22 +751,6 @@ public final class KnowledgeBase {
         return map;
     }
 
-    public void addType(Type type) {
-        types.updateAndGet(map -> map.put(type.name(), type));
-    }
-
-    public Type getType(String name) {
-        return types.get().get(name);
-    }
-
-    public void addVar(Variable var) {
-        variables.updateAndGet(map -> map.put(var.name(), var));
-    }
-
-    public Variable getVar(String name) {
-        return variables.get().get(name);
-    }
-
     public void addFunctor(Functor functor, @SuppressWarnings("unused") Token[] tokens, Constructor<? extends Node> constructor) {
         if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
             Class<? extends Node> cls = constructor.getDeclaringClass();
@@ -784,32 +772,11 @@ public final class KnowledgeBase {
     }
 
     public void print(PrintStream stream, boolean withTokens) {
-        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "types", U.Colors.code(0));
-        for (Entry<String, Type> e : types().sortedBy(e -> (Type.predefined().contains(e.getValue()) || e.getValue().get(0) instanceof TokenType ? "0" : "1") + e.getValue().name())) {
-            Type type = e.getValue();
-            String supers = type.supers().isEmpty() ? "" : ":: " + type.supers().map(Type::toString).collect(Collectors.joining(", "));
-            stream.printf("        %-20s %-25s %s%n", type, supers, type.source());
-            if (withTokens) {
-                for (Token token : type.tokens()) {
-                    stream.println("            " + token);
-                }
-            }
-        }
         System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "functors", U.Colors.code(0));
         for (Functor e : functors()) {
             stream.printf("        %-20s ::= %s%n", e.resultType(), e);
             if (withTokens) {
                 for (Token token : e.tokens()) {
-                    stream.println("            " + token);
-                }
-            }
-        }
-        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "variables", U.Colors.code(0));
-        for (Entry<String, Variable> e : variables()) {
-            Variable var = e.getValue();
-            stream.println("        " + var.type() + " " + var.name());
-            if (withTokens) {
-                for (Token token : var.tokens()) {
                     stream.println("            " + token);
                 }
             }
@@ -837,7 +804,7 @@ public final class KnowledgeBase {
         }
     }
 
-    public void register(SyntaxPattern pattern) {
+    public void register(Functor pattern) {
         Type expected = pattern.expected() != null ? pattern.expected() : Type.NODE;
         Patterns patterns = pattern.patterns();
         this.patterns.updateAndGet(m -> m.put(expected, patterns.merge(m.get(expected))));

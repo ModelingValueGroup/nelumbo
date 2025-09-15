@@ -22,26 +22,27 @@ package org.modelingvalue.nelumbo.integers;
 
 import java.math.BigInteger;
 
-import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Multiply extends Predicate {
     private static final long serialVersionUID = 2630128775301942610L;
 
-    public Multiply(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1], args[2]);
+    public Multiply(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private Multiply(Object[] array, int start, Multiply declaration) {
-        super(array, start, declaration);
+    private Multiply(Object[] array, Multiply declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Multiply struct(Object[] array, int start, Predicate declaration) {
-        return new Multiply(array, start, (Multiply) declaration);
+    protected Multiply struct(Object[] array, Predicate declaration) {
+        return new Multiply(array, (Multiply) declaration);
     }
 
     @Override

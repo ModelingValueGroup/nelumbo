@@ -2,25 +2,26 @@ package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.patterns.SyntaxPattern;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class ParseResult {
 
-    private final MutableList<Token>  tokens;
-    private final MutableList<Object> args;
+    private final MutableList<AstElement> elements;
+    private final MutableList<Object>  args;
 
-    private SyntaxPattern             pattern;
-    private int                       pre  = 0;
-    private int                       post = 0;
+    private Functor                    pattern;
+    private int                        pre  = 0;
+    private int                        post = 0;
 
     public ParseResult() {
-        tokens = MutableList.of(List.of());
+        elements = MutableList.of(List.of());
         args = MutableList.of(List.of());
     }
 
-    public SyntaxPattern pattern() {
+    public Functor pattern() {
         return pattern;
     }
 
@@ -29,15 +30,16 @@ public final class ParseResult {
         return precedence != null ? precedence : Integer.MAX_VALUE;
     }
 
-    public void setPattern(SyntaxPattern pattern) {
+    public void setPattern(Functor pattern) {
         this.pattern = pattern;
     }
 
-    public List<Token> tokens() {
-        return tokens.toImmutable();
+    public List<AstElement> elements() {
+        return elements.toImmutable();
     }
 
     public void add(Node node) {
+        elements.add(node);
         args.add(node);
         if (pattern == null) {
             pre++;
@@ -45,7 +47,7 @@ public final class ParseResult {
     }
 
     public void add(Token token) {
-        tokens.add(token);
+        elements.add(token);
         if (pattern == null) {
             pre++;
         }

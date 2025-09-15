@@ -22,25 +22,25 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.util.Objects;
 
-import org.modelingvalue.nelumbo.Element;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.U;
 
 @SuppressWarnings("ClassCanBeRecord")
-public class Token implements Element {
-    public static final Token[] EMPTY = new Token[0];
+public class Token implements AstElement {
 
-    private final TokenType     type;
-    private final String        text;
-    private final int           line;                // line number in the input file (0-based)
-    private final int           position;            // position (column) in the line (0-based)
-    private final int           index;               // position in the input stream (0-based)
-    private final String        fileName;
+    private final TokenType type;
+    private final String    text;
+    private final int       line;       // line number in the input file (0-based)
+    private final int       position;   // position (column) in the line (0-based)
+    private final int       index;      // position in the input stream (0-based)
+    private final String    fileName;
 
-    private Token               next;
-    private Token               previous;
+    private Token           next;
+    private Token           previous;
 
-    private Token               nextAll;
-    private Token               previousAll;
+    private Token           nextAll;
+    private Token           previousAll;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -129,8 +129,8 @@ public class Token implements Element {
         return fileName;
     }
 
-    public boolean isCommentOrHspace() {
-        return type.comment() || type == TokenType.HSPACE;
+    public boolean skip() {
+        return type.skip();
     }
 
     public Token split(int i) {
@@ -173,5 +173,33 @@ public class Token implements Element {
     @Override
     public String toString() {
         return String.format("TOKEN: %5d (%3d,%3d) %-16s '%s'", index, line, position, type, textTraced());
+    }
+
+    @Override
+    public Token firstToken() {
+        return this;
+    }
+
+    @Override
+    public Token lastToken() {
+        return this;
+    }
+
+    public List<Token> list(Token last) {
+        List<Token> list = List.of(this);
+        Token t = next();
+        for (; t != last; t = t.next()) {
+            list = list.add(t);
+        }
+        return list.add(t);
+    }
+
+    public List<Token> listAll(Token last) {
+        List<Token> list = List.of(this);
+        Token t = nextAll();
+        for (; t != last; t = t.nextAll()) {
+            list = list.add(t);
+        }
+        return list.add(t);
     }
 }

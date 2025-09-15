@@ -2,6 +2,8 @@ package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
@@ -14,21 +16,17 @@ public class TokenTypePattern extends AbstractPattern {
     @Serial
     private static final long serialVersionUID = 2405616043878166113L;
 
-    public static TokenTypePattern of(TokenType tokenType) {
-        return new TokenTypePattern(Type.PATTERN, Token.EMPTY, tokenType);
+    public TokenTypePattern(Type type, List<AstElement> elements, Object... args) {
+        super(type, elements, args);
     }
 
-    public TokenTypePattern(Type type, Token[] tokens, Object... args) {
-        super(type, tokens, args);
-    }
-
-    protected TokenTypePattern(Object[] args, int start) {
-        super(args, start);
+    protected TokenTypePattern(Object[] args) {
+        super(args);
     }
 
     @Override
-    protected TokenTypePattern struct(Object[] array, int start) {
-        return new TokenTypePattern(array, start);
+    protected TokenTypePattern struct(Object[] array) {
+        return new TokenTypePattern(array);
     }
 
     public TokenType tokenType() {
@@ -38,9 +36,12 @@ public class TokenTypePattern extends AbstractPattern {
     @Override
     public void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
-            Token token = parser.consume(tokenType());
+            TokenType type = tokenType();
+            Token token = parser.consume(type);
             result.add(token);
-            result.add(token.text());
+            if (type.variable()) {
+                result.add(token.text());
+            }
         }
     }
 

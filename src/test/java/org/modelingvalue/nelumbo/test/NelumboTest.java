@@ -23,8 +23,6 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.RepeatedTest;
@@ -38,6 +36,7 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public class NelumboTest extends NelumboTestBase {
 
@@ -56,7 +55,7 @@ public class NelumboTest extends NelumboTestBase {
                     // Init only
                     """;
             try {
-                new Parser(new Tokenizer(example, "NelumboTest.initTest").first()).parse();
+                new Parser(new Tokenizer(example, "NelumboTest.initTest").tokenize()).parse();
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -123,27 +122,27 @@ public class NelumboTest extends NelumboTestBase {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
                 String nl = "? -4=-(2+2)";
 
-                Token[] tokens = new Tokenizer(nl, "NelumboTest.tokenSplitTest").tokenize();
+                TokenizerResult tr = new Tokenizer(nl, "NelumboTest.tokenSplitTest").tokenize();
                 //U.printTokens("before-parse", tokens);
-                LinkedList<Token> all = Tokenizer.listAll(tokens);
+                List<Token> all = tr.listAll();
                 assertEquals(10, all.size(), "wrong number of tokens returned by tokenize()");
                 assertEquals("?, ,-,4,=-,(,2,+,2,)", // why does the ? appear at the end?
-                        all.stream().map(Token::text).collect(Collectors.joining(",")), //
+                        all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts before-parse not as expected");
 
-                List<Node> result = new Parser(tokens[Tokenizer.FIRST]).parse();
+                List<Node> result = new Parser(tr).parse();
                 //U.printTokens("after-parse", tokens);
-                all = Tokenizer.listAll(tokens);
+                all = tr.listAll();
                 assertEquals(11, all.size(), "wrong number of tokens after parse()");
                 assertEquals("?, ,-,4,=,-,(,2,+,2,)", // why does the ? appear at the end?
-                        all.stream().map(Token::text).collect(Collectors.joining(",")), //
+                        all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts after-parse not as expected");
                 assertEquals(1, result.size(), "wrong number of result nodes");
 
-                assertEquals("?,-,4,=,-,(,2,+,2,)", Arrays.stream(result.first().tokens()).map(Token::text).collect(Collectors.joining(",")), //
+                assertEquals("?,-,4,=,-,(,2,+,2,)", tr.list().map(Token::text).collect(Collectors.joining(",")), //
                         "result tokens text not as expected");
                 assertEquals("OPERATOR,OPERATOR,NUMBER,OPERATOR,OPERATOR,LPAREN,NUMBER,OPERATOR,NUMBER,RPAREN", //
-                        Arrays.stream(result.first().tokens()).map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
+                        result.first().tokens().map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
                         "result tokens type not as expected");
 
                 U.printNode("all result nodes", result);
@@ -168,11 +167,11 @@ public class NelumboTest extends NelumboTestBase {
                         //<Predicate> p
                         //? p=true""";
 
-                Token[] tokens = new Tokenizer(nl, "NelumboTest.research").tokenize();
-                LinkedList<Token> all = Tokenizer.listAll(tokens);
+                TokenizerResult tr = new Tokenizer(nl, "NelumboTest.research").tokenize();
+                List<Token> all = tr.listAll();
                 U.printTokens("after-parse", all);
 
-                List<Node> result = new Parser(tokens[Tokenizer.FIRST]).parse();
+                List<Node> result = new Parser(tr).parse();
 
                 U.printNode("all result nodes", result);
                 U.printKnowledgeBase("KNOWLEDGE-BASE", true);

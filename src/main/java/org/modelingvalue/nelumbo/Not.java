@@ -22,33 +22,34 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Not extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -4543178470298951866L;
 
-    private static Functor FUNCTOR;
+    private static Functor    FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(Not.class, f -> FUNCTOR = f);
     }
 
-    public Not(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0]);
+    public Not(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0]);
     }
 
-    private Not(Object[] args, int start, Not declaration) {
-        super(args, start, declaration);
+    private Not(Object[] args, Not declaration) {
+        super(args, declaration);
     }
 
     public static Not of(Node predicate) {
-        return new Not(FUNCTOR, Token.EMPTY, new Object[]{predicate});
+        return new Not(FUNCTOR, List.of(), new Object[]{predicate});
     }
 
     @Override
-    protected Not struct(Object[] array, int start, Predicate declaration) {
-        return new Not(array, start, (Not) declaration);
+    protected Not struct(Object[] array, Predicate declaration) {
+        return new Not(array, (Not) declaration);
     }
 
     @Override
@@ -63,7 +64,7 @@ public final class Not extends CompoundPredicate {
 
     @Override
     protected InferResult infer(InferContext context) {
-        Predicate   predicate  = predicate();
+        Predicate predicate = predicate();
         InferResult predResult = predicate.infer(context);
         if (predResult.hasStackOverflow()) {
             return predResult;

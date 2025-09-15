@@ -2,31 +2,28 @@ package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.Token;
 
 public class OptionalPattern extends AbstractPattern {
     @Serial
     private static final long serialVersionUID = 3011113311569598643L;
 
-    public static OptionalPattern of(AbstractPattern optional) {
-        return new OptionalPattern(Type.PATTERN, Token.EMPTY, optional);
+    public OptionalPattern(Type type, List<AstElement> elements, Object... args) {
+        super(type, elements, args);
     }
 
-    public OptionalPattern(Type type, Token[] tokens, Object... args) {
-        super(type, tokens, args);
-    }
-
-    protected OptionalPattern(Object[] args, int start) {
-        super(args, start);
+    protected OptionalPattern(Object[] args) {
+        super(args);
     }
 
     @Override
-    protected OptionalPattern struct(Object[] array, int start) {
-        return new OptionalPattern(array, start);
+    protected OptionalPattern struct(Object[] array) {
+        return new OptionalPattern(array);
     }
 
     public AbstractPattern optional() {

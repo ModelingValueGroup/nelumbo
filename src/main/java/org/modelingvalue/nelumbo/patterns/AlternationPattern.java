@@ -3,6 +3,7 @@ package org.modelingvalue.nelumbo.patterns;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
@@ -13,21 +14,17 @@ public class AlternationPattern extends AbstractPattern {
     @Serial
     private static final long serialVersionUID = -2652813935675033086L;
 
-    public static AlternationPattern of(AbstractPattern... options) {
-        return new AlternationPattern(Type.PATTERN, Token.EMPTY, List.of(options));
+    public AlternationPattern(Type type, List<AstElement> elements, Object... args) {
+        super(type, elements, args);
     }
 
-    public AlternationPattern(Type type, Token[] tokens, Object... args) {
-        super(type, tokens, args);
-    }
-
-    protected AlternationPattern(Object[] args, int start) {
-        super(args, start);
+    protected AlternationPattern(Object[] args) {
+        super(args);
     }
 
     @Override
-    protected AlternationPattern struct(Object[] array, int start) {
-        return new AlternationPattern(array, start);
+    protected AlternationPattern struct(Object[] array) {
+        return new AlternationPattern(array);
     }
 
     @SuppressWarnings("unchecked")

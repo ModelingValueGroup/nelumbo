@@ -22,9 +22,10 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Collect extends Predicate {
     @Serial
@@ -38,12 +39,12 @@ public final class Collect extends Predicate {
     private Predicate         identityPred;
     private Predicate         emptyCollector;
 
-    public Collect(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public Collect(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private Collect(Object[] args, int start, Collect declaration) {
-        super(args, start, declaration);
+    private Collect(Object[] args, Collect declaration) {
+        super(args, declaration);
     }
 
     private void initDeclaration() {
@@ -100,8 +101,8 @@ public final class Collect extends Predicate {
     }
 
     @Override
-    protected Collect struct(Object[] array, int start, Predicate declaration) {
-        return new Collect(array, start, (Collect) declaration);
+    protected Collect struct(Object[] array, Predicate declaration) {
+        return new Collect(array, (Collect) declaration);
     }
 
     @Override

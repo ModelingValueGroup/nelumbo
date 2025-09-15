@@ -22,27 +22,28 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public class Terminal extends Node {
     @Serial
     private static final long serialVersionUID = 7548506547559092927L;
 
-    public Terminal(Functor functor, Token[] tokens, Object... args) {
-        super(functor, tokens, args);
+    public Terminal(Functor functor, List<AstElement> elements, Object... args) {
+        super(functor, elements, args);
     }
 
-    public Terminal(Type type, Token[] tokens, Object... args) {
-        super(type, tokens, args);
+    public Terminal(Type type, List<AstElement> elements, Object... args) {
+        super(type, elements, args);
     }
 
-    protected Terminal(Object[] array, int start) {
-        super(array, start);
+    protected Terminal(Object[] array) {
+        super(array);
     }
 
     @Override
-    protected Terminal struct(Object[] array, int start) {
-        return new Terminal(array, start);
+    protected Terminal struct(Object[] array) {
+        return new Terminal(array);
     }
 
     @Override
