@@ -30,11 +30,11 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 public final class ParseResult {
 
     private final MutableList<AstElement> elements;
-    private final MutableList<Object>  args;
+    private final MutableList<Object>     args;
 
-    private Functor                    pattern;
-    private int                        pre  = 0;
-    private int                        post = 0;
+    private Functor                       pattern;
+    private int                           pre  = 0;
+    private int                           post = 0;
 
     public ParseResult() {
         elements = MutableList.of(List.of());

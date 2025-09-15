@@ -64,7 +64,7 @@ public class NelumboTestBase {
 
     public static void hasResult(Predicate query, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods) {
         InferResult expectedResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
-        InferResult queryResult    = getResult(query);
+        InferResult queryResult = getResult(query);
         assertEquals(expectedResult, queryResult);
     }
 
