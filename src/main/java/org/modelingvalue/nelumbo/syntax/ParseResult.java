@@ -33,6 +33,7 @@ public final class ParseResult {
     private final MutableList<Object>     args;
 
     private Functor                       pattern;
+    private Token                         token;
     private int                           pre  = 0;
     private int                           post = 0;
 
@@ -45,13 +46,18 @@ public final class ParseResult {
         return pattern;
     }
 
+    public Token nextToken() {
+        return token;
+    }
+
     public int precedence() {
         Integer precedence = pattern.precedence();
         return precedence != null ? precedence : Integer.MAX_VALUE;
     }
 
-    public void setPattern(Functor pattern) {
+    public void endPreParse(Functor pattern, Token token) {
         this.pattern = pattern;
+        this.token = token;
     }
 
     public List<AstElement> elements() {
@@ -87,6 +93,11 @@ public final class ParseResult {
 
     public boolean isDone() {
         return post++ < pre;
+    }
+
+    @Override
+    public String toString() {
+        return pattern.toString() + args().toString().substring(4);
     }
 
 }

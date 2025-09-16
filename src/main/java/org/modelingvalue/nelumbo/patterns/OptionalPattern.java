@@ -28,6 +28,7 @@ import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class OptionalPattern extends AbstractPattern {
     @Serial
@@ -51,16 +52,22 @@ public class OptionalPattern extends AbstractPattern {
     }
 
     @Override
-    public void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
         AbstractPattern optional = optional();
-        if (optional.peekIs(parser) || (next != null && !next.peekIs(parser))) {
-            optional.parse(expected, precedence, parser, next, result);
+        if (optional.peekIs(token, parser) || (next != null && !next.peekIs(token, parser))) {
+            token = optional.parse(token, expected, precedence, parser, next, result);
         }
+        return token;
     }
 
     @Override
     public boolean isFixed() {
         return false;
+    }
+
+    @Override
+    public List<Type> args() {
+        return optional().args();
     }
 
 }

@@ -28,6 +28,7 @@ import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class RepetitionPattern extends AbstractPattern {
     @Serial
@@ -51,16 +52,22 @@ public class RepetitionPattern extends AbstractPattern {
     }
 
     @Override
-    public void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
         AbstractPattern repeated = repeated();
-        while (repeated.peekIs(parser) || (next != null && !next.peekIs(parser))) {
-            repeated.parse(expected, precedence, parser, next, result);
+        while (repeated.peekIs(token, parser) || (next != null && !next.peekIs(token, parser))) {
+            token = repeated.parse(token, expected, precedence, parser, next, result);
         }
+        return token;
     }
 
     @Override
     public boolean isFixed() {
         return false;
+    }
+
+    @Override
+    public List<Type> args() {
+        return repeated().args().map(t -> t.list()).asList();
     }
 
 }

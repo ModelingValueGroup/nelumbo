@@ -30,6 +30,7 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class NodeTypePattern extends AbstractPattern {
     @Serial
@@ -53,15 +54,23 @@ public class NodeTypePattern extends AbstractPattern {
     }
 
     @Override
-    public void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
             Type type = nodeType();
-            Node node = parser.parseNode(precedence, type);
+            Node node = parser.parseNode(token, precedence, type);
             if (!type.isAssignableFrom(node.type())) {
                 throw new ParseException("Expected element of type " + type + " but found " + node + " of type " + node.type(), node);
             }
             result.add(node);
+            token = node.nextToken();
         }
+        return token;
+    }
+
+    @Override
+    public boolean peekIs(Token token, Parser parser) throws ParseException {
+        Type type = nodeType();
+        return parser.preParse(token, type, null) != null;
     }
 
     @Override
@@ -72,6 +81,11 @@ public class NodeTypePattern extends AbstractPattern {
     @Override
     public boolean isFixed() {
         return true;
+    }
+
+    @Override
+    public List<Type> args() {
+        return List.of(nodeType());
     }
 
 }

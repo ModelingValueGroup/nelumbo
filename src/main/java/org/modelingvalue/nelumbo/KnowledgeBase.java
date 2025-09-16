@@ -164,7 +164,7 @@ public final class KnowledgeBase {
     }
 
     private void addType(Type type) {
-        register(Functor.of(t(type.toString()), null, Type.TYPE(), Type.TYPE(), (t, a) -> {
+        register(Functor.of(t(type.toString()), null, null, Type.TYPE(), (t, a) -> {
             return type.setAstElements(t);
         }));
     }
@@ -175,7 +175,7 @@ public final class KnowledgeBase {
             for (Type predefined : Type.predefined()) {
                 addType(predefined);
             }
-            register(Functor.of(s(t("("), n(Type.NODE), t(")")), null, null, Type.NODE, (t, a) -> {
+            register(Functor.of(s(t("("), n(Type.__), t(")")), null, null, Type.__, (t, a) -> {
                 return (Node) a[0];
             }));
             register(Functor.of(s(r(n(Type.ROOT)), t(ENDOFFILE)), //
@@ -190,7 +190,7 @@ public final class KnowledgeBase {
                     }));
 
             register(Functor.of(s(t(TYPE), t("::"), o(s(n(Type.TYPE()), r(s(t(","), n(Type.TYPE()))))), t(NEWLINE)), //
-                    null, Type.ROOT, Type.TYPE(), (t, a) -> {
+                    null, null, Type.TYPE(), (t, a) -> {
                         String name = (String) a[0];
                         name = name.substring(1, name.length() - 1);
                         Set<Type> supers = Set.of();
@@ -202,8 +202,10 @@ public final class KnowledgeBase {
                         return type;
                     }));
 
-            List<TokenTypePattern> tokenTypePatterns = List.of(TokenType.values()).exclude(TokenType.SINGLEQUOTE::equals).exclude(TokenType::skip).map(TokenTypePattern::t).asList();
-            List<AbstractPattern> elementPatterns = List.<AbstractPattern> of(n(Type.PATTERN)).addAll(tokenTypePatterns);
+            Set<TokenType> excluded = Set.of(TokenType.TYPE, TokenType.META_OPERATOR, TokenType.NEWLINE, TokenType.ERROR, TokenType.ENDOFFILE);
+            List<TokenType> tokenTypes = List.of(TokenType.values()).exclude(TokenType::skip).exclude(excluded::contains).asList();
+            List<TokenTypePattern> tokenTypePatterns = tokenTypes.map(TokenTypePattern::t).asList();
+            List<AbstractPattern> elementPatterns = List.<AbstractPattern> of(n(Type.PATTERN), n(Type.TYPE())).addAll(tokenTypePatterns);
             RepetitionPattern patternRepetition = r(a(elementPatterns.toArray(i -> new AbstractPattern[i])));
 
             register(Functor.of(s(t("<(>"), patternRepetition, r(s(t("<|>"), patternRepetition)), t("<)>")), //
@@ -221,12 +223,9 @@ public final class KnowledgeBase {
                         return null;
                     }));
 
-            register(Functor.of(s(n(Type.TYPE()), t("'"), patternRepetition, t("'"), t(NEWLINE)), //
-                    null, Type.ROOT, Type.FUNCTOR, (t1, a1) -> {
-                        Functor pattern = Functor.of(null, null, null, null, (t2, a2) -> {
-                            return null;
-                        });
-                        return pattern;
+            register(Functor.of(s(n(Type.TYPE()), t("::="), patternRepetition, t(NEWLINE)), //
+                    null, null, Type.FUNCTOR, (t1, a1) -> {
+                        return new Functor(t1, a1);
                     }));
 
             //            // Functors
@@ -559,16 +558,17 @@ public final class KnowledgeBase {
     //        }
     //    }
 
-    private final AtomicReference<Set<Functor>>                         functors    = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, InferResult>>          facts       = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, Set<Rule>>>            rules       = new AtomicReference<>();
+    private final AtomicReference<Set<Functor>>                         functors     = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, InferResult>>          facts        = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, Set<Rule>>>            rules        = new AtomicReference<>();
     //
-    private final AtomicReference<Map<Type, Patterns>>                  patterns    = new AtomicReference<>();
+    private final AtomicReference<Map<Type, Patterns>>                  prePatterns  = new AtomicReference<>();
+    private final AtomicReference<Map<Type, Patterns>>                  postPatterns = new AtomicReference<>();
     //
-    private final AtomicReference<Map<Functor, Functor>>                relations   = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>>                relations    = new AtomicReference<>();
     //
-    private final AtomicInteger                                         depth       = new AtomicInteger();
-    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization = new AtomicReference<>();
+    private final AtomicInteger                                         depth        = new AtomicInteger();
+    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization  = new AtomicReference<>();
     private final InferContext                                          context;
     private final KnowledgeBase                                         init;
     private boolean                                                     stopped;
@@ -585,7 +585,8 @@ public final class KnowledgeBase {
         functors.set(init != null ? init.functors.get() : Set.of());
         facts.set(init != null ? init.facts.get() : Map.of());
         rules.set(init != null ? init.rules.get() : Map.of());
-        patterns.set(init != null ? init.patterns.get() : Map.of());
+        prePatterns.set(init != null ? init.prePatterns.get() : Map.of());
+        postPatterns.set(init != null ? init.postPatterns.get() : Map.of());
         relations.set(init != null ? init.relations.get() : Map.of());
         memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
         depth.set(init != null ? init.depth.get() : 0);
@@ -807,30 +808,32 @@ public final class KnowledgeBase {
     public void register(Functor pattern) {
         Type expected = pattern.expected() != null ? pattern.expected() : Type.NODE;
         Patterns patterns = pattern.patterns();
-        this.patterns.updateAndGet(m -> m.put(expected, patterns.merge(m.get(expected))));
+        boolean post = patterns.a().toKeys().anyMatch(Type.class::isInstance);
+        (post ? postPatterns : prePatterns).updateAndGet(m -> m.put(expected, patterns.merge(m.get(expected))));
     }
 
-    public ParseResult preParse(Type expected, Node left, Parser parser) throws ParseException {
-        Map<Type, Patterns> patternsMap = patterns.get();
+    public ParseResult preParse(Token token, Type expected, Node left, Parser parser) throws ParseException {
+        Map<Type, Patterns> patternsMap = (left != null ? postPatterns : prePatterns).get();
         Patterns patterns = patternsMap.get(expected);
         if (patterns == null && expected != Type.NODE) {
             patterns = patternsMap.get(Type.NODE);
         }
-        if (patterns != null) {
-            if (left != null) {
-                for (Type type : left.type().allsupers()) {
-                    Patterns found = patterns.get(type);
-                    if (found != null) {
-                        ParseResult result = new ParseResult();
-                        result.add(left);
-                        return found.preParse(result, parser);
-                    }
+        return patterns != null ? preParse(token, left, parser, patterns) : null;
+    }
+
+    private ParseResult preParse(Token token, Node left, Parser parser, Patterns patterns) throws ParseException {
+        if (left != null) {
+            for (Type type : left.type().allsupers()) {
+                Patterns found = patterns.get(type);
+                if (found != null) {
+                    ParseResult result = new ParseResult();
+                    result.add(left);
+                    return found.preParse(token, result, parser);
                 }
-            } else {
-                return patterns.preParse(new ParseResult(), parser);
             }
+            return null;
         }
-        return null;
+        return patterns.preParse(token, new ParseResult(), parser);
     }
 
 }

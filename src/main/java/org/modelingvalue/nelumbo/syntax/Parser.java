@@ -60,8 +60,8 @@ public final class Parser {
 
     // Instance
 
-    private final KnowledgeBase knowledgeBase;
-    private Token               token;
+    private final KnowledgeBase   knowledgeBase;
+    private final TokenizerResult tokenizerResult;
 
     public Parser(TokenizerResult tokenizerResult) {
         this(tokenizerResult, false);
@@ -69,113 +69,50 @@ public final class Parser {
 
     public Parser(TokenizerResult tokenizerResult, boolean noInfer) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
-        this.token = tokenizerResult.first();
+        this.tokenizerResult = tokenizerResult;
         knowledgeBase.noInfer(noInfer);
     }
 
     public List<Node> parse() throws ParseException {
-        Node node = parseNode(Integer.MIN_VALUE, Type.ROOT.list());
-        if (moreTokens()) {
-            throw new ParseException("Unexpected token " + peek().text() + " after end of input", peek());
+        Token token = tokenizerResult.first();
+        Node node = parseNode(token, Integer.MIN_VALUE, Type.ROOT.list());
+        token = node != null ? node.nextToken() : token;
+        if (token != null) {
+            throw new ParseException("Unexpected token " + token.text() + " after end of input", token);
         }
         return node instanceof ListNode ? ((ListNode) node).elements() : node != null ? List.of(node) : List.of();
     }
 
-    public Node parseNode(int precedence, Type expected) throws ParseException {
-        if (noMoreTokens()) {
-            throw new ParseException("premature end of input while expecting a " + expected.name(), token);
-        }
-        ParseResult result = preParse(expected, null);
+    public Node parseNode(Token token, int precedence, Type expected) throws ParseException {
+        ParseResult result = preParse(token, expected, null);
         if (result == null) {
             throw new ParseException("No syntax pattern found for " + token.text(), token);
         }
         Node left = result.postParse(expected, this);
-        if (moreTokens()) {
-            result = preParse(expected, left);
+        token = left.nextToken();
+        if (token != null) {
+            result = preParse(token, expected, left);
             while (result != null) {
                 if (precedence >= result.precedence()) {
                     return left;
                 }
                 left = result.postParse(expected, this);
-                if (noMoreTokens()) {
+                token = left.nextToken();
+                if (token == null) {
                     return left;
                 }
-                result = preParse(expected, left);
+                result = preParse(token, expected, left);
             }
         }
         return left;
     }
 
-    private ParseResult preParse(Type expected, Node left) throws ParseException {
-        return knowledgeBase.preParse(expected, left, this);
+    public ParseResult preParse(Token token, Type expected, Node left) throws ParseException {
+        return knowledgeBase.preParse(token, expected, left, this);
     }
 
     public KnowledgeBase knowledgeBase() {
         return knowledgeBase;
-    }
-
-    public Token peek() {
-        return token;
-    }
-
-    public boolean peekIs(TokenType expected) {
-        Token token = peek();
-        return token != null && token.type() == expected;
-    }
-
-    public boolean peekIs(String expected) {
-        Token token = peek();
-        return token != null && token.text().equals(expected);
-    }
-
-    public Token consume() {
-        Token t = token;
-        if (t != null) {
-            token = t.next();
-        }
-        return t;
-    }
-
-    public void setToken(Token token) {
-        this.token = token;
-    }
-
-    private boolean moreTokens() {
-        return peek() != null;
-    }
-
-    private boolean noMoreTokens() {
-        return peek() == null;
-    }
-
-    public boolean match(TokenType expected) {
-        boolean isType = peekIs(expected);
-        if (isType) {
-            consume();
-        }
-        return isType;
-    }
-
-    public Token consume(TokenType expected) throws ParseException {
-        Token token = consume();
-        if (token == null) {
-            throw new ParseException("Expected token " + expected + " but found end of input");
-        }
-        if (token.type() != expected) {
-            throw new ParseException("Expected token " + expected + " but found " + token.text() + " of type " + token.type(), token);
-        }
-        return token;
-    }
-
-    public Token consume(String expected) throws ParseException {
-        Token token = consume();
-        if (token == null) {
-            throw new ParseException("Expected token " + expected + " but found end of input");
-        }
-        if (!token.text().equals(expected)) {
-            throw new ParseException("Expected token " + expected + " but found " + token.text(), token);
-        }
-        return token;
     }
 
 }

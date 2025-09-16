@@ -29,6 +29,7 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class SequencePattern extends AbstractPattern {
     @Serial
@@ -53,18 +54,19 @@ public class SequencePattern extends AbstractPattern {
     }
 
     @Override
-    public void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
         List<AbstractPattern> elements = elements();
         for (int i = 0; i < elements.size(); i++) {
             AbstractPattern pattern = elements.get(i);
-            pattern.parse(expected, precedence, parser, i + 1 < elements.size() ? elements.get(i + 1) : next, result);
+            token = pattern.parse(token, expected, precedence, parser, i + 1 < elements.size() ? elements.get(i + 1) : next, result);
         }
+        return token;
     }
 
     @Override
-    public boolean peekIs(Parser parser) {
+    public boolean peekIs(Token token, Parser parser) throws ParseException {
         List<AbstractPattern> elements = elements();
-        return !elements.isEmpty() && elements.first().peekIs(parser);
+        return !elements.isEmpty() && elements.first().peekIs(token, parser);
     }
 
     @Override
@@ -86,6 +88,30 @@ public class SequencePattern extends AbstractPattern {
     @Override
     public boolean isFixed() {
         return true;
+    }
+
+    @Override
+    public String name() {
+        String name = "";
+        for (AbstractPattern element : elements()) {
+            name += element.name();
+        }
+        return name;
+    }
+
+    @Override
+    public List<Type> args() {
+        List<Type> args = List.of();
+        for (AbstractPattern element : elements()) {
+            Type last = args.last();
+            List<Type> l = element.args();
+            Type first = l.first();
+            if (first != null && last != null && first.isList() && last.equals(first.element())) {
+                args = args.removeLast();
+            }
+            args = args.addAll(l);
+        }
+        return args;
     }
 
 }

@@ -54,20 +54,21 @@ public class TokenTypePattern extends AbstractPattern {
     }
 
     @Override
-    public void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
             TokenType type = tokenType();
-            Token token = parser.consume(type);
             result.add(token);
             if (type.variable()) {
                 result.add(token.text());
             }
+            token = token.next();
         }
+        return token;
     }
 
     @Override
-    public boolean peekIs(Parser parser) {
-        return parser.peekIs(tokenType());
+    public boolean peekIs(Token token, Parser parser) throws ParseException {
+        return token.type() == tokenType();
     }
 
     @Override

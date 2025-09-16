@@ -44,7 +44,7 @@ public class SyntaxTest extends NelumboTestBase {
         run(() -> {
             String example = """
                     <Set> :: <Node>
-                    <Set> ' { <[> <Node> <{> , <Node> <}> <]> } '
+                    <Set> ::= { <[> <Node> <{> , <Node> <}> <]> }
                     """;
             try {
                 TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();

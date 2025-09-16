@@ -41,23 +41,26 @@ public class Functor extends Node {
     private static final long serialVersionUID = -1901047746034698364L;
 
     public static Functor of(AbstractPattern pattern, Integer precedence, Type expected, Type result, Constructor<? extends Node> constructor) {
-        return new Functor(Type.PATTERN, List.of(), pattern, precedence, expected, result, constructor);
+        return new Functor(List.of(), pattern, precedence, expected, result, constructor);
     }
 
     public static Functor of(AbstractPattern pattern, Integer precedence, Type expected, Type result, ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function) {
-        return new Functor(Type.PATTERN, List.of(), pattern, precedence, expected, result, function);
+        return new Functor(List.of(), pattern, precedence, expected, result, function);
     }
 
     public static Functor of(AbstractPattern pattern, Integer precedence, Type expected, Type result) {
-        return new Functor(Type.PATTERN, List.of(), pattern, precedence, expected, result, null);
+        return new Functor(List.of(), pattern, precedence, expected, result, null);
     }
 
-    public Functor(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    private String     name;
+    private List<Type> args;
+
+    public Functor(List<AstElement> elements, Object... args) {
+        super(Type.FUNCTOR, elements, args);
     }
 
-    private Functor(Object[] args) {
-        super(args);
+    private Functor(Object[] array) {
+        super(array);
     }
 
     @Override
@@ -94,12 +97,18 @@ public class Functor extends Node {
     }
 
     public String name() {
-        return (String) get(1);
+        if (name == null) {
+            name = pattern().name();
+        }
+        return name;
     }
 
     @SuppressWarnings("unchecked")
     public List<Type> args() {
-        return (List<Type>) get(2);
+        if (args == null) {
+            args = pattern().args();
+        }
+        return args;
     }
 
     @Override
@@ -135,7 +144,7 @@ public class Functor extends Node {
     @SuppressWarnings("unchecked")
     public Node postParse(Type expected, Parser parser, ParseResult result) throws ParseException {
         Integer precedence = precedence();
-        pattern().parse(expected, precedence != null ? precedence : Integer.MIN_VALUE, parser, null, result);
+        pattern().parse(result.nextToken(), expected, precedence != null ? precedence : Integer.MIN_VALUE, parser, null, result);
         return construct(result.elements(), result.args().toArray());
     }
 

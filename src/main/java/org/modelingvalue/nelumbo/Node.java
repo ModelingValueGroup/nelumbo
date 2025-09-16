@@ -482,6 +482,10 @@ public class Node extends StructImpl implements AstElement {
         return AstElement.lastToken(astElements());
     }
 
+    public Token nextToken() {
+        return lastToken().next();
+    }
+
     public List<Token> tokens() {
         Token first = firstToken();
         return first != null ? first.list(lastToken()) : List.of();

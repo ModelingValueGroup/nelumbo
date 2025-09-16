@@ -30,6 +30,7 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public abstract class AbstractPattern extends Node {
@@ -75,9 +76,9 @@ public abstract class AbstractPattern extends Node {
     @Override
     protected abstract AbstractPattern struct(Object[] array);
 
-    public abstract void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException;
+    public abstract Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException;
 
-    public boolean peekIs(Parser parser) {
+    public boolean peekIs(Token token, Parser parser) throws ParseException {
         return false;
     }
 
@@ -86,5 +87,13 @@ public abstract class AbstractPattern extends Node {
     }
 
     public abstract boolean isFixed();
+
+    public String name() {
+        return "";
+    }
+
+    public List<Type> args() {
+        return List.of();
+    }
 
 }

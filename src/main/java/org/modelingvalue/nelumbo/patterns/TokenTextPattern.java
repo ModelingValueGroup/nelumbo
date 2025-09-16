@@ -53,16 +53,17 @@ public class TokenTextPattern extends AbstractPattern {
     }
 
     @Override
-    public void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
-            Token token = parser.consume(tokenText());
             result.add(token);
+            token = token.next();
         }
+        return token;
     }
 
     @Override
-    public boolean peekIs(Parser parser) {
-        return parser.peekIs(tokenText());
+    public boolean peekIs(Token token, Parser parser) throws ParseException {
+        return token.text().equals(tokenText());
     }
 
     @Override
@@ -73,6 +74,11 @@ public class TokenTextPattern extends AbstractPattern {
     @Override
     public boolean isFixed() {
         return true;
+    }
+
+    @Override
+    public String name() {
+        return tokenText();
     }
 
 }

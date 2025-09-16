@@ -45,7 +45,7 @@ public class Type extends Node {
     public static final Type  RULE             = new Type(Rule.class, ROOT);
     public static final Type  FUNCTOR          = new Type(Functor.class, ROOT);
     public static final Type  STRING           = new Type(String.class);
-    public static final Type  PATTERN          = new Type("Pattern", Type.ROOT);
+    public static final Type  PATTERN          = new Type("Pattern", Type.NODE);
 
     public static final Type  TYPE_NAME        = new Type("TypeName", Type.NODE);
     public static final Type  VAR_NAME         = new Type("VarName", Type.NODE);
@@ -53,6 +53,8 @@ public class Type extends Node {
     public static final Type  PRECEDENCE       = new Type("Precedence", Type.NODE);
     public static final Type  FACTS            = new Type("Facts", Type.NODE);
     public static final Type  FALSEHOODS       = new Type("Falsehoods", Type.NODE);
+
+    public static final Type  __               = new Type("_", NODE);
 
     public static List<Type> predefined() {
         return List.of(TYPE(), //
@@ -138,7 +140,7 @@ public class Type extends Node {
     }
 
     private Type(Type element) {
-        super(TYPE(), List.of(element), "List", Set.of(NODE), element);
+        super(TYPE(), List.of(element), "List" + element, Set.of(NODE), element);
     }
 
     public Type element() {

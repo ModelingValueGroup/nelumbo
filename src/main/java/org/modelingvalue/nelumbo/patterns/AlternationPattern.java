@@ -53,21 +53,24 @@ public class AlternationPattern extends AbstractPattern {
     }
 
     @Override
-    public void parse(Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
         for (AbstractPattern option : options()) {
-            if (option.peekIs(parser)) {
-                option.parse(expected, precedence, parser, next, result);
-                return;
+            if (option.peekIs(token, parser)) {
+                return option.parse(token, expected, precedence, parser, next, result);
             }
         }
-        Token token = parser.peek();
         throw new ParseException("Expected " + this + " but found " + token.text() + " of type " + token.type(), token);
     }
 
     @Override
-    public boolean peekIs(Parser parser) {
+    public boolean peekIs(Token token, Parser parser) throws ParseException {
         List<AbstractPattern> options = options();
-        return options.anyMatch(o -> o.peekIs(parser));
+        for (AbstractPattern option : options) {
+            if (option.peekIs(token, parser)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

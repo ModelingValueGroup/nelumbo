@@ -77,24 +77,23 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         return d();
     }
 
-    public ParseResult preParse(ParseResult result, Parser parser) throws ParseException {
+    public ParseResult preParse(Token token, ParseResult result, Parser parser) throws ParseException {
         if (a().isEmpty()) {
-            result.setPattern(pattern());
+            result.endPreParse(pattern(), token);
             return result;
         } else {
-            if (token(result, parser) != null) {
+            if (token(token, result, parser) != null) {
                 return result;
             }
             Type expected = expected();
             if (expected != null) {
-                return node(result, parser, expected);
+                return node(token, result, parser, expected);
             }
         }
         return null;
     }
 
-    private ParseResult token(ParseResult result, Parser parser) throws ParseException {
-        Token token = parser.peek();
+    private ParseResult token(Token token, ParseResult result, Parser parser) throws ParseException {
         String text = token.text();
         Map<Object, Patterns> map = a();
         Patterns patterns = map.get(text);
@@ -104,7 +103,7 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
                     String key = text.substring(0, i);
                     patterns = map.get(key);
                     if (patterns != null) {
-                        parser.setToken(token.split(i));
+                        token = token.split(i);
                         break;
                     }
                 }
@@ -117,23 +116,25 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
             }
         }
         if (patterns != null) {
-            result.add(parser.consume());
-            if (patterns.preParse(result, parser) != null) {
+            result.add(token);
+            if (patterns.preParse(token.next(), result, parser) != null) {
                 return result;
             }
-            parser.setToken(token);
         }
         return null;
     }
 
-    private ParseResult node(ParseResult result, Parser parser, Type expected) throws ParseException {
-        Node node = parser.parseNode(precedence(), expected);
+    private ParseResult node(Token token, ParseResult result, Parser parser, Type expected) throws ParseException {
+        Node node = parser.parseNode(token, precedence(), expected);
         result.add(node);
+        token = node.nextToken();
         Map<Object, Patterns> map = a();
         for (Type type : node.type().allsupers()) {
             Patterns patterns = map.get(type);
             if (patterns != null) {
-                return patterns.preParse(result, parser);
+                if (patterns.preParse(token, result, parser) != null) {
+                    return result;
+                }
             }
         }
         throw new ParseException("no functor found for type " + node.type(), node);
