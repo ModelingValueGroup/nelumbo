@@ -21,6 +21,7 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -112,6 +113,18 @@ public class Node extends StructImpl {
             tokens[i - 1] = (Token) super.get(i);
         }
         return tokens;
+    }
+
+    public java.util.List<Node> children() {
+        java.util.List<Node> children = new ArrayList<>();
+        children.add(typeOrFunctor());
+        for (int i = 0; i < length(); i++) {
+            Object child = get(i);
+            if (child instanceof Node) {
+                children.add((Node) child);
+            }
+        }
+        return children;
     }
 
     @Override
