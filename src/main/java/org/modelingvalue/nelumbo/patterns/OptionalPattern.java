@@ -30,7 +30,7 @@ import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class OptionalPattern extends AbstractPattern {
+public class OptionalPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 3011113311569598643L;
 
@@ -47,15 +47,15 @@ public class OptionalPattern extends AbstractPattern {
         return new OptionalPattern(array);
     }
 
-    public AbstractPattern optional() {
-        return (AbstractPattern) get(0);
+    public Pattern optional() {
+        return (Pattern) get(0);
     }
 
     @Override
-    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
-        AbstractPattern optional = optional();
+    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+        Pattern optional = optional();
         if (optional.peekIs(token, parser) || (next != null && !next.peekIs(token, parser))) {
-            token = optional.parse(token, expected, precedence, parser, next, result);
+            token = optional.parse(token, group, precedence, parser, next, result);
         }
         return token;
     }
@@ -68,6 +68,11 @@ public class OptionalPattern extends AbstractPattern {
     @Override
     public List<Type> args() {
         return optional().args();
+    }
+
+    @Override
+    public String toString() {
+        return "o(" + optional() + ")";
     }
 
 }

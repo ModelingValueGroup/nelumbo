@@ -75,40 +75,40 @@ public final class Parser {
 
     public List<Node> parse() throws ParseException {
         Token token = tokenizerResult.first();
-        Node node = parseNode(token, Integer.MIN_VALUE, Type.ROOT.list());
-        token = node != null ? node.nextToken() : token;
+        Node node = parseNode(token, Integer.MIN_VALUE, Type.TOP_GROUP);
+        token = node.nextToken();
         if (token != null) {
             throw new ParseException("Unexpected token " + token.text() + " after end of input", token);
         }
-        return node instanceof ListNode ? ((ListNode) node).elements() : node != null ? List.of(node) : List.of();
+        return node instanceof ListNode ? ((ListNode) node).elements() : List.of(node);
     }
 
-    public Node parseNode(Token token, int precedence, Type expected) throws ParseException {
-        ParseResult result = preParse(token, expected, null);
+    public Node parseNode(Token token, int precedence, String group) throws ParseException {
+        ParseResult result = preParse(token, group, null);
         if (result == null) {
             throw new ParseException("No syntax pattern found for " + token.text(), token);
         }
-        Node left = result.postParse(expected, this);
+        Node left = result.postParse(group, this);
         token = left.nextToken();
         if (token != null) {
-            result = preParse(token, expected, left);
+            result = preParse(token, group, left);
             while (result != null) {
                 if (precedence >= result.precedence()) {
                     return left;
                 }
-                left = result.postParse(expected, this);
+                left = result.postParse(group, this);
                 token = left.nextToken();
                 if (token == null) {
                     return left;
                 }
-                result = preParse(token, expected, left);
+                result = preParse(token, group, left);
             }
         }
         return left;
     }
 
-    public ParseResult preParse(Token token, Type expected, Node left) throws ParseException {
-        return knowledgeBase.preParse(token, expected, left, this);
+    public ParseResult preParse(Token token, String group, Node left) throws ParseException {
+        return knowledgeBase.preParse(token, group, left, this);
     }
 
     public KnowledgeBase knowledgeBase() {

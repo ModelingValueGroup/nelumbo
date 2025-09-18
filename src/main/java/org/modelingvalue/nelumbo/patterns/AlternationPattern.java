@@ -30,7 +30,7 @@ import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class AlternationPattern extends AbstractPattern {
+public class AlternationPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = -2652813935675033086L;
 
@@ -48,15 +48,15 @@ public class AlternationPattern extends AbstractPattern {
     }
 
     @SuppressWarnings("unchecked")
-    public List<AbstractPattern> options() {
-        return (List<AbstractPattern>) get(0);
+    public List<Pattern> options() {
+        return (List<Pattern>) get(0);
     }
 
     @Override
-    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
-        for (AbstractPattern option : options()) {
+    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+        for (Pattern option : options()) {
             if (option.peekIs(token, parser)) {
-                return option.parse(token, expected, precedence, parser, next, result);
+                return option.parse(token, group, precedence, parser, next, result);
             }
         }
         throw new ParseException("Expected " + this + " but found " + token.text() + " of type " + token.type(), token);
@@ -64,8 +64,8 @@ public class AlternationPattern extends AbstractPattern {
 
     @Override
     public boolean peekIs(Token token, Parser parser) throws ParseException {
-        List<AbstractPattern> options = options();
-        for (AbstractPattern option : options) {
+        List<Pattern> options = options();
+        for (Pattern option : options) {
             if (option.peekIs(token, parser)) {
                 return true;
             }
@@ -76,6 +76,12 @@ public class AlternationPattern extends AbstractPattern {
     @Override
     public boolean isFixed() {
         return false;
+    }
+
+    @Override
+    public String toString() {
+        String string = options().toString();
+        return "a(" + string.substring(5, string.length() - 1) + ")";
     }
 
 }

@@ -40,16 +40,16 @@ public class Functor extends Node {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
-    public static Functor of(AbstractPattern pattern, Integer precedence, Type expected, Type result, Constructor<? extends Node> constructor) {
-        return new Functor(List.of(), pattern, precedence, expected, result, constructor);
+    public static Functor of(Pattern pattern, Integer precedence, Type result, Constructor<? extends Node> constructor) {
+        return new Functor(List.of(), pattern, precedence, result, constructor);
     }
 
-    public static Functor of(AbstractPattern pattern, Integer precedence, Type expected, Type result, ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function) {
-        return new Functor(List.of(), pattern, precedence, expected, result, function);
+    public static Functor of(Pattern pattern, Integer precedence, Type result, ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function) {
+        return new Functor(List.of(), pattern, precedence, result, function);
     }
 
-    public static Functor of(AbstractPattern pattern, Integer precedence, Type expected, Type result) {
-        return new Functor(List.of(), pattern, precedence, expected, result, null);
+    public static Functor of(Pattern pattern, Integer precedence, Type result) {
+        return new Functor(List.of(), pattern, precedence, result, null);
     }
 
     private String     name;
@@ -68,31 +68,27 @@ public class Functor extends Node {
         return new Functor(array);
     }
 
-    public AbstractPattern pattern() {
-        return (AbstractPattern) get(0);
+    public Pattern pattern() {
+        return (Pattern) get(0);
     }
 
     public Integer precedence() {
         return (Integer) get(1);
     }
 
-    public Type expected() {
-        return (Type) get(2);
-    }
-
     public Type resultType() {
-        return (Type) get(3);
+        return (Type) get(2);
     }
 
     @SuppressWarnings("unchecked")
     public Constructor<? extends Node> constructor() {
-        Object val = get(4);
+        Object val = get(3);
         return val instanceof Constructor ? (Constructor<? extends Node>) val : null;
     }
 
     @SuppressWarnings("unchecked")
     public ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function() {
-        Object val = get(4);
+        Object val = get(3);
         return val instanceof ThrowingBiFunction ? (ThrowingBiFunction<List<AstElement>, Object[], ? extends Node>) val : null;
     }
 
@@ -138,13 +134,13 @@ public class Functor extends Node {
         if (precedence == null) {
             precedence = Integer.MIN_VALUE;
         }
-        return pattern().patterns(Patterns.EMPTY.setPattern(this).setPrecedence(precedence), precedence);
+        return pattern().patterns(Patterns.EMPTY.setFunctor(this).setPrecedence(precedence), precedence);
     }
 
     @SuppressWarnings("unchecked")
-    public Node postParse(Type expected, Parser parser, ParseResult result) throws ParseException {
+    public Node postParse(String group, Parser parser, ParseResult result) throws ParseException {
         Integer precedence = precedence();
-        pattern().parse(result.nextToken(), expected, precedence != null ? precedence : Integer.MIN_VALUE, parser, null, result);
+        pattern().parse(result.nextToken(), group, precedence != null ? precedence : Integer.MIN_VALUE, parser, null, result);
         return construct(result.elements(), result.args().toArray());
     }
 

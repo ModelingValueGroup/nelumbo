@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class TokenTextPattern extends AbstractPattern {
+public class TokenTextPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = -7116490422223451839L;
 
@@ -53,7 +53,7 @@ public class TokenTextPattern extends AbstractPattern {
     }
 
     @Override
-    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
             result.add(token);
             token = token.next();
@@ -79,6 +79,11 @@ public class TokenTextPattern extends AbstractPattern {
     @Override
     public String name() {
         return tokenText();
+    }
+
+    @Override
+    public String toString() {
+        return "t(\"" + tokenText() + "\")";
     }
 
 }

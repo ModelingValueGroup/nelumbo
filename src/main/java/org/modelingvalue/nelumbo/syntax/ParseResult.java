@@ -24,7 +24,6 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class ParseResult {
@@ -32,7 +31,7 @@ public final class ParseResult {
     private final MutableList<AstElement> elements;
     private final MutableList<Object>     args;
 
-    private Functor                       pattern;
+    private Functor                       functor;
     private Token                         token;
     private int                           pre  = 0;
     private int                           post = 0;
@@ -42,8 +41,8 @@ public final class ParseResult {
         args = MutableList.of(List.of());
     }
 
-    public Functor pattern() {
-        return pattern;
+    public Functor functor() {
+        return functor;
     }
 
     public Token nextToken() {
@@ -51,12 +50,12 @@ public final class ParseResult {
     }
 
     public int precedence() {
-        Integer precedence = pattern.precedence();
+        Integer precedence = functor.precedence();
         return precedence != null ? precedence : Integer.MAX_VALUE;
     }
 
-    public void endPreParse(Functor pattern, Token token) {
-        this.pattern = pattern;
+    public void endPreParse(Functor functor, Token token) {
+        this.functor = functor;
         this.token = token;
     }
 
@@ -67,14 +66,14 @@ public final class ParseResult {
     public void add(Node node) {
         elements.add(node);
         args.add(node);
-        if (pattern == null) {
+        if (functor == null) {
             pre++;
         }
     }
 
     public void add(Token token) {
         elements.add(token);
-        if (pattern == null) {
+        if (functor == null) {
             pre++;
         }
     }
@@ -87,8 +86,8 @@ public final class ParseResult {
         return args.toImmutable();
     }
 
-    public Node postParse(Type expected, Parser parser) throws ParseException {
-        return pattern.postParse(expected, parser, this);
+    public Node postParse(String group, Parser parser) throws ParseException {
+        return functor.postParse(group, parser, this);
     }
 
     public boolean isDone() {
@@ -97,7 +96,7 @@ public final class ParseResult {
 
     @Override
     public String toString() {
-        return pattern.toString() + args().toString().substring(4);
+        return functor.toString() + args().toString().substring(4);
     }
 
 }

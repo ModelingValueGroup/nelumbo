@@ -32,7 +32,7 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class NodeTypePattern extends AbstractPattern {
+public class NodeTypePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 6828401544789430678L;
 
@@ -54,10 +54,10 @@ public class NodeTypePattern extends AbstractPattern {
     }
 
     @Override
-    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
             Type type = nodeType();
-            Node node = parser.parseNode(token, precedence, type);
+            Node node = parser.parseNode(token, precedence, type.group());
             if (!type.isAssignableFrom(node.type())) {
                 throw new ParseException("Expected element of type " + type + " but found " + node + " of type " + node.type(), node);
             }
@@ -69,8 +69,7 @@ public class NodeTypePattern extends AbstractPattern {
 
     @Override
     public boolean peekIs(Token token, Parser parser) throws ParseException {
-        Type type = nodeType();
-        return parser.preParse(token, type, null) != null;
+        return parser.preParse(token, nodeType().group(), null) != null;
     }
 
     @Override
@@ -86,6 +85,11 @@ public class NodeTypePattern extends AbstractPattern {
     @Override
     public List<Type> args() {
         return List.of(nodeType());
+    }
+
+    @Override
+    public String toString() {
+        return "n(" + nodeType() + ")";
     }
 
 }

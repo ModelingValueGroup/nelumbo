@@ -33,11 +33,11 @@ import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public abstract class AbstractPattern extends Node {
+public abstract class Pattern extends Node {
     @Serial
     private static final long serialVersionUID = -1788203180486332564L;
 
-    public static AlternationPattern a(AbstractPattern... options) {
+    public static AlternationPattern a(Pattern... options) {
         return new AlternationPattern(Type.PATTERN, List.of(), List.of(options));
     }
 
@@ -45,15 +45,15 @@ public abstract class AbstractPattern extends Node {
         return new NodeTypePattern(Type.PATTERN, List.of(), nodeType);
     }
 
-    public static OptionalPattern o(AbstractPattern optional) {
+    public static OptionalPattern o(Pattern optional) {
         return new OptionalPattern(Type.PATTERN, List.of(), optional);
     }
 
-    public static RepetitionPattern r(AbstractPattern repeated) {
+    public static RepetitionPattern r(Pattern repeated) {
         return new RepetitionPattern(Type.PATTERN, List.of(), repeated);
     }
 
-    public static SequencePattern s(AbstractPattern... elements) {
+    public static SequencePattern s(Pattern... elements) {
         return new SequencePattern(Type.PATTERN, List.of(), List.of(elements));
     }
 
@@ -65,18 +65,18 @@ public abstract class AbstractPattern extends Node {
         return new TokenTypePattern(Type.PATTERN, List.of(), tokenType);
     }
 
-    protected AbstractPattern(Type type, List<AstElement> elements, Object... args) {
+    protected Pattern(Type type, List<AstElement> elements, Object... args) {
         super(type, elements, args);
     }
 
-    protected AbstractPattern(Object[] args) {
+    protected Pattern(Object[] args) {
         super(args);
     }
 
     @Override
-    protected abstract AbstractPattern struct(Object[] array);
+    protected abstract Pattern struct(Object[] array);
 
-    public abstract Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException;
+    public abstract Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException;
 
     public boolean peekIs(Token token, Parser parser) throws ParseException {
         return false;

@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class SequencePattern extends AbstractPattern {
+public class SequencePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 1477171023667359130L;
 
@@ -49,29 +49,41 @@ public class SequencePattern extends AbstractPattern {
     }
 
     @SuppressWarnings("unchecked")
-    public List<AbstractPattern> elements() {
-        return (List<AbstractPattern>) get(0);
+    public List<Pattern> elements() {
+        return (List<Pattern>) get(0);
+    }
+
+    private Pattern next(List<Pattern> elements, int i, Pattern next) {
+        if (i + 1 < elements.size()) {
+            Pattern element = elements.get(i + 1);
+            if (element instanceof OptionalPattern || element instanceof RepetitionPattern) {
+                next = next(elements, i + 1, next);
+                return a(element, next);
+            }
+            return element;
+        }
+        return next;
     }
 
     @Override
-    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
-        List<AbstractPattern> elements = elements();
+    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+        List<Pattern> elements = elements();
         for (int i = 0; i < elements.size(); i++) {
-            AbstractPattern pattern = elements.get(i);
-            token = pattern.parse(token, expected, precedence, parser, i + 1 < elements.size() ? elements.get(i + 1) : next, result);
+            Pattern element = elements.get(i);
+            token = element.parse(token, group, precedence, parser, next(elements, i, next), result);
         }
         return token;
     }
 
     @Override
     public boolean peekIs(Token token, Parser parser) throws ParseException {
-        List<AbstractPattern> elements = elements();
+        List<Pattern> elements = elements();
         return !elements.isEmpty() && elements.first().peekIs(token, parser);
     }
 
     @Override
     public Patterns patterns(Patterns patterns, int precedence) {
-        List<AbstractPattern> elements = elements();
+        List<Pattern> elements = elements();
         int max = elements.size() - 1;
         for (int i = 0; i <= max; i++) {
             if (!elements.get(i).isFixed()) {
@@ -93,7 +105,7 @@ public class SequencePattern extends AbstractPattern {
     @Override
     public String name() {
         String name = "";
-        for (AbstractPattern element : elements()) {
+        for (Pattern element : elements()) {
             name += element.name();
         }
         return name;
@@ -102,7 +114,7 @@ public class SequencePattern extends AbstractPattern {
     @Override
     public List<Type> args() {
         List<Type> args = List.of();
-        for (AbstractPattern element : elements()) {
+        for (Pattern element : elements()) {
             Type last = args.last();
             List<Type> l = element.args();
             Type first = l.first();
@@ -112,6 +124,12 @@ public class SequencePattern extends AbstractPattern {
             args = args.addAll(l);
         }
         return args;
+    }
+
+    @Override
+    public String toString() {
+        String string = elements().toString();
+        return "s(" + string.substring(5, string.length() - 1) + ")";
     }
 
 }

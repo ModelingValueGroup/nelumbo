@@ -20,7 +20,7 @@
 
 package org.modelingvalue.nelumbo;
 
-import static org.modelingvalue.nelumbo.patterns.AbstractPattern.*;
+import static org.modelingvalue.nelumbo.patterns.Pattern.*;
 import static org.modelingvalue.nelumbo.syntax.TokenType.*;
 
 import java.io.PrintStream;
@@ -41,10 +41,9 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
-import org.modelingvalue.nelumbo.patterns.AbstractPattern;
+import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
-import org.modelingvalue.nelumbo.patterns.TokenTypePattern;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -164,7 +163,7 @@ public final class KnowledgeBase {
     }
 
     private void addType(Type type) {
-        register(Functor.of(t(type.toString()), null, null, Type.TYPE(), (t, a) -> {
+        register(Functor.of(t(type.toString()), null, Type.TYPE(), (t, a) -> {
             return type.setAstElements(t);
         }));
     }
@@ -175,11 +174,11 @@ public final class KnowledgeBase {
             for (Type predefined : Type.predefined()) {
                 addType(predefined);
             }
-            register(Functor.of(s(t("("), n(Type.__), t(")")), null, null, Type.__, (t, a) -> {
+            register(Functor.of(s(t("("), n(Type.__), t(")")), null, Type.__, (t, a) -> {
                 return (Node) a[0];
             }));
             register(Functor.of(s(r(n(Type.ROOT)), t(ENDOFFILE)), //
-                    null, Type.ROOT.list(), Type.ROOT.list(), (t, a) -> {
+                    null, Type.ROOT.list(Type.TOP_GROUP), (t, a) -> {
                         ListNode roots = new ListNode(t, Type.ROOT);
                         for (int i = 0; i < a.length; i++) {
                             if (a[i] instanceof Node root) {
@@ -189,42 +188,43 @@ public final class KnowledgeBase {
                         return roots;
                     }));
 
-            register(Functor.of(s(t(TYPE), t("::"), o(s(n(Type.TYPE()), r(s(t(","), n(Type.TYPE()))))), t(NEWLINE)), //
-                    null, null, Type.TYPE(), (t, a) -> {
+            register(Functor.of(s(t(TYPE), t("::"), o(s(n(Type.TYPE()), r(s(t(","), n(Type.TYPE()))))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
+                    null, Type.TYPE(), (t, a) -> {
                         String name = (String) a[0];
                         name = name.substring(1, name.length() - 1);
                         Set<Type> supers = Set.of();
-                        for (int i = 1; i < a.length; i++) {
+                        for (int i = 1; i < a.length && a[i] instanceof Type; i++) {
                             supers = supers.add((Type) a[i]);
                         }
-                        Type type = new Type(t, name, supers);
+                        String group = a[a.length - 1] instanceof String ? (String) a[a.length - 1] : Type.DEFAULT_GROUP;
+                        Type type = new Type(t, name, supers, group);
                         CURRENT.get().addType(type);
                         return type;
                     }));
 
             Set<TokenType> excluded = Set.of(TokenType.TYPE, TokenType.META_OPERATOR, TokenType.NEWLINE, TokenType.ERROR, TokenType.ENDOFFILE);
             List<TokenType> tokenTypes = List.of(TokenType.values()).exclude(TokenType::skip).exclude(excluded::contains).asList();
-            List<TokenTypePattern> tokenTypePatterns = tokenTypes.map(TokenTypePattern::t).asList();
-            List<AbstractPattern> elementPatterns = List.<AbstractPattern> of(n(Type.PATTERN), n(Type.TYPE())).addAll(tokenTypePatterns);
-            RepetitionPattern patternRepetition = r(a(elementPatterns.toArray(i -> new AbstractPattern[i])));
+            List<Pattern> tokenTypePatterns = tokenTypes.map(tt -> (Pattern) t(tt)).asList();
+            List<Pattern> elementPatterns = tokenTypePatterns.add(n(Type.PATTERN)).add(n(Type.TYPE()));
+            RepetitionPattern patternRepetition = r(a(elementPatterns.toArray(i -> new Pattern[i])));
 
             register(Functor.of(s(t("<(>"), patternRepetition, r(s(t("<|>"), patternRepetition)), t("<)>")), //
-                    null, Type.PATTERN, Type.PATTERN, (t1, a1) -> {
+                    null, Type.PATTERN, (t1, a1) -> {
                         return null;
                     }));
 
             register(Functor.of(s(t("<{>"), patternRepetition, t("<}>")), //
-                    null, Type.PATTERN, Type.PATTERN, (t1, a1) -> {
+                    null, Type.PATTERN, (t1, a1) -> {
                         return null;
                     }));
 
             register(Functor.of(s(t("<[>"), patternRepetition, t("<]>")), //
-                    null, Type.PATTERN, Type.PATTERN, (t1, a1) -> {
+                    null, Type.PATTERN, (t1, a1) -> {
                         return null;
                     }));
 
             register(Functor.of(s(n(Type.TYPE()), t("::="), patternRepetition, t(NEWLINE)), //
-                    null, null, Type.FUNCTOR, (t1, a1) -> {
+                    null, Type.FUNCTOR, (t1, a1) -> {
                         return new Functor(t1, a1);
                     }));
 
@@ -562,8 +562,8 @@ public final class KnowledgeBase {
     private final AtomicReference<Map<Predicate, InferResult>>          facts        = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, Set<Rule>>>            rules        = new AtomicReference<>();
     //
-    private final AtomicReference<Map<Type, Patterns>>                  prePatterns  = new AtomicReference<>();
-    private final AtomicReference<Map<Type, Patterns>>                  postPatterns = new AtomicReference<>();
+    private final AtomicReference<Map<String, Patterns>>                prePatterns  = new AtomicReference<>();
+    private final AtomicReference<Map<String, Patterns>>                postPatterns = new AtomicReference<>();
     //
     private final AtomicReference<Map<Functor, Functor>>                relations    = new AtomicReference<>();
     //
@@ -806,18 +806,15 @@ public final class KnowledgeBase {
     }
 
     public void register(Functor pattern) {
-        Type expected = pattern.expected() != null ? pattern.expected() : Type.NODE;
+        String group = pattern.resultType().group();
         Patterns patterns = pattern.patterns();
         boolean post = patterns.a().toKeys().anyMatch(Type.class::isInstance);
-        (post ? postPatterns : prePatterns).updateAndGet(m -> m.put(expected, patterns.merge(m.get(expected))));
+        (post ? postPatterns : prePatterns).updateAndGet(m -> m.put(group, patterns.merge(m.get(group))));
     }
 
-    public ParseResult preParse(Token token, Type expected, Node left, Parser parser) throws ParseException {
-        Map<Type, Patterns> patternsMap = (left != null ? postPatterns : prePatterns).get();
-        Patterns patterns = patternsMap.get(expected);
-        if (patterns == null && expected != Type.NODE) {
-            patterns = patternsMap.get(Type.NODE);
-        }
+    public ParseResult preParse(Token token, String group, Node left, Parser parser) throws ParseException {
+        Map<String, Patterns> patternsMap = (left != null ? postPatterns : prePatterns).get();
+        Patterns patterns = patternsMap.get(group);
         return patterns != null ? preParse(token, left, parser, patterns) : null;
     }
 

@@ -32,7 +32,7 @@ import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class TokenTypePattern extends AbstractPattern {
+public class TokenTypePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 2405616043878166113L;
 
@@ -54,7 +54,7 @@ public class TokenTypePattern extends AbstractPattern {
     }
 
     @Override
-    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
             TokenType type = tokenType();
             result.add(token);
@@ -79,6 +79,11 @@ public class TokenTypePattern extends AbstractPattern {
     @Override
     public boolean isFixed() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "t(" + tokenType() + ")";
     }
 
 }

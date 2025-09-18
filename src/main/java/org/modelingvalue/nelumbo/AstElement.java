@@ -40,10 +40,10 @@ public interface AstElement {
     }
 
     static Token lastToken(List<AstElement> elements) {
-        for (AstElement element : elements) {
-            Token first = element.firstToken();
-            if (first != null) {
-                return first;
+        for (AstElement element : elements.reverse()) {
+            Token last = element.lastToken();
+            if (last != null) {
+                return last;
             }
         }
         return null;

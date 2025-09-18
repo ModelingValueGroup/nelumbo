@@ -30,7 +30,7 @@ import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class RepetitionPattern extends AbstractPattern {
+public class RepetitionPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 7257418785045060245L;
 
@@ -47,15 +47,15 @@ public class RepetitionPattern extends AbstractPattern {
         return new RepetitionPattern(array);
     }
 
-    public AbstractPattern repeated() {
-        return (AbstractPattern) get(0);
+    public Pattern repeated() {
+        return (Pattern) get(0);
     }
 
     @Override
-    public Token parse(Token token, Type expected, int precedence, Parser parser, AbstractPattern next, ParseResult result) throws ParseException {
-        AbstractPattern repeated = repeated();
-        while (repeated.peekIs(token, parser) || (next != null && !next.peekIs(token, parser))) {
-            token = repeated.parse(token, expected, precedence, parser, next, result);
+    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+        Pattern repeated = repeated();
+        while (next != null ? !next.peekIs(token, parser) : repeated.peekIs(token, parser)) {
+            token = repeated.parse(token, group, precedence, parser, next, result);
         }
         return token;
     }
@@ -70,4 +70,8 @@ public class RepetitionPattern extends AbstractPattern {
         return repeated().args().map(t -> t.list()).asList();
     }
 
+    @Override
+    public String toString() {
+        return "r(" + repeated() + ")";
+    }
 }

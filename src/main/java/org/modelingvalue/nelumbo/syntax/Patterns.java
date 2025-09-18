@@ -34,15 +34,15 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
 
     public static final Patterns EMPTY            = new Patterns(Map.of(), null, null, null);
 
-    private Patterns(Map<Object, Patterns> map, Functor pattern, Integer precedence, Type expected) {
-        super(map, pattern, precedence, expected);
+    private Patterns(Map<Object, Patterns> map, Functor functor, Integer precedence, Type nodeType) {
+        super(map, functor, precedence, nodeType);
     }
 
-    public Patterns setPattern(Functor pattern) {
+    public Patterns setFunctor(Functor functor) {
         if (b() != null) {
             throw new IllegalArgumentException();
         }
-        return new Patterns(a(), pattern, c(), d());
+        return new Patterns(a(), functor, c(), d());
     }
 
     public Patterns put(Object key, Patterns patterns) {
@@ -65,7 +65,7 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         return a();
     }
 
-    public Functor pattern() {
+    public Functor functor() {
         return b();
     }
 
@@ -73,29 +73,29 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         return c();
     }
 
-    public Type expected() {
+    public Type nodeType() {
         return d();
     }
 
     public ParseResult preParse(Token token, ParseResult result, Parser parser) throws ParseException {
-        if (a().isEmpty()) {
-            result.endPreParse(pattern(), token);
+        if (token(token, result, parser) != null) {
             return result;
-        } else {
-            if (token(token, result, parser) != null) {
-                return result;
-            }
-            Type expected = expected();
-            if (expected != null) {
-                return node(token, result, parser, expected);
-            }
         }
-        return null;
+        Type nodeType = nodeType();
+        if (nodeType != null) {
+            return node(token, result, parser, nodeType);
+        }
+        Functor functor = functor();
+        if (functor == null) {
+            return null;
+        }
+        result.endPreParse(functor(), token);
+        return result;
     }
 
     private ParseResult token(Token token, ParseResult result, Parser parser) throws ParseException {
-        String text = token.text();
         Map<Object, Patterns> map = a();
+        String text = token.text();
         Patterns patterns = map.get(text);
         if (patterns == null) {
             if (token.type() == TokenType.OPERATOR) {
@@ -109,7 +109,7 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
                 }
             }
             if (patterns == null) {
-                patterns = a().get(token.type());
+                patterns = map.get(token.type());
                 if (patterns != null) {
                     result.add(text);
                 }
@@ -124,13 +124,16 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         return null;
     }
 
-    private ParseResult node(Token token, ParseResult result, Parser parser, Type expected) throws ParseException {
-        Node node = parser.parseNode(token, precedence(), expected);
+    private ParseResult node(Token token, ParseResult result, Parser parser, Type type) throws ParseException {
+        Node node = parser.parseNode(token, precedence(), type.group());
+        if (!type.isAssignableFrom(node.type())) {
+            return null;
+        }
         result.add(node);
         token = node.nextToken();
         Map<Object, Patterns> map = a();
-        for (Type type : node.type().allsupers()) {
-            Patterns patterns = map.get(type);
+        for (Type sup : node.type().allsupers()) {
+            Patterns patterns = map.get(sup);
             if (patterns != null) {
                 if (patterns.preParse(token, result, parser) != null) {
                     return result;
@@ -144,9 +147,9 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         if (patterns == null) {
             return this;
         }
-        Functor s = merge(pattern(), patterns.pattern());
+        Functor s = merge(functor(), patterns.functor());
         Integer p = merge(precedence(), patterns.precedence());
-        Type e = merge(expected(), patterns.expected());
+        Type e = merge(nodeType(), patterns.nodeType());
         Map<Object, Patterns> m = map().addAll(patterns.map(), (a, b) -> a.merge(b));
         return new Patterns(m, s, p, e);
     }

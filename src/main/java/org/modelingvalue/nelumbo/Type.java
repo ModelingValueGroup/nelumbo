@@ -31,30 +31,34 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Type extends Node {
     @Serial
-    private static final long serialVersionUID = -4583279157841144493L;
+    private static final long  serialVersionUID = -4583279157841144493L;
     //
-    public static final Type  NODE             = new Type(Node.class);
-    public static final Type  FUNCTION         = new Type("Function", NODE);
-    public static final Type  TERMINAL         = new Type(Terminal.class, NODE);
-    public static final Type  LITERAL          = new Type("Literal", TERMINAL);
-    public static final Type  ROOT             = new Type("Root", NODE);
-    public static final Type  PREDICATE        = new Type(Predicate.class, NODE);
-    public static final Type  RELATION         = new Type("Relation", PREDICATE, ROOT);
-    public static final Type  RESULT           = new Type("Result", ROOT);
-    public static final Type  VARIABLE         = new Type(Variable.class, ROOT);
-    public static final Type  RULE             = new Type(Rule.class, ROOT);
-    public static final Type  FUNCTOR          = new Type(Functor.class, ROOT);
-    public static final Type  STRING           = new Type(String.class);
-    public static final Type  PATTERN          = new Type("Pattern", Type.NODE);
-
-    public static final Type  TYPE_NAME        = new Type("TypeName", Type.NODE);
-    public static final Type  VAR_NAME         = new Type("VarName", Type.NODE);
-    public static final Type  NATIVE           = new Type("Native", Type.NODE);
-    public static final Type  PRECEDENCE       = new Type("Precedence", Type.NODE);
-    public static final Type  FACTS            = new Type("Facts", Type.NODE);
-    public static final Type  FALSEHOODS       = new Type("Falsehoods", Type.NODE);
-
-    public static final Type  __               = new Type("_", NODE);
+    public static final String DEFAULT_GROUP    = "_";
+    public static final String SYNTAX_GROUP     = "SYNTAX";
+    public static final String TOP_GROUP        = "TOP";
+    //
+    public static final Type   NODE             = new Type(Node.class);
+    public static final Type   FUNCTION         = new Type("Function", NODE);
+    public static final Type   TERMINAL         = new Type(Terminal.class, NODE);
+    public static final Type   LITERAL          = new Type("Literal", TERMINAL);
+    public static final Type   ROOT             = new Type("Root", NODE);
+    public static final Type   PREDICATE        = new Type(Predicate.class, NODE);
+    public static final Type   RELATION         = new Type("Relation", PREDICATE, ROOT);
+    public static final Type   RESULT           = new Type("Result", ROOT);
+    public static final Type   VARIABLE         = new Type(Variable.class, ROOT);
+    public static final Type   RULE             = new Type(Rule.class, ROOT);
+    public static final Type   FUNCTOR          = new Type(Functor.class, ROOT);
+    public static final Type   STRING           = new Type(String.class);
+    public static final Type   PATTERN          = new Type("Pattern", SYNTAX_GROUP, Type.NODE);
+    //
+    public static final Type   TYPE_NAME        = new Type("TypeName", Type.NODE);
+    public static final Type   VAR_NAME         = new Type("VarName", Type.NODE);
+    public static final Type   NATIVE           = new Type("Native", Type.NODE);
+    public static final Type   PRECEDENCE       = new Type("Precedence", Type.NODE);
+    public static final Type   FACTS            = new Type("Facts", Type.NODE);
+    public static final Type   FALSEHOODS       = new Type("Falsehoods", Type.NODE);
+    //
+    public static final Type   __               = new Type("_", NODE);
 
     public static List<Type> predefined() {
         return List.of(TYPE(), //
@@ -106,27 +110,35 @@ public class Type extends Node {
     private List<Type> allSupers;
 
     private Type() {
-        super((Type) null, List.of(), Type.class, null);
+        super((Type) null, List.of(), Type.class, null, DEFAULT_GROUP);
     }
 
     private Type(Object[] array) {
         super(array);
     }
 
+    private Type(Class<?> clss, String group, Type... supers) {
+        super(TYPE(), List.of(), clss, Set.of(supers), group);
+    }
+
     private Type(Class<?> clss, Type... supers) {
-        super(TYPE(), List.of(), clss, Set.of(supers));
+        super(TYPE(), List.of(), clss, Set.of(supers), DEFAULT_GROUP);
     }
 
-    protected Type(TokenType type) {
-        super(TYPE(), List.of(), type, Set.of());
-    }
-
-    public Type(List<AstElement> elements, String name, Collection<Type> supers) {
-        super(TYPE(), elements, name, supers.asSet());
+    public Type(String name, String group, Type... supers) {
+        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group);
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers));
+        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), DEFAULT_GROUP);
+    }
+
+    protected Type(TokenType type) {
+        super(TYPE(), List.of(), type, Set.of(), DEFAULT_GROUP);
+    }
+
+    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
+        super(TYPE(), elements, name, supers.asSet(), group);
     }
 
     public Type(Type super1, Type super2) {
@@ -136,19 +148,23 @@ public class Type extends Node {
                 Set.of(super1, super2) //
                         .addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))) //
                         .addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))) //
-        );
+                , super1.group());
     }
 
-    private Type(Type element) {
-        super(TYPE(), List.of(element), "List" + element, Set.of(NODE), element);
+    private Type(Type element, String group) {
+        super(TYPE(), List.of(element), "List" + element, Set.of(NODE), group, element);
     }
 
     public Type element() {
         if (isList()) {
-            return (Type) get(2);
+            return (Type) get(3);
         } else {
             return this;
         }
+    }
+
+    public String group() {
+        return (String) get(2);
     }
 
     @SuppressWarnings("unchecked")
@@ -157,7 +173,7 @@ public class Type extends Node {
     }
 
     public boolean isList() {
-        return length() == 3;
+        return length() == 4;
     }
 
     public boolean isMany() {
@@ -204,8 +220,12 @@ public class Type extends Node {
     }
 
     public Type list() {
+        return list(group());
+    }
+
+    public Type list(String group) {
         if (list == null) {
-            list = new Type(this);
+            list = new Type(this, group);
         }
         return list;
     }
