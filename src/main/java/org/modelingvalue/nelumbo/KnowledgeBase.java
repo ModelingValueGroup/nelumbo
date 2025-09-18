@@ -26,6 +26,7 @@ import static org.modelingvalue.nelumbo.syntax.TokenType.*;
 import java.io.PrintStream;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
+import java.util.Optional;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -202,7 +203,7 @@ public final class KnowledgeBase {
                         return roots;
                     }));
 
-            register(Functor.of(s(t(TYPE), t("::"), o(s(n(Type.TYPE()), r(s(t(","), n(Type.TYPE()))))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
+            register(Functor.of(s(t(TYPE), t("::"), n(Type.TYPE()), r(s(t(","), n(Type.TYPE()))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
                     null, Type.TYPE(), (t, a) -> {
                         String name = (String) a[0];
                         name = name.substring(1, name.length() - 1);
@@ -245,11 +246,29 @@ public final class KnowledgeBase {
             register(Functor.of(s(t("<[>"), patternRepetition, t("<]>")), //
                     null, Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
 
-            register(Functor.of(s(n(Type.TYPE()), t("::="), patternRepetition, t(NEWLINE)), //
+            register(Functor.of(s(n(Type.TYPE()), t("::="), patternRepetition, o(s(t("#"), t(TokenType.NUMBER))), o(s(t("@"), t(TokenType.QNAME))), t(NEWLINE)), //
                     null, Type.FUNCTOR, (t1, a1) -> {
                         Type type = (Type) t1.get(0);
-                        Pattern pattern = pattern(t1.removeFirst().removeFirst().removeLast());
-                        return new Functor(t1, pattern, null, type, null);
+                        int max = t1.size() - 1;
+                        Optional<AstElement> o = t1.findFirst(e -> e instanceof Token t && t.text().equals("@"));
+                        Constructor<?> constructor = null;
+                        if (o.isPresent()) {
+                            max = t1.firstIndexOf(o.get());
+                            Token className = (Token) t1.get(max + 1);
+                            try {
+                                constructor = Class.forName(className.text()).getConstructor(Functor.class, List.class, Object[].class);
+                            } catch (NoSuchMethodException | SecurityException | ClassNotFoundException e1) {
+                                throw new ParseException(e1, "Exception during constructor of new Node", className);
+                            }
+                        }
+                        Integer precedence = null;
+                        o = t1.findFirst(e -> e instanceof Token t && t.text().equals("#"));
+                        if (o.isPresent()) {
+                            max = t1.firstIndexOf(o.get());
+                            precedence = Integer.parseInt(((Token) t1.get(max + 1)).text());
+                        }
+                        Pattern pattern = pattern(t1.sublist(2, max));
+                        return new Functor(t1, pattern, precedence, type, constructor);
                     }));
 
             //            // Functors

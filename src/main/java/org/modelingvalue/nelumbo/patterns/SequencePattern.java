@@ -56,9 +56,11 @@ public class SequencePattern extends Pattern {
     private Pattern next(List<Pattern> elements, int i, Pattern next) {
         if (i + 1 < elements.size()) {
             Pattern element = elements.get(i + 1);
-            if (element instanceof OptionalPattern || element instanceof RepetitionPattern) {
-                next = next(elements, i + 1, next);
-                return a(element, next);
+            if (element instanceof OptionalPattern op) {
+                return a(op.optional(), next(elements, i + 1, next));
+            }
+            if (element instanceof RepetitionPattern rp) {
+                return a(rp.repeated(), next(elements, i + 1, next));
             }
             return element;
         }
