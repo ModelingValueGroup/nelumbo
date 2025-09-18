@@ -172,7 +172,7 @@ public class Token implements AstElement {
 
     @Override
     public String toString() {
-        return String.format("TOKEN: %5d (%3d,%3d) %-16s '%s'", index, line, position, type, textTraced());
+        return "'" + textTraced() + "'";
     }
 
     @Override

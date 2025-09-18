@@ -41,8 +41,8 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
-import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
@@ -168,6 +168,20 @@ public final class KnowledgeBase {
         }));
     }
 
+    private Pattern pattern(List<AstElement> elements) {
+        List<Pattern> patterns = List.of();
+        for (AstElement e : elements) {
+            if (e instanceof Token t) {
+                patterns = patterns.add(t(t.text()));
+            } else if (e instanceof Type t) {
+                patterns = patterns.add(n(t));
+            } else {
+                patterns = patterns.add((Pattern) e);
+            }
+        }
+        return patterns.size() > 1 ? s(patterns.toArray(i -> new Pattern[i])) : patterns.first();
+    }
+
     @SuppressWarnings({"unchecked", "CodeBlock2Expr"})
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
@@ -210,22 +224,32 @@ public final class KnowledgeBase {
 
             register(Functor.of(s(t("<(>"), patternRepetition, r(s(t("<|>"), patternRepetition)), t("<)>")), //
                     null, Type.PATTERN, (t1, a1) -> {
-                        return null;
+                        List<Pattern> options = List.of();
+                        List<AstElement> option = null;
+                        for (AstElement e : t1) {
+                            if (e instanceof Token t && t.type() == TokenType.META_OPERATOR) {
+                                if (option != null) {
+                                    options = options.add(pattern(option));
+                                }
+                                option = List.of();
+                            } else {
+                                option = option.add(e);
+                            }
+                        }
+                        return a(t1, options.toArray(i -> new Pattern[i]));
                     }));
 
             register(Functor.of(s(t("<{>"), patternRepetition, t("<}>")), //
-                    null, Type.PATTERN, (t1, a1) -> {
-                        return null;
-                    }));
+                    null, Type.PATTERN, (t1, a1) -> r(t1, pattern(t1))));
 
             register(Functor.of(s(t("<[>"), patternRepetition, t("<]>")), //
-                    null, Type.PATTERN, (t1, a1) -> {
-                        return null;
-                    }));
+                    null, Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
 
             register(Functor.of(s(n(Type.TYPE()), t("::="), patternRepetition, t(NEWLINE)), //
                     null, Type.FUNCTOR, (t1, a1) -> {
-                        return new Functor(t1, a1);
+                        Type type = (Type) t1.get(0);
+                        Pattern pattern = pattern(t1.removeFirst().removeFirst().removeLast());
+                        return new Functor(t1, pattern, null, type, null);
                     }));
 
             //            // Functors
