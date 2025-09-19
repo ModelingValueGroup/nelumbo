@@ -30,7 +30,7 @@ plugins {
 }
 
 mvgcorrector {
-//    setHeaderUrl("https://github.com/ModelingValueGroup/nelumbo/blob/a1df95c77ce1d13d9a392cb2ebb5fbe1886085ca/gradlew")
+//    setHeaderUrl("https://raw.githubusercontent.com/ModelingValueGroup/nelumbo/refs/heads/new-headers/header-template.txt")
 //    forceHeaderCorrection = true
 }
 
