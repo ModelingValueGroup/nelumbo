@@ -30,7 +30,7 @@ plugins {
 }
 
 mvgcorrector {
-//    setHeaderUrl("https://raw.githubusercontent.com/ModelingValueGroup/nelumbo/refs/heads/new-headers/header-template.txt")
+    setHeaderUrl("https://raw.githubusercontent.com/ModelingValueGroup/nelumbo/refs/heads/new-headers/header-template.txt")
 //    forceHeaderCorrection = true
 }
 
