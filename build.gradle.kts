@@ -28,6 +28,12 @@ plugins {
     idea
     eclipse
 }
+
+mvgcorrector {
+//    setHeaderUrl("https://github.com/ModelingValueGroup/nelumbo/blob/a1df95c77ce1d13d9a392cb2ebb5fbe1886085ca/gradlew")
+//    forceHeaderCorrection = true
+}
+
 dependencies {
     implementation("org.modelingvalue:immutable-collections:4.1.0-BRANCHED")
 }
@@ -45,3 +51,4 @@ publishing {
         }
     }
 }
+
