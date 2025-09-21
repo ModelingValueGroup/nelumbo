@@ -26,8 +26,8 @@ plugins {
 }
 
 mvgcorrector {
-    setHeaderUrl("https://raw.githubusercontent.com/ModelingValueGroup/nelumbo/refs/heads/Syntax_Patterns/header-template.txt")
-//    forceHeaderCorrection = true
+    setHeaderUrl("file:header-template.txt")
+    forceHeaderCorrection = true
 }
 
 dependencies {
