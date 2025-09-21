@@ -22,12 +22,12 @@ plugins {
     id("com.gradle.enterprise") version ("3.5")
 }
 
-val inEclipse=System.getenv("GRADLE_ECLIPSE")
-println("Gradle: inEclipse="+inEclipse)
-if(inEclipse!=null && inEclipse.equals("true")) {
-	includeBuild("../immutable-collections") {
-	    dependencySubstitution {
-	       substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-	    }
-	}
+val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
+println("Gradle: inEclipse=$inEclipse")
+if (inEclipse != null && inEclipse == "true") {
+    includeBuild("../immutable-collections") {
+        dependencySubstitution {
+            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
+        }
+    }
 }
