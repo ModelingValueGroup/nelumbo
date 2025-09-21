@@ -27,7 +27,7 @@ plugins {
 
 mvgcorrector {
     setHeaderUrl("file:header-template.txt")
-    forceHeaderCorrection = true
+//    forceHeaderCorrection = true
 }
 
 dependencies {
