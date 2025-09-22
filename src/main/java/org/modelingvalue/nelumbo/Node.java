@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -29,15 +30,16 @@ import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.Token;
 
+@SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long     serialVersionUID = 7315776001191198132L;
+    private static final long serialVersionUID = 7315776001191198132L;
 
-    protected static final int    START            = 2;
+    protected static final int START = 2;
 
-    private int                   hashCode         = 0;
+    private int                   hashCode    = 0;
     private Map<Variable, Object> variables;
-    private int                   nrOfUnbound      = -1;
+    private int                   nrOfUnbound = -1;
 
     public Node(Functor functor, List<AstElement> elements, Object... args) {
         super(array(functor, elements, args));
@@ -94,6 +96,18 @@ public class Node extends StructImpl implements AstElement {
         return (List<AstElement>) super.get(1);
     }
 
+    public java.util.List<Node> nodes() {
+        java.util.List<Node> nodes = new ArrayList<>();
+        nodes.add(typeOrFunctor());
+        for (int i = 0; i < length(); i++) {
+            Object child = get(i);
+            if (child instanceof Node) {
+                nodes.add((Node) child);
+            }
+        }
+        return nodes;
+    }
+
     @Override
     public int hashCode() {
         if (hashCode == 0) {
@@ -102,7 +116,7 @@ public class Node extends StructImpl implements AstElement {
                 Object e = get(i);
                 r = 31 * r + (e == null ? 0 : e.hashCode());
             }
-            r = 31 * r + super.get(0).hashCode();
+            r        = 31 * r + super.get(0).hashCode();
             hashCode = r == 0 ? 1 : r;
         }
         return hashCode;
@@ -181,8 +195,8 @@ public class Node extends StructImpl implements AstElement {
         if (render != null) {
             return render.apply(this);
         }
-        Functor functor = functor();
-        StringBuilder sb = new StringBuilder();
+        Functor       functor = functor();
+        StringBuilder sb      = new StringBuilder();
         if (functor != null) {
             sb.append(functor.name());
         } else {
@@ -199,7 +213,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public final String toString(int i) {
-        Object v = get(i);
+        Object v      = get(i);
         String string = StringUtil.toString(v);
         if (v instanceof Node && render() != null && ((Node) v).render() != null) {
             Functor tf = functor();
@@ -267,7 +281,7 @@ public class Node extends StructImpl implements AstElement {
 
     private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
-        int i = idx[ii] + START;
+        int      i     = idx[ii] + START;
         if (ii < idx.length - 1) {
             Node s = (Node) array[i];
             array[i] = s.set(ii + 1, idx, val);
@@ -315,8 +329,8 @@ public class Node extends StructImpl implements AstElement {
         Type thisType = typeOf(thisVal);
         thisVal = thisVal instanceof Type ? null : thisVal;
         if (declVal instanceof Variable var) {
-            Object varVal = vars.get(var);
-            Type varType = typeOf(varVal);
+            Object varVal  = vars.get(var);
+            Type   varType = typeOf(varVal);
             varVal = varVal instanceof Type ? null : varVal;
             if (varVal != null) {
                 if (thisVal != null && !thisVal.equals(varVal)) {
@@ -337,6 +351,8 @@ public class Node extends StructImpl implements AstElement {
             }
         } else if (declVal instanceof Node declStruct && !(declVal instanceof Type)) {
             if (thisVal != null) {
+                //TODO @WIM: '!(thisVal instanceof Type)' seems always true here...because 'thisVal = thisVal instanceof Type ? null : thisVal;' (above)
+                //noinspection ConstantValue
                 if (thisVal instanceof Node && !(thisVal instanceof Type)) {
                     vars = ((Node) thisVal).getBinding(declStruct, vars, check);
                 } else {
@@ -363,7 +379,7 @@ public class Node extends StructImpl implements AstElement {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
-            Object bound = setBinding(declaration.get(i), thisVal, vars);
+            Object bound   = setBinding(declaration.get(i), thisVal, vars);
             if (!Objects.equals(bound, thisVal)) {
                 if (array == null) {
                     array = toArray();
@@ -458,10 +474,11 @@ public class Node extends StructImpl implements AstElement {
         return set(i, typed);
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected boolean atomic() {
         for (int i = 0; i < length(); i++) {
             Object v = get(i);
-            if (!(v instanceof Node) && !(v instanceof Type)) {
+            if (!(v instanceof Node)) {
                 return true;
             }
         }

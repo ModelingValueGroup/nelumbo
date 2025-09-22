@@ -36,6 +36,13 @@ dependencies {
 tasks {
     shadowJar {
         archiveClassifier.set("all")
+        doFirst {
+            // Remove previous artifacts before creating the new shadow jar
+            val libsDir = layout.buildDirectory.dir("libs")
+            libsDir.get().asFile.listFiles()?.forEach { f ->
+                if (f.isFile) f.delete()
+            }
+        }
     }
 }
 

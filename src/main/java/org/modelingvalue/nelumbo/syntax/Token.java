@@ -22,7 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.U;
 
-@SuppressWarnings("ClassCanBeRecord")
+@SuppressWarnings({"unused"})
 public class Token implements AstElement {
 
     private final TokenType type;
@@ -31,12 +31,14 @@ public class Token implements AstElement {
     private final int       position;   // position (column) in the line (0-based)
     private final int       index;      // position in the input stream (0-based)
     private final String    fileName;
+    private final int       numLines;       // number of lines of this token (1...n)
+    private final int       positionEnd;    // position (column) in the line (0-based) after the token
 
-    private Token           next;
-    private Token           previous;
+    private Token next;
+    private Token previous;
 
-    private Token           nextAll;
-    private Token           previousAll;
+    private Token nextAll;
+    private Token previousAll;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -45,12 +47,14 @@ public class Token implements AstElement {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type = type;
-        this.text = text;
-        this.line = line;
-        this.position = position;
-        this.index = index;
-        this.fileName = fileName;
+        this.type        = type;
+        this.text        = text;
+        this.line        = line;
+        this.position    = position;
+        this.index       = index;
+        this.fileName    = fileName;
+        this.numLines    = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
+        this.positionEnd = numLines == 1 ? position + text.length() : text.length() - text.lastIndexOf('\n');
     }
 
     public void setNext(Token next) {
@@ -113,12 +117,46 @@ public class Token implements AstElement {
         return line;
     }
 
+    public int lineEnd() {
+        return line + numLines - 1;
+    }
+
+    public int numLines() {
+        return numLines;
+    }
+
     public int position() {
         return position;
     }
 
+    public int positionEnd() {
+        return positionEnd;
+    }
+
+    public int numChars() {
+        return text.length();
+    }
+
     public int index() {
         return index;
+    }
+
+    public int indexEnd() {
+        return index + numChars();
+    }
+
+    public boolean contains(int l, int c) {
+        if (numLines == 1) {
+            return line == l && position <= c && c < positionEnd;
+        } else if (l < line || lineEnd() <= l) {
+            return false;
+        } else if (l == line) {
+            return position <= c;
+        } else if (l == lineEnd() - 1) {
+            return c < positionEnd;
+        } else {
+            return true;
+        }
     }
 
     public String fileName() {
@@ -183,7 +221,7 @@ public class Token implements AstElement {
 
     public List<Token> list(Token last) {
         List<Token> list = List.of(this);
-        Token t = next();
+        Token       t    = next();
         for (; t != last; t = t.next()) {
             list = list.add(t);
         }
@@ -192,7 +230,7 @@ public class Token implements AstElement {
 
     public List<Token> listAll(Token last) {
         List<Token> list = List.of(this);
-        Token t = nextAll();
+        Token       t    = nextAll();
         for (; t != last; t = t.nextAll()) {
             list = list.add(t);
         }
