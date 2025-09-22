@@ -45,4 +45,6 @@ public interface AstElement {
         return null;
     }
 
+    boolean isMeta();
+
 }

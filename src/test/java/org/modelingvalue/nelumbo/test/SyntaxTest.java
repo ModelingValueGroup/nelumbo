@@ -39,8 +39,8 @@ public class SyntaxTest extends NelumboTestBase {
     public void test1() {
         run(() -> {
             String example = """
-                    <Set> :: <Node>
-                    <Set> ::= { <[> <Node> <{> , <Node> <}> <]> }
+                    <Set>  ::  <Node>
+                    <Set>  ::= { <[> <Node> <{> , <Node> <}> <]> } #(44,55)
                     """;
             try {
                 TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();

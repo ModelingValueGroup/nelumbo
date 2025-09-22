@@ -198,4 +198,9 @@ public class Token implements AstElement {
         }
         return list.add(t);
     }
+
+    @Override
+    public boolean isMeta() {
+        return type == TokenType.META_OPERATOR;
+    }
 }

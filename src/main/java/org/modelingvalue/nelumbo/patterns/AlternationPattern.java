@@ -49,10 +49,10 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
         for (Pattern option : options()) {
             if (option.peekIs(token, parser)) {
-                return option.parse(token, group, precedence, parser, next, result);
+                return option.parse(token, group, parser, next, result);
             }
         }
         throw new ParseException("Expected " + this + " but found " + token.text() + " of type " + token.type(), token);
@@ -78,6 +78,19 @@ public class AlternationPattern extends Pattern {
     public String toString() {
         String string = options().toString();
         return "a(" + string.substring(5, string.length() - 1) + ")";
+    }
+
+    @Override
+    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+        List<Pattern> options = options();
+        for (int i = 0; i < options.size(); i++) {
+            Pattern pa = options.get(i);
+            Pattern pb = pa.setPresedence(precedence, p);
+            if (!pb.equals(pa)) {
+                options = options.replace(i, pb);
+            }
+        }
+        return set(0, options);
     }
 
 }

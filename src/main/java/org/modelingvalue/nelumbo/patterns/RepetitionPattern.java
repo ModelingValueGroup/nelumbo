@@ -48,10 +48,10 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
         Pattern repeated = repeated();
         while (next != null ? !next.peekIs(token, parser) : repeated.peekIs(token, parser)) {
-            token = repeated.parse(token, group, precedence, parser, next, result);
+            token = repeated.parse(token, group, parser, next, result);
         }
         return token;
     }
@@ -69,5 +69,10 @@ public class RepetitionPattern extends Pattern {
     @Override
     public String toString() {
         return "r(" + repeated() + ")";
+    }
+
+    @Override
+    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+        return set(0, repeated().setPresedence(precedence, p));
     }
 }

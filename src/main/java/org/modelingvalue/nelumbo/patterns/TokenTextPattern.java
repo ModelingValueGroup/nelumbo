@@ -49,7 +49,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
             result.add(token);
             token = token.next();
@@ -63,8 +63,13 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns patterns, int precedence) {
+    public Patterns patterns(Patterns patterns) {
         return Patterns.EMPTY.put(tokenText(), patterns);
+    }
+
+    @Override
+    public List<Pattern> fixed(List<Pattern> fixed, boolean[] stop) {
+        return fixed.add(this);
     }
 
     @Override

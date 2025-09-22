@@ -45,9 +45,8 @@ public final class ParseResult {
         return token;
     }
 
-    public int precedence() {
-        Integer precedence = functor.precedence();
-        return precedence != null ? precedence : Integer.MAX_VALUE;
+    public int leftPrecedence() {
+        return functor.leftPrecedence();
     }
 
     public void endPreParse(Functor functor, Token token) {

@@ -156,4 +156,10 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         }
         return t1 == null ? t2 : t1;
     }
+
+    @Override
+    public String toString() {
+        Map<Object, Patterns> map = map();
+        return map.isEmpty() ? functor().toString() : map.toString().substring(3);
+    }
 }

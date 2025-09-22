@@ -50,7 +50,7 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
             TokenType type = tokenType();
             result.add(token);
@@ -68,8 +68,13 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns patterns, int precedence) {
+    public Patterns patterns(Patterns patterns) {
         return Patterns.EMPTY.put(tokenType(), patterns);
+    }
+
+    @Override
+    public List<Pattern> fixed(List<Pattern> fixed, boolean[] stop) {
+        return fixed.add(this);
     }
 
     @Override

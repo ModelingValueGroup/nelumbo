@@ -199,16 +199,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public final String toString(int i) {
-        Object v = get(i);
-        String string = StringUtil.toString(v);
-        if (v instanceof Node && render() != null && ((Node) v).render() != null) {
-            Functor tf = functor();
-            Functor vf = ((Node) v).functor();
-            if (!tf.equals(vf) && tf.precedence() >= vf.precedence()) {
-                return "(" + string + ")";
-            }
-        }
-        return string;
+        return StringUtil.toString(get(i));
     }
 
     public Map<Terminal, int[]> terminals() {
@@ -485,6 +476,11 @@ public class Node extends StructImpl implements AstElement {
     public List<Token> tokens() {
         Token first = firstToken();
         return first != null ? first.list(lastToken()) : List.of();
+    }
+
+    @Override
+    public boolean isMeta() {
+        return false;
     }
 
 }

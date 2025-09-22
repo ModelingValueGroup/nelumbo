@@ -89,7 +89,7 @@ public final class Parser {
         if (token != null) {
             result = preParse(token, group, left);
             while (result != null) {
-                if (precedence >= result.precedence()) {
+                if (precedence >= result.leftPrecedence()) {
                     return left;
                 }
                 left = result.postParse(group, this);

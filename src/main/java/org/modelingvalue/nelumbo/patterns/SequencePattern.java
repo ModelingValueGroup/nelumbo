@@ -24,7 +24,6 @@ import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class SequencePattern extends Pattern {
@@ -64,11 +63,11 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
         List<Pattern> elements = elements();
         for (int i = 0; i < elements.size(); i++) {
             Pattern element = elements.get(i);
-            token = element.parse(token, group, precedence, parser, next(elements, i, next), result);
+            token = element.parse(token, group, parser, next(elements, i, next), result);
         }
         return token;
     }
@@ -80,24 +79,18 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns patterns, int precedence) {
-        List<Pattern> elements = elements();
-        int max = elements.size() - 1;
-        for (int i = 0; i <= max; i++) {
-            if (!elements.get(i).isFixed()) {
-                max = i;
+    public List<Pattern> fixed(List<Pattern> list, boolean[] stop) {
+        for (Pattern element : elements()) {
+            if (!element.isFixed()) {
+                stop[0] = true;
+                break;
+            }
+            list = element.fixed(list, stop);
+            if (stop[0]) {
                 break;
             }
         }
-        for (int i = max; i >= 0; i--) {
-            patterns = elements.get(i).patterns(patterns, precedence);
-        }
-        return patterns;
-    }
-
-    @Override
-    public boolean isFixed() {
-        return true;
+        return list;
     }
 
     @Override
@@ -128,6 +121,24 @@ public class SequencePattern extends Pattern {
     public String toString() {
         String string = elements().toString();
         return "s(" + string.substring(5, string.length() - 1) + ")";
+    }
+
+    @Override
+    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+        List<Pattern> elements = elements();
+        for (int i = 0; i < elements.size(); i++) {
+            Pattern pa = elements.get(i);
+            Pattern pb = pa.setPresedence(precedence, p);
+            if (!pb.equals(pa)) {
+                elements = elements.replace(i, pb);
+            }
+        }
+        return set(0, elements);
+    }
+
+    @Override
+    public boolean isFixed() {
+        return true;
     }
 
 }

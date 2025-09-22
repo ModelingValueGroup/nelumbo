@@ -37,8 +37,8 @@ public abstract class Pattern extends Node {
         return a(List.of(), options);
     }
 
-    public static NodeTypePattern n(Type nodeType) {
-        return n(List.of(), nodeType);
+    public static NodeTypePattern n(Type nodeType, Integer precedence) {
+        return n(List.of(), nodeType, precedence);
     }
 
     public static OptionalPattern o(Pattern optional) {
@@ -65,8 +65,8 @@ public abstract class Pattern extends Node {
         return new AlternationPattern(Type.PATTERN, ast, List.of(options));
     }
 
-    public static NodeTypePattern n(List<AstElement> ast, Type nodeType) {
-        return new NodeTypePattern(Type.PATTERN, ast, nodeType);
+    public static NodeTypePattern n(List<AstElement> ast, Type nodeType, Integer precedence) {
+        return new NodeTypePattern(Type.PATTERN, ast, nodeType, precedence);
     }
 
     public static OptionalPattern o(List<AstElement> ast, Pattern optional) {
@@ -100,14 +100,18 @@ public abstract class Pattern extends Node {
     @Override
     protected abstract Pattern struct(Object[] array);
 
-    public abstract Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException;
+    public abstract Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException;
 
     public boolean peekIs(Token token, Parser parser) throws ParseException {
         return false;
     }
 
-    public Patterns patterns(Patterns patterns, int precedence) {
-        return patterns;
+    public Patterns patterns(Patterns patterns) {
+        throw new UnsupportedOperationException();
+    }
+
+    public List<Pattern> fixed(List<Pattern> fixed, boolean[] stop) {
+        return fixed;
     }
 
     public abstract boolean isFixed();
@@ -118,6 +122,15 @@ public abstract class Pattern extends Node {
 
     public List<Type> args() {
         return List.of();
+    }
+
+    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+        return this;
+    }
+
+    @Override
+    public Pattern set(int i, Object... a) {
+        return (Pattern) super.set(i, a);
     }
 
 }

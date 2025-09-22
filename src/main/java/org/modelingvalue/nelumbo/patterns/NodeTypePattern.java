@@ -49,11 +49,21 @@ public class NodeTypePattern extends Pattern {
         return (Type) get(0);
     }
 
+    public int leftPrecedence() {
+        Integer precedence = (Integer) get(1);
+        return precedence != null ? precedence : Integer.MAX_VALUE;
+    }
+
+    public int innerPrecedence() {
+        Integer precedence = (Integer) get(1);
+        return precedence != null ? precedence : Integer.MIN_VALUE;
+    }
+
     @Override
-    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
         if (!result.isDone()) {
             Type type = nodeType();
-            Node node = parser.parseNode(token, precedence, type.group());
+            Node node = parser.parseNode(token, innerPrecedence(), type.group());
             if (!type.isAssignableFrom(node.type())) {
                 throw new ParseException("Expected element of type " + type + " but found " + node + " of type " + node.type(), node);
             }
@@ -69,13 +79,18 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns patterns, int precedence) {
-        return Patterns.EMPTY.put(nodeType(), patterns).setPrecedence(precedence).setExpected(nodeType());
+    public Patterns patterns(Patterns patterns) {
+        return Patterns.EMPTY.put(nodeType(), patterns).setPrecedence(innerPrecedence()).setExpected(nodeType());
     }
 
     @Override
     public boolean isFixed() {
         return true;
+    }
+
+    @Override
+    public List<Pattern> fixed(List<Pattern> fixed, boolean[] stop) {
+        return fixed.add(this);
     }
 
     @Override
@@ -85,7 +100,17 @@ public class NodeTypePattern extends Pattern {
 
     @Override
     public String toString() {
-        return "n(" + nodeType() + ")";
+        Integer precedence = (Integer) get(1);
+        return "n(" + nodeType() + (precedence != null ? precedence : "") + ")";
+    }
+
+    @Override
+    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+        int i = p[0];
+        if (i < precedence.size() - 1) {
+            p[0]++;
+        }
+        return set(1, precedence.get(i));
     }
 
 }

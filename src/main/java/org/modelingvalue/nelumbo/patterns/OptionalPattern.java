@@ -48,10 +48,10 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, int precedence, Parser parser, Pattern next, ParseResult result) throws ParseException {
+    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
         Pattern optional = optional();
         if (optional.peekIs(token, parser) || (next != null && !next.peekIs(token, parser))) {
-            token = optional.parse(token, group, precedence, parser, next, result);
+            token = optional.parse(token, group, parser, next, result);
         }
         return token;
     }
@@ -69,6 +69,11 @@ public class OptionalPattern extends Pattern {
     @Override
     public String toString() {
         return "o(" + optional() + ")";
+    }
+
+    @Override
+    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+        return set(0, optional().setPresedence(precedence, p));
     }
 
 }

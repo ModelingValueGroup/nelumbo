@@ -36,16 +36,16 @@ public class Functor extends Node {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
-    public static Functor of(Pattern pattern, Integer precedence, Type result, Constructor<? extends Node> constructor) {
-        return new Functor(List.of(), pattern, precedence, result, constructor);
+    public static Functor of(Pattern pattern, Type result, Constructor<? extends Node> constructor) {
+        return new Functor(List.of(), pattern, result, constructor);
     }
 
-    public static Functor of(Pattern pattern, Integer precedence, Type result, ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function) {
-        return new Functor(List.of(), pattern, precedence, result, function);
+    public static Functor of(Pattern pattern, Type result, ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function) {
+        return new Functor(List.of(), pattern, result, function);
     }
 
-    public static Functor of(Pattern pattern, Integer precedence, Type result) {
-        return new Functor(List.of(), pattern, precedence, result, null);
+    public static Functor of(Pattern pattern, Type result) {
+        return new Functor(List.of(), pattern, result, null);
     }
 
     private String     name;
@@ -68,24 +68,40 @@ public class Functor extends Node {
         return (Pattern) get(0);
     }
 
-    public Integer precedence() {
-        return (Integer) get(1);
-    }
-
     public Type resultType() {
-        return (Type) get(2);
+        return (Type) get(1);
     }
 
     @SuppressWarnings("unchecked")
     public Constructor<? extends Node> constructor() {
-        Object val = get(3);
+        Object val = get(2);
         return val instanceof Constructor ? (Constructor<? extends Node>) val : null;
     }
 
     @SuppressWarnings("unchecked")
     public ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function() {
-        Object val = get(3);
+        Object val = get(2);
         return val instanceof ThrowingBiFunction ? (ThrowingBiFunction<List<AstElement>, Object[], ? extends Node>) val : null;
+    }
+
+    public Type leftType() {
+        Pattern pattern = pattern();
+        if (pattern instanceof SequencePattern sp) {
+            if (sp.elements().first() instanceof NodeTypePattern ntp) {
+                return ntp.nodeType();
+            }
+        }
+        return null;
+    }
+
+    public int leftPrecedence() {
+        Pattern pattern = pattern();
+        if (pattern instanceof SequencePattern sp) {
+            if (sp.elements().first() instanceof NodeTypePattern ntp) {
+                return ntp.leftPrecedence();
+            }
+        }
+        throw new UnsupportedOperationException();
     }
 
     public String name() {
@@ -126,17 +142,17 @@ public class Functor extends Node {
     }
 
     public Patterns patterns() {
-        Integer precedence = precedence();
-        if (precedence == null) {
-            precedence = Integer.MIN_VALUE;
+        List<Pattern> fixed = pattern().fixed(List.of(), new boolean[]{false});
+        Patterns patterns = Patterns.EMPTY.setFunctor(this);
+        for (Pattern pattern : fixed.reverse()) {
+            patterns = pattern.patterns(patterns);
         }
-        return pattern().patterns(Patterns.EMPTY.setFunctor(this).setPrecedence(precedence), precedence);
+        return patterns;
     }
 
     @SuppressWarnings("unchecked")
     public Node postParse(String group, Parser parser, ParseResult result) throws ParseException {
-        Integer precedence = precedence();
-        pattern().parse(result.nextToken(), group, precedence != null ? precedence : Integer.MIN_VALUE, parser, null, result);
+        pattern().parse(result.nextToken(), group, parser, null, result);
         return construct(result.elements(), result.args().toArray());
     }
 

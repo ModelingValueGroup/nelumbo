@@ -17,7 +17,8 @@
 package org.modelingvalue.nelumbo;
 
 import static org.modelingvalue.nelumbo.patterns.Pattern.*;
-import static org.modelingvalue.nelumbo.syntax.TokenType.*;
+import static org.modelingvalue.nelumbo.syntax.TokenType.ENDOFFILE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.NEWLINE;
 
 import java.io.PrintStream;
 import java.io.Serial;
@@ -41,6 +42,7 @@ import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
+import org.modelingvalue.nelumbo.patterns.SequencePattern;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -160,7 +162,7 @@ public final class KnowledgeBase {
     }
 
     private void addType(Type type) {
-        register(Functor.of(t(type.toString()), null, Type.TYPE(), (t, a) -> {
+        register(Functor.of(t(type.toString()), Type.TYPE(), (t, a) -> {
             return type.setAstElements(t);
         }));
     }
@@ -168,24 +170,29 @@ public final class KnowledgeBase {
     private Pattern pattern(List<AstElement> elements) {
         List<Pattern> patterns = List.of();
         for (AstElement e : elements) {
-            Pattern pattern;
-            if (e instanceof Token t) {
-                String text = t.text();
-                if (t.type() == TokenType.STRING) {
-                    text = text.substring(1, text.length() - 1);
-                }
-                pattern = t(text);
-            } else if (e instanceof Type t) {
-                TokenType tt = t.tokenType();
-                if (tt != null) {
-                    pattern = t(tt);
+            if (!e.isMeta()) {
+                if (e instanceof Token t) {
+                    String text = t.text();
+                    if (t.type() == TokenType.STRING) {
+                        text = text.substring(1, text.length() - 1);
+                    }
+                    patterns = patterns.add(t(text));
+                } else if (e instanceof Type t) {
+                    TokenType tt = t.tokenType();
+                    if (tt != null) {
+                        patterns = patterns.add(t(tt));
+                    } else {
+                        patterns = patterns.add(n(t, null));
+                    }
                 } else {
-                    pattern = n(t);
+                    Pattern pattern = (Pattern) e;
+                    if (pattern instanceof SequencePattern sp) {
+                        patterns = patterns.addAll(sp.elements());
+                    } else {
+                        patterns = patterns.add(pattern);
+                    }
                 }
-            } else {
-                pattern = (Pattern) e;
             }
-            patterns = patterns.add(pattern);
         }
         return patterns.size() > 1 ? s(patterns.toArray(i -> new Pattern[i])) : patterns.first();
     }
@@ -196,16 +203,15 @@ public final class KnowledgeBase {
             for (Type type : Type.predefined()) {
                 addType(type);
             }
+
             for (TokenType tokenType : TokenType.values()) {
                 if (!tokenType.skip()) {
                     addType(new Type(tokenType));
                 }
             }
-            register(Functor.of(s(t("("), n(Type.__), t(")")), null, Type.__, (t, a) -> {
-                return (Node) a[0];
-            }));
-            register(Functor.of(s(r(n(Type.ROOT)), t(ENDOFFILE)), //
-                    null, Type.ROOT.list(Type.TOP_GROUP), (t, a) -> {
+
+            register(Functor.of(s(r(n(Type.ROOT, null)), t(ENDOFFILE)), //
+                    Type.ROOT.list(Type.TOP_GROUP), (t, a) -> {
                         ListNode roots = new ListNode(t, Type.ROOT);
                         for (int i = 0; i < a.length; i++) {
                             if (a[i] instanceof Node root) {
@@ -215,28 +221,16 @@ public final class KnowledgeBase {
                         return roots;
                     }));
 
-            register(Functor.of(s(t(TYPE), t("::"), n(Type.TYPE()), r(s(t(","), n(Type.TYPE()))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
-                    null, Type.TYPE(), (t, a) -> {
-                        String name = (String) a[0];
-                        name = name.substring(1, name.length() - 1);
-                        Set<Type> supers = Set.of();
-                        for (int i = 1; i < a.length && a[i] instanceof Type; i++) {
-                            supers = supers.add((Type) a[i]);
-                        }
-                        String group = a[a.length - 1] instanceof String ? (String) a[a.length - 1] : Type.DEFAULT_GROUP;
-                        Type type = new Type(t, name, supers, group);
-                        CURRENT.get().addType(type);
-                        return type;
-                    }));
-
-            Set<TokenType> excluded = Set.of(TokenType.TYPE, TokenType.META_OPERATOR, TokenType.NEWLINE, TokenType.ERROR, TokenType.ENDOFFILE);
-            List<TokenType> tokenTypes = List.of(TokenType.values()).exclude(TokenType::skip).exclude(excluded::contains).asList();
-            List<Pattern> tokenTypePatterns = tokenTypes.map(tt -> (Pattern) t(tt)).asList();
-            List<Pattern> elementPatterns = tokenTypePatterns.add(n(Type.PATTERN)).add(n(Type.TYPE()));
+            List<TokenType> tokenTypes = List.of(TokenType.NAME, TokenType.OPERATOR, TokenType.STRING, //
+                    TokenType.SEMICOLON, TokenType.SINGLEQUOTE, TokenType.NEWLINE, TokenType.ENDOFFILE);
+            List<Pattern> tokenTypePatternsNoComma = tokenTypes.map(tt -> (Pattern) t(tt)).asList();
+            List<Pattern> elementPatternsNoComma = tokenTypePatternsNoComma.add(n(Type.PATTERN, Integer.MAX_VALUE)).add(n(Type.TYPE(), Integer.MAX_VALUE));
+            RepetitionPattern patternRepetitionNoComma = r(a(elementPatternsNoComma.toArray(i -> new Pattern[i])));
+            List<Pattern> elementPatterns = elementPatternsNoComma.prepend(t(TokenType.COMMA));
             RepetitionPattern patternRepetition = r(a(elementPatterns.toArray(i -> new Pattern[i])));
 
             register(Functor.of(s(t("<(>"), patternRepetition, r(s(t("<|>"), patternRepetition)), t("<)>")), //
-                    null, Type.PATTERN, (t1, a1) -> {
+                    Type.PATTERN, (t1, a1) -> {
                         List<Pattern> options = List.of();
                         List<AstElement> option = null;
                         for (AstElement e : t1) {
@@ -252,14 +246,24 @@ public final class KnowledgeBase {
                         return a(t1, options.toArray(i -> new Pattern[i]));
                     }));
 
+            register(Functor.of(s(t("{"), patternRepetition, t("}")), //
+                    Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
+
+            register(Functor.of(s(t("("), patternRepetition, t(")")), //
+                    Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
+
+            register(Functor.of(s(t("["), patternRepetition, t("]")), //
+                    Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
+
             register(Functor.of(s(t("<{>"), patternRepetition, t("<}>")), //
-                    null, Type.PATTERN, (t1, a1) -> r(t1, pattern(t1))));
+                    Type.PATTERN, (t1, a1) -> r(t1, pattern(t1))));
 
             register(Functor.of(s(t("<[>"), patternRepetition, t("<]>")), //
-                    null, Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
+                    Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
 
-            register(Functor.of(s(n(Type.TYPE()), t("::="), patternRepetition, o(s(t("#"), t(TokenType.NUMBER))), o(s(t("@"), t(TokenType.QNAME))), t(NEWLINE)), //
-                    null, Type.FUNCTOR, (t1, a1) -> {
+            register(Functor.of(s(n(Type.TYPE(), null), t("::="), s(patternRepetitionNoComma, //
+                    o(s(t("#"), a(t(TokenType.NUMBER), s(t("("), t(TokenType.NUMBER), r(s(t(","), t(TokenType.NUMBER))), t(")"))))), // 
+                    o(s(t("@"), t(TokenType.QNAME)))), t(NEWLINE)), Type.FUNCTOR, (t1, a1) -> {
                         Type type = (Type) t1.get(0);
                         int max = t1.size() - 1;
                         Optional<AstElement> o = t1.findFirst(e -> e instanceof Token t && t.text().equals("@"));
@@ -273,15 +277,46 @@ public final class KnowledgeBase {
                                 throw new ParseException(e1, "Exception during constructor of new Node", className);
                             }
                         }
-                        Integer precedence = null;
+                        List<Integer> precedence = List.of();
                         o = t1.findFirst(e -> e instanceof Token t && t.text().equals("#"));
                         if (o.isPresent()) {
                             max = t1.firstIndexOf(o.get());
-                            precedence = Integer.parseInt(((Token) t1.get(max + 1)).text());
+                            Token token = (Token) t1.get(max + 1);
+                            if (token.text().equals("(")) {
+                                token = token.next();
+                                precedence = precedence.add(Integer.parseInt(token.text()));
+                                while (token.next().text().equals(",")) {
+                                    token = token.next().next();
+                                    precedence = precedence.add(Integer.parseInt(token.text()));
+                                }
+                            } else {
+                                precedence = precedence.add(Integer.parseInt(token.text()));
+                            }
                         }
                         Pattern pattern = pattern(t1.sublist(2, max));
-                        return new Functor(t1, pattern, precedence, type, constructor);
+                        if (!precedence.isEmpty()) {
+                            pattern = pattern.setPresedence(precedence, new int[]{0});
+                        }
+                        return new Functor(t1, pattern, type, constructor);
                     }));
+
+            register(Functor.of(s(t(TokenType.TYPE), t("::"), n(Type.TYPE(), null), r(s(t(","), n(Type.TYPE(), null))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
+                    Type.TYPE(), (t, a) -> {
+                        String name = (String) a[0];
+                        name = name.substring(1, name.length() - 1);
+                        Set<Type> supers = Set.of();
+                        for (int i = 1; i < a.length && a[i] instanceof Type; i++) {
+                            supers = supers.add((Type) a[i]);
+                        }
+                        String group = a[a.length - 1] instanceof String ? (String) a[a.length - 1] : Type.DEFAULT_GROUP;
+                        Type type = new Type(t, name, supers, group);
+                        CURRENT.get().addType(type);
+                        return type;
+                    }));
+
+            //            register(Functor.of(s(t("("), n(Type.__, null), t(")")), Type.__, (t, a) -> {
+            //                return (Node) a[0];
+            //            }));
 
             //            // Functors
             //            register(InfixParselet.of(Type.ROOT, Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
@@ -860,10 +895,10 @@ public final class KnowledgeBase {
         }
     }
 
-    public void register(Functor pattern) {
-        String group = pattern.resultType().group();
-        Patterns patterns = pattern.patterns();
-        boolean post = patterns.a().toKeys().anyMatch(Type.class::isInstance);
+    public void register(Functor functor) {
+        boolean post = functor.leftType() != null;
+        String group = functor.resultType().group();
+        Patterns patterns = functor.patterns();
         (post ? postPatterns : prePatterns).updateAndGet(m -> m.put(group, patterns.merge(m.get(group))));
     }
 
