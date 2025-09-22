@@ -168,13 +168,24 @@ public final class KnowledgeBase {
     private Pattern pattern(List<AstElement> elements) {
         List<Pattern> patterns = List.of();
         for (AstElement e : elements) {
+            Pattern pattern;
             if (e instanceof Token t) {
-                patterns = patterns.add(t(t.text()));
+                String text = t.text();
+                if (t.type() == TokenType.STRING) {
+                    text = text.substring(1, text.length() - 1);
+                }
+                pattern = t(text);
             } else if (e instanceof Type t) {
-                patterns = patterns.add(n(t));
+                TokenType tt = t.tokenType();
+                if (tt != null) {
+                    pattern = t(tt);
+                } else {
+                    pattern = n(t);
+                }
             } else {
-                patterns = patterns.add((Pattern) e);
+                pattern = (Pattern) e;
             }
+            patterns = patterns.add(pattern);
         }
         return patterns.size() > 1 ? s(patterns.toArray(i -> new Pattern[i])) : patterns.first();
     }
@@ -182,8 +193,13 @@ public final class KnowledgeBase {
     @SuppressWarnings({"unchecked", "CodeBlock2Expr"})
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
-            for (Type predefined : Type.predefined()) {
-                addType(predefined);
+            for (Type type : Type.predefined()) {
+                addType(type);
+            }
+            for (TokenType tokenType : TokenType.values()) {
+                if (!tokenType.skip()) {
+                    addType(new Type(tokenType));
+                }
             }
             register(Functor.of(s(t("("), n(Type.__), t(")")), null, Type.__, (t, a) -> {
                 return (Node) a[0];
