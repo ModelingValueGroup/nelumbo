@@ -40,7 +40,8 @@ public class SyntaxTest extends NelumboTestBase {
         run(() -> {
             String example = """
                     <Set>  ::  <Node>
-                    <Set>  ::= { <[> <Node> <{> , <Node> <}> <]> } #(44,55)
+                    <Set>  ::= { <[> <Node> <{> , <Node> <}> <]> } #10 #5,
+                               <Set> + <Node> #40
                     """;
             try {
                 TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();

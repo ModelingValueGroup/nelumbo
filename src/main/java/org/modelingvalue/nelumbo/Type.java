@@ -220,6 +220,9 @@ public class Type extends Node {
     }
 
     public Type list(String group) {
+        if (!group.equals(group())) {
+            return new Type(this, group);
+        }
         if (list == null) {
             list = new Type(this, group);
         }
