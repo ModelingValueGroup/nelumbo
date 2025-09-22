@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -29,6 +30,7 @@ import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.Token;
 
+@SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
     @Serial
     private static final long     serialVersionUID = 7315776001191198132L;
@@ -92,6 +94,18 @@ public class Node extends StructImpl implements AstElement {
     @SuppressWarnings("unchecked")
     public final List<AstElement> astElements() {
         return (List<AstElement>) super.get(1);
+    }
+
+    public java.util.List<Node> nodes() {
+        java.util.List<Node> nodes = new ArrayList<>();
+        nodes.add(typeOrFunctor());
+        for (int i = 0; i < length(); i++) {
+            Object child = get(i);
+            if (child instanceof Node) {
+                nodes.add((Node) child);
+            }
+        }
+        return nodes;
     }
 
     @Override
@@ -328,6 +342,8 @@ public class Node extends StructImpl implements AstElement {
             }
         } else if (declVal instanceof Node declStruct && !(declVal instanceof Type)) {
             if (thisVal != null) {
+                //TODO @WIM: '!(thisVal instanceof Type)' seems always true here...because 'thisVal = thisVal instanceof Type ? null : thisVal;' (above)
+                //noinspection ConstantValue
                 if (thisVal instanceof Node && !(thisVal instanceof Type)) {
                     vars = ((Node) thisVal).getBinding(declStruct, vars, check);
                 } else {
@@ -449,10 +465,11 @@ public class Node extends StructImpl implements AstElement {
         return set(i, typed);
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected boolean atomic() {
         for (int i = 0; i < length(); i++) {
             Object v = get(i);
-            if (!(v instanceof Node) && !(v instanceof Type)) {
+            if (!(v instanceof Node)) {
                 return true;
             }
         }

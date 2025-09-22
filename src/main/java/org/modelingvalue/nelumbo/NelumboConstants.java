@@ -14,44 +14,10 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-defaultTasks("mvgCorrector", "test", "publish", "mvgTagger")
+package org.modelingvalue.nelumbo;
 
-plugins {
-    `java-library`
-    `maven-publish`
-    id("org.modelingvalue.gradle.mvgplugin") version "1.1.3"
-    id("com.gradleup.shadow") version "9.0.0-beta2"
-    idea
-    eclipse
+@SuppressWarnings("unused")
+public interface NelumboConstants {
+    String NAME      = "nelumbo";
+    String EXTENSION = "nl";
 }
-
-mvgcorrector {
-    setHeaderUrl("file:header-template.txt")
-//    forceHeaderCorrection = true
-}
-
-dependencies {
-    implementation("org.modelingvalue:immutable-collections:4.1.0-BRANCHED")
-}
-tasks {
-    shadowJar {
-        archiveClassifier.set("all")
-        doFirst {
-            // Remove previous artifacts before creating the new shadow jar
-            val libsDir = layout.buildDirectory.dir("libs")
-            libsDir.get().asFile.listFiles()?.forEach { f ->
-                if (f.isFile) f.delete()
-            }
-        }
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("nelumbo") {
-            from(components["java"])
-            // artifact(tasks.shadowJar)
-        }
-    }
-}
-
