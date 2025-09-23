@@ -47,10 +47,6 @@ public class Type extends Node {
     public static final Type   STRING           = new Type(String.class);
     public static final Type   PATTERN          = new Type("Pattern", SYNTAX_GROUP, Type.NODE);
     //
-    public static final Type   TYPE_NAME        = new Type("TypeName", Type.NODE);
-    public static final Type   VAR_NAME         = new Type("VarName", Type.NODE);
-    public static final Type   NATIVE           = new Type("Native", Type.NODE);
-    public static final Type   PRECEDENCE       = new Type("Precedence", Type.NODE);
     public static final Type   FACTS            = new Type("Facts", Type.NODE);
     public static final Type   FALSEHOODS       = new Type("Falsehoods", Type.NODE);
     //

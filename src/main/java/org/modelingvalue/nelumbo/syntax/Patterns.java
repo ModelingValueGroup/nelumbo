@@ -45,7 +45,7 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         return new Patterns(a().put(key, patterns), b(), c(), d());
     }
 
-    public Patterns setPrecedence(int precedence) {
+    public Patterns setPrecedence(Integer precedence) {
         return new Patterns(a(), b(), precedence, d());
     }
 
@@ -152,7 +152,7 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
 
     private static <T> T merge(T t1, T t2) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Non deterministic pattern merge " + t1 + " <>  " + t2);
         }
         return t1 == null ? t2 : t1;
     }

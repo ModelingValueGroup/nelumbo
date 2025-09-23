@@ -65,7 +65,7 @@ public final class KnowledgeBase {
                                                                                                                  } else {
                                                                                                                      for (int i = 0; i < l.size(); i++) {
                                                                                                                          Rule r = l.get(i);
-                                                                                                                         if (r.consequence().equals(e.consequence()) &&   //
+                                                                                                                         if (r.consequence().equals(e.consequence()) &&                                                                                          //
                                                                                                                                  r.condition().contains(e.condition())) {
                                                                                                                              return l;
                                                                                                                          }
@@ -74,6 +74,13 @@ public final class KnowledgeBase {
                                                                                                                  }
                                                                                                              };
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
+
+    private static final List<TokenType>                                                TOKEN_TYPES          = List.of(TokenType.NAME, TokenType.OPERATOR, TokenType.STRING, TokenType.SEMICOLON, TokenType.SINGLEQUOTE, TokenType.NEWLINE, TokenType.ENDOFFILE);
+    private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(tt -> (Pattern) t(tt)).asList().add(n(Type.PATTERN, Integer.MAX_VALUE)).add(n(Type.TYPE(), Integer.MAX_VALUE));
+    private static final RepetitionPattern                                              REPETITION_NO_COMMA  = r(a(PATTERNS_NO_COMMA.toArray(i -> new Pattern[i])));
+    private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(TokenType.COMMA));
+    private static final RepetitionPattern                                              REPETITION           = r(a(PATTERNS.toArray(i -> new Pattern[i])));
+
     public static final KnowledgeBase                                                   BASE                 = new KnowledgeBase(null).initBase();
 
     public static void registerFunctorSetter(Class<? extends Node> clazz, Consumer<Functor> setter) {
@@ -166,6 +173,12 @@ public final class KnowledgeBase {
         }));
     }
 
+    private void addVariable(Variable var) {
+        register(Functor.of(t(var.toString()), var.type(), (t, a) -> {
+            return var.setAstElements(t);
+        }));
+    }
+
     private Pattern pattern(List<AstElement> elements) {
         List<Pattern> patterns = List.of();
         for (AstElement e : elements) {
@@ -218,15 +231,7 @@ public final class KnowledgeBase {
                         return roots.setAstElements(roots.astElements().add(t.last()));
                     }));
 
-            List<TokenType> tokenTypes = List.of(TokenType.NAME, TokenType.OPERATOR, TokenType.STRING, //
-                    TokenType.SEMICOLON, TokenType.SINGLEQUOTE, TokenType.NEWLINE, TokenType.ENDOFFILE);
-            List<Pattern> tokenTypePatternsNoComma = tokenTypes.map(tt -> (Pattern) t(tt)).asList();
-            List<Pattern> elementPatternsNoComma = tokenTypePatternsNoComma.add(n(Type.PATTERN, Integer.MAX_VALUE)).add(n(Type.TYPE(), Integer.MAX_VALUE));
-            RepetitionPattern patternRepetitionNoComma = r(a(elementPatternsNoComma.toArray(i -> new Pattern[i])));
-            List<Pattern> elementPatterns = elementPatternsNoComma.prepend(t(TokenType.COMMA));
-            RepetitionPattern patternRepetition = r(a(elementPatterns.toArray(i -> new Pattern[i])));
-
-            register(Functor.of(s(t("<(>"), patternRepetition, r(s(t("<|>"), patternRepetition)), t("<)>")), //
+            register(Functor.of(s(t("<(>"), REPETITION, r(s(t("<|>"), REPETITION)), t("<)>")), //
                     Type.PATTERN, (t1, a1) -> {
                         List<Pattern> options = List.of();
                         List<AstElement> option = null;
@@ -243,22 +248,22 @@ public final class KnowledgeBase {
                         return a(t1, options.toArray(i -> new Pattern[i]));
                     }));
 
-            register(Functor.of(s(t("{"), patternRepetition, t("}")), //
+            register(Functor.of(s(t("{"), REPETITION, t("}")), //
                     Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
 
-            register(Functor.of(s(t("("), patternRepetition, t(")")), //
+            register(Functor.of(s(t("("), REPETITION, t(")")), //
                     Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
 
-            register(Functor.of(s(t("["), patternRepetition, t("]")), //
+            register(Functor.of(s(t("["), REPETITION, t("]")), //
                     Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
 
-            register(Functor.of(s(t("<{>"), patternRepetition, t("<}>")), //
+            register(Functor.of(s(t("<{>"), REPETITION, t("<}>")), //
                     Type.PATTERN, (t1, a1) -> r(t1, pattern(t1))));
 
-            register(Functor.of(s(t("<[>"), patternRepetition, t("<]>")), //
+            register(Functor.of(s(t("<[>"), REPETITION, t("<]>")), //
                     Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
 
-            SequencePattern patternSequence = s(patternRepetitionNoComma, r(s(t("#"), a(t(TokenType.NUMBER)))), o(s(t("@"), t(TokenType.QNAME))));
+            SequencePattern patternSequence = s(REPETITION_NO_COMMA, r(s(t("#"), a(t(TokenType.NUMBER)))), o(s(t("@"), t(TokenType.QNAME))));
 
             register(Functor.of(s(n(Type.TYPE(), null), t("::="), patternSequence, r(s(t(","), patternSequence)), t(NEWLINE)), Type.FUNCTOR, (t1, a1) -> {
                 Type type = (Type) t1.get(0);
@@ -277,6 +282,7 @@ public final class KnowledgeBase {
                             }
                             Functor functor = new Functor(ast, pattern, type, constructor);
                             roots = new ListNode(List.of(), roots, functor);
+                            CURRENT.get().register(functor);
                             ast = pttrn = List.of();
                             constructor = null;
                             precedence = List.of();
@@ -314,6 +320,27 @@ public final class KnowledgeBase {
                         Type type = new Type(t, name, supers, group);
                         CURRENT.get().addType(type);
                         return new ListNode(List.of(), Type.ROOT, type);
+                    }));
+
+            register(Functor.of(s(n(Type.TYPE(), null), t(TokenType.NAME), r(s(t(","), t(TokenType.NAME))), t(NEWLINE)), //
+                    Type.VARIABLE, (t, a) -> {
+                        Type type = (Type) t.get(0);
+                        ListNode roots = new ListNode(t.sublist(0, 1), Type.ROOT);
+                        for (int i = 1; i < t.size() - 1; i++) {
+                            Token token = (Token) t.get(i);
+                            Token comma = null;
+                            if (token.text().equals(",")) {
+                                comma = token;
+                                token = (Token) t.get(++i);
+                            }
+                            Variable var = new Variable(List.of(token), type, token.text());
+                            roots = new ListNode(List.of(), roots, var);
+                            if (comma != null) {
+                                roots.setAstElements(roots.astElements().add(comma));
+                            }
+                            CURRENT.get().addVariable(var);
+                        }
+                        return roots.setAstElements(roots.astElements().add(t.last()));
                     }));
 
             //            register(Functor.of(s(t("("), n(Type.__, null), t(")")), Type.__, (t, a) -> {

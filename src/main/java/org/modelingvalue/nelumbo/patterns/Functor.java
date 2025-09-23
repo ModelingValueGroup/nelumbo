@@ -147,7 +147,7 @@ public class Functor extends Node {
         for (Pattern pattern : fixed.reverse()) {
             patterns = pattern.patterns(patterns);
         }
-        return patterns;
+        return patterns.setPrecedence(null).setExpected(null);
     }
 
     @SuppressWarnings("unchecked")
