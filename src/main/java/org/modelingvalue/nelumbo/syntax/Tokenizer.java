@@ -83,7 +83,7 @@ public class Tokenizer {
             //adjust position:
             position += text.replaceAll(".*\\v", "").length();
         }
-        addToken(tokens, TokenType.ENDOFFILE, "EOF", line, position, index);
+        addToken(tokens, TokenType.ENDOFFILE, "", line, position, index);
         return new TokenizerResult(tokens);
     }
 

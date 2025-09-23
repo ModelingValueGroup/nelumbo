@@ -27,18 +27,18 @@ public class Token implements AstElement {
 
     private final TokenType type;
     private final String    text;
-    private final int       line;       // line number in the input file (0-based)
-    private final int       position;   // position (column) in the line (0-based)
-    private final int       index;      // position in the input stream (0-based)
+    private final int       line;        // line number in the input file (0-based)
+    private final int       position;    // position (column) in the line (0-based)
+    private final int       index;       // position in the input stream (0-based)
     private final String    fileName;
-    private final int       numLines;       // number of lines of this token (1...n)
-    private final int       positionEnd;    // position (column) in the line (0-based) after the token
+    private final int       numLines;    // number of lines of this token (1...n)
+    private final int       positionEnd; // position (column) in the line (0-based) after the token
 
-    private Token next;
-    private Token previous;
+    private Token           next;
+    private Token           previous;
 
-    private Token nextAll;
-    private Token previousAll;
+    private Token           nextAll;
+    private Token           previousAll;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -47,13 +47,13 @@ public class Token implements AstElement {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type        = type;
-        this.text        = text;
-        this.line        = line;
-        this.position    = position;
-        this.index       = index;
-        this.fileName    = fileName;
-        this.numLines    = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
+        this.type = type;
+        this.text = text;
+        this.line = line;
+        this.position = position;
+        this.index = index;
+        this.fileName = fileName;
+        this.numLines = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
         this.positionEnd = numLines == 1 ? position + text.length() : text.length() - text.lastIndexOf('\n');
     }
 
@@ -221,20 +221,22 @@ public class Token implements AstElement {
 
     public List<Token> list(Token last) {
         List<Token> list = List.of(this);
-        Token       t    = next();
-        for (; t != last; t = t.next()) {
+        Token t = this;
+        while (t != last) {
+            t = t.next();
             list = list.add(t);
         }
-        return list.add(t);
+        return list;
     }
 
     public List<Token> listAll(Token last) {
         List<Token> list = List.of(this);
-        Token       t    = nextAll();
-        for (; t != last; t = t.nextAll()) {
+        Token t = this;
+        while (t != last) {
+            t = t.nextAll();
             list = list.add(t);
         }
-        return list.add(t);
+        return list;
     }
 
     @Override
