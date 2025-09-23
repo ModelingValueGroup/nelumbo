@@ -131,7 +131,7 @@ public class Functor extends Node {
             try {
                 return constructor.newInstance(this, elements, args);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
-                throw new ParseException(e, "Exception during createNode()", AstElement.firstToken(elements));
+                throw new ParseException(e, "Exception during Node construction", elements.toArray(i -> new AstElement[i]));
             }
         }
         ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function = function();

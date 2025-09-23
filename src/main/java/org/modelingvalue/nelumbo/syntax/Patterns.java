@@ -136,7 +136,7 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
                 }
             }
         }
-        throw new ParseException("no functor found for type " + node.type(), node);
+        throw new ParseException("No functor found for type " + node.type(), node);
     }
 
     public Patterns merge(Patterns patterns) {

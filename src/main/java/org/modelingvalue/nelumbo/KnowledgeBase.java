@@ -166,22 +166,6 @@ public final class KnowledgeBase {
         }));
     }
 
-    private static <E> List<List<E>> split(int start, List<E> list, java.util.function.Predicate<E> separator) {
-        List<List<E>> split = List.of();
-        int prev = start;
-        for (int i = start; i < list.size(); i++) {
-            E e = list.get(i);
-            if (separator.test(e)) {
-                split = split.add(list.sublist(prev, i));
-                prev = i + 1;
-            }
-        }
-        if (prev < list.size()) {
-            split = split.add(list.sublist(prev, list.size()));
-        }
-        return split;
-    }
-
     private Pattern pattern(List<AstElement> elements) {
         List<Pattern> patterns = List.of();
         for (AstElement e : elements) {
@@ -276,32 +260,44 @@ public final class KnowledgeBase {
 
             SequencePattern patternSequence = s(patternRepetitionNoComma, r(s(t("#"), a(t(TokenType.NUMBER)))), o(s(t("@"), t(TokenType.QNAME))));
 
-            register(Functor.of(s(n(Type.TYPE(), null), t("::="), patternSequence, r(s(t(","), patternSequence)), t(NEWLINE)), Type.FUNCTOR, (t0, a1) -> {
-                Type type = (Type) t0.get(0);
-                ListNode roots = new ListNode(List.of(t0.get(0), t0.get(1)), Type.ROOT);
-                for (List<AstElement> t1 : split(2, t0, e -> e instanceof Token t && (t.text().equals(",") || t.type() == NEWLINE))) {
-                    List<List<AstElement>> split = split(0, t1, e -> e instanceof Token t && (t.text().equals("@") || t.text().equals("#")));
-                    Pattern pattern = pattern(split.first());
-                    Constructor<?> constructor = null;
-                    List<Integer> precedence = List.of();
-                    for (List<AstElement> t2 : split.skip(1)) {
-                        Token t = (Token) t2.first();
-                        if (t.type() == TokenType.NUMBER) {
-                            precedence = precedence.add(Integer.parseInt(t.text()));
-                        } else if (t.type() == TokenType.QNAME) {
-                            try {
-                                constructor = Class.forName(t.text()).getConstructor(Functor.class, List.class, Object[].class);
-                            } catch (NoSuchMethodException | SecurityException | ClassNotFoundException e1) {
-                                throw new ParseException(e1, "Exception during constructor of new Node", t);
+            register(Functor.of(s(n(Type.TYPE(), null), t("::="), patternSequence, r(s(t(","), patternSequence)), t(NEWLINE)), Type.FUNCTOR, (t1, a1) -> {
+                Type type = (Type) t1.get(0);
+                ListNode roots = new ListNode(t1.sublist(0, 2), Type.ROOT);
+                List<AstElement> pttrn = List.of(), ast = List.of();
+                Constructor<?> constructor = null;
+                List<Integer> precedence = List.of();
+                for (int i = 2; i < t1.size(); i++) {
+                    AstElement e = t1.get(i);
+                    ast = ast.add(e);
+                    if (e instanceof Token t) {
+                        if ((t.text().equals(",") || t.type() == NEWLINE)) {
+                            Pattern pattern = pattern(pttrn);
+                            if (!precedence.isEmpty()) {
+                                pattern = pattern.setPresedence(precedence, new int[1]);
                             }
+                            Functor functor = new Functor(ast, pattern, type, constructor);
+                            roots = new ListNode(List.of(), roots, functor);
+                            ast = pttrn = List.of();
+                            constructor = null;
+                            precedence = List.of();
+                        } else if (t.text().equals("#")) {
+                            precedence = precedence.add(Integer.parseInt(t.next().text()));
+                            ast = ast.add(t.next());
+                            i++;
+                        } else if (t.text().equals("@")) {
+                            try {
+                                constructor = Class.forName(t.next().text()).getConstructor(Functor.class, List.class, Object[].class);
+                            } catch (NoSuchMethodException | SecurityException | ClassNotFoundException ex) {
+                                throw new ParseException(ex, "Exception during finding class with Node constructor " + t.next().text(), t.next());
+                            }
+                            ast = ast.add(t.next());
+                            i++;
+                        } else {
+                            pttrn = pttrn.add(e);
                         }
+                    } else {
+                        pttrn = pttrn.add(e);
                     }
-                    if (!precedence.isEmpty()) {
-                        pattern = pattern.setPresedence(precedence, new int[]{0});
-                    }
-                    t1 = t1.append(t1.last().lastToken().next());
-                    Functor functor = new Functor(t1, pattern, type, constructor);
-                    roots = new ListNode(List.of(), roots, functor);
                 }
                 return roots;
             }));
