@@ -226,28 +226,12 @@ public final class KnowledgeBase {
             }
 
             register(Functor.of(s(r(n(Type.ROOT.list(), null)), t(ENDOFFILE)), //
-                    Type.ROOT.list(Type.TOP_GROUP), (t, a) -> {
-                        ListNode roots = new ListNode(List.of(), Type.ROOT);
-                        for (int i = 0; i < a.length; i++) {
-                            if (a[i] instanceof ListNode list) {
-                                List<Node> elements = list.elements();
-                                for (int ii = 0; ii < elements.size(); ii++) {
-                                    Node e = elements.get(ii);
-                                    if (e instanceof Node root) {
-                                        if (i == a.length - 1 && ii == elements.size() - 1) {
-                                            root = root.setAstElements(root.astElements().add(t.last()));
-                                        }
-                                        roots = new ListNode(List.of(), roots, root);
-                                    }
-                                }
-                            } else if (a[i] instanceof Node root) {
-                                if (i == a.length - 1) {
-                                    root = root.setAstElements(root.astElements().add(t.last()));
-                                }
-                                roots = new ListNode(List.of(), roots, root);
-                            }
+                    Type.ROOT.list().list(Type.TOP_GROUP), (t, a) -> {
+                        ListNode roots = new ListNode(List.of(), Type.ROOT.list());
+                        for (Object e : a) {
+                            roots = new ListNode(List.of(), roots, (ListNode) e);
                         }
-                        return roots;
+                        return roots.setAstElements(roots.astElements().add(t.last()));
                     }));
 
             List<TokenType> tokenTypes = List.of(TokenType.NAME, TokenType.OPERATOR, TokenType.STRING, //
@@ -294,15 +278,14 @@ public final class KnowledgeBase {
 
             register(Functor.of(s(n(Type.TYPE(), null), t("::="), patternSequence, r(s(t(","), patternSequence)), t(NEWLINE)), Type.FUNCTOR, (t0, a1) -> {
                 Type type = (Type) t0.get(0);
-                ListNode roots = new ListNode(List.of(), Type.ROOT);
-                boolean first = true;
+                ListNode roots = new ListNode(List.of(t0.get(0), t0.get(1)), Type.ROOT);
                 for (List<AstElement> t1 : split(2, t0, e -> e instanceof Token t && (t.text().equals(",") || t.type() == NEWLINE))) {
                     List<List<AstElement>> split = split(0, t1, e -> e instanceof Token t && (t.text().equals("@") || t.text().equals("#")));
                     Pattern pattern = pattern(split.first());
                     Constructor<?> constructor = null;
                     List<Integer> precedence = List.of();
-                    for (int i = 1; i < split.size(); i++) {
-                        Token t = (Token) split.get(i).first();
+                    for (List<AstElement> t2 : split.skip(1)) {
+                        Token t = (Token) t2.first();
                         if (t.type() == TokenType.NUMBER) {
                             precedence = precedence.add(Integer.parseInt(t.text()));
                         } else if (t.type() == TokenType.QNAME) {
@@ -316,12 +299,9 @@ public final class KnowledgeBase {
                     if (!precedence.isEmpty()) {
                         pattern = pattern.setPresedence(precedence, new int[]{0});
                     }
-                    if (first) {
-                        t1 = t1.prependList(t0.sublist(0, 2));
-                    }
                     t1 = t1.append(t1.last().lastToken().next());
-                    roots = new ListNode(List.of(), roots, new Functor(t1, pattern, type, constructor));
-                    first = false;
+                    Functor functor = new Functor(t1, pattern, type, constructor);
+                    roots = new ListNode(List.of(), roots, functor);
                 }
                 return roots;
             }));
@@ -337,7 +317,7 @@ public final class KnowledgeBase {
                         String group = a[a.length - 1] instanceof String ? (String) a[a.length - 1] : Type.DEFAULT_GROUP;
                         Type type = new Type(t, name, supers, group);
                         CURRENT.get().addType(type);
-                        return new ListNode(List.of(), new ListNode(List.of(), Type.ROOT), type);
+                        return new ListNode(List.of(), Type.ROOT, type);
                     }));
 
             //            register(Functor.of(s(t("("), n(Type.__, null), t(")")), Type.__, (t, a) -> {

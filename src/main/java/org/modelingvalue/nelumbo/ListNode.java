@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.syntax.Token;
 
 public class ListNode extends Node {
     @Serial
@@ -30,11 +29,20 @@ public class ListNode extends Node {
     }
 
     public ListNode(List<AstElement> elements, ListNode list, Node last) {
-        super(list.type(), elements, list.elements().add(last));
+        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
+    }
+
+    public ListNode(List<AstElement> elements, Type elementType, Node... nodes) {
+        super(elementType.list(), elements.addAll(List.of(nodes)), List.of(nodes));
     }
 
     private ListNode(Object[] array) {
         super(array);
+    }
+
+    @Override
+    public ListNode setAstElements(List<AstElement> elements) {
+        return (ListNode) super.setAstElements(elements);
     }
 
     @SuppressWarnings("unused")
@@ -61,15 +69,4 @@ public class ListNode extends Node {
     public String toString() {
         return elements().toString().substring(4);
     }
-
-    @Override
-    public Token firstToken() {
-        return elements().first().firstToken();
-    }
-
-    @Override
-    public Token lastToken() {
-        return elements().last().lastToken();
-    }
-
 }
