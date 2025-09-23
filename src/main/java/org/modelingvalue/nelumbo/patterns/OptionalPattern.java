@@ -57,11 +57,6 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public boolean isFixed() {
-        return false;
-    }
-
-    @Override
     public List<Type> args() {
         return optional().args();
     }

@@ -70,11 +70,6 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public boolean isFixed() {
-        return false;
-    }
-
-    @Override
     public String toString() {
         String string = options().toString();
         return "a(" + string.substring(5, string.length() - 1) + ")";

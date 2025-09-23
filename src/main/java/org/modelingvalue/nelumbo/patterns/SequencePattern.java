@@ -79,9 +79,14 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
+    public boolean isFixed(boolean first) {
+        return true;
+    }
+
+    @Override
     public List<Pattern> fixed(List<Pattern> list, boolean[] stop) {
         for (Pattern element : elements()) {
-            if (!element.isFixed()) {
+            if (!element.isFixed(list.isEmpty())) {
                 stop[0] = true;
                 break;
             }
@@ -134,11 +139,6 @@ public class SequencePattern extends Pattern {
             }
         }
         return set(0, elements);
-    }
-
-    @Override
-    public boolean isFixed() {
-        return true;
     }
 
 }

@@ -114,7 +114,9 @@ public abstract class Pattern extends Node {
         return fixed;
     }
 
-    public abstract boolean isFixed();
+    public boolean isFixed(boolean first) {
+        return false;
+    }
 
     public String name() {
         return "";

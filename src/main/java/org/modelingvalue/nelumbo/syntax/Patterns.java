@@ -19,38 +19,28 @@ package org.modelingvalue.nelumbo.syntax;
 import java.io.Serial;
 
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.util.Quadruple;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
-public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer, Type> {
+public class Patterns extends Pair<Map<Object, Patterns>, Functor> {
     @Serial
     private static final long    serialVersionUID = 7933114430825879121L;
 
-    public static final Patterns EMPTY            = new Patterns(Map.of(), null, null, null);
+    public static final Patterns EMPTY            = new Patterns(Map.of(), null);
 
-    private Patterns(Map<Object, Patterns> map, Functor functor, Integer precedence, Type nodeType) {
-        super(map, functor, precedence, nodeType);
+    private Patterns(Map<Object, Patterns> map, Functor functor) {
+        super(map, functor);
     }
 
     public Patterns setFunctor(Functor functor) {
         if (b() != null) {
             throw new IllegalArgumentException();
         }
-        return new Patterns(a(), functor, c(), d());
+        return new Patterns(a(), functor);
     }
 
     public Patterns put(Object key, Patterns patterns) {
-        return new Patterns(a().put(key, patterns), b(), c(), d());
-    }
-
-    public Patterns setPrecedence(Integer precedence) {
-        return new Patterns(a(), b(), precedence, d());
-    }
-
-    public Patterns setExpected(Type expected) {
-        return new Patterns(a(), b(), c(), expected);
+        return new Patterns(a().put(key, patterns), b());
     }
 
     public Patterns get(Object key) {
@@ -65,21 +55,9 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         return b();
     }
 
-    public Integer precedence() {
-        return c();
-    }
-
-    public Type nodeType() {
-        return d();
-    }
-
     public ParseResult preParse(Token token, ParseResult result, Parser parser) throws ParseException {
         if (token(token, result, parser) != null) {
             return result;
-        }
-        Type nodeType = nodeType();
-        if (nodeType != null) {
-            return node(token, result, parser, nodeType);
         }
         Functor functor = functor();
         if (functor == null) {
@@ -120,39 +98,18 @@ public class Patterns extends Quadruple<Map<Object, Patterns>, Functor, Integer,
         return null;
     }
 
-    private ParseResult node(Token token, ParseResult result, Parser parser, Type type) throws ParseException {
-        Node node = parser.parseNode(token, precedence(), type.group());
-        if (!type.isAssignableFrom(node.type())) {
-            return null;
-        }
-        result.add(node);
-        token = node.nextToken();
-        Map<Object, Patterns> map = a();
-        for (Type sup : node.type().allsupers()) {
-            Patterns patterns = map.get(sup);
-            if (patterns != null) {
-                if (patterns.preParse(token, result, parser) != null) {
-                    return result;
-                }
-            }
-        }
-        throw new ParseException("No functor found for type " + node.type(), node);
-    }
-
     public Patterns merge(Patterns patterns) {
         if (patterns == null) {
             return this;
         }
-        Functor s = merge(functor(), patterns.functor());
-        Integer p = merge(precedence(), patterns.precedence());
-        Type e = merge(nodeType(), patterns.nodeType());
+        Functor f = merge(functor(), patterns.functor());
         Map<Object, Patterns> m = map().addAll(patterns.map(), (a, b) -> a.merge(b));
-        return new Patterns(m, s, p, e);
+        return new Patterns(m, f);
     }
 
-    private static <T> T merge(T t1, T t2) {
+    private static Functor merge(Functor t1, Functor t2) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
-            throw new IllegalArgumentException("Non deterministic pattern merge " + t1 + " <>  " + t2);
+            throw new PatternMergeException("Non deterministic pattern merge " + t1 + " <>  " + t2);
         }
         return t1 == null ? t2 : t1;
     }

@@ -45,6 +45,7 @@ import org.modelingvalue.nelumbo.patterns.SequencePattern;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.PatternMergeException;
 import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -561,18 +562,6 @@ public final class KnowledgeBase {
         return map;
     }
 
-    public void addFunctor(Functor functor, @SuppressWarnings("unused") Token[] tokens, Constructor<? extends Node> constructor) {
-        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
-            Class<? extends Node> cls = constructor.getDeclaringClass();
-            Consumer<Functor> setter = FUNCTOR_REGISTRATION.get().get(cls);
-            if (setter != null) {
-                setter.accept(functor);
-                FUNCTOR_REGISTRATION.updateAndGet(map -> map.remove(cls));
-            }
-        }
-        functors.updateAndGet(set -> set.add(functor));
-    }
-
     public InferContext context() {
         return context;
     }
@@ -618,7 +607,25 @@ public final class KnowledgeBase {
         boolean post = functor.leftType() != null;
         String group = functor.resultType().group();
         Patterns patterns = functor.patterns();
-        (post ? postPatterns : prePatterns).updateAndGet(m -> m.put(group, patterns.merge(m.get(group))));
+        try {
+            (post ? postPatterns : prePatterns).updateAndGet(m -> m.put(group, patterns.merge(m.get(group))));
+        } catch (PatternMergeException pme) {
+            if (functor.firstToken() != null) {
+                functor = functor.setError(new ParseException(pme.getMessage(), functor));
+            } else {
+                throw pme;
+            }
+        }
+        Constructor<? extends Node> constructor = functor.constructor();
+        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
+            Class<? extends Node> cls = constructor.getDeclaringClass();
+            Consumer<Functor> setter = FUNCTOR_REGISTRATION.get().get(cls);
+            if (setter != null) {
+                setter.accept(functor);
+                FUNCTOR_REGISTRATION.updateAndGet(map -> map.remove(cls));
+            }
+        }
+        functors.accumulateAndGet(Set.of(functor), Set::addAll);
     }
 
     public ParseResult preParse(Token token, String group, Node left, Parser parser) throws ParseException {

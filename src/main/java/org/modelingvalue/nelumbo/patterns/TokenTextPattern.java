@@ -73,7 +73,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public boolean isFixed() {
+    public boolean isFixed(boolean first) {
         return true;
     }
 

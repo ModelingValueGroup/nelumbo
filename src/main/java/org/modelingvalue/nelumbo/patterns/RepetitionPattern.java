@@ -57,11 +57,6 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public boolean isFixed() {
-        return false;
-    }
-
-    @Override
     public List<Type> args() {
         return repeated().args().map(t -> t.list()).asList();
     }

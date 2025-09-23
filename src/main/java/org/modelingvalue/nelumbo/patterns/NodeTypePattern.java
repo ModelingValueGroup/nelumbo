@@ -80,12 +80,12 @@ public class NodeTypePattern extends Pattern {
 
     @Override
     public Patterns patterns(Patterns patterns) {
-        return Patterns.EMPTY.put(nodeType(), patterns).setPrecedence(innerPrecedence()).setExpected(nodeType());
+        return Patterns.EMPTY.put(nodeType(), patterns);
     }
 
     @Override
-    public boolean isFixed() {
-        return true;
+    public boolean isFixed(boolean first) {
+        return first;
     }
 
     @Override

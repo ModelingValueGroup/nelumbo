@@ -104,6 +104,19 @@ public class Functor extends Node {
         throw new UnsupportedOperationException();
     }
 
+    public ParseException error() {
+        return length() > 3 ? (ParseException) get(3) : null;
+    }
+
+    public Functor setError(ParseException exception) {
+        return set(3, exception);
+    }
+
+    @Override
+    public Functor set(int i, Object... a) {
+        return (Functor) super.set(i, a);
+    }
+
     public String name() {
         if (name == null) {
             name = pattern().name();
@@ -147,7 +160,7 @@ public class Functor extends Node {
         for (Pattern pattern : fixed.reverse()) {
             patterns = pattern.patterns(patterns);
         }
-        return patterns.setPrecedence(null).setExpected(null);
+        return patterns;
     }
 
     @SuppressWarnings("unchecked")
