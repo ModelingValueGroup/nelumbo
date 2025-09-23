@@ -46,11 +46,10 @@ public class Type extends Node {
     public static final Type   FUNCTOR          = new Type(Functor.class, ROOT);
     public static final Type   STRING           = new Type(String.class);
     public static final Type   PATTERN          = new Type("Pattern", SYNTAX_GROUP, Type.NODE);
+    public static final Type   QUERY            = new Type("Query", Type.ROOT);
     //
     public static final Type   FACTS            = new Type("Facts", Type.NODE);
     public static final Type   FALSEHOODS       = new Type("Falsehoods", Type.NODE);
-    //
-    public static final Type   __               = new Type("_", NODE);
 
     public static List<Type> predefined() {
         return List.of(TYPE(), //

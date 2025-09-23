@@ -80,6 +80,10 @@ public final class KnowledgeBase {
     private static final RepetitionPattern                                              REPETITION_NO_COMMA  = r(a(PATTERNS_NO_COMMA.toArray(i -> new Pattern[i])));
     private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(TokenType.COMMA));
     private static final RepetitionPattern                                              REPETITION           = r(a(PATTERNS.toArray(i -> new Pattern[i])));
+    private static final SequencePattern                                                SEQUENCE             = s(REPETITION_NO_COMMA, r(s(t("#"), a(t(TokenType.NUMBER)))), o(s(t("@"), t(TokenType.QNAME))));
+
+    private static final Pattern                                                        ALTERNATIVE          = a(t(".."), n(Type.PREDICATE, null));
+    private static final Pattern                                                        PREDICTION           = o(s(ALTERNATIVE, r(s(t(","), ALTERNATIVE))));
 
     public static final KnowledgeBase                                                   BASE                 = new KnowledgeBase(null).initBase();
 
@@ -156,15 +160,6 @@ public final class KnowledgeBase {
             }
         }
         return result;
-    }
-
-    private Functor eqFunctor;
-
-    public Functor eqFunctor() {
-        if (eqFunctor == null) {
-            eqFunctor = null; // TODO
-        }
-        return eqFunctor;
     }
 
     private void addType(Type type) {
@@ -263,53 +258,52 @@ public final class KnowledgeBase {
             register(Functor.of(s(t("<[>"), REPETITION, t("<]>")), //
                     Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
 
-            SequencePattern patternSequence = s(REPETITION_NO_COMMA, r(s(t("#"), a(t(TokenType.NUMBER)))), o(s(t("@"), t(TokenType.QNAME))));
-
-            register(Functor.of(s(n(Type.TYPE(), null), t("::="), patternSequence, r(s(t(","), patternSequence)), t(NEWLINE)), Type.FUNCTOR, (t1, a1) -> {
-                Type type = (Type) t1.get(0);
-                ListNode roots = new ListNode(t1.sublist(0, 2), Type.ROOT);
-                List<AstElement> pttrn = List.of(), ast = List.of();
-                Constructor<?> constructor = null;
-                List<Integer> precedence = List.of();
-                for (int i = 2; i < t1.size(); i++) {
-                    AstElement e = t1.get(i);
-                    ast = ast.add(e);
-                    if (e instanceof Token t) {
-                        if ((t.text().equals(",") || t.type() == NEWLINE)) {
-                            Pattern pattern = pattern(pttrn);
-                            if (!precedence.isEmpty()) {
-                                pattern = pattern.setPresedence(precedence, new int[1]);
+            register(Functor.of(s(n(Type.TYPE(), null), t("::="), SEQUENCE, r(s(t(","), SEQUENCE)), t(NEWLINE)), //
+                    Type.ROOT.list(), (t1, a1) -> {
+                        Type type = (Type) t1.get(0);
+                        ListNode roots = new ListNode(t1.sublist(0, 2), Type.ROOT);
+                        List<AstElement> pttrn = List.of(), ast = List.of();
+                        Constructor<?> constructor = null;
+                        List<Integer> precedence = List.of();
+                        for (int i = 2; i < t1.size(); i++) {
+                            AstElement e = t1.get(i);
+                            ast = ast.add(e);
+                            if (e instanceof Token t) {
+                                if ((t.text().equals(",") || t.type() == NEWLINE)) {
+                                    Pattern pattern = pattern(pttrn);
+                                    if (!precedence.isEmpty()) {
+                                        pattern = pattern.setPresedence(precedence, new int[1]);
+                                    }
+                                    Functor functor = new Functor(ast, pattern, type, constructor);
+                                    roots = new ListNode(List.of(), roots, functor);
+                                    CURRENT.get().register(functor);
+                                    ast = pttrn = List.of();
+                                    constructor = null;
+                                    precedence = List.of();
+                                } else if (t.text().equals("#")) {
+                                    precedence = precedence.add(Integer.parseInt(t.next().text()));
+                                    ast = ast.add(t.next());
+                                    i++;
+                                } else if (t.text().equals("@")) {
+                                    try {
+                                        constructor = Class.forName(t.next().text()).getConstructor(Functor.class, List.class, Object[].class);
+                                    } catch (NoSuchMethodException | SecurityException | ClassNotFoundException ex) {
+                                        throw new ParseException(ex, "Exception during finding class with Node constructor " + t.next().text(), t.next());
+                                    }
+                                    ast = ast.add(t.next());
+                                    i++;
+                                } else {
+                                    pttrn = pttrn.add(e);
+                                }
+                            } else {
+                                pttrn = pttrn.add(e);
                             }
-                            Functor functor = new Functor(ast, pattern, type, constructor);
-                            roots = new ListNode(List.of(), roots, functor);
-                            CURRENT.get().register(functor);
-                            ast = pttrn = List.of();
-                            constructor = null;
-                            precedence = List.of();
-                        } else if (t.text().equals("#")) {
-                            precedence = precedence.add(Integer.parseInt(t.next().text()));
-                            ast = ast.add(t.next());
-                            i++;
-                        } else if (t.text().equals("@")) {
-                            try {
-                                constructor = Class.forName(t.next().text()).getConstructor(Functor.class, List.class, Object[].class);
-                            } catch (NoSuchMethodException | SecurityException | ClassNotFoundException ex) {
-                                throw new ParseException(ex, "Exception during finding class with Node constructor " + t.next().text(), t.next());
-                            }
-                            ast = ast.add(t.next());
-                            i++;
-                        } else {
-                            pttrn = pttrn.add(e);
                         }
-                    } else {
-                        pttrn = pttrn.add(e);
-                    }
-                }
-                return roots;
-            }));
+                        return roots;
+                    }));
 
             register(Functor.of(s(t(TokenType.TYPE), t("::"), n(Type.TYPE(), null), r(s(t(","), n(Type.TYPE(), null))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
-                    Type.TYPE(), (t, a) -> {
+                    Type.ROOT.list(), (t, a) -> {
                         String name = (String) a[0];
                         name = name.substring(1, name.length() - 1);
                         Set<Type> supers = Set.of();
@@ -323,7 +317,7 @@ public final class KnowledgeBase {
                     }));
 
             register(Functor.of(s(n(Type.TYPE(), null), t(TokenType.NAME), r(s(t(","), t(TokenType.NAME))), t(NEWLINE)), //
-                    Type.VARIABLE, (t, a) -> {
+                    Type.ROOT.list(), (t, a) -> {
                         Type type = (Type) t.get(0);
                         ListNode roots = new ListNode(t.sublist(0, 1), Type.ROOT);
                         for (int i = 1; i < t.size() - 1; i++) {
@@ -343,339 +337,35 @@ public final class KnowledgeBase {
                         return roots.setAstElements(roots.astElements().add(t.last()));
                     }));
 
-            //            register(Functor.of(s(t("("), n(Type.__, null), t(")")), Type.__, (t, a) -> {
-            //                return (Node) a[0];
-            //            }));
+            register(Functor.of(s(t("("), n(Type.NODE, null), t(")")), //
+                    Type.NODE, (t, a) -> {
+                        Node node = (Node) a[0];
+                        return node.setAstElements(node.astElements().prepend(t.first()).append(t.last()));
+                    }));
 
-            //            // Functors
-            //            register(InfixParselet.of(Type.ROOT, Type.TYPE(), "::=", SIGNATURE.list(), 10, (l, t, r) -> {
-            //                ListNode list = new ListNode(Token.EMPTY, Type.FUNCTOR);
-            //                KnowledgeBase current = KnowledgeBase.CURRENT.get();
-            //                for (Node rr : ((ListNode) r).elements()) {
-            //                    list = new ListNode(Token.EMPTY, list, current.createFunctor((Type) l, Token.concat(l, t, rr), rr));
-            //                }
-            //                return list;
-            //            }));
-            //            register(CallWithArgs.of(SIGNATURE, TokenType.NAME, (t, l) -> {
-            //                return new Node(SIGNATURE, Token.concat(t, l), t.text(), l);
-            //            }, Type.TYPE().list()));
-            //            register(AtomicParselet.of(SIGNATURE, TokenType.NAME, t -> {
-            //                return new Node(SIGNATURE, t.singleton(), t.text());
-            //            }));
-            //            register(AtomicParselet.of(SIGNATURE, TokenType.TYPE, t -> {
-            //                Type type = type(t);
-            //                return type.tokenType() != null ? new Node(SIGNATURE, t.singleton(), type) : type.setTokens(t.singleton());
-            //            }));
-            //            register(PrefixParselet.of(SIGNATURE, TokenType.OPERATOR, TokenType.TYPE, Type.TYPE(), 50, (t, r) -> {
-            //                return new Node(SIGNATURE, Token.concat(t, r), t.text(), r);
-            //            }));
-            //            register(PrefixParselet.of(SIGNATURE, TokenType.NAME, TokenType.TYPE, Type.TYPE(), 50, (t, r) -> {
-            //                return new Node(SIGNATURE, Token.concat(t, r), t.text(), r);
-            //            }));
-            //            register(PostfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.OPERATOR, 50, (l, t) -> {
-            //                return new Node(SIGNATURE, Token.concat(l, t), l, t.text());
-            //            }));
-            //            register(PostfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.NAME, 50, (l, t) -> {
-            //                return new Node(SIGNATURE, Token.concat(l, t), l, t.text());
-            //            }));
-            //            register(InfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.OPERATOR, TokenType.TYPE, Type.TYPE(), 50, (l, t, r) -> {
-            //                return new Node(SIGNATURE, Token.concat(l, t, r), l, t.text(), r);
-            //            }));
-            //            register(InfixParselet.of(SIGNATURE, Type.TYPE(), TokenType.NAME, TokenType.TYPE, Type.TYPE(), 50, (l, t, r) -> {
-            //                return new Node(SIGNATURE, Token.concat(l, t, r), l, t.text(), r);
-            //            }));
-            //            register(InfixParselet.of(SIGNATURE, "#", TokenType.NUMBER, PRECEDENCE, 50, (l, t, r) -> {
-            //                return new Node(SIGNATURE, Token.concat(l, t, r), l, r.get(0));
-            //            }));
-            //            register(AtomicParselet.of(PRECEDENCE, TokenType.NUMBER, t -> {
-            //                return new Node(PRECEDENCE, t.singleton(), Integer.parseInt(t.text()));
-            //            }));
-            //            register(InfixParselet.of(SIGNATURE, "@", TokenType.QNAME, NATIVE, 50, (l, t, r) -> {
-            //                return new Node(SIGNATURE, Token.concat(l, t, r), l, r.get(0));
-            //            }));
-            //            register(AtomicParselet.of(NATIVE, TokenType.QNAME, t -> {
-            //                try {
-            //                    return new Node(NATIVE, t.singleton(), Class.forName(t.text()).getConstructor(Functor.class, Token[].class, Object[].class));
-            //                } catch (ClassNotFoundException | NoSuchMethodException | SecurityException e) {
-            //                    throw new ParseException(e, "Exception during constructor of new Node", t);
-            //                }
-            //            }));
-            //
-            //            // Variables
-            //            register(PrefixParselet.of(Type.ROOT, TokenType.TYPE, TokenType.NAME, VAR_NAME.list(), 10, (t, l) -> {
-            //                ListNode list = new ListNode(Token.EMPTY, Type.VARIABLE);
-            //                Type type = type(t);
-            //                KnowledgeBase current = KnowledgeBase.CURRENT.get();
-            //                for (Node v : ((ListNode) l).elements()) {
-            //                    Variable var = new Variable(v.tokens(), type, (String) v.get(0));
-            //                    current.addVar(var);
-            //                    list = new ListNode(Token.EMPTY, list, var);
-            //                }
-            //                return list;
-            //            }));
-            //            register(AtomicParselet.of(VAR_NAME, TokenType.NAME, t -> {
-            //                String name = t.text();
-            //                return new Terminal(VAR_NAME, t.singleton(), name);
-            //            }));
-            //
-            //            // Rules
-            //            register(InfixParselet.of(Type.ROOT, Type.PREDICATE, "<==", Type.PREDICATE.list(), 10, (l, t, r) -> {
-            //                return rule(l, Token.concat(l, t), (ListNode) r, false);
-            //            }));
-            //            register(InfixParselet.of(Type.ROOT, Type.PREDICATE, "<==>", Type.PREDICATE.list(), 10, (l, t, r) -> {
-            //                return rule(l, Token.concat(l, t), (ListNode) r, true);
-            //            }));
-            //
-            //            // Expectations
-            //            register(InfixParselet.of(Type.ROOT, Type.RESULT, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
-            //                return new Node(FACTS, Token.concat(l, t, r), l, ((ListNode) r).elements());
-            //            }));
-            //            register(InfixParselet.of(Type.ROOT, FACTS, "[", Type.PREDICATE.list(), 8, (l, t, r) -> {
-            //                return new Node(FALSEHOODS, Token.concat(l, t, r), l.get(0), l.get(1), ((ListNode) r).elements());
-            //            }));
-            //            register(PostfixParselet.of(Type.ROOT, FACTS, "]", 8, (l, t) -> {
-            //                return l.setTokens(Token.concat(l, t));
-            //            }));
-            //            register(PostfixParselet.of(Type.ROOT, FALSEHOODS, "]", 8, (l, t) -> {
-            //                Set<Predicate> facts = ((List<Predicate>) l.get(1)).asSet();
-            //                boolean completeFacts = true;
-            //                if (facts.contains(INCOMPLETE)) {
-            //                    completeFacts = false;
-            //                    facts = facts.remove(INCOMPLETE);
-            //                }
-            //                Set<Predicate> falsehoods = ((List<Predicate>) l.get(2)).asSet();
-            //                boolean completeFalsehoods = true;
-            //                if (falsehoods.contains(INCOMPLETE)) {
-            //                    completeFalsehoods = false;
-            //                    falsehoods = falsehoods.remove(INCOMPLETE);
-            //                }
-            //                InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
-            //                InferResult result = l.getVal(0, 1);
-            //                if (!result.equals(expected) && !result.toString().equals(expected.toString())) {
-            //                    throw new ParseException("Expected result " + expected + ", found " + result, Token.concat(l, t));
-            //                }
-            //                return l.getVal(0);
-            //            }));
-            //            register(AtomicParselet.of(Type.PREDICATE, "..", t -> {
-            //                return INCOMPLETE;
-            //            }));
-            //
-            //            // Queries
-            //            register(PrefixParselet.of(Type.ROOT, "?", Type.PREDICATE, 10, (t, r) -> {
-            //                Predicate predicate = (Predicate) r;
-            //                predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
-            //                InferResult result = predicate.infer();
-            //                return new Node(Type.RESULT, Token.concat(t, r), predicate, result);
-            //            }));
+            register(Functor.of(s(n(Type.PREDICATE, null), t("<=="), n(Type.PREDICATE, 10), r(s(t(","), n(Type.PREDICATE, 10))), t(TokenType.NEWLINE)), //
+                    Type.RULE, (t, a) -> CURRENT.get().rules(t, a, false)));
 
-            //            try {
-            //                Parser.parse(KnowledgeBase.class);
-            //            } catch (ParseException e) {
-            //                throw new IllegalArgumentException(e);
-            //            }
+            register(Functor.of(s(n(Type.PREDICATE, null), t("<==>"), n(Type.PREDICATE, 10), r(s(t(","), n(Type.PREDICATE, 10))), t(TokenType.NEWLINE)), //
+                    Type.RULE, (t, a) -> CURRENT.get().rules(t, a, true)));
+
+            register(Functor.of(s(t("?"), n(Type.PREDICATE, null), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), Type.ROOT.list(), (t, a) -> {
+                return new ListNode(t, Type.ROOT, new Node(Type.QUERY, t, a));
+            }));
+
+            try {
+                Parser.parse(KnowledgeBase.class);
+            } catch (ParseException e) {
+                throw new IllegalArgumentException(e);
+            }
         });
         return this;
     }
 
-    //    @SuppressWarnings("unused")
-    //    private static Node rule(Node l, List<AstElement> elements, ListNode r, boolean symmetric) throws ParseException {
-    //        ListNode list = new ListNode(Token.EMPTY, Type.RULE);
-    //        KnowledgeBase current = KnowledgeBase.CURRENT.get();
-    //        Predicate cons = (Predicate) l;
-    //        Map<Variable, Object> consVars = cons.variables();
-    //        for (Node c : r.elements()) {
-    //            Predicate cond = (Predicate) c;
-    //            Map<Variable, Object> condVars = cond.variables();
-    //            Functor rel = current.relations.get().get(cons.functor());
-    //            Map<Variable, Object> local = condVars.removeAllKey(consVars);
-    //            if (symmetric && !local.isEmpty()) {
-    //                throw new ParseException("No local variables allowed in condition of a symmetric rule. Found: " + local.get(0).getKey().name(), local.get(0).getKey().tokens());
-    //            }
-    //            if (rel != null) {
-    //                Map<Variable, Object> vars = Predicate.literals(condVars.putAll(consVars));
-    //                cons = cons.setFunctor(rel).setVariables(vars);
-    //                cond = cond.setVariables(vars);
-    //            } else if (!local.isEmpty()) {
-    //                cond = cond.setVariables(Predicate.literals(local));
-    //            }
-    //            Rule rule = new Rule(Token.concat(tokens, c.tokens()), cons, cond, symmetric);
-    //            current.addRule(rule);
-    //            list = new ListNode(Token.EMPTY, list, rule);
-    //        }
-    //        return list;
-    //    }
-    //
-
-    //
-    //    // NB: ConstantValue because Intellij concludes that rel is always false, but it is not !!
-    //    @SuppressWarnings({"unchecked", "ConstantValue", "DataFlowIssue"})
-    //    private Node createFunctor(Type type, List<AstElement> elements, Node sig) throws ParseException {
-    //        Constructor<? extends Node> constructor = sig.length() == 2 && sig.get(0) instanceof Node && sig.get(1) instanceof Constructor ? //
-    //                (Constructor<? extends Node>) sig.get(1) : null;
-    //        if (constructor != null) {
-    //            sig = (Node) sig.get(0);
-    //        }
-    //        Integer precedence = sig.length() == 2 && sig.get(0) instanceof Node && sig.get(1) instanceof Integer ? //
-    //                (Integer) sig.get(1) : null;
-    //        if (precedence != null) {
-    //            sig = (Node) sig.get(0);
-    //        }
-    //        boolean relation = Type.RELATION.isAssignableFrom(type);
-    //        boolean predicate = relation || Type.PREDICATE.isAssignableFrom(type);
-    //        if (sig.length() == 1 && sig.get(0) instanceof Type && ((Type) sig.get(0)).tokenType() != null) {
-    //            // Literal
-    //            if (precedence != null) {
-    //                throw new ParseException("Precedence should not be defined " + sig, tokens);
-    //            }
-    //            type = type.literal();
-    //            TokenType tokenType = ((Type) sig.get(0)).tokenType();
-    //            String functorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
-    //            Functor functor = new Functor(tokens, type, functorName, Type.STRING);
-    //            addFunctor(functor, tokens, constructor);
-    //            register(AtomicParselet.of(tokenType, tt -> createNode(predicate, tt.singleton(), constructor, functor, tt.text())));
-    //            return functor;
-    //        } else if (sig.length() == 1 && sig.get(0) instanceof String name) {
-    //            // Constant
-    //            if (precedence != null) {
-    //                throw new ParseException("Precedence should not be defined " + sig, tokens);
-    //            }
-    //            type = type.literal();
-    //            String functorName = constructor != null ? constructor.getDeclaringClass().getSimpleName() : type.literal().name();
-    //            Functor functor = new Functor(tokens, type, functorName, n -> n.toString(0), 100, Type.STRING);
-    //            addFunctor(functor, tokens, constructor);
-    //            Node node = createNode(predicate, tokens, constructor, functor, name);
-    //            register(AtomicParselet.of(name, tt -> node.setTokens(tt.singleton())));
-    //            return functor;
-    //        } else if (sig.length() == 2 && sig.get(0) instanceof String name && sig.get(1) instanceof List) {
-    //            // CallWithArgs
-    //            if (precedence != null) {
-    //                throw new ParseException("Precedence should not be defined " + sig, tokens);
-    //            }
-    //            if (!predicate) {
-    //                type = type.function();
-    //            }
-    //            List<Type> args = (List<Type>) sig.get(1);
-    //            boolean rel = relation && !args.isEmpty() && args.noneMatch(Type::isLiteral);
-    //            Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, name, args);
-    //            addFunctor(functor, tokens, rel ? null : constructor);
-    //            register(CallWithArgs.of(name, //
-    //                    (tt, ll) -> createNode(predicate, Token.concat(tt, ll), rel ? null : constructor, functor, ll.toArray()), //
-    //                    args.toArray(Type[]::new) //
-    //            ));
-    //            if (rel) {
-    //                List<Type> litArgs = args.replaceAll(Type::literal);
-    //                Functor relFunctor = new Functor(tokens, type, name, litArgs);
-    //                relations.updateAndGet(map -> map.put(functor, relFunctor));
-    //                addFunctor(relFunctor, tokens, constructor);
-    //                register(CallWithArgs.of(name, (tt, ll) -> createNode(predicate, Token.concat(tt, ll), constructor, relFunctor, ll.toArray()), //
-    //                        litArgs.toArray(Type[]::new)));
-    //                Object[] nodVars = new Variable[args.size()];
-    //                Object[] litVars = new Variable[args.size()];
-    //                for (int i = 0; i < args.size(); i++) {
-    //                    nodVars[i] = new Variable(args.get(i).tokens(), args.get(i), "n" + (i + 1));
-    //                    litVars[i] = new Variable(litArgs.get(i).tokens(), litArgs.get(i), "l" + (i + 1));
-    //                }
-    //                Predicate conclusion = new Predicate(functor, tokens, nodVars);
-    //                Predicate condition = (Predicate) createNode(true, tokens, constructor, relFunctor, litVars);
-    //                for (int i = 0; i < args.size(); i++) {
-    //                    Predicate eq = new Predicate(eqFunctor(), tokens, nodVars[i], litVars[i]);
-    //                    condition = And.of(eq, condition);
-    //                }
-    //                addRule(new Rule(tokens, conclusion, condition, false));
-    //            }
-    //            return functor;
-    //        } else if (sig.length() == 2 && sig.get(0) instanceof Type pre && sig.get(1) instanceof String oper) {
-    //            // PostfixOperator
-    //            if (precedence == null) {
-    //                throw new ParseException("No precedence defined " + sig, tokens);
-    //            }
-    //            if (!predicate) {
-    //                type = type.function();
-    //            }
-    //            boolean rel = relation && !pre.isLiteral();
-    //            Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> n.toString(0) + oper, precedence, pre);
-    //            addFunctor(functor, tokens, rel ? null : constructor);
-    //            register(PostfixParselet.of(pre, oper, precedence, (ll, tt) -> createNode(predicate, Token.concat(ll, tt), rel ? null : constructor, functor, ll)));
-    //            if (rel) {
-    //                Type litPre = pre.literal();
-    //                Functor relFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper, precedence, litPre);
-    //                relations.updateAndGet(map -> map.put(functor, relFunctor));
-    //                addFunctor(relFunctor, tokens, constructor);
-    //                //noinspection ConstantValue (predicate is always true)
-    //                register(PostfixParselet.of(litPre, oper, precedence, (ll, tt) -> createNode(predicate, Token.concat(ll, tt), constructor, relFunctor, ll)));
-    //                Variable nodVar = new Variable(pre.tokens(), pre, "n");
-    //                Variable litVar = new Variable(litPre.tokens(), litPre, "l");
-    //                Predicate conclusion = new Predicate(functor, tokens, nodVar);
-    //                Predicate condition = (Predicate) createNode(true, tokens, constructor, relFunctor, litVar);
-    //                Predicate eq = new Predicate(eqFunctor(), tokens, nodVar, litVar);
-    //                condition = And.of(eq, condition);
-    //                addRule(new Rule(tokens, conclusion, condition, false));
-    //            }
-    //            return functor;
-    //        } else if (sig.length() == 2 && sig.get(0) instanceof String oper && sig.get(1) instanceof Type post) {
-    //            // PrefixOperator
-    //            if (precedence == null) {
-    //                throw new ParseException("No precedence defined " + sig, tokens);
-    //            }
-    //            if (!predicate) {
-    //                type = type.function();
-    //            }
-    //            boolean rel = relation && !post.isLiteral();
-    //            Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> oper + n.toString(0), precedence, post);
-    //            addFunctor(functor, tokens, rel ? null : constructor);
-    //            register(PrefixParselet.of(oper, post, precedence, (tt, rr) -> createNode(predicate, Token.concat(tt, rr), rel ? null : constructor, functor, rr)));
-    //            if (rel) {
-    //                Type litPost = post.literal();
-    //                Functor relFunctor = new Functor(tokens, type, oper, n -> oper + n.toString(0), precedence, litPost);
-    //                relations.updateAndGet(map -> map.put(functor, relFunctor));
-    //                addFunctor(relFunctor, tokens, constructor);
-    //                //noinspection ConstantValue (predicate is always true)
-    //                register(PrefixParselet.of(oper, litPost, precedence, (tt, rr) -> createNode(predicate, Token.concat(tt, rr), constructor, relFunctor, rr)));
-    //                Variable nodVar = new Variable(post.tokens(), post, "n");
-    //                Variable litVar = new Variable(litPost.tokens(), litPost, "l");
-    //                Predicate conclusion = new Predicate(functor, tokens, nodVar);
-    //                Predicate condition = (Predicate) createNode(true, tokens, constructor, relFunctor, litVar);
-    //                Predicate eq = new Predicate(eqFunctor(), tokens, nodVar, litVar);
-    //                condition = And.of(eq, condition);
-    //                addRule(new Rule(tokens, conclusion, condition, false));
-    //            }
-    //            return functor;
-    //        } else if (sig.length() == 3 && sig.get(0) instanceof Type pre && sig.get(1) instanceof String oper && sig.get(2) instanceof Type post) {
-    //            // InfixOperator
-    //            if (precedence == null) {
-    //                throw new ParseException("No precedence defined " + sig, tokens);
-    //            }
-    //            if (!predicate) {
-    //                type = type.function();
-    //            }
-    //            boolean rel = relation && !pre.isLiteral() && !post.isLiteral();
-    //            Functor functor = new Functor(tokens, rel ? Type.PREDICATE : type, oper, n -> n.toString(0) + oper + n.toString(1), precedence, pre, post);
-    //            addFunctor(functor, tokens, rel ? null : constructor);
-    //            register(InfixParselet.of(pre, oper, post, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), Token.concat(tt, rr)), rel ? null : constructor, functor, ll, rr)));
-    //            if (rel) {
-    //                Type litPre = pre.literal();
-    //                Type litPost = post.literal();
-    //                Functor relFunctor = new Functor(tokens, type, oper, n -> n.toString(0) + oper + n.toString(1), precedence, litPre, litPost);
-    //                relations.updateAndGet(map -> map.put(functor, relFunctor));
-    //                addFunctor(relFunctor, tokens, constructor);
-    //                //noinspection ConstantValue (predicate is always true)
-    //                register(InfixParselet.of(litPre, oper, litPost, precedence, (ll, tt, rr) -> createNode(predicate, Token.concat(ll.tokens(), Token.concat(tt, rr)), constructor, relFunctor, ll, rr)));
-    //                Variable nodVar0 = new Variable(pre.tokens(), pre, "n1");
-    //                Variable litVar0 = new Variable(litPre.tokens(), litPre, "l1");
-    //                Variable nodVar1 = new Variable(post.tokens(), post, "n2");
-    //                Variable litVar1 = new Variable(litPost.tokens(), litPost, "l2");
-    //                Predicate conclusion = new Predicate(functor, tokens, nodVar0, nodVar1);
-    //                Predicate condition = (Predicate) createNode(true, tokens, constructor, relFunctor, litVar0, litVar1);
-    //                Predicate eq0 = new Predicate(eqFunctor(), tokens, nodVar0, litVar0);
-    //                Predicate eq1 = new Predicate(eqFunctor(), tokens, nodVar1, litVar1);
-    //                condition = And.of(eq0, And.of(eq1, condition));
-    //                addRule(new Rule(tokens, conclusion, condition, false));
-    //            }
-    //            return functor;
-    //        } else {
-    //            throw new ParseException("Invalid signature " + sig, tokens);
-    //        }
-    //    }
+    private ListNode rules(List<AstElement> elements, Object[] args, boolean symmetric) {
+        ListNode roots = new ListNode(elements, Type.ROOT);
+        return roots;
+    }
 
     private final AtomicReference<Set<Functor>>                         functors     = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, InferResult>>          facts        = new AtomicReference<>();

@@ -45,7 +45,6 @@ public class SyntaxTest extends NelumboTestBase {
                                <Set> + <Node> #40
                     <Int>  ::= <Set>.size
                     <Set> sa, sb
-
                     """;
             try {
                 TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();

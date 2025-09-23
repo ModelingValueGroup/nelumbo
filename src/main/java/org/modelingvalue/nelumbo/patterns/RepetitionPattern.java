@@ -51,7 +51,7 @@ public class RepetitionPattern extends Pattern {
     public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
         Pattern repeated = repeated();
         while (next != null ? !next.peekIs(token, parser) : repeated.peekIs(token, parser)) {
-            token = repeated.parse(token, group, parser, next, result);
+            token = repeated.parse(token, group, parser, a(repeated, next), result);
         }
         return token;
     }
