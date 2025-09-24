@@ -39,12 +39,17 @@ public class SyntaxTest extends NelumboTestBase {
     public void test1() {
         run(() -> {
             String example = """
+
                     <Set>  ::  <Node>
                     <Int>  ::  <Node>
-                    <Set>  ::= { <[> <Node> <{> , <Node> <}> <]> } #10 #5,
+                    <Set>  ::= { <[> <Node> <{> , <Node> <}> <]> } #10 #5 @org.modelingvalue.nelumbo.Node,
                                <Set> + <Node> #40
-                    <Int>  ::= <Set>.size
-                    <Set> sa, sb
+                    // <Int>  ::= <Set>.size
+                    // <Set>  s, t
+                    // <Int>  i, j
+
+                    // s.size=i <==> i=i
+
                     """;
             try {
                 TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();

@@ -27,8 +27,6 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseResult;
-import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.ThrowingBiFunction;
 
@@ -84,24 +82,14 @@ public class Functor extends Node {
         return val instanceof ThrowingBiFunction ? (ThrowingBiFunction<List<AstElement>, Object[], ? extends Node>) val : null;
     }
 
-    public Type leftType() {
+    public NodeTypePattern left() {
         Pattern pattern = pattern();
         if (pattern instanceof SequencePattern sp) {
             if (sp.elements().first() instanceof NodeTypePattern ntp) {
-                return ntp.nodeType();
+                return ntp;
             }
         }
         return null;
-    }
-
-    public int leftPrecedence() {
-        Pattern pattern = pattern();
-        if (pattern instanceof SequencePattern sp) {
-            if (sp.elements().first() instanceof NodeTypePattern ntp) {
-                return ntp.leftPrecedence();
-            }
-        }
-        throw new UnsupportedOperationException();
     }
 
     public ParseException error() {
@@ -138,7 +126,7 @@ public class Functor extends Node {
         return name() + "(" + types + ")";
     }
 
-    private Node construct(List<AstElement> elements, Object[] args) throws ParseException {
+    public Node construct(List<AstElement> elements, Object[] args) throws ParseException {
         Constructor<? extends Node> constructor = constructor();
         if (constructor != null) {
             try {
@@ -155,18 +143,7 @@ public class Functor extends Node {
     }
 
     public Patterns patterns() {
-        List<Pattern> fixed = pattern().fixed(List.of(), new boolean[]{false});
-        Patterns patterns = Patterns.EMPTY.setFunctor(this);
-        for (Pattern pattern : fixed.reverse()) {
-            patterns = pattern.patterns(patterns);
-        }
-        return patterns;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Node postParse(String group, Parser parser, ParseResult result) throws ParseException {
-        pattern().parse(result.nextToken(), group, parser, null, result);
-        return construct(result.elements(), result.args().toArray());
+        return pattern().patterns(new Patterns(this), left());
     }
 
 }

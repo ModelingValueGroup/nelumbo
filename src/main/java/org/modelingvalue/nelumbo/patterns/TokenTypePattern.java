@@ -21,11 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseResult;
-import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
-import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class TokenTypePattern extends Pattern {
@@ -50,36 +46,8 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
-        if (!result.isDone()) {
-            TokenType type = tokenType();
-            result.add(token);
-            if (type.variable()) {
-                result.add(token.text());
-            }
-            token = token.next();
-        }
-        return token;
-    }
-
-    @Override
-    public boolean peekIs(Token token, Parser parser) throws ParseException {
-        return token.type() == tokenType();
-    }
-
-    @Override
-    public Patterns patterns(Patterns patterns) {
-        return Patterns.EMPTY.put(tokenType(), patterns);
-    }
-
-    @Override
-    public List<Pattern> fixed(List<Pattern> fixed, boolean[] stop) {
-        return fixed.add(this);
-    }
-
-    @Override
-    public boolean isFixed(boolean first) {
-        return true;
+    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
+        return new Patterns(tokenType(), nextPatterns);
     }
 
     @Override

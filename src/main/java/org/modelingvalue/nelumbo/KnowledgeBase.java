@@ -66,7 +66,7 @@ public final class KnowledgeBase {
                                                                                                                  } else {
                                                                                                                      for (int i = 0; i < l.size(); i++) {
                                                                                                                          Rule r = l.get(i);
-                                                                                                                         if (r.consequence().equals(e.consequence()) &&                                                                                          //
+                                                                                                                         if (r.consequence().equals(e.consequence()) &&                                                  //
                                                                                                                                  r.condition().contains(e.condition())) {
                                                                                                                              return l;
                                                                                                                          }
@@ -76,12 +76,14 @@ public final class KnowledgeBase {
                                                                                                              };
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
 
-    private static final List<TokenType>                                                TOKEN_TYPES          = List.of(TokenType.NAME, TokenType.OPERATOR, TokenType.STRING, TokenType.SEMICOLON, TokenType.SINGLEQUOTE, TokenType.NEWLINE, TokenType.ENDOFFILE);
-    private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(tt -> (Pattern) t(tt)).asList().add(n(Type.PATTERN, Integer.MAX_VALUE)).add(n(Type.TYPE(), Integer.MAX_VALUE));
+    private static final List<TokenType>                                                TOKEN_TYPES          = List.of(TokenType.NAME, TokenType.OPERATOR, TokenType.STRING, TokenType.SEMICOLON, TokenType.SINGLEQUOTE);
+    private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(tt -> (Pattern) t(tt)).asList().add(n(Type.PATTERN, Integer.MAX_VALUE));
     private static final RepetitionPattern                                              REPETITION_NO_COMMA  = r(a(PATTERNS_NO_COMMA.toArray(i -> new Pattern[i])));
     private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(TokenType.COMMA));
     private static final RepetitionPattern                                              REPETITION           = r(a(PATTERNS.toArray(i -> new Pattern[i])));
-    private static final SequencePattern                                                SEQUENCE             = s(REPETITION_NO_COMMA, r(s(t("#"), a(t(TokenType.NUMBER)))), o(s(t("@"), t(TokenType.QNAME))));
+    private static final SequencePattern                                                SEQUENCE             = s(REPETITION_NO_COMMA,                                                                                    //
+            r(s(t("#"), a(t(TokenType.NUMBER)))),                                                                                                                                                                        //
+            o(s(t("@"), t(TokenType.NAME), r(s(t("."), t(TokenType.NAME))))));
 
     private static final Pattern                                                        ALTERNATIVE          = a(t(".."), n(Type.PREDICATE, null));
     private static final Pattern                                                        PREDICTION           = o(s(ALTERNATIVE, r(s(t(","), ALTERNATIVE))));
@@ -185,13 +187,6 @@ public final class KnowledgeBase {
                         text = text.substring(1, text.length() - 1);
                     }
                     patterns = patterns.add(t(text));
-                } else if (e instanceof Type t) {
-                    TokenType tt = t.tokenType();
-                    if (tt != null) {
-                        patterns = patterns.add(t(tt));
-                    } else {
-                        patterns = patterns.add(n(t, null));
-                    }
                 } else {
                     Pattern pattern = (Pattern) e;
                     if (pattern instanceof SequencePattern sp) {
@@ -259,6 +254,13 @@ public final class KnowledgeBase {
             register(Functor.of(s(t("<[>"), REPETITION, t("<]>")), //
                     Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
 
+            register(Functor.of(n(Type.TYPE(), Integer.MAX_VALUE), //
+                    Type.PATTERN, (t1, a1) -> {
+                        Type type = (Type) a1[0];
+                        TokenType tt = type.tokenType();
+                        return tt != null ? t(t1, tt) : n(t1, type, null);
+                    }));
+
             register(Functor.of(s(n(Type.TYPE(), null), t("::="), SEQUENCE, r(s(t(","), SEQUENCE)), t(NEWLINE)), //
                     Type.ROOT.list(), (t1, a1) -> {
                         Type type = (Type) t1.get(0);
@@ -282,17 +284,24 @@ public final class KnowledgeBase {
                                     constructor = null;
                                     precedence = List.of();
                                 } else if (t.text().equals("#")) {
-                                    precedence = precedence.add(Integer.parseInt(t.next().text()));
-                                    ast = ast.add(t.next());
+                                    t = t.next();
+                                    ast = ast.add(t);
                                     i++;
+                                    precedence = precedence.add(Integer.parseInt(t.text()));
                                 } else if (t.text().equals("@")) {
+                                    String qname = "";
+                                    t = t.next();
+                                    do {
+                                        ast = ast.add(t);
+                                        i++;
+                                        qname += t.text();
+                                        t = t.next();
+                                    } while (t.text().equals(".") || t.type() == TokenType.NAME);
                                     try {
-                                        constructor = Class.forName(t.next().text()).getConstructor(Functor.class, List.class, Object[].class);
+                                        constructor = Class.forName(qname).getConstructor(Functor.class, List.class, Object[].class);
                                     } catch (NoSuchMethodException | SecurityException | ClassNotFoundException ex) {
-                                        throw new ParseException(ex, "Exception during finding class with Node constructor " + t.next().text(), t.next());
+                                        throw new ParseException(ex, "Exception during finding class with Node constructor " + qname, t.next());
                                     }
-                                    ast = ast.add(t.next());
-                                    i++;
                                 } else {
                                     pttrn = pttrn.add(e);
                                 }
@@ -354,13 +363,14 @@ public final class KnowledgeBase {
                 return new ListNode(t, Type.ROOT, new Node(Type.QUERY, t, a));
             }));
 
-            try {
-                Parser.parse(KnowledgeBase.class);
-            } catch (ParseException e) {
-                throw new IllegalArgumentException(e);
-            }
+            //            try {
+            //                Parser.parse(KnowledgeBase.class);
+            //            } catch (ParseException e) {
+            //                throw new IllegalArgumentException(e);
+            //            }
         });
         return this;
+
     }
 
     private ListNode rules(List<AstElement> elements, Object[] args, boolean symmetric) {
@@ -604,17 +614,17 @@ public final class KnowledgeBase {
     }
 
     public void register(Functor functor) {
-        boolean post = functor.leftType() != null;
+        boolean post = functor.left() != null;
         String group = functor.resultType().group();
-        Patterns patterns = functor.patterns();
         try {
+            Patterns patterns = functor.patterns();
             (post ? postPatterns : prePatterns).updateAndGet(m -> m.put(group, patterns.merge(m.get(group))));
         } catch (PatternMergeException pme) {
-            if (functor.firstToken() != null) {
-                functor = functor.setError(new ParseException(pme.getMessage(), functor));
-            } else {
-                throw pme;
-            }
+            //            if (functor.firstToken() != null) {
+            //                functor = functor.setError(new ParseException(pme.getMessage(), functor));
+            //            } else {
+            throw pme;
+            //            }
         }
         Constructor<? extends Node> constructor = functor.constructor();
         if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
@@ -637,16 +647,16 @@ public final class KnowledgeBase {
     private ParseResult preParse(Token token, Node left, Parser parser, Patterns patterns) throws ParseException {
         if (left != null) {
             for (Type type : left.type().allsupers()) {
-                Patterns found = patterns.get(type);
+                Patterns found = patterns.map().get(type);
                 if (found != null) {
                     ParseResult result = new ParseResult();
                     result.add(left);
-                    return found.preParse(token, result, parser);
+                    return found.parse(token, result, parser, true);
                 }
             }
             return null;
         }
-        return patterns.preParse(token, new ParseResult(), parser);
+        return patterns.parse(token, new ParseResult(), parser, true);
     }
 
 }

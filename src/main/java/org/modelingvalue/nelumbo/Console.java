@@ -350,7 +350,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 Highlighter.HighlightPainter hp = switch (token.type()) {
                 case STRING -> bluePainter;
                 case NUMBER, DECIMAL -> greenPainter;
-                case QNAME, NAME -> yellowPainter;
+                case NAME -> yellowPainter;
                 case SEMICOLON, OPERATOR, LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE, META_OPERATOR -> greyPainter;
                 case COMMA -> purplePainter;
                 case TYPE -> pinkPainter;

@@ -84,7 +84,7 @@ public final class Parser {
         if (result == null) {
             throw new ParseException("No syntax pattern found for " + token.text(), token);
         }
-        Node left = result.postParse(group, this);
+        Node left = result.postParse(this);
         token = left.nextToken();
         if (token != null) {
             result = preParse(token, group, left);
@@ -92,7 +92,7 @@ public final class Parser {
                 if (precedence >= result.leftPrecedence()) {
                     return left;
                 }
-                left = result.postParse(group, this);
+                left = result.postParse(this);
                 token = left.nextToken();
                 if (token == null) {
                     return left;

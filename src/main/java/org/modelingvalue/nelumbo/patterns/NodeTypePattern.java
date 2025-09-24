@@ -20,13 +20,8 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseResult;
-import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
-import org.modelingvalue.nelumbo.syntax.Token;
 
 public class NodeTypePattern extends Pattern {
     @Serial
@@ -49,48 +44,21 @@ public class NodeTypePattern extends Pattern {
         return (Type) get(0);
     }
 
-    public int leftPrecedence() {
+    public Integer leftPrecedence() {
         Integer precedence = (Integer) get(1);
         return precedence != null ? precedence : Integer.MAX_VALUE;
     }
 
-    public int innerPrecedence() {
+    public Integer innerPrecedence() {
         Integer precedence = (Integer) get(1);
         return precedence != null ? precedence : Integer.MIN_VALUE;
     }
 
     @Override
-    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
-        if (!result.isDone()) {
-            Type type = nodeType();
-            Node node = parser.parseNode(token, innerPrecedence(), type.group());
-            if (!type.isAssignableFrom(node.type())) {
-                throw new ParseException("Expected element of type " + type + " but found " + node + " of type " + node.type(), node);
-            }
-            result.add(node);
-            token = node.nextToken();
-        }
-        return token;
-    }
-
-    @Override
-    public boolean peekIs(Token token, Parser parser) throws ParseException {
-        return parser.preParse(token, nodeType().group(), null) != null;
-    }
-
-    @Override
-    public Patterns patterns(Patterns patterns) {
-        return Patterns.EMPTY.put(nodeType(), patterns);
-    }
-
-    @Override
-    public boolean isFixed(boolean first) {
-        return first;
-    }
-
-    @Override
-    public List<Pattern> fixed(List<Pattern> fixed, boolean[] stop) {
-        return fixed.add(this);
+    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
+        Integer leftPrecedence = left != null && left != this ? left.leftPrecedence() : null;
+        Integer innerPrecedence = left == null || left != this ? innerPrecedence() : null;
+        return new Patterns(nodeType(), nextPatterns, leftPrecedence, innerPrecedence);
     }
 
     @Override

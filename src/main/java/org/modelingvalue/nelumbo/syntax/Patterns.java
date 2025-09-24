@@ -18,64 +18,124 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.util.Pair;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
-public class Patterns extends Pair<Map<Object, Patterns>, Functor> {
+public class Patterns {
     @Serial
-    private static final long    serialVersionUID = 7933114430825879121L;
+    private static final long            serialVersionUID = 7933114430825879121L;
 
-    public static final Patterns EMPTY            = new Patterns(Map.of(), null);
+    public static final Patterns         EMPTY            = new Patterns((Functor) null);
 
-    private Patterns(Map<Object, Patterns> map, Functor functor) {
-        super(map, functor);
+    private final Map<Object, Patterns>  map;
+    private final Functor                functor;
+    private final Integer                leftPrecedence;
+    private final Integer                innerPrecedence;
+    private final String                 group;
+    private final Set<RepetitionPattern> startRepetitions;
+    private final RepetitionPattern      endRepetition;
+
+    public Patterns(Functor functor) {
+        this(Map.of(), functor, null, null, null, Set.of(), null);
     }
 
-    public Patterns setFunctor(Functor functor) {
-        if (b() != null) {
-            throw new IllegalArgumentException();
-        }
-        return new Patterns(a(), functor);
+    public Patterns(RepetitionPattern repetition, boolean end) {
+        this(Map.of(), null, null, null, null, end ? Set.of() : Set.of(repetition), end ? repetition : null);
     }
 
-    public Patterns put(Object key, Patterns patterns) {
-        return new Patterns(a().put(key, patterns), b());
+    public Patterns(Object key, Patterns value) {
+        this(Map.of(Entry.of(key, value)), null, null, null, null, Set.of(), null);
     }
 
-    public Patterns get(Object key) {
-        return a().get(key);
+    public Patterns(Type key, Patterns value, Integer leftPrecedence, Integer innerPrecedence) {
+        this(Map.of(Entry.of(key, value)), null, leftPrecedence, innerPrecedence, key.group(), Set.of(), null);
+    }
+
+    private Patterns(Map<Object, Patterns> map, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, Set<RepetitionPattern> startRepetitions, RepetitionPattern endRepetition) {
+        this.map = map;
+        this.functor = functor;
+        this.leftPrecedence = leftPrecedence;
+        this.innerPrecedence = innerPrecedence;
+        this.group = group;
+        this.startRepetitions = startRepetitions;
+        this.endRepetition = endRepetition;
     }
 
     public Map<Object, Patterns> map() {
-        return a();
+        return map;
     }
 
     public Functor functor() {
-        return b();
+        return functor;
     }
 
-    public ParseResult preParse(Token token, ParseResult result, Parser parser) throws ParseException {
-        if (token(token, result, parser) != null) {
+    public Integer leftPrecedence() {
+        return leftPrecedence;
+    }
+
+    public Integer innerPrecedence() {
+        return innerPrecedence;
+    }
+
+    public String group() {
+        return group;
+    }
+
+    public Set<RepetitionPattern> startRepetitions() {
+        return startRepetitions;
+    }
+
+    public RepetitionPattern endRepetition() {
+        return endRepetition;
+    }
+
+    public ParseResult parse(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
+        if (endRepetition() != null) {
+            result.endRepetition(endRepetition(), token);
             return result;
         }
-        Functor functor = functor();
-        if (functor == null) {
+        do {
+            if (token(token, result, parser, pre) == null) {
+                if (pre && group() != null) {
+                    result.endPreParse(this, token);
+                    return result;
+                } else if (node(token, result, parser, pre) == null) {
+                    break;
+                }
+            }
+            if (!repeat(result)) {
+                return result;
+            }
+            token = result.nextToken();
+            result.endRepetition(null, token);
+        } while (true);
+        if (pre && functor() == null) {
             return null;
         }
-        result.endPreParse(functor(), token);
+        result.endPostParse(functor(), token);
         return result;
     }
 
-    private ParseResult token(Token token, ParseResult result, Parser parser) throws ParseException {
-        Map<Object, Patterns> map = a();
+    private boolean repeat(ParseResult result) {
+        return result.endRepetition() != null && startRepetitions().contains(result.endRepetition());
+    }
+
+    private ParseResult token(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
+        if (map().isEmpty()) {
+            return null;
+        }
         String text = token.text();
-        Patterns patterns = map.get(text);
+        Patterns patterns = map().get(text);
         if (patterns == null) {
             if (token.type() == TokenType.OPERATOR) {
                 for (int i = text.length() - 1; i > 0; i--) {
                     String key = text.substring(0, i);
-                    patterns = map.get(key);
+                    patterns = map().get(key);
                     if (patterns != null) {
                         token = token.split(i);
                         break;
@@ -83,31 +143,53 @@ public class Patterns extends Pair<Map<Object, Patterns>, Functor> {
                 }
             }
             if (patterns == null) {
-                patterns = map.get(token.type());
-                if (patterns != null) {
+                patterns = map().get(token.type());
+                if (patterns != null && token.type().variable()) {
                     result.add(text);
                 }
             }
         }
         if (patterns != null) {
             result.add(token);
-            if (patterns.preParse(token.next(), result, parser) != null) {
+            if (patterns.parse(token.next(), result, parser, pre) != null) {
                 return result;
             }
         }
         return null;
     }
 
+    private ParseResult node(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
+        if (group() == null) {
+            return null;
+        }
+        Node node = parser.parseNode(token, innerPrecedence(), group());
+        result.add(node);
+        token = node.nextToken();
+        for (Type sup : node.type().allsupers()) {
+            Patterns patterns = map().get(sup);
+            if (patterns != null) {
+                if (patterns.parse(token, result, parser, pre) != null) {
+                    return result;
+                }
+            }
+        }
+        throw new ParseException("No functor found for type " + node.type(), node);
+    }
+
     public Patterns merge(Patterns patterns) {
         if (patterns == null) {
             return this;
         }
-        Functor f = merge(functor(), patterns.functor());
-        Map<Object, Patterns> m = map().addAll(patterns.map(), (a, b) -> a.merge(b));
-        return new Patterns(m, f);
+        return new Patterns(map().addAll(patterns.map(), (a, b) -> a.merge(b)), //
+                merge(functor(), patterns.functor()), //
+                merge(leftPrecedence(), patterns.leftPrecedence()), //
+                merge(innerPrecedence(), patterns.innerPrecedence()), //
+                merge(group(), patterns.group()), //
+                startRepetitions().addAll(patterns.startRepetitions()), //
+                merge(endRepetition(), patterns.endRepetition()));
     }
 
-    private static Functor merge(Functor t1, Functor t2) {
+    private static <T> T merge(T t1, T t2) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
             throw new PatternMergeException("Non deterministic pattern merge " + t1 + " <>  " + t2);
         }
@@ -116,7 +198,6 @@ public class Patterns extends Pair<Map<Object, Patterns>, Functor> {
 
     @Override
     public String toString() {
-        Map<Object, Patterns> map = map();
-        return map.isEmpty() ? functor().toString() : map.toString().substring(3);
+        return map().toString().substring(3);
     }
 }

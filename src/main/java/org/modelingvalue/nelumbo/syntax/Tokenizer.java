@@ -36,8 +36,8 @@ public class Tokenizer {
     public TokenizerResult tokenize() throws ParseException {
         Token[] tokens = new Token[4];
         TokenType[] tokenTypes = TokenType.values();
-        Matcher[] matchers = new Matcher[tokenTypes.length];
-        for (int i = 0; i < tokenTypes.length; i++) {
+        Matcher[] matchers = new Matcher[tokenTypes.length - 2];
+        for (int i = 0; i < matchers.length; i++) {
             matchers[i] = tokenTypes[i].pattern().matcher(input);
             if (!matchers[i].find()) {
                 matchers[i] = null;
@@ -49,7 +49,7 @@ public class Tokenizer {
         while (index < input.length()) {
             String text = null;
             TokenType type = null;
-            for (int i = 0; i < tokenTypes.length; i++) {
+            for (int i = 0; i < matchers.length; i++) {
                 final Matcher m = matchers[i];
                 if (m == null) {
                     continue;

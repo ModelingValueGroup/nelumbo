@@ -21,10 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseResult;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.Patterns;
 
 public class SequencePattern extends Pattern {
     @Serial
@@ -46,56 +43,6 @@ public class SequencePattern extends Pattern {
     @SuppressWarnings("unchecked")
     public List<Pattern> elements() {
         return (List<Pattern>) get(0);
-    }
-
-    private Pattern next(List<Pattern> elements, int i, Pattern next) {
-        if (i + 1 < elements.size()) {
-            Pattern element = elements.get(i + 1);
-            if (element instanceof OptionalPattern op) {
-                return a(op.optional(), next(elements, i + 1, next));
-            }
-            if (element instanceof RepetitionPattern rp) {
-                return a(rp.repeated(), next(elements, i + 1, next));
-            }
-            return element;
-        }
-        return next;
-    }
-
-    @Override
-    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
-        List<Pattern> elements = elements();
-        for (int i = 0; i < elements.size(); i++) {
-            Pattern element = elements.get(i);
-            token = element.parse(token, group, parser, next(elements, i, next), result);
-        }
-        return token;
-    }
-
-    @Override
-    public boolean peekIs(Token token, Parser parser) throws ParseException {
-        List<Pattern> elements = elements();
-        return !elements.isEmpty() && elements.first().peekIs(token, parser);
-    }
-
-    @Override
-    public boolean isFixed(boolean first) {
-        return true;
-    }
-
-    @Override
-    public List<Pattern> fixed(List<Pattern> list, boolean[] stop) {
-        for (Pattern element : elements()) {
-            if (!element.isFixed(list.isEmpty())) {
-                stop[0] = true;
-                break;
-            }
-            list = element.fixed(list, stop);
-            if (stop[0]) {
-                break;
-            }
-        }
-        return list;
     }
 
     @Override
@@ -139,6 +86,14 @@ public class SequencePattern extends Pattern {
             }
         }
         return set(0, elements);
+    }
+
+    @Override
+    public Patterns patterns(Patterns patterns, NodeTypePattern left) {
+        for (Pattern element : elements().reverse()) {
+            patterns = element.patterns(patterns, left);
+        }
+        return patterns;
     }
 
 }

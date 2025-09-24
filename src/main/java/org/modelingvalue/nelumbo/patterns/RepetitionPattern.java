@@ -21,10 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseResult;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.Patterns;
 
 public class RepetitionPattern extends Pattern {
     @Serial
@@ -48,15 +45,6 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
-        Pattern repeated = repeated();
-        while (next != null ? !next.peekIs(token, parser) : repeated.peekIs(token, parser)) {
-            token = repeated.parse(token, group, parser, a(repeated, next), result);
-        }
-        return token;
-    }
-
-    @Override
     public List<Type> args() {
         return repeated().args().map(t -> t.list()).asList();
     }
@@ -69,5 +57,10 @@ public class RepetitionPattern extends Pattern {
     @Override
     public Pattern setPresedence(List<Integer> precedence, int[] p) {
         return set(0, repeated().setPresedence(precedence, p));
+    }
+
+    @Override
+    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
+        return nextPatterns.merge(repeated().patterns(new Patterns(this, true), left)).merge(new Patterns(this, false));
     }
 }

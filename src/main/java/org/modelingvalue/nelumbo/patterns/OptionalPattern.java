@@ -21,10 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseResult;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.Patterns;
 
 public class OptionalPattern extends Pattern {
     @Serial
@@ -48,17 +45,13 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException {
-        Pattern optional = optional();
-        if (optional.peekIs(token, parser) || (next != null && !next.peekIs(token, parser))) {
-            token = optional.parse(token, group, parser, next, result);
-        }
-        return token;
+    public List<Type> args() {
+        return optional().args();
     }
 
     @Override
-    public List<Type> args() {
-        return optional().args();
+    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
+        return nextPatterns.merge(optional().patterns(nextPatterns, left));
     }
 
     @Override

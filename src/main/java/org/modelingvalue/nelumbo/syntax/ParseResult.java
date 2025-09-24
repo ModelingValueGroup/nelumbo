@@ -21,6 +21,7 @@ import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public final class ParseResult {
 
@@ -28,9 +29,9 @@ public final class ParseResult {
     private final MutableList<Object>     args;
 
     private Functor                       functor;
-    private Token                         token;
-    private int                           pre  = 0;
-    private int                           post = 0;
+    private Patterns                      patterns;
+    private RepetitionPattern             endRepetition;
+    private Token                         nextToken;
 
     public ParseResult() {
         elements = MutableList.of(List.of());
@@ -41,17 +42,35 @@ public final class ParseResult {
         return functor;
     }
 
+    public Patterns patterns() {
+        return patterns;
+    }
+
+    public RepetitionPattern endRepetition() {
+        return endRepetition;
+    }
+
     public Token nextToken() {
-        return token;
+        return nextToken;
     }
 
     public int leftPrecedence() {
-        return functor.leftPrecedence();
+        return patterns != null ? patterns.leftPrecedence() : functor.left().leftPrecedence();
     }
 
-    public void endPreParse(Functor functor, Token token) {
+    public void endPostParse(Functor functor, Token nextToken) {
         this.functor = functor;
-        this.token = token;
+        this.nextToken = nextToken;
+    }
+
+    public void endPreParse(Patterns patterns, Token nextToken) {
+        this.patterns = patterns;
+        this.nextToken = nextToken;
+    }
+
+    public void endRepetition(RepetitionPattern endRepetition, Token nextToken) {
+        this.endRepetition = endRepetition;
+        this.nextToken = nextToken;
     }
 
     public List<AstElement> elements() {
@@ -61,16 +80,10 @@ public final class ParseResult {
     public void add(Node node) {
         elements.add(node);
         args.add(node);
-        if (functor == null) {
-            pre++;
-        }
     }
 
     public void add(Token token) {
         elements.add(token);
-        if (functor == null) {
-            pre++;
-        }
     }
 
     public void add(String val) {
@@ -81,17 +94,16 @@ public final class ParseResult {
         return args.toImmutable();
     }
 
-    public Node postParse(String group, Parser parser) throws ParseException {
-        return functor.postParse(group, parser, this);
-    }
-
-    public boolean isDone() {
-        return post++ < pre;
+    public Node postParse(Parser parser) throws ParseException {
+        if (patterns != null) {
+            patterns.parse(nextToken, this, parser, false);
+        }
+        return functor.construct(elements(), args().toArray());
     }
 
     @Override
     public String toString() {
-        return functor.toString() + args().toString().substring(4);
+        return elements().toString().substring(4);
     }
 
 }

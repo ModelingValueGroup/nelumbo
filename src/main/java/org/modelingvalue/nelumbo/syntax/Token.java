@@ -206,7 +206,8 @@ public class Token implements AstElement {
 
     @Override
     public String toString() {
-        return "'" + textTraced() + "'";
+        String textTraced = textTraced();
+        return textTraced.isEmpty() && !type().variable() ? type().name() : "'" + textTraced + "'";
     }
 
     @Override

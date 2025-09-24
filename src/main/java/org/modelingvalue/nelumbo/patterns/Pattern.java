@@ -22,11 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseResult;
-import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Patterns;
-import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public abstract class Pattern extends Node {
@@ -100,23 +96,7 @@ public abstract class Pattern extends Node {
     @Override
     protected abstract Pattern struct(Object[] array);
 
-    public abstract Token parse(Token token, String group, Parser parser, Pattern next, ParseResult result) throws ParseException;
-
-    public boolean peekIs(Token token, Parser parser) throws ParseException {
-        return false;
-    }
-
-    public Patterns patterns(Patterns patterns) {
-        throw new UnsupportedOperationException();
-    }
-
-    public List<Pattern> fixed(List<Pattern> fixed, boolean[] stop) {
-        return fixed;
-    }
-
-    public boolean isFixed(boolean first) {
-        return false;
-    }
+    public abstract Patterns patterns(Patterns nextPatterns, NodeTypePattern left);
 
     public String name() {
         return "";
