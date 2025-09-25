@@ -35,14 +35,10 @@ public class ParseException extends Exception {
     }
 
     public ParseException(Throwable cause, String s, AstElement... elements) {
-        this(cause, s, elements[0], elements[elements.length - 1]);
+        this(cause, s, elements[0].firstToken(), elements[elements.length - 1].lastToken());
     }
 
-    public ParseException(Throwable cause, String s, AstElement firstElement, AstElement lastElement) {
-        this(cause, s, firstElement.firstToken(), lastElement.lastToken());
-    }
-
-    private ParseException(Throwable cause, String s, Token firstToken, Token lastToken) {
+    public ParseException(Throwable cause, String s, Token firstToken, Token lastToken) {
         this(cause, //
                 s, //
                 firstToken.line(), //

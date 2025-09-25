@@ -108,7 +108,7 @@ public class Patterns {
                     break;
                 }
             }
-            if (!repeat(result)) {
+            if (result.endRepetition() == null || !startRepetitions().contains(result.endRepetition())) {
                 return result;
             }
             token = result.nextToken();
@@ -119,10 +119,6 @@ public class Patterns {
         }
         result.endPostParse(functor(), token);
         return result;
-    }
-
-    private boolean repeat(ParseResult result) {
-        return result.endRepetition() != null && startRepetitions().contains(result.endRepetition());
     }
 
     private ParseResult token(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
@@ -173,7 +169,11 @@ public class Patterns {
                 }
             }
         }
-        throw new ParseException("No functor found for type " + node.type(), node);
+        throw new ParseException("Node of Unexpected type " + node.type() + ", expected " + expectedTypes(), node);
+    }
+
+    private String expectedTypes() {
+        return map().toKeys().filter(Type.class).map(Object::toString).reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
     public Patterns merge(Patterns patterns) {

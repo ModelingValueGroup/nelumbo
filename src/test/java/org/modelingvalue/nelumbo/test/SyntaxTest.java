@@ -42,13 +42,19 @@ public class SyntaxTest extends NelumboTestBase {
 
                     <Set>  ::  <Node>
                     <Int>  ::  <Node>
+
                     <Set>  ::= { <[> <Node> <{> , <Node> <}> <]> } #10 #5 @org.modelingvalue.nelumbo.Node,
                                <Set> + <Node> #40
-                    // <Int>  ::= <Set>.size
-                    // <Set>  s, t
-                    // <Int>  i, j
+                    <Int>  ::= <Set>.size
+                    <Int>  ::= <NUMBER>
+                    <Predicate> ::= <Int> = <Int>
 
-                    // s.size=i <==> i=i
+                    <Set>  s, t
+                    <Int>  i, j
+
+                    // 10=10
+
+                    // s.size=i <==> i=10
 
                     """;
             try {
