@@ -146,4 +146,9 @@ public class Functor extends Node {
         return pattern().patterns(new Patterns(this), left());
     }
 
+    @Override
+    public Functor setAstElements(List<AstElement> elements) {
+        return (Functor) super.setAstElements(elements);
+    }
+
 }

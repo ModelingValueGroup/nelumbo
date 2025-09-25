@@ -30,8 +30,8 @@ public class Type extends Node {
     private static final long  serialVersionUID = -4583279157841144493L;
     //
     public static final String DEFAULT_GROUP    = "_";
-    public static final String SYNTAX_GROUP     = "SYNTAX";
     public static final String TOP_GROUP        = "TOP";
+    public static final String PATTERN_GROUP    = "PATTERN";
     //
     public static final Type   NODE             = new Type(Node.class);
     public static final Type   FUNCTION         = new Type("Function", NODE);
@@ -39,17 +39,15 @@ public class Type extends Node {
     public static final Type   LITERAL          = new Type("Literal", TERMINAL);
     public static final Type   ROOT             = new Type("Root", NODE);
     public static final Type   PREDICATE        = new Type(Predicate.class, NODE);
-    public static final Type   RELATION         = new Type("Relation", PREDICATE, ROOT);
+    public static final Type   RELATION         = new Type("Relation", PREDICATE);
     public static final Type   RESULT           = new Type("Result", ROOT);
-    public static final Type   VARIABLE         = new Type(Variable.class, ROOT);
+    public static final Type   VARIABLE         = new Type(Variable.class, NODE);
     public static final Type   RULE             = new Type(Rule.class, ROOT);
     public static final Type   FUNCTOR          = new Type(Functor.class, ROOT);
+    public static final Type   FACT             = new Type("Fact", ROOT);
     public static final Type   STRING           = new Type(String.class);
-    public static final Type   PATTERN          = new Type("Pattern", SYNTAX_GROUP, Type.NODE);
+    public static final Type   PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.NODE);
     public static final Type   QUERY            = new Type("Query", Type.ROOT);
-    //
-    public static final Type   FACTS            = new Type("Facts", Type.NODE);
-    public static final Type   FALSEHOODS       = new Type("Falsehoods", Type.NODE);
 
     public static List<Type> predefined() {
         return List.of(TYPE(), //
@@ -64,8 +62,10 @@ public class Type extends Node {
                 VARIABLE, //
                 RULE, //
                 FUNCTOR, //
-                STRING //
-        );
+                FACT, //
+                STRING, //
+                PATTERN, //
+                QUERY);
     }
 
     private static Type TYPE = null;
@@ -88,7 +88,12 @@ public class Type extends Node {
 
                 @Override
                 public Set<Type> supers() {
-                    return Set.of(ROOT);
+                    return Set.of();
+                }
+
+                @Override
+                public String group() {
+                    return DEFAULT_GROUP;
                 }
             };
         }
@@ -113,7 +118,7 @@ public class Type extends Node {
     }
 
     private Type(Class<?> clss, Type... supers) {
-        super(TYPE(), List.of(), clss, Set.of(supers), DEFAULT_GROUP);
+        super(TYPE(), List.of(), clss, Set.of(supers), group(supers));
     }
 
     public Type(String name, String group, Type... supers) {
@@ -121,7 +126,7 @@ public class Type extends Node {
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), DEFAULT_GROUP);
+        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group(supers));
     }
 
     protected Type(TokenType type) {
@@ -144,6 +149,10 @@ public class Type extends Node {
 
     private Type(Type element, String group) {
         super(TYPE(), List.of(element), "List" + element, Set.of(NODE), group, element);
+    }
+
+    private static Object group(Type... supers) {
+        return supers.length > 0 ? supers[0].group() : DEFAULT_GROUP;
     }
 
     public Type element() {
@@ -215,6 +224,9 @@ public class Type extends Node {
     }
 
     public Type list(String group) {
+        if (!group.equals(group())) {
+            return new Type(this, group);
+        }
         if (list == null) {
             list = new Type(this, group);
         }

@@ -29,59 +29,59 @@ public abstract class Pattern extends Node {
     @Serial
     private static final long serialVersionUID = -1788203180486332564L;
 
-    public static AlternationPattern a(Pattern... options) {
+    public static Pattern a(Pattern... options) {
         return a(List.of(), options);
     }
 
-    public static NodeTypePattern n(Type nodeType, Integer precedence) {
+    public static Pattern n(Type nodeType, Integer precedence) {
         return n(List.of(), nodeType, precedence);
     }
 
-    public static OptionalPattern o(Pattern optional) {
+    public static Pattern o(Pattern optional) {
         return o(List.of(), optional);
     }
 
-    public static RepetitionPattern r(Pattern repeated) {
+    public static Pattern r(Pattern repeated) {
         return r(List.of(), repeated);
     }
 
-    public static SequencePattern s(Pattern... elements) {
+    public static Pattern s(Pattern... elements) {
         return s(List.of(), elements);
     }
 
-    public static TokenTextPattern t(String tokenText) {
+    public static Pattern t(String tokenText) {
         return t(List.of(), tokenText);
     }
 
-    public static TokenTypePattern t(TokenType tokenType) {
+    public static Pattern t(TokenType tokenType) {
         return t(List.of(), tokenType);
     }
 
-    public static AlternationPattern a(List<AstElement> ast, Pattern... options) {
+    public static Pattern a(List<AstElement> ast, Pattern... options) {
         return new AlternationPattern(Type.PATTERN, ast, List.of(options));
     }
 
-    public static NodeTypePattern n(List<AstElement> ast, Type nodeType, Integer precedence) {
+    public static Pattern n(List<AstElement> ast, Type nodeType, Integer precedence) {
         return new NodeTypePattern(Type.PATTERN, ast, nodeType, precedence);
     }
 
-    public static OptionalPattern o(List<AstElement> ast, Pattern optional) {
+    public static Pattern o(List<AstElement> ast, Pattern optional) {
         return new OptionalPattern(Type.PATTERN, ast, optional);
     }
 
-    public static RepetitionPattern r(List<AstElement> ast, Pattern repeated) {
+    public static Pattern r(List<AstElement> ast, Pattern repeated) {
         return new RepetitionPattern(Type.PATTERN, ast, repeated);
     }
 
-    public static SequencePattern s(List<AstElement> ast, Pattern... elements) {
+    public static Pattern s(List<AstElement> ast, Pattern... elements) {
         return new SequencePattern(Type.PATTERN, ast, List.of(elements));
     }
 
-    public static TokenTextPattern t(List<AstElement> ast, String tokenText) {
+    public static Pattern t(List<AstElement> ast, String tokenText) {
         return new TokenTextPattern(Type.PATTERN, ast, tokenText);
     }
 
-    public static TokenTypePattern t(List<AstElement> ast, TokenType tokenType) {
+    public static Pattern t(List<AstElement> ast, TokenType tokenType) {
         return new TokenTypePattern(Type.PATTERN, ast, tokenType);
     }
 

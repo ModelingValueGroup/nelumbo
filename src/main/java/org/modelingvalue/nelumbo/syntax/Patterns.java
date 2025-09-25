@@ -95,10 +95,6 @@ public class Patterns {
     }
 
     public ParseResult parse(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
-        if (endRepetition() != null) {
-            result.endRepetition(endRepetition(), token);
-            return result;
-        }
         do {
             if (token(token, result, parser, pre) == null) {
                 if (pre && group() != null) {
@@ -114,11 +110,25 @@ public class Patterns {
             token = result.nextToken();
             result.endRepetition(null, token);
         } while (true);
-        if (pre && functor() == null) {
-            return null;
+        if (endRepetition() != null) {
+            result.endRepetition(endRepetition(), token);
+            return result;
+        }
+        if (functor() == null) {
+            if (pre) {
+                return null;
+            } else {
+                throw new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token);
+            }
         }
         result.endPostParse(functor(), token);
         return result;
+    }
+
+    private String expectedTokens() {
+        return map().toKeys().filter(k -> k instanceof String || k instanceof TokenType).//
+                map(o -> o instanceof String ? ("\"" + o + "\"") : o.toString()).//
+                reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
     private ParseResult token(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
@@ -173,7 +183,8 @@ public class Patterns {
     }
 
     private String expectedTypes() {
-        return map().toKeys().filter(Type.class).map(Object::toString).reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
+        return map().toKeys().filter(Type.class).map(Object::toString).//
+                reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
     public Patterns merge(Patterns patterns) {
@@ -191,7 +202,7 @@ public class Patterns {
 
     private static <T> T merge(T t1, T t2) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
-            throw new PatternMergeException("Non deterministic pattern merge " + t1 + " <>  " + t2);
+            throw new PatternMergeException("Non deterministic pattern merge " + t1 + " <> " + t2);
         }
         return t1 == null ? t2 : t1;
     }

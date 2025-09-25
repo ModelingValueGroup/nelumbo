@@ -40,7 +40,6 @@ import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
-import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseResult;
@@ -78,10 +77,11 @@ public final class KnowledgeBase {
 
     private static final List<TokenType>                                                TOKEN_TYPES          = List.of(TokenType.NAME, TokenType.OPERATOR, TokenType.STRING, TokenType.SEMICOLON, TokenType.SINGLEQUOTE);
     private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(tt -> (Pattern) t(tt)).asList().add(n(Type.PATTERN, Integer.MAX_VALUE));
-    private static final RepetitionPattern                                              REPETITION_NO_COMMA  = r(a(PATTERNS_NO_COMMA.toArray(i -> new Pattern[i])));
+    private static final Pattern                                                        ALT_NO_COMMA         = a(PATTERNS_NO_COMMA.toArray(i -> new Pattern[i]));
     private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(TokenType.COMMA));
-    private static final RepetitionPattern                                              REPETITION           = r(a(PATTERNS.toArray(i -> new Pattern[i])));
-    private static final SequencePattern                                                SEQUENCE             = s(REPETITION_NO_COMMA,                                                                                    //
+    private static final Pattern                                                        ALTERNATIVES         = a(PATTERNS.toArray(i -> new Pattern[i]));
+    private static final Pattern                                                        SEQ_NO_COMMA         = s(ALTERNATIVES, r(ALTERNATIVES));
+    private static final Pattern                                                        SEQUENCE             = s(ALT_NO_COMMA, r(ALT_NO_COMMA),                                                                          //
             r(s(t("#"), a(t(TokenType.NUMBER)))),                                                                                                                                                                        //
             o(s(t("@"), t(TokenType.NAME), r(s(t("."), t(TokenType.NAME))))));
 
@@ -165,14 +165,14 @@ public final class KnowledgeBase {
         return result;
     }
 
-    private void addType(Type type) {
-        register(Functor.of(t(type.toString()), Type.TYPE(), (t, a) -> {
+    private Functor addType(Type type) {
+        return register(Functor.of(t(type.toString()), Type.TYPE(), (t, a) -> {
             return type.setAstElements(t);
         }));
     }
 
-    private void addVariable(Variable var) {
-        register(Functor.of(t(var.toString()), var.type(), (t, a) -> {
+    private Functor addVariable(Variable var) {
+        return register(Functor.of(t(var.toString()), var.type(), (t, a) -> {
             return var.setAstElements(t);
         }));
     }
@@ -213,16 +213,22 @@ public final class KnowledgeBase {
                 }
             }
 
-            register(Functor.of(s(r(n(Type.ROOT.list(), null)), t(ENDOFFILE)), //
-                    Type.ROOT.list().list(Type.TOP_GROUP), (t, a) -> {
+            register(Functor.of(s(r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null))), t(ENDOFFILE)), //
+                    Type.ROOT.list(Type.TOP_GROUP), (t, a) -> {
                         ListNode roots = new ListNode(List.of(), Type.ROOT.list());
-                        for (Object e : a) {
-                            roots = new ListNode(List.of(), roots, (ListNode) e);
+                        for (Object e1 : a) {
+                            if (e1 instanceof ListNode) {
+                                for (Node e2 : ((ListNode) e1).elements()) {
+                                    roots = new ListNode(List.of(), roots, (Node) e2);
+                                }
+                            } else {
+                                roots = new ListNode(List.of(), roots, (Node) e1);
+                            }
                         }
                         return roots.setAstElements(roots.astElements().add(t.last()));
                     }));
 
-            register(Functor.of(s(t("<(>"), REPETITION, r(s(t("<|>"), REPETITION)), t("<)>")), //
+            register(Functor.of(s(t("<(>"), SEQ_NO_COMMA, r(s(t("<|>"), SEQ_NO_COMMA)), t("<)>")), //
                     Type.PATTERN, (t1, a1) -> {
                         List<Pattern> options = List.of();
                         List<AstElement> option = null;
@@ -239,19 +245,19 @@ public final class KnowledgeBase {
                         return a(t1, options.toArray(i -> new Pattern[i]));
                     }));
 
-            register(Functor.of(s(t("{"), REPETITION, t("}")), //
+            register(Functor.of(s(t("{"), SEQ_NO_COMMA, t("}")), //
                     Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
 
-            register(Functor.of(s(t("("), REPETITION, t(")")), //
+            register(Functor.of(s(t("("), SEQ_NO_COMMA, t(")")), //
                     Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
 
-            register(Functor.of(s(t("["), REPETITION, t("]")), //
+            register(Functor.of(s(t("["), SEQ_NO_COMMA, t("]")), //
                     Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
 
-            register(Functor.of(s(t("<{>"), REPETITION, t("<}>")), //
+            register(Functor.of(s(t("<{>"), SEQ_NO_COMMA, t("<}>")), //
                     Type.PATTERN, (t1, a1) -> r(t1, pattern(t1))));
 
-            register(Functor.of(s(t("<[>"), REPETITION, t("<]>")), //
+            register(Functor.of(s(t("<[>"), SEQ_NO_COMMA, t("<]>")), //
                     Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
 
             register(Functor.of(n(Type.TYPE(), Integer.MAX_VALUE), //
@@ -313,7 +319,7 @@ public final class KnowledgeBase {
                     }));
 
             register(Functor.of(s(t(TokenType.TYPE), t("::"), n(Type.TYPE(), null), r(s(t(","), n(Type.TYPE(), null))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
-                    Type.ROOT.list(), (t, a) -> {
+                    Type.FUNCTOR, (t, a) -> {
                         String name = (String) a[0];
                         name = name.substring(1, name.length() - 1);
                         Set<Type> supers = Set.of();
@@ -322,8 +328,7 @@ public final class KnowledgeBase {
                         }
                         String group = a[a.length - 1] instanceof String ? (String) a[a.length - 1] : Type.DEFAULT_GROUP;
                         Type type = new Type(t, name, supers, group);
-                        CURRENT.get().addType(type);
-                        return new ListNode(List.of(), Type.ROOT, type);
+                        return CURRENT.get().addType(type).setAstElements(t);
                     }));
 
             register(Functor.of(s(n(Type.TYPE(), null), t(TokenType.NAME), r(s(t(","), t(TokenType.NAME))), t(NEWLINE)), //
@@ -338,30 +343,32 @@ public final class KnowledgeBase {
                                 token = (Token) t.get(++i);
                             }
                             Variable var = new Variable(List.of(token), type, token.text());
-                            roots = new ListNode(List.of(), roots, var);
                             if (comma != null) {
                                 roots.setAstElements(roots.astElements().add(comma));
                             }
-                            CURRENT.get().addVariable(var);
+                            Functor functor = CURRENT.get().addVariable(var).setAstElements(List.of(token));
+                            roots = new ListNode(List.of(), roots, functor);
                         }
                         return roots.setAstElements(roots.astElements().add(t.last()));
                     }));
+
+            register(Functor.of(s(n(Type.PREDICATE, null), t("<=="), n(Type.PREDICATE, 10), r(s(t(","), n(Type.PREDICATE, 10))), t(TokenType.NEWLINE)), //
+                    Type.ROOT.list(), (t, a) -> CURRENT.get().rules(t, a, false)));
+
+            register(Functor.of(s(n(Type.PREDICATE, null), t("<==>"), n(Type.PREDICATE, 10), r(s(t(","), n(Type.PREDICATE, 10))), t(TokenType.NEWLINE)), //
+                    Type.ROOT.list(), (t, a) -> CURRENT.get().rules(t, a, true)));
+
+            register(Functor.of(s(n(Type.PREDICATE, null), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), //
+                    Type.QUERY, (t, a) -> new Node(Type.QUERY, t, a)));
+
+            register(Functor.of(s(n(Type.RELATION, null), t(TokenType.NEWLINE)), //
+                    Type.FACT, (t, a) -> new Node(Type.FACT, t, a)));
 
             register(Functor.of(s(t("("), n(Type.NODE, null), t(")")), //
                     Type.NODE, (t, a) -> {
                         Node node = (Node) a[0];
                         return node.setAstElements(node.astElements().prepend(t.first()).append(t.last()));
                     }));
-
-            register(Functor.of(s(n(Type.PREDICATE, null), t("<=="), n(Type.PREDICATE, 10), r(s(t(","), n(Type.PREDICATE, 10))), t(TokenType.NEWLINE)), //
-                    Type.RULE, (t, a) -> CURRENT.get().rules(t, a, false)));
-
-            register(Functor.of(s(n(Type.PREDICATE, null), t("<==>"), n(Type.PREDICATE, 10), r(s(t(","), n(Type.PREDICATE, 10))), t(TokenType.NEWLINE)), //
-                    Type.RULE, (t, a) -> CURRENT.get().rules(t, a, true)));
-
-            register(Functor.of(s(t("?"), n(Type.PREDICATE, null), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), Type.ROOT.list(), (t, a) -> {
-                return new ListNode(t, Type.ROOT, new Node(Type.QUERY, t, a));
-            }));
 
             //            try {
             //                Parser.parse(KnowledgeBase.class);
@@ -613,7 +620,7 @@ public final class KnowledgeBase {
         }
     }
 
-    public void register(Functor functor) {
+    public Functor register(Functor functor) {
         boolean post = functor.left() != null;
         String group = functor.resultType().group();
         try {
@@ -636,6 +643,7 @@ public final class KnowledgeBase {
             }
         }
         functors.accumulateAndGet(Set.of(functor), Set::addAll);
+        return functor;
     }
 
     public ParseResult preParse(Token token, String group, Node left, Parser parser) throws ParseException {

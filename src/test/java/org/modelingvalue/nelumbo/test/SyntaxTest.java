@@ -40,21 +40,21 @@ public class SyntaxTest extends NelumboTestBase {
         run(() -> {
             String example = """
 
-                    <Set>  ::  <Node>
-                    <Int>  ::  <Node>
+                    <Set>      ::  <Node>
+                    <Int>      ::  <Node>
 
-                    <Set>  ::= { <[> <Node> <{> , <Node> <}> <]> } #10 #5 @org.modelingvalue.nelumbo.Node,
-                               <Set> + <Node> #40
-                    <Int>  ::= <Set>.size
-                    <Int>  ::= <NUMBER>
-                    <Predicate> ::= <Int> = <Int>
+                    <Set>      ::= { <[> <Node> <{> , <Node> <}> <]> } #10 #5 @org.modelingvalue.nelumbo.Node
+                    <Set>      ::= <Set> + <Node> #40
+                    <Int>      ::= <Set>.size
+                    <Int>      ::= <NUMBER>
+                    <Relation> ::= <Int> = <Int>
 
                     <Set>  s, t
                     <Int>  i, j
 
-                    // 10=10
+                    10=10
 
-                    // s.size=i <==> i=10
+                    s.size=i <==> i=10
 
                     """;
             try {
