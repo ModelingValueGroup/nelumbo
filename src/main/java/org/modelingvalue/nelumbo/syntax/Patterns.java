@@ -170,11 +170,10 @@ public class Patterns {
         }
         Node node = parser.parseNode(token, innerPrecedence(), group());
         result.add(node);
-        token = node.nextToken();
         for (Type sup : node.type().allsupers()) {
             Patterns patterns = map().get(sup);
             if (patterns != null) {
-                if (patterns.parse(token, result, parser, pre) != null) {
+                if (patterns.parse(node.nextToken(), result, parser, pre) != null) {
                     return result;
                 }
             }

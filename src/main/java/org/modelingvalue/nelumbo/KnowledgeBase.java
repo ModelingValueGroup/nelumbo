@@ -352,19 +352,19 @@ public final class KnowledgeBase {
                         return roots.setAstElements(roots.astElements().add(t.last()));
                     }));
 
-            register(Functor.of(s(n(Type.PREDICATE, null), t("<=="), n(Type.PREDICATE, 10), r(s(t(","), n(Type.PREDICATE, 10))), t(TokenType.NEWLINE)), //
+            register(Functor.of(s(n(Type.PREDICATE, 0), t("<=="), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
                     Type.ROOT.list(), (t, a) -> CURRENT.get().rules(t, a, false)));
 
-            register(Functor.of(s(n(Type.PREDICATE, null), t("<==>"), n(Type.PREDICATE, 10), r(s(t(","), n(Type.PREDICATE, 10))), t(TokenType.NEWLINE)), //
+            register(Functor.of(s(n(Type.PREDICATE, 0), t("<==>"), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
                     Type.ROOT.list(), (t, a) -> CURRENT.get().rules(t, a, true)));
 
-            register(Functor.of(s(n(Type.PREDICATE, null), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), //
+            register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), //
                     Type.QUERY, (t, a) -> new Node(Type.QUERY, t, a)));
 
-            register(Functor.of(s(n(Type.RELATION, null), t(TokenType.NEWLINE)), //
+            register(Functor.of(s(n(Type.RELATION, 0), t(TokenType.NEWLINE)), //
                     Type.FACT, (t, a) -> new Node(Type.FACT, t, a)));
 
-            register(Functor.of(s(t("("), n(Type.NODE, null), t(")")), //
+            register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
                     Type.NODE, (t, a) -> {
                         Node node = (Node) a[0];
                         return node.setAstElements(node.astElements().prepend(t.first()).append(t.last()));
@@ -659,7 +659,10 @@ public final class KnowledgeBase {
                 if (found != null) {
                     ParseResult result = new ParseResult();
                     result.add(left);
-                    return found.parse(token, result, parser, true);
+                    result = found.parse(token, result, parser, true);
+                    if (result != null) {
+                        return result;
+                    }
                 }
             }
             return null;

@@ -85,19 +85,21 @@ public final class Parser {
             throw new ParseException("No syntax pattern found for " + token.text(), token);
         }
         Node left = result.postParse(this);
-        token = left.nextToken();
-        if (token != null) {
-            result = preParse(token, group, left);
-            while (result != null) {
-                if (precedence >= result.leftPrecedence()) {
-                    return left;
-                }
-                left = result.postParse(this);
-                token = left.nextToken();
-                if (token == null) {
-                    return left;
-                }
+        if (precedence < Integer.MAX_VALUE) {
+            token = left.nextToken();
+            if (token != null) {
                 result = preParse(token, group, left);
+                while (result != null) {
+                    if (precedence >= result.leftPrecedence()) {
+                        return left;
+                    }
+                    left = result.postParse(this);
+                    token = left.nextToken();
+                    if (token == null) {
+                        return left;
+                    }
+                    result = preParse(token, group, left);
+                }
             }
         }
         return left;

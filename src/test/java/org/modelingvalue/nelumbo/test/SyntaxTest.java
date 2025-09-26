@@ -43,11 +43,11 @@ public class SyntaxTest extends NelumboTestBase {
                     <Set>      ::  <Node>
                     <Int>      ::  <Node>
 
-                    <Set>      ::= { <[> <Node> <{> , <Node> <}> <]> } #10 #5 @org.modelingvalue.nelumbo.Node
+                    <Set>      ::= { <[> <Node> <{> , <Node> <}> <]> } @org.modelingvalue.nelumbo.Node
                     <Set>      ::= <Set> + <Node> #40
                     <Int>      ::= <Set>.size
                     <Int>      ::= <NUMBER>
-                    <Relation> ::= <Int> = <Int>
+                    <Relation> ::= <Int> = <Int> #10
 
                     <Set>  s, t
                     <Int>  i, j
