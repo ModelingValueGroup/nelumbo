@@ -27,14 +27,8 @@ public final class Rule extends Node {
     @Serial
     private static final long serialVersionUID = -4602043866952049391L;
 
-    private static Functor    FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(Not.class, f -> FUNCTOR = f);
-    }
-
-    public Rule(List<AstElement> elements, Predicate consequence, Predicate condition, boolean symmetric) {
-        super(FUNCTOR, elements, consequence, condition, symmetric);
+    public Rule(Functor functor, List<AstElement> elements, Predicate consequence, Predicate condition, boolean symmetric) {
+        super(functor, elements, consequence, condition, symmetric);
     }
 
     private Rule(Object[] args) {

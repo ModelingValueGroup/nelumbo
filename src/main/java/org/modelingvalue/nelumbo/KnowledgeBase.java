@@ -166,13 +166,13 @@ public final class KnowledgeBase {
     }
 
     private Functor addType(Type type) {
-        return register(Functor.of(t(type.toString()), Type.TYPE(), (t, a) -> {
+        return register(Functor.of(t(type.toString()), Type.TYPE(), (t, a, f) -> {
             return type.setAstElements(t);
         }));
     }
 
     private Functor addVariable(Variable var) {
-        return register(Functor.of(t(var.toString()), var.type(), (t, a) -> {
+        return register(Functor.of(t(var.toString()), var.type(), (t, a, f) -> {
             return var.setAstElements(t);
         }));
     }
@@ -214,7 +214,7 @@ public final class KnowledgeBase {
             }
 
             register(Functor.of(s(r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null))), t(ENDOFFILE)), //
-                    Type.ROOT.list(Type.TOP_GROUP), (t, a) -> {
+                    Type.ROOT.list(Type.TOP_GROUP), (t, a, f) -> {
                         ListNode roots = new ListNode(List.of(), Type.ROOT.list());
                         for (Object e1 : a) {
                             if (e1 instanceof ListNode) {
@@ -229,7 +229,7 @@ public final class KnowledgeBase {
                     }));
 
             register(Functor.of(s(t("<(>"), SEQ_NO_COMMA, r(s(t("<|>"), SEQ_NO_COMMA)), t("<)>")), //
-                    Type.PATTERN, (t1, a1) -> {
+                    Type.PATTERN, (t1, a1, f) -> {
                         List<Pattern> options = List.of();
                         List<AstElement> option = null;
                         for (AstElement e : t1) {
@@ -246,29 +246,29 @@ public final class KnowledgeBase {
                     }));
 
             register(Functor.of(s(t("{"), SEQ_NO_COMMA, t("}")), //
-                    Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
+                    Type.PATTERN, (t, a, f) -> s(t, pattern(t))));
 
             register(Functor.of(s(t("("), SEQ_NO_COMMA, t(")")), //
-                    Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
+                    Type.PATTERN, (t, a, f) -> s(t, pattern(t))));
 
             register(Functor.of(s(t("["), SEQ_NO_COMMA, t("]")), //
-                    Type.PATTERN, (t1, a1) -> s(t1, pattern(t1))));
+                    Type.PATTERN, (t, a, f) -> s(t, pattern(t))));
 
             register(Functor.of(s(t("<{>"), SEQ_NO_COMMA, t("<}>")), //
-                    Type.PATTERN, (t1, a1) -> r(t1, pattern(t1))));
+                    Type.PATTERN, (t, a, f) -> r(t, pattern(t))));
 
             register(Functor.of(s(t("<[>"), SEQ_NO_COMMA, t("<]>")), //
-                    Type.PATTERN, (t1, a1) -> o(t1, pattern(t1))));
+                    Type.PATTERN, (t, a, f) -> o(t, pattern(t))));
 
             register(Functor.of(n(Type.TYPE(), Integer.MAX_VALUE), //
-                    Type.PATTERN, (t1, a1) -> {
-                        Type type = (Type) a1[0];
+                    Type.PATTERN, (t, a, f) -> {
+                        Type type = (Type) a[0];
                         TokenType tt = type.tokenType();
-                        return tt != null ? t(t1, tt) : n(t1, type, null);
+                        return tt != null ? t(t, tt) : n(t, type, null);
                     }));
 
             register(Functor.of(s(n(Type.TYPE(), null), t("::="), SEQUENCE, r(s(t(","), SEQUENCE)), t(NEWLINE)), //
-                    Type.ROOT.list(), (t1, a1) -> {
+                    Type.ROOT.list(), (t1, a1, f) -> {
                         Type type = (Type) t1.get(0);
                         ListNode roots = new ListNode(t1.sublist(0, 2), Type.ROOT);
                         List<AstElement> pttrn = List.of(), ast = List.of();
@@ -319,7 +319,7 @@ public final class KnowledgeBase {
                     }));
 
             register(Functor.of(s(t(TokenType.TYPE), t("::"), n(Type.TYPE(), null), r(s(t(","), n(Type.TYPE(), null))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
-                    Type.FUNCTOR, (t, a) -> {
+                    Type.FUNCTOR, (t, a, f) -> {
                         String name = (String) a[0];
                         name = name.substring(1, name.length() - 1);
                         Set<Type> supers = Set.of();
@@ -332,7 +332,7 @@ public final class KnowledgeBase {
                     }));
 
             register(Functor.of(s(n(Type.TYPE(), null), t(TokenType.NAME), r(s(t(","), t(TokenType.NAME))), t(NEWLINE)), //
-                    Type.ROOT.list(), (t, a) -> {
+                    Type.ROOT.list(), (t, a, f) -> {
                         Type type = (Type) t.get(0);
                         ListNode roots = new ListNode(t.sublist(0, 1), Type.ROOT);
                         for (int i = 1; i < t.size() - 1; i++) {
@@ -353,19 +353,19 @@ public final class KnowledgeBase {
                     }));
 
             register(Functor.of(s(n(Type.PREDICATE, 0), t("<=="), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
-                    Type.ROOT.list(), (t, a) -> CURRENT.get().rules(t, a, false)));
+                    Type.ROOT.list(), (t, a, f) -> CURRENT.get().rules(f, t, a, false)));
 
             register(Functor.of(s(n(Type.PREDICATE, 0), t("<==>"), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
-                    Type.ROOT.list(), (t, a) -> CURRENT.get().rules(t, a, true)));
+                    Type.ROOT.list(), (t, a, f) -> CURRENT.get().rules(f, t, a, true)));
 
             register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), //
-                    Type.QUERY, (t, a) -> new Node(Type.QUERY, t, a)));
+                    Type.QUERY, (t, a, f) -> new Node(Type.QUERY, t, a)));
 
             register(Functor.of(s(n(Type.RELATION, 0), t(TokenType.NEWLINE)), //
-                    Type.FACT, (t, a) -> new Node(Type.FACT, t, a)));
+                    Type.FACT, (t, a, f) -> new Node(Type.FACT, t, a)));
 
             register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
-                    Type.NODE, (t, a) -> {
+                    Type.NODE, (t, a, f) -> {
                         Node node = (Node) a[0];
                         return node.setAstElements(node.astElements().prepend(t.first()).append(t.last()));
                     }));
@@ -380,9 +380,15 @@ public final class KnowledgeBase {
 
     }
 
-    private ListNode rules(List<AstElement> elements, Object[] args, boolean symmetric) {
-        ListNode roots = new ListNode(elements, Type.ROOT);
-        return roots;
+    private ListNode rules(Functor f, List<AstElement> elements, Object[] args, boolean symmetric) {
+        ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
+        Predicate rel = (Predicate) args[0];
+        for (int i = 1; i < args.length; i++) {
+            Predicate p = (Predicate) args[i];
+            Rule rule = new Rule(f, List.of(p), rel, p, symmetric);
+            roots = new ListNode(List.of(), roots, rule);
+        }
+        return roots.setAstElements(roots.astElements().add(elements.last()));
     }
 
     private final AtomicReference<Set<Functor>>                         functors     = new AtomicReference<>();
@@ -622,20 +628,21 @@ public final class KnowledgeBase {
 
     public Functor register(Functor functor) {
         boolean post = functor.left() != null;
-        String group = functor.resultType().group();
+        Type type = functor.resultType();
+        String group = type.group();
         try {
             Patterns patterns = functor.patterns();
             (post ? postPatterns : prePatterns).updateAndGet(m -> m.put(group, patterns.merge(m.get(group))));
         } catch (PatternMergeException pme) {
-            //            if (functor.firstToken() != null) {
-            //                functor = functor.setError(new ParseException(pme.getMessage(), functor));
-            //            } else {
-            throw pme;
-            //            }
+            if (functor.firstToken() != null) {
+                functor = functor.setError(new ParseException(pme.getMessage(), functor));
+            } else {
+                throw pme;
+            }
         }
         Constructor<? extends Node> constructor = functor.constructor();
-        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
-            Class<? extends Node> cls = constructor.getDeclaringClass();
+        Class<? extends Node> cls = constructor != null ? constructor.getDeclaringClass() : type.clss();
+        if (cls != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
             Consumer<Functor> setter = FUNCTOR_REGISTRATION.get().get(cls);
             if (setter != null) {
                 setter.accept(functor);

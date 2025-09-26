@@ -28,7 +28,7 @@ import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Patterns;
-import org.modelingvalue.nelumbo.syntax.ThrowingBiFunction;
+import org.modelingvalue.nelumbo.syntax.ThrowingTriFunction;
 
 public class Functor extends Node {
     @Serial
@@ -38,7 +38,7 @@ public class Functor extends Node {
         return new Functor(List.of(), pattern, result, constructor);
     }
 
-    public static Functor of(Pattern pattern, Type result, ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function) {
+    public static Functor of(Pattern pattern, Type result, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function) {
         return new Functor(List.of(), pattern, result, function);
     }
 
@@ -77,9 +77,9 @@ public class Functor extends Node {
     }
 
     @SuppressWarnings("unchecked")
-    public ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function() {
+    public ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function() {
         Object val = get(2);
-        return val instanceof ThrowingBiFunction ? (ThrowingBiFunction<List<AstElement>, Object[], ? extends Node>) val : null;
+        return val instanceof ThrowingTriFunction ? (ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node>) val : null;
     }
 
     public NodeTypePattern left() {
@@ -135,11 +135,11 @@ public class Functor extends Node {
                 throw new ParseException(e, "Exception during Node construction", elements.toArray(i -> new AstElement[i]));
             }
         }
-        ThrowingBiFunction<List<AstElement>, Object[], ? extends Node> function = function();
+        ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function = function();
         if (function != null) {
-            return function.apply(elements, args);
+            return function.apply(elements, args, this);
         }
-        return resultType() == Type.PREDICATE ? new Predicate(this, elements, args) : new Node(this, elements, args);
+        return Type.PREDICATE.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : new Node(this, elements, args);
     }
 
     public Patterns patterns() {

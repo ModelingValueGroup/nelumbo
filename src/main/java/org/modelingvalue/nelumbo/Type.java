@@ -253,6 +253,12 @@ public class Type extends Node {
         return (String) type;
     }
 
+    @SuppressWarnings("unchecked")
+    public Class<? extends Node> clss() {
+        Object type = get(0);
+        return type instanceof Class clss ? clss : null;
+    }
+
     @Override
     public String toString() {
         return "<" + name() + ">";
