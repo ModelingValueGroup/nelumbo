@@ -39,24 +39,29 @@ public class Patterns {
     private final String                 group;
     private final Set<RepetitionPattern> startRepetitions;
     private final RepetitionPattern      endRepetition;
+    private final Patterns               repetitionNext;
 
     public Patterns(Functor functor) {
-        this(Map.of(), functor, null, null, null, Set.of(), null);
+        this(Map.of(), functor, null, null, null, Set.of(), null, null);
     }
 
-    public Patterns(RepetitionPattern repetition, boolean end) {
-        this(Map.of(), null, null, null, null, end ? Set.of() : Set.of(repetition), end ? repetition : null);
+    public Patterns(RepetitionPattern repetition, Patterns repetitionNext) {
+        this(Map.of(), null, null, null, null, Set.of(), repetition, repetitionNext);
+    }
+
+    public Patterns(RepetitionPattern repetition) {
+        this(Map.of(), null, null, null, null, Set.of(repetition), null, null);
     }
 
     public Patterns(Object key, Patterns value) {
-        this(Map.of(Entry.of(key, value)), null, null, null, null, Set.of(), null);
+        this(Map.of(Entry.of(key, value)), null, null, null, null, Set.of(), null, null);
     }
 
     public Patterns(Type key, Patterns value, Integer leftPrecedence, Integer innerPrecedence) {
-        this(Map.of(Entry.of(key, value)), null, leftPrecedence, innerPrecedence, key.group(), Set.of(), null);
+        this(Map.of(Entry.of(key, value)), null, leftPrecedence, innerPrecedence, key.group(), Set.of(), null, null);
     }
 
-    private Patterns(Map<Object, Patterns> map, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, Set<RepetitionPattern> startRepetitions, RepetitionPattern endRepetition) {
+    private Patterns(Map<Object, Patterns> map, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, Set<RepetitionPattern> startRepetitions, RepetitionPattern endRepetition, Patterns repetitionNext) {
         this.map = map;
         this.functor = functor;
         this.leftPrecedence = leftPrecedence;
@@ -64,6 +69,7 @@ public class Patterns {
         this.group = group;
         this.startRepetitions = startRepetitions;
         this.endRepetition = endRepetition;
+        this.repetitionNext = repetitionNext;
     }
 
     public Map<Object, Patterns> map() {
@@ -94,10 +100,17 @@ public class Patterns {
         return endRepetition;
     }
 
+    public Patterns repetitionNext() {
+        return repetitionNext;
+    }
+
     public ParseResult parse(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
         do {
-            if (token(token, result, parser, pre) == null) {
-                if (pre && group() != null) {
+            if (token(token, result, parser, pre, false) == null) {
+                if (endRepetition() != null && (group() == null || repetitionNext().token(token, result, parser, pre, true) != null)) {
+                    result.endRepetition(endRepetition(), token);
+                    return result;
+                } else if (pre && group() != null) {
                     result.endPreParse(this, token);
                     return result;
                 } else if (node(token, result, parser, pre) == null) {
@@ -110,10 +123,6 @@ public class Patterns {
             token = result.nextToken();
             result.endRepetition(null, token);
         } while (true);
-        if (endRepetition() != null) {
-            result.endRepetition(endRepetition(), token);
-            return result;
-        }
         if (functor() == null) {
             if (pre) {
                 return null;
@@ -131,7 +140,7 @@ public class Patterns {
                 reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
-    private ParseResult token(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
+    private ParseResult token(Token token, ParseResult result, Parser parser, boolean pre, boolean peek) throws ParseException {
         if (map().isEmpty()) {
             return null;
         }
@@ -150,12 +159,15 @@ public class Patterns {
             }
             if (patterns == null) {
                 patterns = map().get(token.type());
-                if (patterns != null && token.type().variable()) {
+                if (!peek && patterns != null && token.type().variable()) {
                     result.add(text);
                 }
             }
         }
         if (patterns != null) {
+            if (peek) {
+                return result;
+            }
             result.add(token);
             if (patterns.parse(token.next(), result, parser, pre) != null) {
                 return result;
@@ -196,7 +208,8 @@ public class Patterns {
                 merge(innerPrecedence(), patterns.innerPrecedence()), //
                 merge(group(), patterns.group()), //
                 startRepetitions().addAll(patterns.startRepetitions()), //
-                merge(endRepetition(), patterns.endRepetition()));
+                merge(endRepetition(), patterns.endRepetition()), //
+                merge(repetitionNext(), patterns.repetitionNext()));
     }
 
     private static <T> T merge(T t1, T t2) {
@@ -208,6 +221,6 @@ public class Patterns {
 
     @Override
     public String toString() {
-        return map().toString().substring(3);
+        return map().toKeys().asSet().toString().substring(3);
     }
 }

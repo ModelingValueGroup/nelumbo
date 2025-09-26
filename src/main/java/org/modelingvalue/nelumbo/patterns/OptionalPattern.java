@@ -51,7 +51,7 @@ public class OptionalPattern extends Pattern {
 
     @Override
     public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
-        return nextPatterns.merge(optional().patterns(nextPatterns, left));
+        return optional().patterns(nextPatterns, left).merge(nextPatterns);
     }
 
     @Override
