@@ -85,6 +85,24 @@ public class Token implements AstElement {
         }
     }
 
+    public Token split(int i) {
+        Token t1 = splitGet1(i);
+        Token t2 = splitGet2(i);
+        t1.next = t2;
+        t1.nextAll = t2;
+        t2.next = next();
+        t2.nextAll = nextAll();
+        return t1;
+    }
+
+    private Token splitGet1(int len) {
+        return new Token(type, text.substring(0, len), line, position, index, fileName);
+    }
+
+    private Token splitGet2(int len) {
+        return new Token(type, text.substring(len), line, position + len, index + len, fileName);
+    }
+
     public Token next() {
         return next;
     }
@@ -165,26 +183,6 @@ public class Token implements AstElement {
 
     public boolean skip() {
         return type.skip();
-    }
-
-    public Token split(int i) {
-        Token t1 = splitGet1(i);
-        Token t2 = splitGet2(i);
-        t1.setPrevious(previous());
-        t1.setPreviousAll(previousAll());
-        t2.setNext(next());
-        t2.setNextAll(nextAll());
-        t1.setNext(t2);
-        t1.setNextAll(t2);
-        return t1;
-    }
-
-    private Token splitGet1(int len) {
-        return new Token(type, text.substring(0, len), line, position, index, fileName);
-    }
-
-    private Token splitGet2(int len) {
-        return new Token(type, text.substring(len), line, position + len, index + len, fileName);
     }
 
     @Override

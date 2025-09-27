@@ -155,7 +155,7 @@ public class Patterns {
                     String key = text.substring(0, i);
                     patterns = map().get(key);
                     if (patterns != null) {
-                        token = token.split(i);
+                        token = result.addSplit(token.previous(), token.split(i));
                         break;
                     }
                 }

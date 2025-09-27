@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
@@ -59,6 +60,21 @@ public class SyntaxTest extends NelumboTestBase {
             try {
                 TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();
                 List<Node> roots = new Parser(result).parse();
+                for (Node root : roots) {
+                    System.out.println(root);
+                }
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    @Test()
+    public void test2() {
+        run(() -> {
+            try {
+                List<Node> roots = Parser.parse(Integer.class);
                 for (Node root : roots) {
                     System.out.println(root);
                 }

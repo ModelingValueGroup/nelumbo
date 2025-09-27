@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.syntax;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -26,19 +27,26 @@ import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public final class ParseResult {
 
-    private final MutableList<AstElement> elements;
-    private final MutableList<Object>     args;
-    private final Parser                  parser;
+    private final MutableList<AstElement>         elements;
+    private final MutableList<Object>             args;
+    private final Parser                          parser;
+    private final MutableList<Pair<Token, Token>> splitted;
 
-    private Functor                       functor;
-    private Patterns                      patterns;
-    private RepetitionPattern             endRepetition;
-    private Token                         nextToken;
+    private Functor                               functor;
+    private Patterns                              patterns;
+    private RepetitionPattern                     endRepetition;
+    private Token                                 nextToken;
 
     public ParseResult(Parser parser) {
         this.parser = parser;
         elements = MutableList.of(List.of());
         args = MutableList.of(List.of());
+        splitted = MutableList.of(List.of());
+    }
+
+    public Token addSplit(Token prev, Token split) {
+        splitted.add(Pair.of(prev, split));
+        return split;
     }
 
     public Parser parser() {
@@ -105,6 +113,15 @@ public final class ParseResult {
     }
 
     public Node postParse(Parser parser) throws ParseException {
+        for (Pair<Token, Token> split : splitted) {
+            split.a().setNext(split.b());
+            split.a().setNextAll(split.b());
+            split.b().next().setPrevious(split.b());
+            split.b().nextAll().setPreviousAll(split.b());
+            split.b().next().next().setPrevious(split.b().next());
+            split.b().nextAll().nextAll().setPreviousAll(split.b().next());
+        }
+        splitted.clear();
         if (patterns != null) {
             patterns.parse(nextToken, this, Map.of(), false);
         }
