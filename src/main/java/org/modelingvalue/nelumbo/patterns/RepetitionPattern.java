@@ -61,6 +61,7 @@ public class RepetitionPattern extends Pattern {
 
     @Override
     public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
-        return repeated().patterns(new Patterns(this, nextPatterns), left).merge(new Patterns(this)).merge(nextPatterns);
+        Integer leftPrecedence = left != null ? left.leftPrecedence() : null;
+        return repeated().patterns(new Patterns(this), left).merge(new Patterns(this, leftPrecedence)).merge(nextPatterns);
     }
 }

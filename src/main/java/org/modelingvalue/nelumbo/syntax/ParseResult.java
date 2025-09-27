@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
@@ -27,15 +28,21 @@ public final class ParseResult {
 
     private final MutableList<AstElement> elements;
     private final MutableList<Object>     args;
+    private final Parser                  parser;
 
     private Functor                       functor;
     private Patterns                      patterns;
     private RepetitionPattern             endRepetition;
     private Token                         nextToken;
 
-    public ParseResult() {
+    public ParseResult(Parser parser) {
+        this.parser = parser;
         elements = MutableList.of(List.of());
         args = MutableList.of(List.of());
+    }
+
+    public Parser parser() {
+        return parser;
     }
 
     public Functor functor() {
@@ -69,6 +76,9 @@ public final class ParseResult {
     }
 
     public void endRepetition(RepetitionPattern endRepetition, Token nextToken) {
+        if (endRepetition != null && this.endRepetition != null) {
+            throw new IllegalArgumentException();
+        }
         this.endRepetition = endRepetition;
         this.nextToken = nextToken;
     }
@@ -96,7 +106,7 @@ public final class ParseResult {
 
     public Node postParse(Parser parser) throws ParseException {
         if (patterns != null) {
-            patterns.parse(nextToken, this, parser, false);
+            patterns.parse(nextToken, this, Map.of(), false);
         }
         return functor.construct(elements(), args().toArray());
     }

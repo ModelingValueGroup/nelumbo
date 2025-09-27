@@ -39,29 +39,28 @@ public class Patterns {
     private final String                 group;
     private final Set<RepetitionPattern> startRepetitions;
     private final RepetitionPattern      endRepetition;
-    private final Patterns               repetitionNext;
 
     public Patterns(Functor functor) {
-        this(Map.of(), functor, null, null, null, Set.of(), null, null);
-    }
-
-    public Patterns(RepetitionPattern repetition, Patterns repetitionNext) {
-        this(Map.of(), null, null, null, null, Set.of(), repetition, repetitionNext);
+        this(Map.of(), functor, null, null, null, Set.of(), null);
     }
 
     public Patterns(RepetitionPattern repetition) {
-        this(Map.of(), null, null, null, null, Set.of(repetition), null, null);
+        this(Map.of(), null, null, null, null, Set.of(), repetition);
+    }
+
+    public Patterns(RepetitionPattern repetition, Integer leftPrecedence) {
+        this(Map.of(), null, leftPrecedence, null, null, Set.of(repetition), null);
     }
 
     public Patterns(Object key, Patterns value) {
-        this(Map.of(Entry.of(key, value)), null, null, null, null, Set.of(), null, null);
+        this(Map.of(Entry.of(key, value)), null, null, null, null, Set.of(), null);
     }
 
     public Patterns(Type key, Patterns value, Integer leftPrecedence, Integer innerPrecedence) {
-        this(Map.of(Entry.of(key, value)), null, leftPrecedence, innerPrecedence, key.group(), Set.of(), null, null);
+        this(Map.of(Entry.of(key, value)), null, leftPrecedence, innerPrecedence, key.group(), Set.of(), null);
     }
 
-    private Patterns(Map<Object, Patterns> map, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, Set<RepetitionPattern> startRepetitions, RepetitionPattern endRepetition, Patterns repetitionNext) {
+    private Patterns(Map<Object, Patterns> map, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, Set<RepetitionPattern> startRepetitions, RepetitionPattern endRepetition) {
         this.map = map;
         this.functor = functor;
         this.leftPrecedence = leftPrecedence;
@@ -69,7 +68,6 @@ public class Patterns {
         this.group = group;
         this.startRepetitions = startRepetitions;
         this.endRepetition = endRepetition;
-        this.repetitionNext = repetitionNext;
     }
 
     public Map<Object, Patterns> map() {
@@ -100,20 +98,25 @@ public class Patterns {
         return endRepetition;
     }
 
-    public Patterns repetitionNext() {
-        return repetitionNext;
-    }
-
-    public ParseResult parse(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
+    public ParseResult parse(Token token, ParseResult result, Map<RepetitionPattern, Patterns> outer, boolean pre) throws ParseException {
+        if (pre && !startRepetitions().isEmpty()) {
+            result.endPreParse(this, token);
+            return result;
+        }
+        Map<RepetitionPattern, Patterns> inner = outer;
+        for (RepetitionPattern repetition : startRepetitions()) {
+            inner = inner.put(repetition, this);
+        }
         do {
-            if (token(token, result, parser, pre, false) == null) {
-                if (endRepetition() != null && (group() == null || repetitionNext().token(token, result, parser, pre, true) != null)) {
-                    result.endRepetition(endRepetition(), token);
-                    return result;
-                } else if (pre && group() != null) {
+            if (endRepetition() != null && (map().isEmpty() || outer.get(endRepetition()).token(token, result, null, pre) != null)) {
+                result.endRepetition(endRepetition(), token);
+                return result;
+            }
+            if (token(token, result, inner, pre) == null) {
+                if (pre && group() != null) {
                     result.endPreParse(this, token);
                     return result;
-                } else if (node(token, result, parser, pre) == null) {
+                } else if (node(token, result, inner, pre) == null) {
                     break;
                 }
             }
@@ -140,7 +143,7 @@ public class Patterns {
                 reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
-    private ParseResult token(Token token, ParseResult result, Parser parser, boolean pre, boolean peek) throws ParseException {
+    private ParseResult token(Token token, ParseResult result, Map<RepetitionPattern, Patterns> repetitions, boolean pre) throws ParseException {
         if (map().isEmpty()) {
             return null;
         }
@@ -159,38 +162,38 @@ public class Patterns {
             }
             if (patterns == null) {
                 patterns = map().get(token.type());
-                if (!peek && patterns != null && token.type().variable()) {
+                if (repetitions != null && patterns != null && token.type().variable()) {
                     result.add(text);
                 }
             }
         }
         if (patterns != null) {
-            if (peek) {
+            if (repetitions == null) {
                 return result;
             }
             result.add(token);
-            if (patterns.parse(token.next(), result, parser, pre) != null) {
+            if (patterns.parse(token.next(), result, repetitions, pre) != null) {
                 return result;
             }
         }
         return null;
     }
 
-    private ParseResult node(Token token, ParseResult result, Parser parser, boolean pre) throws ParseException {
+    private ParseResult node(Token token, ParseResult result, Map<RepetitionPattern, Patterns> repetitions, boolean pre) throws ParseException {
         if (group() == null) {
             return null;
         }
-        Node node = parser.parseNode(token, innerPrecedence(), group());
+        Node node = result.parser().parseNode(token, innerPrecedence(), group());
         result.add(node);
         for (Type sup : node.type().allsupers()) {
             Patterns patterns = map().get(sup);
             if (patterns != null) {
-                if (patterns.parse(node.nextToken(), result, parser, pre) != null) {
+                if (patterns.parse(node.nextToken(), result, repetitions, pre) != null) {
                     return result;
                 }
             }
         }
-        throw new ParseException("Node of Unexpected type " + node.type() + ", expected " + expectedTypes(), node);
+        throw new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node);
     }
 
     private String expectedTypes() {
@@ -208,8 +211,7 @@ public class Patterns {
                 merge(innerPrecedence(), patterns.innerPrecedence()), //
                 merge(group(), patterns.group()), //
                 startRepetitions().addAll(patterns.startRepetitions()), //
-                merge(endRepetition(), patterns.endRepetition()), //
-                merge(repetitionNext(), patterns.repetitionNext()));
+                merge(endRepetition(), patterns.endRepetition()));
     }
 
     private static <T> T merge(T t1, T t2) {

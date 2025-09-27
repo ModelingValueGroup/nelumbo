@@ -370,11 +370,11 @@ public final class KnowledgeBase {
                         return node.setAstElements(node.astElements().prepend(t.first()).append(t.last()));
                     }));
 
-            //            try {
-            //                Parser.parse(KnowledgeBase.class);
-            //            } catch (ParseException e) {
-            //                throw new IllegalArgumentException(e);
-            //            }
+            try {
+                Parser.parse(KnowledgeBase.class);
+            } catch (ParseException e) {
+                throw new IllegalArgumentException(e);
+            }
         });
         return this;
 
@@ -664,9 +664,9 @@ public final class KnowledgeBase {
             for (Type type : left.type().allsupers()) {
                 Patterns found = patterns.map().get(type);
                 if (found != null) {
-                    ParseResult result = new ParseResult();
+                    ParseResult result = new ParseResult(parser);
                     result.add(left);
-                    result = found.parse(token, result, parser, true);
+                    result = found.parse(token, result, Map.of(), true);
                     if (result != null) {
                         return result;
                     }
@@ -674,7 +674,7 @@ public final class KnowledgeBase {
             }
             return null;
         }
-        return patterns.parse(token, new ParseResult(), parser, true);
+        return patterns.parse(token, new ParseResult(parser), Map.of(), true);
     }
 
 }

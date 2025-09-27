@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -45,21 +46,20 @@ public class SyntaxTest extends NelumboTestBase {
 
                     <Int>      ::= <Set>.size,
                                    <NUMBER>
-                    <Set>      ::= { <[> <Node> <{> , <Node> <}> <]> }      @org.modelingvalue.nelumbo.Node,
-                                   <Set> + <Node>                           #40
-                    <Relation> ::= <Int> = <Int>                            #10
+                    <Set>      ::= <Set> + <Node>                           #40,
+                                   { <[> <Node> <{> , <Node> <}> <]> }      @org.modelingvalue.nelumbo.Node,
+                                   <Set> - <Node>                           #40
 
                     <Set>  s, t, u
                     <Int>  i, j, k
 
-                    10=10
-
-                    s.size=i <==> i=10
+                    s.size=i   <==> i=10
 
                     """;
             try {
                 TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();
-                for (Node root : new Parser(result).parse()) {
+                List<Node> roots = new Parser(result).parse();
+                for (Node root : roots) {
                     System.out.println(root);
                 }
             } catch (ParseException e) {
