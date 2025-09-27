@@ -46,6 +46,7 @@ public class Tokenizer {
         int index = 0;
         int line = 0;
         int position = 0;
+        String previousVertical = null;
         while (index < input.length()) {
             String text = null;
             TokenType type = null;
@@ -71,16 +72,17 @@ public class Tokenizer {
                 throw new ParseException("Unexpected input '" + unexpectedChars + "'", line, position, index, unexpectedChars.length(), fileName);
             }
             addToken(tokens, type, text, line, position, index);
-
-            // adjust index:
             index += text.length();
-            // adjust line:
-            int lineInc = text.replaceAll("\\V", "").length();
-            if (0 < lineInc) {
-                line += lineInc;
-                position = 0;
+            int lineIncr = text.replaceAll("\\V", "").length();
+            if (0 < lineIncr) {
+                if (previousVertical == null || previousVertical.contains(text)) {
+                    line += lineIncr;
+                    position = 0;
+                    previousVertical = previousVertical == null ? text : previousVertical + text;
+                }
+            } else {
+                previousVertical = null;
             }
-            //adjust position:
             position += text.replaceAll(".*\\v", "").length();
         }
         addToken(tokens, TokenType.ENDOFFILE, "", line, position, index);
