@@ -95,6 +95,16 @@ public class Token implements AstElement {
         return t1;
     }
 
+    public void connect(Token t1) {
+        Token t2 = t1.next;
+        t2.previous = t1;
+        t2.previousAll = t1;
+        previous.setNext(t1);
+        previousAll.setNextAll(t1);
+        next.setPrevious(t2);
+        nextAll.setPreviousAll(t2);
+    }
+
     private Token splitGet1(int len) {
         return new Token(type, text.substring(0, len), line, position, index, fileName);
     }

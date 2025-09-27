@@ -44,8 +44,8 @@ public final class ParseResult {
         splitted = MutableList.of(List.of());
     }
 
-    public Token addSplit(Token prev, Token split) {
-        splitted.add(Pair.of(prev, split));
+    public Token addSplit(Token original, Token split) {
+        splitted.add(Pair.of(original, split));
         return split;
     }
 
@@ -114,12 +114,7 @@ public final class ParseResult {
 
     public Node postParse(Parser parser) throws ParseException {
         for (Pair<Token, Token> split : splitted) {
-            split.a().setNext(split.b());
-            split.a().setNextAll(split.b());
-            split.b().next().setPrevious(split.b());
-            split.b().nextAll().setPreviousAll(split.b());
-            split.b().next().next().setPrevious(split.b().next());
-            split.b().nextAll().nextAll().setPreviousAll(split.b().next());
+            split.a().connect(split.b());
         }
         splitted.clear();
         if (patterns != null) {

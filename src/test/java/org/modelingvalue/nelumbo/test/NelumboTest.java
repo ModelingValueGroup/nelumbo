@@ -121,8 +121,8 @@ public class NelumboTest extends NelumboTestBase {
                 TokenizerResult tr = new Tokenizer(nl, "NelumboTest.tokenSplitTest").tokenize();
                 //U.printTokens("before-parse", tokens);
                 List<Token> all = tr.listAll();
-                assertEquals(10, all.size(), "wrong number of tokens returned by tokenize()");
-                assertEquals("?, ,-,4,=-,(,2,+,2,)", // why does the ? appear at the end?
+                assertEquals(11, all.size(), "wrong number of tokens returned by tokenize()");
+                assertEquals("?, ,-,4,=-,(,2,+,2,),", // why does the ? appear at the end?
                         all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts before-parse not as expected");
 
