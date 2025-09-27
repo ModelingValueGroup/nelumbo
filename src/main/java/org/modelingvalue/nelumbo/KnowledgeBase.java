@@ -361,7 +361,7 @@ public final class KnowledgeBase {
             register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), //
                     Type.QUERY, (t, a, f) -> new Node(Type.QUERY, t, a)));
 
-            register(Functor.of(s(n(Type.RELATION, 0), t(TokenType.NEWLINE)), //
+            register(Functor.of(s(n(Type.PREDICATE, 0), t(TokenType.NEWLINE)), //
                     Type.FACT, (t, a, f) -> new Node(Type.FACT, t, a)));
 
             register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //

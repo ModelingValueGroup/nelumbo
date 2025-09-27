@@ -72,7 +72,7 @@ public class ParseException extends Exception {
 
     @Override
     public String getMessage() {
-        return getShortMessage() + ", line=" + line + ", position=" + position + ", file=" + fileName;
+        return getShortMessage() + ", line=" + (line + 1) + ", position=" + (position + 1) + ", file=" + fileName;
     }
 
     public String getShortMessage() {
