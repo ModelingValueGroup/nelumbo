@@ -48,7 +48,7 @@ public class U {
     public static void printResults(List<Node> roots) {
         if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
             for (Node root : roots) {
-                if (root.type().equals(Type.RESULT)) {
+                if (root.type().equals(Type.QUERY)) {
                     System.out.println(root.toString(1));
                 }
             }

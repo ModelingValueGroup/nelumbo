@@ -34,22 +34,22 @@ public class Functor extends Node {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
-    public static Functor of(Pattern pattern, Type result, Constructor<? extends Node> constructor) {
-        return new Functor(List.of(), pattern, result, constructor);
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, Constructor<?> constructor) {
+        return new Functor(elements, pattern, result, local, constructor);
     }
 
-    public static Functor of(Pattern pattern, Type result, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function) {
-        return new Functor(List.of(), pattern, result, function);
+    public static Functor of(Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function) {
+        return new Functor(List.of(), pattern, result, local, function);
     }
 
-    public static Functor of(Pattern pattern, Type result) {
-        return new Functor(List.of(), pattern, result, null);
+    public static Functor of(Pattern pattern, Type result, boolean local) {
+        return new Functor(List.of(), pattern, result, local, null);
     }
 
     private String     name;
     private List<Type> args;
 
-    public Functor(List<AstElement> elements, Object... args) {
+    private Functor(List<AstElement> elements, Object... args) {
         super(Type.FUNCTOR, elements, args);
     }
 
@@ -70,15 +70,19 @@ public class Functor extends Node {
         return (Type) get(1);
     }
 
+    public boolean local() {
+        return (Boolean) get(2);
+    }
+
     @SuppressWarnings("unchecked")
     public Constructor<? extends Node> constructor() {
-        Object val = get(2);
+        Object val = get(3);
         return val instanceof Constructor ? (Constructor<? extends Node>) val : null;
     }
 
     @SuppressWarnings("unchecked")
     public ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function() {
-        Object val = get(2);
+        Object val = get(3);
         return val instanceof ThrowingTriFunction ? (ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node>) val : null;
     }
 
@@ -93,11 +97,11 @@ public class Functor extends Node {
     }
 
     public ParseException error() {
-        return length() > 3 ? (ParseException) get(3) : null;
+        return length() > 4 ? (ParseException) get(4) : null;
     }
 
     public Functor setError(ParseException exception) {
-        return set(3, exception);
+        return set(4, exception);
     }
 
     @Override

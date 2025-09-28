@@ -70,13 +70,17 @@ public final class Parser {
     }
 
     public List<Node> parse() throws ParseException {
-        Token token = tokenizerResult.first();
-        Node node = parseNode(token, Integer.MIN_VALUE, Type.TOP_GROUP);
-        token = node.nextToken();
-        if (token != null) {
-            throw new ParseException("Unexpected token " + token.text() + " after end of input", token);
+        try {
+            Token token = tokenizerResult.first();
+            Node node = parseNode(token, Integer.MIN_VALUE, Type.TOP_GROUP);
+            token = node.nextToken();
+            if (token != null) {
+                throw new ParseException("Unexpected token " + token.text() + " after end of input", token);
+            }
+            return node instanceof ListNode ? ((ListNode) node).elements() : List.of(node);
+        } finally {
+            knowledgeBase.clearLocal();
         }
-        return node instanceof ListNode ? ((ListNode) node).elements() : List.of(node);
     }
 
     public Node parseNode(Token token, int precedence, String group) throws ParseException {

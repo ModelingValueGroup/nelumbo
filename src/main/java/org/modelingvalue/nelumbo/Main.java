@@ -45,7 +45,7 @@ public final class Main {
             while (line != null) {
                 try {
                     for (Node root : Parser.parse(line)) {
-                        if (root.type().equals(Type.RESULT)) {
+                        if (root.type().equals(Type.QUERY)) {
                             System.out.println(WRITE + root.toString(1));
                         }
                     }
