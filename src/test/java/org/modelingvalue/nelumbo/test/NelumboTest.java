@@ -116,28 +116,28 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             try {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
-                String nl = "? -4=-(2+2)";
+                String nl = "-4=-(2+2) ?";
 
                 TokenizerResult tr = new Tokenizer(nl, "NelumboTest.tokenSplitTest").tokenize();
                 //U.printTokens("before-parse", tokens);
                 List<Token> all = tr.listAll();
                 assertEquals(11, all.size(), "wrong number of tokens returned by tokenize()");
-                assertEquals("?, ,-,4,=-,(,2,+,2,),", // why does the ? appear at the end?
+                assertEquals("-,4,=-,(,2,+,2,), ,?,", //
                         all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts before-parse not as expected");
 
                 List<Node> result = new Parser(tr).parse();
                 //U.printTokens("after-parse", tokens);
                 all = tr.listAll();
-                assertEquals(11, all.size(), "wrong number of tokens after parse()");
-                assertEquals("?, ,-,4,=,-,(,2,+,2,)", // why does the ? appear at the end?
+                assertEquals(12, all.size(), "wrong number of tokens after parse()");
+                assertEquals("-,4,=,-,(,2,+,2,), ,?,", //
                         all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts after-parse not as expected");
                 assertEquals(1, result.size(), "wrong number of result nodes");
 
-                assertEquals("?,-,4,=,-,(,2,+,2,)", tr.list().map(Token::text).collect(Collectors.joining(",")), //
+                assertEquals("-,4,=,-,(,2,+,2,),?,", tr.list().map(Token::text).collect(Collectors.joining(",")), //
                         "result tokens text not as expected");
-                assertEquals("OPERATOR,OPERATOR,NUMBER,OPERATOR,OPERATOR,LPAREN,NUMBER,OPERATOR,NUMBER,RPAREN", //
+                assertEquals("OPERATOR,NUMBER,OPERATOR,OPERATOR,LEFT,NUMBER,OPERATOR,NUMBER,RIGHT,OPERATOR", //
                         result.first().tokens().map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
                         "result tokens type not as expected");
 

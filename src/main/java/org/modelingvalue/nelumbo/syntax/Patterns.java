@@ -162,7 +162,14 @@ public class Patterns {
             }
             if (patterns == null) {
                 patterns = map().get(token.type());
-                if (repetitions != null && patterns != null && token.type().variable()) {
+                if (patterns == null) {
+                    patterns = map().get(TokenType.NEWLINE);
+                    if (patterns != null && isEndOfLine(token)) {
+                        return patterns.parse(token, result, repetitions, pre);
+                    } else {
+                        patterns = null;
+                    }
+                } else if (repetitions != null && patterns != null && token.type().variable()) {
                     result.add(text);
                 }
             }
@@ -172,11 +179,21 @@ public class Patterns {
                 return result;
             }
             result.add(token);
-            if (patterns.parse(token.next(), result, repetitions, pre) != null) {
-                return result;
-            }
+            return patterns.parse(token.next(), result, repetitions, pre);
         }
         return null;
+    }
+
+    private static boolean isEndOfLine(Token token) {
+        if (token.type() == TokenType.ENDOFFILE) {
+            return true;
+        }
+        for (Token p = token.previousAll(); p != token.previous(); p = p.previousAll()) {
+            if (p.type() == TokenType.NEWLINE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private ParseResult node(Token token, ParseResult result, Map<RepetitionPattern, Patterns> repetitions, boolean pre) throws ParseException {
