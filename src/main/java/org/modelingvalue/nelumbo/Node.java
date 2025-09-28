@@ -61,6 +61,12 @@ public class Node extends StructImpl implements AstElement {
         return result;
     }
 
+    public Node setFunctor(Functor functor) {
+        Object[] array = toArray();
+        array[0] = functor;
+        return struct(array);
+    }
+
     public Node setAstElements(List<AstElement> elements) {
         Object[] array = toArray();
         array[1] = elements;

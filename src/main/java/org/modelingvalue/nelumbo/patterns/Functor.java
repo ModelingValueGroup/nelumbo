@@ -151,6 +151,11 @@ public class Functor extends Node {
     }
 
     @Override
+    public Functor setFunctor(Functor functor) {
+        return (Functor) super.setFunctor(functor);
+    }
+
+    @Override
     public Functor setAstElements(List<AstElement> elements) {
         return (Functor) super.setAstElements(elements);
     }

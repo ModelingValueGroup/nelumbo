@@ -165,15 +165,23 @@ public final class KnowledgeBase {
         return result;
     }
 
-    private Functor addType(Type type) {
+    private Functor addType(Type type, boolean predefined) {
         return register(Functor.of(t(type.toString()), Type.TYPE(), false, (t, a, f) -> {
-            return type.setAstElements(t);
+            Type result = type.setAstElements(t);
+            if (!predefined) {
+                result = result.setFunctor(f);
+            }
+            return result;
         }));
     }
 
-    private Functor addVariable(Variable var) {
+    private Functor addVariable(Variable var, boolean predefined) {
         return register(Functor.of(t(var.toString()), var.type(), true, (t, a, f) -> {
-            return var.setAstElements(t);
+            Variable result = var.setAstElements(t);
+            if (!predefined) {
+                result = result.setFunctor(f);
+            }
+            return result;
         }));
     }
 
@@ -204,12 +212,12 @@ public final class KnowledgeBase {
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             for (Type type : Type.predefined()) {
-                addType(type);
+                addType(type, true);
             }
 
             for (TokenType tokenType : TokenType.values()) {
                 if (!tokenType.skip()) {
-                    addType(new Type(tokenType));
+                    addType(new Type(tokenType), true);
                 }
             }
 
@@ -322,7 +330,7 @@ public final class KnowledgeBase {
                         }
                         String group = a[a.length - 1] instanceof String ? (String) a[a.length - 1] : Type.DEFAULT_GROUP;
                         Type type = new Type(t, name, supers, group);
-                        return CURRENT.get().addType(type).setAstElements(t);
+                        return CURRENT.get().addType(type, false).setAstElements(t);
                     }));
 
             register(Functor.of(s(n(Type.TYPE(), null), t(TokenType.NAME), r(s(t(","), t(TokenType.NAME))), t(NEWLINE)), //
@@ -340,7 +348,7 @@ public final class KnowledgeBase {
                             if (comma != null) {
                                 roots.setAstElements(roots.astElements().add(comma));
                             }
-                            Functor functor = CURRENT.get().addVariable(var).setAstElements(List.of(token));
+                            Functor functor = CURRENT.get().addVariable(var, false).setAstElements(List.of(token));
                             roots = new ListNode(List.of(), roots, functor);
                         }
                         return roots.setAstElements(roots.astElements().add(t.last()));

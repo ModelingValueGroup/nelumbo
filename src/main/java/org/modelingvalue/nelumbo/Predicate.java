@@ -106,7 +106,8 @@ public class Predicate extends Node {
         return from.struct(array, declaration());
     }
 
-    protected Predicate setFunctor(Functor functor) {
+    @Override
+    public Predicate setFunctor(Functor functor) {
         Object[] array = toArray();
         array[0] = functor;
         return struct(array, null);

@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Variable extends Node {
     @Serial
@@ -30,6 +31,16 @@ public final class Variable extends Node {
 
     private Variable(Object[] array) {
         super(array);
+    }
+
+    @Override
+    public Variable setFunctor(Functor functor) {
+        return (Variable) super.setFunctor(functor);
+    }
+
+    @Override
+    public Variable setAstElements(List<AstElement> elements) {
+        return (Variable) super.setAstElements(elements);
     }
 
     public Variable literal() {

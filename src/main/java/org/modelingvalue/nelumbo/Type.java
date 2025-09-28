@@ -151,6 +151,16 @@ public class Type extends Node {
         return supers.length > 0 ? supers[0].group() : DEFAULT_GROUP;
     }
 
+    @Override
+    public Type setFunctor(Functor functor) {
+        return (Type) super.setFunctor(functor);
+    }
+
+    @Override
+    public Type setAstElements(List<AstElement> elements) {
+        return (Type) super.setAstElements(elements);
+    }
+
     public Type element() {
         if (isList()) {
             return (Type) get(3);
