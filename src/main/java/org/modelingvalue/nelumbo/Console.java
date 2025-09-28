@@ -351,7 +351,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 case STRING -> bluePainter;
                 case NUMBER, DECIMAL -> greenPainter;
                 case NAME -> yellowPainter;
-                case SEMICOLON, OPERATOR, LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE, META_OPERATOR -> greyPainter;
+                case SEMICOLON, OPERATOR, LEFT, RIGHT, META_OPERATOR -> greyPainter;
                 case COMMA -> purplePainter;
                 case TYPE -> pinkPainter;
                 case END_LINE_COMMENT, IN_LINE_COMMENT, SINGLEQUOTE -> lightGreyPainter;

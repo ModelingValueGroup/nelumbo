@@ -80,8 +80,8 @@ public final class KnowledgeBase {
     private static final Pattern                                                        ALT_NO_COMMA         = a(PATTERNS_NO_COMMA.toArray(i -> new Pattern[i]));
     private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(TokenType.COMMA));
     private static final Pattern                                                        ALTERNATIVES         = a(PATTERNS.toArray(i -> new Pattern[i]));
-    private static final Pattern                                                        SEQ_NO_COMMA         = s(ALTERNATIVES, r(ALTERNATIVES));
-    private static final Pattern                                                        SEQUENCE             = s(ALT_NO_COMMA, r(ALT_NO_COMMA),                                                                          //
+    private static final Pattern                                                        SEQUENCE             = s(ALTERNATIVES, r(ALTERNATIVES));
+    private static final Pattern                                                        SEQ_NO_COMMA         = s(ALT_NO_COMMA, r(ALT_NO_COMMA),                                                                          //
             r(s(t("#"), a(t(TokenType.NUMBER)))),                                                                                                                                                                        //
             o(s(t("@"), t(TokenType.NAME), r(s(t("."), t(TokenType.NAME))))));
 
@@ -228,7 +228,7 @@ public final class KnowledgeBase {
                         return roots.setAstElements(roots.astElements().add(t.last()));
                     }));
 
-            register(Functor.of(s(t("<(>"), SEQ_NO_COMMA, r(s(t("<|>"), SEQ_NO_COMMA)), t("<)>")), //
+            register(Functor.of(s(t("<(>"), SEQUENCE, r(s(t("<|>"), SEQUENCE)), t("<)>")), //
                     Type.PATTERN, false, (t1, a1, f) -> {
                         List<Pattern> options = List.of();
                         List<AstElement> option = null;
@@ -245,19 +245,13 @@ public final class KnowledgeBase {
                         return a(t1, options.toArray(i -> new Pattern[i]));
                     }));
 
-            register(Functor.of(s(t("{"), SEQ_NO_COMMA, t("}")), //
+            register(Functor.of(s(t(TokenType.LEFT), SEQUENCE, t(TokenType.RIGHT)), //
                     Type.PATTERN, false, (t, a, f) -> s(t, pattern(t))));
 
-            register(Functor.of(s(t("("), SEQ_NO_COMMA, t(")")), //
-                    Type.PATTERN, false, (t, a, f) -> s(t, pattern(t))));
-
-            register(Functor.of(s(t("["), SEQ_NO_COMMA, t("]")), //
-                    Type.PATTERN, false, (t, a, f) -> s(t, pattern(t))));
-
-            register(Functor.of(s(t("<{>"), SEQ_NO_COMMA, t("<}>")), //
+            register(Functor.of(s(t("<{>"), SEQUENCE, t("<}>")), //
                     Type.PATTERN, false, (t, a, f) -> r(t, pattern(t))));
 
-            register(Functor.of(s(t("<[>"), SEQ_NO_COMMA, t("<]>")), //
+            register(Functor.of(s(t("<[>"), SEQUENCE, t("<]>")), //
                     Type.PATTERN, false, (t, a, f) -> o(t, pattern(t))));
 
             register(Functor.of(n(Type.TYPE(), Integer.MAX_VALUE), //
@@ -267,7 +261,7 @@ public final class KnowledgeBase {
                         return tt != null ? t(t, tt) : n(t, type, null);
                     }));
 
-            register(Functor.of(s(n(Type.TYPE(), null), t("::="), SEQUENCE, r(s(t(","), SEQUENCE)), t(NEWLINE)), //
+            register(Functor.of(s(n(Type.TYPE(), null), t("::="), SEQ_NO_COMMA, r(s(t(","), SEQ_NO_COMMA)), t(NEWLINE)), //
                     Type.ROOT.list(), false, (t1, a1, f) -> {
                         Type type = (Type) t1.get(0);
                         ListNode roots = new ListNode(t1.sublist(0, 2), Type.ROOT);

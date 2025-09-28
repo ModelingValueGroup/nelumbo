@@ -22,12 +22,8 @@ public enum TokenType {
     SINGLEQUOTE("\'", false, false, false), //
     SEMICOLON(";", false, false, false), //
     COMMA(",", false, false, true), //
-    LPAREN("\\(", false, false, true), //
-    RPAREN("\\)", false, false, false), //
-    LBRACKET("\\[", false, false, true), //
-    RBRACKET("\\]", false, false, false), //
-    LBRACE("\\{", false, false, true), //
-    RBRACE("\\}", false, false, false), //
+    LEFT("[\\(\\[\\{]", false, true, true), //
+    RIGHT("[\\)\\]\\}]", false, true, false), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, true, false), //
     NUMBER("[0-9]+(#[0-9a-zA-Z]+)?", false, true, false), //
     DECIMAL("[0-9]+\\.[0-9]+", false, true, false), //
