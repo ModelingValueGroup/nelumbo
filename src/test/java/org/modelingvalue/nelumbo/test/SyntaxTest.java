@@ -53,6 +53,10 @@ public class SyntaxTest extends NelumboTestBase {
 
                     <Set>  s, t, u
                     <Int>  i, j, k
+                    <Node> n
+
+                    s=t+n ?
+                    s=t+n ? [..][..]
 
                     s.size=i   <==> i=10
 
