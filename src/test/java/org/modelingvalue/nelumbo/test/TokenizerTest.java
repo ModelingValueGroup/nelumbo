@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.U;
-import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
@@ -39,7 +38,7 @@ public class TokenizerTest extends NelumboTestBase {
     }
 
     @Test
-    public void tokenizerTest() throws ParseException {
+    public void tokenizerTest() {
         String example = """
                 // COMMENT
                     -abb + bcc *
@@ -107,7 +106,7 @@ public class TokenizerTest extends NelumboTestBase {
     }
 
     @Test
-    public void tokenizerComment1Test() throws ParseException {
+    public void tokenizerComment1Test() {
         String example = "/* unterminated comment";
 
         TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();
@@ -126,7 +125,7 @@ public class TokenizerTest extends NelumboTestBase {
     }
 
     @Test
-    public void tokenizerComment2Test() throws ParseException {
+    public void tokenizerComment2Test() {
         String example = "<a/*a*/>•a";
 
         TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();

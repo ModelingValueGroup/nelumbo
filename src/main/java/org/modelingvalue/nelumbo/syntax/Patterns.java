@@ -98,7 +98,7 @@ public class Patterns {
         return endRepetition;
     }
 
-    public ParseResult parse(Token token, ParseResult result, Map<RepetitionPattern, Patterns> outer, boolean pre) throws ParseException {
+    public PatternResult parse(Token token, PatternResult result, Map<RepetitionPattern, Patterns> outer, boolean pre) throws ParseException {
         if (pre && !startRepetitions().isEmpty()) {
             result.endPreParse(this, token);
             return result;
@@ -130,7 +130,7 @@ public class Patterns {
             if (pre) {
                 return null;
             } else {
-                throw new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token);
+                result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token));
             }
         }
         result.endPostParse(functor(), token);
@@ -143,7 +143,7 @@ public class Patterns {
                 reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
-    private ParseResult token(Token token, ParseResult result, Map<RepetitionPattern, Patterns> repetitions, boolean pre) throws ParseException {
+    private PatternResult token(Token token, PatternResult result, Map<RepetitionPattern, Patterns> repetitions, boolean pre) throws ParseException {
         if (map().isEmpty()) {
             return null;
         }
@@ -196,21 +196,24 @@ public class Patterns {
         return false;
     }
 
-    private ParseResult node(Token token, ParseResult result, Map<RepetitionPattern, Patterns> repetitions, boolean pre) throws ParseException {
+    private PatternResult node(Token token, PatternResult result, Map<RepetitionPattern, Patterns> repetitions, boolean pre) throws ParseException {
         if (group() == null) {
             return null;
         }
         Node node = result.parser().parseNode(token, innerPrecedence(), group());
-        result.add(node);
-        for (Type sup : node.type().allsupers()) {
-            Patterns patterns = map().get(sup);
-            if (patterns != null) {
-                if (patterns.parse(node.nextToken(), result, repetitions, pre) != null) {
-                    return result;
+        if (node != null) {
+            result.add(node);
+            for (Type sup : node.type().allsupers()) {
+                Patterns patterns = map().get(sup);
+                if (patterns != null) {
+                    if (patterns.parse(node.nextToken(), result, repetitions, pre) != null) {
+                        return result;
+                    }
                 }
             }
+            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
         }
-        throw new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node);
+        return result;
     }
 
     private String expectedTypes() {

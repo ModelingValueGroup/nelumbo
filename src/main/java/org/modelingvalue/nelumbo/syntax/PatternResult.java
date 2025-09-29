@@ -25,7 +25,7 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
-public final class ParseResult {
+public final class PatternResult {
 
     private final MutableList<AstElement>         elements;
     private final MutableList<Object>             args;
@@ -37,7 +37,7 @@ public final class ParseResult {
     private RepetitionPattern                     endRepetition;
     private Token                                 nextToken;
 
-    public ParseResult(Parser parser) {
+    public PatternResult(Parser parser) {
         this.parser = parser;
         elements = MutableList.of(List.of());
         args = MutableList.of(List.of());
@@ -120,12 +120,19 @@ public final class ParseResult {
         if (patterns != null) {
             patterns.parse(nextToken, this, Map.of(), false);
         }
-        return functor.construct(elements(), args().toArray());
+        if (functor != null) {
+            return functor.construct(elements(), args().toArray(), this);
+        }
+        return null;
     }
 
     @Override
     public String toString() {
         return elements().toString().substring(4);
+    }
+
+    public void addException(ParseException exception) throws ParseException {
+        parser.addException(exception);
     }
 
 }

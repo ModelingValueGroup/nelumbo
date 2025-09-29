@@ -38,7 +38,7 @@ public class ParseException extends Exception {
         this(cause, s, elements[0].firstToken(), elements[elements.length - 1].lastToken());
     }
 
-    public ParseException(Throwable cause, String s, Token firstToken, Token lastToken) {
+    private ParseException(Throwable cause, String s, Token firstToken, Token lastToken) {
         this(cause, //
                 s, //
                 firstToken.line(), //
@@ -55,10 +55,6 @@ public class ParseException extends Exception {
 
     public ParseException(Throwable cause, String message, String fileName) {
         this(cause, message, 0, 0, 0, 0, fileName);
-    }
-
-    public ParseException(String message, int line, int position, int index, int length, String fileName) {
-        this(null, message, line, position, index, length, fileName);
     }
 
     public ParseException(Throwable cause, String message, int line, int position, int index, int length, String fileName) {

@@ -19,11 +19,10 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
@@ -62,11 +61,9 @@ public class SyntaxTest extends NelumboTestBase {
 
                     """;
             try {
-                TokenizerResult result = new Tokenizer(example, "SyntaxTest.test1").tokenize();
-                List<Node> roots = new Parser(result).parse();
-                for (Node root : roots) {
-                    System.out.println(root);
-                }
+                TokenizerResult tr = new Tokenizer(example, "SyntaxTest.test1").tokenize();
+                ParserResult pr = new Parser(tr).parseThrowing();
+
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -78,10 +75,7 @@ public class SyntaxTest extends NelumboTestBase {
     public void test2() {
         run(() -> {
             try {
-                List<Node> roots = Parser.parse(Integer.class);
-                for (Node root : roots) {
-                    System.out.println(root);
-                }
+                Parser.parse(Integer.class);
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);

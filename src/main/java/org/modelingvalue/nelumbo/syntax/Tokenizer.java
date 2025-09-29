@@ -33,7 +33,7 @@ public class Tokenizer {
         this.fileName = fileName;
     }
 
-    public TokenizerResult tokenize() throws ParseException {
+    public TokenizerResult tokenize() {
         Token[] tokens = new Token[4];
         TokenType[] tokenTypes = TokenType.values();
         Matcher[] matchers = new Matcher[tokenTypes.length - 1];
@@ -66,10 +66,6 @@ public class Tokenizer {
                         type = tokenTypes[i];
                     }
                 }
-            }
-            if (text == null) {
-                String unexpectedChars = getUnexpectedToken(input, index);
-                throw new ParseException("Unexpected input '" + unexpectedChars + "'", line, position, index, unexpectedChars.length(), fileName);
             }
             addToken(tokens, type, text, line, position, index);
             index += text.length();
@@ -112,18 +108,6 @@ public class Tokenizer {
             tokens[LAST].setNext(token);
         }
         tokens[LAST] = token;
-    }
-
-    private String getUnexpectedToken(String text, int at) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = at; i < text.length() && i < at + 8; i++) {
-            char c = text.charAt(i);
-            if (Character.isSpaceChar(c)) {
-                break;
-            }
-            sb.append(c);
-        }
-        return sb.toString();
     }
 
     public static final class TokenizerResult {

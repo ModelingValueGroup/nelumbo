@@ -184,9 +184,6 @@ public class Predicate extends Node {
 
     public InferResult infer() {
         KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
-        if (knowledgeBase.noInfer()) {
-            return unknown();
-        }
         InferContext context = knowledgeBase.context();
         Predicate predicate = setBinding(variables());
         if (context.trace()) {
@@ -332,9 +329,6 @@ public class Predicate extends Node {
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (KnowledgeBase.CURRENT.get().noInfer()) {
-            return unknown();
-        }
         Functor functor = functor();
         if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
             return unknown();

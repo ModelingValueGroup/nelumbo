@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.integers.Integer;
@@ -51,7 +50,7 @@ public class NelumboTest extends NelumboTestBase {
                     // Init only
                     """;
             try {
-                new Parser(new Tokenizer(example, "NelumboTest.initTest").tokenize()).parse();
+                new Parser(new Tokenizer(example, "NelumboTest.initTest").tokenize()).parseThrowing();
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -126,7 +125,7 @@ public class NelumboTest extends NelumboTestBase {
                         all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts before-parse not as expected");
 
-                List<Node> result = new Parser(tr).parse();
+                List<Node> result = new Parser(tr).parseThrowing().roots();
                 //U.printTokens("after-parse", tokens);
                 all = tr.listAll();
                 assertEquals(12, all.size(), "wrong number of tokens after parse()");
@@ -152,7 +151,6 @@ public class NelumboTest extends NelumboTestBase {
     @Test
     public void research() {
         run(() -> {
-            KnowledgeBase.CURRENT.get().noInfer(true);
             try {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
                 String nl = """
@@ -167,7 +165,7 @@ public class NelumboTest extends NelumboTestBase {
                 List<Token> all = tr.listAll();
                 U.printTokens("after-parse", all);
 
-                List<Node> result = new Parser(tr).parse();
+                List<Node> result = new Parser(tr).parseThrowing().roots();
 
                 U.printNode("all result nodes", result);
                 U.printKnowledgeBase("KNOWLEDGE-BASE", true);

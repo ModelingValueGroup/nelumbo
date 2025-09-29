@@ -322,7 +322,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             }
             Tokenizer tokenizer = new Tokenizer(line, line);
             Parser parser = new Parser(tokenizer.tokenize());
-            for (Node root : parser.parse()) {
+            for (Node root : parser.parseThrowing().roots()) {
                 if (root.type().equals(Type.QUERY)) {
                     write(root.toString(1));
                 }
@@ -338,7 +338,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         }
     }
 
-    private void applySyntaxColors(String line) throws ParseException {
+    private void applySyntaxColors(String line) {
         System.err.println("line=[" + U.traceable(line) + "]");
         textArea.insert(" ", getEnd() - 1);
         Tokenizer tokenizer = new Tokenizer(line, line);
