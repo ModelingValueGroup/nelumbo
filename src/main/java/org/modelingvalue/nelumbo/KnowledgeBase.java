@@ -42,9 +42,9 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.PatternResult;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.PatternMergeException;
+import org.modelingvalue.nelumbo.syntax.PatternResult;
 import org.modelingvalue.nelumbo.syntax.Patterns;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -363,10 +363,10 @@ public final class KnowledgeBase {
                         Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().rules(f, t, a, true)));
 
                 register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), //
-                        Type.QUERY, false, (t, a, f) -> new Node(Type.QUERY, t, a)));
+                        Type.QUERY, false, (t, a, f) -> new Query(f, t, a)));
 
                 register(Functor.of(s(n(Type.PREDICATE, 0), t(TokenType.NEWLINE)), //
-                        Type.FACT, false, (t, a, f) -> new Node(Type.FACT, t, a)));
+                        Type.FACT, false, (t, a, f) -> new Fact(f, t, a)));
 
                 register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
                         Type.NODE, false, (t, a, f) -> {
@@ -559,9 +559,9 @@ public final class KnowledgeBase {
         }
     }
 
-    public void addRule(Rule ruleImpl) {
-        Predicate signature = ruleImpl.consequence().signature(Integer.MAX_VALUE);
-        rules.updateAndGet(m -> addRule(ruleImpl, signature, m));
+    public void addRule(Rule rule) {
+        Predicate signature = rule.consequence().signature(Integer.MAX_VALUE);
+        rules.updateAndGet(m -> addRule(rule, signature, m));
         int signDepth = signature.depth();
         depth.accumulateAndGet(signDepth, Math::max);
     }

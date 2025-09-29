@@ -43,9 +43,9 @@ public class Type extends Node {
     public static final Type   VARIABLE         = new Type(Variable.class, NODE);
     public static final Type   RULE             = new Type(Rule.class, ROOT);
     public static final Type   FUNCTOR          = new Type(Functor.class, ROOT);
-    public static final Type   FACT             = new Type("Fact", ROOT);
+    public static final Type   FACT             = new Type(Fact.class, ROOT);
     public static final Type   PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.NODE);
-    public static final Type   QUERY            = new Type("Query", Type.ROOT);
+    public static final Type   QUERY            = new Type(Query.class, Type.ROOT);
 
     public static List<Type> predefined() {
         return List.of(TYPE(), //

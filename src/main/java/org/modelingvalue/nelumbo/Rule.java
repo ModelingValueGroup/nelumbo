@@ -22,8 +22,9 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 
-public final class Rule extends Node {
+public final class Rule extends Node implements Evaluatable {
     @Serial
     private static final long serialVersionUID = -4602043866952049391L;
 
@@ -101,6 +102,11 @@ public final class Rule extends Node {
     @Override
     public Rule set(int i, Object... a) {
         return (Rule) super.set(i, a);
+    }
+
+    @Override
+    public void evaluate(KnowledgeBase knowledgeBase) throws ParseException {
+        knowledgeBase.addRule(this);
     }
 
 }

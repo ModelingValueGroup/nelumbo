@@ -63,7 +63,7 @@ public class SyntaxTest extends NelumboTestBase {
             try {
                 TokenizerResult tr = new Tokenizer(example, "SyntaxTest.test1").tokenize();
                 ParserResult pr = new Parser(tr).parseThrowing();
-
+                pr.evaluate();
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);

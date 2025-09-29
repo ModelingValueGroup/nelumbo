@@ -2,9 +2,10 @@ package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.nelumbo.Evaluatable;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
 
 public class ParserResult {
 
@@ -15,7 +16,7 @@ public class ParserResult {
 
     public ParserResult(boolean throwing) {
         this.throwing = throwing;
-        this.exceptions = throwing ? null : MutableList.of(List.of());
+        this.exceptions = MutableList.of(List.of());
     }
 
     public List<Node> roots() {
@@ -49,9 +50,10 @@ public class ParserResult {
 
     public void evaluate() throws ParseException {
         throwException();
+        KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
         for (Node root : roots()) {
-            if (root.type() == Type.QUERY) {
-                // TODO
+            if (root instanceof Evaluatable eval) {
+                eval.evaluate(knowledgeBase);
             }
         }
     }
