@@ -294,35 +294,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
                                         }
-                                        List<Type> args = pattern.argTypes();
-                                        boolean rel = relation && !args.isEmpty() && args.noneMatch(Type::isLiteral);
-                                        Functor functor = Functor.of(ast, pattern, rel ? Type.PREDICATE : type, false, rel ? null : constructor);
-                                        CURRENT.get().register(functor);
-                                        roots = new ListNode(List.of(), roots, functor);
-                                        if (rel) {
-                                            List<Type> litArgs = args.replaceAll(Type::literal);
-
-                                            pattern = pattern.setTypes(Type::literal);
-                                            Functor relFunctor = Functor.of(List.of(), pattern, type, false, constructor);
-                                            relations.updateAndGet(map -> map.put(functor, relFunctor));
-                                            CURRENT.get().register(relFunctor);
-                                            roots = new ListNode(List.of(), roots, relFunctor);
-                                            // Implied Rule
-                                            Object[] nodVars = new Variable[args.size()];
-                                            Object[] litVars = new Variable[args.size()];
-                                            for (int v = 0; v < args.size(); v++) {
-                                                nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1));
-                                                litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1));
-                                            }
-                                            Predicate conclusion = (Predicate) functor.construct(List.of(), nodVars, this);
-                                            Predicate condition = (Predicate) relFunctor.construct(List.of(), litVars, this);
-                                            for (int c = 0; c < args.size(); c++) {
-                                                Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
-                                                condition = And.of(eq, condition);
-                                            }
-                                            Rule rule = new Rule(ruleFunctor, List.of(), conclusion, condition, false);
-                                            roots = new ListNode(List.of(), roots, rule);
-                                        }
+                                        roots = CURRENT.get().createFunctor(type, relation, roots, ast, constructor, pattern);
                                         ast = pttrn = List.of();
                                         constructor = null;
                                         precedence = List.of();
@@ -390,11 +362,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }));
 
                 ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=="), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
-                        Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().rules(f, t, a, false));
+                        Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().createRules(f, t, a, false));
                 register(ruleFunctor);
 
                 binRuleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<==>"), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
-                        Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().rules(f, t, a, true));
+                        Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().createRules(f, t, a, true));
                 register(binRuleFunctor);
 
                 register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), //
@@ -418,8 +390,40 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
+    private ListNode createFunctor(Type type, boolean relation, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
+        List<Type> args = pattern.argTypes();
+        boolean rel = relation && !args.isEmpty() && args.noneMatch(Type::isLiteral);
+        Functor functor = Functor.of(ast, pattern, rel ? Type.PREDICATE : type, false, rel ? null : constructor);
+        register(functor);
+        roots = new ListNode(List.of(), roots, functor);
+        if (rel) {
+            List<Type> litArgs = args.replaceAll(Type::literal);
+            pattern = pattern.setTypes(Type::literal);
+            Functor relFunctor = Functor.of(List.of(), pattern, type, false, constructor);
+            relations.updateAndGet(map -> map.put(functor, relFunctor));
+            register(relFunctor);
+            roots = new ListNode(List.of(), roots, relFunctor);
+            // Implied Rule
+            Object[] nodVars = new Variable[args.size()];
+            Object[] litVars = new Variable[args.size()];
+            for (int v = 0; v < args.size(); v++) {
+                nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1));
+                litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1));
+            }
+            Predicate conclusion = (Predicate) functor.construct(List.of(), nodVars, this);
+            Predicate condition = (Predicate) relFunctor.construct(List.of(), litVars, this);
+            for (int c = 0; c < args.size(); c++) {
+                Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
+                condition = And.of(eq, condition);
+            }
+            Rule rule = new Rule(ruleFunctor, List.of(), conclusion, condition, false);
+            roots = new ListNode(List.of(), roots, rule);
+        }
+        return roots;
+    }
+
     @SuppressWarnings("unchecked")
-    private ListNode rules(Functor f, List<AstElement> elements, Object[] args, boolean symmetric) throws ParseException {
+    private ListNode createRules(Functor f, List<AstElement> elements, Object[] args, boolean symmetric) throws ParseException {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
         Predicate cons = (Predicate) args[0];
         List<Predicate> list = ((List<Predicate>) args[2]).prepend((Predicate) args[1]);
