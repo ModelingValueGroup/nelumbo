@@ -17,9 +17,10 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
 
 public interface Evaluatable {
 
-    void evaluate(KnowledgeBase knowledgeBase) throws ParseException;
+    void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException;
 
 }

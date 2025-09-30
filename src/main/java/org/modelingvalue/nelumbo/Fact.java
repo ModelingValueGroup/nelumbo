@@ -21,6 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
 
 public final class Fact extends Node implements Evaluatable {
     @Serial
@@ -49,7 +50,7 @@ public final class Fact extends Node implements Evaluatable {
     }
 
     @Override
-    public void evaluate(KnowledgeBase knowledgeBase) throws ParseException {
+    public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
         knowledgeBase.addFact(predicate());
     }
 

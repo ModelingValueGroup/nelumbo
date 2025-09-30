@@ -65,11 +65,12 @@ public class ParserResult {
     }
 
     public void evaluate() throws ParseException {
-        throwException();
-        KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
-        for (Node root : roots()) {
-            if (root instanceof Evaluatable eval) {
-                eval.evaluate(knowledgeBase);
+        if (exceptions.isEmpty()) {
+            KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+            for (Node root : roots()) {
+                if (root instanceof Evaluatable eval) {
+                    eval.evaluate(knowledgeBase, this);
+                }
             }
         }
     }

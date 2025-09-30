@@ -23,6 +23,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
 
 public final class Rule extends Node implements Evaluatable {
     @Serial
@@ -105,7 +106,7 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    public void evaluate(KnowledgeBase knowledgeBase) throws ParseException {
+    public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
         knowledgeBase.addRule(this);
     }
 

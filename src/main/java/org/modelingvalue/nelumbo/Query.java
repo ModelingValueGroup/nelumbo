@@ -19,8 +19,10 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
 
 public final class Query extends Node implements Evaluatable {
     @Serial
@@ -30,9 +32,20 @@ public final class Query extends Node implements Evaluatable {
         super(functor, elements, args(elements, args));
     }
 
+    @SuppressWarnings("unchecked")
     private static Object[] args(List<AstElement> elements, Object[] args) {
+        if (((List<Object>) args[1]).isEmpty()) {
+            return new Object[]{args[0]};
+        }
+        List<Object> expected = (List<Object>) args[1];
+        List<Object> flatFacts = ((List<Object>) expected.get(0)).replaceAllAll(f -> f instanceof List list ? list : List.of(f));
+        List<Object> flatFalsehoods = ((List<Object>) expected.get(1)).replaceAllAll(f -> f instanceof List list ? list : List.of(f));
         Object[] array = new Object[5];
         array[0] = args[0];
+        array[1] = flatFacts.filter(Predicate.class).asList();
+        array[2] = !flatFacts.contains("..");
+        array[3] = flatFalsehoods.filter(Predicate.class).asList();
+        array[4] = !flatFalsehoods.contains("..");
         return array;
     }
 
@@ -54,29 +67,45 @@ public final class Query extends Node implements Evaluatable {
         return (Predicate) get(0);
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Predicate> facts() {
+        return (List<Predicate>) get(1);
+    }
+
+    public boolean completeFacts() {
+        return (java.lang.Boolean) get(2);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Predicate> falsehoods() {
+        return (List<Predicate>) get(3);
+    }
+
+    public boolean completeFalsehoods() {
+        return (java.lang.Boolean) get(4);
+    }
+
+    public boolean hasExpected() {
+        return length() > 1;
+    }
+
     @Override
-    public void evaluate(KnowledgeBase knowledgeBase) throws ParseException {
+    public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
         Predicate predicate = predicate();
         predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
-        InferResult result = predicate.infer();
-
-        //        Set<Predicate> facts = ((List<Predicate>) l.get(1)).asSet();
-        //        boolean completeFacts = true;
-        //        if (facts.contains(INCOMPLETE)) {
-        //            completeFacts = false;
-        //            facts = facts.remove(INCOMPLETE);
-        //        }
-        //        Set<Predicate> falsehoods = ((List<Predicate>) l.get(2)).asSet();
-        //        boolean completeFalsehoods = true;
-        //        if (falsehoods.contains(INCOMPLETE)) {
-        //            completeFalsehoods = false;
-        //            falsehoods = falsehoods.remove(INCOMPLETE);
-        //        }
-        //        InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
-        //        InferResult result = l.getVal(0, 1);
-        //        if (!result.equals(expected) && !result.toString().equals(expected.toString())) {
-        //            throw new ParseException("Expected result " + expected + ", found " + result, Token.concat(l, t));
-        //        }
+        InferResult infer = predicate.infer();
+        if (hasExpected()) {
+            Set<Predicate> facts = facts().asSet();
+            boolean completeFacts = completeFacts();
+            Set<Predicate> falsehoods = falsehoods().asSet();
+            boolean completeFalsehoods = completeFalsehoods();
+            InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
+            if (!infer.equals(expected) && !infer.toString().equals(expected.toString())) {
+                List<AstElement> astElements = astElements();
+                result.addException(new ParseException("Expected result " + expected + ", found " + result, //
+                        astElements.sublist(2, astElements.size()).toArray(i -> new AstElement[i])));
+            }
+        }
     }
 
 }
