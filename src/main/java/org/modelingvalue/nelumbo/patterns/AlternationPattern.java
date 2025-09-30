@@ -47,9 +47,8 @@ public class AlternationPattern extends Pattern {
 
     @Override
     public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
-        List<Pattern> options = options();
         Patterns result = Patterns.EMPTY;
-        for (Pattern option : options) {
+        for (Pattern option : options()) {
             result = result.merge(option.patterns(nextPatterns, left));
         }
         return result;
@@ -72,6 +71,34 @@ public class AlternationPattern extends Pattern {
             }
         }
         return set(0, options);
+    }
+
+    @Override
+    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
+        List<Object> pre = args.get();
+        for (Pattern option : options()) {
+            int ii = option.args(elements, i, args, true);
+            if (ii >= 0) {
+                return ii;
+            } else {
+                args.set(pre);
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
+        String pre = string.get();
+        for (Pattern option : options()) {
+            int ii = option.string(args, i, string, true);
+            if (ii >= 0) {
+                return ii;
+            } else {
+                string.set(pre);
+            }
+        }
+        return -1;
     }
 
 }

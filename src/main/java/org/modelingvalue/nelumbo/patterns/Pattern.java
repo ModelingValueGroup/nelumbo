@@ -102,7 +102,7 @@ public abstract class Pattern extends Node {
         return "";
     }
 
-    public List<Type> args() {
+    public List<Type> argTypes() {
         return List.of();
     }
 
@@ -113,6 +113,31 @@ public abstract class Pattern extends Node {
     @Override
     public Pattern set(int i, Object... a) {
         return (Pattern) super.set(i, a);
+    }
+
+    public abstract int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt);
+
+    public abstract int string(List<Object> args, int i, Ref<String> string, boolean alt);
+
+    public static final class Ref<T> {
+        private T val;
+
+        public Ref(T val) {
+            this.val = val;
+        }
+
+        public void set(T val) {
+            this.val = val;
+        }
+
+        public T get() {
+            return val;
+        }
+
+        @Override
+        public String toString() {
+            return val.toString();
+        }
     }
 
 }

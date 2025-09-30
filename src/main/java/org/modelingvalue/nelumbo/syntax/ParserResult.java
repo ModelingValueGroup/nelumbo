@@ -74,4 +74,13 @@ public class ParserResult {
         }
     }
 
+    public void print() {
+        for (ParseException exc : exceptions()) {
+            System.out.println(exc);
+        }
+        for (Node root : roots()) {
+            System.out.println(root);
+        }
+    }
+
 }

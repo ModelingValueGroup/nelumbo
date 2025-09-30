@@ -55,11 +55,11 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public List<Type> args() {
+    public List<Type> argTypes() {
         List<Type> args = List.of();
         for (Pattern element : elements()) {
             Type last = args.last();
-            List<Type> l = element.args();
+            List<Type> l = element.argTypes();
             Type first = l.first();
             if (first != null && last != null && first.isList() && last.equals(first.element())) {
                 args = args.removeLast();
@@ -94,6 +94,32 @@ public class SequencePattern extends Pattern {
             patterns = element.patterns(patterns, left);
         }
         return patterns;
+    }
+
+    @Override
+    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
+        List<Object> pre = args.get();
+        for (Pattern element : elements()) {
+            i = element.args(elements, i, args, alt);
+            if (i < 0) {
+                args.set(pre);
+                return -1;
+            }
+        }
+        return i;
+    }
+
+    @Override
+    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
+        String pre = string.get();
+        for (Pattern element : elements()) {
+            i = element.string(args, i, string, alt);
+            if (i < 0) {
+                string.set(pre);
+                return -1;
+            }
+        }
+        return i;
     }
 
 }

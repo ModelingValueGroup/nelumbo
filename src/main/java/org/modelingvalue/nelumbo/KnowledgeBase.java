@@ -226,13 +226,13 @@ public final class KnowledgeBase {
                 register(Functor.of(s(r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null))), t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (t, a, f) -> {
                             ListNode roots = new ListNode(List.of(), Type.ROOT.list());
-                            for (Object e1 : a) {
+                            for (Node e1 : ((List<Node>) a[0])) {
                                 if (e1 instanceof ListNode) {
                                     for (Node e2 : ((ListNode) e1).elements()) {
                                         roots = new ListNode(List.of(), roots, (Node) e2);
                                     }
                                 } else {
-                                    roots = new ListNode(List.of(), roots, (Node) e1);
+                                    roots = new ListNode(List.of(), roots, e1);
                                 }
                             }
                             return roots.setAstElements(roots.astElements().add(t.last()));
@@ -383,11 +383,12 @@ public final class KnowledgeBase {
 
     }
 
+    @SuppressWarnings("unchecked")
     private ListNode rules(Functor f, List<AstElement> elements, Object[] args, boolean symmetric) {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
         Predicate rel = (Predicate) args[0];
-        for (int i = 1; i < args.length; i++) {
-            Predicate p = (Predicate) args[i];
+        List<Predicate> list = ((List<Predicate>) args[2]).prepend((Predicate) args[1]);
+        for (Predicate p : list) {
             Rule rule = new Rule(f, List.of(p), rel, p, symmetric);
             roots = new ListNode(List.of(), roots, rule);
         }
@@ -576,7 +577,7 @@ public final class KnowledgeBase {
 
     public void addFact(Predicate fact) {
         Functor functor = fact.functor();
-        List<Type> args = functor.args();
+        List<Type> args = functor.argTypes();
         facts.updateAndGet(map -> {
             map = map.put(fact, fact.factCC());
             for (int i = 0; i < fact.length(); i++) {

@@ -45,8 +45,8 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public List<Type> args() {
-        return repeated().args().map(t -> t.list()).asList();
+    public List<Type> argTypes() {
+        return repeated().argTypes().map(t -> t.list()).asList();
     }
 
     @Override
@@ -63,5 +63,40 @@ public class RepetitionPattern extends Pattern {
     public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
         Integer leftPrecedence = left != null ? left.leftPrecedence() : null;
         return repeated().patterns(new Patterns(this), left).merge(new Patterns(this, leftPrecedence)).merge(nextPatterns);
+    }
+
+    @Override
+    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
+        if (i == elements.size()) {
+            args.set(args.get().add(List.of()));
+            return i;
+        }
+        Pattern repeated = repeated();
+        Ref<List<Object>> ref = new Ref<>(List.of());
+        do {
+            int ii = repeated.args(elements, i, ref, alt);
+            if (ii < 0) {
+                args.set(args.get().add(ref.get()));
+                return i;
+            }
+            i = ii;
+        } while (true);
+    }
+
+    @Override
+    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
+        if (i == args.size()) {
+            return i;
+        }
+        Pattern repeated = repeated();
+        Ref<String> ref = new Ref<>("");
+        do {
+            int ii = repeated.string(args, i, ref, alt);
+            if (ii < 0) {
+                string.set(string.get() + ref.get());
+                return i;
+            }
+            i = ii;
+        } while (true);
     }
 }

@@ -45,8 +45,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public List<Type> args() {
-        return optional().args();
+    public List<Type> argTypes() {
+        return optional().argTypes();
     }
 
     @Override
@@ -62,6 +62,36 @@ public class OptionalPattern extends Pattern {
     @Override
     public Pattern setPresedence(List<Integer> precedence, int[] p) {
         return set(0, optional().setPresedence(precedence, p));
+    }
+
+    @Override
+    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
+        if (i == elements.size()) {
+            args.set(args.get().add(List.of()));
+            return i;
+        }
+        Ref<List<Object>> ref = new Ref<>(List.of());
+        int ii = optional().args(elements, i, ref, alt);
+        if (ii < 0) {
+            args.set(args.get().add(List.of()));
+            return i;
+        }
+        args.set(args.get().add(ref.get()));
+        return ii;
+    }
+
+    @Override
+    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
+        if (i == args.size()) {
+            return i;
+        }
+        Ref<String> ref = new Ref<>("");
+        int ii = optional().string(args, i, ref, alt);
+        if (ii < 0) {
+            return i;
+        }
+        string.set(string.get() + ref.get());
+        return ii;
     }
 
 }

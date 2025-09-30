@@ -23,7 +23,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.U;
 
 @SuppressWarnings({"unused"})
-public class Token implements AstElement {
+public final class Token implements AstElement {
 
     private final TokenType type;
     private final String    text;

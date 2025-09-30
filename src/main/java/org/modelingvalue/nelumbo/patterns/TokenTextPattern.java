@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class TokenTextPattern extends Pattern {
     @Serial
@@ -57,6 +58,32 @@ public class TokenTextPattern extends Pattern {
     @Override
     public String toString() {
         return "t(\"" + tokenText() + "\")";
+    }
+
+    @Override
+    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
+        String tokenText = tokenText();
+        if (elements.get(i) instanceof Token token && tokenText.equals(token.text())) {
+            if (alt) {
+                args.set(args.get().add(tokenText));
+            }
+            return i + 1;
+        }
+        return -1;
+    }
+
+    @Override
+    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
+        String tokenText = tokenText();
+        if (alt) {
+            if (args.get(i) instanceof String text && tokenText.equals(text)) {
+                i++;
+            } else {
+                return -1;
+            }
+        }
+        string.set(string.get() + tokenText);
+        return i;
     }
 
 }

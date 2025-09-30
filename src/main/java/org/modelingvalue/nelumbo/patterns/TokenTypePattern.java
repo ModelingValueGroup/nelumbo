@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class TokenTypePattern extends Pattern {
@@ -53,6 +54,37 @@ public class TokenTypePattern extends Pattern {
     @Override
     public String toString() {
         return "t(" + tokenType() + ")";
+    }
+
+    @Override
+    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
+        TokenType tokenType = tokenType();
+        if (tokenType == TokenType.NEWLINE && i == elements.size()) {
+            return i;
+        }
+        if (elements.get(i) instanceof Token token && tokenType.equals(token.type())) {
+            if (alt || tokenType.variable()) {
+                args.set(args.get().add(token.text()));
+            }
+            return i + 1;
+        }
+        return -1;
+    }
+
+    @Override
+    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
+        TokenType tokenType = tokenType();
+        if (tokenType == TokenType.NEWLINE && i == args.size()) {
+            return i;
+        }
+        if (alt || tokenType.variable()) {
+            if (args.get(i) instanceof String text && tokenType.pattern().matcher(text).matches()) {
+                string.set(string.get() + text);
+                return i + 1;
+            }
+            return -1;
+        }
+        return i;
     }
 
 }

@@ -17,9 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
-import java.util.ArrayList;
 import java.util.Objects;
-import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -102,16 +100,13 @@ public class Node extends StructImpl implements AstElement {
         return (List<AstElement>) super.get(1);
     }
 
-    public java.util.List<Node> nodes() {
-        java.util.List<Node> nodes = new ArrayList<>();
-        nodes.add(typeOrFunctor());
+    @SuppressWarnings("unchecked")
+    public final List<Object> args() {
+        List<Object> args = List.of();
         for (int i = 0; i < length(); i++) {
-            Object child = get(i);
-            if (child instanceof Node) {
-                nodes.add((Node) child);
-            }
+            args = args.add(get(i));
         }
-        return nodes;
+        return args;
     }
 
     @Override
@@ -190,18 +185,12 @@ public class Node extends StructImpl implements AstElement {
         return nrOfUnbound() == 0;
     }
 
-    public Function<Node, String> render() {
-        Functor functor = functor();
-        return functor != null ? functor.render() : null;
-    }
-
     @Override
     public String toString() {
-        Function<Node, String> render = render();
-        if (render != null) {
-            return render.apply(this);
-        }
         Functor functor = functor();
+        if (functor != null && !functor.astElements().isEmpty()) {
+            return functor.string(args());
+        }
         StringBuilder sb = new StringBuilder();
         if (functor != null) {
             sb.append(functor.name());
@@ -212,7 +201,7 @@ public class Node extends StructImpl implements AstElement {
         String sep = "";
         for (int i = 0; i < length(); i++) {
             sb.append(sep).append(toString(i));
-            sep = ", ";
+            sep = ",";
         }
         sb.append(')');
         return sb.toString();
@@ -445,7 +434,7 @@ public class Node extends StructImpl implements AstElement {
             Object v = get(i);
             if (v instanceof Type) {
                 if (full) {
-                    List<Type> args = functor().args();
+                    List<Type> args = functor().argTypes();
                     for (Type s : KnowledgeBase.generalizations((Type) v, args.get(i))) {
                         result = result.add(setType(i, s));
                     }

@@ -169,8 +169,6 @@ public class Patterns {
                     } else {
                         patterns = null;
                     }
-                } else if (repetitions != null && patterns != null && token.type().variable()) {
-                    result.add(text);
                 }
             }
         }
@@ -182,6 +180,7 @@ public class Patterns {
             return patterns.parse(token.next(), result, repetitions, pre);
         }
         return null;
+
     }
 
     private static boolean isEndOfLine(Token token) {

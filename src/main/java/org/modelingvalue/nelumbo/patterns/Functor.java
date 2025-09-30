@@ -110,16 +110,16 @@ public class Functor extends Node {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Type> args() {
+    public List<Type> argTypes() {
         if (args == null) {
-            args = pattern().args();
+            args = pattern().argTypes();
         }
         return args;
     }
 
     @Override
     public String toString() {
-        String types = args().map(Type::toString).collect(Collectors.joining(", "));
+        String types = argTypes().map(Type::toString).collect(Collectors.joining(","));
         return name() + "(" + types + ")";
     }
 
@@ -155,6 +155,18 @@ public class Functor extends Node {
     @Override
     public Functor setAstElements(List<AstElement> elements) {
         return (Functor) super.setAstElements(elements);
+    }
+
+    public List<Object> args(List<AstElement> elements) {
+        Pattern.Ref<List<Object>> ref = new Pattern.Ref<>(List.of());
+        pattern().args(elements, 0, ref, false);
+        return ref.get();
+    }
+
+    public String string(List<Object> args) {
+        Pattern.Ref<String> ref = new Pattern.Ref<>("");
+        pattern().string(args, 0, ref, false);
+        return ref.get();
     }
 
 }

@@ -20,6 +20,7 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.Patterns;
 
@@ -62,7 +63,7 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public List<Type> args() {
+    public List<Type> argTypes() {
         return List.of(nodeType());
     }
 
@@ -79,6 +80,24 @@ public class NodeTypePattern extends Pattern {
             p[0]++;
         }
         return set(1, precedence.get(i));
+    }
+
+    @Override
+    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
+        if (elements.get(i) instanceof Node node && nodeType().isAssignableFrom(node.type())) {
+            args.set(args.get().add(node));
+            return i + 1;
+        }
+        return -1;
+    }
+
+    @Override
+    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
+        if (args.get(i) instanceof Node node && nodeType().isAssignableFrom(node.type())) {
+            string.set(string.get() + args.get(i));
+            return i + 1;
+        }
+        return -1;
     }
 
 }
