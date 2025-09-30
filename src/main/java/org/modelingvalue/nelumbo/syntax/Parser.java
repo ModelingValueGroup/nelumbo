@@ -26,7 +26,7 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
-public final class Parser {
+public final class Parser implements ParseExceptionHandler {
 
     public static List<Node> parse(String string) throws ParseException {
         Tokenizer tokenizer = new Tokenizer(string + "\n", string);
@@ -79,7 +79,7 @@ public final class Parser {
 
     private ParserResult parse(ParserResult result) throws ParseException {
         this.result = result;
-        knowledgeBase.startParsing(this);
+        knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
             Node node = parseNode(token, Integer.MIN_VALUE, Type.TOP_GROUP);
@@ -135,6 +135,7 @@ public final class Parser {
         return knowledgeBase;
     }
 
+    @Override
     public void addException(ParseException exception) throws ParseException {
         result.addException(exception);
     }

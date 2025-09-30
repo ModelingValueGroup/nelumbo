@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -81,6 +82,19 @@ public class SequencePattern extends Pattern {
         for (int i = 0; i < elements.size(); i++) {
             Pattern pa = elements.get(i);
             Pattern pb = pa.setPresedence(precedence, p);
+            if (!pb.equals(pa)) {
+                elements = elements.replace(i, pb);
+            }
+        }
+        return set(0, elements);
+    }
+
+    @Override
+    public Pattern setTypes(Function<Type, Type> typeFunction) {
+        List<Pattern> elements = elements();
+        for (int i = 0; i < elements.size(); i++) {
+            Pattern pa = elements.get(i);
+            Pattern pb = pa.setTypes(typeFunction);
             if (!pb.equals(pa)) {
                 elements = elements.replace(i, pb);
             }

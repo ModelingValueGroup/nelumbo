@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -57,6 +58,11 @@ public class RepetitionPattern extends Pattern {
     @Override
     public Pattern setPresedence(List<Integer> precedence, int[] p) {
         return set(0, repeated().setPresedence(precedence, p));
+    }
+
+    @Override
+    public Pattern setTypes(Function<Type, Type> typeFunction) {
+        return set(0, repeated().setTypes(typeFunction));
     }
 
     @Override

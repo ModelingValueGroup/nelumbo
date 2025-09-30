@@ -25,7 +25,7 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
-public final class PatternResult {
+public final class PatternResult implements ParseExceptionHandler {
 
     private final MutableList<AstElement>         elements;
     private final Parser                          parser;
@@ -121,6 +121,7 @@ public final class PatternResult {
         return elements().toString().substring(4);
     }
 
+    @Override
     public void addException(ParseException exception) throws ParseException {
         parser.addException(exception);
     }

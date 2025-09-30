@@ -41,16 +41,10 @@ import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.PatternMergeException;
-import org.modelingvalue.nelumbo.syntax.PatternResult;
-import org.modelingvalue.nelumbo.syntax.Patterns;
-import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
+import org.modelingvalue.nelumbo.syntax.*;
 
 @SuppressWarnings("DuplicatedCode")
-public final class KnowledgeBase {
+public final class KnowledgeBase implements ParseExceptionHandler {
 
     private static final boolean                                                        TRACE_NELUMBO        = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
     public static final Context<KnowledgeBase>                                          CURRENT              = Context.of();
@@ -208,6 +202,10 @@ public final class KnowledgeBase {
         return patterns.size() > 1 ? s(patterns.toArray(i -> new Pattern[i])) : patterns.first();
     }
 
+    private static Functor equalsFunctor;
+    private static Functor ruleFunctor;
+    private static Functor binRuleFunctor;
+
     @SuppressWarnings({"unchecked", "CodeBlock2Expr"})
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
@@ -222,6 +220,10 @@ public final class KnowledgeBase {
                         addType(new Type(tokenType), true);
                     }
                 }
+
+                equalsFunctor = Functor.of(s(n(Type.NODE, 30), t("="), n(Type.NODE, 30)), // 
+                        Type.PREDICATE, false);
+                register(equalsFunctor);
 
                 register(Functor.of(s(r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null))), t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (t, a, f) -> {
@@ -274,6 +276,11 @@ public final class KnowledgeBase {
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), SEQ_NO_COMMA, r(s(t(","), SEQ_NO_COMMA)), t(NEWLINE)), //
                         Type.ROOT.list(), false, (t1, a1, f) -> {
                             Type type = (Type) t1.get(0);
+                            boolean relation = Type.RELATION.isAssignableFrom(type);
+                            boolean predicate = relation || Type.PREDICATE.isAssignableFrom(type);
+                            if (!predicate) {
+                                type = type.function();
+                            }
                             ListNode roots = new ListNode(t1.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
@@ -287,9 +294,35 @@ public final class KnowledgeBase {
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
                                         }
-                                        Functor functor = Functor.of(ast, pattern, type, false, constructor);
-                                        roots = new ListNode(List.of(), roots, functor);
+                                        List<Type> args = pattern.argTypes();
+                                        boolean rel = relation && !args.isEmpty() && args.noneMatch(Type::isLiteral);
+                                        Functor functor = Functor.of(ast, pattern, rel ? Type.PREDICATE : type, false, rel ? null : constructor);
                                         CURRENT.get().register(functor);
+                                        roots = new ListNode(List.of(), roots, functor);
+                                        if (rel) {
+                                            List<Type> litArgs = args.replaceAll(Type::literal);
+
+                                            pattern = pattern.setTypes(Type::literal);
+                                            Functor relFunctor = Functor.of(List.of(), pattern, type, false, constructor);
+                                            relations.updateAndGet(map -> map.put(functor, relFunctor));
+                                            CURRENT.get().register(relFunctor);
+                                            roots = new ListNode(List.of(), roots, relFunctor);
+                                            // Implied Rule
+                                            Object[] nodVars = new Variable[args.size()];
+                                            Object[] litVars = new Variable[args.size()];
+                                            for (int v = 0; v < args.size(); v++) {
+                                                nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1));
+                                                litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1));
+                                            }
+                                            Predicate conclusion = (Predicate) functor.construct(List.of(), nodVars, this);
+                                            Predicate condition = (Predicate) relFunctor.construct(List.of(), litVars, this);
+                                            for (int c = 0; c < args.size(); c++) {
+                                                Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
+                                                condition = And.of(eq, condition);
+                                            }
+                                            Rule rule = new Rule(ruleFunctor, List.of(), conclusion, condition, false);
+                                            roots = new ListNode(List.of(), roots, rule);
+                                        }
                                         ast = pttrn = List.of();
                                         constructor = null;
                                         precedence = List.of();
@@ -356,11 +389,13 @@ public final class KnowledgeBase {
                             return roots.setAstElements(roots.astElements().add(t.last()));
                         }));
 
-                register(Functor.of(s(n(Type.PREDICATE, 0), t("<=="), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
-                        Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().rules(f, t, a, false)));
+                ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=="), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
+                        Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().rules(f, t, a, false));
+                register(ruleFunctor);
 
-                register(Functor.of(s(n(Type.PREDICATE, 0), t("<==>"), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
-                        Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().rules(f, t, a, true)));
+                binRuleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<==>"), n(Type.PREDICATE, 0), r(s(t(","), n(Type.PREDICATE, 0))), t(TokenType.NEWLINE)), //
+                        Type.ROOT.list(), false, (t, a, f) -> CURRENT.get().rules(f, t, a, true));
+                register(binRuleFunctor);
 
                 register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(TokenType.NEWLINE)), //
                         Type.QUERY, false, (t, a, f) -> new Query(f, t, a)));
@@ -384,12 +419,26 @@ public final class KnowledgeBase {
     }
 
     @SuppressWarnings("unchecked")
-    private ListNode rules(Functor f, List<AstElement> elements, Object[] args, boolean symmetric) {
+    private ListNode rules(Functor f, List<AstElement> elements, Object[] args, boolean symmetric) throws ParseException {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
-        Predicate rel = (Predicate) args[0];
+        Predicate cons = (Predicate) args[0];
         List<Predicate> list = ((List<Predicate>) args[2]).prepend((Predicate) args[1]);
-        for (Predicate p : list) {
-            Rule rule = new Rule(f, List.of(p), rel, p, symmetric);
+        Map<Variable, Object> consVars = cons.variables();
+        for (Predicate cond : list) {
+            Map<Variable, Object> condVars = cond.variables();
+            Functor rel = relations.get().get(cons.functor());
+            Map<Variable, Object> local = condVars.removeAllKey(consVars);
+            if (symmetric && !local.isEmpty()) {
+                addException(new ParseException("No local variables allowed in condition of a symmetric rule. Found: " + local.get(0).getKey().name(), local.get(0).getKey().tokens()));
+            }
+            if (rel != null) {
+                Map<Variable, Object> vars = Predicate.literals(condVars.putAll(consVars));
+                cons = cons.setFunctor(rel).setVariables(vars);
+                cond = cond.setVariables(vars);
+            } else if (!local.isEmpty()) {
+                cond = cond.setVariables(Predicate.literals(local));
+            }
+            Rule rule = new Rule(f, List.of(cond), cons, cond, symmetric);
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots.setAstElements(roots.astElements().add(elements.last()));
@@ -413,7 +462,7 @@ public final class KnowledgeBase {
     private final KnowledgeBase                                         init;
 
     private boolean                                                     stopped;
-    private Parser                                                      parser;
+    private ParseExceptionHandler                                       exceptionHandler;
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
@@ -434,20 +483,21 @@ public final class KnowledgeBase {
         endParsing();
     }
 
-    public void startParsing(Parser parser) {
-        this.parser = parser;
+    public void setExceptionHandler(ParseExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
     }
 
+    @Override
     public void addException(ParseException exception) throws ParseException {
-        if (parser != null) {
-            parser.addException(exception);
+        if (exceptionHandler != null) {
+            exceptionHandler.addException(exception);
         } else {
             throw exception;
         }
     }
 
     public void endParsing() {
-        this.parser = null;
+        this.exceptionHandler = null;
         localPrePatterns.set(Map.of());
         localPostPatterns.set(Map.of());
     }

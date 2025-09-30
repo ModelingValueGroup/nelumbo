@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -62,6 +63,11 @@ public class OptionalPattern extends Pattern {
     @Override
     public Pattern setPresedence(List<Integer> precedence, int[] p) {
         return set(0, optional().setPresedence(precedence, p));
+    }
+
+    @Override
+    public Pattern setTypes(Function<Type, Type> typeFunction) {
+        return set(0, optional().setTypes(typeFunction));
     }
 
     @Override

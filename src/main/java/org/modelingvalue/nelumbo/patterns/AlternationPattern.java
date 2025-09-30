@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -66,6 +67,19 @@ public class AlternationPattern extends Pattern {
         for (int i = 0; i < options.size(); i++) {
             Pattern pa = options.get(i);
             Pattern pb = pa.setPresedence(precedence, p);
+            if (!pb.equals(pa)) {
+                options = options.replace(i, pb);
+            }
+        }
+        return set(0, options);
+    }
+
+    @Override
+    public Pattern setTypes(Function<Type, Type> typeFunction) {
+        List<Pattern> options = options();
+        for (int i = 0; i < options.size(); i++) {
+            Pattern pa = options.get(i);
+            Pattern pb = pa.setTypes(typeFunction);
             if (!pb.equals(pa)) {
                 options = options.replace(i, pb);
             }

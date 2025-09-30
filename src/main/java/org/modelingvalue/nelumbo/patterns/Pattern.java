@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -107,6 +108,10 @@ public abstract class Pattern extends Node {
     }
 
     public Pattern setPresedence(List<Integer> precedence, int[] p) {
+        return this;
+    }
+
+    public Pattern setTypes(Function<Type, Type> typeFunction) {
         return this;
     }
 

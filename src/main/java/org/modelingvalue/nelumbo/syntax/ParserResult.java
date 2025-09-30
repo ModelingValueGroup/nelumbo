@@ -23,7 +23,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 
-public class ParserResult {
+public class ParserResult implements ParseExceptionHandler {
 
     private final boolean                     throwing;
     private final MutableList<ParseException> exceptions;
@@ -47,6 +47,7 @@ public class ParserResult {
         this.root = root;
     }
 
+    @Override
     public void addException(ParseException exception) throws ParseException {
         if (throwing) {
             throw exception;

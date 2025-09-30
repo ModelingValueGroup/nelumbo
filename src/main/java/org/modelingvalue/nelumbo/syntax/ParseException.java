@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 
 public class ParseException extends Exception {
@@ -36,6 +37,10 @@ public class ParseException extends Exception {
 
     public ParseException(Throwable cause, String s, AstElement... elements) {
         this(cause, s, elements[0].firstToken(), elements[elements.length - 1].lastToken());
+    }
+
+    public ParseException(String s, List<Token> tokens) {
+        this(null, s, tokens.first(), tokens.last());
     }
 
     private ParseException(Throwable cause, String s, Token firstToken, Token lastToken) {
