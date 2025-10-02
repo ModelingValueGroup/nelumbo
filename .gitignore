@@ -64,6 +64,7 @@ local.properties
 tmp/
 tmp/**
 tmp/**/*
+site/
 
 #### java (https://github.com/github/gitignore/blob/master/Java.gitignore)
 *.class

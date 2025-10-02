@@ -1,0 +1,8 @@
+slides:
+  theme: solarized
+  highlight_theme: nelumbo.css
+  favicon: ../src/main/resources/org/modelingvalue/nelumbo/nelumbo.png
+revealjs:
+  height: 910
+  width: 1445
+  transition: slide
