@@ -28,7 +28,7 @@ import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.ThrowingTriFunction;
 
 public class Functor extends Node {
@@ -49,6 +49,7 @@ public class Functor extends Node {
 
     private String     name;
     private List<Type> args;
+    private ParseState start;
 
     private Functor(List<AstElement> elements, Object... args) {
         super(Type.FUNCTOR, elements, args);
@@ -143,8 +144,11 @@ public class Functor extends Node {
         return Type.PREDICATE.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : new Node(this, elements, args);
     }
 
-    public Patterns patterns() {
-        return pattern().patterns(new Patterns(this), left());
+    public ParseState start() {
+        if (start == null) {
+            start = pattern().state(new ParseState(this), left(), List.of());
+        }
+        return start;
     }
 
     @Override
@@ -157,16 +161,29 @@ public class Functor extends Node {
         return (Functor) super.setAstElements(elements);
     }
 
-    public List<Object> args(List<AstElement> elements) {
-        Pattern.Ref<List<Object>> ref = new Pattern.Ref<>(List.of());
-        pattern().args(elements, 0, ref, false);
-        return ref.get();
+    @SuppressWarnings("unchecked")
+    public Object[] args(List<AstElement> elements) {
+        Pattern pattern = pattern();
+        List<Object> args = pattern.args(List.of(), new Pattern.ElementIterator(elements, start()), List.of(), false);
+        return pattern instanceof SequencePattern && args.get(0) instanceof List list ? list.toArray() : args.toArray();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void printArgs(List<Object> args, String prefix) {
+        for (Object arg : args) {
+            if (arg instanceof List list) {
+                printArgs(list, prefix + "  ");
+            } else {
+                System.out.println(prefix + arg);
+            }
+        }
     }
 
     public String string(List<Object> args) {
-        Pattern.Ref<String> ref = new Pattern.Ref<>("");
-        pattern().string(args, 0, ref, false);
-        return ref.get();
+        StringBuffer sb = new StringBuffer();
+        ParseState state = start();
+
+        return sb.toString();
     }
 
 }

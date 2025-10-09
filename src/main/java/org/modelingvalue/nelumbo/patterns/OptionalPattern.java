@@ -17,12 +17,13 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 
 public class OptionalPattern extends Pattern {
     @Serial
@@ -51,8 +52,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
-        return optional().patterns(nextPatterns, left).merge(nextPatterns);
+    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
+        return optional().state(next, left, branche.add(0)).merge(next, true);
     }
 
     @Override
@@ -71,33 +72,15 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
-        if (i == elements.size()) {
-            args.set(args.get().add(List.of()));
-            return i;
+    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
+        if (it.match(branche)) {
+            List<Object> inner = List.of();
+            inner = optional().args(inner, it, branche.add(0), false);
+            args = args.add(Optional.of(inner.first()));
+        } else {
+            args = args.add(Optional.empty());
         }
-        Ref<List<Object>> ref = new Ref<>(List.of());
-        int ii = optional().args(elements, i, ref, alt);
-        if (ii < 0) {
-            args.set(args.get().add(List.of()));
-            return i;
-        }
-        args.set(args.get().add(ref.get()));
-        return ii;
-    }
-
-    @Override
-    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
-        if (i == args.size()) {
-            return i;
-        }
-        Ref<String> ref = new Ref<>("");
-        int ii = optional().string(args, i, ref, alt);
-        if (ii < 0) {
-            return i;
-        }
-        string.set(string.get() + ref.get());
-        return ii;
+        return args;
     }
 
 }

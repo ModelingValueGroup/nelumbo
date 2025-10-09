@@ -155,7 +155,7 @@ public class NelumboTest extends NelumboTestBase {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
                 String nl = """
                         <Relation>  ::= xx(<Integer>,<Integer>)
-                        true  <==>  xx(1,2),xx(2,3)
+                        true  <==>  xx(1,2),xx(2,3),xx(3,4)
                         //<Predicate> ::= <String> ~~~~~~~~~~~~~~~~~~~ <String> #66
                         //<TOM> :: <String>
                         //<Predicate> p

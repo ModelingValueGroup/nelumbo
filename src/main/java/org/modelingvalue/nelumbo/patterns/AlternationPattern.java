@@ -22,7 +22,7 @@ import java.util.function.Function;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 
 public class AlternationPattern extends Pattern {
     @Serial
@@ -47,10 +47,11 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
-        Patterns result = Patterns.EMPTY;
+    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
+        ParseState result = ParseState.EMPTY;
+        int i = 0;
         for (Pattern option : options()) {
-            result = result.merge(option.patterns(nextPatterns, left));
+            result = result.merge(option.state(next, left, branche.add(i++)), true);
         }
         return result;
     }
@@ -88,31 +89,9 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
-        List<Object> pre = args.get();
-        for (Pattern option : options()) {
-            int ii = option.args(elements, i, args, true);
-            if (ii >= 0) {
-                return ii;
-            } else {
-                args.set(pre);
-            }
-        }
-        return -1;
-    }
-
-    @Override
-    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
-        String pre = string.get();
-        for (Pattern option : options()) {
-            int ii = option.string(args, i, string, true);
-            if (ii >= 0) {
-                return ii;
-            } else {
-                string.set(pre);
-            }
-        }
-        return -1;
+    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
+        Integer i = it.branche.get(branche.size());
+        return options().get(i).args(args, it, branche.add(i), true);
     }
 
 }

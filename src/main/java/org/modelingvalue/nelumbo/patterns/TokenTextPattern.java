@@ -21,7 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class TokenTextPattern extends Pattern {
@@ -46,8 +46,8 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
-        return new Patterns(tokenText(), nextPatterns);
+    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
+        return new ParseState(tokenText(), next, branche);
     }
 
     @Override
@@ -61,29 +61,12 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
-        String tokenText = tokenText();
-        if (elements.get(i) instanceof Token token && tokenText.equals(token.text())) {
-            if (alt) {
-                args.set(args.get().add(tokenText));
-            }
-            return i + 1;
-        }
-        return -1;
-    }
-
-    @Override
-    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
-        String tokenText = tokenText();
+    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         if (alt) {
-            if (args.get(i) instanceof String text && tokenText.equals(text)) {
-                i++;
-            } else {
-                return -1;
-            }
+            args = args.add(((Token) it.element).text());
         }
-        string.set(string.get() + tokenText);
-        return i;
+        it.next();
+        return args;
     }
 
 }

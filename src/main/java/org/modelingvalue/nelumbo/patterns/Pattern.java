@@ -17,13 +17,14 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.Iterator;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public abstract class Pattern extends Node {
@@ -75,7 +76,9 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern s(List<AstElement> ast, Pattern... elements) {
-        return new SequencePattern(Type.PATTERN, ast, List.of(elements));
+        return new SequencePattern(Type.PATTERN, ast, List.of(elements).replaceAllAll(e -> {
+            return e instanceof SequencePattern s ? s.elements() : List.of(e);
+        }));
     }
 
     public static Pattern t(List<AstElement> ast, String tokenText) {
@@ -97,7 +100,7 @@ public abstract class Pattern extends Node {
     @Override
     protected abstract Pattern struct(Object[] array);
 
-    public abstract Patterns patterns(Patterns nextPatterns, NodeTypePattern left);
+    public abstract ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche);
 
     public String name() {
         return "";
@@ -120,29 +123,52 @@ public abstract class Pattern extends Node {
         return (Pattern) super.set(i, a);
     }
 
-    public abstract int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt);
+    protected abstract List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt);
 
-    public abstract int string(List<Object> args, int i, Ref<String> string, boolean alt);
+    protected static final class ElementIterator {
 
-    public static final class Ref<T> {
-        private T val;
+        private final Iterator<AstElement> it;
 
-        public Ref(T val) {
-            this.val = val;
+        private List<ParseState>           states;
+        private int                        stateIndex;
+
+        protected AstElement               element;
+        protected List<Integer>            branche;
+
+        protected ElementIterator(List<AstElement> elements, ParseState start) {
+            it = elements.iterator();
+            states = List.of(start);
+            next();
         }
 
-        public void set(T val) {
-            this.val = val;
+        protected void next() {
+            if (it.hasNext()) {
+                element = it.next();
+                stateIndex -= element.getCycleDepth();
+                ParseState state = states.get(stateIndex);
+                Object input = element.getInput();
+                branche = state.branches().get(input);
+                state = state.transitions().get(input);
+                states = states.size() > ++stateIndex ? states.replace(stateIndex, state) : states.add(state);
+            } else {
+                element = null;
+                stateIndex = 0;
+                branche = List.of();
+            }
         }
 
-        public T get() {
-            return val;
+        protected boolean match(List<Integer> branche) {
+            if (this.branche.size() <= branche.size()) {
+                return false;
+            }
+            for (int i = 0; i < branche.size(); i++) {
+                if (!this.branche.get(i).equals(branche.get(i))) {
+                    return false;
+                }
+            }
+            return true;
         }
 
-        @Override
-        public String toString() {
-            return val.toString();
-        }
     }
 
 }

@@ -47,4 +47,11 @@ public interface AstElement {
 
     boolean isMeta();
 
+    void setInput(Object key);
+
+    Object getInput();
+
+    void setCycleDepth(int depth);
+
+    int getCycleDepth();
 }

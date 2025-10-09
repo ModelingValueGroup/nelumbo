@@ -14,10 +14,10 @@
     "foo"+a="foobar"          ? ["foo"+"bar"="foobar"][..]
     "foo"+"bar"=a             ? ["foo"+"bar"="foobar"][..]
 
-    string_length("foo",0)             ? [][string_length("foo",0)]
-    string_length("foo",3)             ? [string_length("foo",3)][]
-    string_length(a,3)                 ? [..][..]
-    string_length("foo",d)             ? [string_length("foo",3)][..]
+    string_length("foo",0)            ? [][string_length("foo",0)]
+    string_length("foo",3)            ? [string_length("foo",3)][]
+    string_length(a,3)                ? [..][..]
+    string_length("foo",d)            ? [string_length("foo",3)][..]
 
     integer_string(123456,"123456")   ? [integer_string(123456,"123456")][]
     integer_string(123456,a)          ? [integer_string(123456,"123456")][..]

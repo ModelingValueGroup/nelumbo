@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
+import java.util.Optional;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
@@ -34,12 +35,12 @@ public final class Query extends Node implements Evaluatable {
 
     @SuppressWarnings("unchecked")
     private static Object[] args(List<AstElement> elements, Object[] args) {
-        if (((List<Object>) args[1]).isEmpty()) {
+        Optional<List<Optional<List<Object>>>> expected = (Optional<List<Optional<List<Object>>>>) args[1];
+        if (expected.isEmpty()) {
             return new Object[]{args[0]};
         }
-        List<Object> expected = (List<Object>) args[1];
-        List<Object> flatFacts = ((List<Object>) expected.get(0)).replaceAllAll(f -> f instanceof List list ? list : List.of(f));
-        List<Object> flatFalsehoods = ((List<Object>) expected.get(1)).replaceAllAll(f -> f instanceof List list ? list : List.of(f));
+        List<Object> flatFacts = flatten(expected.get().get(0));
+        List<Object> flatFalsehoods = flatten(expected.get().get(1));
         Object[] array = new Object[5];
         array[0] = args[0];
         array[1] = flatFacts.filter(Predicate.class).asList();
@@ -47,6 +48,11 @@ public final class Query extends Node implements Evaluatable {
         array[3] = flatFalsehoods.filter(Predicate.class).asList();
         array[4] = !flatFalsehoods.contains("..");
         return array;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Object> flatten(Optional<List<Object>> expected) {
+        return expected.orElse(List.of()).replaceAllAll(f -> f instanceof List list ? list : List.of(f));
     }
 
     private Query(Object[] array) {

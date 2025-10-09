@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -39,6 +40,9 @@ public class Node extends StructImpl implements AstElement {
     private Map<Variable, Object> variables;
     private int                   nrOfUnbound      = -1;
 
+    private Object                input;
+    private int                   cycleDepth;
+
     public Node(Functor functor, List<AstElement> elements, Object... args) {
         super(array(functor, elements, args));
     }
@@ -56,6 +60,11 @@ public class Node extends StructImpl implements AstElement {
         result[0] = functor;
         result[1] = elements;
         System.arraycopy(args, 0, result, START, args.length);
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof Optional<?> opt) {
+                result[i + START] = opt.orElse(null);
+            }
+        }
         return result;
     }
 
@@ -493,6 +502,26 @@ public class Node extends StructImpl implements AstElement {
     @Override
     public boolean isMeta() {
         return false;
+    }
+
+    @Override
+    public Object getInput() {
+        return input;
+    }
+
+    @Override
+    public void setInput(Object input) {
+        this.input = input;
+    }
+
+    @Override
+    public int getCycleDepth() {
+        return cycleDepth;
+    }
+
+    @Override
+    public void setCycleDepth(int cycleDepth) {
+        this.cycleDepth = cycleDepth;
     }
 
 }

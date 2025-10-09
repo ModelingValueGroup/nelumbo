@@ -22,7 +22,7 @@ import java.util.function.Function;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 
 public class RepetitionPattern extends Pattern {
     @Serial
@@ -66,43 +66,20 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
+    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
         Integer leftPrecedence = left != null ? left.leftPrecedence() : null;
-        return repeated().patterns(new Patterns(this), left).merge(new Patterns(this, leftPrecedence)).merge(nextPatterns);
+        return repeated().state(new ParseState(this).merge(next, true), left, branche.add(0)).//
+                merge(new ParseState(this, leftPrecedence), true).merge(next, true);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
-        if (i == elements.size()) {
-            args.set(args.get().add(List.of()));
-            return i;
-        }
+    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
+        List<Object> inner = List.of();
         Pattern repeated = repeated();
-        Ref<List<Object>> ref = new Ref<>(List.of());
-        do {
-            int ii = repeated.args(elements, i, ref, alt);
-            if (ii < 0) {
-                args.set(args.get().add(ref.get()));
-                return i;
-            }
-            i = ii;
-        } while (true);
-    }
-
-    @Override
-    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
-        if (i == args.size()) {
-            return i;
+        while (it.match(branche)) {
+            inner = repeated.args(inner, it, branche.add(0), false);
         }
-        Pattern repeated = repeated();
-        Ref<String> ref = new Ref<>("");
-        do {
-            int ii = repeated.string(args, i, ref, alt);
-            if (ii < 0) {
-                string.set(string.get() + ref.get());
-                return i;
-            }
-            i = ii;
-        } while (true);
+        return args.add(inner);
     }
 }

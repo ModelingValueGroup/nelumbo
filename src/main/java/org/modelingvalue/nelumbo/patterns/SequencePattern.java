@@ -22,7 +22,7 @@ import java.util.function.Function;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 
 public class SequencePattern extends Pattern {
     @Serial
@@ -103,37 +103,23 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns patterns, NodeTypePattern left) {
+    public ParseState state(ParseState state, NodeTypePattern left, List<Integer> branche) {
+        int i = elements().size();
         for (Pattern element : elements().reverse()) {
-            patterns = element.patterns(patterns, left);
+            state = element.state(state, left, branche.add(--i));
         }
-        return patterns;
+        return state;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
-        List<Object> pre = args.get();
-        for (Pattern element : elements()) {
-            i = element.args(elements, i, args, alt);
-            if (i < 0) {
-                args.set(pre);
-                return -1;
-            }
+    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
+        List<Pattern> parts = elements();
+        List<Object> inner = List.of();
+        for (int i = 0; i < parts.size(); i++) {
+            inner = parts.get(i).args(inner, it, branche.add(i), false);
         }
-        return i;
-    }
-
-    @Override
-    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
-        String pre = string.get();
-        for (Pattern element : elements()) {
-            i = element.string(args, i, string, alt);
-            if (i < 0) {
-                string.set(pre);
-                return -1;
-            }
-        }
-        return i;
+        return args.add(inner.size() > 1 ? inner : inner.first());
     }
 
 }

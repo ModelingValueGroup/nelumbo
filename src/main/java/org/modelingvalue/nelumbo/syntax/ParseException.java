@@ -43,14 +43,14 @@ public class ParseException extends Exception {
         this(null, s, tokens.first(), tokens.last());
     }
 
-    private ParseException(Throwable cause, String s, Token firstToken, Token lastToken) {
+    private ParseException(Throwable cause, String message, Token firstToken, Token lastToken) {
         this(cause, //
-                s, //
-                firstToken.line(), //
-                firstToken.position(), //
-                firstToken.index(), //
-                lastToken.position() - firstToken.position() + lastToken.text().length(), //
-                firstToken.fileName()//
+                message, //
+                firstToken != null ? firstToken.line() : -1, //
+                firstToken != null ? firstToken.position() : -1, //
+                firstToken != null ? firstToken.index() : -1, //
+                firstToken != null ? lastToken.position() - firstToken.position() + lastToken.text().length() : -1, //
+                firstToken != null ? firstToken.fileName() : ""//
         );
     }
 

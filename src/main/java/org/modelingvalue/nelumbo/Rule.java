@@ -29,8 +29,8 @@ public final class Rule extends Node implements Evaluatable {
     @Serial
     private static final long serialVersionUID = -4602043866952049391L;
 
-    public Rule(Functor functor, List<AstElement> elements, Predicate consequence, Predicate condition, boolean symmetric) {
-        super(functor, elements, consequence, condition, symmetric);
+    public Rule(Functor functor, List<AstElement> elements, Predicate consequence, Predicate condition, Predicate guard) {
+        super(functor, elements, consequence, condition, guard);
     }
 
     private Rule(Object[] args) {
@@ -50,8 +50,8 @@ public final class Rule extends Node implements Evaluatable {
         return (Predicate) get(1);
     }
 
-    public final boolean symmetric() {
-        return (java.lang.Boolean) get(2);
+    public final Predicate guard() {
+        return (Predicate) get(2);
     }
 
     protected final InferResult imply(Predicate proven, InferContext context) {
@@ -59,12 +59,13 @@ public final class Rule extends Node implements Evaluatable {
         if (binding == null) {
             return null;
         }
-        boolean symmetric = symmetric();
         binding = variables().putAll(binding);
-        Predicate condition = condition().setBinding(binding);
         Predicate consequence = consequence().setBinding(binding);
+        Predicate condition = condition().setBinding(binding);
+        Predicate guard = guard();
+        guard = guard != null ? guard.setBinding(binding) : null;
         if (context.trace()) {
-            System.out.println(context.prefix() + consequence + (symmetric ? " <==> " : " <== ") + condition);
+            System.out.println(context.prefix() + consequence + " <==> " + condition + (guard != null ? " ? " + guard : ""));
         }
         InferResult condResult = condition.resolve(context);
         InferResult proResult;
@@ -79,7 +80,7 @@ public final class Rule extends Node implements Evaluatable {
             }
             for (Predicate condFalsehood : condResult.falsehoods()) {
                 Predicate proFalsehood = proven.castFrom(consequence.setBinding(condFalsehood.getBinding()));
-                if (symmetric || !proFacts.contains(proFalsehood)) {
+                if (!proFacts.contains(proFalsehood)) {
                     proFalsehoods = proFalsehoods.add(proFalsehood);
                 }
             }

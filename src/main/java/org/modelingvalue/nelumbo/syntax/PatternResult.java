@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
@@ -32,14 +33,16 @@ public final class PatternResult implements ParseExceptionHandler {
     private final MutableList<Pair<Token, Token>> splitted;
 
     private Functor                               functor;
-    private Patterns                              patterns;
-    private RepetitionPattern                     endRepetition;
+    private ParseState                            state;
+    private Set<RepetitionPattern>                endRepetitions;
     private Token                                 nextToken;
+    private int                                   depth;
 
     public PatternResult(Parser parser) {
         this.parser = parser;
         elements = MutableList.of(List.of());
         splitted = MutableList.of(List.of());
+        endRepetitions = Set.of();
     }
 
     public Token addSplit(Token original, Token split) {
@@ -55,20 +58,24 @@ public final class PatternResult implements ParseExceptionHandler {
         return functor;
     }
 
-    public Patterns patterns() {
-        return patterns;
+    public ParseState state() {
+        return state;
     }
 
-    public RepetitionPattern endRepetition() {
-        return endRepetition;
+    public Set<RepetitionPattern> endRepetitions() {
+        return endRepetitions;
     }
 
     public Token nextToken() {
         return nextToken;
     }
 
+    public int depth() {
+        return depth;
+    }
+
     public int leftPrecedence() {
-        return patterns != null ? patterns.leftPrecedence() : functor.left().leftPrecedence();
+        return state != null ? state.leftPrecedence() : functor.left().leftPrecedence();
     }
 
     public void endPostParse(Functor functor, Token nextToken) {
@@ -76,29 +83,34 @@ public final class PatternResult implements ParseExceptionHandler {
         this.nextToken = nextToken;
     }
 
-    public void endPreParse(Patterns patterns, Token nextToken) {
-        this.patterns = patterns;
+    public void endPreParse(ParseState state, Token nextToken) {
+        this.state = state;
         this.nextToken = nextToken;
     }
 
-    public void endRepetition(RepetitionPattern endRepetition, Token nextToken) {
-        if (endRepetition != null && this.endRepetition != null) {
-            throw new IllegalArgumentException();
+    public void countDepth() {
+        if (depth > 0) {
+            depth++;
         }
-        this.endRepetition = endRepetition;
+    }
+
+    public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken, int depth) {
+        this.endRepetitions = endRepetitions;
         this.nextToken = nextToken;
+        this.depth += depth;
     }
 
     public List<AstElement> elements() {
         return elements.toImmutable();
     }
 
-    public void add(Node node) {
-        elements.add(node);
-    }
-
-    public void add(Token token) {
-        elements.add(token);
+    public void add(AstElement element) {
+        elements.add(element);
+        if (depth > 0) {
+            element.setCycleDepth(depth);
+            depth = 0;
+            endRepetitions = Set.of();
+        }
     }
 
     public Node postParse(Parser parser) throws ParseException {
@@ -106,12 +118,12 @@ public final class PatternResult implements ParseExceptionHandler {
             split.a().connect(split.b());
         }
         splitted.clear();
-        if (patterns != null) {
-            patterns.parse(nextToken, this, Map.of(), false);
+        if (state != null) {
+            state.parse(nextToken, this, Map.of(), false);
         }
         if (functor != null) {
             List<AstElement> elements = elements();
-            return functor.construct(elements, functor.args(elements).toArray(), this);
+            return functor.construct(elements, functor.args(elements), this);
         }
         return null;
     }

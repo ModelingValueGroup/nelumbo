@@ -23,7 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 
 public class NodeTypePattern extends Pattern {
     @Serial
@@ -57,10 +57,10 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
+    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
         Integer leftPrecedence = left != null && left != this ? left.leftPrecedence() : null;
         Integer innerPrecedence = left == null || left != this ? innerPrecedence() : null;
-        return new Patterns(nodeType(), nextPatterns, leftPrecedence, innerPrecedence);
+        return new ParseState(nodeType(), next, leftPrecedence, innerPrecedence, branche);
     }
 
     @Override
@@ -89,21 +89,10 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
-        if (elements.get(i) instanceof Node node && nodeType().isAssignableFrom(node.type())) {
-            args.set(args.get().add(node));
-            return i + 1;
-        }
-        return -1;
-    }
-
-    @Override
-    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
-        if (args.get(i) instanceof Node node && nodeType().isAssignableFrom(node.type())) {
-            string.set(string.get() + args.get(i));
-            return i + 1;
-        }
-        return -1;
+    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
+        args = args.add((Node) it.element);
+        it.next();
+        return args;
     }
 
 }

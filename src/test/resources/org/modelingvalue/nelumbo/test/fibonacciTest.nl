@@ -8,7 +8,8 @@
     fib(1,1)
 
     fib(a)=b  <==> fib(a,b)
-    fib(a,b)  <==  a>1 & b=fib(a-1)+fib(a-2)
+    fib(a,b)  <==> b=fib(a-1)+fib(a-2) ? a>1,
+                   a=b                 ? a<=1
     
     fib(0)=a        ? [fib(0)=0][..]
     fib(1)=a        ? [fib(1)=1][..]

@@ -40,6 +40,9 @@ public final class Token implements AstElement {
     private Token           nextAll;
     private Token           previousAll;
 
+    private Object          input;
+    private int             cycleDepth;
+
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
             throw new NullPointerException("type can not be null");
@@ -252,4 +255,25 @@ public final class Token implements AstElement {
     public boolean isMeta() {
         return type == TokenType.META_OPERATOR;
     }
+
+    @Override
+    public Object getInput() {
+        return input;
+    }
+
+    @Override
+    public void setInput(Object input) {
+        this.input = input;
+    }
+
+    @Override
+    public int getCycleDepth() {
+        return cycleDepth;
+    }
+
+    @Override
+    public void setCycleDepth(int cycleDepth) {
+        this.cycleDepth = cycleDepth;
+    }
+
 }

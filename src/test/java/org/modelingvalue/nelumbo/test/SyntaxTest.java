@@ -43,12 +43,15 @@ public class SyntaxTest extends NelumboTestBase {
 
                     <Set>      ::  <Node>
                     <Int>      ::  <Node>
+                    <List>     ::  <Node>
 
                     <Int>      ::= <Set>.size,
                                    <NUMBER>
-                    <Set>      ::= <Set> + <Node>                           #40,
-                                   { <[> <Node> <{> , <Node> <}> <]> }      @org.modelingvalue.nelumbo.Node,
-                                   <Set> - <Node>                           #40
+                    <Set>      ::= <Set> + <Node>                        #40,
+                                   <Set> - <Node>                        #40,
+                                   { <[> <Node> <{> , <Node> <}> <]> }   @org.modelingvalue.nelumbo.Node,
+                    <List>     ::= [ <[> <Node> <{> , <Node> <}> <]> ]   @org.modelingvalue.nelumbo.Node,
+                    <Node>     ::= <List>.get(<Int>)
 
                     <Set>  s, t, u
                     <Int>  i, j, k

@@ -21,7 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.syntax.Patterns;
+import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -47,8 +47,8 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public Patterns patterns(Patterns nextPatterns, NodeTypePattern left) {
-        return new Patterns(tokenType(), nextPatterns);
+    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
+        return new ParseState(tokenType(), next, branche);
     }
 
     @Override
@@ -57,34 +57,13 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, Ref<List<Object>> args, boolean alt) {
-        TokenType tokenType = tokenType();
-        if (tokenType == TokenType.NEWLINE && i == elements.size()) {
-            return i;
+    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
+        TokenType type = tokenType();
+        if (type != TokenType.NEWLINE && type != TokenType.ENDOFFILE) {
+            args = args.add(((Token) it.element).text());
+            it.next();
         }
-        if (elements.get(i) instanceof Token token && tokenType.equals(token.type())) {
-            if (alt || tokenType.variable()) {
-                args.set(args.get().add(token.text()));
-            }
-            return i + 1;
-        }
-        return -1;
-    }
-
-    @Override
-    public int string(List<Object> args, int i, Ref<String> string, boolean alt) {
-        TokenType tokenType = tokenType();
-        if (tokenType == TokenType.NEWLINE && i == args.size()) {
-            return i;
-        }
-        if (alt || tokenType.variable()) {
-            if (args.get(i) instanceof String text && tokenType.pattern().matcher(text).matches()) {
-                string.set(string.get() + text);
-                return i + 1;
-            }
-            return -1;
-        }
-        return i;
+        return args;
     }
 
 }
