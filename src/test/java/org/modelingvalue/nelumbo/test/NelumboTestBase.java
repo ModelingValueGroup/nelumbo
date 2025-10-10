@@ -26,6 +26,7 @@ import org.modelingvalue.nelumbo.Predicate;
 
 @SuppressWarnings("unused")
 public class NelumboTestBase {
+
     static void setProp(String name, String def) {
         String env = System.getenv(name);
         System.setProperty(name, env != null ? env : System.getProperty(name, def));

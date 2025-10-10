@@ -19,10 +19,8 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
-import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
@@ -68,21 +66,7 @@ public class SyntaxTest extends NelumboTestBase {
                     """;
             try {
                 TokenizerResult tr = new Tokenizer(example, "SyntaxTest.test1").tokenize();
-                ParserResult pr = new Parser(tr).parseThrowing();
-                pr.print();
-                pr.evaluate();
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
-    }
-
-    @Test()
-    public void test2() {
-        run(() -> {
-            try {
-                Parser.parse(Integer.class);
+                new Parser(tr).parseEvaluate();
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);

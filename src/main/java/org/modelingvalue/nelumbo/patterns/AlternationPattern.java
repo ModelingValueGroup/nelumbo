@@ -103,15 +103,15 @@ public class AlternationPattern extends Pattern {
         Object o = args.get(ai);
         StringBuffer inner = new StringBuffer();
         for (Pattern option : options()) {
-            int ii = option.string(List.of(o), 0, sb, true);
+            int ii = option.string(List.of(o), 0, inner, true);
             if (ii < 0) {
                 inner = new StringBuffer();
             } else {
-                break;
+                sb.append(inner);
+                return ai + 1;
             }
         }
-        sb.append(inner);
-        return ai + 1;
+        return -1;
     }
 
 }

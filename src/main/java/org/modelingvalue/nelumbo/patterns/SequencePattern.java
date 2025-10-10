@@ -118,7 +118,7 @@ public class SequencePattern extends Pattern {
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
         if (argTypes(List.of()).size() == 1) {
-            args = List.of(args.get(ai));
+            args = List.of(List.of(args.get(ai)));
         }
         if (args.get(ai) instanceof List list) {
             StringBuffer inner = new StringBuffer();

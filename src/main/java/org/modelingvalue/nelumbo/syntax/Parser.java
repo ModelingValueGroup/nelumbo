@@ -77,6 +77,12 @@ public final class Parser implements ParseExceptionHandler {
         return parse(new ParserResult(true));
     }
 
+    public ParserResult parseEvaluate() throws ParseException {
+        ParserResult parserResult = parse(new ParserResult(true));
+        parserResult.evaluate();
+        return parserResult;
+    }
+
     private ParserResult parse(ParserResult result) throws ParseException {
         this.result = result;
         knowledgeBase.setExceptionHandler(this);

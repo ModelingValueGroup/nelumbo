@@ -199,7 +199,10 @@ public class Node extends StructImpl implements AstElement {
     public String toString() {
         Functor functor = functor();
         if (functor != null) {
-            return functor.string(args());
+            String string = functor.string(args());
+            if (string != null) {
+                return string;
+            }
         }
         StringBuilder sb = new StringBuilder();
         if (functor != null) {

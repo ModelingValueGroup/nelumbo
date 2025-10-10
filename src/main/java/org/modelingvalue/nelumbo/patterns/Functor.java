@@ -166,24 +166,15 @@ public class Functor extends Node {
         return pattern instanceof SequencePattern && args.get(0) instanceof List seq ? seq.toArray() : args.toArray();
     }
 
-    @SuppressWarnings("unchecked")
-    public static void printArgs(List<Object> args, String prefix) {
-        for (Object arg : args) {
-            if (arg instanceof List list) {
-                printArgs(list, prefix + "  ");
-            } else {
-                System.out.println(prefix + arg);
-            }
-        }
-    }
-
     public String string(List<Object> args) {
         Pattern pattern = pattern();
-        if (pattern instanceof SequencePattern) {
+        if (pattern instanceof SequencePattern && argTypes().size() > 1) {
             args = List.of(args);
         }
         StringBuffer sb = new StringBuffer();
-        pattern.string(args, 0, sb, false);
+        if (pattern.string(args, 0, sb, false) < 0) {
+            return null;
+        }
         return sb.toString();
     }
 
