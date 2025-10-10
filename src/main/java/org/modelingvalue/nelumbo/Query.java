@@ -50,6 +50,28 @@ public final class Query extends Node implements Evaluatable {
         return array;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Override
+    public List<Object> args() {
+        List<Object> args = List.of(predicate());
+        if (hasExpected()) {
+            List facts = facts();
+            if (!completeFacts()) {
+                facts = facts.add("..");
+            }
+            List falsehoods = falsehoods();
+            if (!completeFalsehoods()) {
+                falsehoods = falsehoods.add("..");
+            }
+            args = args.add(Optional.of(List.of(//
+                    facts.isEmpty() ? Optional.empty() : Optional.of(List.of(facts.first(), facts.sublist(1, facts.size()))), //
+                    falsehoods.isEmpty() ? Optional.empty() : Optional.of(List.of(falsehoods.first(), falsehoods.sublist(1, falsehoods.size()))))));
+        } else {
+            args = args.add(Optional.empty());
+        }
+        return args;
+    }
+
     @SuppressWarnings("unchecked")
     private static List<Object> flatten(Optional<List<Object>> expected) {
         return expected.orElse(List.of()).replaceAllAll(f -> f instanceof List list ? list : List.of(f));

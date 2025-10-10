@@ -56,17 +56,8 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public List<Type> argTypes(List<Type> types) {
-        for (Pattern element : elements()) {
-            types = element.argTypes(types);
-        }
-        return types;
-    }
-
-    @Override
     public String toString() {
-        String string = elements().toString();
-        return "s(" + string.substring(5, string.length() - 1) + ")";
+        return elements().map(Object::toString).reduce("", (a, b) -> a + b);
     }
 
     @Override
@@ -104,6 +95,14 @@ public class SequencePattern extends Pattern {
         return state;
     }
 
+    @Override
+    public List<Type> argTypes(List<Type> types) {
+        for (Pattern element : elements()) {
+            types = element.argTypes(types);
+        }
+        return types;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
@@ -113,6 +112,27 @@ public class SequencePattern extends Pattern {
             inner = parts.get(i).args(inner, it, branche.add(i), false);
         }
         return args.add(inner.size() > 1 ? inner : inner.first());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+        if (argTypes(List.of()).size() == 1) {
+            args = List.of(args.get(ai));
+        }
+        if (args.get(ai) instanceof List list) {
+            StringBuffer inner = new StringBuffer();
+            int ii = 0;
+            for (Pattern element : elements()) {
+                ii = element.string(list, ii, inner, false);
+                if (ii < 0) {
+                    return -1;
+                }
+            }
+            sb.append(inner);
+            return ai + 1;
+        }
+        return -1;
     }
 
 }

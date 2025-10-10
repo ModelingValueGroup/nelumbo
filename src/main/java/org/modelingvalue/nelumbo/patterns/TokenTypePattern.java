@@ -53,7 +53,8 @@ public class TokenTypePattern extends Pattern {
 
     @Override
     public String toString() {
-        return "t(" + tokenType() + ")";
+        TokenType type = tokenType();
+        return type != TokenType.NEWLINE && type != TokenType.ENDOFFILE ? "" + tokenType() : "";
     }
 
     @Override
@@ -70,6 +71,20 @@ public class TokenTypePattern extends Pattern {
             it.next();
         }
         return args;
+    }
+
+    @Override
+    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+        TokenType type = tokenType();
+        if (type != TokenType.NEWLINE && type != TokenType.ENDOFFILE) {
+            if (args.get(ai) instanceof String text && type.pattern().matcher(text).matches()) {
+                sb.append(text);
+                return ai + 1;
+            } else {
+                return -1;
+            }
+        }
+        return ai;
     }
 
 }

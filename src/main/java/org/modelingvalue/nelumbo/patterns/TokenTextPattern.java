@@ -57,7 +57,7 @@ public class TokenTextPattern extends Pattern {
 
     @Override
     public String toString() {
-        return "t(\"" + tokenText() + "\")";
+        return tokenText();
     }
 
     @Override
@@ -72,6 +72,19 @@ public class TokenTextPattern extends Pattern {
         }
         it.next();
         return args;
+    }
+
+    @Override
+    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+        if (alt) {
+            if (args.get(ai) instanceof String text && text.equals(tokenText())) {
+                sb.append(text);
+                return ai + 1;
+            }
+            return -1;
+        }
+        sb.append(tokenText());
+        return ai;
     }
 
 }

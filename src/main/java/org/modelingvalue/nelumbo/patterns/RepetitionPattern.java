@@ -46,13 +46,8 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public List<Type> argTypes(List<Type> types) {
-        return types.add(repeated().argTypes(List.of()).first().list());
-    }
-
-    @Override
     public String toString() {
-        return "r(" + repeated() + ")";
+        return "<{>" + repeated() + "<}>";
     }
 
     @Override
@@ -72,6 +67,11 @@ public class RepetitionPattern extends Pattern {
                 merge(new ParseState(this, leftPrecedence), true).merge(next, true);
     }
 
+    @Override
+    public List<Type> argTypes(List<Type> types) {
+        return types.add(repeated().argTypes(List.of()).first().list());
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
@@ -82,4 +82,21 @@ public class RepetitionPattern extends Pattern {
         }
         return args.add(inner);
     }
+
+    @Override
+    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+        if (args.get(ai) instanceof List<?> list) {
+            StringBuffer inner = new StringBuffer();
+            for (Object o : list) {
+                int ii = repeated().string(List.of(o), 0, inner, false);
+                if (ii < 0) {
+                    return -1;
+                }
+            }
+            sb.append(inner);
+            return ai + 1;
+        }
+        return -1;
+    }
+
 }

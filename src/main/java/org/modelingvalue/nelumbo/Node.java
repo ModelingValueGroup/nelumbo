@@ -110,10 +110,11 @@ public class Node extends StructImpl implements AstElement {
     }
 
     @SuppressWarnings("unchecked")
-    public final List<Object> args() {
+    public List<Object> args() {
         List<Object> args = List.of();
         for (int i = 0; i < length(); i++) {
-            args = args.add(get(i));
+            Object a = get(i);
+            args = args.add(a == null ? Optional.empty() : a);
         }
         return args;
     }
@@ -197,7 +198,7 @@ public class Node extends StructImpl implements AstElement {
     @Override
     public String toString() {
         Functor functor = functor();
-        if (functor != null && !functor.astElements().isEmpty()) {
+        if (functor != null) {
             return functor.string(args());
         }
         StringBuilder sb = new StringBuilder();

@@ -47,18 +47,13 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public List<Type> argTypes(List<Type> types) {
-        return optional().argTypes(types);
-    }
-
-    @Override
     public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
         return optional().state(next, left, branche.add(0)).merge(next, true);
     }
 
     @Override
     public String toString() {
-        return "o(" + optional() + ")";
+        return "<[>" + optional() + "<]>";
     }
 
     @Override
@@ -72,6 +67,11 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
+    public List<Type> argTypes(List<Type> types) {
+        return optional().argTypes(types);
+    }
+
+    @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         if (it.match(branche)) {
             List<Object> inner = List.of();
@@ -81,6 +81,22 @@ public class OptionalPattern extends Pattern {
             args = args.add(Optional.empty());
         }
         return args;
+    }
+
+    @Override
+    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+        if (args.get(ai) instanceof Optional<?> opt) {
+            StringBuffer inner = new StringBuffer();
+            if (opt.isPresent()) {
+                int ii = optional().string(List.of(opt.get()), 0, inner, false);
+                if (ii < 0) {
+                    return -1;
+                }
+            }
+            sb.append(inner);
+            return ai + 1;
+        }
+        return -1;
     }
 
 }

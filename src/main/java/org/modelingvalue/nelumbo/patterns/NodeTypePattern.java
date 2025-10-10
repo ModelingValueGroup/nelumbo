@@ -64,14 +64,8 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public List<Type> argTypes(List<Type> types) {
-        return types.add(nodeType());
-    }
-
-    @Override
     public String toString() {
-        Integer precedence = (Integer) get(1);
-        return "n(" + nodeType() + (precedence != null ? precedence : "") + ")";
+        return "" + nodeType();
     }
 
     @Override
@@ -89,10 +83,24 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
+    public List<Type> argTypes(List<Type> types) {
+        return types.add(nodeType());
+    }
+
+    @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         args = args.add((Node) it.element);
         it.next();
         return args;
+    }
+
+    @Override
+    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+        if (args.get(ai) instanceof Node node && nodeType().isAssignableFrom(node.type())) {
+            sb.append(node.toString());
+            return ai + 1;
+        }
+        return -1;
     }
 
 }

@@ -58,8 +58,7 @@ public class AlternationPattern extends Pattern {
 
     @Override
     public String toString() {
-        String string = options().toString();
-        return "a(" + string.substring(5, string.length() - 1) + ")";
+        return "<(>" + options().map(Object::toString).reduce("", (a, b) -> a.isEmpty() || b.isEmpty() ? a + b : a + "<|>" + b) + "<)>";
     }
 
     @Override
@@ -97,6 +96,22 @@ public class AlternationPattern extends Pattern {
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         Integer i = it.branche.get(branche.size());
         return options().get(i).args(args, it, branche.add(i), true);
+    }
+
+    @Override
+    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+        Object o = args.get(ai);
+        StringBuffer inner = new StringBuffer();
+        for (Pattern option : options()) {
+            int ii = option.string(List.of(o), 0, sb, true);
+            if (ii < 0) {
+                inner = new StringBuffer();
+            } else {
+                break;
+            }
+        }
+        sb.append(inner);
+        return ai + 1;
     }
 
 }

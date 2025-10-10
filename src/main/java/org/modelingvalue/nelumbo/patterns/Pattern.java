@@ -106,8 +106,6 @@ public abstract class Pattern extends Node {
         return "";
     }
 
-    public abstract List<Type> argTypes(List<Type> types);
-
     public Pattern setPresedence(List<Integer> precedence, int[] p) {
         return this;
     }
@@ -121,7 +119,11 @@ public abstract class Pattern extends Node {
         return (Pattern) super.set(i, a);
     }
 
+    public abstract List<Type> argTypes(List<Type> types);
+
     protected abstract List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt);
+
+    protected abstract int string(List<Object> args, int ai, StringBuffer sb, boolean alt);
 
     protected static final class ElementIterator {
 

@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo.patterns;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.stream.Collectors;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -120,8 +119,7 @@ public class Functor extends Node {
 
     @Override
     public String toString() {
-        String types = argTypes().map(Type::toString).collect(Collectors.joining(","));
-        return name() + "(" + types + ")";
+        return resultType() + "::=" + pattern();
     }
 
     public Node construct(List<AstElement> elements, Object[] args, ParseExceptionHandler handler) throws ParseException {
@@ -180,9 +178,12 @@ public class Functor extends Node {
     }
 
     public String string(List<Object> args) {
+        Pattern pattern = pattern();
+        if (pattern instanceof SequencePattern) {
+            args = List.of(args);
+        }
         StringBuffer sb = new StringBuffer();
-        ParseState state = start();
-
+        pattern.string(args, 0, sb, false);
         return sb.toString();
     }
 

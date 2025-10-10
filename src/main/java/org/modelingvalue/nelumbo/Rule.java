@@ -38,6 +38,11 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
+    public List<Object> args() {
+        return super.args().add(List.of());
+    }
+
+    @Override
     protected Rule struct(Object[] array) {
         return new Rule(array);
     }
