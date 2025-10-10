@@ -23,7 +23,6 @@ import static org.modelingvalue.nelumbo.syntax.TokenType.NEWLINE;
 import java.io.PrintStream;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
-import java.util.Optional;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -79,7 +78,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final Pattern                                                        SEQ_NO_COMMA         = s(ALT_NO_COMMA, r(ALT_NO_COMMA),                                                                          //
             r(s(t("#"), t(TokenType.NUMBER))),                                                                                                                                                                           //
             o(s(t("@"), t(TokenType.NAME), r(s(t("."), t(TokenType.NAME))))));
-    private static final Pattern                                                        CONDITION            = s(n(Type.PREDICATE, 0), o(s(t("?"), n(Type.PREDICATE, 0))));
+    private static final Pattern                                                        CONDITION            = n(Type.PREDICATE, 0);
 
     private static final Pattern                                                        ALTERNATIVE          = a(t(".."), n(Type.PREDICATE, null));
     private static final Pattern                                                        PREDICTION           = o(s(ALTERNATIVE, r(s(t(","), ALTERNATIVE))));
@@ -414,23 +413,19 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
                 condition = And.of(eq, condition);
             }
-            Rule rule = new Rule(ruleFunctor, List.of(), conclusion, condition, null);
+            Rule rule = new Rule(ruleFunctor, List.of(), conclusion, condition);
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots;
     }
 
     @SuppressWarnings("unchecked")
-    private ListNode createRules(Functor f, List<AstElement> elements, Object[] args) throws ParseException {
+    private ListNode createRules(Functor funtor, List<AstElement> elements, Object[] args) throws ParseException {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
         Predicate cons = (Predicate) args[0];
         Map<Variable, Object> consVars = cons.variables();
-        List<List<Object>> nextList = (List<List<Object>>) args[3];
-        for (List<Object> ruleList : nextList.prepend(List.of(args[1], args[2]))) {
-            Predicate cond = (Predicate) ruleList.get(0);
-            Optional<Object> guardList = (Optional<Object>) ruleList.get(1);
-            Predicate guard = (Predicate) guardList.orElse(null);
-            List<AstElement> ast = List.of(cond);
+        List<Predicate> nextList = (List<Predicate>) args[2];
+        for (Predicate cond : nextList.prepend((Predicate) args[1])) {
             Map<Variable, Object> condVars = cond.variables();
             Functor rel = relations.get().get(cons.functor());
             Map<Variable, Object> local = condVars.removeAllKey(consVars);
@@ -441,7 +436,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             } else if (!local.isEmpty()) {
                 cond = cond.setVariables(Predicate.literals(local));
             }
-            Rule rule = new Rule(f, ast, cons, cond, guard);
+            Rule rule = new Rule(funtor, List.of(cond), cons, cond);
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots.setAstElements(roots.astElements().add(elements.last()));

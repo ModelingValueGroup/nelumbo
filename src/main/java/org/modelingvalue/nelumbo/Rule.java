@@ -29,8 +29,8 @@ public final class Rule extends Node implements Evaluatable {
     @Serial
     private static final long serialVersionUID = -4602043866952049391L;
 
-    public Rule(Functor functor, List<AstElement> elements, Predicate consequence, Predicate condition, Predicate guard) {
-        super(functor, elements, consequence, condition, guard);
+    public Rule(Functor functor, List<AstElement> elements, Predicate consequence, Predicate condition) {
+        super(functor, elements, consequence, condition);
     }
 
     private Rule(Object[] args) {
@@ -50,10 +50,6 @@ public final class Rule extends Node implements Evaluatable {
         return (Predicate) get(1);
     }
 
-    public final Predicate guard() {
-        return (Predicate) get(2);
-    }
-
     protected final InferResult imply(Predicate proven, InferContext context) {
         Map<Variable, Object> binding = proven.getBinding(consequence(), Map.of(), true);
         if (binding == null) {
@@ -62,10 +58,8 @@ public final class Rule extends Node implements Evaluatable {
         binding = variables().putAll(binding);
         Predicate consequence = consequence().setBinding(binding);
         Predicate condition = condition().setBinding(binding);
-        Predicate guard = guard();
-        guard = guard != null ? guard.setBinding(binding) : null;
         if (context.trace()) {
-            System.out.println(context.prefix() + consequence + " <==> " + condition + (guard != null ? " ? " + guard : ""));
+            System.out.println(context.prefix() + consequence + " <==> " + condition);
         }
         InferResult condResult = condition.resolve(context);
         InferResult proResult;
