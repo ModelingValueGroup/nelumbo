@@ -30,7 +30,7 @@ public final class Parser implements ParseExceptionHandler {
 
     public static List<Node> parse(String string) throws ParseException {
         Tokenizer tokenizer = new Tokenizer(string + "\n", string);
-        return new Parser(tokenizer.tokenize()).parseThrowing().roots();
+        return new Parser(tokenizer.tokenize()).parseEvaluate().roots();
     }
 
     public static List<Node> parse(Class<?> clss) throws ParseException {
@@ -47,7 +47,7 @@ public final class Parser implements ParseExceptionHandler {
             }
             InputStream buffer = new BufferedInputStream(stream);
             String base = new String(buffer.readAllBytes());
-            return new Parser(new Tokenizer(base, fileName).tokenize()).parseThrowing().roots();
+            return new Parser(new Tokenizer(base, fileName).tokenize()).parseEvaluate().roots();
         } catch (IOException e) {
             throw new ParseException(e, "IOException during parse", fileName);
         }
@@ -78,8 +78,8 @@ public final class Parser implements ParseExceptionHandler {
     }
 
     public ParserResult parseEvaluate() throws ParseException {
-        ParserResult parserResult = parse(new ParserResult(true));
-        parserResult.evaluate();
+        ParserResult parserResult = parseThrowing();
+        // parserResult.evaluate();
         return parserResult;
     }
 

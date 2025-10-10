@@ -21,7 +21,6 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Boolean extends Predicate {
     @Serial
@@ -34,7 +33,7 @@ public final class Boolean extends Predicate {
     private InferResult       result;
 
     public Boolean(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse(((Token) elements.first()).text()));
+        super(functor, elements, parse(functor.name()));
         if (TRUE == null && isTrue()) {
             TRUE = this;
         } else if (FALSE == null && isFalse()) {
@@ -42,6 +41,11 @@ public final class Boolean extends Predicate {
         } else if (UNKNOWN == null && isUnknown()) {
             UNKNOWN = this;
         }
+    }
+
+    @Override
+    public List<Object> args() {
+        return List.of();
     }
 
     private static java.lang.Boolean parse(String arg) {

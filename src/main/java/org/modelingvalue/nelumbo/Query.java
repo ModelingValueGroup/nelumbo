@@ -35,6 +35,7 @@ public final class Query extends Node implements Evaluatable {
 
     @SuppressWarnings("unchecked")
     private static Object[] args(List<AstElement> elements, Object[] args) {
+        Predicate predicate = (Predicate) args[0];
         Optional<List<Optional<List<Object>>>> expected = (Optional<List<Optional<List<Object>>>>) args[1];
         if (expected.isEmpty()) {
             return new Object[]{args[0]};
@@ -42,7 +43,7 @@ public final class Query extends Node implements Evaluatable {
         List<Object> flatFacts = flatten(expected.get().get(0));
         List<Object> flatFalsehoods = flatten(expected.get().get(1));
         Object[] array = new Object[5];
-        array[0] = args[0];
+        array[0] = predicate.setVariables(Predicate.literals(predicate.variables()));
         array[1] = flatFacts.filter(Predicate.class).asList();
         array[2] = !flatFacts.contains("..");
         array[3] = flatFalsehoods.filter(Predicate.class).asList();
@@ -121,16 +122,16 @@ public final class Query extends Node implements Evaluatable {
     public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
         Predicate predicate = predicate();
         predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
-        InferResult infer = predicate.infer();
+        InferResult found = predicate.infer();
         if (hasExpected()) {
             Set<Predicate> facts = facts().asSet();
             boolean completeFacts = completeFacts();
             Set<Predicate> falsehoods = falsehoods().asSet();
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
-            if (!infer.equals(expected) && !infer.toString().equals(expected.toString())) {
+            if (!found.equals(expected) && !found.toString().equals(expected.toString())) {
                 List<AstElement> astElements = astElements();
-                result.addException(new ParseException("Expected result " + expected + ", found " + result, //
+                result.addException(new ParseException("Expected result " + expected + ", found " + found, //
                         astElements.sublist(2, astElements.size()).toArray(i -> new AstElement[i])));
             }
         }

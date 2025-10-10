@@ -41,6 +41,8 @@ import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
+import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
+import org.modelingvalue.nelumbo.patterns.TokenTypePattern;
 import org.modelingvalue.nelumbo.syntax.*;
 
 @SuppressWarnings("DuplicatedCode")
@@ -277,11 +279,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), SEQ_NO_COMMA, r(s(t(","), SEQ_NO_COMMA)), t(NEWLINE)), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             Type type = (Type) elements.get(0);
-                            boolean relation = Type.RELATION.isAssignableFrom(type);
-                            boolean predicate = relation || Type.PREDICATE.isAssignableFrom(type);
-                            if (!predicate) {
-                                type = type.function();
-                            }
                             ListNode roots = new ListNode(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
@@ -295,7 +292,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
                                         }
-                                        roots = CURRENT.get().createFunctor(type, relation, roots, ast, constructor, pattern);
+                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern);
                                         ast = pttrn = List.of();
                                         constructor = null;
                                         precedence = List.of();
@@ -387,13 +384,21 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    private ListNode createFunctor(Type type, boolean relation, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
+    private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
+        if (pattern instanceof TokenTypePattern || pattern instanceof TokenTextPattern) {
+            type = type.literal();
+        } else if (!Type.PREDICATE.isAssignableFrom(type)) {
+            type = type.function();
+        }
         List<Type> args = pattern.argTypes(List.of());
-        boolean rel = relation && !args.isEmpty() && args.noneMatch(Type::isLiteral);
-        Functor functor = Functor.of(ast, pattern, rel ? Type.PREDICATE : type, false, rel ? null : constructor);
+        boolean relation = Type.RELATION.isAssignableFrom(type) && !args.isEmpty() && args.noneMatch(Type::isLiteral);
+        Functor functor = Functor.of(ast, pattern, relation ? Type.PREDICATE : type, false, relation ? null : constructor);
         register(functor);
         roots = new ListNode(List.of(), roots, functor);
-        if (rel) {
+        if (pattern instanceof TokenTextPattern && constructor != null) {
+            functor.construct(List.of(), new Object[0], this);
+        }
+        if (relation) {
             List<Type> litArgs = args.replaceAll(Type::literal);
             pattern = pattern.setTypes(Type::literal);
             Functor relFunctor = Functor.of(List.of(), pattern, type, false, constructor);

@@ -30,7 +30,7 @@ public class SyntaxTest extends NelumboTestBase {
         setProp("PARALLEL_COLLECTIONS", "false");
         setProp("REVERSE_NELUMBO", "false");
         setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "false");
+        setProp("TRACE_NELUMBO", "true");
         setProp("VERBOSE_TESTS", "false");
     }
 
@@ -57,6 +57,8 @@ public class SyntaxTest extends NelumboTestBase {
                     <Set>  s, t, u
                     <Int>  i, j, k
                     <Node> n
+
+                    10=10 ? [10=10][]
 
                     s=t+n ?
                     s=t+n ? [..][..]

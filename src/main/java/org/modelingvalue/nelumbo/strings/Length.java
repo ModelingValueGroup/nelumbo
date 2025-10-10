@@ -49,7 +49,7 @@ public final class Length extends Predicate {
             return unknown();
         }
 
-        String string = getVal(0, 0);
+        java.lang.String string = getVal(0, 0);
         BigInteger length = getVal(1, 0);
         if (string != null) {
             BigInteger actual = BigInteger.valueOf(string.length());

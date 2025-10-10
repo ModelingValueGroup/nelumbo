@@ -142,11 +142,7 @@ public class ParseState {
             return result;
         }
         if (functor() == null) {
-            if (pre) {
-                return null;
-            } else {
-                result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token));
-            }
+            return null;
         }
         result.endPostParse(functor(), token);
         return result;
@@ -162,7 +158,7 @@ public class ParseState {
         return false;
     }
 
-    private String expectedTokens() {
+    public String expectedTokens() {
         return transitions().toKeys().filter(k -> k instanceof String || k instanceof TokenType).//
                 map(o -> o instanceof String ? ("\"" + o + "\"") : o.toString()).//
                 reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
@@ -210,7 +206,11 @@ public class ParseState {
                 result.add(token);
                 token.setInput(input);
             }
-            return next.parse(token.next(), result, repetitions, pre);
+            if (next.parse(token.next(), result, repetitions, pre) != null) {
+                return result;
+            } else if (input != null) {
+                result.removeLast();
+            }
         }
         return null;
 
@@ -232,7 +232,8 @@ public class ParseState {
                     }
                 }
             }
-            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
+            result.removeLast();
+            return null;
         }
         return result;
     }
@@ -241,7 +242,7 @@ public class ParseState {
         return token.type() == TokenType.ENDOFFILE || token.line() > token.previous().line();
     }
 
-    private String expectedTypes() {
+    public String expectedTypes() {
         return transitions().toKeys().filter(Type.class).map(Object::toString).//
                 reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }

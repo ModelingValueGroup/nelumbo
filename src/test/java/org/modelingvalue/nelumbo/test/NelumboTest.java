@@ -50,7 +50,7 @@ public class NelumboTest extends NelumboTestBase {
                     // Init only
                     """;
             try {
-                new Parser(new Tokenizer(example, "NelumboTest.initTest").tokenize()).parseThrowing();
+                new Parser(new Tokenizer(example, "NelumboTest.initTest").tokenize()).parseEvaluate();
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -125,7 +125,7 @@ public class NelumboTest extends NelumboTestBase {
                         all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts before-parse not as expected");
 
-                List<Node> result = new Parser(tr).parseThrowing().roots();
+                List<Node> result = new Parser(tr).parseEvaluate().roots();
                 //U.printTokens("after-parse", tokens);
                 all = tr.listAll();
                 assertEquals(12, all.size(), "wrong number of tokens after parse()");
@@ -165,7 +165,7 @@ public class NelumboTest extends NelumboTestBase {
                 List<Token> all = tr.listAll();
                 U.printTokens("after-parse", all);
 
-                List<Node> result = new Parser(tr).parseThrowing().roots();
+                List<Node> result = new Parser(tr).parseEvaluate().roots();
 
                 U.printNode("all result nodes", result);
                 U.printKnowledgeBase("KNOWLEDGE-BASE", true);
