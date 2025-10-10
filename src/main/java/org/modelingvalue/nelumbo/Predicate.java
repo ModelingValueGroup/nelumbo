@@ -421,11 +421,7 @@ public class Predicate extends Node {
                 } else if (ruleResult.hasCycleWith(this)) {
                     ruleResult = ruleResult.complete();
                 }
-                if (rule.guard() == null) {
-                    return ruleResult;
-                } else {
-                    result = result.or(ruleResult);
-                }
+                result = result.or(ruleResult);
             }
         }
         return result;

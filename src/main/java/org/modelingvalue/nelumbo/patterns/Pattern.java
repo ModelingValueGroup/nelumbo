@@ -106,9 +106,7 @@ public abstract class Pattern extends Node {
         return "";
     }
 
-    public List<Type> argTypes() {
-        return List.of();
-    }
+    public abstract List<Type> argTypes(List<Type> types);
 
     public Pattern setPresedence(List<Integer> precedence, int[] p) {
         return this;

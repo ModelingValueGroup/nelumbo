@@ -57,6 +57,12 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
+    public List<Type> argTypes(List<Type> types) {
+        TokenType type = tokenType();
+        return type != TokenType.NEWLINE && type != TokenType.ENDOFFILE ? types.add(Type.STRING) : types;
+    }
+
+    @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         TokenType type = tokenType();
         if (type != TokenType.NEWLINE && type != TokenType.ENDOFFILE) {

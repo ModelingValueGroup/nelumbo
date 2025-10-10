@@ -46,8 +46,8 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public List<Type> argTypes() {
-        return repeated().argTypes().map(t -> t.list()).asList();
+    public List<Type> argTypes(List<Type> types) {
+        return types.add(repeated().argTypes(List.of()).first().list());
     }
 
     @Override

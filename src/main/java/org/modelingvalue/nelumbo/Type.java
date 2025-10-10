@@ -33,7 +33,10 @@ public class Type extends Node {
     public static final String TOP_GROUP        = "TOP";
     public static final String PATTERN_GROUP    = "PATTERN";
     //
-    public static final Type   NODE             = new Type(Node.class);
+    public static final Type   OBJECT           = new Type(Object.class);
+    public static final Type   STRING           = new Type(String.class, OBJECT);
+    //
+    public static final Type   NODE             = new Type(Node.class, OBJECT);
     public static final Type   FUNCTION         = new Type("Function", NODE);
     public static final Type   TERMINAL         = new Type(Terminal.class, NODE);
     public static final Type   LITERAL          = new Type("Literal", TERMINAL);

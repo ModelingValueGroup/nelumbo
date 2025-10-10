@@ -47,8 +47,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public List<Type> argTypes() {
-        return optional().argTypes();
+    public List<Type> argTypes(List<Type> types) {
+        return optional().argTypes(types);
     }
 
     @Override

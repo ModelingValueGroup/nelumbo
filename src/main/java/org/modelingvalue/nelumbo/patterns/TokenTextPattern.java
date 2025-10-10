@@ -61,6 +61,11 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
+    public List<Type> argTypes(List<Type> types) {
+        return types;
+    }
+
+    @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         if (alt) {
             args = args.add(((Token) it.element).text());

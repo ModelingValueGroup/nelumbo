@@ -56,18 +56,11 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public List<Type> argTypes() {
-        List<Type> args = List.of();
+    public List<Type> argTypes(List<Type> types) {
         for (Pattern element : elements()) {
-            Type last = args.last();
-            List<Type> l = element.argTypes();
-            Type first = l.first();
-            if (first != null && last != null && first.isList() && last.equals(first.element())) {
-                args = args.removeLast();
-            }
-            args = args.addAll(l);
+            types = element.argTypes(types);
         }
-        return args;
+        return types;
     }
 
     @Override

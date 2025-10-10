@@ -89,6 +89,11 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
+    public List<Type> argTypes(List<Type> types) {
+        return types.add(Type.OBJECT);
+    }
+
+    @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         Integer i = it.branche.get(branche.size());
         return options().get(i).args(args, it, branche.add(i), true);

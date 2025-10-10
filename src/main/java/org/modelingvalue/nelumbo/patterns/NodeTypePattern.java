@@ -64,8 +64,8 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public List<Type> argTypes() {
-        return List.of(nodeType());
+    public List<Type> argTypes(List<Type> types) {
+        return types.add(nodeType());
     }
 
     @Override

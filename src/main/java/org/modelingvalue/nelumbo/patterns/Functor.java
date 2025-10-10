@@ -113,7 +113,7 @@ public class Functor extends Node {
     @SuppressWarnings("unchecked")
     public List<Type> argTypes() {
         if (args == null) {
-            args = pattern().argTypes();
+            args = pattern().argTypes(List.of());
         }
         return args;
     }
@@ -165,7 +165,7 @@ public class Functor extends Node {
     public Object[] args(List<AstElement> elements) {
         Pattern pattern = pattern();
         List<Object> args = pattern.args(List.of(), new Pattern.ElementIterator(elements, start()), List.of(), false);
-        return pattern instanceof SequencePattern && args.get(0) instanceof List list ? list.toArray() : args.toArray();
+        return pattern instanceof SequencePattern && args.get(0) instanceof List seq ? seq.toArray() : args.toArray();
     }
 
     @SuppressWarnings("unchecked")

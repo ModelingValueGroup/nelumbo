@@ -388,7 +388,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private ListNode createFunctor(Type type, boolean relation, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
-        List<Type> args = pattern.argTypes();
+        List<Type> args = pattern.argTypes(List.of());
         boolean rel = relation && !args.isEmpty() && args.noneMatch(Type::isLiteral);
         Functor functor = Functor.of(ast, pattern, rel ? Type.PREDICATE : type, false, rel ? null : constructor);
         register(functor);
