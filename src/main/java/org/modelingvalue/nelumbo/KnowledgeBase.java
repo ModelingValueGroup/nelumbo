@@ -485,7 +485,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         relations.set(init != null ? init.relations.get() : Map.of());
         memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
         depth.set(init != null ? init.depth.get() : 0);
-        endParsing();
+        endParsing(false);
     }
 
     public void setExceptionHandler(ParseExceptionHandler exceptionHandler) {
@@ -501,10 +501,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
-    public void endParsing() {
+    public void endParsing(boolean mutiple) {
         this.exceptionHandler = null;
-        localPrePatterns.set(prePatterns.get());
-        localPostPatterns.set(postPatterns.get());
+        if (!mutiple) {
+            localPrePatterns.set(prePatterns.get());
+            localPostPatterns.set(postPatterns.get());
+        }
     }
 
     public InferResult getFacts(Predicate predicate, InferContext context) {

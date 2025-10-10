@@ -67,23 +67,29 @@ public final class Parser implements ParseExceptionHandler {
 
     public ParserResult parseNonThrowing() {
         try {
-            return parse(new ParserResult(false));
+            return parse(new ParserResult(false), false);
         } catch (ParseException e) {
             throw new IllegalStateException(e);
         }
     }
 
     public ParserResult parseThrowing() throws ParseException {
-        return parse(new ParserResult(true));
+        return parse(new ParserResult(true), false);
     }
 
     public ParserResult parseEvaluate() throws ParseException {
-        ParserResult parserResult = parseThrowing();
-        // parserResult.evaluate();
+        ParserResult parserResult = parse(new ParserResult(true), false);
+        parserResult.evaluate();
         return parserResult;
     }
 
-    private ParserResult parse(ParserResult result) throws ParseException {
+    public ParserResult parseMutiple() throws ParseException {
+        ParserResult parserResult = parse(new ParserResult(true), true);
+        parserResult.evaluate();
+        return parserResult;
+    }
+
+    private ParserResult parse(ParserResult result, boolean mutiple) throws ParseException {
         this.result = result;
         knowledgeBase.setExceptionHandler(this);
         try {
@@ -98,7 +104,7 @@ public final class Parser implements ParseExceptionHandler {
             }
             return result;
         } finally {
-            knowledgeBase.endParsing();
+            knowledgeBase.endParsing(mutiple);
             this.result = null;
         }
     }

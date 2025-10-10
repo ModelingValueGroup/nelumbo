@@ -322,9 +322,9 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             }
             Tokenizer tokenizer = new Tokenizer(line, line);
             Parser parser = new Parser(tokenizer.tokenize());
-            for (Node root : parser.parseEvaluate().roots()) {
-                if (root.type().equals(Type.QUERY)) {
-                    write(root.toString(1));
+            for (Node root : parser.parseMutiple().roots()) {
+                if (root instanceof Query query) {
+                    write(query.inferResult().toString());
                 }
             }
         } catch (ParseException pe) {

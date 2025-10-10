@@ -29,6 +29,8 @@ public final class Query extends Node implements Evaluatable {
     @Serial
     private static final long serialVersionUID = -6751904607718047038L;
 
+    private InferResult       inferResult;
+
     public Query(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, args(elements, args));
     }
@@ -135,6 +137,11 @@ public final class Query extends Node implements Evaluatable {
                         astElements.sublist(2, astElements.size()).toArray(i -> new AstElement[i])));
             }
         }
+        inferResult = found;
+    }
+
+    public InferResult inferResult() {
+        return inferResult;
     }
 
 }
