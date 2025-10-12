@@ -75,6 +75,8 @@ public class Equal extends Predicate {
             return ((Type) left).isAssignableFrom((right).type()) ? right : null;
         } else if (left instanceof Type && right instanceof Type) { // right always a Type here!
             return Objects.equals(left, right) ? left : null;
+        } else if (!left.typeOrFunctor().equals(right.typeOrFunctor())) {
+            return null;
         } else if (left.length() != right.length()) {
             return null;
         }
