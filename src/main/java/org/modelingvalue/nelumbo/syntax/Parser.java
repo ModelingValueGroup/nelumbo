@@ -80,6 +80,7 @@ public final class Parser implements ParseExceptionHandler {
     public ParserResult parseEvaluate() throws ParseException {
         ParserResult parserResult = parse(new ParserResult(true), false);
         parserResult.evaluate();
+        // parserResult.print();
         return parserResult;
     }
 

@@ -278,7 +278,7 @@ public class Type extends Node {
         return (Set<Type>) get(1);
     }
 
-    public List<Type> allsupers() {
+    public List<Type> allSupers() {
         if (allSupers == null) {
             List<Type> pre = List.of(), post = List.of(this);
             do {

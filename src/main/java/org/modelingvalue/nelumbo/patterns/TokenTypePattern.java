@@ -47,14 +47,14 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
-        return new ParseState(tokenType(), next, branche);
-    }
-
-    @Override
     public String toString() {
         TokenType type = tokenType();
         return type != TokenType.NEWLINE && type != TokenType.ENDOFFILE ? "" + tokenType() : "";
+    }
+
+    @Override
+    public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
+        return new ParseState(tokenType(), next.merge(new ParseState(functor, branche)));
     }
 
     @Override

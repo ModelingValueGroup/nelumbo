@@ -61,10 +61,10 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
+    public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
         Integer leftPrecedence = left != null ? left.leftPrecedence() : null;
-        return repeated().state(new ParseState(this).merge(next, true), left, branche.add(0)).//
-                merge(new ParseState(this, leftPrecedence), true).merge(next, true);
+        return repeated().state(new ParseState(this).merge(next), left, functor, branche.add(0)).//
+                merge(new ParseState(this, leftPrecedence)).merge(next);
     }
 
     @Override

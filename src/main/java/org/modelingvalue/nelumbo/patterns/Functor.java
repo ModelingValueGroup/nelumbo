@@ -144,7 +144,7 @@ public class Functor extends Node {
 
     public ParseState start() {
         if (start == null) {
-            start = pattern().state(new ParseState(this), left(), List.of());
+            start = pattern().state(new ParseState(this), left(), this, List.of());
         }
         return start;
     }
@@ -162,7 +162,7 @@ public class Functor extends Node {
     @SuppressWarnings("unchecked")
     public Object[] args(List<AstElement> elements) {
         Pattern pattern = pattern();
-        List<Object> args = pattern.args(List.of(), new Pattern.ElementIterator(elements, start()), List.of(), false);
+        List<Object> args = pattern.args(List.of(), new Pattern.ElementIterator(elements, start(), this), List.of(), false);
         return pattern instanceof SequencePattern && args.get(0) instanceof List seq ? seq.toArray() : args.toArray();
     }
 

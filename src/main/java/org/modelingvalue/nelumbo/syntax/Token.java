@@ -19,29 +19,31 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.Objects;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.U;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 @SuppressWarnings({"unused"})
 public final class Token implements AstElement {
 
-    private final TokenType type;
-    private final String    text;
-    private final int       line;        // line number in the input file (0-based)
-    private final int       position;    // position (column) in the line (0-based)
-    private final int       index;       // position in the input stream (0-based)
-    private final String    fileName;
-    private final int       numLines;    // number of lines of this token (1...n)
-    private final int       positionEnd; // position (column) in the line (0-based) after the token
+    private final TokenType             type;
+    private final String                text;
+    private final int                   line;        // line number in the input file (0-based)
+    private final int                   position;    // position (column) in the line (0-based)
+    private final int                   index;       // position in the input stream (0-based)
+    private final String                fileName;
+    private final int                   numLines;    // number of lines of this token (1...n)
+    private final int                   positionEnd; // position (column) in the line (0-based) after the token
 
-    private Token           next;
-    private Token           previous;
+    private Token                       next;
+    private Token                       previous;
 
-    private Token           nextAll;
-    private Token           previousAll;
+    private Token                       nextAll;
+    private Token                       previousAll;
 
-    private Object          input;
-    private int             cycleDepth;
+    private Map<Functor, List<Integer>> branches;
+    private int                         cycleDepth;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -257,13 +259,14 @@ public final class Token implements AstElement {
     }
 
     @Override
-    public Object getInput() {
-        return input;
+    public List<Integer> getBranche(Functor functor) {
+        return branches.get(functor);
     }
 
     @Override
-    public void setInput(Object input) {
-        this.input = input;
+    public void setBranches(Map<Functor, List<Integer>> branches) {
+        assert branches != null;
+        this.branches = branches;
     }
 
     @Override

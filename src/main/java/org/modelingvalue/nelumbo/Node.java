@@ -32,16 +32,16 @@ import org.modelingvalue.nelumbo.syntax.Token;
 @SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long     serialVersionUID = 7315776001191198132L;
+    private static final long           serialVersionUID = 7315776001191198132L;
 
-    protected static final int    START            = 2;
+    protected static final int          START            = 2;
 
-    private int                   hashCode         = 0;
-    private Map<Variable, Object> variables;
-    private int                   nrOfUnbound      = -1;
+    private int                         hashCode         = 0;
+    private Map<Variable, Object>       variables;
+    private int                         nrOfUnbound      = -1;
 
-    private Object                input;
-    private int                   cycleDepth;
+    private Map<Functor, List<Integer>> branches;
+    private int                         cycleDepth;
 
     public Node(Functor functor, List<AstElement> elements, Object... args) {
         super(array(functor, elements, args));
@@ -509,16 +509,6 @@ public class Node extends StructImpl implements AstElement {
     }
 
     @Override
-    public Object getInput() {
-        return input;
-    }
-
-    @Override
-    public void setInput(Object input) {
-        this.input = input;
-    }
-
-    @Override
     public int getCycleDepth() {
         return cycleDepth;
     }
@@ -526,6 +516,16 @@ public class Node extends StructImpl implements AstElement {
     @Override
     public void setCycleDepth(int cycleDepth) {
         this.cycleDepth = cycleDepth;
+    }
+
+    @Override
+    public List<Integer> getBranche(Functor functor) {
+        return branches.get(functor);
+    }
+
+    @Override
+    public void setBranches(Map<Functor, List<Integer>> branches) {
+        this.branches = branches;
     }
 
 }

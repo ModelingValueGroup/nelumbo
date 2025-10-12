@@ -113,10 +113,6 @@ public final class PatternResult implements ParseExceptionHandler {
         }
     }
 
-    public void removeLast() {
-        elements.removeLast();
-    }
-
     public Node postParse(Parser parser) throws ParseException {
         for (Pair<Token, Token> split : splitted) {
             split.a().connect(split.b());

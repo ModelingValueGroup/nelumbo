@@ -57,10 +57,10 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche) {
+    public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
         Integer leftPrecedence = left != null && left != this ? left.leftPrecedence() : null;
         Integer innerPrecedence = left == null || left != this ? innerPrecedence() : null;
-        return new ParseState(nodeType(), next, leftPrecedence, innerPrecedence, branche);
+        return new ParseState(nodeType(), next.merge(new ParseState(functor, branche)), leftPrecedence, innerPrecedence);
     }
 
     @Override

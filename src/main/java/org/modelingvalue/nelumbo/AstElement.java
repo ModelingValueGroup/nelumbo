@@ -17,6 +17,8 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public interface AstElement {
@@ -47,9 +49,9 @@ public interface AstElement {
 
     boolean isMeta();
 
-    void setInput(Object key);
+    List<Integer> getBranche(Functor functor);
 
-    Object getInput();
+    void setBranches(Map<Functor, List<Integer>> branches);
 
     void setCycleDepth(int depth);
 

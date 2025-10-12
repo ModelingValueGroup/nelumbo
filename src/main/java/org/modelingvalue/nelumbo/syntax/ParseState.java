@@ -25,25 +25,30 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public class ParseState {
     @Serial
-    private static final long                serialVersionUID = 7933114430825879121L;
+    private static final long                 serialVersionUID = 7933114430825879121L;
 
-    public static final ParseState           EMPTY            = new ParseState((Functor) null);
+    public static final ParseState            EMPTY            = new ParseState((Functor) null);
 
-    private final Map<Object, ParseState>    transitions;
-    private final Functor                    functor;
-    private final Integer                    leftPrecedence;
-    private final Integer                    innerPrecedence;
-    private final String                     group;
-    private final Set<RepetitionPattern>     startRepetitions;
-    private final Set<RepetitionPattern>     endRepetitions;
-    private final Map<Object, List<Integer>> branches;
+    private final Map<Object, ParseState>     transitions;
+    private final Functor                     functor;
+    private final Integer                     leftPrecedence;
+    private final Integer                     innerPrecedence;
+    private final String                      group;
+    private final Set<RepetitionPattern>      startRepetitions;
+    private final Set<RepetitionPattern>      endRepetitions;
+    private final Map<Functor, List<Integer>> branches;
 
     public ParseState(Functor functor) {
         this(Map.of(), functor, null, null, null, Set.of(), Set.of(), Map.of());
+    }
+
+    public ParseState(Functor functor, List<Integer> branche) {
+        this(Map.of(), null, null, null, null, Set.of(), Set.of(), Map.of(Entry.of(functor, branche)));
     }
 
     public ParseState(RepetitionPattern endRepetition) {
@@ -54,20 +59,20 @@ public class ParseState {
         this(Map.of(), null, leftPrecedence, null, null, Set.of(startRepetition), Set.of(), Map.of());
     }
 
-    public ParseState(String text, ParseState next, List<Integer> branche) {
-        this(Map.of(Entry.of(text, next)), null, null, null, null, Set.of(), Set.of(), Map.of(Entry.of(text, branche)));
+    public ParseState(String text, ParseState next) {
+        this(Map.of(Entry.of(text, next)), null, null, null, null, Set.of(), Set.of(), Map.of());
     }
 
-    public ParseState(TokenType tokenType, ParseState next, List<Integer> branche) {
-        this(Map.of(Entry.of(tokenType, next)), null, null, null, null, Set.of(), Set.of(), Map.of(Entry.of(tokenType, branche)));
+    public ParseState(TokenType tokenType, ParseState next) {
+        this(Map.of(Entry.of(tokenType, next)), null, null, null, null, Set.of(), Set.of(), Map.of());
     }
 
-    public ParseState(Type nodeType, ParseState next, Integer leftPrecedence, Integer innerPrecedence, List<Integer> branche) {
-        this(Map.of(Entry.of(nodeType, next)), null, leftPrecedence, innerPrecedence, nodeType.group(), Set.of(), Set.of(), Map.of(Entry.of(nodeType, branche)));
+    public ParseState(Type nodeType, ParseState next, Integer leftPrecedence, Integer innerPrecedence) {
+        this(Map.of(Entry.of(nodeType, next)), null, leftPrecedence, innerPrecedence, nodeType.group(), Set.of(), Set.of(), Map.of());
     }
 
     private ParseState(Map<Object, ParseState> transitions, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, //
-            Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, Map<Object, List<Integer>> branches) {
+            Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, Map<Functor, List<Integer>> branches) {
         this.transitions = transitions;
         this.functor = functor;
         this.leftPrecedence = leftPrecedence;
@@ -106,7 +111,7 @@ public class ParseState {
         return endRepetitions;
     }
 
-    public Map<Object, List<Integer>> branches() {
+    public Map<Functor, List<Integer>> branches() {
         return branches;
     }
 
@@ -142,7 +147,11 @@ public class ParseState {
             return result;
         }
         if (functor() == null) {
-            return null;
+            if (pre) {
+                return null;
+            } else {
+                result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token));
+            }
         }
         result.endPostParse(functor(), token);
         return result;
@@ -158,7 +167,7 @@ public class ParseState {
         return false;
     }
 
-    public String expectedTokens() {
+    private String expectedTokens() {
         return transitions().toKeys().filter(k -> k instanceof String || k instanceof TokenType).//
                 map(o -> o instanceof String ? ("\"" + o + "\"") : o.toString()).//
                 reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
@@ -192,7 +201,7 @@ public class ParseState {
                     input = type;
                 } else {
                     next = transitions().get(TokenType.NEWLINE);
-                    if (next != null && !isEndOfLine(token)) {
+                    if (next != null && !Pattern.isEndOfLine(token)) {
                         next = null;
                     }
                 }
@@ -204,13 +213,9 @@ public class ParseState {
             }
             if (input != null) {
                 result.add(token);
-                token.setInput(input);
+                token.setBranches(next.branches);
             }
-            if (next.parse(token.next(), result, repetitions, pre) != null) {
-                return result;
-            } else if (input != null) {
-                result.removeLast();
-            }
+            return next.parse(token.next(), result, repetitions, pre);
         }
         return null;
 
@@ -223,46 +228,64 @@ public class ParseState {
         Node node = result.parser().parseNode(token, innerPrecedence(), group());
         if (node != null) {
             result.add(node);
-            for (Type sup : node.type().allsupers()) {
-                ParseState state = transitions().get(sup);
-                if (state != null) {
-                    if (state.parse(node.nextToken(), result, repetitions, pre) != null) {
-                        node.setInput(sup);
+            for (Type sup : node.type().allSupers()) {
+                ParseState next = transitions().get(sup);
+                if (next != null) {
+                    if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                        node.setBranches(next.branches);
                         return result;
+                    } else {
+                        break;
                     }
                 }
             }
-            result.removeLast();
-            return null;
+            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
         }
         return result;
     }
 
-    private static boolean isEndOfLine(Token token) {
-        return token.type() == TokenType.ENDOFFILE || token.line() > token.previous().line();
-    }
-
-    public String expectedTypes() {
+    private String expectedTypes() {
         return transitions().toKeys().filter(Type.class).map(Object::toString).//
                 reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
-    public ParseState merge(ParseState state, boolean local) {
+    public ParseState merge(ParseState state) {
+        return merge(state, false);
+    }
+
+    private ParseState merge(ParseState state, boolean override) {
         if (state == null) {
             return this;
         }
-        return new ParseState(transitions().addAll(state.transitions(), (a, b) -> a.merge(b, local)), //
-                merge(functor(), state.functor()), //
-                merge(leftPrecedence(), state.leftPrecedence()), //
-                merge(innerPrecedence(), state.innerPrecedence()), //
-                merge(group(), state.group()), //
+        Map<Object, ParseState> pre = transitions().addAll(state.transitions(), (a, b) -> a.merge(b, override));
+        Map<Object, ParseState> post = pre;
+        for (Entry<Object, ParseState> e : pre) {
+            if (e.getKey() instanceof Type sub) {
+                for (Type sup : sub.allSupers()) {
+                    if (!sup.equals(sub)) {
+                        ParseState supState = pre.get(sup);
+                        if (supState != null) {
+                            post = post.put(sub, e.getValue().merge(supState, true));
+                        }
+                    }
+                }
+            }
+        }
+        return new ParseState(post, //
+                merge(functor(), state.functor(), override), //
+                merge(leftPrecedence(), state.leftPrecedence(), false), //
+                merge(innerPrecedence(), state.innerPrecedence(), false), //
+                merge(group(), state.group(), false), //
                 startRepetitions().addAll(state.startRepetitions()), //
                 endRepetitions().addAll(state.endRepetitions()), //
-                local ? branches().addAll(state.branches(), (a, b) -> merge(a, b)) : null);
+                branches().addAll(state.branches(), (a, b) -> merge(a, b, false)));
     }
 
-    private static <T> T merge(T t1, T t2) {
+    private static <T> T merge(T t1, T t2, boolean override) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
+            if (override) {
+                return t1;
+            }
             throw new PatternMergeException("Non deterministic pattern merge " + t1 + " <> " + t2);
         }
         return t1 == null ? t2 : t1;

@@ -25,6 +25,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public abstract class Pattern extends Node {
@@ -100,7 +101,7 @@ public abstract class Pattern extends Node {
     @Override
     protected abstract Pattern struct(Object[] array);
 
-    public abstract ParseState state(ParseState next, NodeTypePattern left, List<Integer> branche);
+    public abstract ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche);
 
     public String name() {
         return "";
@@ -127,29 +128,59 @@ public abstract class Pattern extends Node {
 
     protected static final class ElementIterator {
 
+        private static final List<Integer> LEFT_BRANCHE = List.of(0);
+
         private final Iterator<AstElement> it;
 
         private List<ParseState>           states;
         private int                        stateIndex;
+        private final Functor              functor;
 
         protected AstElement               element;
         protected List<Integer>            branche;
 
-        protected ElementIterator(List<AstElement> elements, ParseState start) {
-            it = elements.iterator();
-            states = List.of(start);
-            next();
+        protected ElementIterator(List<AstElement> elements, ParseState start, Functor functor) {
+            this.it = elements.iterator();
+            this.states = List.of(start);
+            this.functor = functor;
+            next(true);
         }
 
         protected void next() {
+            next(false);
+        }
+
+        private void next(boolean first) {
             if (it.hasNext()) {
                 element = it.next();
                 stateIndex -= element.getCycleDepth();
-                ParseState state = states.get(stateIndex);
-                Object input = element.getInput();
-                branche = state.branches().get(input);
-                state = state.transitions().get(input);
-                states = states.size() > ++stateIndex ? states.replace(stateIndex, state) : states.add(state);
+                ParseState pre = states.get(stateIndex);
+                if (first && functor.left() != null) {
+                    branche = LEFT_BRANCHE;
+                } else {
+                    branche = element.getBranche(functor);
+                }
+                ParseState post = null;
+                if (element instanceof Token token) {
+                    post = pre.transitions().get(token.text());
+                    if (post == null) {
+                        post = pre.transitions().get(token.type());
+                    }
+                    if (post == null && isEndOfLine(token)) {
+                        post = pre.transitions().get(TokenType.NEWLINE);
+                    }
+                } else {
+                    Type type = ((Node) element).type();
+                    for (Type sup : type.allSupers()) {
+                        post = pre.transitions().get(sup);
+                        if (post != null) {
+                            break;
+                        }
+                    }
+                }
+                assert branche != null;
+                assert post != null;
+                states = states.size() > ++stateIndex ? states.replace(stateIndex, post) : states.add(post);
             } else {
                 element = null;
                 stateIndex = 0;
@@ -169,6 +200,10 @@ public abstract class Pattern extends Node {
             return true;
         }
 
+    }
+
+    public static boolean isEndOfLine(Token token) {
+        return token.type() == TokenType.ENDOFFILE || token.line() > token.previous().line();
     }
 
 }

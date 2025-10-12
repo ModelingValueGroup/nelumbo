@@ -706,9 +706,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         try {
             ParseState state = functor.start();
             if (!functor.local()) {
-                (post ? postPatterns : prePatterns).updateAndGet(p -> p.put(group, state.merge(p.get(group), false)));
+                (post ? postPatterns : prePatterns).updateAndGet(p -> p.put(group, state.merge(p.get(group))));
             }
-            (post ? localPostPatterns : localPrePatterns).updateAndGet(l -> l.put(group, state.merge(l.get(group), false)));
+            (post ? localPostPatterns : localPrePatterns).updateAndGet(l -> l.put(group, state.merge(l.get(group))));
         } catch (PatternMergeException pme) {
             addException(new ParseException(pme.getMessage(), functor));
         }
@@ -732,16 +732,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private PatternResult preParse(Token token, Node left, Parser parser, ParseState state) throws ParseException {
         if (left != null) {
-            for (Type sup : left.type().allsupers()) {
+            for (Type sup : left.type().allSupers()) {
                 ParseState found = state.transitions().get(sup);
                 if (found != null) {
                     PatternResult result = new PatternResult(parser);
                     result.add(left);
-                    result = found.parse(token, result, Map.of(), true);
-                    if (result != null) {
-                        left.setInput(sup);
-                        return result;
-                    }
+                    return found.parse(token, result, Map.of(), true);
                 }
             }
             return null;
