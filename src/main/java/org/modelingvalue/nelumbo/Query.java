@@ -124,7 +124,13 @@ public final class Query extends Node implements Evaluatable {
     public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
         Predicate predicate = predicate();
         predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
-        InferResult found = predicate.infer();
+        InferResult found;
+        try {
+            found = predicate.infer();
+        } catch (InconsistencyException ie) {
+            result.addException(new ParseException(ie.getMessage(), ie.rule()));
+            return;
+        }
         if (hasExpected()) {
             Set<Predicate> facts = facts().asSet();
             boolean completeFacts = completeFacts();
@@ -132,6 +138,7 @@ public final class Query extends Node implements Evaluatable {
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
             if (!found.equals(expected) && !found.toString().equals(expected.toString())) {
+                predicate.infer();
                 List<AstElement> astElements = astElements();
                 result.addException(new ParseException("Expected result " + expected + ", found " + found, //
                         astElements.sublist(2, astElements.size()).toArray(i -> new AstElement[i])));

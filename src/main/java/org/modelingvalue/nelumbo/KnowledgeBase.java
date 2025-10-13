@@ -385,13 +385,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
+        boolean relation = false;
         if (pattern instanceof TokenTypePattern || pattern instanceof TokenTextPattern) {
             type = type.literal();
         } else if (!Type.PREDICATE.isAssignableFrom(type)) {
             type = type.function();
+        } else if (Type.RELATION.isAssignableFrom(type)) {
+            relation = true;
         }
-        List<Type> args = pattern.argTypes(List.of());
-        boolean relation = Type.RELATION.isAssignableFrom(type) && !args.isEmpty() && args.noneMatch(Type::isLiteral);
         Functor functor = Functor.of(ast, pattern, relation ? Type.PREDICATE : type, false, relation ? null : constructor);
         register(functor);
         roots = new ListNode(List.of(), roots, functor);
@@ -399,9 +400,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             functor.construct(List.of(), new Object[0], this);
         }
         if (relation) {
+            List<Type> args = pattern.argTypes(List.of());
             List<Type> litArgs = args.replaceAll(Type::literal);
             pattern = pattern.setTypes(Type::literal);
-            Functor relFunctor = Functor.of(List.of(), pattern, type, false, constructor);
+            Functor relFunctor = Functor.of(List.of(), pattern, Type.RELATION, false, constructor);
             relations.updateAndGet(map -> map.put(functor, relFunctor));
             register(relFunctor);
             roots = new ListNode(List.of(), roots, relFunctor);
@@ -412,37 +414,52 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1));
                 litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1));
             }
-            Predicate conclusion = (Predicate) functor.construct(List.of(), nodVars, this);
-            Predicate condition = (Predicate) relFunctor.construct(List.of(), litVars, this);
+            Predicate cons = (Predicate) functor.construct(List.of(), nodVars, this);
+            Predicate cond = (Predicate) relFunctor.construct(List.of(), litVars, this);
             for (int c = 0; c < args.size(); c++) {
                 Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
-                condition = And.of(eq, condition);
+                cond = And.of(eq, cond);
             }
-            Rule rule = new Rule(ruleFunctor, List.of(), conclusion, condition);
+            Rule rule = new Rule(ruleFunctor, List.of(), cons, cond);
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots;
     }
 
     @SuppressWarnings("unchecked")
-    private ListNode createRules(Functor funtor, List<AstElement> elements, Object[] args) throws ParseException {
+    private ListNode createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
         Predicate cons = (Predicate) args[0];
+        if (Type.RELATION.isAssignableFrom(cons.type())) {
+            addException(new ParseException("Rulw consequence " + cons + " is a relation.", cons));
+        }
         Map<Variable, Object> consVars = cons.variables();
         List<Predicate> nextList = (List<Predicate>) args[2];
+        Functor consFunctor = cons.functor();
+        boolean function = consFunctor.equals(equalsFunctor) && Type.FUNCTION.isAssignableFrom(((Node) cons.get(0)).type());
         for (Predicate cond : nextList.prepend((Predicate) args[1])) {
             Map<Variable, Object> condVars = cond.variables();
-            Functor rel = relations.get().get(cons.functor());
             Map<Variable, Object> local = condVars.removeAllKey(consVars);
-            if (rel != null) {
-                Map<Variable, Object> vars = Predicate.literals(condVars.putAll(consVars));
-                cons = cons.setFunctor(rel).setVariables(vars);
-                cond = cond.setVariables(vars);
+            if (false && function && !relations.get().containsKey(cond.functor())) {
+                condVars = ((Node) cons.get(1)).variables();
+                condVars = Predicate.literals(condVars, n -> "l" + n);
+                Predicate litCond = cond.setVariables(condVars);
+                for (Entry<Variable, Object> e : condVars) {
+                    Variable nv = e.getKey();
+                    Variable lv = (Variable) e.getValue();
+                    Predicate eq = new Predicate(equalsFunctor, List.of(), nv, lv);
+                    litCond = And.of(eq, litCond);
+                }
+                Rule rule = new Rule(functor, List.of(cond), cons, litCond);
+                roots = new ListNode(List.of(), roots, rule);
             } else if (!local.isEmpty()) {
-                cond = cond.setVariables(Predicate.literals(local));
+                Rule rule = new Rule(functor, List.of(cond), cons, //
+                        cond.setVariables(Predicate.literals(local)));
+                roots = new ListNode(List.of(), roots, rule);
+            } else {
+                Rule rule = new Rule(functor, List.of(cond), cons, cond);
+                roots = new ListNode(List.of(), roots, rule);
             }
-            Rule rule = new Rule(funtor, List.of(cond), cons, cond);
-            roots = new ListNode(List.of(), roots, rule);
         }
         return roots.setAstElements(roots.astElements().add(elements.last()));
     }

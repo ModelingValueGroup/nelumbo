@@ -345,7 +345,7 @@ public interface InferResult {
         };
     }
 
-    static InferResult falsehoodsCI(Set<Predicate> falsehoods) {
+    static InferResult falsehoodsCI(Predicate falsehood) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -354,7 +354,7 @@ public interface InferResult {
 
             @Override
             public Set<Predicate> falsehoods() {
-                return falsehoods;
+                return Set.of();
             }
 
             @Override
@@ -369,7 +369,7 @@ public interface InferResult {
 
             @Override
             public Predicate unknown() {
-                return null;
+                return falsehood;
             }
 
             @Override
@@ -484,18 +484,21 @@ public interface InferResult {
         return of(facts(), completeFalsehoods(), falsehoods(), completeFacts(), cycles());
     }
 
-    default InferResult or(InferResult other) {
-        Set<Predicate> facts = facts().addAll(other.facts());
-        Set<Predicate> falsehoods = falsehoods().addAll(other.falsehoods());
-        if (facts.anyMatch(Predicate::isFullyBound) || falsehoods.anyMatch(Predicate::isFullyBound)) {
-            facts = facts.retainAll(Predicate::isFullyBound);
-            falsehoods = falsehoods.retainAll(Predicate::isFullyBound);
+    default InferResult biimply(InferResult ruleResult, Rule rule) {
+        if (checkConsistency(ruleResult) || ruleResult.checkConsistency(this)) {
+            throw new InconsistencyException(rule, ruleResult, this);
         }
-        falsehoods = falsehoods.removeAll(facts);
-        boolean completeFacts = completeFacts() && other.completeFacts();
-        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(other.cycles());
+        Set<Predicate> facts = facts().addAll(ruleResult.facts());
+        Set<Predicate> falsehoods = falsehoods().addAll(ruleResult.falsehoods());
+        boolean completeFacts = completeFacts() || ruleResult.completeFacts();
+        boolean completeFalsehoods = completeFalsehoods() || ruleResult.completeFalsehoods();
+        Set<Predicate> cycles = cycles().addAll(ruleResult.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
+    }
+
+    default boolean checkConsistency(InferResult other) {
+        return (other.completeFacts() && !facts().allMatch(other.facts()::contains)) || //
+                (other.completeFalsehoods() && !falsehoods().allMatch(other.falsehoods()::contains));
     }
 
     default InferResult complete() {

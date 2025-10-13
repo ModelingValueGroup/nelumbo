@@ -18,49 +18,31 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
-
-public final class Fact extends Node implements Evaluatable {
+public class InconsistencyException extends RuntimeException {
     @Serial
-    private static final long serialVersionUID = 6226473785860814115L;
+    private static final long serialVersionUID = -30585101694801066L;
 
-    public Fact(Functor functor, List<AstElement> elements, Object... args) {
-        super(functor, elements, args);
+    private final Rule        rule;
+    private final InferResult ruleResult;
+    private final InferResult existingResult;
+
+    public InconsistencyException(Rule rule, InferResult ruleResult, InferResult existingResult) {
+        super("Rule " + rule + " causes inconsistent result " + ruleResult + " that does not biimplicate " + existingResult + ".");
+        this.rule = rule;
+        this.ruleResult = ruleResult;
+        this.existingResult = existingResult;
     }
 
-    private Fact(Object[] array) {
-        super(array);
+    public Rule rule() {
+        return rule;
     }
 
-    @Override
-    protected Fact struct(Object[] array) {
-        return new Fact(array);
+    public InferResult ruleResult() {
+        return ruleResult;
     }
 
-    @Override
-    public Fact set(int i, Object... a) {
-        return (Fact) super.set(i, a);
-    }
-
-    public Predicate predicate() {
-        return (Predicate) get(0);
-    }
-
-    @Override
-    public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
-        Predicate predicate = predicate();
-        if (!predicate.isRelation()) {
-            result.addException(new ParseException("Fact " + predicate + " is not a relation.", predicate));
-            return;
-        }
-        if (!predicate.isFullyBound()) {
-            result.addException(new ParseException("Fact " + predicate + " has variables.", predicate));
-            return;
-        }
-        knowledgeBase.addFact(predicate);
+    public InferResult existingResult() {
+        return existingResult;
     }
 
 }

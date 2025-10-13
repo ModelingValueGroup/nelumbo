@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -145,6 +146,10 @@ public class Predicate extends Node {
 
     protected static Map<Variable, Object> literals(Map<Variable, Object> vars) {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal()));
+    }
+
+    protected static Map<Variable, Object> literals(Map<Variable, Object> vars, Function<String, String> rename) {
+        return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal().rename(rename.apply(e.getKey().name()))));
     }
 
     protected Predicate setVariables(Map<Variable, Object> vars) {
@@ -281,7 +286,7 @@ public class Predicate extends Node {
     }
 
     public final InferResult falsehoodCI() {
-        return InferResult.falsehoodsCI(singleton());
+        return InferResult.falsehoodsCI(this);
     }
 
     public final Set<Predicate> singleton() {
@@ -335,7 +340,7 @@ public class Predicate extends Node {
         }
         KnowledgeBase knowledgebase = context.knowledgebase();
         if (knowledgebase.getRules(this).isEmpty()) {
-            return knowledgebase.getFacts(this, context);
+            return isRelation() ? knowledgebase.getFacts(this, context) : unknown();
         } else {
             InferResult result = knowledgebase.getMemoiz(this);
             if (result != null) {
@@ -406,25 +411,24 @@ public class Predicate extends Node {
 
     private InferResult inferRules(InferContext context) {
         KnowledgeBase knowledgebase = context.knowledgebase();
-        InferResult result = knowledgebase.getFacts(this, context), ruleResult;
-        if (result.isTrueCC()) {
-            return result;
-        }
+        InferResult result = isRelation() ? knowledgebase.getFacts(this, context) : unknown(), ruleResult;
         Set<Rule> rules = knowledgebase.getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
-            ruleResult = rule.imply(this, context);
+            ruleResult = rule.biimply(this, context);
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
-                    return ruleResult;
-                } else if (ruleResult.isTrueCC()) {
                     return ruleResult;
                 } else if (ruleResult.hasCycleWith(this)) {
                     ruleResult = ruleResult.complete();
                 }
-                result = result.or(ruleResult);
+                result = result.biimply(ruleResult, rule);
             }
         }
         return result;
+    }
+
+    public boolean isRelation() {
+        return Type.RELATION.isAssignableFrom(type());
     }
 
 }

@@ -55,7 +55,7 @@ public final class Rule extends Node implements Evaluatable {
         return (Predicate) get(1);
     }
 
-    protected final InferResult imply(Predicate proven, InferContext context) {
+    protected final InferResult biimply(Predicate proven, InferContext context) {
         Map<Variable, Object> binding = proven.getBinding(consequence(), Map.of(), true);
         if (binding == null) {
             return null;

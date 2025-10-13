@@ -3,7 +3,7 @@
                     false                            @org.modelingvalue.nelumbo.Boolean,
                     unknown                          @org.modelingvalue.nelumbo.Boolean,
                     ! <Predicate>               #25  @org.modelingvalue.nelumbo.Not,
-                    <Predicate> & <Predicate>   #20  @org.modelingvalue.nelumbo.And,
+                    <Predicate> & <Predicate>   #22  @org.modelingvalue.nelumbo.And,
                     <Predicate> | <Predicate>   #20  @org.modelingvalue.nelumbo.Or,
                     <Predicate> --> <Predicate> #15  @org.modelingvalue.nelumbo.Collect,
                     eq(<Node>,<Node>)                @org.modelingvalue.nelumbo.Equal,

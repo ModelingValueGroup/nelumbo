@@ -159,7 +159,7 @@ public class Node extends StructImpl implements AstElement {
         }
     }
 
-    public final Map<Variable, Object> variables() {
+    public Map<Variable, Object> variables() {
         if (variables == null) {
             Map<Variable, Object> vars = Map.of();
             for (int i = 0; i < length(); i++) {
