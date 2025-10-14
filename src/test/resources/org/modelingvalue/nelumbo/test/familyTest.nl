@@ -43,7 +43,7 @@
     m(Amalia)=a         ? [m(Amalia)=Maxima][..]
     a(Amalia)=a         ? [a(Amalia)=Beatrix,a(Amalia)=Maxima,a(Amalia)=Hendrik,a(Amalia)=Bernhard,a(Amalia)=Juliana,a(Amalia)=Claus,a(Amalia)=Willem,a(Amalia)=Wilhelmina][..]
     f(Amalia)=a         ? [f(Amalia)=Willem][..]
-    // f(m(f(Amalia)))=a   ? [f(m(f(Amalia)))=Bernhard][..]
+    f(m(f(Amalia)))=a   ? [f(m(f(Amalia)))=Bernhard][..]
 
     
 
