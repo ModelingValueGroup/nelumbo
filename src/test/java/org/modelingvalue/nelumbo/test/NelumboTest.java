@@ -39,7 +39,7 @@ public class NelumboTest extends NelumboTestBase {
         setProp("PARALLEL_COLLECTIONS", "false");
         setProp("REVERSE_NELUMBO", "false");
         setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "true");
+        setProp("TRACE_NELUMBO", "false");
         setProp("VERBOSE_TESTS", "false");
     }
 
