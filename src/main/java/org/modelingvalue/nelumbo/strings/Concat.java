@@ -62,13 +62,13 @@ public final class Concat extends Predicate {
             if (sum.startsWith(addend1)) {
                 return set(1, org.modelingvalue.nelumbo.strings.String.of(sum.substring(addend1.length()))).factCI();
             } else {
-                return falsehoodCC();
+                return falsehoodCI();
             }
         } else if (addend2 != null && sum != null) {
             if (sum.endsWith(addend2)) {
                 return set(0, org.modelingvalue.nelumbo.strings.String.of(sum.substring(0, addend2.length()))).factCI();
             } else {
-                return falsehoodCC();
+                return falsehoodCI();
             }
         } else {
             return unknown();

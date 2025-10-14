@@ -61,7 +61,7 @@ public final class Integer extends Predicate {
                     return set(0, org.modelingvalue.nelumbo.integers.Integer.of(parsed)).factCI();
                 }
             } catch (NumberFormatException e) {
-                return falsehoodCC();
+                return integer != null ? falsehoodCC() : falsehoodCI();
             }
         } else if (integer != null) {
             java.lang.String s = integer.toString();
