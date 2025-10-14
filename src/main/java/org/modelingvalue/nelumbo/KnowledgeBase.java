@@ -401,18 +401,19 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 toLiteral = true;
             }
         }
-        Functor functor = Functor.of(ast, pattern, type, false, toLiteral ? null : constructor);
-        register(functor);
-        roots = new ListNode(List.of(), roots, functor);
+        Type nodType = toLiteral && Type.RELATION.isAssignableFrom(type) ? Type.PREDICATE : type;
+        Functor nodFunctor = Functor.of(ast, pattern, nodType, false, toLiteral ? null : constructor);
+        register(nodFunctor);
+        roots = new ListNode(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && constructor != null) {
-            functor.construct(List.of(), new Object[0], this);
+            nodFunctor.construct(List.of(), new Object[0], this);
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::literal);
             Functor litFunctor = Functor.of(ast, litPattern, type, false, constructor);
             register(litFunctor, true);
             roots = new ListNode(List.of(), roots, litFunctor);
-            literalFunctors.updateAndGet(m -> m.put(functor, litFunctor));
+            literalFunctors.updateAndGet(m -> m.put(nodFunctor, litFunctor));
             // Implied Rule
             Object[] nodVars = new Variable[args.size()];
             Object[] litVars = new Variable[args.size()];
@@ -421,7 +422,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1));
                 litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1));
             }
-            Node nodNode = functor.construct(List.of(), nodVars, this);
+            Node nodNode = nodFunctor.construct(List.of(), nodVars, this);
             Node litNode = litFunctor.construct(List.of(), litVars, this);
             Type nonFuncType = type.nonFunction();
             Variable nodVar = function ? new Variable(List.of(), nonFuncType, "n0") : null;
