@@ -24,6 +24,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
@@ -139,7 +140,8 @@ public class Functor extends Node {
                 handler.addException(pe);
             }
         }
-        return Type.PREDICATE.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : new Node(this, elements, args);
+        return Type.PREDICATE.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : //
+                Type.TERMINAL.isAssignableFrom(resultType()) ? new Terminal(this, elements, args) : new Node(this, elements, args);
     }
 
     public ParseState start() {
@@ -175,6 +177,10 @@ public class Functor extends Node {
         if (pattern.string(args, 0, sb, false) < 0) {
             return null;
         }
+        //        Constructor<? extends Node> cons = constructor();
+        //        if (cons != null) {
+        //            sb.append(" @" + cons.getDeclaringClass().getName());
+        //        }
         return sb.toString();
     }
 

@@ -253,25 +253,26 @@ public class ParseState {
         return merge(state, false);
     }
 
-    private ParseState merge(ParseState state, boolean override) {
+    public ParseState merge(ParseState state, boolean override) {
         if (state == null) {
             return this;
         }
-        Map<Object, ParseState> pre = transitions().addAll(state.transitions(), (a, b) -> a.merge(b, override));
-        Map<Object, ParseState> post = pre;
-        for (Entry<Object, ParseState> e : pre) {
-            if (e.getKey() instanceof Type sub) {
+        Map<Object, ParseState> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b, override));
+        for (Object key : transitions.toKeys()) {
+            if (key instanceof Type sub) {
                 for (Type sup : sub.allSupers()) {
                     if (!sup.equals(sub)) {
-                        ParseState supState = pre.get(sup);
-                        if (supState != null) {
-                            post = post.put(sub, e.getValue().merge(supState, true));
+                        ParseState superState = transitions.get(sup);
+                        if (superState != null) {
+                            ParseState subState = transitions.get(sub);
+                            ParseState mergedState = subState.merge(superState, true);
+                            transitions = transitions.put(sub, mergedState);
                         }
                     }
                 }
             }
         }
-        return new ParseState(post, //
+        return new ParseState(transitions, //
                 merge(functor(), state.functor(), override), //
                 merge(leftPrecedence(), state.leftPrecedence(), false), //
                 merge(innerPrecedence(), state.innerPrecedence(), false), //

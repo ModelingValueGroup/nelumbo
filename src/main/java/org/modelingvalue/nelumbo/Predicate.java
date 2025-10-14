@@ -247,6 +247,11 @@ public class Predicate extends Node {
         return (Predicate) super.set(to, get(from));
     }
 
+    @Override
+    protected Predicate replace(Function<Node, Node> replacer) {
+        return (Predicate) super.replace(replacer);
+    }
+
     protected final Predicate set(int from, Predicate... a) {
         Object[] declArray = declaration.toArray();
         int i = from + START;
@@ -339,8 +344,8 @@ public class Predicate extends Node {
             return unknown();
         }
         KnowledgeBase knowledgebase = context.knowledgebase();
-        if (knowledgebase.getRules(this).isEmpty()) {
-            return isRelation() ? knowledgebase.getFacts(this, context) : unknown();
+        if (isRelation()) {
+            return knowledgebase.getFacts(this, context);
         } else {
             InferResult result = knowledgebase.getMemoiz(this);
             if (result != null) {
@@ -410,17 +415,16 @@ public class Predicate extends Node {
     }
 
     private InferResult inferRules(InferContext context) {
-        KnowledgeBase knowledgebase = context.knowledgebase();
-        InferResult result = isRelation() ? knowledgebase.getFacts(this, context) : unknown(), ruleResult;
-        Set<Rule> rules = knowledgebase.getRules(this);
+        InferResult result = unknown(), ruleResult;
+        Set<Rule> rules = context.knowledgebase().getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
             ruleResult = rule.biimply(this, context);
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
-                } else if (ruleResult.hasCycleWith(this)) {
-                    ruleResult = ruleResult.complete();
-                }
+                } // else if (ruleResult.hasCycleWith(this)) {
+                  // ruleResult = ruleResult.complete();
+                  // }
                 result = result.biimply(ruleResult, rule);
             }
         }

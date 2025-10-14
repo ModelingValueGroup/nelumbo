@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -157,6 +158,18 @@ public class Node extends StructImpl implements AstElement {
             }
             return true;
         }
+    }
+
+    public boolean contains(java.util.function.Predicate<Node> pred) {
+        for (int i = 0; i < length(); i++) {
+            Object val = get(i);
+            if (val instanceof Node node) {
+                if (pred.test(node) || node.contains(pred)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public Map<Variable, Object> variables() {
@@ -403,6 +416,28 @@ public class Node extends StructImpl implements AstElement {
             }
         }
         return thisVal;
+    }
+
+    protected Node replace(Function<Node, Node> replacer) {
+        Node to = replacer.apply(this);
+        if (to != this) {
+            return to;
+        } else {
+            Object[] array = null;
+            for (int i = 0; i < length(); i++) {
+                Object thisVal = get(i);
+                if (thisVal instanceof Node fromNode) {
+                    Node toNode = fromNode.replace(replacer);
+                    if (toNode != fromNode) {
+                        if (array == null) {
+                            array = toArray();
+                        }
+                        array[i + START] = toNode;
+                    }
+                }
+            }
+            return array != null ? struct(array) : this;
+        }
     }
 
     protected final int depth() {

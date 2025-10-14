@@ -385,42 +385,58 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
-        boolean relation = false;
+        boolean toLiteral = false, function = false;
+        List<Type> args = pattern.argTypes(List.of());
         if (pattern instanceof TokenTypePattern || pattern instanceof TokenTextPattern) {
-            type = type.literal();
-        } else if (!Type.PREDICATE.isAssignableFrom(type)) {
-            type = type.function();
-        } else if (Type.RELATION.isAssignableFrom(type)) {
-            relation = true;
+            if (!Type.PREDICATE.isAssignableFrom(type)) {
+                type = type.literal();
+            }
+        } else {
+            if (!Type.PREDICATE.isAssignableFrom(type)) {
+                type = type.function();
+                function = true;
+            }
+            if (!args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t)) && //
+                    !args.anyMatch(t -> Type.LITERAL.isAssignableFrom(t))) {
+                toLiteral = true;
+            }
         }
-        Functor functor = Functor.of(ast, pattern, relation ? Type.PREDICATE : type, false, relation ? null : constructor);
+        Functor functor = Functor.of(ast, pattern, type, false, toLiteral ? null : constructor);
         register(functor);
         roots = new ListNode(List.of(), roots, functor);
         if (pattern instanceof TokenTextPattern && constructor != null) {
             functor.construct(List.of(), new Object[0], this);
         }
-        if (relation) {
-            List<Type> args = pattern.argTypes(List.of());
-            List<Type> litArgs = args.replaceAll(Type::literal);
-            pattern = pattern.setTypes(Type::literal);
-            Functor relFunctor = Functor.of(List.of(), pattern, Type.RELATION, false, constructor);
-            relations.updateAndGet(map -> map.put(functor, relFunctor));
-            register(relFunctor);
-            roots = new ListNode(List.of(), roots, relFunctor);
+        if (toLiteral) {
+            Pattern litPattern = pattern.setTypes(Type::literal);
+            Functor litFunctor = Functor.of(ast, litPattern, type, false, constructor);
+            register(litFunctor, true);
+            roots = new ListNode(List.of(), roots, litFunctor);
+            literalFunctors.updateAndGet(m -> m.put(functor, litFunctor));
             // Implied Rule
             Object[] nodVars = new Variable[args.size()];
             Object[] litVars = new Variable[args.size()];
+            List<Type> litArgs = args.replaceAll(Type::literal);
             for (int v = 0; v < args.size(); v++) {
                 nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1));
                 litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1));
             }
-            Predicate cons = (Predicate) functor.construct(List.of(), nodVars, this);
-            Predicate cond = (Predicate) relFunctor.construct(List.of(), litVars, this);
-            for (int c = 0; c < args.size(); c++) {
+            Node nodNode = functor.construct(List.of(), nodVars, this);
+            Node litNode = litFunctor.construct(List.of(), litVars, this);
+            Type nonFuncType = type.nonFunction();
+            Variable nodVar = function ? new Variable(List.of(), nonFuncType, "n0") : null;
+            Variable litVar = function ? new Variable(List.of(), nonFuncType.literal(), "l0") : null;
+            Predicate nodCons = function ? new Predicate(equalsFunctor, List.of(), nodNode, nodVar) : (Predicate) nodNode;
+            Predicate litCond = function ? new Predicate(equalsFunctor, List.of(), litNode, litVar) : (Predicate) litNode;
+            for (int c = args.size() - 1; c >= 0; c--) {
                 Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
-                cond = And.of(eq, cond);
+                litCond = And.of(eq, litCond);
             }
-            Rule rule = new Rule(ruleFunctor, List.of(), cons, cond);
+            if (function) {
+                Predicate eq = new Predicate(equalsFunctor, List.of(), nodVar, litVar);
+                litCond = And.of(eq, litCond);
+            }
+            Rule rule = new Rule(ruleFunctor, List.of(), nodCons, litCond);
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots;
@@ -431,35 +447,27 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
         Predicate cons = (Predicate) args[0];
         if (Type.RELATION.isAssignableFrom(cons.type())) {
-            addException(new ParseException("Rulw consequence " + cons + " is a relation.", cons));
+            addException(new ParseException("Rule consequence " + cons + " is a relation.", cons));
         }
         Map<Variable, Object> consVars = cons.variables();
-        List<Predicate> nextList = (List<Predicate>) args[2];
         Functor consFunctor = cons.functor();
-        boolean function = consFunctor.equals(equalsFunctor) && Type.FUNCTION.isAssignableFrom(((Node) cons.get(0)).type());
+        Functor nodeFunctor = consFunctor.equals(equalsFunctor) ? ((Node) cons.get(0)).functor() : consFunctor;
+        Functor literalFunctor = literalFunctors.get().get(nodeFunctor);
+        List<Predicate> nextList = (List<Predicate>) args[2];
         for (Predicate cond : nextList.prepend((Predicate) args[1])) {
             Map<Variable, Object> condVars = cond.variables();
-            Map<Variable, Object> local = condVars.removeAllKey(consVars);
-            if (false && function && !relations.get().containsKey(cond.functor())) {
-                condVars = ((Node) cons.get(1)).variables();
-                condVars = Predicate.literals(condVars, n -> "l" + n);
-                Predicate litCond = cond.setVariables(condVars);
-                for (Entry<Variable, Object> e : condVars) {
-                    Variable nv = e.getKey();
-                    Variable lv = (Variable) e.getValue();
-                    Predicate eq = new Predicate(equalsFunctor, List.of(), nv, lv);
-                    litCond = And.of(eq, litCond);
-                }
-                Rule rule = new Rule(functor, List.of(cond), cons, litCond);
-                roots = new ListNode(List.of(), roots, rule);
-            } else if (!local.isEmpty()) {
-                Rule rule = new Rule(functor, List.of(cond), cons, //
-                        cond.setVariables(Predicate.literals(local)));
-                roots = new ListNode(List.of(), roots, rule);
-            } else {
-                Rule rule = new Rule(functor, List.of(cond), cons, cond);
-                roots = new ListNode(List.of(), roots, rule);
+            Map<Variable, Object> localVars = condVars.removeAllKey(consVars);
+            if (literalFunctor != null) {
+                cons = cons.replace(n -> nodeFunctor.equals(n.functor()) ? n.setFunctor(literalFunctor) : n);
+                Map<Variable, Object> litVars = Predicate.literals(consVars.putAll(condVars));
+                cons = cons.setVariables(litVars);
+                cond = cond.setVariables(litVars);
+            } else if (!localVars.isEmpty()) {
+                Map<Variable, Object> litVars = Predicate.literals(localVars);
+                cond = cond.setVariables(litVars);
             }
+            Rule rule = new Rule(functor, List.of(cond), cons, cond);
+            roots = new ListNode(List.of(), roots, rule);
         }
         return roots.setAstElements(roots.astElements().add(elements.last()));
     }
@@ -474,7 +482,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final AtomicReference<Map<String, ParseState>>              localPrePatterns  = new AtomicReference<>();
     private final AtomicReference<Map<String, ParseState>>              localPostPatterns = new AtomicReference<>();
     //
-    private final AtomicReference<Map<Functor, Functor>>                relations         = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>>                literalFunctors   = new AtomicReference<>();
     //
     private final AtomicInteger                                         depth             = new AtomicInteger();
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization       = new AtomicReference<>();
@@ -499,7 +507,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         postPatterns.set(init != null ? init.postPatterns.get() : Map.of());
         localPrePatterns.set(prePatterns.get());
         localPostPatterns.set(postPatterns.get());
-        relations.set(init != null ? init.relations.get() : Map.of());
+        literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
         memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
         depth.set(init != null ? init.depth.get() : 0);
         endParsing(false);
@@ -717,15 +725,19 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Functor register(Functor functor) throws ParseException {
+        return register(functor, false);
+    }
+
+    private Functor register(Functor functor, boolean override) throws ParseException {
         boolean post = functor.left() != null;
         Type type = functor.resultType();
         String group = type.group();
         try {
             ParseState state = functor.start();
             if (!functor.local()) {
-                (post ? postPatterns : prePatterns).updateAndGet(p -> p.put(group, state.merge(p.get(group))));
+                (post ? postPatterns : prePatterns).updateAndGet(p -> p.put(group, state.merge(p.get(group), override)));
             }
-            (post ? localPostPatterns : localPrePatterns).updateAndGet(l -> l.put(group, state.merge(l.get(group))));
+            (post ? localPostPatterns : localPrePatterns).updateAndGet(l -> l.put(group, state.merge(l.get(group), override)));
         } catch (PatternMergeException pme) {
             addException(new ParseException(pme.getMessage(), functor));
         }

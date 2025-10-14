@@ -198,6 +198,18 @@ public class Type extends Node {
         return function;
     }
 
+    public Type nonFunction() {
+        if (isFunction()) {
+            Optional<Type> first = supers().findFirst(s -> s != FUNCTION);
+            if (first.isEmpty()) {
+                throw new IllegalStateException("No non-function supertype for " + this);
+            }
+            return first.get();
+        } else {
+            return this;
+        }
+    }
+
     public boolean isFunction() {
         return FUNCTION.isAssignableFrom(this);
     }
@@ -247,11 +259,11 @@ public class Type extends Node {
         return type instanceof TokenType ? ((TokenType) type) : null;
     }
 
+    @SuppressWarnings("unchecked")
     public String name() {
         Object type = get(0);
         if (type instanceof Set) {
-            String many = many().toString();
-            return many.substring(5, many.length() - 2).replace(">,<", "");
+            return ((Set<Type>) type).map(t -> t.name()).sorted().sequential().reduce("", (a, b) -> a + b);
         }
         if (type instanceof TokenType) {
             return ((TokenType) type).name();

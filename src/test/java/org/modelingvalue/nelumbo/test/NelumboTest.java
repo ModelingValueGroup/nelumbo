@@ -59,6 +59,18 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void logicTest() {
+        run(() -> {
+            try {
+                U.printResults(Parser.parse(NelumboTest.class, "logicTest.nl"));
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    @RepeatedTest(10)
     public void familyTest() {
         run(() -> {
             try {
@@ -148,31 +160,4 @@ public class NelumboTest extends NelumboTestBase {
         });
     }
 
-    @Test
-    public void research() {
-        run(() -> {
-            try {
-                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
-                String nl = """
-                        <Relation>  ::= xx(<Integer>,<Integer>)
-                        true  <==>  xx(1,2),xx(2,3),xx(3,4)
-                        //<Predicate> ::= <String> ~~~~~~~~~~~~~~~~~~~ <String> #66
-                        //<TOM> :: <String>
-                        //<Predicate> p
-                        //? p=true""";
-
-                TokenizerResult tr = new Tokenizer(nl, "NelumboTest.research").tokenize();
-                List<Token> all = tr.listAll();
-                U.printTokens("after-parse", all);
-
-                List<Node> result = new Parser(tr).parseEvaluate().roots();
-
-                U.printNode("all result nodes", result);
-                U.printKnowledgeBase("KNOWLEDGE-BASE", true);
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
-    }
 }

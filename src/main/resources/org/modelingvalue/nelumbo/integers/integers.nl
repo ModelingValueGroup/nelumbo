@@ -3,12 +3,10 @@
    
     <Integer>   ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.Integer
   
-    <Relation>  ::= gt(<Integer>,<Integer>)              @org.modelingvalue.nelumbo.integers.GreaterThan,
-                    add(<Integer>,<Integer>,<Integer>)   @org.modelingvalue.nelumbo.integers.Add,
-                    mult(<Integer>,<Integer>,<Integer>)  @org.modelingvalue.nelumbo.integers.Multiply
-
-    <Predicate> ::= <Integer> <  <Integer>  #30,
-                    <Integer> >  <Integer>  #30,
+    <Predicate> ::= add(<Integer>,<Integer>,<Integer>)   @org.modelingvalue.nelumbo.integers.Add,
+                    mult(<Integer>,<Integer>,<Integer>)  @org.modelingvalue.nelumbo.integers.Multiply,
+                    <Integer> > <Integer>   #30          @org.modelingvalue.nelumbo.integers.GreaterThan,
+                    <Integer> <  <Integer>  #30,
                     <Integer> <= <Integer>  #30,
                     <Integer> >= <Integer>  #30
 
@@ -21,8 +19,7 @@
 
     <Integer> a, b, c
     
-    a>b      <==>  gt(a,b)
-    a<b      <==>  gt(b,a)
+    a<b      <==>  b>a
     a<=b     <==>  a<b | a=b
     a>=b     <==>  a>b | a=b
     

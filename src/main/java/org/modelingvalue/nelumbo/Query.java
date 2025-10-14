@@ -38,9 +38,10 @@ public final class Query extends Node implements Evaluatable {
     @SuppressWarnings("unchecked")
     private static Object[] args(List<AstElement> elements, Object[] args) {
         Predicate predicate = (Predicate) args[0];
+        predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
         Optional<List<Optional<List<Object>>>> expected = (Optional<List<Optional<List<Object>>>>) args[1];
         if (expected.isEmpty()) {
-            return new Object[]{args[0]};
+            return new Object[]{predicate};
         }
         List<Object> flatFacts = flatten(expected.get().get(0));
         List<Object> flatFalsehoods = flatten(expected.get().get(1));
@@ -123,7 +124,6 @@ public final class Query extends Node implements Evaluatable {
     @Override
     public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
         Predicate predicate = predicate();
-        predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
         InferResult found;
         try {
             found = predicate.infer();
