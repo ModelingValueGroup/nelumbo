@@ -1,7 +1,8 @@
 .hljs {
   background: white;
-  color: darkbrown;
+  color: black;
   font-size: 30px;
+  line-height: 35px;
 }
 
 .hljs-string,

@@ -29,5 +29,6 @@
     a/b=c    <==>  mult(c,b,a)
     
     -a=b     <==>  0-a=b
-    abs(a)=b <==>  (a>=0 & b=a) | (a<0 & b=-a)
+    abs(a)=b <==>  a>=0 & b=a |
+                   a<0 & b=-a
     

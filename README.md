@@ -1,4 +1,5 @@
-# Nelumbo
+    d(a)=c  <==>  c(a)=c |
+                  d(a)=b & c(b)=c# Nelumbo
 
 Nelumbo aims to be a powerful and extensible declarative logic programming language, designed for defining and executing custom syntax and semantics. As a meta-language, Nelumbo will be easily extensible, making it suitable for a wide range of applications. The goal is to integrate it with any IDE using the Language Server Protocol, allowing Nelumbo to serve as a language development platform. The language is currently developed in Java for seamless integration and performance. Please note that Nelumbo is in a very early stage of development, and incompatible changes are likely to occur.
 
@@ -45,12 +46,12 @@ Nelumbo aims to be a powerful and extensible declarative logic programming langu
            
 c(a)=b  <==>  pc(a,b)
 p(a)=b  <==>  pc(b,a)
-m(a)=b  <==>  pc(x,a) & b=x
-f(a)=b  <==>  pc(y,a) & b=y
+m(a)=b  <==>  c(x)=a & b=x
+f(a)=b  <==>  c(y)=a & b=y
 
 a(a)=b  <==>  d(b)=a
-d(a)=c  <==>  pc(a,c) |
-              d(a)=b & pc(b, c)
+d(a)=c  <==>  c(a)=c |
+              d(a)=b & c(b)=c
 
 <Male>   ::= Hendrik, Bernhard, Claus, Willem
 <Female> ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
