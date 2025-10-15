@@ -8,7 +8,7 @@
 * Define and parse Syntaxes
 * Define and execute Semantics
 * Define and run Tests
-* Light-wait language workbench
+* Lightweight language workbench
 ---
 
 ## Syntax
@@ -199,10 +199,10 @@
 ## Rationale
 
 * Background in formalization of TAX laws and Clinical Knowledge
-* Semantical rich and proven consistent
-* Light-wait language workbench by using LSP
+* Semantically rich and proven consistent
+* Lightweight language workbench by using LSP
 * Fully declarative, hence, no over-specification
-* Performant by binding variables by navigating relations only (not over extend of types)
+* Performant by binding variables by navigating relations only (not the extent of a type)
 * Easily extensible and integrable with the use of native classes
 * Strongly typed for more consistency and extensibility
 * Natural support of not (!) by reasoning over incomplete facts and falsehoods
