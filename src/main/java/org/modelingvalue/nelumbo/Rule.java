@@ -63,7 +63,7 @@ public final class Rule extends Node implements Evaluatable {
         binding = variables().putAll(binding);
         Predicate consequence = consequence().setBinding(binding);
         Predicate condition = condition().setBinding(binding);
-        if (context.trace()) {
+        if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + consequence + " <==> " + condition);
         }
         InferResult condResult = condition.resolve(context);
@@ -102,7 +102,7 @@ public final class Rule extends Node implements Evaluatable {
             }
             proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());
         }
-        if (context.trace()) {
+        if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + proven + " " + proResult);
         }
         return proResult;
@@ -116,6 +116,10 @@ public final class Rule extends Node implements Evaluatable {
     @Override
     public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
         knowledgeBase.addRule(this);
+    }
+
+    public boolean isSyntatic() {
+        return astElements().isEmpty() || firstToken().fileName().equals("nelumbo.nl");
     }
 
 }
