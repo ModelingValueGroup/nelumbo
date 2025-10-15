@@ -424,17 +424,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
             Node nodNode = nodFunctor.construct(List.of(), nodVars, this);
             Node litNode = litFunctor.construct(List.of(), litVars, this);
-            Type nonFuncType = type.nonFunction();
-            Variable nodVar = function ? new Variable(List.of(), nonFuncType, "n0") : null;
-            Variable litVar = function ? new Variable(List.of(), nonFuncType.literal(), "l0") : null;
-            Predicate nodCons = function ? new Predicate(equalsFunctor, List.of(), nodNode, nodVar) : (Predicate) nodNode;
-            Predicate litCond = function ? new Predicate(equalsFunctor, List.of(), litNode, litVar) : (Predicate) litNode;
+            Variable rigthVar = function ? new Variable(List.of(), type.nonFunction(), "r") : null;
+            Predicate nodCons = function ? new Predicate(equalsFunctor, List.of(), nodNode, rigthVar) : (Predicate) nodNode;
+            Predicate litCond = function ? new Predicate(equalsFunctor, List.of(), litNode, rigthVar) : (Predicate) litNode;
             for (int c = args.size() - 1; c >= 0; c--) {
                 Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
-                litCond = And.of(eq, litCond);
-            }
-            if (function) {
-                Predicate eq = new Predicate(equalsFunctor, List.of(), nodVar, litVar);
                 litCond = And.of(eq, litCond);
             }
             Rule rule = new Rule(ruleFunctor, List.of(), nodCons, litCond);
@@ -451,8 +445,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             addException(new ParseException("Rule consequence " + cons + " is a relation.", cons));
         }
         Map<Variable, Object> consVars = cons.variables();
-        Functor consFunctor = cons.functor();
-        Functor nodeFunctor = consFunctor.equals(equalsFunctor) ? ((Node) cons.get(0)).functor() : consFunctor;
+        Node node = cons.functor().equals(equalsFunctor) ? (Node) cons.get(0) : cons;
+        Map<Variable, Object> nodeVars = node == cons ? consVars : node.variables();
+        Functor nodeFunctor = node.functor();
         Functor literalFunctor = literalFunctors.get().get(nodeFunctor);
         List<Predicate> nextList = (List<Predicate>) args[2];
         for (Predicate cond : nextList.prepend((Predicate) args[1])) {
@@ -460,7 +455,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Map<Variable, Object> localVars = condVars.removeAllKey(consVars);
             if (literalFunctor != null) {
                 cons = cons.replace(n -> nodeFunctor.equals(n.functor()) ? n.setFunctor(literalFunctor) : n);
-                Map<Variable, Object> litVars = Predicate.literals(consVars.putAll(condVars));
+                Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(localVars));
                 cons = cons.setVariables(litVars);
                 cond = cond.setVariables(litVars);
             } else if (!localVars.isEmpty()) {
