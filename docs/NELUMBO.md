@@ -8,7 +8,7 @@
 * Define and parse Syntaxes
 * Define and execute Semantics
 * Define and run Tests
-* Lightweight language workbench
+* Lightweight Language Workbench
 ---
 
 ## Syntax
