@@ -82,6 +82,16 @@
   abs(a)=10 ?     [abs(-10)=10,abs(10)=10][..]
 ```
 
+### Proof
+
+```text
+  a+11=21
+    a+11=21 <==> add(a,11,21)
+      add(l1,11,21) [add(10,11,21)][..]
+    l1+11=21 [10+11=21][..]
+  a+11=21 [10+11=21][..]
+```
+
 ---
 
 ## Native Semantics
@@ -142,13 +152,47 @@
 
 ---
 
-## Functions and Literals
+### Literals
 
-TODO
+```text
+  <Male>    ::= Hendrik, Bernhard, Claus, Willem
+  <Female>  ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
+  
+  <Integer> ::= <NUMBER>    @org.modelingvalue.nelumbo.integers.Integer
+```
 
-## Predicates and Relations
 
-TODO
+### Functions
+
+```text
+  <Integer>  ::= <Integer> -  <Integer>  #40,
+                 <Integer> +  <Integer>  #40
+
+  a+b=c    <==>  add(a,b,c)
+  a-b=c    <==>  add(c,b,a)
+```
+
+---
+
+### Relations and Facts
+
+```text
+  <Relation>  ::= pc(<Person>,<Person>)   // parent-child
+
+  // Facts
+  pc(Beatrix, Willem)
+  pc(Claus, Willem)
+  pc(Willem, Amalia)
+  pc(Maxima, Amalia)
+```
+
+### Predicates
+
+```text
+  <Predicate> ::= <Integer> <= <Integer>  #30
+                    
+  a<=b     <==>  a<b | a=b
+```
 
 ---
 
