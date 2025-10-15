@@ -37,11 +37,11 @@ tasks {
     shadowJar {
         archiveClassifier.set("all")
         doFirst {
-            // Remove previous artifacts before creating the new shadow jar
+            // Clean only previous shadow jars; leave regular publication jars intact
             val libsDir = layout.buildDirectory.dir("libs")
-            libsDir.get().asFile.listFiles()?.forEach { f ->
-                if (f.isFile) f.delete()
-            }
+            libsDir.get().asFile.listFiles()
+                ?.filter { f -> f.isFile && (f.name.endsWith("-all.jar") || f.name.contains("-all-")) }
+                ?.forEach { it.delete() }
         }
     }
 }
