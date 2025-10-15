@@ -1,22 +1,18 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo;
 
@@ -26,41 +22,49 @@ import java.util.Optional;
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Type extends Node {
     @Serial
-    private static final long serialVersionUID = -4583279157841144493L;
+    private static final long  serialVersionUID = -4583279157841144493L;
     //
-    public static final  Type NODE             = new Type(Node.class);
-    public static final  Type FUNCTION         = new Type("Function", NODE);
-    public static final  Type TERMINAL         = new Type(Terminal.class, NODE);
-    public static final  Type LITERAL          = new Type("Literal", TERMINAL);
-    public static final  Type ROOT             = new Type("Root", NODE);
-    public static final  Type PREDICATE        = new Type(Predicate.class, NODE);
-    public static final  Type RELATION         = new Type("Relation", PREDICATE, ROOT);
-    public static final  Type RESULT           = new Type("Result", ROOT);
-    public static final  Type VARIABLE         = new Type(Variable.class, ROOT);
-    public static final  Type RULE             = new Type(Rule.class, ROOT);
-    public static final  Type FUNCTOR          = new Type(Functor.class, ROOT);
-    public static final  Type STRING           = new Type(String.class);
+    public static final String DEFAULT_GROUP    = "_";
+    public static final String TOP_GROUP        = "TOP";
+    public static final String PATTERN_GROUP    = "PATTERN";
+    //
+    public static final Type   OBJECT           = new Type(Object.class);
+    public static final Type   STRING           = new Type(String.class, OBJECT);
+    //
+    public static final Type   NODE             = new Type(Node.class, OBJECT);
+    public static final Type   FUNCTION         = new Type("Function", NODE);
+    public static final Type   TERMINAL         = new Type(Terminal.class, NODE);
+    public static final Type   LITERAL          = new Type("Literal", TERMINAL);
+    public static final Type   ROOT             = new Type("Root", NODE);
+    public static final Type   PREDICATE        = new Type(Predicate.class, NODE);
+    public static final Type   RELATION         = new Type("Relation", PREDICATE);
+    public static final Type   VARIABLE         = new Type(Variable.class, NODE);
+    public static final Type   RULE             = new Type(Rule.class, ROOT);
+    public static final Type   FUNCTOR          = new Type(Functor.class, ROOT);
+    public static final Type   FACT             = new Type(Fact.class, ROOT);
+    public static final Type   PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.NODE);
+    public static final Type   QUERY            = new Type(Query.class, Type.ROOT);
 
     public static List<Type> predefined() {
-        return List.of(TYPE(),//
-                       NODE,//
-                       FUNCTION,//
-                       TERMINAL,//
-                       LITERAL,//
-                       ROOT,//
-                       PREDICATE,//
-                       RELATION,//
-                       RESULT,//
-                       VARIABLE,//
-                       RULE,//
-                       FUNCTOR,//
-                       STRING//
-                      );
+        return List.of(TYPE(), //
+                NODE, //
+                FUNCTION, //
+                TERMINAL, //
+                LITERAL, //
+                ROOT, //
+                PREDICATE, //
+                RELATION, //
+                VARIABLE, //
+                RULE, //
+                FUNCTOR, //
+                FACT, //
+                PATTERN, //
+                QUERY);
     }
 
     private static Type TYPE = null;
@@ -83,61 +87,93 @@ public class Type extends Node {
 
                 @Override
                 public Set<Type> supers() {
-                    return Set.of(ROOT);
+                    return Set.of();
+                }
+
+                @Override
+                public String group() {
+                    return DEFAULT_GROUP;
                 }
             };
         }
         return TYPE;
     }
 
-    private Type list;
-    private Type literal;
-    private Type function;
+    private Type       list;
+    private Type       literal;
+    private Type       function;
+    private List<Type> allSupers;
 
     private Type() {
-        super((Type) null, Token.EMPTY, Type.class, null);
+        super((Type) null, List.of(), Type.class, null, DEFAULT_GROUP);
     }
 
-    private Type(Object[] array, int start) {
-        super(array, start);
+    private Type(Object[] array) {
+        super(array);
+    }
+
+    private Type(Class<?> clss, String group, Type... supers) {
+        super(TYPE(), List.of(), clss, Set.of(supers), group);
     }
 
     private Type(Class<?> clss, Type... supers) {
-        super(TYPE(), Token.EMPTY, clss, Set.of(supers));
+        super(TYPE(), List.of(), clss, Set.of(supers), group(supers));
     }
 
-    protected Type(TokenType type) {
-        super(TYPE(), Token.EMPTY, type, Set.of());
-    }
-
-    public Type(Token[] tokens, String name, Collection<Type> supers) {
-        super(TYPE(), tokens, name, supers.asSet());
+    public Type(String name, String group, Type... supers) {
+        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group);
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE(), Token.EMPTY, name, supers.length == 0 ? Set.of(NODE) : Set.of(supers));
+        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group(supers));
+    }
+
+    protected Type(TokenType type) {
+        super(TYPE(), List.of(), type, Set.of(), DEFAULT_GROUP);
+    }
+
+    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
+        super(TYPE(), elements, name, supers.asSet(), group);
     }
 
     public Type(Type super1, Type super2) {
         super(TYPE(), //
-              Token.EMPTY, //
-              Set.of(super1, super2), //
-              Set.of(super1, super2) //
-                 .addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))) //
-                 .addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))) //
-             );
+                List.of(), //
+                Set.of(super1, super2), //
+                Set.of(super1, super2) //
+                        .addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))) //
+                        .addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))) //
+                , super1.group());
     }
 
-    private Type(Type element) {
-        super(TYPE(), element.tokens(), "List", Set.of(NODE), element);
+    private Type(Type element, String group) {
+        super(TYPE(), List.of(element), "List" + element, Set.of(NODE), group, element);
+    }
+
+    private static Object group(Type... supers) {
+        return supers.length > 0 ? supers[0].group() : DEFAULT_GROUP;
+    }
+
+    @Override
+    public Type setFunctor(Functor functor) {
+        return (Type) super.setFunctor(functor);
+    }
+
+    @Override
+    public Type setAstElements(List<AstElement> elements) {
+        return (Type) super.setAstElements(elements);
     }
 
     public Type element() {
         if (isList()) {
-            return (Type) get(2);
+            return (Type) get(3);
         } else {
             return this;
         }
+    }
+
+    public String group() {
+        return (String) get(2);
     }
 
     @SuppressWarnings("unchecked")
@@ -146,7 +182,7 @@ public class Type extends Node {
     }
 
     public boolean isList() {
-        return length() == 3;
+        return length() == 4;
     }
 
     public boolean isMany() {
@@ -160,6 +196,18 @@ public class Type extends Node {
             return function = equals(NODE) ? FUNCTION : new Type(this, FUNCTION);
         }
         return function;
+    }
+
+    public Type nonFunction() {
+        if (isFunction()) {
+            Optional<Type> first = supers().findFirst(s -> s != FUNCTION);
+            if (first.isEmpty()) {
+                throw new IllegalStateException("No non-function supertype for " + this);
+            }
+            return first.get();
+        } else {
+            return this;
+        }
     }
 
     public boolean isFunction() {
@@ -193,8 +241,15 @@ public class Type extends Node {
     }
 
     public Type list() {
+        return list(group());
+    }
+
+    public Type list(String group) {
+        if (!group.equals(group())) {
+            return new Type(this, group);
+        }
         if (list == null) {
-            list = new Type(this);
+            list = new Type(this, group);
         }
         return list;
     }
@@ -204,11 +259,11 @@ public class Type extends Node {
         return type instanceof TokenType ? ((TokenType) type) : null;
     }
 
+    @SuppressWarnings("unchecked")
     public String name() {
         Object type = get(0);
         if (type instanceof Set) {
-            String many = many().toString();
-            return many.substring(5, many.length() - 2).replace(">,<", "");
+            return ((Set<Type>) type).map(t -> t.name()).sorted().sequential().reduce("", (a, b) -> a + b);
         }
         if (type instanceof TokenType) {
             return ((TokenType) type).name();
@@ -217,6 +272,12 @@ public class Type extends Node {
             return ((Class<?>) type).getSimpleName();
         }
         return (String) type;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Class<? extends Node> clss() {
+        Object type = get(0);
+        return type instanceof Class clss ? clss : null;
     }
 
     @Override
@@ -229,9 +290,24 @@ public class Type extends Node {
         return (Set<Type>) get(1);
     }
 
+    public List<Type> allSupers() {
+        if (allSupers == null) {
+            List<Type> pre = List.of(), post = List.of(this);
+            do {
+                int i = pre.size();
+                pre = post;
+                for (; i < pre.size(); i++) {
+                    post = post.addAllUnique(pre.get(i).supers());
+                }
+            } while (post.size() > pre.size());
+            allSupers = post;
+        }
+        return allSupers;
+    }
+
     @Override
-    protected Type struct(Object[] array, int start) {
-        return new Type(array, start);
+    protected Type struct(Object[] array) {
+        return new Type(array);
     }
 
     @Override
@@ -251,22 +327,4 @@ public class Type extends Node {
         return clss instanceof Class && ((Class<?>) clss).isAssignableFrom(type);
     }
 
-    /**
-     * only for tracing purposes
-     *
-     * @return a string representing where this type was declared
-     */
-    public String source() {
-        if (Type.predefined().contains(this)) {
-            return "pre";
-        }
-        if (get(0) instanceof TokenType) {
-            return "token-type";
-        }
-        Token[] tokens = tokens();
-        if (0 < tokens.length) {
-            return tokens[0].fileName();
-        }
-        return "????";
-    }
 }

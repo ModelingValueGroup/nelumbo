@@ -1,30 +1,27 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Collect extends Predicate {
     @Serial
@@ -38,12 +35,12 @@ public final class Collect extends Predicate {
     private Predicate         identityPred;
     private Predicate         emptyCollector;
 
-    public Collect(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public Collect(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private Collect(Object[] args, int start, Collect declaration) {
-        super(args, start, declaration);
+    private Collect(Object[] args, Collect declaration) {
+        super(args, declaration);
     }
 
     private void initDeclaration() {
@@ -100,8 +97,8 @@ public final class Collect extends Predicate {
     }
 
     @Override
-    protected Collect struct(Object[] array, int start, Predicate declaration) {
-        return new Collect(array, start, (Collect) declaration);
+    protected Collect struct(Object[] array, Predicate declaration) {
+        return new Collect(array, (Collect) declaration);
     }
 
     @Override

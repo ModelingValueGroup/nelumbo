@@ -1,43 +1,37 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -928776822979604743L;
 
-    protected static final int[] ZERO_ONE         = new int[]{0, 1};
-    protected static final int[] ONE_ZERO         = new int[]{1, 0};
-
-    protected BinaryPredicate(Functor functor, Token[] tokens, Object predicate1, Object predicate2) {
-        super(functor, tokens, predicate1, predicate2);
+    protected BinaryPredicate(Functor functor, List<AstElement> elements, Object predicate1, Object predicate2) {
+        super(functor, elements, predicate1, predicate2);
     }
 
-    protected BinaryPredicate(Object[] args, int start, BinaryPredicate declaration) {
-        super(args, start, declaration);
+    protected BinaryPredicate(Object[] args, BinaryPredicate declaration) {
+        super(args, declaration);
     }
 
     @Override
@@ -62,8 +56,10 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     protected final InferResult infer(InferContext context) {
         Predicate[] predicate = new Predicate[2];
         InferResult[] predResult = new InferResult[2];
-        for (int i : order()) {
-            predicate[i] = predicate(i);
+        predicate[0] = predicate(0);
+        predicate[1] = predicate(1);
+        order(predicate);
+        for (int i = 0; i < 2; i++) {
             predResult[i] = predicate[i].infer(context);
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
@@ -112,14 +108,24 @@ public abstract class BinaryPredicate extends CompoundPredicate {
 
     protected abstract InferResult add(InferResult[] predResult);
 
-    protected int[] order() {
-        if (REVERSE_NELUMBO) {
-            return ONE_ZERO;
+    private static void order(Predicate[] predicate) {
+        if (predicate[0] instanceof Boolean && !(predicate[1] instanceof Boolean)) {
+            return;
+        } else if (predicate[1] instanceof Boolean && !(predicate[0] instanceof Boolean)) {
+            flip(predicate);
+        } else if (REVERSE_NELUMBO) {
+            flip(predicate);
         } else if (RANDOM_NELUMBO) {
-            return ThreadLocalRandom.current().nextBoolean() ? ONE_ZERO : ZERO_ONE;
-        } else {
-            return ZERO_ONE;
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                flip(predicate);
+            }
         }
+    }
+
+    private static void flip(Predicate[] predicate) {
+        Predicate zero = predicate[0];
+        predicate[0] = predicate[1];
+        predicate[1] = zero;
     }
 
 }

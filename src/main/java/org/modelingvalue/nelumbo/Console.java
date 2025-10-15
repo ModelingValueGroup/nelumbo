@@ -1,46 +1,21 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo;
 
-import javax.swing.Action;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.KeyStroke;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Caret;
-import javax.swing.text.DefaultEditorKit;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.Element;
-import javax.swing.text.Highlighter;
-import javax.swing.text.TextAction;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -57,6 +32,19 @@ import java.io.Serial;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Caret;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.Element;
+import javax.swing.text.Highlighter;
+import javax.swing.text.TextAction;
 
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -103,8 +91,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     public Console() {
         initWindow();
         initActions();
-        runWithKnowledgeBase();
-        // only returns when done
+        initKnowledgeBase();
     }
 
     private void initWindow() {
@@ -235,7 +222,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         });
     }
 
-    private void runWithKnowledgeBase() {
+    private void initKnowledgeBase() {
         KnowledgeBase.run(this, KnowledgeBase.run(() -> {
             try {
                 Parser.parse(Integer.class);
@@ -262,6 +249,7 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
     public synchronized void windowClosed(WindowEvent evt) {
         quit = true;
         notifyAll();
+        System.exit(0);
     }
 
     @Override
@@ -334,9 +322,9 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
             }
             Tokenizer tokenizer = new Tokenizer(line, line);
             Parser parser = new Parser(tokenizer.tokenize());
-            for (Node root : parser.parse()) {
-                if (root.type().equals(Type.RESULT)) {
-                    write(root.toString(1));
+            for (Node root : parser.parseMutiple().roots()) {
+                if (root instanceof Query query) {
+                    write(query.inferResult().toString());
                 }
             }
         } catch (ParseException pe) {
@@ -350,11 +338,11 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
         }
     }
 
-    private void applySyntaxColors(String line) throws ParseException {
+    private void applySyntaxColors(String line) {
         System.err.println("line=[" + U.traceable(line) + "]");
         textArea.insert(" ", getEnd() - 1);
-        Tokenizer tokenizer = new Tokenizer(line, line, true);
-        for (Token token : tokenizer.tokenize()) {
+        Tokenizer tokenizer = new Tokenizer(line, line);
+        for (Token token = tokenizer.tokenize().firstAll(); token != null; token = token.nextAll()) {
             try {
                 int beg = getStart() + token.position();
                 int end = beg + token.text().length();
@@ -362,13 +350,13 @@ public class Console extends WindowAdapter implements WindowListener, ActionList
                 Highlighter.HighlightPainter hp = switch (token.type()) {
                 case STRING -> bluePainter;
                 case NUMBER, DECIMAL -> greenPainter;
-                case QNAME, NAME -> yellowPainter;
-                case SEMICOLON, OPERATOR, LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE -> greyPainter;
+                case NAME -> yellowPainter;
+                case SEMICOLON, OPERATOR, LEFT, RIGHT, META_OPERATOR -> greyPainter;
                 case COMMA -> purplePainter;
                 case TYPE -> pinkPainter;
-                case END_LINE_COMMENT, IN_LINE_COMMENT -> lightGreyPainter;
-                case HSPACE, VSPACE, NEWLINE -> whitePainter;
-                case ERROR -> redPainter;
+                case END_LINE_COMMENT, IN_LINE_COMMENT, SINGLEQUOTE -> lightGreyPainter;
+                case HSPACE, NEWLINE -> whitePainter;
+                case ERROR, ENDOFFILE -> redPainter;
                 };
                 if (hp != null) {
                     textArea.getHighlighter().addHighlight(beg, end, hp);

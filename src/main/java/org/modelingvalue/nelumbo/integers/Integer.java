@@ -1,56 +1,53 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo.integers;
 
 import java.io.Serial;
 import java.math.BigInteger;
 
-import org.modelingvalue.nelumbo.Functor;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Terminal;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Integer extends Terminal {
     @Serial
-    private static final long serialVersionUID = 2454372545442550574L;
+    private static final long       serialVersionUID = 2454372545442550574L;
 
-    private static final BigInteger MIN = BigInteger.valueOf(Long.MIN_VALUE);
-    private static final BigInteger MAX = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
 
-    private static Functor FUNCTOR;
+    private static Functor          FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(Integer.class, f -> FUNCTOR = f);
     }
 
-    public Integer(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, parse((String) args[0]));
+    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse((String) args[0]));
     }
 
-    private Integer(Functor functor, Token[] tokens, BigInteger val) {
-        super(functor, tokens, val);
+    private Integer(Functor functor, List<AstElement> elements, BigInteger val) {
+        super(functor, elements, val);
     }
 
     public static Integer of(BigInteger val) {
-        return new Integer(FUNCTOR, Token.EMPTY, val);
+        return new Integer(FUNCTOR, List.of(), val);
     }
 
     private static BigInteger parse(String string) {
@@ -62,13 +59,13 @@ public final class Integer extends Terminal {
         return new BigInteger(string);
     }
 
-    private Integer(Object[] array, int start) {
-        super(array, start);
+    private Integer(Object[] array) {
+        super(array);
     }
 
     @Override
-    protected Integer struct(Object[] array, int start) {
-        return new Integer(array, start);
+    protected Integer struct(Object[] array) {
+        return new Integer(array);
     }
 
     @Override

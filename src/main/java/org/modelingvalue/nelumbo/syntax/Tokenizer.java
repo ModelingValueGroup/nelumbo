@@ -1,91 +1,56 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedList;
 import java.util.regex.Matcher;
 
+import org.modelingvalue.collections.List;
+
+@SuppressWarnings("ClassCanBeRecord")
 public class Tokenizer {
-    private final String  input;
-    private final String  fileName;
-    private final boolean includeAllTokens;
 
-    private Token lastForParser = null;
+    private static final int FIRST = 0, FIRST_ALL = 1, LAST = 2, LAST_ALL = 3;
 
-    public Tokenizer(Class<?> clazz) throws ParseException {
-        this(clazz, false);
-    }
-
-    public Tokenizer(Class<?> clazz, String fileName) throws ParseException {
-        this(clazz, fileName, false);
-    }
+    private final String     input;
+    private final String     fileName;
 
     public Tokenizer(String input, String fileName) {
-        this(input, fileName, false);
+        this.input = input;
+        this.fileName = fileName;
     }
 
-    public Tokenizer(Class<?> clazz, boolean includeAllTokens) throws ParseException {
-        this(clazz, clazz.getPackageName().substring(clazz.getPackageName().lastIndexOf('.') + 1) + ".nl");
-    }
-
-    public Tokenizer(Class<?> clazz, String fileName, boolean includeAllTokens) throws ParseException {
-        try {
-            InputStream stream = clazz.getResourceAsStream(fileName);
-            if (stream == null) {
-                throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
-            }
-            this.input            = new String(new BufferedInputStream(stream).readAllBytes());
-            this.fileName         = fileName;
-            this.includeAllTokens = includeAllTokens;
-        } catch (IOException e) {
-            throw new ParseException(e, "IOException during parse", fileName);
-        }
-    }
-
-    public Tokenizer(String input, String fileName, boolean includeAllTokens) {
-        this.input            = input;
-        this.fileName         = fileName;
-        this.includeAllTokens = includeAllTokens;
-    }
-
-    public LinkedList<Token> tokenize() throws ParseException {
-        LinkedList<Token> tokens     = new LinkedList<>();
-        TokenType[]       tokenTypes = TokenType.values();
-        Matcher[]         matchers   = new Matcher[tokenTypes.length];
-        for (int i = 0; i < tokenTypes.length; i++) {
+    public TokenizerResult tokenize() {
+        Token[] tokens = new Token[4];
+        TokenType[] tokenTypes = TokenType.values();
+        Matcher[] matchers = new Matcher[tokenTypes.length - 1];
+        for (int i = 0; i < matchers.length; i++) {
             matchers[i] = tokenTypes[i].pattern().matcher(input);
             if (!matchers[i].find()) {
                 matchers[i] = null;
             }
         }
-        int index    = 0;
-        int line     = 0;
+        int index = 0;
+        int line = 0;
         int position = 0;
+        String previousVertical = null;
         while (index < input.length()) {
-            String    text = null;
+            String text = null;
             TokenType type = null;
-            for (int i = 0; i < tokenTypes.length; i++) {
+            for (int i = 0; i < matchers.length; i++) {
                 final Matcher m = matchers[i];
                 if (m == null) {
                     continue;
@@ -102,47 +67,80 @@ public class Tokenizer {
                     }
                 }
             }
-            if (text == null) {
-                String unexpectedChars = getUnexpectedToken(input, index);
-                throw new ParseException("Unexpected input '" + unexpectedChars + "'", line, position, index, unexpectedChars.length(), fileName);
-            }
             addToken(tokens, type, text, line, position, index);
-            // adjust index:
             index += text.length();
-            // adjust line:
-            int lineInc = text.replaceAll("\\V", "").length();
-            if (0 < lineInc) {
-                line += lineInc;
-                position = 0;
+            int lineIncr = text.replaceAll("\\V", "").length();
+            if (0 < lineIncr) {
+                if (previousVertical == null || previousVertical.contains(text)) {
+                    line += lineIncr;
+                    position = 0;
+                    previousVertical = previousVertical == null ? text : previousVertical + text;
+                }
+            } else {
+                previousVertical = null;
             }
-            //adjust position:
             position += text.replaceAll(".*\\v", "").length();
         }
-        return tokens;
+        addToken(tokens, TokenType.ENDOFFILE, "", line, position, index);
+        return new TokenizerResult(tokens);
     }
 
-    private void addToken(LinkedList<Token> tokens, TokenType type, String text, int line, int position, int index) {
-        if (type == TokenType.NEWLINE && (lastForParser == null || lastForParser.type().more())) {
-            type = TokenType.VSPACE;
+    private void addToken(Token[] tokens, TokenType type, String text, int line, int position, int index) {
+        Token token = new Token(type, text, line, position, index, fileName);
+        if (tokens[FIRST_ALL] == null) {
+            tokens[FIRST_ALL] = token;
+        } else {
+            tokens[LAST_ALL].setNextAll(token);
         }
-        if (includeAllTokens || !type.isIgnoreForParser()) {
-            Token newToken = new Token(type, text, line, position, index, fileName);
-            tokens.add(newToken);
-            if (!type.isIgnoreForParser()) {
-                lastForParser = newToken;
+        tokens[LAST_ALL] = token;
+        if (token.skip()) {
+            return;
+        }
+        if (token.type() == TokenType.NEWLINE) {
+            if (tokens[FIRST] == null || tokens[LAST].type().more()) {
+                // ignore newlines after a token that can be continued
+                return;
             }
         }
+        if (tokens[FIRST] == null) {
+            tokens[FIRST] = token;
+        } else {
+            tokens[LAST].setNext(token);
+        }
+        tokens[LAST] = token;
     }
 
-    private String getUnexpectedToken(String text, int at) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = at; i < text.length() && i < at + 8; i++) {
-            char c = text.charAt(i);
-            if (Character.isSpaceChar(c)) {
-                break;
-            }
-            sb.append(c);
+    public static final class TokenizerResult {
+        private final Token[] tokens;
+
+        public TokenizerResult(Token[] tokens) {
+            this.tokens = tokens;
         }
-        return sb.toString();
+
+        public Token firstAll() {
+            return tokens[FIRST_ALL];
+        }
+
+        public Token first() {
+            return tokens[FIRST];
+        }
+
+        public Token lastAll() {
+            return tokens[LAST_ALL];
+        }
+
+        public Token last() {
+            return tokens[LAST];
+        }
+
+        public List<Token> list() {
+            return tokens[FIRST].list(tokens[LAST]);
+        }
+
+        public List<Token> listAll() {
+            return tokens[FIRST_ALL].listAll(tokens[LAST_ALL]);
+        }
+
     }
+
 }

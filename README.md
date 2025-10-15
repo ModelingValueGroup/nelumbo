@@ -1,13 +1,11 @@
 # Nelumbo
 
-Nelumbo is a declarative logic programming language that is able to define and execute custom syntax and semantics. The current state of this repository is intended for research and prototyping rather than production use. It can however been seen as a prove of the feasibility of the goals.
-
-As a meta-language, Nelumbo is designed to be extensible, but expect rapid iteration and breaking changes in this early state of the project. The language is implemented in Java to simplify integration, but interfaces, behavior, and APIs may change without notice.
+Nelumbo is a powerful and extensible declarative logic programming language designed for defining and executing custom syntax and semantics. As a meta-language, Nelumbo is easily extensible, making it suitable for a wide range of applications. The language is implemented in Java for seamless integration and performance.
 
 ---
 
 ## Table of Contents
-- [Roadmap](#Roadmap)
+- [Features](#features)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [License](#license)
@@ -15,10 +13,7 @@ As a meta-language, Nelumbo is designed to be extensible, but expect rapid itera
 
 ---
 
-## Roadmap
-
-Note: The following goals are exploratory and may change or be incomplete as we iterate.
-
+## Features
 * Define and parse syntaxes
 * Define and execute semantics
 * Purely declarative semantics
@@ -88,11 +83,10 @@ fib(a,b)  <==  a>1 & b=fib(a-1)+fib(a-2)
 ```
 
 ## Contributing
-Feedback and exploratory contributions are very welcome! Please open issues or pull requests on GitHub.
-Given the early state of the project, expect fast iteration, possibly breaking changes, and evolving guidelines. Sharing use cases, ideas, and minimal repros is especially helpful.
+Contributions and feedback are welcome! Please open issues or pull requests on GitHub.
 
 ## License
 This project is licensed under the terms of the LICENSE file provided in the repository.
 
 ## Support
-This is best-effort support while the project is under active development. For questions, ideas or support, please use the GitHub Issues page.
+For questions or support, please use the GitHub Issues page.

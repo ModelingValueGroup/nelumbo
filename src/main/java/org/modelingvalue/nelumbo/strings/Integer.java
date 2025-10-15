@@ -1,50 +1,46 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo.strings;
 
-import org.modelingvalue.nelumbo.Functor;
+import java.io.Serial;
+import java.math.BigInteger;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Predicate;
-import org.modelingvalue.nelumbo.syntax.Token;
-
-import java.io.Serial;
-import java.lang.String;
-import java.math.BigInteger;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Integer extends Predicate {
     @Serial
     private static final long serialVersionUID = -2874326869672600959L;
 
-    public Integer(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, args[0], args[1]);
+    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    private Integer(Object[] array, int start, Integer declaration) {
-        super(array, start, declaration);
+    private Integer(Object[] array, Integer declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Integer struct(Object[] array, int start, Predicate declaration) {
-        return new Integer(array, start, (Integer) declaration);
+    protected Integer struct(Object[] array, Predicate declaration) {
+        return new Integer(array, (Integer) declaration);
     }
 
     @Override
@@ -54,7 +50,7 @@ public final class Integer extends Predicate {
         }
 
         BigInteger integer = getVal(0, 0);
-        String string = getVal(1, 0);
+        java.lang.String string = getVal(1, 0);
         if (string != null) {
             try {
                 BigInteger parsed = BigInteger.valueOf(java.lang.Integer.parseInt(string));
@@ -65,10 +61,10 @@ public final class Integer extends Predicate {
                     return set(0, org.modelingvalue.nelumbo.integers.Integer.of(parsed)).factCI();
                 }
             } catch (NumberFormatException e) {
-                return falsehoodCC();
+                return integer != null ? falsehoodCC() : falsehoodCI();
             }
-        } else if(integer != null) {
-            String s = integer.toString();
+        } else if (integer != null) {
+            java.lang.String s = integer.toString();
             return set(1, org.modelingvalue.nelumbo.strings.String.of(s)).factCI();
         }
 

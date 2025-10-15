@@ -1,28 +1,24 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
-import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
@@ -31,66 +27,68 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.Token;
 
-public class Node extends StructImpl {
+@SuppressWarnings("unused")
+public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long serialVersionUID = 7315776001191198132L;
+    private static final long           serialVersionUID = 7315776001191198132L;
 
-    private         int                   hashCode    = 0;
-    private         Map<Variable, Object> variables;
-    private         int                   nrOfUnbound = -1;
-    protected final int                   start;
+    protected static final int          START            = 2;
 
-    public Node(Functor functor, Token[] tokens, Object... args) {
-        super(array(functor, tokens, args));
-        start = tokens.length + 1;
+    private int                         hashCode         = 0;
+    private Map<Variable, Object>       variables;
+    private int                         nrOfUnbound      = -1;
+
+    private Map<Functor, List<Integer>> branches;
+    private int                         cycleDepth;
+
+    public Node(Functor functor, List<AstElement> elements, Object... args) {
+        super(array(functor, elements, args));
     }
 
-    public Node(Type type, Token[] tokens, Object... args) {
-        super(array(type, tokens, args));
-        start = tokens.length + 1;
+    public Node(Type type, List<AstElement> elements, Object... args) {
+        super(array(type, elements, args));
     }
 
-    protected Node(Object[] args, int start) {
+    protected Node(Object[] args) {
         super(args);
-        this.start = start;
-        if (get(0) instanceof Token) {
-            System.err.println("WARNING: Node.get(0) is a Token... is this an error??");
-        }
     }
 
-    private static Object[] array(Object functor, Token[] tokens, Object[] args) {
-        Object[] result = new Object[1 + tokens.length + args.length];
+    private static Object[] array(Object functor, List<AstElement> elements, Object[] args) {
+        Object[] result = new Object[START + args.length];
         result[0] = functor;
-        System.arraycopy(tokens, 0, result, 1, tokens.length);
-        System.arraycopy(args, 0, result, 1 + tokens.length, args.length);
+        result[1] = elements;
+        System.arraycopy(args, 0, result, START, args.length);
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof Optional<?> opt) {
+                result[i + START] = opt.orElse(null);
+            }
+        }
         return result;
     }
 
-    public Node setTokens(Token... tokens) {
-        int      newStart = 1 + tokens.length;
-        Object[] newData  = new Object[newStart + length()];
-        // add type to array
-        newData[0] = typeOrFunctor();
-        // add new tokens to array
-        System.arraycopy(tokens, 0, newData, 1, tokens.length);
-        // add args to array
-        for (int i = 0; i < length(); i++) {
-            newData[newStart + i] = get(i);
-        }
-        // make new node
-        return struct(newData, newStart);
+    public Node setFunctor(Functor functor) {
+        Object[] array = toArray();
+        array[0] = functor;
+        return struct(array);
+    }
+
+    public Node setAstElements(List<AstElement> elements) {
+        Object[] array = toArray();
+        array[1] = elements;
+        return struct(array);
     }
 
     @Override
     public int length() {
-        return super.length() - start;
+        return super.length() - START;
     }
 
     @Override
     public Object get(int i) {
-        return super.get(i + start);
+        return super.get(i + START);
     }
 
     public Type type() {
@@ -107,24 +105,19 @@ public class Node extends StructImpl {
         return (Node) super.get(0);
     }
 
-    public Token[] tokens() {
-        Token[] tokens = new Token[start - 1];
-        for (int i = 1; i < start; i++) {
-            tokens[i - 1] = (Token) super.get(i);
-        }
-        return tokens;
+    @SuppressWarnings("unchecked")
+    public final List<AstElement> astElements() {
+        return (List<AstElement>) super.get(1);
     }
 
-    public java.util.List<Node> children() {
-        java.util.List<Node> children = new ArrayList<>();
-        children.add(typeOrFunctor());
+    @SuppressWarnings("unchecked")
+    public List<Object> args() {
+        List<Object> args = List.of();
         for (int i = 0; i < length(); i++) {
-            Object child = get(i);
-            if (child instanceof Node) {
-                children.add((Node) child);
-            }
+            Object a = get(i);
+            args = args.add(a == null ? Optional.empty() : a);
         }
-        return children;
+        return args;
     }
 
     @Override
@@ -135,7 +128,7 @@ public class Node extends StructImpl {
                 Object e = get(i);
                 r = 31 * r + (e == null ? 0 : e.hashCode());
             }
-            r        = 31 * r + super.get(0).hashCode();
+            r = 31 * r + super.get(0).hashCode();
             hashCode = r == 0 ? 1 : r;
         }
         return hashCode;
@@ -167,7 +160,19 @@ public class Node extends StructImpl {
         }
     }
 
-    public final Map<Variable, Object> variables() {
+    public boolean contains(java.util.function.Predicate<Node> pred) {
+        for (int i = 0; i < length(); i++) {
+            Object val = get(i);
+            if (val instanceof Node node) {
+                if (pred.test(node) || node.contains(pred)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Map<Variable, Object> variables() {
         if (variables == null) {
             Map<Variable, Object> vars = Map.of();
             for (int i = 0; i < length(); i++) {
@@ -203,47 +208,33 @@ public class Node extends StructImpl {
         return nrOfUnbound() == 0;
     }
 
-    public Function<Node, String> render() {
-        Functor functor = functor();
-        return functor != null ? functor.render() : null;
-    }
-
-    public int precedence() {
-        return functor().precedence();
-    }
-
     @Override
     public String toString() {
-        Function<Node, String> render = render();
-        if (render != null) {
-            return render.apply(this);
-        }
-        Functor       functor = functor();
-        StringBuilder sb      = new StringBuilder();
+        Functor functor = functor();
         if (functor != null) {
-            sb.append("F#").append(functor.name());
+            String string = functor.string(args());
+            if (string != null) {
+                return string;
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        if (functor != null) {
+            sb.append(functor.name());
         } else {
-            sb.append("T#").append(type().name());
+            sb.append(type().name());
         }
         sb.append('(');
         String sep = "";
         for (int i = 0; i < length(); i++) {
             sb.append(sep).append(toString(i));
-            sep = ", ";
+            sep = ",";
         }
         sb.append(')');
         return sb.toString();
     }
 
     public final String toString(int i) {
-        Object v      = get(i);
-        String string = StringUtil.toString(v);
-        if (v instanceof Node && render() != null && ((Node) v).render() != null) {
-            if (!functor().equals(((Node) v).functor()) && precedence() >= ((Node) v).precedence()) {
-                return "(" + string + ")";
-            }
-        }
-        return string;
+        return StringUtil.toString(get(i));
     }
 
     public Map<Terminal, int[]> terminals() {
@@ -285,7 +276,7 @@ public class Node extends StructImpl {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + f + start] = a[i];
+                array[i + f + START] = a[i];
             }
         }
         return array;
@@ -293,7 +284,7 @@ public class Node extends StructImpl {
 
     public Node set(int f, Object... a) {
         Object[] array = setArray(f, a);
-        return array != null ? struct(array, start) : this;
+        return array != null ? struct(array) : this;
     }
 
     public Node set(int[] idx, Object val) {
@@ -302,18 +293,18 @@ public class Node extends StructImpl {
 
     private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
-        int      i     = idx[ii] + start;
+        int i = idx[ii] + START;
         if (ii < idx.length - 1) {
             Node s = (Node) array[i];
             array[i] = s.set(ii + 1, idx, val);
         } else {
             array[i] = val;
         }
-        return struct(array, start);
+        return struct(array);
     }
 
-    protected Node struct(Object[] array, int start) {
-        return new Node(array, start);
+    protected Node struct(Object[] array) {
+        return new Node(array);
     }
 
     protected final Object get(Node declaration, Variable var) {
@@ -350,8 +341,8 @@ public class Node extends StructImpl {
         Type thisType = typeOf(thisVal);
         thisVal = thisVal instanceof Type ? null : thisVal;
         if (declVal instanceof Variable var) {
-            Object varVal  = vars.get(var);
-            Type   varType = typeOf(varVal);
+            Object varVal = vars.get(var);
+            Type varType = typeOf(varVal);
             varVal = varVal instanceof Type ? null : varVal;
             if (varVal != null) {
                 if (thisVal != null && !thisVal.equals(varVal)) {
@@ -372,6 +363,8 @@ public class Node extends StructImpl {
             }
         } else if (declVal instanceof Node declStruct && !(declVal instanceof Type)) {
             if (thisVal != null) {
+                //TODO @WIM: '!(thisVal instanceof Type)' seems always true here...because 'thisVal = thisVal instanceof Type ? null : thisVal;' (above)
+                //noinspection ConstantValue
                 if (thisVal instanceof Node && !(thisVal instanceof Type)) {
                     vars = ((Node) thisVal).getBinding(declStruct, vars, check);
                 } else {
@@ -398,15 +391,15 @@ public class Node extends StructImpl {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
-            Object bound   = setBinding(declaration.get(i), thisVal, vars);
+            Object bound = setBinding(declaration.get(i), thisVal, vars);
             if (!Objects.equals(bound, thisVal)) {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + start] = bound;
+                array[i + START] = bound;
             }
         }
-        return array != null ? struct(array, start) : this;
+        return array != null ? struct(array) : this;
     }
 
     private static Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars) {
@@ -423,6 +416,28 @@ public class Node extends StructImpl {
             }
         }
         return thisVal;
+    }
+
+    protected Node replace(Function<Node, Node> replacer) {
+        Node to = replacer.apply(this);
+        if (to != this) {
+            return to;
+        } else {
+            Object[] array = null;
+            for (int i = 0; i < length(); i++) {
+                Object thisVal = get(i);
+                if (thisVal instanceof Node fromNode) {
+                    Node toNode = fromNode.replace(replacer);
+                    if (toNode != fromNode) {
+                        if (array == null) {
+                            array = toArray();
+                        }
+                        array[i + START] = toNode;
+                    }
+                }
+            }
+            return array != null ? struct(array) : this;
+        }
     }
 
     protected final int depth() {
@@ -450,7 +465,7 @@ public class Node extends StructImpl {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + start] = r;
+                array[i + START] = r;
             }
         }
         return array;
@@ -458,7 +473,7 @@ public class Node extends StructImpl {
 
     protected Node signature(int depth) {
         Object[] array = signatureArray(depth);
-        return array != null ? struct(array, start) : this;
+        return array != null ? struct(array) : this;
     }
 
     protected Set<? extends Node> generalize(boolean full) {
@@ -467,7 +482,7 @@ public class Node extends StructImpl {
             Object v = get(i);
             if (v instanceof Type) {
                 if (full) {
-                    List<Type> args = functor().args();
+                    List<Type> args = functor().argTypes();
                     for (Type s : KnowledgeBase.generalizations((Type) v, args.get(i))) {
                         result = result.add(setType(i, s));
                     }
@@ -493,14 +508,59 @@ public class Node extends StructImpl {
         return set(i, typed);
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected boolean atomic() {
         for (int i = 0; i < length(); i++) {
             Object v = get(i);
-            if (!(v instanceof Node) && !(v instanceof Type)) {
+            if (!(v instanceof Node)) {
                 return true;
             }
         }
         return false;
+    }
+
+    @Override
+    public Token firstToken() {
+        return AstElement.firstToken(astElements());
+    }
+
+    @Override
+    public Token lastToken() {
+        return AstElement.lastToken(astElements());
+    }
+
+    public Token nextToken() {
+        return lastToken().next();
+    }
+
+    public List<Token> tokens() {
+        Token first = firstToken();
+        return first != null ? first.list(lastToken()) : List.of();
+    }
+
+    @Override
+    public boolean isMeta() {
+        return false;
+    }
+
+    @Override
+    public int getCycleDepth() {
+        return cycleDepth;
+    }
+
+    @Override
+    public void setCycleDepth(int cycleDepth) {
+        this.cycleDepth = cycleDepth;
+    }
+
+    @Override
+    public List<Integer> getBranche(Functor functor) {
+        return branches.get(functor);
+    }
+
+    @Override
+    public void setBranches(Map<Functor, List<Integer>> branches) {
+        this.branches = branches;
     }
 
 }

@@ -1,42 +1,39 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Boolean extends Predicate {
     @Serial
-    private static final long        serialVersionUID = -8515171118744898263L;
+    private static final long serialVersionUID = -8515171118744898263L;
     //
-    public static        Boolean     TRUE;
-    public static        Boolean     FALSE;
-    public static        Boolean     UNKNOWN;
+    public static Boolean     TRUE;
+    public static Boolean     FALSE;
+    public static Boolean     UNKNOWN;
     //
-    private              InferResult result;
+    private InferResult       result;
 
-    public Boolean(Functor functor, Token[] tokens, Object[] args) {
-        super(functor, tokens, parse((String) args[0]));
+    public Boolean(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse(functor.name()));
         if (TRUE == null && isTrue()) {
             TRUE = this;
         } else if (FALSE == null && isFalse()) {
@@ -46,13 +43,18 @@ public final class Boolean extends Predicate {
         }
     }
 
-    private static java.lang.Boolean parse(String arg) {
-        return "true".equalsIgnoreCase(arg) ? java.lang.Boolean.TRUE : //
-               "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
+    @Override
+    public List<Object> args() {
+        return List.of();
     }
 
-    private Boolean(Object[] args, int start, Boolean declaration) {
-        super(args, start, declaration);
+    private static java.lang.Boolean parse(String arg) {
+        return "true".equalsIgnoreCase(arg) ? java.lang.Boolean.TRUE : //
+                "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
+    }
+
+    private Boolean(Object[] args, Boolean declaration) {
+        super(args, declaration);
     }
 
     @Override
@@ -79,8 +81,8 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    protected Boolean struct(Object[] array, int start, Predicate declaration) {
-        return new Boolean(array, start, (Boolean) declaration);
+    protected Boolean struct(Object[] array, Predicate declaration) {
+        return new Boolean(array, (Boolean) declaration);
     }
 
     @Override

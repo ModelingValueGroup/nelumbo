@@ -1,44 +1,49 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo.syntax;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.collections.Map;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.U;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
-@SuppressWarnings("unused")
-public class Token {
-    public static final Token[] EMPTY = new Token[0];
+@SuppressWarnings({"unused"})
+public final class Token implements AstElement {
 
-    private final TokenType type;
-    private final String    text;
-    private final String    fileName;
-    private final int       index;          // position in the input stream (0-based)
-    private final int       line;           // line number in the input file (0-based)
-    private final int       numLines;       // number of lines of this token (1...n)
-    private final int       position;       // position (column) in the line (0-based)
-    private final int       positionEnd;    // position (column) in the line (0-based) after the token
+    private final TokenType             type;
+    private final String                text;
+    private final int                   line;        // line number in the input file (0-based)
+    private final int                   position;    // position (column) in the line (0-based)
+    private final int                   index;       // position in the input stream (0-based)
+    private final String                fileName;
+    private final int                   numLines;    // number of lines of this token (1...n)
+    private final int                   positionEnd; // position (column) in the line (0-based) after the token
+
+    private Token                       next;
+    private Token                       previous;
+
+    private Token                       nextAll;
+    private Token                       previousAll;
+
+    private Map<Functor, List<Integer>> branches;
+    private int                         cycleDepth;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -47,58 +52,86 @@ public class Token {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type        = type;
-        this.text        = text;
-        this.fileName    = fileName;
-        this.line        = line;
-        this.position    = position;
-        this.index       = index;
-        this.numLines    = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
+        this.type = type;
+        this.text = text;
+        this.line = line;
+        this.position = position;
+        this.index = index;
+        this.fileName = fileName;
+        this.numLines = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
         this.positionEnd = numLines == 1 ? position + text.length() : text.length() - text.lastIndexOf('\n');
     }
 
-    public Token[] singleton() {
-        return new Token[]{this};
-    }
-
-    public static Token[] concat(Token t1, Node n, Token t2) {
-        return concat(t1.singleton(), n.tokens(), t2.singleton());
-    }
-
-    public static Token[] concat(Token t1, Token t2, List<Node> l, Token t3) {
-        return concat(t1.singleton(), t2.singleton(), toTokenArray(l), t3.singleton());
-    }
-
-    public static Token[] concat(Token t, List<Node> l) {
-        return concat(t.singleton(), toTokenArray(l));
-    }
-
-    public static Token[] concat(Node n1, Token t, Node n2) {
-        return concat(n1.tokens(), t.singleton(), n2.tokens());
-    }
-
-    public static Token[] concat(Token t, Node n) {
-        return concat(t.singleton(), n.tokens());
-    }
-
-    public static Token[] concat(Node n, Token t) {
-        return concat(n.tokens(), t.singleton());
-    }
-
-    private static Token[] toTokenArray(List<Node> l) {
-        return l.flatMap(n -> Stream.of(n.tokens())).toArray(Token[]::new);
-    }
-
-    public static Token[] concat(Token[]... all) {
-        int     totalLength = Stream.of(all).mapToInt(t -> t.length).reduce(0, Integer::sum);
-        Token[] result      = new Token[totalLength];
-        int     i           = 0;
-        for (Token[] tokens : all) {
-            System.arraycopy(tokens, 0, result, i, tokens.length);
-            i += tokens.length;
+    public void setNext(Token next) {
+        this.next = next;
+        if (next != null) {
+            next.previous = this;
         }
-        assert i == totalLength;
-        return result;
+    }
+
+    public void setNextAll(Token next) {
+        this.nextAll = next;
+        if (next != null) {
+            next.previousAll = this;
+        }
+    }
+
+    public void setPrevious(Token previous) {
+        this.previous = previous;
+        if (previous != null) {
+            previous.next = this;
+        }
+    }
+
+    public void setPreviousAll(Token previous) {
+        this.previousAll = previous;
+        if (previous != null) {
+            previous.nextAll = this;
+        }
+    }
+
+    public Token split(int i) {
+        Token t1 = splitGet1(i);
+        Token t2 = splitGet2(i);
+        t1.next = t2;
+        t1.nextAll = t2;
+        t2.next = next();
+        t2.nextAll = nextAll();
+        return t1;
+    }
+
+    public void connect(Token t1) {
+        Token t2 = t1.next;
+        t2.previous = t1;
+        t2.previousAll = t1;
+        previous.setNext(t1);
+        previousAll.setNextAll(t1);
+        next.setPrevious(t2);
+        nextAll.setPreviousAll(t2);
+    }
+
+    private Token splitGet1(int len) {
+        return new Token(type, text.substring(0, len), line, position, index, fileName);
+    }
+
+    private Token splitGet2(int len) {
+        return new Token(type, text.substring(len), line, position + len, index + len, fileName);
+    }
+
+    public Token next() {
+        return next;
+    }
+
+    public Token previous() {
+        return previous;
+    }
+
+    public Token nextAll() {
+        return nextAll;
+    }
+
+    public Token previousAll() {
+        return previousAll;
     }
 
     public TokenType type() {
@@ -111,14 +144,6 @@ public class Token {
 
     public String textTraced() {
         return U.traceable(text);
-    }
-
-    public int index() {
-        return index;
-    }
-
-    public int indexEnd() {
-        return index + numChars();
     }
 
     public int line() {
@@ -145,6 +170,14 @@ public class Token {
         return text.length();
     }
 
+    public int index() {
+        return index;
+    }
+
+    public int indexEnd() {
+        return index + numChars();
+    }
+
     public boolean contains(int l, int c) {
         if (numLines == 1) {
             return line == l && position <= c && c < positionEnd;
@@ -163,16 +196,8 @@ public class Token {
         return fileName;
     }
 
-    public boolean isIgnoreForParser() {
-        return type.isIgnoreForParser();
-    }
-
-    public Token splitGet1(int len) {
-        return new Token(type, text.substring(0, len), line, position, index, fileName);
-    }
-
-    public Token splitGet2(int len) {
-        return new Token(type, text.substring(len), line, position + len, index + len, fileName);
+    public boolean skip() {
+        return type.skip();
     }
 
     @Override
@@ -194,6 +219,64 @@ public class Token {
 
     @Override
     public String toString() {
-        return String.format("TOKEN: %5d (%3d,%3d) %-16s '%s'", index, line, position, type, textTraced());
+        String textTraced = textTraced();
+        return textTraced.isEmpty() && !type().variable() ? type().name() : "'" + textTraced + "'";
     }
+
+    @Override
+    public Token firstToken() {
+        return this;
+    }
+
+    @Override
+    public Token lastToken() {
+        return this;
+    }
+
+    public List<Token> list(Token last) {
+        List<Token> list = List.of(this);
+        Token t = this;
+        while (t != last) {
+            t = t.next();
+            list = list.add(t);
+        }
+        return list;
+    }
+
+    public List<Token> listAll(Token last) {
+        List<Token> list = List.of(this);
+        Token t = this;
+        while (t != last) {
+            t = t.nextAll();
+            list = list.add(t);
+        }
+        return list;
+    }
+
+    @Override
+    public boolean isMeta() {
+        return type == TokenType.META_OPERATOR;
+    }
+
+    @Override
+    public List<Integer> getBranche(Functor functor) {
+        return branches.get(functor);
+    }
+
+    @Override
+    public void setBranches(Map<Functor, List<Integer>> branches) {
+        assert branches != null;
+        this.branches = branches;
+    }
+
+    @Override
+    public int getCycleDepth() {
+        return cycleDepth;
+    }
+
+    @Override
+    public void setCycleDepth(int cycleDepth) {
+        this.cycleDepth = cycleDepth;
+    }
+
 }

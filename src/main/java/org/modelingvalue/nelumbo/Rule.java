@@ -1,47 +1,50 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
 
-public final class Rule extends Node {
+public final class Rule extends Node implements Evaluatable {
     @Serial
-    private static final long    serialVersionUID = -4602043866952049391L;
-    public static final  Functor FUNCTOR          = new Functor(Token.EMPTY, Type.RULE, "Rule", n -> n.toString(0) + (((Rule) n).symmetric() ? " <==> " : " <== ") + n.toString(1), 10, Type.PREDICATE, Type.PREDICATE);
+    private static final long serialVersionUID = -4602043866952049391L;
 
-    public Rule(Token[] tokens, Predicate consequence, Predicate condition, boolean symmetric) {
-        super(FUNCTOR, tokens, consequence, condition, symmetric);
+    public Rule(Functor functor, List<AstElement> elements, Predicate consequence, Predicate condition) {
+        super(functor, elements, consequence, condition);
     }
 
-    private Rule(Object[] args, int start) {
-        super(args, start);
+    private Rule(Object[] args) {
+        super(args);
     }
 
     @Override
-    protected Rule struct(Object[] array, int start) {
-        return new Rule(array, start);
+    public List<Object> args() {
+        return super.args().add(List.of());
+    }
+
+    @Override
+    protected Rule struct(Object[] array) {
+        return new Rule(array);
     }
 
     public final Predicate consequence() {
@@ -52,21 +55,16 @@ public final class Rule extends Node {
         return (Predicate) get(1);
     }
 
-    public final boolean symmetric() {
-        return (java.lang.Boolean) get(2);
-    }
-
-    protected final InferResult imply(Predicate proven, InferContext context) {
+    protected final InferResult biimply(Predicate proven, InferContext context) {
         Map<Variable, Object> binding = proven.getBinding(consequence(), Map.of(), true);
         if (binding == null) {
             return null;
         }
-        boolean symmetric = symmetric();
         binding = variables().putAll(binding);
-        Predicate condition = condition().setBinding(binding);
         Predicate consequence = consequence().setBinding(binding);
+        Predicate condition = condition().setBinding(binding);
         if (context.trace()) {
-            System.out.println(context.prefix() + consequence + (symmetric ? " <==> " : " <== ") + condition);
+            System.out.println(context.prefix() + consequence + " <==> " + condition);
         }
         InferResult condResult = condition.resolve(context);
         InferResult proResult;
@@ -77,12 +75,20 @@ public final class Rule extends Node {
             boolean completeFacts = true, completeFalsehoods = true;
             for (Predicate condFact : condResult.facts()) {
                 Predicate proFact = proven.castFrom(consequence.setBinding(condFact.getBinding()));
-                proFacts = proFacts.add(proFact);
+                if (proFact.isFullyBound()) {
+                    proFacts = proFacts.add(proFact);
+                } else {
+                    completeFacts = false;
+                }
             }
             for (Predicate condFalsehood : condResult.falsehoods()) {
                 Predicate proFalsehood = proven.castFrom(consequence.setBinding(condFalsehood.getBinding()));
-                if (symmetric || !proFacts.contains(proFalsehood)) {
-                    proFalsehoods = proFalsehoods.add(proFalsehood);
+                if (!proFacts.contains(proFalsehood)) {
+                    if (proFalsehood.isFullyBound()) {
+                        proFalsehoods = proFalsehoods.add(proFalsehood);
+                    } else {
+                        completeFalsehoods = false;
+                    }
                 }
             }
             if (!proven.isFullyBound()) {
@@ -105,6 +111,11 @@ public final class Rule extends Node {
     @Override
     public Rule set(int i, Object... a) {
         return (Rule) super.set(i, a);
+    }
+
+    @Override
+    public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
+        knowledgeBase.addRule(this);
     }
 
 }

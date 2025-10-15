@@ -1,36 +1,32 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                         ~
-//                                                                                                                       ~
-//  Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in       ~
-//  compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0   ~
-//  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on  ~
-//  an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the   ~
-//  specific language governing permissions and limitations under the License.                                           ~
-//                                                                                                                       ~
-//  Maintainers:                                                                                                         ~
-//      Wim Bast, Tom Brus                                                                                               ~
-//                                                                                                                       ~
-//  Contributors:                                                                                                        ~
-//      Ronald Krijgsheld ✝, Arjan Kok, Carel Bast                                                                       ~
-// --------------------------------------------------------------------------------------------------------------------- ~
-//  In Memory of Ronald Krijgsheld, 1972 - 2023                                                                          ~
-//      Ronald was suddenly and unexpectedly taken from us. He was not only our long-term colleague and team member      ~
-//      but also our friend. "He will live on in many of the lines of code you see below."                               ~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.U;
-import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public class TokenizerTest extends NelumboTestBase {
     static {
@@ -42,25 +38,27 @@ public class TokenizerTest extends NelumboTestBase {
     }
 
     @Test
-    public void tokenizerTest() throws ParseException {
+    public void tokenizerTest() {
         String example = """
-                         // COMMENT
-                             -abb + bcc *
-                                c - dee // ANOTHER COMMENT
-                             e = 8.9 / 2
-                         """;
+                // COMMENT
+                    -abb + bcc *
+                       c - dee // ANOTHER COMMENT
+                    e = 8.9 / 2
+                """;
 
-        LinkedList<Token> tokens        = new Tokenizer(example, "tokenizerTest").tokenize();
-        LinkedList<Token> all           = new Tokenizer(example, "tokenizerTest.all", true).tokenize();
-        String            reassembled   = all.stream().map(Token::text).collect(Collectors.joining());
-        String            types         = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String            expectedTypes = "END_LINE_COMMENT VSPACE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR VSPACE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE";
+        TokenizerResult result = new Tokenizer(example, "tokenizerTest").tokenize();
+        List<Token> tokens = result.list();
+        List<Token> all = result.listAll();
+
+        String reassembled = all.map(Token::text).collect(Collectors.joining());
+        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        String expectedTypes = "END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE ENDOFFILE";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
 
-        assertEquals(15, tokens.size(), "wrong number of tokens returned by tokenize()");
-        assertEquals(32, all.size(), "wrong number of tokens returned by tokenize(all)");
+        assertEquals(16, tokens.size(), "wrong number of tokens returned by tokenize()");
+        assertEquals(33, all.size(), "wrong number of tokens returned by tokenize(all)");
         assertEquals(example, reassembled, "could not reassemble tokens");
         assertEquals(expectedTypes, types, "unexpected token types in token list");
 
@@ -69,7 +67,7 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals(0, all.get(0).line());
         assertEquals(0, all.get(0).position());
 
-        assertEquals(TokenType.VSPACE, all.get(1).type());
+        assertEquals(TokenType.NEWLINE, all.get(1).type());
         assertEquals(0, all.get(1).line());
         assertEquals(10, all.get(1).position());
 
@@ -108,17 +106,18 @@ public class TokenizerTest extends NelumboTestBase {
     }
 
     @Test
-    public void tokenizerComment1Test() throws ParseException {
+    public void tokenizerComment1Test() {
         String example = "/* unterminated comment";
 
-        LinkedList<Token> tokens        = new Tokenizer(example, "tokenizerCommentTest").tokenize();
-        LinkedList<Token> all           = new Tokenizer(example, "tokenizerCommentTest.all", true).tokenize();
+        TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();
+        List<Token> tokens = result.list();
+        List<Token> all = result.listAll();
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
 
-        assertEquals(0, tokens.size(), "wrong number of tokens returned by tokenize()");
-        assertEquals(1, all.size(), "wrong number of tokens returned by tokenize(all)");
+        assertEquals(1, tokens.size(), "wrong number of tokens returned by tokenize()");
+        assertEquals(2, all.size(), "wrong number of tokens returned by tokenize(all)");
 
         assertEquals(TokenType.IN_LINE_COMMENT, all.get(0).type());
         assertEquals(0, all.get(0).line());
@@ -126,20 +125,21 @@ public class TokenizerTest extends NelumboTestBase {
     }
 
     @Test
-    public void tokenizerComment2Test() throws ParseException {
+    public void tokenizerComment2Test() {
         String example = "<a/*a*/>•a";
 
-        LinkedList<Token> tokens        = new Tokenizer(example, "tokenizerCommentTest").tokenize();
-        LinkedList<Token> all           = new Tokenizer(example, "tokenizerCommentTest.all", true).tokenize();
-        String            reassembled   = all.stream().map(Token::text).collect(Collectors.joining());
-        String            types         = all.stream().map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String            expectedTypes = "OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME";
+        TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();
+        List<Token> tokens = result.list();
+        List<Token> all = result.listAll();
+        String reassembled = all.map(Token::text).collect(Collectors.joining());
+        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        String expectedTypes = "OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME ENDOFFILE";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
 
-        assertEquals(5, tokens.size(), "wrong number of tokens returned by tokenize()");
-        assertEquals(6, all.size(), "wrong number of tokens returned by tokenize(all)");
+        assertEquals(6, tokens.size(), "wrong number of tokens returned by tokenize()");
+        assertEquals(7, all.size(), "wrong number of tokens returned by tokenize(all)");
         assertEquals(example, reassembled, "could not reassemble tokens");
         assertEquals(expectedTypes, types, "unexpected token types in token list");
 

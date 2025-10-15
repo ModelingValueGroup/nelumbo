@@ -3,7 +3,7 @@
 
     <String>    ::= <STRING>                                        @org.modelingvalue.nelumbo.strings.String
 
-    <Relation>  ::= string_concat(<String>,<String>,<String>)       @org.modelingvalue.nelumbo.strings.Concat,
+    <Predicate> ::= string_concat(<String>,<String>,<String>)       @org.modelingvalue.nelumbo.strings.Concat,
                     string_length(<String>,<Integer>)               @org.modelingvalue.nelumbo.strings.Length,
                     integer_string(<Integer>,<String>)              @org.modelingvalue.nelumbo.strings.Integer
 
