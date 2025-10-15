@@ -61,7 +61,7 @@ public class ParserResult implements ParseExceptionHandler {
 
     public void throwException() throws ParseException {
         if (!exceptions.isEmpty()) {
-            throw exceptions.getFirst();
+            throw exceptions().first();
         }
     }
 
