@@ -422,9 +422,7 @@ public class Predicate extends Node {
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
-                } // else if (ruleResult.hasCycleWith(this)) {
-                  // ruleResult = ruleResult.complete();
-                  // }
+                }
                 result = result.biimply(ruleResult, rule);
             }
         }

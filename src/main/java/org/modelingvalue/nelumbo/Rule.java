@@ -74,8 +74,8 @@ public final class Rule extends Node implements Evaluatable {
             Set<Predicate> proFacts = Set.of(), proFalsehoods = Set.of();
             boolean completeFacts = true, completeFalsehoods = true;
             for (Predicate condFact : condResult.facts()) {
-                if (condFact.isFullyBound()) {
-                    Predicate proFact = proven.castFrom(consequence.setBinding(condFact.getBinding()));
+                Predicate proFact = proven.castFrom(consequence.setBinding(condFact.getBinding()));
+                if (proFact.isFullyBound()) {
                     proFacts = proFacts.add(proFact);
                 } else {
                     completeFacts = false;

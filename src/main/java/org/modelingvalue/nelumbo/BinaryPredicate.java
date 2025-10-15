@@ -24,10 +24,7 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
     @Serial
-    private static final long    serialVersionUID = -928776822979604743L;
-
-    protected static final int[] ZERO_ONE         = new int[]{0, 1};
-    protected static final int[] ONE_ZERO         = new int[]{1, 0};
+    private static final long serialVersionUID = -928776822979604743L;
 
     protected BinaryPredicate(Functor functor, List<AstElement> elements, Object predicate1, Object predicate2) {
         super(functor, elements, predicate1, predicate2);
@@ -59,8 +56,10 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     protected final InferResult infer(InferContext context) {
         Predicate[] predicate = new Predicate[2];
         InferResult[] predResult = new InferResult[2];
-        for (int i : order()) {
-            predicate[i] = predicate(i);
+        predicate[0] = predicate(0);
+        predicate[1] = predicate(1);
+        order(predicate);
+        for (int i = 0; i < 2; i++) {
             predResult[i] = predicate[i].infer(context);
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
@@ -109,14 +108,24 @@ public abstract class BinaryPredicate extends CompoundPredicate {
 
     protected abstract InferResult add(InferResult[] predResult);
 
-    protected int[] order() {
-        if (REVERSE_NELUMBO) {
-            return ONE_ZERO;
+    private static void order(Predicate[] predicate) {
+        if (predicate[0] instanceof Boolean && !(predicate[1] instanceof Boolean)) {
+            return;
+        } else if (predicate[1] instanceof Boolean && !(predicate[0] instanceof Boolean)) {
+            flip(predicate);
+        } else if (REVERSE_NELUMBO) {
+            flip(predicate);
         } else if (RANDOM_NELUMBO) {
-            return ThreadLocalRandom.current().nextBoolean() ? ONE_ZERO : ZERO_ONE;
-        } else {
-            return ZERO_ONE;
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                flip(predicate);
+            }
         }
+    }
+
+    private static void flip(Predicate[] predicate) {
+        Predicate zero = predicate[0];
+        predicate[0] = predicate[1];
+        predicate[1] = zero;
     }
 
 }
