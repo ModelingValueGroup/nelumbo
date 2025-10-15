@@ -217,4 +217,8 @@ LIVE
 
 ## Contributing
 
-TODO
+* Open source : Create tests and libraries
+* Help to write scientific publication
+* We are aiming for a subsidy to fund serious development in the coming years
+* Github : https://github.com/ModelingValueGroup/nelumbo
+* Mail   : wim.bast@gmail.com
