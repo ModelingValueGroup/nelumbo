@@ -17,7 +17,6 @@
 package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.InferResult;
@@ -39,16 +38,6 @@ public class NelumboTestBase {
 
     public KnowledgeBase run(Runnable test, KnowledgeBase init) {
         return KnowledgeBase.run(test, init);
-    }
-
-    public static void isTrue(Predicate pred) {
-        InferResult result = getResult(pred);
-        assertTrue(result.isTrue());
-    }
-
-    public static void isFalse(Predicate pred) {
-        InferResult result = getResult(pred);
-        assertTrue(result.isFalse());
     }
 
     public static InferResult getResult(Predicate pred) {

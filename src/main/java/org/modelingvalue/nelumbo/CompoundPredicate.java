@@ -60,11 +60,11 @@ public abstract class CompoundPredicate extends Predicate {
                     if (result.hasStackOverflow()) {
                         return result;
                     } else {
-                        for (Predicate pred : result.facts()) {
+                        for (Predicate pred : result.allFacts()) {
                             Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
                             next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.TRUE));
                         }
-                        for (Predicate pred : result.falsehoods()) {
+                        for (Predicate pred : result.allFalsehoods()) {
                             Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
                             next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.FALSE));
                         }
