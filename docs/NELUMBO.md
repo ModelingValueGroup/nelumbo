@@ -4,11 +4,11 @@
 
 * Fast logic Reasoning
 * Fully Declarative
+* IDE integration using LSP
 * Define and parse Syntaxes
 * Define and execute Semantics
 * Define and run Tests
-* IDE integration using LSP 
-
+* Light-wait language workbench
 ---
 
 ## Syntax
@@ -198,12 +198,14 @@
 
 ## Rationale
 
-* Formalization of TAX laws and Clinical guidelines and protocols
-* Semantical rich and no over-specification (hence declarative)
-* Perfomant by binding variables by navigating relations only
-* Easily extensible and integrable by native classes for relations
+* Background in formalization of TAX laws and Clinical Knowledge
+* Semantical rich and proven consistent
+* Light-wait language workbench by using LSP
+* Fully declarative, hence, no over-specification
+* Performant by binding variables by navigating relations only (not over extend of types)
+* Easily extensible and integrable with the use of native classes
 * Strongly typed for more consistency and extensibility
-* Natural support of not (!) by reasoning over incomplete facts and falsehoods 
+* Natural support of not (!) by reasoning over incomplete facts and falsehoods
 
 ---
 
