@@ -66,16 +66,36 @@
 ```
 
 ---
+
+## Running
+
+### Queries
+
+```text
+  a+11=21   ?     // [10+11=21][..]
+```
+
+### Testing
+
+```text
+  a+11=21   ?     [10+11=21][..]
+  abs(a)=10 ?     [abs(-10)=10,abs(10)=10][..]
+```
+
+---
+
 ## Native Semantics
 
 ### Declaration
+
 ```text
   <Predicate> ::= add(<Integer>,<Integer>,<Integer>)
                   @org.modelingvalue.nelumbo.integers.Add
 ```
 
 ### Java Code
-```small
+
+```text
  protected InferResult infer(int nrOfUnbound, InferContext context) {
     if (nrOfUnbound > 1) {
         return unknown();
@@ -100,6 +120,26 @@
     }
 }
 ```
+
+---
+
+## Fibonacci Example
+
+```text
+  <Integer> ::= fib(<Integer>)
+
+  <Integer> n, f
+
+  fib(n)=f  <==> n<=1 & f=n |
+                 n>1  & f=fib(n-1)+fib(n-2)
+    
+  fib(0)=f       ? [fib(0)=0][..]
+  fib(2)=f       ? [fib(2)=1][..]
+  fib(10)=f      ? [fib(10)=55][..]
+  fib(100)=f     ? [fib(100)=36#22r8fozas3n8w3][..]
+  fib(1000)=f    ? [fib(1000)=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf][..]
+```
+
 ---
 
 ## Functions and Literals
@@ -109,23 +149,6 @@ TODO
 ## Predicates and Relations
 
 TODO
-
----
-
-## Running
-
-### Queries
-
-```text
-  a+11=21   ?     // [10+11=21][..]
-```
-
-### Testing
-
-```text
-  a+11=21   ?     [10+11=21][..]
-  abs(a)=10 ?     [abs(-10)=10,abs(10)=10][..]
-```
 
 ---
 
