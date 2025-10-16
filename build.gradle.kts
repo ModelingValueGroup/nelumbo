@@ -55,3 +55,30 @@ publishing {
     }
 }
 
+val dockerPath = System.getenv("DOCKER_PATH") ?: "/opt/local/bin/docker" // adjust if needed
+tasks.register<Exec>("slidesDocker") {
+    val docsDir = file("${project.projectDir}/docs").absolutePath
+    val projectRoot = project.projectDir.absolutePath
+
+    executable = "/opt/local/bin/docker" // or "docker"
+    args(
+        "run",
+        "--rm",
+        // Mount docs at /work (build output goes to /work/site)
+        "-v", "$docsDir:/work",
+        // Mount project root so ../src/... is reachable from /work
+        "-v", "$projectRoot:/project",
+        "-w", "/work",
+        // Optional: pip cache
+        "-v", "${gradle.gradleUserHomeDir}/caches/pip:/root/.cache/pip",
+        "python:3.12-alpine",
+        "sh", "-lc",
+        """
+        ln -s /project/src ../src 2>/dev/null || true; \
+        pip install -q --disable-pip-version-check --root-user-action=ignore mkslides 2>&1 | grep -v 'Created wheel' || true; \
+        mkslides  build NELUMBO.md
+        cp site/index.html NELUMBO.html
+        rm -rf site
+        """
+    )
+}
