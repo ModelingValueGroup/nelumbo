@@ -423,6 +423,9 @@ public class Predicate extends Node {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
                 }
+                if (ruleResult.hasCycleWith(this)) {
+                    ruleResult = ruleResult.complete();
+                }
                 result = result.biimply(ruleResult, rule);
             }
         }

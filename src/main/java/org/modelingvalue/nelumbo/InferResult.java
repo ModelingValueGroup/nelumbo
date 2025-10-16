@@ -472,4 +472,8 @@ public interface InferResult {
         }
     }
 
+    default InferResult complete() {
+        return completeFacts() && completeFalsehoods() ? this : of(facts(), true, falsehoods(), true, cycles());
+    }
+
 }

@@ -71,6 +71,18 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void friendsTest() {
+        run(() -> {
+            try {
+                U.printResults(Parser.parse(NelumboTest.class, "friends.nl"));
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    @RepeatedTest(10)
     public void familyTest() {
         run(() -> {
             try {
