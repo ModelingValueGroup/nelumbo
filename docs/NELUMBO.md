@@ -161,7 +161,6 @@
   <Integer> ::= <NUMBER>    @org.modelingvalue.nelumbo.integers.Integer
 ```
 
-
 ### Functions
 
 ```text
@@ -212,6 +211,20 @@
 ## Demo
 
 LIVE
+
+---
+
+## Plans
+
+* <Predicate> fib(n)=f <==> f=fib(n-1)+fib(n-2) IF n>1
+* Exists and ForAll E(....) A(...)
+* Namespaces
+* Generics (type arguments)
+* LSP (also on WEB)
+* Reactive update execution semantics
+* Language pattern transformations (also for <Root> patterns)
+* Deprecation and migration support
+* Abstract vs Concrete language mappings (like Xtext?)
 
 ---
 
