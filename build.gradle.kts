@@ -55,12 +55,12 @@ publishing {
     }
 }
 
-val dockerPath = System.getenv("DOCKER_PATH") ?: "/opt/local/bin/docker" // adjust if needed
 tasks.register<Exec>("generate-slides") {
     val docsDir = file("${project.projectDir}/docs").absolutePath
     val projectRoot = project.projectDir.absolutePath
 
-    executable = "/opt/local/bin/docker" // or "docker"
+    val dockerCandidateFile = file("/opt/local/bin/docker")
+    executable = if (dockerCandidateFile.exists() && dockerCandidateFile.canExecute()) dockerCandidateFile.absolutePath else "docker"
     args(
         "run",
         "--rm",
