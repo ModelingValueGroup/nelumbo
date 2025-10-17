@@ -42,7 +42,7 @@ jobs:
 
       ################################################################################
       - name: "generate-slides"
-        run: ./gradlew generate-slides
+        run: ./gradlew --info --stacktrace generate-slides
         
       - name: "build"
         run: ./gradlew --info --scan
