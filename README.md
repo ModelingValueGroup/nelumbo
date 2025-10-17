@@ -8,6 +8,7 @@ Nelumbo aims to be a powerful and extensible declarative logic programming langu
 ## Table of Contents
 - [Features](#features)
 - [Examples](#examples)
+- [FAQ](#faq)
 - [Contributing](#contributing)
 - [License](#license)
 - [Support](#support)
@@ -92,6 +93,16 @@ fib(10)=f      ? [fib(10)=55][..]
 fib(100)=f     ? [fib(100)=36#22r8fozas3n8w3][..]
 fib(1000)=f    ? [fib(1000)=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf][..]
 ```
+
+## FAQ
+
+### What is GLSP?
+GLSP stands for Graphical Language Server Platform. It is an Eclipse Foundation technology for building web-based diagram editors and modeling tools using a client–server architecture, inspired by the Language Server Protocol (LSP). A GLSP Client (typically a web UI built with Sprotty) communicates with a GLSP Server over JSON-RPC to render diagrams, handle user interactions, and execute model operations. GLSP enables consistent, IDE-like diagramming experiences in the browser and can integrate with platforms such as VS Code, Theia, or Eclipse.
+
+Useful links:
+- Project page: https://www.eclipse.org/glsp/
+- Docs: https://www.eclipse.org/glsp/documentation/
+- GitHub: https://github.com/eclipse-glsp/glsp
 
 ## Contributing
 Contributions and feedback are welcome! Please open issues or pull requests on GitHub.

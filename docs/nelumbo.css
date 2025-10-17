@@ -36,3 +36,12 @@
 .hljs-emphasis {
   font-style: italic;
 }
+
+/* Background image for the deck */
+.reveal {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url("nelumbo.png");
+    background-size: auto, cover; /* overlay auto; image cover */
+    background-position: center, center; /* align both */
+    background-repeat: no-repeat, no-repeat; /* avoid tiling */
+    background-attachment: fixed, fixed; /* subtle parallax on scroll */
+}

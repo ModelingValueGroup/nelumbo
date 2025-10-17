@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Subtle, low-color lotus background (dark, neutral) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+    <defs>
+        <!-- Background radial gradient -->
+        <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+            <stop offset="0%" stop-color="#0b1020"/>
+            <stop offset="100%" stop-color="#0a0d18"/>
+        </radialGradient>
+
+        <!-- Soft halo around the lotus -->
+        <radialGradient id="halo" cx="50%" cy="50%" r="55%">
+            <stop offset="0%" stop-color="#cbd5e1" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#cbd5e1" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- Petal gradient: very low saturation neutral -->
+        <linearGradient id="petalGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#8FA1B3" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#8FA1B3" stop-opacity="0.22"/>
+        </linearGradient>
+
+        <!-- Soft blur to keep the lotus vague -->
+        <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8"/>
+        </filter>
+
+        <!-- Very subtle noise/grain to avoid banding -->
+        <filter id="grain" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="3" result="noise"/>
+            <feColorMatrix type="saturate" values="0"/>
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.02"/>
+            </feComponentTransfer>
+            <feBlend in="SourceGraphic" in2="noise" mode="overlay"/>
+        </filter>
+
+        <!-- Base petal shape -->
+        <g id="petal">
+            <!-- A rounded petal, centered horizontally around x=100 -->
+            <path d="M0,0 C30,-120 170,-120 200,0 C170,20 30,20 0,0 Z" fill="url(#petalGrad)"/>
+        </g>
+    </defs>
+
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="url(#bg)"/>
+    <rect x="0" y="0" width="100%" height="100%" fill="url(#halo)"/>
+
+    <!-- Lotus group (centered) -->
+    <g transform="translate(960,540)" filter="url(#grain)">
+        <!-- Outer ring (largest, most transparent) -->
+        <g filter="url(#softBlur)" opacity="0.55">
+            <!-- 12 petals, rotated every 30 degrees -->
+            <g transform="rotate(0) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(30) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(60) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(90) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(120) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(150) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(180) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(210) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(240) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(270) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(300) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(330) translate(0,-360) translate(-100,0) scale(1.35)">
+                <use href="#petal"/>
+            </g>
+        </g>
+
+        <!-- Middle ring -->
+        <g filter="url(#softBlur)" opacity="0.7">
+            <!-- 10 petals, rotated every 36 degrees -->
+            <g transform="rotate(18) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(54) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(90) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(126) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(162) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(198) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(234) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(270) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(306) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(342) translate(0,-260) translate(-100,0) scale(1.05)">
+                <use href="#petal"/>
+            </g>
+        </g>
+
+        <!-- Inner ring -->
+        <g filter="url(#softBlur)" opacity="0.85">
+            <!-- 8 petals, rotated every 45 degrees -->
+            <g transform="rotate(0) translate(0,-170) translate(-100,0) scale(0.8)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(45) translate(0,-170) translate(-100,0) scale(0.8)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(90) translate(0,-170) translate(-100,0) scale(0.8)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(135) translate(0,-170) translate(-100,0) scale(0.8)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(180) translate(0,-170) translate(-100,0) scale(0.8)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(225) translate(0,-170) translate(-100,0) scale(0.8)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(270) translate(0,-170) translate(-100,0) scale(0.8)">
+                <use href="#petal"/>
+            </g>
+            <g transform="rotate(315) translate(0,-170) translate(-100,0) scale(0.8)">
+                <use href="#petal"/>
+            </g>
+        </g>
+
+        <!-- Very soft center -->
+        <circle cx="0" cy="0" r="110" fill="#cbd5e1" opacity="0.05"/>
+    </g>
+</svg>
