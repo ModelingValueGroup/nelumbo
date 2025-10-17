@@ -1,5 +1,7 @@
 # Nelumbo
 
+<img src="nelumbo.svg" alt="Nelumbo" width="50" height="50" />
+
 ## Logic Meta Language
 
 * Fast logic Reasoning
@@ -217,11 +219,11 @@
 
 ---
 
-| Operator    | Meaning     |
-| ----------- | ----------- |
-| `::`        | Type        |
-| `::=`       | Pattern     |
-| `<==>`      | Rule        |
+| Operator | Meaning |
+|----------|---------|
+| `::`     | Type    |
+| `::=`    | Pattern |
+| `<==>`   | Rule    |
 
 ---
 

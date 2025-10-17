@@ -37,11 +37,29 @@
   font-style: italic;
 }
 
-/* Background image for the deck */
+/*!* Background image for the deck *!*/
 .reveal {
-    background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url("nelumbo.png");
-    background-size: auto, cover; /* overlay auto; image cover */
-    background-position: center, center; /* align both */
-    background-repeat: no-repeat, no-repeat; /* avoid tiling */
-    background-attachment: fixed, fixed; /* subtle parallax on scroll */
+    background-color: #fdf6e3;
+    position: relative; /* create stacking context for pseudo-element */
+}
+
+/* Render background image via pseudo-element so we can control its opacity independently */
+.reveal::before {
+    content: "";
+    position: fixed; /* stay put during scroll for subtle parallax */
+    inset: 0; /* top:0; right:0; bottom:0; left:0 */
+    pointer-events: none; /* don't block interactions */
+
+    background-image: url("nelumbo.svg");
+    background-size: 50%; /* a bit smaller than full cover */
+    background-position: center; /* center the image */
+    background-repeat: no-repeat; /* no tiling */
+
+    opacity: 0.1; /* 20% opacity for the image */
+    z-index: 0; /* behind slide content */
+}
+
+/* Ensure slide content is above the pseudo-element */
+.reveal .slides {
+    z-index: 1;
 }
