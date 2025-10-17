@@ -215,9 +215,19 @@
 
 ---
 
+## Predefined operators
+
+| Operator    | Meaning     |
+| ----------- | ----------- |
+| `::`        | Type        |
+| `::=`       | Pattern     |
+| `<==>`      | Rule        |
+
+---
+
 ## Demo
 
-LIVE
+### LIVE Nelumbo Console
 
 ---
 
