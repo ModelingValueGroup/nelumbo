@@ -215,8 +215,6 @@
 
 ---
 
-## Predefined operators
-
 | Operator    | Meaning     |
 | ----------- | ----------- |
 | `::`        | Type        |
