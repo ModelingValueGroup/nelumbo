@@ -36,6 +36,16 @@ jobs:
           java-version: 17
           distribution: zulu
 
+      # Ensure Docker CLI and Buildx are available for docker commands
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Optional sanity check to confirm docker is usable on the runner
+      - name: Check Docker
+        run: |
+          docker version
+          docker info
+
       ################################################################################
       - name: "build"
         run: ./gradlew --info --scan
