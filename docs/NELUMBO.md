@@ -225,7 +225,7 @@
 
 ## Demo
 
-### LIVE Nelumbo Console
+### LIVE
 
 ---
 
