@@ -25,9 +25,11 @@
 
 ## Nelumbo vs Dclare
 
-* Reactive update execution semantics (push) and lazy derivation (pull).
-* Pulling has problems with opposite relations.
-* Dclare has blackbox rules. This causes scalability issues. Nelumbo rules are whitebox.
+* Both have reactive execution semantics (push) and lazy derivation (pull).
+* Dclare has blackbox rules. This causes scalability issues with pushing.
+* Nelumbo rules are compltally defined in Nelumo. Hence, no scalabilty issues.
+* Pulling with Dclare has problems with opposite relations.
+* Nelumbo is multi-directional by nature.
 
 ---
 
