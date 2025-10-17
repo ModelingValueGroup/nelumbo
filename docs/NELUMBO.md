@@ -3,12 +3,34 @@
 ## Logic Meta Language
 
 * Fast logic Reasoning
-* Fully Declarative
-* IDE integration using LSP
 * Define and parse Syntaxes
 * Define and execute Semantics
 * Define and run Tests
+* IDE integration using LSP
 * Lightweight Language Workbench
+
+---
+
+## Requirements for Nelumbo
+
+* Perfect for formalization of e.g. TAX laws and Clinical Knowledge
+* Semantically rich and proven consistent
+* Fully declarative, hence, no over-specification
+* Performant by binding variables based on navigating relations only
+* Easily extensible and integrable with the use of native classes
+* Strongly typed for more consistency and extensibility
+* Natural support of not (!) by reasoning over incomplete facts and falsehoods
+
+---
+
+## Nelumbo vs Dclare
+
+* Both have reactive execution semantics (push) and lazy derivation (pull).
+* Dclare has blackbox rules. This causes scalability issues with pushing.
+* Nelumbo rules are compltally defined in Nelumo. Hence, no scalabilty issues.
+* Pulling with Dclare has problems with opposite relations.
+* Nelumbo is multi-directional by nature.
+
 ---
 
 ## Syntax
@@ -161,7 +183,6 @@
   <Integer> ::= <NUMBER>    @org.modelingvalue.nelumbo.integers.Integer
 ```
 
-
 ### Functions
 
 ```text
@@ -196,22 +217,32 @@
 
 ---
 
-## Rationale
-
-* Background in formalization of TAX laws and Clinical Knowledge
-* Semantically rich and proven consistent
-* Lightweight language workbench by using LSP
-* Fully declarative, hence, no over-specification
-* Performant by binding variables by navigating relations only (not the extent of a type)
-* Easily extensible and integrable with the use of native classes
-* Strongly typed for more consistency and extensibility
-* Natural support of not (!) by reasoning over incomplete facts and falsehoods
+| Operator    | Meaning     |
+| ----------- | ----------- |
+| `::`        | Type        |
+| `::=`       | Pattern     |
+| `<==>`      | Rule        |
 
 ---
 
 ## Demo
 
-LIVE
+### LIVE
+
+---
+
+## Plans
+
+* <Predicate> fib(n)=f <==> f=fib(n-1)+fib(n-2) WHEN n>1
+* Exists and ForAll E(....) A(...)
+* Namespaces
+* Generics (type arguments)
+* LSP (also on WEB)
+* Reactive update execution semantics
+* Language pattern transformations (also for predefined patterns)
+* Deprecation and migration support
+* Abstract vs Concrete language mappings (like Xtext?)
+* ....
 
 ---
 
@@ -222,3 +253,7 @@ LIVE
 * We are aiming for a subsidy to fund serious development in the coming years
 * Github : https://github.com/ModelingValueGroup/nelumbo
 * Mail   : wim.bast@gmail.com
+
+---
+
+# Q&A

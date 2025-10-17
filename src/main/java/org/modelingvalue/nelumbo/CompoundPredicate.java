@@ -56,21 +56,23 @@ public abstract class CompoundPredicate extends Predicate {
                     facts = facts.add(setBinding(entry.getKey()));
                 } else {
                     Predicate predicate = result.unknown();
-                    result = predicate.infer(context);
-                    if (result.hasStackOverflow()) {
-                        return result;
-                    } else {
-                        for (Predicate pred : result.allFacts()) {
-                            Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
-                            next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.TRUE));
+                    if (predicate != null) {
+                        result = predicate.infer(context);
+                        if (result.hasStackOverflow()) {
+                            return result;
+                        } else {
+                            for (Predicate pred : result.allFacts()) {
+                                Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
+                                next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.TRUE));
+                            }
+                            for (Predicate pred : result.allFalsehoods()) {
+                                Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
+                                next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.FALSE));
+                            }
+                            completeFacts &= result.completeFacts();
+                            completeFalsehoods &= result.completeFalsehoods();
+                            cycles = cycles.addAll(result.cycles());
                         }
-                        for (Predicate pred : result.allFalsehoods()) {
-                            Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
-                            next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.FALSE));
-                        }
-                        completeFacts &= result.completeFacts();
-                        completeFalsehoods &= result.completeFalsehoods();
-                        cycles = cycles.addAll(result.cycles());
                     }
                 }
             }
