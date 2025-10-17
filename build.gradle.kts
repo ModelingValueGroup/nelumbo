@@ -46,6 +46,12 @@ tasks {
     }
 }
 
+// Ensure `gradle clean` also removes the generated documentation site
+// This is safe if the directory does not exist
+tasks.named<Delete>("clean") {
+    delete(file("docs/site"))
+}
+
 publishing {
     publications {
         create<MavenPublication>("nelumbo") {
