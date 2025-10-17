@@ -7,7 +7,7 @@
 
 friend(a)=c <==> friends(a,c) |
                  friends(c,a) |
-                 friend(a)=b & friend(b)=c
+                 friend(friend(a))=c
 
 <Person>   ::= Piet, Jan, Klaas, Wim, Tom
 
