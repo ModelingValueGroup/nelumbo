@@ -71,7 +71,7 @@ public interface InferResult {
     }
 
     default boolean isEmpty() {
-        return allFacts().isEmpty() && allFalsehoods().isEmpty();
+        return allFacts().isEmpty() && allFalsehoods().isEmpty() && cycles().isEmpty();
     }
 
     static InferResult of(Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods, Set<Predicate> cycles) {
@@ -473,7 +473,8 @@ public interface InferResult {
     }
 
     default InferResult complete() {
-        return completeFacts() && completeFalsehoods() ? this : of(facts(), true, falsehoods(), true, cycles());
+        boolean fullyBound = cycles().anyMatch(Node::isFullyBound);
+        return completeFacts() && completeFalsehoods() ? this : of(facts(), true, falsehoods(), fullyBound, cycles());
     }
 
 }

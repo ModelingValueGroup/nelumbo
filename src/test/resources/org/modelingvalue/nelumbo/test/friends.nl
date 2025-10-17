@@ -6,13 +6,13 @@
 <Person> a, b, c
 
 friend(a)=c <==> friends(a,c) |
-                 friends(c,a)  // |
-                 // friend(a)=b & friend(b)=c
+                 friends(c,a) |
+                 friend(a)=b & friend(b)=c
 
 <Person>   ::= Piet, Jan, Klaas, Wim, Tom
 
 friends(Piet, Jan)
 friends(Jan,  Klaas)
 
-friend(Piet)=b ? [friend(Piet)=Jan][..]
-friend(Jan)=b  ? [friend(Jan)=Klaas,friend(Jan)=Piet][..]
+friend(Piet)=b ? [friend(Piet)=Jan,friend(Piet)=Klaas,friend(Piet)=Piet][..]
+friend(Jan)=b  ? [friend(Jan)=Jan,friend(Jan)=Klaas,friend(Jan)=Piet][..]
