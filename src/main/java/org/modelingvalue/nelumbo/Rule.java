@@ -56,7 +56,7 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     protected final InferResult biimply(Predicate proven, InferContext context) {
-        Map<Variable, Object> binding = proven.getBinding(consequence(), Map.of(), true);
+        Map<Variable, Object> binding = proven.getBinding(consequence(), Map.of());
         if (binding == null) {
             return null;
         }

@@ -158,7 +158,7 @@ public class Predicate extends Node {
     }
 
     public Map<Variable, Object> getBinding() {
-        return super.getBinding(declaration, Map.of(), false);
+        return super.getBinding(declaration, Map.of());
     }
 
     protected final Predicate setBinding(Map<Variable, Object> vars) {
@@ -407,7 +407,7 @@ public class Predicate extends Node {
         Set<Rule> rules = context.knowledgebase().getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
             ruleResult = rule.biimply(this, context);
-            if (ruleResult != null) {
+            if (result != null) {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
                 }

@@ -322,21 +322,14 @@ public class Node extends StructImpl implements AstElement {
         return null;
     }
 
-    protected final Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars, boolean check) {
-        if (typeOrFunctor().equals(declaration.typeOrFunctor())) {
-            for (int i = 0; i < length(); i++) {
-                vars = getBinding(declaration.get(i), get(i), vars, check);
-                if (vars == null) {
-                    return null;
-                }
-            }
-            return vars;
-        } else {
-            return null;
+    protected final Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars) {
+        for (int i = 0; vars != null && i < length(); i++) {
+            vars = getBinding(declaration.get(i), get(i), vars);
         }
+        return vars;
     }
 
-    private static Map<Variable, Object> getBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, boolean check) {
+    private static Map<Variable, Object> getBinding(Object declVal, Object thisVal, Map<Variable, Object> vars) {
         Type thisType = typeOf(thisVal);
         thisVal = thisVal instanceof Type ? null : thisVal;
         if (declVal instanceof Variable var) {
@@ -348,32 +341,13 @@ public class Node extends StructImpl implements AstElement {
                     return null;
                 }
             } else if (thisVal != null) {
-                if (var.type().isAssignableFrom(thisType)) {
-                    vars = vars.put(var, thisVal);
-                } else {
-                    return null;
-                }
-            } else if (thisType == null || !var.type().isAssignableFrom(thisType)) {
-                return null;
-            } else if (varType != null && !varType.equals(thisType)) {
-                return null;
+                vars = vars.put(var, thisVal);
             } else {
                 vars = vars.put(var, thisType);
             }
-        } else if (declVal instanceof Node declStruct && !(declVal instanceof Type)) {
-            if (thisVal != null) {
-                //TODO @WIM: '!(thisVal instanceof Type)' seems always true here...because 'thisVal = thisVal instanceof Type ? null : thisVal;' (above)
-                //noinspection ConstantValue
-                if (thisVal instanceof Node && !(thisVal instanceof Type)) {
-                    vars = ((Node) thisVal).getBinding(declStruct, vars, check);
-                } else {
-                    return null;
-                }
-            } else if (thisType == null || !declStruct.type().isAssignableFrom(thisType)) {
-                return null;
-            }
-        } else if (check && thisVal != null && !thisVal.equals(declVal)) {
-            return null;
+        } else if (declVal instanceof Node declStruct && !(declVal instanceof Type) && //
+                thisVal instanceof Node && !(thisVal instanceof Type)) {
+            vars = ((Node) thisVal).getBinding(declStruct, vars);
         }
         return vars;
     }
@@ -402,17 +376,14 @@ public class Node extends StructImpl implements AstElement {
     }
 
     private static Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars) {
-        if (declVal instanceof Variable) {
-            Object varVal = vars.get((Variable) declVal);
+        if (declVal instanceof Variable declVar) {
+            Object varVal = vars.get(declVar);
             if (varVal != null) {
                 return varVal;
             }
-        } else if (declVal instanceof Node && !(declVal instanceof Type)) {
-            if (thisVal instanceof Type && ((Type) thisVal).isAssignableFrom((((Node) declVal).type()))) {
-                return ((Node) declVal).setBinding((Node) declVal, vars);
-            } else if (thisVal instanceof Node && !(thisVal instanceof Type)) {
-                return ((Node) thisVal).setBinding((Node) declVal, vars);
-            }
+        } else if (declVal instanceof Node declNode && !(declNode instanceof Type) && //
+                thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
+            return thisNode.setBinding(declNode, vars);
         }
         return thisVal;
     }
