@@ -172,13 +172,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }));
     }
 
-    private Functor addVariable(Variable var, boolean predefined) throws ParseException {
+    private Functor addVariable(Variable var) throws ParseException {
         return register(Functor.of(t(var.toString()), var.type(), true, (elements, args, functor) -> {
             Variable result = var.setAstElements(elements);
-            if (!predefined) {
-                result = result.setFunctor(functor);
-            }
-            return result;
+            return result.setFunctor(functor);
         }));
     }
 
@@ -353,7 +350,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 if (comma != null) {
                                     roots.setAstElements(roots.astElements().add(comma));
                                 }
-                                Functor varFun = CURRENT.get().addVariable(var, false).setAstElements(List.of(token));
+                                Functor varFun = CURRENT.get().addVariable(var).setAstElements(List.of(token));
                                 roots = new ListNode(List.of(), roots, varFun);
                             }
                             return roots.setAstElements(roots.astElements().add(elements.last()));
@@ -504,9 +501,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         localPrePatterns.set(prePatterns.get());
         localPostPatterns.set(postPatterns.get());
         literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
-        memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
         depth.set(init != null ? init.depth.get() : 0);
+        resetMemoization();
         endParsing(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void resetMemoization() {
+        memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
     }
 
     public void setExceptionHandler(ParseExceptionHandler exceptionHandler) {
@@ -643,6 +645,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         rules.updateAndGet(m -> addRule(rule, signature, m));
         int signDepth = signature.depth();
         depth.accumulateAndGet(signDepth, Math::max);
+        resetMemoization();
     }
 
     private static Map<Predicate, Set<Rule>> addRule(Rule ruleImpl, Predicate signature, Map<Predicate, Set<Rule>> map) {
@@ -663,6 +666,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
             return map;
         });
+        resetMemoization();
     }
 
     private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact, Predicate predicate, int i, Type cls) {
