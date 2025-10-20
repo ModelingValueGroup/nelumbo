@@ -329,12 +329,10 @@ public class Node extends StructImpl implements AstElement {
         return vars;
     }
 
-    private static Map<Variable, Object> getBinding(Object declVal, Object thisVal, Map<Variable, Object> vars) {
-        Type thisType = typeOf(thisVal);
-        thisVal = thisVal instanceof Type ? null : thisVal;
+    private static Map<Variable, Object> getBinding(Object declVal, Object thisIn, Map<Variable, Object> vars) {
+        Object thisVal = thisIn instanceof Type ? null : thisIn;
         if (declVal instanceof Variable var) {
             Object varVal = vars.get(var);
-            Type varType = typeOf(varVal);
             varVal = varVal instanceof Type ? null : varVal;
             if (varVal != null) {
                 if (thisVal != null && !thisVal.equals(varVal)) {
@@ -343,7 +341,7 @@ public class Node extends StructImpl implements AstElement {
             } else if (thisVal != null) {
                 vars = vars.put(var, thisVal);
             } else {
-                vars = vars.put(var, thisType);
+                vars = vars.put(var, typeOf(thisIn));
             }
         } else if (declVal instanceof Node declStruct && !(declVal instanceof Type) && //
                 thisVal instanceof Node && !(thisVal instanceof Type)) {
