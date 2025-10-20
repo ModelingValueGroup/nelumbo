@@ -46,6 +46,12 @@ tasks {
     }
 }
 
+// Ensure `gradle clean` also removes the generated documentation site
+// This is safe if the directory does not exist
+tasks.named<Delete>("clean") {
+    delete(file("docs/site"))
+}
+
 publishing {
     publications {
         create<MavenPublication>("nelumbo") {
@@ -55,30 +61,26 @@ publishing {
     }
 }
 
-val dockerPath = System.getenv("DOCKER_PATH") ?: "/opt/local/bin/docker" // adjust if needed
-tasks.register<Exec>("slidesDocker") {
+tasks.register<Exec>("generate-slides") {
     val docsDir = file("${project.projectDir}/docs").absolutePath
     val projectRoot = project.projectDir.absolutePath
 
-    executable = "/opt/local/bin/docker" // or "docker"
+    val dockerCandidateFile = file("/opt/local/bin/docker")
+    executable = if (dockerCandidateFile.exists() && dockerCandidateFile.canExecute()) dockerCandidateFile.absolutePath else "docker"
     args(
         "run",
         "--rm",
-        // Mount docs at /work (build output goes to /work/site)
-        "-v", "$docsDir:/work",
-        // Mount project root so ../src/... is reachable from /work
-        "-v", "$projectRoot:/project",
-        "-w", "/work",
-        // Optional: pip cache
+        "-v", "$docsDir:/work",         // Mount docs at /work (build output goes to /work/site)
+        "-v", "$projectRoot:/project",  // Mount project root so ../src/... is reachable from /work
         "-v", "${gradle.gradleUserHomeDir}/caches/pip:/root/.cache/pip",
+        "-w", "/work",
         "python:3.12-alpine",
         "sh", "-lc",
         """
         ln -s /project/src ../src 2>/dev/null || true; \
         pip install -q --disable-pip-version-check --root-user-action=ignore mkslides 2>&1 | grep -v 'Created wheel' || true; \
-        mkslides  build NELUMBO.md
-        cp site/index.html NELUMBO.html
-        rm -rf site
+        mkslides build NELUMBO.md
+        cp nelumbo.svg site/assets
         """
     )
 }
