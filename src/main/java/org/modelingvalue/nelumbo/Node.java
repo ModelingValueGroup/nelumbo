@@ -24,7 +24,6 @@ import java.util.function.Function;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -440,66 +439,6 @@ public class Node extends StructImpl implements AstElement {
         }
     }
 
-    protected final int depth() {
-        int result = 1;
-        for (int i = 0; i < length(); i++) {
-            Object v = get(i);
-            if (v instanceof Node && !(v instanceof Type) && !((Node) v).atomic()) {
-                result = Math.max(result, ((Node) v).depth() + 1);
-            }
-        }
-        return result;
-    }
-
-    protected final Object[] signatureArray(int depth) {
-        Object[] array = null;
-        for (int i = 0; i < length(); i++) {
-            Object v = get(i);
-            Object r;
-            if (depth > 1 && v instanceof Node && !(v instanceof Type) && !((Node) v).atomic()) {
-                r = ((Node) v).signature(depth - 1);
-            } else {
-                r = typeOf(v);
-            }
-            if (!Objects.equals(v, r)) {
-                if (array == null) {
-                    array = toArray();
-                }
-                array[i + START] = r;
-            }
-        }
-        return array;
-    }
-
-    protected Node signature(int depth) {
-        Object[] array = signatureArray(depth);
-        return array != null ? struct(array) : this;
-    }
-
-    protected Set<? extends Node> generalize(boolean full) {
-        Set<Node> result = Set.of();
-        for (int i = 0; i < length(); i++) {
-            Object v = get(i);
-            if (v instanceof Type) {
-                if (full) {
-                    List<Type> args = functor().argTypes();
-                    for (Type s : KnowledgeBase.generalizations((Type) v, args.get(i))) {
-                        result = result.add(setType(i, s));
-                    }
-                }
-            } else if (v instanceof Node) {
-                Set<? extends Node> gen = ((Node) v).generalize(full);
-                for (Node s : gen) {
-                    result = result.add(setTyped(i, s));
-                }
-                if (gen.isEmpty()) {
-                    result = result.add(setType(i, typeOf(v)));
-                }
-            }
-        }
-        return result;
-    }
-
     protected Node setType(int i, Type type) {
         return set(i, type);
     }
@@ -563,4 +502,20 @@ public class Node extends StructImpl implements AstElement {
         this.branches = branches;
     }
 
+    public MatchState state(MatchState state) {
+        for (Object arg : args().reverse()) {
+            if (arg instanceof Type type) {
+                state = new MatchState(type, state);
+            } else if (arg instanceof Variable var) {
+                state = new MatchState(var.type(), state);
+            } else if (arg instanceof Node node) {
+                state = node.state(state);
+            } else {
+                state = new MatchState(arg.getClass(), state);
+            }
+        }
+        Functor functor = functor();
+        assert functor != null;
+        return new MatchState(functor, state);
+    }
 }

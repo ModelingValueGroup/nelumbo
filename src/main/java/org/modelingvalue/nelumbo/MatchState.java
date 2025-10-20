@@ -1,0 +1,108 @@
+package org.modelingvalue.nelumbo;
+
+import org.modelingvalue.collections.Entry;
+import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.patterns.Functor;
+
+public class MatchState {
+
+    public static final MatchState        EMPTY = new MatchState();
+
+    private final Map<Object, MatchState> transitions;
+    private final Set<Rule>               rules;
+
+    private MatchState() {
+        this.transitions = Map.of();
+        this.rules = Set.of();
+    }
+
+    public MatchState(Rule rule) {
+        this.transitions = Map.of();
+        this.rules = rule != null ? Set.of(rule) : Set.of();
+    }
+
+    public MatchState(Functor functor, MatchState to) {
+        this.transitions = Map.of(Entry.of(functor, to));
+        this.rules = Set.of();
+    }
+
+    public MatchState(Type type, MatchState to) {
+        this.transitions = Map.of(Entry.of(type, to));
+        this.rules = Set.of();
+    }
+
+    public MatchState(Class<?> clss, MatchState to) {
+        this.transitions = Map.of(Entry.of(clss, to));
+        this.rules = Set.of();
+    }
+
+    private MatchState(Map<Object, MatchState> transitions, Set<Rule> rules) {
+        this.transitions = transitions;
+        this.rules = rules;
+    }
+
+    public Map<Object, MatchState> transitions() {
+        return transitions;
+    }
+
+    public Set<Rule> rules() {
+        return rules;
+    }
+
+    @Override
+    public String toString() {
+        return transitions().toKeys().asSet().toString().substring(3);
+    }
+
+    public MatchState merge(MatchState state) {
+        if (state == null) {
+            return this;
+        }
+        return new MatchState( //
+                transitions().addAll(state.transitions(), (a, b) -> a.merge(b)), //
+                rules().addAll(state.rules()));
+    }
+
+    public Set<Rule> match(Object obj) {
+        MatchState state = doMatch(obj);
+        return state != null ? state.rules() : Set.of();
+    }
+
+    private MatchState doMatch(Object obj) {
+        MatchState state;
+        if (obj instanceof Type type) {
+            state = matchType(type);
+        } else if (obj instanceof Variable var) {
+            state = matchType(var.type());
+        } else if (obj instanceof Node node) {
+            state = transitions().get(node.functor());
+            if (state != null) {
+                for (Object arg : node.args()) {
+                    state = state.doMatch(arg);
+                    if (state == null) {
+                        break;
+                    }
+                }
+            }
+            if (state == null) {
+                state = matchType(node.type());
+            }
+        } else {
+            state = transitions().get(obj.getClass());
+        }
+        return state;
+    }
+
+    private MatchState matchType(Type type) {
+        MatchState state = null;
+        for (Type sup : type.allSupers()) {
+            state = transitions().get(sup);
+            if (state != null) {
+                return state;
+            }
+        }
+        return state;
+    }
+
+}

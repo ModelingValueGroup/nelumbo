@@ -310,18 +310,6 @@ public class Predicate extends Node {
         return array != null ? struct(array, null) : this;
     }
 
-    @Override
-    protected Predicate signature(int depth) {
-        Object[] array = signatureArray(depth);
-        return array != null ? struct(array, null) : this;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected final Set<Predicate> generalize(boolean full) {
-        return (Set<Predicate>) super.generalize(full);
-    }
-
     protected InferResult resolve(InferContext context) {
         return infer(nrOfUnbound(), context);
     }

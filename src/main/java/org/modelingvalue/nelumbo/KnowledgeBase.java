@@ -24,9 +24,7 @@ import java.io.PrintStream;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.modelingvalue.collections.Entry;
@@ -49,28 +47,15 @@ import org.modelingvalue.nelumbo.syntax.*;
 public final class KnowledgeBase implements ParseExceptionHandler {
 
     private static final boolean                                                        TRACE_NELUMBO        = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
+    //
     public static final Context<KnowledgeBase>                                          CURRENT              = Context.of();
+    //
     private static final ContextPool                                                    POOL                 = ContextThread.createPool();
     private static final QualifiedSet<Predicate, Inference>                             EMPTY_MEMOIZ         = QualifiedSet.of(Inference::premise);
     private static final int                                                            MAX_LOGIC_MEMOIZ     = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
     private static final int                                                            MAX_LOGIC_MEMOIZ_D4  = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
     private static final int                                                            INITIAL_USAGE_COUNT  = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
-    private static final BiFunction<Set<Rule>, Rule, Set<Rule>>                         ADD_RULE             = (l, e) -> {
-                                                                                                                 if (l == null) {
-                                                                                                                     return Set.of(e);
-                                                                                                                 } else {
-                                                                                                                     for (int i = 0; i < l.size(); i++) {
-                                                                                                                         Rule r = l.get(i);
-                                                                                                                         if (r.consequence().equals(e.consequence()) &&                                                  //
-                                                                                                                                 r.condition().contains(e.condition())) {
-                                                                                                                             return l;
-                                                                                                                         }
-                                                                                                                     }
-                                                                                                                     return l.add(e);
-                                                                                                                 }
-                                                                                                             };
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
-
     private static final List<TokenType>                                                TOKEN_TYPES          = List.of(TokenType.NAME, TokenType.OPERATOR, TokenType.STRING, TokenType.SEMICOLON, TokenType.SINGLEQUOTE);
     private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(tt -> (Pattern) t(tt)).asList().add(n(Type.PATTERN, Integer.MAX_VALUE));
     private static final Pattern                                                        ALT_NO_COMMA         = a(PATTERNS_NO_COMMA.toArray(i -> new Pattern[i]));
@@ -81,10 +66,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             r(s(t("#"), t(TokenType.NUMBER))),                                                                                                                                                                           //
             o(s(t("@"), t(TokenType.NAME), r(s(t("."), t(TokenType.NAME))))));
     private static final Pattern                                                        CONDITION            = n(Type.PREDICATE, 0);
-
+    //
     private static final Pattern                                                        ALTERNATIVE          = a(t(".."), n(Type.PREDICATE, null));
     private static final Pattern                                                        PREDICTION           = o(s(ALTERNATIVE, r(s(t(","), ALTERNATIVE))));
-
+    //
     public static final KnowledgeBase                                                   BASE                 = new KnowledgeBase(null).initBase();
 
     public static void registerFunctorSetter(Class<? extends Node> clazz, Consumer<Functor> setter) {
@@ -467,7 +452,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private final AtomicReference<Set<Functor>>                         functors          = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, InferResult>>          facts             = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, Set<Rule>>>            rules             = new AtomicReference<>();
+    private final AtomicReference<Set<Rule>>                            rules             = new AtomicReference<>();
     //
     private final AtomicReference<Map<String, ParseState>>              prePatterns       = new AtomicReference<>();
     private final AtomicReference<Map<String, ParseState>>              postPatterns      = new AtomicReference<>();
@@ -477,7 +462,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private final AtomicReference<Map<Functor, Functor>>                literalFunctors   = new AtomicReference<>();
     //
-    private final AtomicInteger                                         depth             = new AtomicInteger();
+    private final AtomicReference<MatchState>                           matchSignatures   = new AtomicReference<>();
+    //
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization       = new AtomicReference<>();
     private final InferContext                                          context;
     private final KnowledgeBase                                         init;
@@ -495,13 +481,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     public void init() {
         functors.set(init != null ? init.functors.get() : Set.of());
         facts.set(init != null ? init.facts.get() : Map.of());
-        rules.set(init != null ? init.rules.get() : Map.of());
+        rules.set(init != null ? init.rules.get() : Set.of());
         prePatterns.set(init != null ? init.prePatterns.get() : Map.of());
         postPatterns.set(init != null ? init.postPatterns.get() : Map.of());
         localPrePatterns.set(prePatterns.get());
         localPostPatterns.set(postPatterns.get());
         literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
-        depth.set(init != null ? init.depth.get() : 0);
+        matchSignatures.set(init != null ? init.matchSignatures.get() : MatchState.EMPTY);
         resetMemoization();
         endParsing(false);
     }
@@ -532,46 +518,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
-    public InferResult getFacts(Predicate predicate, InferContext context) {
-        InferResult result = facts.get().get(predicate);
-        if (result != null) {
-            result = result.cast(predicate);
-            if (context.trace()) {
-                System.out.println(context.prefix() + "  " + predicate + " " + result);
-            }
-            return result;
-        }
-        return predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(Set.of());
-    }
-
-    public Set<Rule> getRules(Predicate predicate) {
-        return doGetRules(predicate.signature(depth()));
-    }
-
-    private Set<Rule> doGetRules(Predicate signature) {
-        Set<Rule> result = rules.get().get(signature);
-        if (result != null) {
-            return result;
-        }
-        result = Set.of();
-        Set<Predicate> post = signature.generalize(true);
-        while (result.isEmpty() && !post.isEmpty()) {
-            for (Predicate rel : post) {
-                result = result.addAll(doGetRules(rel));
-            }
-            if (result.isEmpty()) {
-                Set<Predicate> pre = post;
-                post = Set.of();
-                for (Predicate rel : pre) {
-                    post = post.addAll(rel.generalize(true));
-                }
-            }
-        }
-        Set<Rule> finalRsult = result;
-        rules.updateAndGet(m -> m.put(signature, finalRsult));
-        return result;
-    }
-
     public InferResult getMemoiz(Predicate predicate) {
         for (QualifiedSet<Predicate, Inference> m : memoization.get()) {
             Inference memoiz = m.get(predicate);
@@ -587,7 +533,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return functors.get();
     }
 
-    public Map<Predicate, Set<Rule>> rules() {
+    public Set<Rule> rules() {
         return rules.get();
     }
 
@@ -641,19 +587,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public void addRule(Rule rule) {
-        Predicate signature = rule.consequence().signature(Integer.MAX_VALUE);
-        rules.updateAndGet(m -> addRule(rule, signature, m));
-        int signDepth = signature.depth();
-        depth.accumulateAndGet(signDepth, Math::max);
+        rules.updateAndGet(s -> s.add(rule));
+        MatchState state = rule.consequence().state(new MatchState(rule));
+        matchSignatures.updateAndGet(state::merge);
         resetMemoization();
     }
 
-    private static Map<Predicate, Set<Rule>> addRule(Rule ruleImpl, Predicate signature, Map<Predicate, Set<Rule>> map) {
-        map = map.put(signature, ADD_RULE.apply(map.get(signature), ruleImpl));
-        for (Predicate gen : signature.generalize(false)) {
-            map = addRule(ruleImpl, gen, map);
-        }
-        return map;
+    public Set<Rule> getRules(Predicate predicate) {
+        return matchSignatures.get().match(predicate);
     }
 
     public void addFact(Predicate fact) {
@@ -683,45 +624,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return map;
     }
 
-    public InferContext context() {
-        return context;
-    }
-
-    public int depth() {
-        return depth.get();
-    }
-
-    public void print(PrintStream stream, boolean withTokens) {
-        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "functors", U.Colors.code(0));
-        for (Functor e : functors()) {
-            stream.printf("        %-20s ::= %s%n", e.resultType(), e);
-            if (withTokens) {
-                for (Token token : e.tokens()) {
-                    stream.println("            " + token);
-                }
+    public InferResult getFacts(Predicate predicate, InferContext context) {
+        InferResult result = facts.get().get(predicate);
+        if (result != null) {
+            result = result.cast(predicate);
+            if (context.trace()) {
+                System.out.println(context.prefix() + "  " + predicate + " " + result);
             }
+            return result;
         }
-        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "rules", U.Colors.code(0));
-        Set<Rule> rules = rules().flatMap(Entry::getValue).asSet();
-        for (Rule r : rules) {
-            stream.println("        " + r);
-            if (withTokens) {
-                for (Token token : r.tokens()) {
-                    stream.println("            " + token);
-                }
-            }
-        }
-        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "facts", U.Colors.code(0));
-        for (Entry<Predicate, InferResult> e : facts()) {
-            if (e.getValue().isTrueCC()) {
-                stream.println("        " + e.getKey());
-                if (withTokens) {
-                    for (Token token : e.getKey().tokens()) {
-                        stream.println("            " + token);
-                    }
-                }
-            }
-        }
+        return predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(Set.of());
     }
 
     public Functor register(Functor functor) throws ParseException {
@@ -772,6 +684,42 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             return null;
         }
         return state.parse(token, new PatternResult(parser), Map.of(), true);
+    }
+
+    public void print(PrintStream stream, boolean withTokens) {
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "functors", U.Colors.code(0));
+        for (Functor e : functors()) {
+            stream.printf("        %-20s ::= %s%n", e.resultType(), e);
+            if (withTokens) {
+                for (Token token : e.tokens()) {
+                    stream.println("            " + token);
+                }
+            }
+        }
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "rules", U.Colors.code(0));
+        for (Rule r : rules()) {
+            stream.println("        " + r);
+            if (withTokens) {
+                for (Token token : r.tokens()) {
+                    stream.println("            " + token);
+                }
+            }
+        }
+        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "facts", U.Colors.code(0));
+        for (Entry<Predicate, InferResult> e : facts()) {
+            if (e.getValue().isTrueCC()) {
+                stream.println("        " + e.getKey());
+                if (withTokens) {
+                    for (Token token : e.getKey().tokens()) {
+                        stream.println("            " + token);
+                    }
+                }
+            }
+        }
+    }
+
+    public InferContext context() {
+        return context;
     }
 
 }
