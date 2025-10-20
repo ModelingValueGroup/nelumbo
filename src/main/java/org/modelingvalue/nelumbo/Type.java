@@ -51,11 +51,12 @@ public class Type extends Node {
     public static final Type   QUERY            = new Type(Query.class, Type.ROOT);
 
     public static List<Type> predefined() {
-        return List.of(TYPE(), //
+        return List.of(//
                 NODE, //
                 FUNCTION, //
                 TERMINAL, //
                 LITERAL, //
+                TYPE(), //
                 ROOT, //
                 PREDICATE, //
                 RELATION, //
@@ -87,7 +88,7 @@ public class Type extends Node {
 
                 @Override
                 public Set<Type> supers() {
-                    return Set.of();
+                    return Set.of(NODE);
                 }
 
                 @Override
@@ -99,10 +100,10 @@ public class Type extends Node {
         return TYPE;
     }
 
-    private Type       list;
-    private Type       literal;
-    private Type       function;
-    private List<Type> allSupers;
+    private Type      list;
+    private Type      literal;
+    private Type      function;
+    private Set<Type> allSupers;
 
     private Type() {
         super((Type) null, List.of(), Type.class, null, DEFAULT_GROUP);
@@ -290,19 +291,19 @@ public class Type extends Node {
         return (Set<Type>) get(1);
     }
 
-    public List<Type> allSupers() {
+    public Set<Type> allSuperTypes() {
         if (allSupers == null) {
-            List<Type> pre = List.of(), post = List.of(this);
-            do {
-                int i = pre.size();
-                pre = post;
-                for (; i < pre.size(); i++) {
-                    post = post.addAllUnique(pre.get(i).supers());
-                }
-            } while (post.size() > pre.size());
-            allSupers = post;
+            Set<Type> s = supers();
+            for (Type sup : s) {
+                s = s.addAll(sup.allSuperTypes());
+            }
+            allSupers = s;
         }
         return allSupers;
+    }
+
+    public Set<Type> allSubTypes() {
+        return KnowledgeBase.CURRENT.get().allSubTypes(this);
     }
 
     @Override
@@ -319,7 +320,7 @@ public class Type extends Node {
         if (isMany()) {
             return many().allMatch(s -> s.isAssignableFrom(type));
         }
-        return equals(type) || type.supers().anyMatch(this::isAssignableFrom);
+        return equals(type) || type.allSuperTypes().contains(this);
     }
 
     public boolean isAssignableFrom(Class<?> type) {

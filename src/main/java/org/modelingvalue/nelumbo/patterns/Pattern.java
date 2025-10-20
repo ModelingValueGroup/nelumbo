@@ -171,12 +171,7 @@ public abstract class Pattern extends Node {
                     }
                 } else {
                     Type type = ((Node) element).type();
-                    for (Type sup : type.allSupers()) {
-                        post = pre.transitions().get(sup);
-                        if (post != null) {
-                            break;
-                        }
-                    }
+                    post = pre.transitions().get(type);
                 }
                 assert branche != null;
                 assert post != null;

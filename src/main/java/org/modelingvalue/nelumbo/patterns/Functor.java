@@ -151,6 +151,10 @@ public class Functor extends Node {
         return start;
     }
 
+    public void clearStart() {
+        start = null;
+    }
+
     @Override
     public Functor setFunctor(Functor functor) {
         return (Functor) super.setFunctor(functor);

@@ -172,13 +172,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }));
     }
 
-    private Functor addVariable(Variable var, boolean predefined) throws ParseException {
+    private Functor addVariable(Variable var) throws ParseException {
         return register(Functor.of(t(var.toString()), var.type(), true, (elements, args, functor) -> {
             Variable result = var.setAstElements(elements);
-            if (!predefined) {
-                result = result.setFunctor(functor);
-            }
-            return result;
+            return result.setFunctor(functor);
         }));
     }
 
@@ -213,8 +210,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         CURRENT.run(this, () -> {
             try {
 
+                registerSubTypes(Type.OBJECT);
+                registerSubTypes(Type.STRING);
+
                 for (Type type : Type.predefined()) {
                     addType(type, true);
+                    registerSubTypes(type);
                 }
 
                 for (TokenType tokenType : TokenType.values()) {
@@ -278,6 +279,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), SEQ_NO_COMMA, r(s(t(","), SEQ_NO_COMMA)), t(NEWLINE)), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
+                            KnowledgeBase current = CURRENT.get();
                             Type type = (Type) elements.get(0);
                             ListNode roots = new ListNode(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
@@ -292,7 +294,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
                                         }
-                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern);
+                                        roots = current.createFunctor(type, roots, ast, constructor, pattern);
                                         ast = pttrn = List.of();
                                         constructor = null;
                                         precedence = List.of();
@@ -313,7 +315,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         try {
                                             constructor = Class.forName(qname).getConstructor(Functor.class, List.class, Object[].class);
                                         } catch (NoSuchMethodException | SecurityException | ClassNotFoundException ex) {
-                                            CURRENT.get().addException(new ParseException(ex, "Exception during finding class with Node constructor " + qname, t.next()));
+                                            current.addException(new ParseException(ex, "Exception during finding class with Node constructor " + qname, t.next()));
                                         }
                                     } else {
                                         pttrn = pttrn.add(e);
@@ -335,7 +337,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             }
                             String group = args[args.length - 1] instanceof String ? (String) args[args.length - 1] : Type.DEFAULT_GROUP;
                             Type type = new Type(elements, name, supers, group);
-                            return CURRENT.get().addType(type, false).setAstElements(elements);
+                            KnowledgeBase current = CURRENT.get();
+                            Functor typeFunctor = current.addType(type, false).setAstElements(elements);
+                            type = type.setFunctor(typeFunctor);
+                            current.registerSubTypes(type);
+                            current.register(type);
+                            return typeFunctor;
                         }));
 
                 register(Functor.of(s(n(Type.TYPE(), null), t(TokenType.NAME), r(s(t(","), t(TokenType.NAME))), t(NEWLINE)), //
@@ -353,7 +360,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 if (comma != null) {
                                     roots.setAstElements(roots.astElements().add(comma));
                                 }
-                                Functor varFun = CURRENT.get().addVariable(var, false).setAstElements(List.of(token));
+                                Functor varFun = CURRENT.get().addVariable(var).setAstElements(List.of(token));
                                 roots = new ListNode(List.of(), roots, varFun);
                             }
                             return roots.setAstElements(roots.astElements().add(elements.last()));
@@ -480,6 +487,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private final AtomicReference<Map<Functor, Functor>>                literalFunctors   = new AtomicReference<>();
     //
+    private final AtomicReference<Map<Type, Set<Type>>>                 allSubTypes       = new AtomicReference<>();
+    //
     private final AtomicInteger                                         depth             = new AtomicInteger();
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization       = new AtomicReference<>();
     private final InferContext                                          context;
@@ -494,7 +503,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         init();
     }
 
-    @SuppressWarnings("unchecked")
     public void init() {
         functors.set(init != null ? init.functors.get() : Set.of());
         facts.set(init != null ? init.facts.get() : Map.of());
@@ -504,9 +512,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         localPrePatterns.set(prePatterns.get());
         localPostPatterns.set(postPatterns.get());
         literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
-        memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
+        allSubTypes.set(init != null ? init.allSubTypes.get() : Map.of());
         depth.set(init != null ? init.depth.get() : 0);
+        resetMemoization();
         endParsing(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void resetMemoization() {
+        memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
     }
 
     public void setExceptionHandler(ParseExceptionHandler exceptionHandler) {
@@ -643,6 +657,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         rules.updateAndGet(m -> addRule(rule, signature, m));
         int signDepth = signature.depth();
         depth.accumulateAndGet(signDepth, Math::max);
+        resetMemoization();
     }
 
     private static Map<Predicate, Set<Rule>> addRule(Rule ruleImpl, Predicate signature, Map<Predicate, Set<Rule>> map) {
@@ -663,6 +678,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
             return map;
         });
+        resetMemoization();
     }
 
     private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact, Predicate predicate, int i, Type cls) {
@@ -720,6 +736,42 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
+    public Set<Type> allSubTypes(Type sup) {
+        Set<Type> subTypes = allSubTypes.get().get(sup);
+        return subTypes != null ? subTypes : Set.of();
+    }
+
+    private void registerSubTypes(Type type) {
+        allSubTypes.getAndUpdate(m -> {
+            m = m.put(type, Set.of());
+            for (Type superType : type.allSuperTypes()) {
+                m = m.put(superType, m.get(superType).add(type));
+            }
+            if (type != Type.NODE && type != Type.FUNCTION && type != Type.LITERAL && type != Type.TERMINAL && type.allSuperTypes().contains(Type.NODE)) {
+                m = m.put(Type.LITERAL, m.get(Type.LITERAL).add(type.literal()));
+                m = m.put(Type.FUNCTION, m.get(Type.FUNCTION).add(type.function()));
+            }
+            return m;
+        });
+    }
+
+    public void register(Type type) {
+        functors.get().forEachOrdered(Functor::clearStart);
+        register(type, prePatterns);
+        register(type, postPatterns);
+        register(type, localPrePatterns);
+        register(type, localPostPatterns);
+    }
+
+    private void register(Type type, AtomicReference<Map<String, ParseState>> patterns) {
+        patterns.updateAndGet(p -> {
+            for (Entry<String, ParseState> e : p) {
+                p = p.put(e.getKey(), e.getValue().merge(type));
+            }
+            return p;
+        });
+    }
+
     public Functor register(Functor functor) throws ParseException {
         return register(functor, false);
     }
@@ -757,13 +809,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private PatternResult preParse(Token token, Node left, Parser parser, ParseState state) throws ParseException {
         if (left != null) {
-            for (Type sup : left.type().allSupers()) {
-                ParseState found = state.transitions().get(sup);
-                if (found != null) {
-                    PatternResult result = new PatternResult(parser);
-                    result.add(left);
-                    return found.parse(token, result, Map.of(), true);
-                }
+            ParseState found = state.transitions().get(left.type());
+            if (found != null) {
+                PatternResult result = new PatternResult(parser);
+                result.add(left);
+                return found.parse(token, result, Map.of(), true);
             }
             return null;
         }

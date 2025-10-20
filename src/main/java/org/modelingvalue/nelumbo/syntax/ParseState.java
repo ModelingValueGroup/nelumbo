@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -68,7 +69,11 @@ public class ParseState {
     }
 
     public ParseState(Type nodeType, ParseState next, Integer leftPrecedence, Integer innerPrecedence) {
-        this(Map.of(Entry.of(nodeType, next)), null, leftPrecedence, innerPrecedence, nodeType.group(), Set.of(), Set.of(), Map.of());
+        this(transitions(nodeType, next), null, leftPrecedence, innerPrecedence, nodeType.group(), Set.of(), Set.of(), Map.of());
+    }
+
+    private static Map<Object, ParseState> transitions(Type nodeType, ParseState next) {
+        return Collection.concat(nodeType.allSubTypes(), Collection.of(nodeType, nodeType.literal(), nodeType.function())).asMap(t -> Entry.of(t, next));
     }
 
     private ParseState(Map<Object, ParseState> transitions, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, //
@@ -228,18 +233,12 @@ public class ParseState {
         Node node = result.parser().parseNode(token, innerPrecedence(), group());
         if (node != null) {
             result.add(node);
-            for (Type sup : node.type().allSupers()) {
-                ParseState next = transitions().get(sup);
-                if (next != null) {
-                    if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
-                        node.setBranches(next.branches);
-                        return result;
-                    } else {
-                        break;
-                    }
-                }
+            ParseState next = transitions().get(node.type());
+            if (next != null && next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                node.setBranches(next.branches);
+                return result;
             }
-            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
+            result.addException(new ParseException("Node '" + node + "' of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
         }
         return result;
     }
@@ -253,26 +252,49 @@ public class ParseState {
         return merge(state, false);
     }
 
+    public ParseState merge(Type type) {
+        Map<Object, ParseState> transitions = transitions();
+        ParseState state;
+        for (Entry<Object, ParseState> e : transitions) {
+            state = e.getValue().merge(type);
+            if (state != e.getValue()) {
+                transitions = transitions.put(e.getKey(), state);
+            }
+        }
+        for (Type superType : type.supers()) {
+            state = transitions.get(superType);
+            if (state != null) {
+                state = state.merge(transitions.get(type), true);
+                transitions = transitions.put(type, state);
+                transitions = transitions.put(type.literal(), state);
+                transitions = transitions.put(type.function(), state);
+            }
+        }
+        state = transitions.get(Type.LITERAL);
+        if (state != null) {
+            state = state.merge(transitions.get(type.literal()), true);
+            transitions = transitions.put(type.literal(), state);
+        }
+        state = transitions.get(Type.FUNCTION);
+        if (state != null) {
+            state = state.merge(transitions.get(type.function()), true);
+            transitions = transitions.put(type.function(), state);
+        }
+        return transitions != transitions() ? new ParseState(transitions, //
+                functor(), //
+                leftPrecedence(), //
+                innerPrecedence(), //
+                group(), //
+                startRepetitions(), //
+                endRepetitions(), //
+                branches()) : this;
+    }
+
     public ParseState merge(ParseState state, boolean override) {
         if (state == null) {
             return this;
         }
-        Map<Object, ParseState> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b, override));
-        for (Object key : transitions.toKeys()) {
-            if (key instanceof Type sub) {
-                for (Type sup : sub.allSupers()) {
-                    if (!sup.equals(sub)) {
-                        ParseState superState = transitions.get(sup);
-                        if (superState != null) {
-                            ParseState subState = transitions.get(sub);
-                            ParseState mergedState = subState.merge(superState, true);
-                            transitions = transitions.put(sub, mergedState);
-                        }
-                    }
-                }
-            }
-        }
-        return new ParseState(transitions, //
+        return new ParseState(transitions().addAll(state.transitions(), (a, b) -> a.merge(b, override)), //
                 merge(functor(), state.functor(), override), //
                 merge(leftPrecedence(), state.leftPrecedence(), false), //
                 merge(innerPrecedence(), state.innerPrecedence(), false), //
