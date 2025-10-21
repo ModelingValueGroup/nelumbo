@@ -47,6 +47,10 @@ public final class Rule extends Node implements Evaluatable {
         return new Rule(array);
     }
 
+    public final Functor consequenceFunctor() {
+        return consequence().functor();
+    }
+
     public final Predicate consequence() {
         return (Predicate) get(0);
     }

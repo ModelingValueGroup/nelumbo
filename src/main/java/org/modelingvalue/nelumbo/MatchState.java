@@ -18,42 +18,43 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.QualifiedSet;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public class MatchState {
 
-    public static final MatchState        EMPTY = new MatchState();
+    private static final QualifiedSet<Functor, Rule> EMPTY_RULES = QualifiedSet.of(Rule::consequenceFunctor);
+    public static final MatchState                   EMPTY       = new MatchState();
 
-    private final Map<Object, MatchState> transitions;
-    private final Set<Rule>               rules;
+    private final Map<Object, MatchState>            transitions;
+    private final QualifiedSet<Functor, Rule>        rules;
 
     private MatchState() {
         this.transitions = Map.of();
-        this.rules = Set.of();
+        this.rules = EMPTY_RULES;
     }
 
     public MatchState(Rule rule) {
         this.transitions = Map.of();
-        this.rules = rule != null ? Set.of(rule) : Set.of();
+        this.rules = rule != null ? EMPTY_RULES.add(rule) : EMPTY_RULES;
     }
 
     public MatchState(Functor functor, MatchState to) {
         this.transitions = Map.of(Entry.of(functor, to));
-        this.rules = Set.of();
+        this.rules = EMPTY_RULES;
     }
 
     public MatchState(Type type, MatchState to) {
         this.transitions = Map.of(Entry.of(type, to));
-        this.rules = Set.of();
+        this.rules = EMPTY_RULES;
     }
 
     public MatchState(Class<?> clss, MatchState to) {
         this.transitions = Map.of(Entry.of(clss, to));
-        this.rules = Set.of();
+        this.rules = EMPTY_RULES;
     }
 
-    private MatchState(Map<Object, MatchState> transitions, Set<Rule> rules) {
+    private MatchState(Map<Object, MatchState> transitions, QualifiedSet<Functor, Rule> rules) {
         this.transitions = transitions;
         this.rules = rules;
     }
@@ -62,7 +63,7 @@ public class MatchState {
         return transitions;
     }
 
-    public Set<Rule> rules() {
+    public QualifiedSet<Functor, Rule> rules() {
         return rules;
     }
 
@@ -75,14 +76,27 @@ public class MatchState {
         if (state == null) {
             return this;
         }
-        return new MatchState( //
-                transitions().addAll(state.transitions(), (a, b) -> a.merge(b)), //
-                rules().addAll(state.rules()));
+        Map<Object, MatchState> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b));
+        for (Object key : transitions.toKeys()) {
+            if (key instanceof Type subType) {
+                for (Type superType : subType.allSupers()) {
+                    if (!superType.equals(subType)) {
+                        MatchState superState = transitions.get(superType);
+                        if (superState != null) {
+                            MatchState subState = transitions.get(subType);
+                            MatchState mergedState = subState.merge(superState);
+                            transitions = transitions.put(subType, mergedState);
+                        }
+                    }
+                }
+            }
+        }
+        return new MatchState(transitions, state.rules().putAll(rules()));
     }
 
-    public Set<Rule> match(Object obj) {
+    public QualifiedSet<Functor, Rule> match(Object obj) {
         MatchState state = doMatch(obj);
-        return state != null ? state.rules() : Set.of();
+        return state != null ? state.rules() : EMPTY_RULES;
     }
 
     private MatchState doMatch(Object obj) {

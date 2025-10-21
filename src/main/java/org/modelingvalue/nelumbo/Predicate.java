@@ -22,6 +22,7 @@ import java.util.function.Function;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.QualifiedSet;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -404,7 +405,7 @@ public class Predicate extends Node {
 
     private InferResult inferRules(InferContext context) {
         InferResult result = unknown(), ruleResult;
-        Set<Rule> rules = context.knowledgebase().getRules(this);
+        QualifiedSet<Functor, Rule> rules = context.knowledgebase().getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
             ruleResult = rule.biimply(this, context);
             if (result != null) {

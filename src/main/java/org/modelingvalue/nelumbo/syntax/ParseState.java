@@ -259,14 +259,14 @@ public class ParseState {
         }
         Map<Object, ParseState> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b, override));
         for (Object key : transitions.toKeys()) {
-            if (key instanceof Type sub) {
-                for (Type sup : sub.allSupers()) {
-                    if (!sup.equals(sub)) {
-                        ParseState superState = transitions.get(sup);
+            if (key instanceof Type subType) {
+                for (Type superType : subType.allSupers()) {
+                    if (!superType.equals(subType)) {
+                        ParseState superState = transitions.get(superType);
                         if (superState != null) {
-                            ParseState subState = transitions.get(sub);
+                            ParseState subState = transitions.get(subType);
                             ParseState mergedState = subState.merge(superState, true);
-                            transitions = transitions.put(sub, mergedState);
+                            transitions = transitions.put(subType, mergedState);
                         }
                     }
                 }

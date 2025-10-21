@@ -593,7 +593,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         resetMemoization();
     }
 
-    public Set<Rule> getRules(Predicate predicate) {
+    public QualifiedSet<Functor, Rule> getRules(Predicate predicate) {
         return matchSignatures.get().match(predicate);
     }
 
