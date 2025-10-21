@@ -91,7 +91,7 @@ public class MatchState {
                 }
             }
         }
-        return new MatchState(transitions, state.rules().putAll(rules()));
+        return new MatchState(transitions, rules().addAll(state.rules()));
     }
 
     public QualifiedSet<Functor, Rule> match(Object obj) {
