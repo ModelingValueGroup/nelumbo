@@ -262,10 +262,12 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
 
     private void error(String msg) {
         message.setText(msg);
+        message.repaint();
     }
 
     private void output(String msg) {
         message.setText(msg);
+        message.repaint();
     }
 
     @Override
