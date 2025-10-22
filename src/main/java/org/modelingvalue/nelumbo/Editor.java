@@ -36,7 +36,6 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.TextAction;
 
@@ -149,29 +148,6 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
             public void actionPerformed(ActionEvent e) {
                 if (textArea == getTextComponent(e)) {
                     decrease();
-                }
-            }
-        });
-        textArea.getActionMap().put(DefaultEditorKit.insertBreakAction, new TextAction(DefaultEditorKit.insertBreakAction) {
-            @Serial
-            private static final long serialVersionUID = -6025045977165493128L;
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (textArea == getTextComponent(e)) {
-                    textArea.append("\n");
-                }
-            }
-        });
-        deletePreviousAction = textArea.getActionMap().get(DefaultEditorKit.deletePrevCharAction);
-        textArea.getActionMap().put(DefaultEditorKit.deletePrevCharAction, new TextAction(DefaultEditorKit.deletePrevCharAction) {
-            @Serial
-            private static final long serialVersionUID = 846926090871223832L;
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (textArea == getTextComponent(e)) {
-                    deletePreviousAction.actionPerformed(e);
                 }
             }
         });
