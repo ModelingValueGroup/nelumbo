@@ -60,7 +60,6 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
     private JTextArea     textArea;
     private boolean       quit = false;
     private KnowledgeBase knowledgeBase;
-    private Action        deletePreviousAction;
     private JTextArea     message;
 
     public Editor() {
