@@ -214,7 +214,7 @@ public class Editor extends WindowAdapter implements WindowListener, Runnable, D
     }
 
     @Override
-    public synchronized void run() {
+    public void run() {
         knowledgeBase = KnowledgeBase.CURRENT.get();
         String pre = "";
         for (String text = read(); text != null; text = read()) {
@@ -227,10 +227,12 @@ public class Editor extends WindowAdapter implements WindowListener, Runnable, D
 
     private String read() {
         while (!quit) {
-            try {
-                wait(1_000_000);
-            } catch (InterruptedException ie) {
-                // ignore
+            synchronized (this) {
+                try {
+                    wait(1_000_000);
+                } catch (InterruptedException ie) {
+                    // ignore
+                }
             }
             return textArea.getText();
         }
