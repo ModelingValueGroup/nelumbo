@@ -24,7 +24,6 @@ import java.awt.Insets;
 import java.awt.Taskbar;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -39,13 +38,14 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.TextAction;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
-public class Editor extends WindowAdapter implements WindowListener, ActionListener, Runnable, DocumentListener {
+import com.formdev.flatlaf.FlatLightLaf;
+
+public class Editor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
 
     private final static String                  INCREASE   = "INCREASE";
     private final static String                  DECREASE   = "DECREASE";
@@ -107,8 +107,7 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
         message.setEditable(false);
         message.setFont(font);
         message.setMargin(margin);
-        message.setLineWrap(true);
-        message.setWrapStyleWord(true);
+        message.setLineWrap(false);
         message.setBackground(new Color(0xF5F5F5));
 
         // Create scroll panes with borders
@@ -118,6 +117,8 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
         JScrollPane messageScroll = new JScrollPane(message);
         messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));
 
+        messageScroll.getVerticalScrollBar().setModel(textScroll.getVerticalScrollBar().getModel());
+
         // Create split pane with modern styling
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, textScroll, messageScroll);
         split.setDividerLocation(frameSize.width / 4 * 3);
@@ -125,26 +126,12 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
         split.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         split.setContinuousLayout(true);
 
-        // Create bottom panel with clear button
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
-
-        JButton clear = new JButton("Clear");
-        clear.setFocusPainted(false);
-        clear.setPreferredSize(new Dimension(100, 32));
-
-        JPanel buttonWrapper = new JPanel(new BorderLayout());
-        buttonWrapper.add(clear, BorderLayout.EAST);
-        bottomPanel.add(buttonWrapper, BorderLayout.CENTER);
-
         // Layout
         frame.getContentPane().setLayout(new BorderLayout());
         frame.getContentPane().add(split, BorderLayout.CENTER);
-        frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
         frame.setVisible(true);
 
         frame.addWindowListener(this);
-        clear.addActionListener(this);
         textArea.getDocument().addDocumentListener(this);
 
         // Set focus on text area
@@ -224,18 +211,6 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
     public synchronized void windowClosing(WindowEvent evt) {
         frame.setVisible(false);
         frame.dispose();
-    }
-
-    @Override
-    public synchronized void actionPerformed(ActionEvent evt) {
-        clear();
-    }
-
-    private void clear() {
-        textArea.getHighlighter().removeAllHighlights();
-        knowledgeBase.init();
-        textArea.setText("");
-        message.setText("");
     }
 
     @Override
