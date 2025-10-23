@@ -27,5 +27,6 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
 	<classpathentry kind="src" path="/immutable-collections"/>
+	<classpathentry kind="lib" path="flatlaf-3.6.2-no-natives.jar"/>
 	<classpathentry kind="output" path="bin/main"/>
 </classpath>
