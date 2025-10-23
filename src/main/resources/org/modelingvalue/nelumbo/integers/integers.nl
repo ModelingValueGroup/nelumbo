@@ -15,7 +15,7 @@
                               -  <Integer>  #80,
                     <Integer> *  <Integer>  #50,
                     <Integer> /  <Integer>  #50,
-                    abs(<Integer>)
+                    "|" <Integer> "|"
 
     <Integer> a, b, c
     
@@ -29,6 +29,6 @@
     a/b=c    <==>  mult(c,b,a)
     
     -a=b     <==>  0-a=b
-    abs(a)=b <==>  a>=0 & b=a |
+    |a|=b    <==>  a>=0 & b=a |
                    a<0 & b=-a
     

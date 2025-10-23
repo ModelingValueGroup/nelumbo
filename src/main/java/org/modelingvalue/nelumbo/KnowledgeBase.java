@@ -304,7 +304,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     pttrn = pttrn.add(e);
                                 }
                             }
-                            return roots;
+                            return roots.setAstElements(roots.astElements().add(elements.last()));
                         }));
 
                 register(Functor.of(s(t(TokenType.TYPE), t("::"), n(Type.TYPE(), null), r(s(t(","), n(Type.TYPE(), null))), o(s(t("#"), t(TokenType.NAME))), t(NEWLINE)), //
