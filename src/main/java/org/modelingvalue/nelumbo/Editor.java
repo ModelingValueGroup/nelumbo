@@ -39,6 +39,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.TextAction;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -70,14 +71,17 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
 
     private void initWindow() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-            JOptionPane.showMessageDialog(null, "Unable to set system look and feel", "Warning", JOptionPane.WARNING_MESSAGE);
+            FlatLightLaf.setup();
+            UIManager.put("Button.arc", 8);
+            UIManager.put("Component.arc", 8);
+            UIManager.put("TextComponent.arc", 8);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Unable to set FlatLaf look and feel", "Warning", JOptionPane.WARNING_MESSAGE);
         }
         URL resource = getClass().getResource("nelumbo.png");
         assert resource != null;
         ImageIcon icon = new ImageIcon(resource);
-        frame = new JFrame("Nelumbo");
+        frame = new JFrame("Nelumbo Editor");
         frame.setIconImage(icon.getImage());
         if (Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE)) {
             Taskbar.getTaskbar().setIconImage(icon.getImage());
@@ -88,33 +92,63 @@ public class Editor extends WindowAdapter implements WindowListener, ActionListe
         int y = frameSize.height / 2;
         frame.setBounds(x, y, frameSize.width, frameSize.height);
 
+        // Create text area with modern styling
         textArea = new JTextArea();
-        Font font = new Font(Font.MONOSPACED, Font.PLAIN, textArea.getFont().getSize() + 2);
+        Font font = new Font(Font.MONOSPACED, Font.PLAIN, 14);
         textArea.setFont(font);
         textArea.setEditable(true);
-        Insets margin = (Insets) textArea.getMargin().clone();
-        margin.set(margin.top, margin.left + 4, margin.bottom, margin.right);
+        textArea.setLineWrap(false);
+        textArea.setTabSize(4);
+        Insets margin = new Insets(15, 15, 15, 15);
         textArea.setMargin(margin);
 
-        JButton clear = new JButton("clear");
-
+        // Create message area with modern styling
         message = new JTextArea("");
         message.setEditable(false);
         message.setFont(font);
         message.setMargin(margin);
+        message.setLineWrap(true);
+        message.setWrapStyleWord(true);
+        message.setBackground(new Color(0xF5F5F5));
 
-        frame.getContentPane().setLayout(new BorderLayout());
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
-                new JScrollPane(textArea), //
-                new JScrollPane(message));
+        // Create scroll panes with borders
+        JScrollPane textScroll = new JScrollPane(textArea);
+        textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
+
+        JScrollPane messageScroll = new JScrollPane(message);
+        messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));
+
+        // Create split pane with modern styling
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, textScroll, messageScroll);
         split.setDividerLocation(frameSize.width / 4 * 3);
+        split.setDividerSize(8);
+        split.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        split.setContinuousLayout(true);
+
+        // Create bottom panel with clear button
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
+
+        JButton clear = new JButton("Clear");
+        clear.setFocusPainted(false);
+        clear.setPreferredSize(new Dimension(100, 32));
+
+        JPanel buttonWrapper = new JPanel(new BorderLayout());
+        buttonWrapper.add(clear, BorderLayout.EAST);
+        bottomPanel.add(buttonWrapper, BorderLayout.CENTER);
+
+        // Layout
+        frame.getContentPane().setLayout(new BorderLayout());
         frame.getContentPane().add(split, BorderLayout.CENTER);
-        frame.getContentPane().add(clear, BorderLayout.SOUTH);
+        frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
         frame.setVisible(true);
 
         frame.addWindowListener(this);
         clear.addActionListener(this);
         textArea.getDocument().addDocumentListener(this);
+
+        // Set focus on text area
+        textArea.requestFocusInWindow();
     }
 
     private void initActions() {

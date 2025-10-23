@@ -32,6 +32,7 @@ mvgcorrector {
 
 dependencies {
     implementation("org.modelingvalue:immutable-collections:4.1.0-BRANCHED")
+    implementation("com.formdev:flatlaf:3.5.2")
 }
 tasks {
     shadowJar {
