@@ -164,8 +164,8 @@
 
   <Integer> n, f
 
-  fib(n)=f  <==> n<=1 & f=n |
-                 n>1  & f=fib(n-1)+fib(n-2)
+  fib(n)=f  <==> f=n                  if n<=1,
+                 f=fib(n-1)+fib(n-2)  if n>1  
     
   fib(0)=f       ? [fib(0)=0][..]
   fib(2)=f       ? [fib(2)=1][..]
@@ -235,13 +235,12 @@
 
 ## Plans
 
-* <Predicate> fib(n)=f <==> f=fib(n-1)+fib(n-2) WHEN n>1
 * Exists and ForAll E(....) A(...)
 * Namespaces
 * Generics (type arguments)
 * LSP (also on WEB)
 * Reactive update execution semantics
-* Language pattern transformations (also for predefined patterns)
+* Language pattern transformations
 * Deprecation and migration support
 * Abstract vs Concrete language mappings (like Xtext?)
 * ....

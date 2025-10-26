@@ -90,8 +90,8 @@ f(m(f(Amalia)))=a   ? [f(m(f(Amalia)))=Bernhard][..]
 
 <Integer> n, f
 
-fib(n)=f  <==> n<=1 & f=n |
-               n>1  & f=fib(n-1)+fib(n-2)
+fib(n)=f  <==> f=n                  if n<=1,
+               f=fib(n-1)+fib(n-2)  if n>1  
 
 fib(0)=f       ? [fib(0)=0][..]
 fib(1)=f       ? [fib(1)=1][..]
