@@ -454,7 +454,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                     when = when.setVariables(litVars);
                 }
             }
-            Rule rule = new Rule(functor, List.of(cond), cons, When.of(when, cond));
+            Rule rule = new Rule(functor, //
+                    when != null ? List.of(cond, when) : List.of(cond), //
+                    cons, //
+                    when != null ? When.of(when, cond) : cond);
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots.setAstElements(roots.astElements().add(elements.last()));
