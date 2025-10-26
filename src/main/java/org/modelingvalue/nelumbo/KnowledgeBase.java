@@ -23,6 +23,7 @@ import static org.modelingvalue.nelumbo.syntax.TokenType.NEWLINE;
 import java.io.PrintStream;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
+import java.util.Optional;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -65,7 +66,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final Pattern                                                        SEQ_NO_COMMA         = s(ALT_NO_COMMA, r(ALT_NO_COMMA),                                                                          //
             r(s(t("#"), t(TokenType.NUMBER))),                                                                                                                                                                           //
             o(s(t("@"), t(TokenType.NAME), r(s(t("."), t(TokenType.NAME))))));
-    private static final Pattern                                                        CONDITION            = n(Type.PREDICATE, 0);
+    private static final Pattern                                                        CONDITION            = s(n(Type.PREDICATE, 0), o(s(t("if"), n(Type.PREDICATE, 0))));
     //
     private static final Pattern                                                        ALTERNATIVE          = a(t(".."), n(Type.PREDICATE, null));
     private static final Pattern                                                        PREDICTION           = o(s(ALTERNATIVE, r(s(t(","), ALTERNATIVE))));
@@ -431,20 +432,29 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Map<Variable, Object> nodeVars = node == cons ? consVars : node.variables();
         Functor nodeFunctor = node.functor();
         Functor literalFunctor = literalFunctors.get().get(nodeFunctor);
-        List<Predicate> nextList = (List<Predicate>) args[2];
-        for (Predicate cond : nextList.prepend((Predicate) args[1])) {
+        List<List<Object>> nextList = (List<List<Object>>) args[3];
+        for (List<Object> condIf : nextList.prepend(List.of((Predicate) args[1], (Optional<Object>) args[2]))) {
+            Predicate cond = (Predicate) condIf.get(0);
+            Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
             Map<Variable, Object> condVars = cond.variables();
-            Map<Variable, Object> localVars = condVars.removeAllKey(consVars);
+            Map<Variable, Object> whenVars = when != null ? when.variables() : null;
+            Map<Variable, Object> localVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
             if (literalFunctor != null) {
                 cons = cons.replace(n -> nodeFunctor.equals(n.functor()) ? n.setFunctor(literalFunctor) : n);
                 Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(localVars));
                 cons = cons.setVariables(litVars);
                 cond = cond.setVariables(litVars);
+                if (when != null) {
+                    when = when.setVariables(litVars);
+                }
             } else if (!localVars.isEmpty()) {
                 Map<Variable, Object> litVars = Predicate.literals(localVars);
                 cond = cond.setVariables(litVars);
+                if (when != null) {
+                    when = when.setVariables(litVars);
+                }
             }
-            Rule rule = new Rule(functor, List.of(cond), cons, cond);
+            Rule rule = new Rule(functor, List.of(cond), cons, When.of(when, cond));
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots.setAstElements(roots.astElements().add(elements.last()));
@@ -593,7 +603,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         resetMemoization();
     }
 
-    public QualifiedSet<Functor, Rule> getRules(Predicate predicate) {
+    public Set<Rule> getRules(Predicate predicate) {
         return matchSignatures.get().match(predicate);
     }
 

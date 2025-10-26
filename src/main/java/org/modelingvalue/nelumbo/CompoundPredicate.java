@@ -32,6 +32,10 @@ public abstract class CompoundPredicate extends Predicate {
         super(functor, elements, predicates);
     }
 
+    protected CompoundPredicate(Type type, List<AstElement> elements, Object... predicates) {
+        super(type, elements, predicates);
+    }
+
     protected CompoundPredicate(Object[] args, CompoundPredicate declaration) {
         super(args, declaration);
     }

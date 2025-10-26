@@ -59,13 +59,18 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected boolean isTrue(InferResult predResult) {
+    protected boolean isTrue(InferResult predResult, int i) {
         return false;
     }
 
     @Override
-    protected boolean isFalse(InferResult predResult) {
+    protected boolean isFalse(InferResult predResult, int i) {
         return predResult.isFalseCC();
+    }
+
+    @Override
+    protected boolean isUnknown(InferResult predResult, int i) {
+        return false;
     }
 
     @Override

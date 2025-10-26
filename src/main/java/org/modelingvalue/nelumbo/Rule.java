@@ -65,8 +65,10 @@ public final class Rule extends Node implements Evaluatable {
             return null;
         }
         binding = variables().putAll(binding);
-        Predicate consequence = consequence().setBinding(binding);
-        Predicate condition = condition().setBinding(binding);
+        Predicate consequence = consequence();
+        Predicate condition = condition();
+        consequence = consequence.setBinding(binding);
+        condition = condition.setBinding(binding);
         if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + consequence + " <==> " + condition);
         }

@@ -159,18 +159,6 @@ public class Node extends StructImpl implements AstElement {
         }
     }
 
-    public boolean contains(java.util.function.Predicate<Node> pred) {
-        for (int i = 0; i < length(); i++) {
-            Object val = get(i);
-            if (val instanceof Node node) {
-                if (pred.test(node) || node.contains(pred)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public Map<Variable, Object> variables() {
         if (variables == null) {
             Map<Variable, Object> vars = Map.of();

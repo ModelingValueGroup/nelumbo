@@ -19,48 +19,41 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.patterns.Functor;
 
-public final class Or extends BinaryPredicate {
+public final class When extends BinaryPredicate {
     @Serial
-    private static final long serialVersionUID = -1732549494864415986L;
+    private static final long serialVersionUID = 9105566742523301113L;
 
-    private static Functor    FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(Or.class, f -> FUNCTOR = f);
+    private When(Node when, Node predicate) {
+        super(Type.PREDICATE, List.of(), when, predicate);
     }
 
-    public Or(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
-    }
-
-    private Or(Object[] args, Or declaration) {
+    private When(Object[] args, When declaration) {
         super(args, declaration);
     }
 
-    public static Or of(Node predicate1, Node predicate2) {
-        return new Or(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
+    public static When of(Node when, Node predicate) {
+        return new When(when, predicate);
     }
 
     @Override
-    public Or declaration() {
-        return (Or) super.declaration();
+    public When declaration() {
+        return (When) super.declaration();
     }
 
     @Override
-    protected Or struct(Object[] array, Predicate declaration) {
-        return new Or(array, (Or) declaration);
+    protected When struct(Object[] array, Predicate declaration) {
+        return new When(array, (When) declaration);
     }
 
     @Override
-    public Or set(int i, Object... a) {
-        return (Or) super.set(i, a);
+    public When set(int i, Object... a) {
+        return (When) super.set(i, a);
     }
 
     @Override
     protected boolean isTrue(InferResult predResult, int i) {
-        return predResult.isTrueCC();
+        return false;
     }
 
     @Override
@@ -70,32 +63,41 @@ public final class Or extends BinaryPredicate {
 
     @Override
     protected boolean isUnknown(InferResult predResult, int i) {
-        return false;
+        return i == 0 && predResult.isFalseCC();
     }
 
     @Override
     protected boolean isTrue(InferResult[] predResult) {
-        return false;
+        return predResult[1].isTrueCC();
     }
 
     @Override
     protected boolean isFalse(InferResult[] predResult) {
-        return predResult[0].isFalseCC() && predResult[1].isFalseCC();
-    }
-
-    @Override
-    protected boolean isLeft(InferResult[] predResult) {
         return predResult[1].isFalseCC();
     }
 
     @Override
+    protected boolean isLeft(InferResult[] predResult) {
+        return false;
+    }
+
+    @Override
     protected boolean isRight(InferResult[] predResult) {
-        return predResult[0].isFalseCC();
+        return predResult[0].isTrueCC();
     }
 
     @Override
     protected InferResult add(InferResult[] predResult) {
-        return predResult[0].addOr(predResult[1]);
+        return predResult[0].addAnd(predResult[1]);
     }
 
+    @Override
+    protected void order(Predicate[] predicate) {
+        // Do not change order
+    }
+
+    @Override
+    public String toString() {
+        return predicate2() + " if " + predicate1();
+    }
 }

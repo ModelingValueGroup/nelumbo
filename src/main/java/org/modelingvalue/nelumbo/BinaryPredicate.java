@@ -30,6 +30,10 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         super(functor, elements, predicate1, predicate2);
     }
 
+    protected BinaryPredicate(Type type, List<AstElement> elements, Object predicate1, Object predicate2) {
+        super(type, elements, predicate1, predicate2);
+    }
+
     protected BinaryPredicate(Object[] args, BinaryPredicate declaration) {
         super(args, declaration);
     }
@@ -64,10 +68,12 @@ public abstract class BinaryPredicate extends CompoundPredicate {
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
             } else if (context.reduce()) {
-                if (isTrue(predResult[i])) {
+                if (isTrue(predResult[i], i)) {
                     return Boolean.TRUE.result();
-                } else if (isFalse(predResult[i])) {
+                } else if (isFalse(predResult[i], i)) {
                     return Boolean.FALSE.result();
+                } else if (isUnknown(predResult[i], i)) {
+                    return Boolean.UNKNOWN.result();
                 }
             }
         }
@@ -94,9 +100,11 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         }
     }
 
-    protected abstract boolean isTrue(InferResult predResult);
+    protected abstract boolean isTrue(InferResult predResult, int i);
 
-    protected abstract boolean isFalse(InferResult predResult);
+    protected abstract boolean isFalse(InferResult predResult, int i);
+
+    protected abstract boolean isUnknown(InferResult predResult, int i);
 
     protected abstract boolean isTrue(InferResult[] predResult);
 
@@ -108,7 +116,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
 
     protected abstract InferResult add(InferResult[] predResult);
 
-    private static void order(Predicate[] predicate) {
+    protected void order(Predicate[] predicate) {
         if (predicate[0] instanceof Boolean && !(predicate[1] instanceof Boolean)) {
             return;
         } else if (predicate[1] instanceof Boolean && !(predicate[0] instanceof Boolean)) {

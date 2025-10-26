@@ -18,16 +18,16 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.QualifiedSet;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public class MatchState {
 
-    private static final QualifiedSet<Functor, Rule> EMPTY_RULES = QualifiedSet.of(Rule::consequenceFunctor);
-    public static final MatchState                   EMPTY       = new MatchState();
+    private static final Set<Rule>        EMPTY_RULES = Set.of();
+    public static final MatchState        EMPTY       = new MatchState();
 
-    private final Map<Object, MatchState>            transitions;
-    private final QualifiedSet<Functor, Rule>        rules;
+    private final Map<Object, MatchState> transitions;
+    private final Set<Rule>               rules;
 
     private MatchState() {
         this.transitions = Map.of();
@@ -54,7 +54,7 @@ public class MatchState {
         this.rules = EMPTY_RULES;
     }
 
-    private MatchState(Map<Object, MatchState> transitions, QualifiedSet<Functor, Rule> rules) {
+    private MatchState(Map<Object, MatchState> transitions, Set<Rule> rules) {
         this.transitions = transitions;
         this.rules = rules;
     }
@@ -63,7 +63,7 @@ public class MatchState {
         return transitions;
     }
 
-    public QualifiedSet<Functor, Rule> rules() {
+    public Set<Rule> rules() {
         return rules;
     }
 
@@ -94,7 +94,7 @@ public class MatchState {
         return new MatchState(transitions, rules().addAll(state.rules()));
     }
 
-    public QualifiedSet<Functor, Rule> match(Object obj) {
+    public Set<Rule> match(Object obj) {
         MatchState state = doMatch(obj);
         return state != null ? state.rules() : EMPTY_RULES;
     }
