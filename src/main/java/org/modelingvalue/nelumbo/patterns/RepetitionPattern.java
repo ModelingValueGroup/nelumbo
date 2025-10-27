@@ -23,6 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class RepetitionPattern extends Pattern {
     @Serial
@@ -103,17 +104,17 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+    protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (args.get(ai) instanceof List<?> list) {
             Pattern separator = separator();
             StringBuffer inner = new StringBuffer();
             for (Object o : list) {
                 if (separator != null && !inner.isEmpty()) {
-                    if (separator.string(List.of(o), 0, inner, false) < 0) {
+                    if (separator.string(List.of(o), 0, inner, previous, false) < 0) {
                         return -1;
                     }
                 }
-                if (repeated().string(List.of(o), 0, inner, false) < 0) {
+                if (repeated().string(List.of(o), 0, inner, previous, false) < 0) {
                     return -1;
                 }
             }

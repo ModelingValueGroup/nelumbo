@@ -124,7 +124,7 @@ public abstract class Pattern extends Node {
 
     protected abstract List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt);
 
-    protected abstract int string(List<Object> args, int ai, StringBuffer sb, boolean alt);
+    protected abstract int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt);
 
     protected static final class ElementIterator {
 

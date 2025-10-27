@@ -70,4 +70,13 @@ public enum TokenType {
     public boolean more() {
         return more;
     }
+
+    public static TokenType of(String text) {
+        for (TokenType tt : TokenType.values()) {
+            if (tt.pattern().matcher(text).matches()) {
+                return tt;
+            }
+        }
+        return null;
+    }
 }

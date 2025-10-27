@@ -24,6 +24,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class OptionalPattern extends Pattern {
     @Serial
@@ -84,11 +85,11 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+    protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (args.get(ai) instanceof Optional<?> opt) {
             StringBuffer inner = new StringBuffer();
             if (opt.isPresent()) {
-                int ii = optional().string(List.of(opt.get()), 0, inner, false);
+                int ii = optional().string(List.of(opt.get()), 0, inner, previous, false);
                 if (ii < 0) {
                     return -1;
                 }

@@ -23,6 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class AlternationPattern extends Pattern {
     @Serial
@@ -99,11 +100,11 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+    protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         Object o = args.get(ai);
         StringBuffer inner = new StringBuffer();
         for (Pattern option : options()) {
-            int ii = option.string(List.of(o), 0, inner, true);
+            int ii = option.string(List.of(o), 0, inner, previous, true);
             if (ii < 0) {
                 inner = new StringBuffer();
             } else {

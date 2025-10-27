@@ -23,6 +23,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class TokenTextPattern extends Pattern {
     @Serial
@@ -75,16 +76,25 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+    protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (alt) {
             if (args.get(ai) instanceof String text && text.equals(tokenText())) {
-                sb.append(text);
+                add(sb, previous, text);
                 return ai + 1;
             }
             return -1;
         }
-        sb.append(tokenText());
+        add(sb, previous, tokenText());
         return ai;
+    }
+
+    private void add(StringBuffer sb, TokenType[] previous, String text) {
+        TokenType type = TokenType.of(text);
+        if (previous[0] == type) {
+            sb.append(" ");
+        }
+        sb.append(text);
+        previous[0] = type;
     }
 
 }

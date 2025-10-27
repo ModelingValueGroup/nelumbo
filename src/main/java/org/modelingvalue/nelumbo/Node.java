@@ -28,6 +28,7 @@ import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 @SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
@@ -197,9 +198,13 @@ public class Node extends StructImpl implements AstElement {
 
     @Override
     public String toString() {
+        return toString(new TokenType[1]);
+    }
+
+    public String toString(TokenType[] previous) {
         Functor functor = functor();
         if (functor != null) {
-            String string = functor.string(args());
+            String string = functor.string(args(), previous);
             if (string != null) {
                 return string;
             }

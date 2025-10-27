@@ -23,6 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class SequencePattern extends Pattern {
     @Serial
@@ -116,7 +117,7 @@ public class SequencePattern extends Pattern {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+    protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (argTypes(List.of()).size() == 1) {
             args = List.of(List.of(args.get(ai)));
         }
@@ -124,7 +125,7 @@ public class SequencePattern extends Pattern {
             StringBuffer inner = new StringBuffer();
             int ii = 0;
             for (Pattern element : elements()) {
-                ii = element.string(list, ii, inner, false);
+                ii = element.string(list, ii, inner, previous, false);
                 if (ii < 0) {
                     return -1;
                 }

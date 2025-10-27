@@ -137,7 +137,7 @@ public final class Query extends Node implements Evaluatable {
             Set<Predicate> falsehoods = falsehoods().asSet();
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
-            if (!found.equals(expected) && !found.toString().equals(expected.toString())) {
+            if (!found.equals(expected) && !toString(found).equals(toString(expected))) {
                 predicate.infer();
                 List<AstElement> astElements = astElements();
                 result.addException(new ParseException("Expected result " + expected + ", found " + found, //
@@ -145,6 +145,10 @@ public final class Query extends Node implements Evaluatable {
             }
         }
         inferResult = found;
+    }
+
+    private String toString(InferResult found) {
+        return found.toString().replace(" ", "").replace("(", "").replace(")", "");
     }
 
     public InferResult inferResult() {

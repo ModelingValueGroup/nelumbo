@@ -30,6 +30,7 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.ThrowingTriFunction;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Functor extends Node {
     @Serial
@@ -168,13 +169,13 @@ public class Functor extends Node {
         return pattern instanceof SequencePattern && args.get(0) instanceof List seq ? seq.toArray() : args.toArray();
     }
 
-    public String string(List<Object> args) {
+    public String string(List<Object> args, TokenType[] previous) {
         Pattern pattern = pattern();
         if (pattern instanceof SequencePattern && argTypes().size() > 1) {
             args = List.of(args);
         }
         StringBuffer sb = new StringBuffer();
-        if (pattern.string(args, 0, sb, false) < 0) {
+        if (pattern.string(args, 0, sb, previous, false) < 0) {
             return null;
         }
         //        Constructor<? extends Node> cons = constructor();

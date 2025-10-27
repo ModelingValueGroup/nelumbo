@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NodeTypePattern extends Pattern {
     @Serial
@@ -95,9 +96,9 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
+    protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (args.get(ai) instanceof Node node && nodeType().isAssignableFrom(node.type())) {
-            sb.append(node.toString());
+            sb.append(node.toString(previous));
             return ai + 1;
         }
         return -1;
