@@ -83,7 +83,7 @@
     
   -a=b     <=>  0-a=b
   abs(a)=b <=>  a>=0 & b=a |
-                 a<0 & b=-a
+                a<0 & b=-a
                  
   d(a)=c   <=>  c(a)=c |
                 d(a)=b & c(b)=c
@@ -191,8 +191,8 @@
   <Integer> ::= <Integer> -  <Integer>  #40,
                 <Integer> +  <Integer>  #40
 
-  a+b=c   <=>  add(a,b,c)
-  a-b=c   <=>  add(c,b,a)
+  a+b=c  <=>  add(a,b,c)
+  a-b=c  <=>  add(c,b,a)
 ```
 
 ---
