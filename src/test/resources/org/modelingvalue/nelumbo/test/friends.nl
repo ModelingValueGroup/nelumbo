@@ -5,9 +5,9 @@
 
 <Person> a, b, c
 
-friend(a)=c <==> friends(a,c) |
-                 friends(c,a) |
-                 friend(friend(a))=c
+friend(a)=c <=> friends(a,c) |
+                friends(c,a) |
+                friend(friend(a))=c
 
 <Person>   ::= Piet, Jan, Klaas, Wim, Tom
 

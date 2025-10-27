@@ -70,7 +70,7 @@ public final class Rule extends Node implements Evaluatable {
         consequence = consequence.setBinding(binding);
         condition = condition.setBinding(binding);
         if (context.trace() && !isSyntatic()) {
-            System.out.println(context.prefix() + consequence + " <==> " + condition);
+            System.out.println(context.prefix() + consequence + " <=> " + condition);
         }
         InferResult condResult = condition.resolve(context);
         InferResult proResult;

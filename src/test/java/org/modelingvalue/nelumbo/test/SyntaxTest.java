@@ -63,7 +63,7 @@ public class SyntaxTest extends NelumboTestBase {
                     s=t+n ?
                     s=t+n ? [..][..]
 
-                    s.size=i   <==> i=10
+                    s.size=i   <=> i=10
 
                     """;
             try {

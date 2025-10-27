@@ -53,14 +53,14 @@ occur.
 <Male>   y
 <Female> x
            
-c(a)=b  <==>  pc(a,b)
-p(a)=b  <==>  pc(b,a)
-m(a)=b  <==>  c(x)=a & b=x
-f(a)=b  <==>  c(y)=a & b=y
+c(a)=b  <=>  pc(a,b)
+p(a)=b  <=>  pc(b,a)
+m(a)=b  <=>  c(x)=a & b=x
+f(a)=b  <=>  c(y)=a & b=y
 
-a(a)=b  <==>  d(b)=a
-d(a)=c  <==>  c(a)=c |
-              d(a)=b & c(b)=c
+a(a)=b  <=>  d(b)=a
+d(a)=c  <=>  c(a)=c |
+             d(a)=b & c(b)=c
 
 <Male>   ::= Hendrik, Bernhard, Claus, Willem
 <Female> ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
@@ -75,7 +75,6 @@ pc(Willem, Amalia)
 pc(Maxima, Amalia)
 
 a(Amalia)=a         ? [a(Amalia)=Beatrix,a(Amalia)=Maxima,a(Amalia)=Hendrik,a(Amalia)=Bernhard,a(Amalia)=Juliana,a(Amalia)=Claus,a(Amalia)=Willem,a(Amalia)=Wilhelmina][..]
-
 m(Amalia)=Maxima    ? [m(Amalia)=Maxima][]
 m(Amalia)=Willem    ? [][m(Amalia)=Willem]
 m(Amalia)=a         ? [m(Amalia)=Maxima][..]
@@ -90,8 +89,8 @@ f(m(f(Amalia)))=a   ? [f(m(f(Amalia)))=Bernhard][..]
 
 <Integer> n, f
 
-fib(n)=f  <==> f=n                  if n<=1,
-               f=fib(n-1)+fib(n-2)  if n>1  
+fib(n)=f <=> f=n                 if n<=1,
+             f=fib(n-1)+fib(n-2) if n>1  
 
 fib(0)=f       ? [fib(0)=0][..]
 fib(1)=f       ? [fib(1)=1][..]

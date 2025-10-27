@@ -11,4 +11,4 @@
 
     <String>    a, b, c
 
-    a+b=c <==>  string_concat(a,b,c)
+    a+b=c       <=> string_concat(a,b,c)

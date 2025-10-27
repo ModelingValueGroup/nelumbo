@@ -342,7 +342,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots.setAstElements(roots.astElements().add(elements.last()));
                         }));
 
-                ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<==>"), CONDITION, r(s(t(","), CONDITION)), t(TokenType.NEWLINE)), //
+                ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=>"), CONDITION, r(s(t(","), CONDITION)), t(TokenType.NEWLINE)), //
                         Type.ROOT.list(), false, (elements, args, functor) -> CURRENT.get().createRules(functor, elements, args));
                 register(ruleFunctor);
 

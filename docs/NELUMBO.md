@@ -76,17 +76,17 @@
 ### Rules
 
 ```text
-  a<=b     <==>  a<b | a=b
+  a<=b     <=>  a<b | a=b
 
-  a+b=c    <==>  add(a,b,c)
-  a-b=c    <==>  add(c,b,a)
+  a+b=c    <=>  add(a,b,c)
+  a-b=c    <=>  add(c,b,a)
     
-  -a=b     <==>  0-a=b
-  abs(a)=b <==>  a>=0 & b=a |
+  -a=b     <=>  0-a=b
+  abs(a)=b <=>  a>=0 & b=a |
                  a<0 & b=-a
                  
-  d(a)=c   <==>  c(a)=c |
-                 d(a)=b & c(b)=c
+  d(a)=c   <=>  c(a)=c |
+                d(a)=b & c(b)=c
 ```
 
 ---
@@ -110,7 +110,7 @@
 
 ```text
   a+11=21
-    a+11=21 <==> add(a,11,21)
+    a+11=21 <=> add(a,11,21)
       add(l1,11,21) [add(10,11,21)][..]
     l1+11=21 [10+11=21][..]
   a+11=21 [10+11=21][..]
@@ -164,14 +164,14 @@
 
   <Integer> n, f
 
-  fib(n)=f  <==> f=n                  if n<=1,
-                 f=fib(n-1)+fib(n-2)  if n>1  
+  fib(n)=f <=> f=n                 if n<=1,
+               f=fib(n-1)+fib(n-2) if n>1  
     
-  fib(0)=f       ? [fib(0)=0][..]
-  fib(2)=f       ? [fib(2)=1][..]
-  fib(10)=f      ? [fib(10)=55][..]
-  fib(100)=f     ? [fib(100)=36#22r8fozas3n8w3][..]
-  fib(1000)=f    ? [fib(1000)=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf][..]
+  fib(0)=f    ? [fib(0)=0][..]
+  fib(2)=f    ? [fib(2)=1][..]
+  fib(10)=f   ? [fib(10)=55][..]
+  fib(100)=f  ? [fib(100)=36#22r8fozas3n8w3][..]
+  fib(1000)=f ? [fib(1000)=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf][..]
 ```
 
 ---
@@ -188,11 +188,11 @@
 ### Functions
 
 ```text
-  <Integer>  ::= <Integer> -  <Integer>  #40,
-                 <Integer> +  <Integer>  #40
+  <Integer> ::= <Integer> -  <Integer>  #40,
+                <Integer> +  <Integer>  #40
 
-  a+b=c    <==>  add(a,b,c)
-  a-b=c    <==>  add(c,b,a)
+  a+b=c   <=>  add(a,b,c)
+  a-b=c   <=>  add(c,b,a)
 ```
 
 ---
@@ -214,7 +214,7 @@
 ```text
   <Predicate> ::= <Integer> <= <Integer>  #30
                     
-  a<=b     <==>  a<b | a=b
+  a<=b    <=>  a<b | a=b
 ```
 
 ---
@@ -223,7 +223,7 @@
 |----------|---------|
 | `::`     | Type    |
 | `::=`    | Pattern |
-| `<==>`   | Rule    |
+| `<=>`    | Rule    |
 
 ---
 

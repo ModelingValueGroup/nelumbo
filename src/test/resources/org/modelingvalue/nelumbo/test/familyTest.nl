@@ -16,14 +16,14 @@
     <Male>   y
     <Female> x
                
-    c(a)=b  <==>  pc(a,b)
-    p(a)=b  <==>  pc(b,a)
-    m(a)=b  <==>  c(x)=a & b=x
-    f(a)=b  <==>  c(y)=a & b=y
+    c(a)=b  <=>  pc(a,b)
+    p(a)=b  <=>  pc(b,a)
+    m(a)=b  <=>  c(x)=a & b=x
+    f(a)=b  <=>  c(y)=a & b=y
     
-    a(a)=b  <==>  d(b)=a
-    d(a)=c  <==>  c(a)=c |
-                  d(a)=b & c(b)=c
+    a(a)=b  <=>  d(b)=a
+    d(a)=c  <=>  c(a)=c |
+                 d(a)=b & c(b)=c
 
     <Male>   ::= Hendrik, Bernhard, Claus, Willem
     <Female> ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
