@@ -129,9 +129,6 @@ public class ParseState {
                 if (pre && group() != null) {
                     result.endPreParse(this, token);
                     return result;
-                } else if (group() != null && matchOuter(token, result, outerRepetitions, pre)) {
-                    result.endRepetition(endRepetitions(), token, 1);
-                    return result;
                 } else if (node(token, result, innerRepetitions, pre) == null) {
                     break;
                 }
@@ -155,16 +152,6 @@ public class ParseState {
         }
         result.endPostParse(functor(), token);
         return result;
-    }
-
-    private boolean matchOuter(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions, boolean pre) throws ParseException {
-        for (RepetitionPattern end : endRepetitions()) {
-            ParseState state = outerRepetitions.get(end);
-            if (state != null && state.token(token, result, null, pre) != null) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private String expectedTokens() {
