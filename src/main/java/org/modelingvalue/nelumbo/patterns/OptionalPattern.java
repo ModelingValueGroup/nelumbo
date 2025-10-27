@@ -53,7 +53,7 @@ public class OptionalPattern extends Pattern {
 
     @Override
     public String toString() {
-        return "<[>" + optional() + "<]>";
+        return "<(>" + optional() + "<)?>";
     }
 
     @Override

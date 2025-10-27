@@ -53,13 +53,15 @@
 ### Patterns
 
 ```text
-  <Integer> ::= <NUMBER>                      @nelumbo.integers.Integer
+  <Integer> ::= <NUMBER>                       @nelumbo.integers.Integer
                     
   <Integer> ::= <Integer> - <Integer>  #40,
                 <Integer> + <Integer>  #40,
                           - <Integer>  #80
                               
-  <Set>     ::= { <[> <Node> <{> , <Node> <}> <]> }    @nelumbo.sets.Set
+  <Set>     ::= { <(> <Node> <,> , <)*> }      @nelumbo.sets.Set
+  <Attr>    ::= <(> local <)?> <Type> <NAME> ;
+  <Literal> ::= <(> <STRING> <|> <NUMBER> <)>
 ```
 
 ---

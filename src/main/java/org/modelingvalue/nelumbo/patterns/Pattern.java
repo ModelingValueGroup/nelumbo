@@ -44,8 +44,8 @@ public abstract class Pattern extends Node {
         return o(List.of(), optional);
     }
 
-    public static Pattern r(Pattern repeated) {
-        return r(List.of(), repeated);
+    public static Pattern r(Pattern repeated, Boolean mandatory, Pattern separator) {
+        return r(List.of(), repeated, mandatory, separator);
     }
 
     public static Pattern s(Pattern... elements) {
@@ -72,8 +72,8 @@ public abstract class Pattern extends Node {
         return new OptionalPattern(Type.PATTERN, ast, optional);
     }
 
-    public static Pattern r(List<AstElement> ast, Pattern repeated) {
-        return new RepetitionPattern(Type.PATTERN, ast, repeated);
+    public static Pattern r(List<AstElement> ast, Pattern repeated, Boolean mandatory, Pattern separator) {
+        return new RepetitionPattern(Type.PATTERN, ast, repeated, mandatory, separator);
     }
 
     public static Pattern s(List<AstElement> ast, Pattern... elements) {

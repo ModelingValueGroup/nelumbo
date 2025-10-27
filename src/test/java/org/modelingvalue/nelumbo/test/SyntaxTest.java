@@ -42,15 +42,22 @@ public class SyntaxTest extends NelumboTestBase {
                     <Set>      ::  <Node>
                     <Int>      ::  <Node>
                     <List>     ::  <Node>
+                    <Option>   ::  <Node>
+                    <Altern>   ::  <Node>
+                    <Test>     ::  <Node>                      #TEST
 
                     <Int>      ::= <Set>.size,
                                    <NUMBER>
 
-                    <Set>      ::= <Set> + <Node>                        #40,
-                                   <Set> - <Node>                        #40,
-                                   { <[> <Node> <{> , <Node> <}> <]> }   @org.modelingvalue.nelumbo.Node
+                    <Set>      ::= <Set> + <Node>              #40,
+                                   <Set> - <Node>              #40,
+                                   { <(> <Node> <,> , <)*> }   @org.modelingvalue.nelumbo.Node
 
-                    <List>     ::= [ <[> <Node> <{> , <Node> <}> <]> ]   @org.modelingvalue.nelumbo.Node
+                    <List>     ::= [ <(> <Node> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
+                    <List>     ::= [[ <(> <Node> <,> , <)+> ]] @org.modelingvalue.nelumbo.Node
+                    <Option>   ::= ?[ <(> XX <)?> ]?           @org.modelingvalue.nelumbo.Node
+                    <Altern>   ::= +[ <(> XX <|> YY <)> ]+     @org.modelingvalue.nelumbo.Node
+
 
                     <Node>     ::= <List>.get(<Int>)
 

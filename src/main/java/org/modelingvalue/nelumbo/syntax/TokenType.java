@@ -29,8 +29,8 @@ public enum TokenType {
     DECIMAL("[0-9]+\\.[0-9]+", false, null, false), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, null, false), //
     TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, null, false), //
+    META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", false, null, false), //
     OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", false, null, true), //
-    META_OPERATOR("<[\\[\\]\\{\\}\\(\\)\\|]>", false, null, false), //
     NEWLINE("\\v", false, "", true), //
     HSPACE("\\h+", true, "", false), //
     END_LINE_COMMENT("//[^\\v]*", true, null, false), //

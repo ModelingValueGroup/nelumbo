@@ -39,7 +39,7 @@ public final class Query extends Node implements Evaluatable {
     private static Object[] args(List<AstElement> elements, Object[] args) {
         Predicate predicate = (Predicate) args[0];
         predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
-        Optional<List<Optional<List<Object>>>> expected = (Optional<List<Optional<List<Object>>>>) args[1];
+        Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
         if (expected.isEmpty()) {
             return new Object[]{predicate};
         }
@@ -77,8 +77,8 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @SuppressWarnings("unchecked")
-    private static List<Object> flatten(Optional<List<Object>> expected) {
-        return expected.orElse(List.of()).replaceAllAll(f -> f instanceof List list ? list : List.of(f));
+    private static List<Object> flatten(List<Object> expected) {
+        return expected.replaceAllAll(f -> f instanceof List list ? list : List.of(f));
     }
 
     private Query(Object[] array) {

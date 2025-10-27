@@ -45,9 +45,18 @@ public class RepetitionPattern extends Pattern {
         return (Pattern) get(0);
     }
 
+    public boolean mandatory() {
+        return (Boolean) get(1);
+    }
+
+    public Pattern separator() {
+        return (Pattern) get(2);
+    }
+
     @Override
     public String toString() {
-        return "<{>" + repeated() + "<}>";
+        Pattern separator = separator();
+        return "<(>" + repeated() + (separator != null ? "<,>" + separator : "") + (mandatory() ? "<)+>" : "<)*>");
     }
 
     @Override
@@ -62,9 +71,15 @@ public class RepetitionPattern extends Pattern {
 
     @Override
     public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
-        Integer leftPrecedence = left != null ? left.leftPrecedence() : null;
-        return repeated().state(new ParseState(this).merge(next), left, functor, branche.add(0)).//
-                merge(new ParseState(this, leftPrecedence)).merge(next);
+        ParseState start = new ParseState(this, left != null ? left.leftPrecedence() : null);
+        ParseState end = new ParseState(this);
+        Pattern separator = separator();
+        if (separator != null) {
+            end = separator.state(end, left, functor, branche.add(1));
+        }
+        end = end.merge(next);
+        ParseState state = repeated().state(end, left, functor, branche.add(0)).merge(start);
+        return mandatory() ? state : state.merge(next);
     }
 
     @Override
@@ -75,9 +90,13 @@ public class RepetitionPattern extends Pattern {
     @SuppressWarnings("unchecked")
     @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        List<Object> inner = List.of();
         Pattern repeated = repeated();
+        Pattern separator = separator();
+        List<Object> inner = List.of();
         while (it.match(branche)) {
+            if (separator != null && !inner.isEmpty()) {
+                inner = separator.args(inner, it, branche.add(1), false);
+            }
             inner = repeated.args(inner, it, branche.add(0), false);
         }
         return args.add(inner);
@@ -86,10 +105,15 @@ public class RepetitionPattern extends Pattern {
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, boolean alt) {
         if (args.get(ai) instanceof List<?> list) {
+            Pattern separator = separator();
             StringBuffer inner = new StringBuffer();
             for (Object o : list) {
-                int ii = repeated().string(List.of(o), 0, inner, false);
-                if (ii < 0) {
+                if (separator != null && !inner.isEmpty()) {
+                    if (separator.string(List.of(o), 0, inner, false) < 0) {
+                        return -1;
+                    }
+                }
+                if (repeated().string(List.of(o), 0, inner, false) < 0) {
                     return -1;
                 }
             }
