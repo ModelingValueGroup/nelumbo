@@ -54,7 +54,6 @@
 
 ```text
   <Integer> ::= <NUMBER>                       @nelumbo.integers.Integer
-                    
   <Integer> ::= <Integer> - <Integer>  #40,
                 <Integer> + <Integer>  #40,
                           - <Integer>  #80
