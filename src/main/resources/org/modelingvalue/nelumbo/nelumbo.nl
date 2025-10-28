@@ -8,7 +8,7 @@
                     eq(<Node>,<Node>)                @org.modelingvalue.nelumbo.Equal,
                     <Node> != <Node>            #30
 
-    <Literal>  l, l1, l2
+    <Literal>  l1, l2
     <Function> f1, f2
     <Node>     n1, n2
 

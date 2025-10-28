@@ -111,7 +111,7 @@ public final class Token implements AstElement {
     }
 
     private Token splitGet1(int len) {
-        return new Token(type, text.substring(0, len), line, position, index, fileName);
+        return new Token(TokenType.OPERATOR, text.substring(0, len), line, position, index, fileName);
     }
 
     private Token splitGet2(int len) {

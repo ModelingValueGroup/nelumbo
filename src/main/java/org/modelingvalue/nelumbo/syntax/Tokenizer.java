@@ -36,7 +36,7 @@ public class Tokenizer {
     public TokenizerResult tokenize() {
         Token[] tokens = new Token[4];
         TokenType[] tokenTypes = TokenType.values();
-        Matcher[] matchers = new Matcher[tokenTypes.length - 1];
+        Matcher[] matchers = new Matcher[tokenTypes.length - 3];
         for (int i = 0; i < matchers.length; i++) {
             matchers[i] = tokenTypes[i].pattern().matcher(input);
             if (!matchers[i].find()) {
@@ -46,6 +46,7 @@ public class Tokenizer {
         int index = 0;
         int line = 0;
         int position = 0;
+        addToken(tokens, TokenType.BEGINOFFILE, "", line, position, index);
         String previousVertical = null;
         while (index < input.length()) {
             String text = null;
@@ -97,7 +98,7 @@ public class Tokenizer {
             return;
         }
         if (token.type() == TokenType.NEWLINE) {
-            if (tokens[FIRST] == null || tokens[LAST].type().more()) {
+            if (tokens[LAST] == null || tokens[LAST].type() == TokenType.BEGINOFFILE || tokens[LAST].type().more()) {
                 // ignore newlines after a token that can be continued
                 return;
             }

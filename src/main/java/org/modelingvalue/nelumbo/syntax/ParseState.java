@@ -171,7 +171,14 @@ public class ParseState {
             input = text;
         } else {
             TokenType type = token.type();
-            if (type == TokenType.OPERATOR) {
+            if ((type == TokenType.NUMBER || type == TokenType.DECIMAL) && token.text().startsWith("-") && transitions().get(type) == null) {
+                String key = "-";
+                next = transitions().get(key);
+                if (next != null) {
+                    input = key;
+                    token = result.addSplit(token, token.split(1));
+                }
+            } else if (type == TokenType.OPERATOR) {
                 for (int i = text.length() - 1; i > 0; i--) {
                     String key = text.substring(0, i);
                     next = transitions().get(key);

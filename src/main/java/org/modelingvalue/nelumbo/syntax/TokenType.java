@@ -25,8 +25,8 @@ public enum TokenType {
     LEFT("[\\(\\[\\{]", false, null, true), //
     RIGHT("[\\)\\]\\}]", false, null, false), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, null, false), //
-    NUMBER("[0-9]+(#[0-9a-zA-Z]+)?", false, null, false), //
-    DECIMAL("[0-9]+\\.[0-9]+", false, null, false), //
+    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", false, null, false), //
+    DECIMAL("-?[0-9]+\\.[0-9]+", false, null, false), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, null, false), //
     TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, null, false), //
     META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", false, null, false), //
@@ -36,7 +36,9 @@ public enum TokenType {
     END_LINE_COMMENT("//[^\\v]*", true, null, false), //
     IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", true, null, false), //
     ERROR(".", false, null, false), //
-    ENDOFFILE(".", false, "", false), //
+    BEGINOFFILE("", false, "", false), //
+    ENDOFFILE("", false, "", false), //
+    ENDOFLINE("", false, "", false), //
     ;
 
     private final Pattern pattern; // the pattern that matches tokens of this token type

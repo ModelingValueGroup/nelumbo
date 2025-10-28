@@ -49,7 +49,7 @@ public class TokenTypePattern extends Pattern {
     @Override
     public String toString() {
         TokenType type = tokenType();
-        return type != TokenType.NEWLINE && type != TokenType.ENDOFFILE ? "" + tokenType() : "";
+        return !isEmpty(type) ? "" + tokenType() : "";
     }
 
     @Override
@@ -60,23 +60,23 @@ public class TokenTypePattern extends Pattern {
     @Override
     public List<Type> argTypes(List<Type> types) {
         TokenType type = tokenType();
-        return type != TokenType.NEWLINE && type != TokenType.ENDOFFILE ? types.add(Type.STRING) : types;
+        return !isEmpty(type) ? types.add(Type.STRING) : types;
     }
 
     @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         TokenType type = tokenType();
-        if (type != TokenType.NEWLINE && type != TokenType.ENDOFFILE) {
+        if (!isEmpty(type)) {
             args = args.add(((Token) it.element).text());
-            it.next();
         }
+        it.next();
         return args;
     }
 
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         TokenType type = tokenType();
-        if (type != TokenType.NEWLINE && type != TokenType.ENDOFFILE) {
+        if (!isEmpty(type)) {
             if (args.get(ai) instanceof String text && type.pattern().matcher(text).matches()) {
                 if (previous[0] == type) {
                     sb.append(" ");
@@ -89,6 +89,10 @@ public class TokenTypePattern extends Pattern {
             }
         }
         return ai;
+    }
+
+    private static boolean isEmpty(TokenType type) {
+        return type == TokenType.NEWLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE;
     }
 
 }
