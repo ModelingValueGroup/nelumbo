@@ -1,3 +1,4 @@
+
 <Person>   :: <Node>
 
 <Relation> ::= friends(<Person>,<Person>)
@@ -16,3 +17,4 @@ friends(Jan,  Klaas)
 
 friend(Piet)=b ? [friend(Piet)=Jan,friend(Piet)=Klaas,friend(Piet)=Piet][..]
 friend(Jan)=b  ? [friend(Jan)=Jan,friend(Jan)=Klaas,friend(Jan)=Piet][..]
+
