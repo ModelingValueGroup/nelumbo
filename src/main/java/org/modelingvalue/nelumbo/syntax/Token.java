@@ -118,6 +118,22 @@ public final class Token implements AstElement {
         return new Token(type, text.substring(len), line, position + len, index + len, fileName);
     }
 
+    public Token prepend(String prefix) {
+        Token merge = new Token(type, prefix + text, line, position - prefix.length(), index - prefix.length(), fileName);
+        merge.next = next;
+        merge.nextAll = nextAll;
+        return merge;
+    }
+
+    public void merge(Token merge) {
+        merge.setPrevious(previous);
+        merge.setPreviousAll(previousAll);
+        previous.setNext(merge);
+        previousAll.setNextAll(merge);
+        merge.next.setPrevious(merge);
+        merge.nextAll.setPreviousAll(merge);
+    }
+
     public Token next() {
         return next;
     }

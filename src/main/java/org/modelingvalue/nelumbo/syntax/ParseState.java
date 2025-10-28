@@ -171,7 +171,7 @@ public class ParseState {
             input = text;
         } else {
             TokenType type = token.type();
-            if ((type == TokenType.NUMBER || type == TokenType.DECIMAL) && token.text().startsWith("-") && transitions().get(type) == null) {
+            if (isNumeric(type) && token.text().startsWith("-") && transitions().get(type) == null) {
                 String key = "-";
                 next = transitions().get(key);
                 if (next != null) {
@@ -215,9 +215,17 @@ public class ParseState {
 
     }
 
+    private static boolean isNumeric(TokenType type) {
+        return type == TokenType.NUMBER || type == TokenType.DECIMAL;
+    }
+
     private PatternResult node(Token token, PatternResult result, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
         if (group() == null) {
             return null;
+        }
+        Token nextToken = token.next();
+        if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
+            token = result.addMerge(token, nextToken.prepend("-"));
         }
         Node node = result.parser().parseNode(token, innerPrecedence(), group());
         if (node != null) {

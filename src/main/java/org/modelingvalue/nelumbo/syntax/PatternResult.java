@@ -31,6 +31,7 @@ public final class PatternResult implements ParseExceptionHandler {
     private final MutableList<AstElement>         elements;
     private final Parser                          parser;
     private final MutableList<Pair<Token, Token>> splitted;
+    private final MutableList<Pair<Token, Token>> merged;
 
     private Functor                               functor;
     private ParseState                            state;
@@ -42,12 +43,18 @@ public final class PatternResult implements ParseExceptionHandler {
         this.parser = parser;
         elements = MutableList.of(List.of());
         splitted = MutableList.of(List.of());
+        merged = MutableList.of(List.of());
         endRepetitions = Set.of();
     }
 
     public Token addSplit(Token original, Token split) {
         splitted.add(Pair.of(original, split));
         return split;
+    }
+
+    public Token addMerge(Token original, Token merge) {
+        merged.add(Pair.of(original, merge));
+        return merge;
     }
 
     public Parser parser() {
@@ -117,7 +124,11 @@ public final class PatternResult implements ParseExceptionHandler {
         for (Pair<Token, Token> split : splitted) {
             split.a().connect(split.b());
         }
+        for (Pair<Token, Token> merge : merged) {
+            merge.a().merge(merge.b());
+        }
         splitted.clear();
+        merged.clear();
         if (state != null) {
             state.parse(nextToken, this, Map.of(), false);
         }
