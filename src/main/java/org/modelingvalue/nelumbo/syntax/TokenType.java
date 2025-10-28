@@ -19,38 +19,36 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.regex.Pattern;
 
 public enum TokenType {
-    SINGLEQUOTE("\'", false, "'", false), //
-    SEMICOLON(";", false, ";", false), //
-    COMMA(",", false, ",", true), //
-    LEFT("[\\(\\[\\{]", false, null, true), //
-    RIGHT("[\\)\\]\\}]", false, null, false), //
-    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, null, false), //
-    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", false, null, false), //
-    DECIMAL("-?[0-9]+\\.[0-9]+", false, null, false), //
-    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, null, false), //
-    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, null, false), //
-    META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", false, null, false), //
-    OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", false, null, true), //
-    NEWLINE("\\v", false, "", true), //
-    HSPACE("\\h+", true, "", false), //
-    END_LINE_COMMENT("//[^\\v]*", true, null, false), //
-    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", true, null, false), //
-    ERROR(".", false, null, false), //
-    BEGINOFFILE("", false, "", false), //
-    ENDOFFILE("", false, "", false), //
-    ENDOFLINE("", false, "", false), //
+    SINGLEQUOTE("\'", false, "'"), //
+    SEMICOLON(";", false, ";"), //
+    COMMA(",", false, ","), //
+    LEFT("[\\(\\[\\{]", false, null), //
+    RIGHT("[\\)\\]\\}]", false, null), //
+    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, null), //
+    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", false, null), //
+    DECIMAL("-?[0-9]+\\.[0-9]+", false, null), //
+    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, null), //
+    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, null), //
+    META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", false, null), //
+    OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", false, null), //
+    VSPACE("\\v+", true, ""), //
+    HSPACE("\\h+", true, ""), //
+    END_LINE_COMMENT("//[^\\v]*", true, null), //
+    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", true, null), //
+    ERROR(".", false, null), //
+    BEGINOFFILE("", false, ""), //
+    ENDOFFILE("", false, ""), //
+    ENDOFLINE("", false, ""), //
     ;
 
     private final Pattern pattern; // the pattern that matches tokens of this token type
     private final boolean skip;    // indicates a non semantic part that may be ignored by the parser
     private final String  fixed;   // indicates a token type that has a singular content with the text, otherwise null;
-    private final boolean more;    // indicates that a sequence of NEWLINE tokens after this token is to be ignored when parsing
 
-    TokenType(String regexp, boolean skip, String fixed, boolean more) {
+    TokenType(String regexp, boolean skip, String fixed) {
         this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
         this.skip = skip;
         this.fixed = fixed;
-        this.more = more;
     }
 
     public Pattern pattern() {
@@ -67,10 +65,6 @@ public enum TokenType {
 
     public String fixed() {
         return fixed;
-    }
-
-    public boolean more() {
-        return more;
     }
 
     public static TokenType of(String text) {

@@ -167,7 +167,7 @@ public abstract class Pattern extends Node {
                         post = pre.transitions().get(token.type());
                     }
                     if (post == null && isEndOfLine(token)) {
-                        post = pre.transitions().get(TokenType.NEWLINE);
+                        post = pre.transitions().get(TokenType.ENDOFLINE);
                     }
                 } else {
                     Type type = ((Node) element).type();

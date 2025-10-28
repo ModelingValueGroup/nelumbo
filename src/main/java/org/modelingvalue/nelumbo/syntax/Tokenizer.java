@@ -97,12 +97,6 @@ public class Tokenizer {
         if (token.skip()) {
             return;
         }
-        if (token.type() == TokenType.NEWLINE) {
-            if (tokens[LAST] == null || tokens[LAST].type() == TokenType.BEGINOFFILE || tokens[LAST].type().more()) {
-                // ignore newlines after a token that can be continued
-                return;
-            }
-        }
         if (tokens[FIRST] == null) {
             tokens[FIRST] = token;
         } else {

@@ -52,12 +52,12 @@ public class TokenizerTest extends NelumboTestBase {
 
         String reassembled = all.map(Token::text).collect(Collectors.joining());
         String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String expectedTypes = "BEGINOFFILE END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE ENDOFFILE";
+        String expectedTypes = "BEGINOFFILE END_LINE_COMMENT VSPACE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR VSPACE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT VSPACE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER VSPACE ENDOFFILE";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
 
-        assertEquals(17, tokens.size(), "wrong number of tokens returned by tokenize()");
+        assertEquals(15, tokens.size(), "wrong number of tokens returned by tokenize()");
         assertEquals(34, all.size(), "wrong number of tokens returned by tokenize(all)");
         assertEquals(example, reassembled, "could not reassemble tokens");
         assertEquals(expectedTypes, types, "unexpected token types in token list");
@@ -67,7 +67,7 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals(0, all.get(1).line());
         assertEquals(0, all.get(1).position());
 
-        assertEquals(TokenType.NEWLINE, all.get(2).type());
+        assertEquals(TokenType.VSPACE, all.get(2).type());
         assertEquals(0, all.get(2).line());
         assertEquals(10, all.get(2).position());
 

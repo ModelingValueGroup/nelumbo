@@ -194,9 +194,18 @@ public class ParseState {
                 if (next != null) {
                     input = type;
                 } else {
-                    next = transitions().get(TokenType.NEWLINE);
-                    if (next != null && !Pattern.isEndOfLine(token)) {
-                        next = null;
+                    next = transitions().get(TokenType.ENDOFLINE);
+                    if (next != null) {
+                        if (Pattern.isEndOfLine(token)) {
+                            Token eol = new Token(TokenType.ENDOFLINE, "", token.line(), token.position(), token.index(), token.fileName());
+                            eol.setNext(token);
+                            eol.setNextAll(token);
+                            eol.setPrevious(token.previous());
+                            eol.setPreviousAll(token.previousAll());
+                            token = eol;
+                        } else {
+                            next = null;
+                        }
                     }
                 }
             }

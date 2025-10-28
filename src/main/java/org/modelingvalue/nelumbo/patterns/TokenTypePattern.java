@@ -92,7 +92,7 @@ public class TokenTypePattern extends Pattern {
     }
 
     private static boolean isEmpty(TokenType type) {
-        return type == TokenType.NEWLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE;
+        return type == TokenType.ENDOFLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE;
     }
 
 }

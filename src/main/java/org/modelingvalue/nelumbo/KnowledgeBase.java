@@ -278,7 +278,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return tt != null ? t(elements, tt) : n(elements, type, null);
                         }));
 
-                register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(",")), t(NEWLINE)), //
+                register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(",")), t(ENDOFLINE)), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             Type type = (Type) elements.get(0);
                             ListNode roots = new ListNode(elements.sublist(0, 2), Type.ROOT);
@@ -289,7 +289,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 AstElement e = elements.get(i);
                                 ast = ast.add(e);
                                 if (e instanceof Token t) {
-                                    if (t.text().equals(",") || t.type() == NEWLINE) {
+                                    if (t.text().equals(",") || t.type() == ENDOFLINE) {
                                         Pattern pattern = pattern(pttrn);
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
@@ -327,7 +327,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots.setAstElements(roots.astElements().add(elements.last()));
                         }));
 
-                register(Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME))), t(NEWLINE)), //
+                register(Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME))), t(ENDOFLINE)), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
                             String name = (String) args[0];
                             name = name.substring(1, name.length() - 1);
@@ -340,7 +340,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return CURRENT.get().addType(type, false).setAstElements(elements);
                         }));
 
-                register(Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(",")), t(NEWLINE)), //
+                register(Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(",")), t(ENDOFLINE)), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             Type type = (Type) elements.get(0);
                             ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
@@ -361,14 +361,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots.setAstElements(roots.astElements().add(elements.last()));
                         }));
 
-                ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=>"), r(CONDITION, true, t(",")), t(NEWLINE)), //
+                ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=>"), r(CONDITION, true, t(",")), t(ENDOFLINE)), //
                         Type.ROOT.list(), false, (elements, args, functor) -> CURRENT.get().createRules(functor, elements, args));
                 register(ruleFunctor);
 
-                register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(NEWLINE)), //
+                register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(ENDOFLINE)), //
                         Type.QUERY, false, (elements, args, functor) -> new Query(functor, elements, args)));
 
-                register(Functor.of(s(n(Type.PREDICATE, 0), t(NEWLINE)), //
+                register(Functor.of(s(n(Type.PREDICATE, 0), t(ENDOFLINE)), //
                         Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)));
 
                 register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
