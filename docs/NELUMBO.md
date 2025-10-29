@@ -15,21 +15,21 @@
 
 ## Requirements for Nelumbo
 
-* Perfect for formalization of e.g. TAX laws and Clinical Knowledge
+* Suitable for formalization of, for example, tax laws and clinical knowledge
 * Semantically rich and proven consistent
 * Fully declarative, hence, no over-specification
 * Performant by binding variables based on navigating relations only
 * Easily extensible and integrable with the use of native classes
 * Strongly typed for more consistency and extensibility
-* Natural support of not (!) by reasoning over incomplete facts and falsehoods
+* Natural support for not (!) by reasoning over incomplete facts and falsehoods
 
 ---
 
 ## Nelumbo vs Dclare
 
 * Both have reactive execution semantics (push) and lazy derivation (pull).
-* Dclare has blackbox rules. This causes scalability issues with pushing.
-* Nelumbo rules are compltally defined in Nelumo. Hence, no scalabilty issues.
+* Dclare has black-box rules. This causes scalability issues with pushing.
+* Nelumbo rules are completely defined in Nelumbo. Hence, no scalability issues.
 * Pulling with Dclare has problems with opposite relations.
 * Nelumbo is multi-directional by nature.
 
@@ -46,8 +46,6 @@
   <Person>  :: <Smart>, <Living>
   <Male>    :: <Person>
   <Female>  :: <Person>
-    
-
 ```
 
 ### Patterns
@@ -250,11 +248,11 @@
 
 ## Contributing
 
-* Open source : Create tests and libraries
-* Help to write scientific publication
+* Open source: create tests and libraries
+* Help write scientific publications
 * We are aiming for a subsidy to fund serious development in the coming years
-* Github : https://github.com/ModelingValueGroup/nelumbo
-* Mail   : wim.bast@gmail.com
+* GitHub: https://github.com/ModelingValueGroup/nelumbo
+* Email: wim.bast@gmail.com
 
 ---
 
