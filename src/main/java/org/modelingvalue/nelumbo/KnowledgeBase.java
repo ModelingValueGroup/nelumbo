@@ -458,10 +458,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Map<Variable, Object> whenVars = when != null ? when.variables() : null;
             Map<Variable, Object> localVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
             if (literalFunctor != null) {
-                cons = cons.replace(n -> nodeFunctor.equals(n.functor()) ? n.setFunctor(literalFunctor) : n);
                 Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(localVars));
                 cons = cons.setVariables(litVars);
                 cond = cond.setVariables(litVars);
+                cons = cons.replace(n -> nodeFunctor.equals(n.functor()) ? n.setFunctor(literalFunctor) : n);
                 if (when != null) {
                     when = when.setVariables(litVars);
                 }

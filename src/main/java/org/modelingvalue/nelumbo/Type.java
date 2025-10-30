@@ -327,4 +327,9 @@ public class Type extends Node {
         return clss instanceof Class && ((Class<?>) clss).isAssignableFrom(type);
     }
 
+    @Override
+    protected Node typeForEquals() {
+        return TYPE();
+    }
+
 }

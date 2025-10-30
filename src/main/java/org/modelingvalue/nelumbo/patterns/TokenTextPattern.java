@@ -79,22 +79,13 @@ public class TokenTextPattern extends Pattern {
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (alt) {
             if (args.get(ai) instanceof String text && text.equals(tokenText())) {
-                add(sb, previous, text);
+                addText(sb, previous, text);
                 return ai + 1;
             }
             return -1;
         }
-        add(sb, previous, tokenText());
+        addText(sb, previous, tokenText());
         return ai;
-    }
-
-    private void add(StringBuffer sb, TokenType[] previous, String text) {
-        TokenType type = TokenType.of(text);
-        if (previous[0] == type) {
-            sb.append(" ");
-        }
-        sb.append(text);
-        previous[0] = type;
     }
 
 }

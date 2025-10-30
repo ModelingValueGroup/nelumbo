@@ -77,15 +77,18 @@ public class TokenTypePattern extends Pattern {
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         TokenType type = tokenType();
         if (!isEmpty(type)) {
-            if (args.get(ai) instanceof String text && type.pattern().matcher(text).matches()) {
-                if (previous[0] == type) {
-                    sb.append(" ");
-                }
-                sb.append(text);
-                previous[0] = type;
+            Object val = args.get(ai);
+            if (val instanceof String text && type.pattern().matcher(text).matches()) {
+                addText(sb, previous, text);
                 return ai + 1;
             } else {
-                return -1;
+                String text = val != null ? val.toString() : null;
+                if (text != null && type.pattern().matcher(text).matches()) {
+                    addText(sb, previous, text);
+                    return ai + 1;
+                } else {
+                    return -1;
+                }
             }
         }
         return ai;

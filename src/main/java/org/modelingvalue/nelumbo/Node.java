@@ -128,7 +128,7 @@ public class Node extends StructImpl implements AstElement {
                 Object e = get(i);
                 r = 31 * r + (e == null ? 0 : e.hashCode());
             }
-            r = 31 * r + super.get(0).hashCode();
+            r = 31 * r + typeForEquals().hashCode();
             hashCode = r == 0 ? 1 : r;
         }
         return hashCode;
@@ -146,7 +146,7 @@ public class Node extends StructImpl implements AstElement {
             return true;
         }
         Node other = (Node) obj;
-        if (!typeOrFunctor().equals(other.typeOrFunctor())) {
+        if (!typeForEquals().equals(other.typeForEquals())) {
             return false;
         } else if (length() != other.length()) {
             return false;
@@ -158,6 +158,10 @@ public class Node extends StructImpl implements AstElement {
             }
             return true;
         }
+    }
+
+    protected Node typeForEquals() {
+        return typeOrFunctor();
     }
 
     public Map<Variable, Object> variables() {

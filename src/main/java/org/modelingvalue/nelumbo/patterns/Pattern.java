@@ -206,4 +206,17 @@ public abstract class Pattern extends Node {
         return token.type() == TokenType.ENDOFFILE || token.line() > token.previous().line();
     }
 
+    protected void addText(StringBuffer sb, TokenType[] previous, String text) {
+        TokenType type = TokenType.of(text);
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
+            if (type == TokenType.NAME || type == TokenType.NUMBER || type == TokenType.DECIMAL) {
+                sb.append(" ");
+            }
+        } else if (previous[0] == TokenType.OPERATOR && type == TokenType.OPERATOR) {
+            sb.append(" ");
+        }
+        sb.append(text);
+        previous[0] = type;
+    }
+
 }

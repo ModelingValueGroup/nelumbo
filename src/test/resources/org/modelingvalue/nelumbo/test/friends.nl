@@ -15,6 +15,9 @@ friend(a)=c <=> friends(a,c) |
 friends(Piet, Jan)
 friends(Jan,  Klaas)
 
+friend(Tom)=b ? [][..]
 friend(Piet)=b ? [friend(Piet)=Jan,friend(Piet)=Klaas,friend(Piet)=Piet][..]
 friend(Jan)=b  ? [friend(Jan)=Jan,friend(Jan)=Klaas,friend(Jan)=Piet][..]
+friend(Klaas)=Jan ? [friend(Klaas)=Jan][]
 
+// friend(Tom)=Tom ? [][friend(Tom)=Tom]

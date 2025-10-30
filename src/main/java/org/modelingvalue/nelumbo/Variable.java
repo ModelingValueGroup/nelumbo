@@ -22,6 +22,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Variable extends Node {
     @Serial
@@ -81,6 +82,21 @@ public final class Variable extends Node {
     @Override
     public final Map<Variable, Object> variables() {
         return Map.of(Entry.of(this, type()));
+    }
+
+    @Override
+    public String toString(TokenType[] previous) {
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
+            previous[0] = TokenType.NAME;
+            return " " + name();
+        }
+        previous[0] = TokenType.NAME;
+        return name();
+    }
+
+    @Override
+    protected Node typeForEquals() {
+        return Type.VARIABLE;
     }
 
 }
