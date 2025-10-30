@@ -45,7 +45,7 @@ import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 import com.formdev.flatlaf.FlatLightLaf;
 
-public class Editor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
+public class NelumboEditor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
 
     private final static String                  INCREASE   = "INCREASE";
     private final static String                  DECREASE   = "DECREASE";
@@ -53,7 +53,7 @@ public class Editor extends WindowAdapter implements WindowListener, Runnable, D
     private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xff8888));
 
     public static void main(String[] arg) {
-        new Editor();
+        new NelumboEditor();
     }
 
     //===========================================================================================================================================
@@ -63,7 +63,7 @@ public class Editor extends WindowAdapter implements WindowListener, Runnable, D
     private KnowledgeBase knowledgeBase;
     private JTextArea     message;
 
-    public Editor() {
+    public NelumboEditor() {
         initWindow();
         initActions();
         initKnowledgeBase();
