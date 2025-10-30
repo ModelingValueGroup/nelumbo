@@ -106,6 +106,9 @@ public final class Rule extends Node implements Evaluatable {
                     completeFalsehoods = false;
                 }
             }
+            if (completeFacts && proFacts.isEmpty() && completeFalsehoods && proFalsehoods.isEmpty() && proven.isFullyBound()) {
+                proFalsehoods = proFalsehoods.add(proven);
+            }
             proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());
         }
         if (context.trace() && !isSyntatic()) {
