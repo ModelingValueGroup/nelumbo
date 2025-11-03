@@ -50,6 +50,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.Serial;
 import java.net.URL;
+import java.util.Map;
 import java.util.Objects;
 import java.util.prefs.Preferences;
 
@@ -68,6 +69,31 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private final static String DECREASE = "DECREASE";
 
     private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xff8888));
+
+    /**
+     * Defines a color scheme for a token type with foreground and background colors.
+     */
+    private record ColorScheme(Color foreground,
+                               Color background) {
+
+        public ColorScheme(java.lang.Integer fore, java.lang.Integer back) {
+            this(fore == null ? null : new Color(fore), back == null ? null : new Color(back));
+        }
+    }
+
+    /**
+     * Map from TokenType to ColorScheme defining how each token type should be colored.
+     */
+    private final static Map<TokenType, ColorScheme> TOKEN_COLORS = Map.of(
+            TokenType.NUMBER, new ColorScheme(0x000077, null),
+            TokenType.STRING, new ColorScheme(0x007700, null),
+            TokenType.NAME, new ColorScheme(0x0000ff, null),
+            TokenType.TYPE, new ColorScheme(0x880088, null),
+            TokenType.META_OPERATOR, new ColorScheme(0xffffff, 0x558855),
+            TokenType.OPERATOR, new ColorScheme(0x666666, null),
+            TokenType.END_LINE_COMMENT, new ColorScheme(0x008800, null),
+            TokenType.IN_LINE_COMMENT, new ColorScheme(0x008800, null)
+                                                                          );
 
     private static final String PREF_TEXT_CONTENT    = "textContent";
     private static final String PREF_CARET_POSITION  = "caretPosition";
@@ -226,14 +252,13 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void initKnowledgeBase() {
         KnowledgeBase.BASE.run(() -> {
-                         try {
-                             Parser.parse(Integer.class);
-                             Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
-                         } catch (ParseException e) {
-                             error(e.getMessage());
-                         }
-                     })
-                     .run(this);
+            try {
+                Parser.parse(Integer.class);
+                Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
+            } catch (ParseException e) {
+                error(e.getMessage());
+            }
+        }).run(this);
     }
 
     private void increase() {
@@ -307,13 +332,18 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             Tokenizer       tokenizer       = new Tokenizer(text, "Editor");
             TokenizerResult tokenizerResult = tokenizer.tokenize();
 
-            // Set foreground color for NUMBER tokens to green
-            SimpleAttributeSet greenAttr = new SimpleAttributeSet();
-            StyleConstants.setForeground(greenAttr, Color.GREEN);
-            StyleConstants.setBackground(greenAttr, Color.ORANGE);
+            // Apply colors to all tokens based on the TOKEN_COLORS map
             for (Token token : tokenizerResult.listAll()) {
-                if (token.type() == TokenType.NUMBER) {
-                    doc.setCharacterAttributes(token.index(), token.text().length(), greenAttr, false);
+                ColorScheme colorScheme = TOKEN_COLORS.get(token.type());
+                if (colorScheme != null) {
+                    SimpleAttributeSet attr = new SimpleAttributeSet();
+                    if (colorScheme.foreground != null) {
+                        StyleConstants.setForeground(attr, colorScheme.foreground);
+                    }
+                    if (colorScheme.background != null) {
+                        StyleConstants.setBackground(attr, colorScheme.background);
+                    }
+                    doc.setCharacterAttributes(token.index(), token.text().length(), attr, false);
                 }
             }
 
