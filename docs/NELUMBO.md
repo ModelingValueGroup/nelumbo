@@ -15,23 +15,13 @@
 
 ## Requirements for Nelumbo
 
-* Suitable for formalization of, for example, tax laws and clinical knowledge
+* Suitable for formalization of, for example, complex tax laws and clinical knowledge
 * Semantically rich and proven consistent
+* Direct support for predicate logic by reasoning over incomplete facts and falsehoods
 * Fully declarative, hence, no over-specification
+* Strongly typed for more consistency and extensibility
 * Performant by binding variables based on navigating relations only
 * Easily extensible and integrable with the use of native classes
-* Strongly typed for more consistency and extensibility
-* Natural support for not (!) by reasoning over incomplete facts and falsehoods
-
----
-
-## Nelumbo vs Dclare
-
-* Both have reactive execution semantics (push) and lazy derivation (pull).
-* Dclare has black-box rules. This causes scalability issues with pushing.
-* Nelumbo rules are completely defined in Nelumbo. Hence, no scalability issues.
-* Pulling with Dclare has problems with opposite relations.
-* Nelumbo is multi-directional by nature.
 
 ---
 
@@ -85,7 +75,7 @@
                 a<0 & b=-a
                  
   d(a)=c   <=>  c(a)=c |
-                d(a)=b & c(b)=c
+                E(d(a)=b & c(b)=c)
 ```
 
 ---
@@ -234,14 +224,13 @@
 
 ## Plans
 
-* Exists and ForAll E(....) A(...)
 * Namespaces
 * Generics (type arguments)
+* Lists and Sets
+* Language pattern transformations
 * LSP (also on WEB)
 * Reactive update execution semantics
-* Language pattern transformations
 * Deprecation and migration support
-* Abstract vs Concrete language mappings (like Xtext?)
 * ....
 
 ---
@@ -249,8 +238,8 @@
 ## Contributing
 
 * Open source: create tests and libraries
+* Try to falsify the logic
 * Help write scientific publications
-* We are aiming for a subsidy to fund serious development in the coming years
 * GitHub: https://github.com/ModelingValueGroup/nelumbo
 * Email: wim.bast@gmail.com
 
