@@ -16,6 +16,26 @@
 
 package org.modelingvalue.nelumbo;
 
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
+import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.TextAction;
+import javax.swing.text.ViewFactory;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -30,43 +50,48 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.Serial;
 import java.net.URL;
+import java.util.Objects;
+import java.util.prefs.Preferences;
 
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.TextAction;
-
+import com.formdev.flatlaf.FlatLightLaf;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
-
-import com.formdev.flatlaf.FlatLightLaf;
+import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public class NelumboEditor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
 
-    private final static String                  INCREASE   = "INCREASE";
-    private final static String                  DECREASE   = "DECREASE";
+    private final static String INCREASE = "INCREASE";
+    private final static String DECREASE = "DECREASE";
 
     private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xff8888));
+
+    private static final String PREF_TEXT_CONTENT    = "textContent";
+    private static final String PREF_CARET_POSITION  = "caretPosition";
+    private static final String PREF_SELECTION_START = "selectionStart";
+    private static final String PREF_SELECTION_END   = "selectionEnd";
 
     public static void main(String[] arg) {
         new NelumboEditor();
     }
 
     //===========================================================================================================================================
-    private JFrame        frame;
-    private JTextArea     textArea;
-    private boolean       quit = false;
-    private KnowledgeBase knowledgeBase;
-    private JTextArea     message;
+    private       JFrame        frame;
+    private       JTextPane     textArea;
+    private       boolean       quit        = false;
+    private       KnowledgeBase knowledgeBase;
+    private       JTextArea     message;
+    private final Preferences   preferences = Preferences.userNodeForPackage(NelumboEditor.class);
 
     public NelumboEditor() {
         initWindow();
         initActions();
-        initKnowledgeBase();
+        loadTextContent();
+        initKnowledgeBase(); // execution stays here until the user quits the application. This is by design!
+        // only reaching this point after the user quits
     }
 
     private void initWindow() {
@@ -87,18 +112,44 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             Taskbar.getTaskbar().setIconImage(icon.getImage());
         }
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension frameSize = new Dimension(screenSize.width / 2, screenSize.height / 2);
-        int x = frameSize.width / 2;
-        int y = frameSize.height / 2;
+        Dimension frameSize  = new Dimension(screenSize.width / 2, screenSize.height / 2);
+        int       x          = frameSize.width / 2;
+        int       y          = frameSize.height / 2;
         frame.setBounds(x, y, frameSize.width, frameSize.height);
 
-        // Create text area with modern styling
-        textArea = new JTextArea();
+        // Create text pane with modern styling (no wrapping)
+        textArea = new JTextPane() {
+            @Serial
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public boolean getScrollableTracksViewportWidth() {
+                return false; // Disable line wrapping
+            }
+
+            @Override
+            public void setSize(Dimension d) {
+                if (d.width < getParent().getSize().width) {
+                    d.width = getParent().getSize().width;
+                }
+                super.setSize(d);
+            }
+        };
+
+        // Use a custom EditorKit that doesn't wrap lines
+        textArea.setEditorKit(new StyledEditorKit() {
+            @Serial
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public ViewFactory getViewFactory() {
+                return new NoWrapViewFactory();
+            }
+        });
+
         Font font = new Font(Font.MONOSPACED, Font.PLAIN, 14);
         textArea.setFont(font);
         textArea.setEditable(true);
-        textArea.setLineWrap(false);
-        textArea.setTabSize(4);
         Insets margin = new Insets(15, 15, 15, 15);
         textArea.setMargin(margin);
 
@@ -174,18 +225,19 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void initKnowledgeBase() {
-        KnowledgeBase.run(this, KnowledgeBase.run(() -> {
-            try {
-                Parser.parse(Integer.class);
-                Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
-            } catch (ParseException e) {
-                error(e.getMessage());
-            }
-        }));
+        KnowledgeBase.BASE.run(() -> {
+                         try {
+                             Parser.parse(Integer.class);
+                             Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
+                         } catch (ParseException e) {
+                             error(e.getMessage());
+                         }
+                     })
+                     .run(this);
     }
 
     private void increase() {
-        Font font = textArea.getFont();
+        Font  font    = textArea.getFont();
         float newSize = Math.min(100f, font.getSize() * 1.2f);
         font = font.deriveFont(newSize);
         textArea.setFont(font);
@@ -193,7 +245,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void decrease() {
-        Font font = textArea.getFont();
+        Font  font    = textArea.getFont();
         float newSize = Math.max(7f, font.getSize() / 1.2f);
         font = font.deriveFont(newSize);
         textArea.setFont(font);
@@ -216,17 +268,20 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     @Override
     public void run() {
         knowledgeBase = KnowledgeBase.CURRENT.get();
-        String pre = "";
-        for (String text = read(); text != null; text = read()) {
-            if (!pre.equals(text)) {
+        String pre = null;
+        while (!quit) {
+            String text = textArea.getText();
+            if (!Objects.equals(pre, text)) {
+                saveTextContent();
                 execute(text);
                 pre = text;
             }
+            waitForChange();
         }
     }
 
-    private String read() {
-        while (!quit) {
+    private void waitForChange() {
+        if (!quit) {
             synchronized (this) {
                 try {
                     wait(1_000_000);
@@ -234,28 +289,46 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                     // ignore
                 }
             }
-            return textArea.getText();
         }
-        return null;
     }
 
     private void execute(String text) {
         message.setText("");
         textArea.getHighlighter().removeAllHighlights();
         knowledgeBase.init();
+
+        // Reset all text to default color first
+        StyledDocument     doc         = textArea.getStyledDocument();
+        SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
+        StyleConstants.setForeground(defaultAttr, Color.BLACK);
+        doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
+
         try {
-            Tokenizer tokenizer = new Tokenizer(text, "Editor");
-            Parser parser = new Parser(tokenizer.tokenize());
-            String out = "";
-            int prevLine = 0, nextLine = 0;
+            Tokenizer       tokenizer       = new Tokenizer(text, "Editor");
+            TokenizerResult tokenizerResult = tokenizer.tokenize();
+
+            // Set foreground color for NUMBER tokens to green
+            SimpleAttributeSet greenAttr = new SimpleAttributeSet();
+            StyleConstants.setForeground(greenAttr, Color.GREEN);
+            StyleConstants.setBackground(greenAttr, Color.ORANGE);
+            for (Token token : tokenizerResult.listAll()) {
+                if (token.type() == TokenType.NUMBER) {
+                    doc.setCharacterAttributes(token.index(), token.text().length(), greenAttr, false);
+                }
+            }
+
+            Parser        parser   = new Parser(tokenizerResult);
+            StringBuilder out      = new StringBuilder();
+            int           prevLine = 0;
+            int           nextLine;
             for (Node root : parser.parseMutiple().roots()) {
                 if (root instanceof Query query) {
                     nextLine = query.lastToken().line();
-                    out += emptyLines(nextLine - prevLine) + query.inferResult().toString() + "\n";
+                    out.append(emptyLines(nextLine - prevLine)).append(query.inferResult().toString()).append("\n");
                     prevLine = ++nextLine;
                 }
             }
-            output(out);
+            output(out.toString());
         } catch (ParseException pe) {
             error(emptyLines(pe.line()) + pe.getShortMessage());
             try {
@@ -293,6 +366,102 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     @Override
     public synchronized void changedUpdate(DocumentEvent e) {
         notifyAll();
+    }
+
+    private void saveTextContent() {
+        try {
+            String text = textArea.getText();
+            preferences.put(PREF_TEXT_CONTENT, text);
+
+            // Save caret position and selection
+            int caretPosition  = textArea.getCaretPosition();
+            int selectionStart = textArea.getSelectionStart();
+            int selectionEnd   = textArea.getSelectionEnd();
+
+            preferences.putInt(PREF_CARET_POSITION, caretPosition);
+            preferences.putInt(PREF_SELECTION_START, selectionStart);
+            preferences.putInt(PREF_SELECTION_END, selectionEnd);
+
+            preferences.flush(); // Ensure preferences are written to disk
+        } catch (Exception e) {
+            System.err.println("Failed to save text content: " + e.getMessage());
+        }
+    }
+
+    private void loadTextContent() {
+        String text = preferences.get(PREF_TEXT_CONTENT, "");
+        if (!text.isEmpty()) {
+            try {
+                StyledDocument doc = textArea.getStyledDocument();
+                doc.insertString(0, text, null);
+
+                // Restore caret position and selection
+                int caretPosition  = preferences.getInt(PREF_CARET_POSITION, 0);
+                int selectionStart = preferences.getInt(PREF_SELECTION_START, 0);
+                int selectionEnd   = preferences.getInt(PREF_SELECTION_END, 0);
+
+                // Ensure positions are within bounds
+                int maxPos = doc.getLength();
+                caretPosition  = Math.min(caretPosition, maxPos);
+                selectionStart = Math.min(selectionStart, maxPos);
+                selectionEnd   = Math.min(selectionEnd, maxPos);
+
+                // Restore selection or caret position
+                if (selectionStart != selectionEnd) {
+                    textArea.setSelectionStart(selectionStart);
+                    textArea.setSelectionEnd(selectionEnd);
+                } else {
+                    textArea.setCaretPosition(caretPosition);
+                }
+            } catch (BadLocationException e) {
+                // Fallback to setText if insertString fails
+                textArea.setText(text);
+            }
+        }
+    }
+
+    // ViewFactory that prevents line wrapping in JTextPane
+    private static class NoWrapViewFactory implements ViewFactory {
+        private final ViewFactory defaultFactory = new StyledEditorKit().getViewFactory();
+
+        @Override
+        public javax.swing.text.View create(javax.swing.text.Element elem) {
+            String kind = elem.getName();
+            if (kind != null) {
+                switch (kind) {
+                    case javax.swing.text.AbstractDocument.ContentElementName -> {
+                        return new javax.swing.text.LabelView(elem);
+                    }
+                    case javax.swing.text.AbstractDocument.ParagraphElementName -> {
+                        return new NoWrapParagraphView(elem);
+                    }
+                    case StyleConstants.ComponentElementName -> {
+                        return new javax.swing.text.ComponentView(elem);
+                    }
+                    case StyleConstants.IconElementName -> {
+                        return new javax.swing.text.IconView(elem);
+                    }
+                }
+            }
+            return defaultFactory.create(elem);
+        }
+    }
+
+    // ParagraphView that doesn't wrap lines
+    private static class NoWrapParagraphView extends javax.swing.text.ParagraphView {
+        public NoWrapParagraphView(javax.swing.text.Element elem) {
+            super(elem);
+        }
+
+        @Override
+        public void layout(int width, int height) {
+            super.layout(java.lang.Short.MAX_VALUE, height);
+        }
+
+        @Override
+        public float getMinimumSpan(int axis) {
+            return super.getPreferredSpan(axis);
+        }
     }
 
 }

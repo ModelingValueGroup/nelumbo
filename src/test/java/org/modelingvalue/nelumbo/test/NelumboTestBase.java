@@ -33,11 +33,7 @@ public class NelumboTestBase {
     // Utilities
 
     public KnowledgeBase run(Runnable test) {
-        return KnowledgeBase.run(test);
-    }
-
-    public KnowledgeBase run(Runnable test, KnowledgeBase init) {
-        return KnowledgeBase.run(test, init);
+        return KnowledgeBase.BASE.run(test);
     }
 
     public static InferResult getResult(Predicate pred) {

@@ -130,14 +130,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    public static KnowledgeBase run(Runnable runnable) {
-        return run(runnable, BASE);
-    }
-
-    public static KnowledgeBase run(Runnable runnable, KnowledgeBase init) {
-        return POOL.invoke(new LogicTask(runnable, init));
-    }
-
     public static Set<Type> generalizations(Type type, Type top) {
         Set<Type> result = Set.of();
         for (Type g : type.supers()) {
@@ -146,6 +138,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         return result;
+    }
+
+    public KnowledgeBase run(Runnable runnable) {
+        return POOL.invoke(new LogicTask(runnable, this));
     }
 
     private Functor addType(Type type, boolean predefined) throws ParseException {

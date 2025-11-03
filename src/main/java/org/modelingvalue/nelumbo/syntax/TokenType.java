@@ -19,7 +19,7 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.regex.Pattern;
 
 public enum TokenType {
-    SINGLEQUOTE("\'", false, "'", false), //
+    SINGLEQUOTE("'", false, "'", false), //
     SEMICOLON(";", false, ";", false), //
     COMMA(",", false, ",", true), //
     LEFT("[\\(\\[\\{]", false, null, true), //
