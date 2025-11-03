@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo;
 
+import static org.modelingvalue.nelumbo.KnowledgeBase.TRACE_SYNTATIC;
+
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
@@ -71,7 +73,7 @@ public final class Rule extends Node implements Evaluatable {
         Predicate condition = condition();
         consequence = consequence.setBinding(binding);
         condition = condition.setBinding(binding);
-        if (context.trace() && !isSyntatic()) {
+        if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
             System.out.println(context.prefix() + consequence + " <=> " + condition);
         }
         InferResult condResult = condition.resolve(context.globalVars(consVars));
@@ -107,7 +109,7 @@ public final class Rule extends Node implements Evaluatable {
             }
             proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());
         }
-        if (context.trace() && !isSyntatic()) {
+        if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
             System.out.println(context.prefix() + proven + " " + proResult);
         }
         return proResult;
@@ -124,7 +126,7 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     public boolean isSyntatic() {
-        return astElements().isEmpty() || firstToken().fileName().equals("nelumbo.nl");
+        return TRACE_SYNTATIC || astElements().isEmpty() || firstToken().fileName().equals("nelumbo.nl");
     }
 
     @Override

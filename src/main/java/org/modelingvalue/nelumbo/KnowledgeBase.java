@@ -47,6 +47,7 @@ import org.modelingvalue.nelumbo.syntax.*;
 public final class KnowledgeBase implements ParseExceptionHandler {
 
     private static final boolean                                                        TRACE_NELUMBO        = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
+    public static final boolean                                                         TRACE_SYNTATIC       = java.lang.Boolean.getBoolean("TRACE_SYNTATIC");
     //
     public static final Context<KnowledgeBase>                                          CURRENT              = Context.of();
     //
