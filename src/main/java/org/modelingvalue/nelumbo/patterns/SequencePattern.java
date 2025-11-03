@@ -57,7 +57,7 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         return elements().map(Object::toString).reduce("", (a, b) -> a + b);
     }
 

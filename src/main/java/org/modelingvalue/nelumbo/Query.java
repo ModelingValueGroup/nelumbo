@@ -46,7 +46,7 @@ public final class Query extends Node implements Evaluatable {
         List<Object> flatFacts = flatten(expected.get().get(0));
         List<Object> flatFalsehoods = flatten(expected.get().get(1));
         Object[] array = new Object[5];
-        array[0] = predicate.setVariables(Predicate.literals(predicate.variables()));
+        array[0] = predicate;
         array[1] = flatFacts.filter(Predicate.class).asList();
         array[2] = !flatFacts.contains("..");
         array[3] = flatFalsehoods.filter(Predicate.class).asList();
@@ -138,7 +138,6 @@ public final class Query extends Node implements Evaluatable {
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
             if (!found.equals(expected) && !found.toString().equals(expected.toString())) {
-                predicate.infer();
                 List<AstElement> astElements = astElements();
                 result.addException(new ParseException("Expected result " + expected + ", found " + found, //
                         astElements.sublist(2, astElements.size()).toArray(i -> new AstElement[i])));

@@ -47,7 +47,7 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         TokenType type = tokenType();
         return !isEmpty(type) ? "" + tokenType() : "";
     }

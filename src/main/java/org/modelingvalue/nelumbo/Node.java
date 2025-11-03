@@ -164,7 +164,20 @@ public class Node extends StructImpl implements AstElement {
         return typeOrFunctor();
     }
 
-    public Map<Variable, Object> variables() {
+    public Map<Variable, Object> shallowVariables() {
+        Map<Variable, Object> vars = Map.of();
+        for (int i = 0; i < length(); i++) {
+            Object val = get(i);
+            if (val instanceof Variable) {
+                vars = vars.put((Variable) val, ((Variable) val).type());
+            } else if (val instanceof Node && !(val instanceof Type)) {
+                vars = vars.putAll(((Node) val).shallowVariables());
+            }
+        }
+        return vars;
+    }
+
+    public final Map<Variable, Object> variables() {
         if (variables == null) {
             Map<Variable, Object> vars = Map.of();
             for (int i = 0; i < length(); i++) {
@@ -185,7 +198,7 @@ public class Node extends StructImpl implements AstElement {
             int nr = 0;
             for (int i = 0; i < length(); i++) {
                 Object val = get(i);
-                if (val instanceof Type) {
+                if (val instanceof Type || val instanceof Variable) {
                     nr++;
                 } else if (val instanceof Node && !(val instanceof Terminal)) {
                     nr += ((Node) val).nrOfUnbound();
@@ -201,7 +214,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return toString(new TokenType[1]);
     }
 

@@ -41,7 +41,7 @@ public abstract class CompoundPredicate extends Predicate {
     }
 
     @Override
-    protected final InferResult resolve(InferContext context) {
+    protected InferResult resolve(InferContext context) {
         Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(), this));
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;

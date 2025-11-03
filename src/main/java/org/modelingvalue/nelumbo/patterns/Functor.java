@@ -120,7 +120,7 @@ public class Functor extends Node {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         return resultType() + "::=" + pattern();
     }
 

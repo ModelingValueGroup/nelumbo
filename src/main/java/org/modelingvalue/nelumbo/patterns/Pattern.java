@@ -212,8 +212,6 @@ public abstract class Pattern extends Node {
             if (type == TokenType.NAME || type == TokenType.NUMBER || type == TokenType.DECIMAL) {
                 sb.append(" ");
             }
-        } else if (previous[0] == TokenType.OPERATOR && type == TokenType.OPERATOR) {
-            sb.append(" ");
         }
         sb.append(text);
         previous[0] = type;

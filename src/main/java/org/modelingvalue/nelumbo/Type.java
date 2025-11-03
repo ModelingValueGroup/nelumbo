@@ -281,7 +281,7 @@ public class Type extends Node {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         return "<" + name() + ">";
     }
 

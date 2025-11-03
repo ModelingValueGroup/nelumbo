@@ -55,7 +55,7 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         Pattern separator = separator();
         return "<(>" + repeated() + (separator != null ? "<,>" + separator : "") + (mandatory() ? "<)+>" : "<)*>");
     }

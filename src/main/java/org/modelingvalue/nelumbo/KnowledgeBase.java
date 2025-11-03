@@ -47,6 +47,7 @@ import org.modelingvalue.nelumbo.syntax.*;
 public final class KnowledgeBase implements ParseExceptionHandler {
 
     private static final boolean                                                        TRACE_NELUMBO        = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
+    public static final boolean                                                         TRACE_SYNTATIC       = java.lang.Boolean.getBoolean("TRACE_SYNTATIC");
     //
     public static final Context<KnowledgeBase>                                          CURRENT              = Context.of();
     //
@@ -429,7 +430,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
                 litCond = And.of(eq, litCond);
             }
-            Rule rule = new Rule(ruleFunctor, List.of(), nodCons, litCond);
+            ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), litCond);
+            Rule rule = new Rule(ruleFunctor, List.of(), nodCons, exists);
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots;
@@ -450,9 +452,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         for (List<Object> condIf : (List<List<Object>>) args[1]) {
             Predicate cond = (Predicate) condIf.get(0);
             Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
-            Map<Variable, Object> condVars = cond.variables();
-            Map<Variable, Object> whenVars = when != null ? when.variables() : null;
+            Map<Variable, Object> condVars = cond.shallowVariables();
+            Map<Variable, Object> whenVars = when != null ? when.shallowVariables() : null;
             Map<Variable, Object> localVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
+            if (!localVars.isEmpty()) {
+                String message = "Rule has local variables " + localVars.map(e -> e.getKey().toString()).reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + " in condition";
+                addException(when != null ? new ParseException(message, cond, when) : new ParseException(message, cond));
+            }
+            condVars = cond.variables();
+            whenVars = when != null ? when.variables() : null;
+            localVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
             if (literalFunctor != null) {
                 Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(localVars));
                 cons = cons.setVariables(litVars);
@@ -500,7 +509,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
-        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
+        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO, Map.of());
         init();
     }
 

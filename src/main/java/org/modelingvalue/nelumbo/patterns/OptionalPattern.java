@@ -53,7 +53,7 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         return "<(>" + optional() + "<)?>";
     }
 

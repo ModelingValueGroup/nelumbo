@@ -472,9 +472,4 @@ public interface InferResult {
         }
     }
 
-    default InferResult complete() {
-        boolean fullyBound = cycles().anyMatch(Node::isFullyBound);
-        return completeFacts() && completeFalsehoods() ? this : of(facts(), true, falsehoods(), fullyBound, cycles());
-    }
-
 }

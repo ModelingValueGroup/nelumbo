@@ -57,7 +57,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         return tokenText();
     }
 
