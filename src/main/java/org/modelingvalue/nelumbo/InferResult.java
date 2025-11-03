@@ -420,11 +420,6 @@ public interface InferResult {
                 (other.completeFalsehoods() && !falsehoods().allMatch(other.falsehoods()::contains));
     }
 
-    default InferResult complete() {
-        boolean fullyBound = cycles().anyMatch(Node::isFullyBound);
-        return completeFacts() && completeFalsehoods() ? this : of(facts(), true, falsehoods(), fullyBound, cycles());
-    }
-
     default InferResult cast(Predicate to) {
         return of(cast(facts(), to), completeFacts(), cast(falsehoods(), to), completeFalsehoods(), cycles());
     }

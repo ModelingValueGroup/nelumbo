@@ -347,6 +347,12 @@ public class Predicate extends Node {
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
+                    cycleResult = InferResult.of(nextResult.facts(), true, nextResult.falsehoods(), true, nextResult.cycles());
+                    context.knowledgebase().memoization(this, cycleResult);
+                    nextResult = inferRules(context.putCycleResult(this, cycleResult));
+                    if (nextResult.hasStackOverflow()) {
+                        return nextResult;
+                    }
                     return InferResult.of(nextResult.facts(), nextResult.completeFacts(), //
                             nextResult.falsehoods(), nextResult.completeFalsehoods(), //
                             nextResult.cycles().remove(this));
@@ -364,9 +370,6 @@ public class Predicate extends Node {
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
-                }
-                if (ruleResult.hasCycleWith(this)) {
-                    ruleResult = ruleResult.complete();
                 }
                 result = result.biimply(ruleResult, rule);
             }
