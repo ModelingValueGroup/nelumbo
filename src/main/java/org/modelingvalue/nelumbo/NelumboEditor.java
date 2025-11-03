@@ -18,11 +18,18 @@ package org.modelingvalue.nelumbo;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
@@ -40,6 +47,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Taskbar;
 import java.awt.Toolkit;
@@ -50,8 +59,8 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.Serial;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.prefs.Preferences;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -82,9 +91,9 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     /**
-     * Map from TokenType to ColorScheme defining how each token type should be colored.
+     * Default color schemes for token types
      */
-    private final static Map<TokenType, ColorScheme> TOKEN_COLORS = Map.of(
+    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.of(
             TokenType.NUMBER, new ColorScheme(0x000077, null),
             TokenType.STRING, new ColorScheme(0x007700, null),
             TokenType.NAME, new ColorScheme(0x0000ff, null),
@@ -93,26 +102,35 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             TokenType.OPERATOR, new ColorScheme(0x666666, null),
             TokenType.END_LINE_COMMENT, new ColorScheme(0x008800, null),
             TokenType.IN_LINE_COMMENT, new ColorScheme(0x008800, null)
-                                                                          );
+                                                                                  );
 
-    private static final String PREF_TEXT_CONTENT    = "textContent";
-    private static final String PREF_CARET_POSITION  = "caretPosition";
-    private static final String PREF_SELECTION_START = "selectionStart";
-    private static final String PREF_SELECTION_END   = "selectionEnd";
+    /**
+     * Map from TokenType to ColorScheme defining how each token type should be colored.
+     * This is mutable so users can customize colors.
+     */
+    private static final Map<TokenType, ColorScheme> TOKEN_COLORS = new HashMap<>(DEFAULT_TOKEN_COLORS);
+
+    private static final String PREF_TEXT_CONTENT       = "textContent";
+    private static final String PREF_CARET_POSITION     = "caretPosition";
+    private static final String PREF_SELECTION_START    = "selectionStart";
+    private static final String PREF_SELECTION_END      = "selectionEnd";
+    private static final String PREF_TOKEN_COLOR_PREFIX = "tokenColor.";
 
     public static void main(String[] arg) {
         new NelumboEditor();
     }
 
     //===========================================================================================================================================
-    private       JFrame        frame;
-    private       JTextPane     textArea;
-    private       boolean       quit        = false;
     private       KnowledgeBase knowledgeBase;
-    private       JTextArea     message;
+    private       JFrame        frame;
+    private       JTextPane     messagesPane;
+    private       JTextPane     textPane;
+    private       boolean       quit;
+    private       boolean       refreshRequested;
     private final Preferences   preferences = Preferences.userNodeForPackage(NelumboEditor.class);
 
     public NelumboEditor() {
+        loadTokenColors(); // Load saved colors before creating UI
         initWindow();
         initActions();
         loadTextContent();
@@ -121,6 +139,10 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void initWindow() {
+        // Use native macOS menu bar
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("apple.awt.application.name", "Nelumbo");
+
         try {
             FlatLightLaf.setup();
             UIManager.put("Button.arc", 8);
@@ -144,7 +166,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         frame.setBounds(x, y, frameSize.width, frameSize.height);
 
         // Create text pane with modern styling (no wrapping)
-        textArea = new JTextPane() {
+        textPane = new JTextPane() {
             @Serial
             private static final long serialVersionUID = 1L;
 
@@ -163,7 +185,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         };
 
         // Use a custom EditorKit that doesn't wrap lines
-        textArea.setEditorKit(new StyledEditorKit() {
+        textPane.setEditorKit(new StyledEditorKit() {
             @Serial
             private static final long serialVersionUID = 1L;
 
@@ -174,24 +196,35 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         });
 
         Font font = new Font(Font.MONOSPACED, Font.PLAIN, 14);
-        textArea.setFont(font);
-        textArea.setEditable(true);
+        textPane.setFont(font);
+        textPane.setEditable(true);
         Insets margin = new Insets(15, 15, 15, 15);
-        textArea.setMargin(margin);
+        textPane.setMargin(margin);
 
-        // Create message area with modern styling
-        message = new JTextArea("");
-        message.setEditable(false);
-        message.setFont(font);
-        message.setMargin(margin);
-        message.setLineWrap(false);
-        message.setBackground(new Color(0xF5F5F5));
+        // Set line spacing for better readability
+        StyledDocument     doc            = textPane.getStyledDocument();
+        SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
+        StyleConstants.setLineSpacing(paragraphStyle, 0.2f); // 20% extra spacing
+        doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
+
+        // Create messagesPane area with modern styling
+        messagesPane = new JTextPane();
+        messagesPane.setEditable(false);
+        messagesPane.setFont(font);
+        messagesPane.setMargin(margin);
+        messagesPane.setBackground(new Color(0xF5F5F5));
+
+        // Set line spacing to match textPane
+        StyledDocument     messageDoc            = messagesPane.getStyledDocument();
+        SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
+        StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f); // 20% extra spacing
+        messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
 
         // Create scroll panes with borders
-        JScrollPane textScroll = new JScrollPane(textArea);
+        JScrollPane textScroll = new JScrollPane(textPane);
         textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
 
-        JScrollPane messageScroll = new JScrollPane(message);
+        JScrollPane messageScroll = new JScrollPane(messagesPane);
         messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));
 
         messageScroll.getVerticalScrollBar().setModel(textScroll.getVerticalScrollBar().getModel());
@@ -206,44 +239,59 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         // Layout
         frame.getContentPane().setLayout(new BorderLayout());
         frame.getContentPane().add(split, BorderLayout.CENTER);
+
+        // Setup menu bar before making frame visible
+        JMenuBar  menuBar         = new JMenuBar();
+        JMenu     colorsMenu      = new JMenu("Colors");
+        JMenuItem configureColors = new JMenuItem("Configure Token Colors...");
+        configureColors.addActionListener(e -> showColorConfigDialog());
+
+        JMenuItem resetColors = new JMenuItem("Reset to Defaults");
+        resetColors.addActionListener(e -> resetTokenColors());
+
+        colorsMenu.add(configureColors);
+        colorsMenu.add(resetColors);
+        menuBar.add(colorsMenu);
+        frame.setJMenuBar(menuBar);
+
         frame.setVisible(true);
 
         frame.addWindowListener(this);
-        textArea.getDocument().addDocumentListener(this);
+        textPane.getDocument().addDocumentListener(this);
 
         // Set focus on text area
-        textArea.requestFocusInWindow();
+        textPane.requestFocusInWindow();
     }
 
     private void initActions() {
-        textArea.getInputMap().put(KeyStroke.getKeyStroke('+', InputEvent.CTRL_DOWN_MASK), INCREASE);
-        textArea.getInputMap().put(KeyStroke.getKeyStroke('=', InputEvent.CTRL_DOWN_MASK), INCREASE);
-        textArea.getInputMap().put(KeyStroke.getKeyStroke('-', InputEvent.CTRL_DOWN_MASK), DECREASE);
-        textArea.getInputMap().put(KeyStroke.getKeyStroke('_', InputEvent.CTRL_DOWN_MASK), DECREASE);
+        textPane.getInputMap().put(KeyStroke.getKeyStroke('+', InputEvent.CTRL_DOWN_MASK), INCREASE);
+        textPane.getInputMap().put(KeyStroke.getKeyStroke('=', InputEvent.CTRL_DOWN_MASK), INCREASE);
+        textPane.getInputMap().put(KeyStroke.getKeyStroke('-', InputEvent.CTRL_DOWN_MASK), DECREASE);
+        textPane.getInputMap().put(KeyStroke.getKeyStroke('_', InputEvent.CTRL_DOWN_MASK), DECREASE);
 
-        textArea.getInputMap().put(KeyStroke.getKeyStroke('+', InputEvent.META_DOWN_MASK), INCREASE);
-        textArea.getInputMap().put(KeyStroke.getKeyStroke('=', InputEvent.META_DOWN_MASK), INCREASE);
-        textArea.getInputMap().put(KeyStroke.getKeyStroke('-', InputEvent.META_DOWN_MASK), DECREASE);
-        textArea.getInputMap().put(KeyStroke.getKeyStroke('_', InputEvent.META_DOWN_MASK), DECREASE);
+        textPane.getInputMap().put(KeyStroke.getKeyStroke('+', InputEvent.META_DOWN_MASK), INCREASE);
+        textPane.getInputMap().put(KeyStroke.getKeyStroke('=', InputEvent.META_DOWN_MASK), INCREASE);
+        textPane.getInputMap().put(KeyStroke.getKeyStroke('-', InputEvent.META_DOWN_MASK), DECREASE);
+        textPane.getInputMap().put(KeyStroke.getKeyStroke('_', InputEvent.META_DOWN_MASK), DECREASE);
 
-        textArea.getActionMap().put(INCREASE, new TextAction(INCREASE) {
+        textPane.getActionMap().put(INCREASE, new TextAction(INCREASE) {
             @Serial
             private static final long serialVersionUID = -425923171136898022L;
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (textArea == getTextComponent(e)) {
+                if (textPane == getTextComponent(e)) {
                     increase();
                 }
             }
         });
-        textArea.getActionMap().put(DECREASE, new TextAction(DECREASE) {
+        textPane.getActionMap().put(DECREASE, new TextAction(DECREASE) {
             @Serial
             private static final long serialVersionUID = 3357017446274657221L;
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (textArea == getTextComponent(e)) {
+                if (textPane == getTextComponent(e)) {
                     decrease();
                 }
             }
@@ -262,25 +310,25 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void increase() {
-        Font  font    = textArea.getFont();
+        Font  font    = textPane.getFont();
         float newSize = Math.min(100f, font.getSize() * 1.2f);
         font = font.deriveFont(newSize);
-        textArea.setFont(font);
-        message.setFont(font);
+        textPane.setFont(font);
+        messagesPane.setFont(font);
     }
 
     private void decrease() {
-        Font  font    = textArea.getFont();
+        Font  font    = textPane.getFont();
         float newSize = Math.max(7f, font.getSize() / 1.2f);
         font = font.deriveFont(newSize);
-        textArea.setFont(font);
-        message.setFont(font);
+        textPane.setFont(font);
+        messagesPane.setFont(font);
     }
 
     @Override
     public synchronized void windowClosed(WindowEvent evt) {
         quit = true;
-        notifyAll();
+        refresh();
         System.exit(0);
     }
 
@@ -293,37 +341,42 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     @Override
     public void run() {
         knowledgeBase = KnowledgeBase.CURRENT.get();
-        String pre = null;
         while (!quit) {
-            String text = textArea.getText();
-            if (!Objects.equals(pre, text)) {
-                saveTextContent();
-                execute(text);
-                pre = text;
-            }
-            waitForChange();
+            execute(textPane.getText());
+            waitForRefreshRequest();
         }
     }
 
-    private void waitForChange() {
+    private void waitForRefreshRequest() {
         if (!quit) {
             synchronized (this) {
-                try {
-                    wait(1_000_000);
-                } catch (InterruptedException ie) {
-                    // ignore
+                if (!refreshRequested) {
+                    try {
+                        wait(1_000_000);
+                    } catch (InterruptedException ie) {
+                        // ignore
+                    }
                 }
+                refreshRequested = false;
             }
+        }
+    }
+
+    private void refresh() {
+        synchronized (this) {
+            refreshRequested = true;
+            notifyAll();
         }
     }
 
     private void execute(String text) {
-        message.setText("");
-        textArea.getHighlighter().removeAllHighlights();
+        saveTextContent();
+        messagesPane.setText("");
+        textPane.getHighlighter().removeAllHighlights();
         knowledgeBase.init();
 
         // Reset all text to default color first
-        StyledDocument     doc         = textArea.getStyledDocument();
+        StyledDocument     doc         = textPane.getStyledDocument();
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
         doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
@@ -362,7 +415,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         } catch (ParseException pe) {
             error(emptyLines(pe.line()) + pe.getShortMessage());
             try {
-                textArea.getHighlighter().addHighlight(pe.index(), pe.index() + pe.length(), redPainter);
+                textPane.getHighlighter().addHighlight(pe.index(), pe.index() + pe.length(), redPainter);
             } catch (BadLocationException ble) {
                 error(ble.getMessage());
             }
@@ -374,39 +427,48 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void error(String msg) {
-        message.setText(msg);
-        message.repaint();
+        messagesPane.setText(msg);
+        // Apply line spacing after setting text
+        StyledDocument     messageDoc            = messagesPane.getStyledDocument();
+        SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
+        StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f);
+        messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
+        messagesPane.repaint();
     }
 
     private void output(String msg) {
-        message.setText(msg);
-        message.repaint();
+        messagesPane.setText(msg);
+        // Apply line spacing after setting text
+        StyledDocument     messageDoc            = messagesPane.getStyledDocument();
+        SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
+        StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f);
+        messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
+        messagesPane.repaint();
     }
 
     @Override
     public synchronized void insertUpdate(DocumentEvent e) {
-        notifyAll();
+        refresh();
     }
 
     @Override
     public synchronized void removeUpdate(DocumentEvent e) {
-        notifyAll();
+        refresh();
     }
 
     @Override
     public synchronized void changedUpdate(DocumentEvent e) {
-        notifyAll();
     }
 
     private void saveTextContent() {
         try {
-            String text = textArea.getText();
+            String text = textPane.getText();
             preferences.put(PREF_TEXT_CONTENT, text);
 
             // Save caret position and selection
-            int caretPosition  = textArea.getCaretPosition();
-            int selectionStart = textArea.getSelectionStart();
-            int selectionEnd   = textArea.getSelectionEnd();
+            int caretPosition  = textPane.getCaretPosition();
+            int selectionStart = textPane.getSelectionStart();
+            int selectionEnd   = textPane.getSelectionEnd();
 
             preferences.putInt(PREF_CARET_POSITION, caretPosition);
             preferences.putInt(PREF_SELECTION_START, selectionStart);
@@ -422,8 +484,13 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         String text = preferences.get(PREF_TEXT_CONTENT, "");
         if (!text.isEmpty()) {
             try {
-                StyledDocument doc = textArea.getStyledDocument();
+                StyledDocument doc = textPane.getStyledDocument();
                 doc.insertString(0, text, null);
+
+                // Apply line spacing
+                SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
+                StyleConstants.setLineSpacing(paragraphStyle, 0.2f);
+                doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
 
                 // Restore caret position and selection
                 int caretPosition  = preferences.getInt(PREF_CARET_POSITION, 0);
@@ -438,16 +505,192 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
                 // Restore selection or caret position
                 if (selectionStart != selectionEnd) {
-                    textArea.setSelectionStart(selectionStart);
-                    textArea.setSelectionEnd(selectionEnd);
+                    textPane.setSelectionStart(selectionStart);
+                    textPane.setSelectionEnd(selectionEnd);
                 } else {
-                    textArea.setCaretPosition(caretPosition);
+                    textPane.setCaretPosition(caretPosition);
                 }
             } catch (BadLocationException e) {
                 // Fallback to setText if insertString fails
-                textArea.setText(text);
+                textPane.setText(text);
             }
         }
+    }
+
+    private void loadTokenColors() {
+        for (TokenType tokenType : DEFAULT_TOKEN_COLORS.keySet()) {
+            String fgKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".fg";
+            String bgKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bg";
+
+            String fgValue = preferences.get(fgKey, null);
+            String bgValue = preferences.get(bgKey, null);
+
+            if (fgValue != null || bgValue != null) {
+                Color fg = fgValue != null ? parseColorString(fgValue) : DEFAULT_TOKEN_COLORS.get(tokenType).foreground();
+                Color bg = bgValue != null ? parseColorString(bgValue) : DEFAULT_TOKEN_COLORS.get(tokenType).background();
+                TOKEN_COLORS.put(tokenType, new ColorScheme(fg, bg));
+            }
+        }
+    }
+
+    private void saveTokenColors() {
+        try {
+            for (Map.Entry<TokenType, ColorScheme> entry : TOKEN_COLORS.entrySet()) {
+                TokenType   tokenType = entry.getKey();
+                ColorScheme scheme    = entry.getValue();
+
+                String fgKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".fg";
+                String bgKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bg";
+
+                if (scheme.foreground() != null) {
+                    preferences.put(fgKey, colorToString(scheme.foreground()));
+                } else {
+                    preferences.remove(fgKey);
+                }
+
+                if (scheme.background() != null) {
+                    preferences.put(bgKey, colorToString(scheme.background()));
+                } else {
+                    preferences.remove(bgKey);
+                }
+            }
+            preferences.flush();
+        } catch (Exception e) {
+            System.err.println("Failed to save token colors: " + e.getMessage());
+        }
+    }
+
+    private void resetTokenColors() {
+        TOKEN_COLORS.clear();
+        TOKEN_COLORS.putAll(DEFAULT_TOKEN_COLORS);
+        saveTokenColors();
+        refresh();
+    }
+
+    private String colorToString(Color color) {
+        return String.format("#%06X", color.getRGB() & 0xFFFFFF);
+    }
+
+    private Color parseColorString(String colorStr) {
+        if (colorStr.startsWith("#")) {
+            return new Color(java.lang.Integer.parseInt(colorStr.substring(1), 16));
+        }
+        return Color.BLACK;
+    }
+
+    private void showColorConfigDialog() {
+        JDialog dialog = new JDialog(frame, "Configure Token Colors", true);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill   = GridBagConstraints.HORIZONTAL;
+
+        int row = 0;
+
+        // Create a row for each token type that has a color
+        for (Map.Entry<TokenType, ColorScheme> entry : TOKEN_COLORS.entrySet()) {
+            TokenType   tokenType = entry.getKey();
+            ColorScheme scheme    = entry.getValue();
+
+            // Token type name label (column 0)
+            gbc.gridx   = 0;
+            gbc.gridy   = row;
+            gbc.weightx = 0.0;
+            gbc.anchor  = GridBagConstraints.WEST;
+            JLabel label = new JLabel(tokenType.name());
+            mainPanel.add(label, gbc);
+
+            // Foreground color button (column 1)
+            gbc.gridx   = 1;
+            gbc.weightx = 0.0;
+            gbc.anchor  = GridBagConstraints.CENTER;
+            JButton fgButton = new JButton("Foreground");
+            fgButton.setPreferredSize(new Dimension(120, 25));
+            if (scheme.foreground() != null) {
+                fgButton.setBackground(scheme.foreground());
+                fgButton.setForeground(getContrastColor(scheme.foreground()));
+            }
+            fgButton.addActionListener(e -> {
+                Color initialColor = scheme.foreground() != null ? scheme.foreground() : Color.BLACK;
+                Color newColor     = JColorChooser.showDialog(dialog, "Choose Foreground Color for " + tokenType.name(), initialColor);
+                if (newColor != null) {
+                    fgButton.setBackground(newColor);
+                    fgButton.setForeground(getContrastColor(newColor));
+                    TOKEN_COLORS.put(tokenType, new ColorScheme(newColor, scheme.background()));
+                }
+            });
+            mainPanel.add(fgButton, gbc);
+
+            // Background color button (column 2)
+            gbc.gridx = 2;
+            JButton bgButton = new JButton("Background");
+            bgButton.setPreferredSize(new Dimension(120, 25));
+            if (scheme.background() != null) {
+                bgButton.setBackground(scheme.background());
+                bgButton.setForeground(getContrastColor(scheme.background()));
+            }
+            bgButton.addActionListener(e -> {
+                Color initialColor = scheme.background() != null ? scheme.background() : Color.WHITE;
+                Color newColor     = JColorChooser.showDialog(dialog, "Choose Background Color for " + tokenType.name(), initialColor);
+                if (newColor != null) {
+                    bgButton.setBackground(newColor);
+                    bgButton.setForeground(getContrastColor(newColor));
+                    TOKEN_COLORS.put(tokenType, new ColorScheme(scheme.foreground(), newColor));
+                }
+            });
+            mainPanel.add(bgButton, gbc);
+
+            // Clear background button (column 3)
+            gbc.gridx = 3;
+            JButton clearBgButton = new JButton("Clear BG");
+            clearBgButton.setPreferredSize(new Dimension(100, 25));
+            clearBgButton.addActionListener(e -> {
+                bgButton.setBackground(UIManager.getColor("Button.background"));
+                bgButton.setForeground(UIManager.getColor("Button.foreground"));
+                TOKEN_COLORS.put(tokenType, new ColorScheme(scheme.foreground(), null));
+            });
+            mainPanel.add(clearBgButton, gbc);
+
+            row++;
+        }
+
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setPreferredSize(new Dimension(550, 400));
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        // Buttons panel
+        JPanel  buttonPanel = new JPanel();
+        JButton okButton    = new JButton("OK");
+        okButton.addActionListener(e -> {
+            saveTokenColors();
+            refresh();
+            dialog.dispose();
+        });
+
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(e -> {
+            loadTokenColors(); // Reload original colors
+            refresh(); // Refresh to show original colors
+            dialog.dispose();
+        });
+
+        buttonPanel.add(okButton);
+        buttonPanel.add(cancelButton);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setLocationRelativeTo(frame);
+        dialog.setVisible(true);
+    }
+
+    private Color getContrastColor(Color color) {
+        // Calculate luminance to determine if we should use black or white text
+        double luminance = (0.299 * color.getRed() + 0.587 * color.getGreen() + 0.114 * color.getBlue()) / 255;
+        return luminance > 0.5 ? Color.BLACK : Color.WHITE;
     }
 
     // ViewFactory that prevents line wrapping in JTextPane
