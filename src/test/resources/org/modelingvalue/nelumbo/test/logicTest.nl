@@ -24,6 +24,6 @@
     !true          ? [][!true]
     !false         ? [!false][]
 
-	a=T1 | a=T2      ? [T1=T1|T1=T2,T2=T1|T2=T2][..]
-	a=T1 & a=T2      ? [][T1=T1&T1=T2,T2=T1&T2=T2,..]
+	a=T1|a=T2      ? [T1=T1|T1=T2,T2=T1|T2=T2][..]
+	a=T1&a=T2      ? [][T1=T1&T1=T2,T2=T1&T2=T2,..]
 
