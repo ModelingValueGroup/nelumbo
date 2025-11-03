@@ -22,6 +22,7 @@
 * Strongly typed for more consistency and extensibility
 * Performant by binding variables based on navigating relations only
 * Easily extensible and integrable with the use of native classes
+* Full editor support in any IDE using the Language Server Protocol
 
 ---
 
