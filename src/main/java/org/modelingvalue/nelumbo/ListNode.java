@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class ListNode extends Node {
     @Serial
@@ -66,7 +67,7 @@ public class ListNode extends Node {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         return elements().toString().substring(4);
     }
 }

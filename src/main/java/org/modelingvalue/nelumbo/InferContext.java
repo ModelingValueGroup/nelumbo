@@ -30,7 +30,9 @@ public interface InferContext {
 
     boolean trace();
 
-    static InferContext of(KnowledgeBase knowledgebase, List<Predicate> stack, Map<Predicate, InferResult> cyclic, boolean reduce, boolean trace) {
+    Map<Variable, Object> globalVars();
+
+    static InferContext of(KnowledgeBase knowledgebase, List<Predicate> stack, Map<Predicate, InferResult> cyclic, boolean reduce, boolean trace, Map<Variable, Object> globalVars) {
         return new InferContext() {
             @Override
             public KnowledgeBase knowledgebase() {
@@ -56,24 +58,33 @@ public interface InferContext {
             public boolean trace() {
                 return trace;
             }
+
+            @Override
+            public Map<Variable, Object> globalVars() {
+                return globalVars;
+            }
         };
     }
 
     default InferContext pushOnStack(Predicate predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, trace());
+        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, trace(), globalVars());
     }
 
     default InferContext putCycleResult(Predicate predicate, InferResult cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, trace());
+        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, trace(), globalVars());
     }
 
     default InferContext reduce(boolean reduce) {
-        return of(knowledgebase(), stack(), cycleResult(), reduce, trace());
+        return of(knowledgebase(), stack(), cycleResult(), reduce, trace(), globalVars());
+    }
+
+    default InferContext globalVars(Map<Variable, Object> globalVars) {
+        return of(knowledgebase(), stack(), cycleResult(), reduce(), trace(), globalVars);
     }
 
     @SuppressWarnings("unused")
     default InferContext trace(boolean trace) {
-        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), reduce(), trace);
+        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), reduce(), trace, globalVars());
     }
 
     default String prefix() {

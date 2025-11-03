@@ -24,6 +24,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Rule extends Node implements Evaluatable {
     @Serial
@@ -66,13 +67,14 @@ public final class Rule extends Node implements Evaluatable {
         }
         binding = variables().putAll(binding);
         Predicate consequence = consequence();
+        Map<Variable, Object> consVars = consequence.variables();
         Predicate condition = condition();
         consequence = consequence.setBinding(binding);
         condition = condition.setBinding(binding);
         if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + consequence + " <=> " + condition);
         }
-        InferResult condResult = condition.resolve(context);
+        InferResult condResult = condition.resolve(context.globalVars(consVars));
         InferResult proResult;
         if (condResult.hasStackOverflow()) {
             proResult = condResult;
@@ -89,25 +91,19 @@ public final class Rule extends Node implements Evaluatable {
             }
             for (Predicate condFalsehood : condResult.falsehoods()) {
                 Predicate proFalsehood = proven.castFrom(consequence.setBinding(condFalsehood.getBinding()));
-                if (!proFacts.contains(proFalsehood)) {
-                    if (proFalsehood.isFullyBound()) {
-                        proFalsehoods = proFalsehoods.add(proFalsehood);
-                    } else {
-                        completeFalsehoods = false;
-                    }
-                }
-            }
-            if (!proven.isFullyBound()) {
-                boolean condFullyBound = condition.isFullyBound();
-                if (condFullyBound ? proFacts.isEmpty() : !condResult.completeFacts()) {
-                    completeFacts = false;
-                }
-                if (condFullyBound ? proFalsehoods.isEmpty() : !condResult.completeFalsehoods()) {
+                if (proFalsehood.isFullyBound()) {
+                    proFalsehoods = proFalsehoods.add(proFalsehood);
+                } else {
                     completeFalsehoods = false;
                 }
             }
-            if (completeFacts && proFacts.isEmpty() && completeFalsehoods && proFalsehoods.isEmpty() && proven.isFullyBound()) {
-                proFalsehoods = proFalsehoods.add(proven);
+            if (!proven.isFullyBound()) {
+                if (!condResult.completeFacts()) {
+                    completeFacts = false;
+                }
+                if (!condResult.completeFalsehoods()) {
+                    completeFalsehoods = false;
+                }
             }
             proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());
         }
@@ -129,6 +125,11 @@ public final class Rule extends Node implements Evaluatable {
 
     public boolean isSyntatic() {
         return astElements().isEmpty() || firstToken().fileName().equals("nelumbo.nl");
+    }
+
+    @Override
+    public String toString(TokenType[] previous) {
+        return consequence() + " <=> " + condition();
     }
 
 }

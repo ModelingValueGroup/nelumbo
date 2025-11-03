@@ -19,86 +19,56 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.syntax.TokenType;
+import org.modelingvalue.collections.Map;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
-public final class When extends BinaryPredicate {
+public abstract class Quantifier extends CompoundPredicate {
+
     @Serial
-    private static final long serialVersionUID = 9105566742523301113L;
+    private static final long serialVersionUID = -4838100281214165385L;
 
-    private When(Node when, Node predicate) {
-        super(Type.PREDICATE, List.of(), when, predicate);
+    protected Quantifier(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0]);
     }
 
-    private When(Object[] args, When declaration) {
+    protected Quantifier(Object[] args, Quantifier declaration) {
         super(args, declaration);
     }
 
-    public static When of(Node when, Node predicate) {
-        return new When(when, predicate);
+    @Override
+    public Quantifier declaration() {
+        return (Quantifier) super.declaration();
+    }
+
+    public final Predicate predicate() {
+        return (Predicate) get(0);
     }
 
     @Override
-    public When declaration() {
-        return (When) super.declaration();
+    public Quantifier set(int i, Object... a) {
+        return (Quantifier) super.set(i, a);
     }
 
     @Override
-    protected When struct(Object[] array, Predicate declaration) {
-        return new When(array, (When) declaration);
+    public Map<Variable, Object> shallowVariables() {
+        return Map.of();
     }
 
     @Override
-    public When set(int i, Object... a) {
-        return (When) super.set(i, a);
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        return resolve(context);
     }
 
     @Override
-    protected boolean isTrue(InferResult predResult, int i) {
-        return false;
+    protected final InferResult resolve(InferContext context) {
+        Predicate predicate = predicate();
+        InferResult predResult = predicate.resolve(context.globalVars(predicate.declaration().shallowVariables()));
+        if (predResult.hasStackOverflow()) {
+            return predResult;
+        }
+        return resolve(context, predResult);
     }
 
-    @Override
-    protected boolean isFalse(InferResult predResult, int i) {
-        return false;
-    }
+    protected abstract InferResult resolve(InferContext context, InferResult predResult);
 
-    @Override
-    protected boolean isUnknown(InferResult predResult, int i) {
-        return i == 0 && predResult.isFalseCC();
-    }
-
-    @Override
-    protected boolean isTrue(InferResult[] predResult) {
-        return predResult[1].isTrueCC();
-    }
-
-    @Override
-    protected boolean isFalse(InferResult[] predResult) {
-        return predResult[1].isFalseCC();
-    }
-
-    @Override
-    protected boolean isLeft(InferResult[] predResult) {
-        return false;
-    }
-
-    @Override
-    protected boolean isRight(InferResult[] predResult) {
-        return predResult[0].isTrueCC();
-    }
-
-    @Override
-    protected InferResult add(InferResult[] predResult) {
-        return predResult[0].addAnd(predResult[1]);
-    }
-
-    @Override
-    protected void order(Predicate[] predicate) {
-        // Do not change order
-    }
-
-    @Override
-    public String toString(TokenType[] previous) {
-        return predicate2() + " if " + predicate1();
-    }
 }

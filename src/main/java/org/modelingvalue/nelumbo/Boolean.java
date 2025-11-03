@@ -21,6 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Boolean extends Predicate {
     @Serial
@@ -55,10 +56,6 @@ public final class Boolean extends Predicate {
 
     private Boolean(Object[] args, Boolean declaration) {
         super(args, declaration);
-    }
-
-    @Override
-    protected void init(Predicate parent, int idx) {
     }
 
     public boolean isTrue() {
@@ -109,7 +106,7 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         return isUnknown() ? "unknown" : toString(0);
     }
 

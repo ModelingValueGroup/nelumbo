@@ -18,9 +18,7 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -65,11 +63,6 @@ public final class Variable extends Node {
     }
 
     @Override
-    public String toString() {
-        return name();
-    }
-
-    @Override
     protected Variable struct(Object[] array) {
         return new Variable(array);
     }
@@ -77,11 +70,6 @@ public final class Variable extends Node {
     @Override
     public Variable set(int i, Object... a) {
         return (Variable) super.set(i, a);
-    }
-
-    @Override
-    public final Map<Variable, Object> variables() {
-        return Map.of(Entry.of(this, type()));
     }
 
     @Override

@@ -58,7 +58,7 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         return "<(>" + options().map(Object::toString).reduce("", (a, b) -> a.isEmpty() || b.isEmpty() ? a + b : a + "<|>" + b) + "<)>";
     }
 

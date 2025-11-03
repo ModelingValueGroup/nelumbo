@@ -23,8 +23,8 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Predicate extends Node {
     @Serial
@@ -38,63 +38,21 @@ public class Predicate extends Node {
 
     public static Node             INCOMPLETE         = new Predicate(Type.PREDICATE, List.of(), "..");
 
-    //
-    private final InferResult      cycleResult        = InferResult.cycle(Set.of(), Set.of(), this);
     private final Predicate        declaration;
-    private Predicate              parent;
-    private int                    parentIdx;
 
     public Predicate(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, args);
         this.declaration = this;
-        init();
     }
 
     public Predicate(Type type, List<AstElement> elements, Object... args) {
         super(type, elements, args);
         this.declaration = this;
-        init();
     }
 
     protected Predicate(Object[] args, Predicate declaration) {
         super(args);
         this.declaration = declaration == null ? this : declaration;
-    }
-
-    private void init() {
-        for (int i = 0; i < length(); i++) {
-            Object e = get(i);
-            if (e instanceof Predicate) {
-                ((Predicate) e).init(this, i);
-            }
-        }
-    }
-
-    protected void init(Predicate parent, int idx) {
-        assert (this.parent == null && this.parentIdx == 0);
-        this.parent = parent;
-        this.parentIdx = idx;
-    }
-
-    private Pair<Predicate, int[]> rootIdx() {
-        if (parent != null) {
-            Pair<Predicate, int[]> root = parent.rootIdx();
-            if (root != null) {
-                int[] idx = new int[root.b().length + 1];
-                System.arraycopy(root.b(), 0, idx, 1, root.b().length);
-                idx[0] = parentIdx;
-                return Pair.of(root.a(), idx);
-            } else {
-                return Pair.of(parent, new int[]{parentIdx});
-            }
-        } else {
-            return null;
-        }
-    }
-
-    protected Predicate root() {
-        Pair<Predicate, int[]> ri = rootIdx();
-        return ri != null ? ri.a().set(ri.b(), Boolean.TRUE) : null;
     }
 
     public Predicate declaration() {
@@ -130,12 +88,12 @@ public class Predicate extends Node {
     }
 
     @Override
-    public String toString() {
-        return setVariables().superToString();
+    public String toString(TokenType[] previous) {
+        return setVariables().superToString(previous);
     }
 
-    private String superToString() {
-        return super.toString();
+    private String superToString(TokenType[] previous) {
+        return super.toString(previous);
     }
 
     private Predicate setVariables() {
@@ -376,7 +334,7 @@ public class Predicate extends Node {
     }
 
     private InferResult fixpoint(InferContext context) {
-        InferResult previousResult = null, cycleResult = this.cycleResult, nextResult;
+        InferResult previousResult = null, cycleResult = InferResult.cycle(Set.of(), Set.of(), this), nextResult;
         do {
             nextResult = inferRules(context.putCycleResult(this, cycleResult));
             if (nextResult.hasStackOverflow()) {

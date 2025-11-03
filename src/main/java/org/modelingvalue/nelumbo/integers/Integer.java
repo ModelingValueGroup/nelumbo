@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Integer extends Terminal {
     @Serial
@@ -78,7 +79,7 @@ public final class Integer extends Terminal {
     }
 
     @Override
-    public String toString() {
+    public String toString(TokenType[] previous) {
         BigInteger value = value();
         return value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX)) : value.toString();
     }
