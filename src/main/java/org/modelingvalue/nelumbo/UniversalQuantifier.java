@@ -36,27 +36,17 @@ public final class UniversalQuantifier extends Quantifier {
         super(functor, elements, args);
     }
 
-    private UniversalQuantifier(Object[] args, UniversalQuantifier declaration) {
-        super(args, declaration);
+    protected UniversalQuantifier(List<AstElement> elements, Predicate predicate) {
+        super(FUNCTOR, elements, new Object[]{predicate});
     }
 
-    public static UniversalQuantifier of(Node predicate) {
-        return new UniversalQuantifier(FUNCTOR, List.of(), new Object[]{predicate});
+    private UniversalQuantifier(Object[] args, UniversalQuantifier declaration) {
+        super(args, declaration);
     }
 
     @Override
     protected UniversalQuantifier struct(Object[] array, Predicate declaration) {
         return new UniversalQuantifier(array, (UniversalQuantifier) declaration);
-    }
-
-    @Override
-    public UniversalQuantifier declaration() {
-        return (UniversalQuantifier) super.declaration();
-    }
-
-    @Override
-    public UniversalQuantifier set(int i, Object... a) {
-        return (UniversalQuantifier) super.set(i, a);
     }
 
     @Override

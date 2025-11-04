@@ -44,23 +44,9 @@ public final class ExistentialQuantifier extends Quantifier {
         super(args, declaration);
     }
 
-    public static ExistentialQuantifier of(Node predicate) {
-        return new ExistentialQuantifier(FUNCTOR, List.of(), new Object[]{predicate});
-    }
-
     @Override
     protected ExistentialQuantifier struct(Object[] array, Predicate declaration) {
         return new ExistentialQuantifier(array, (ExistentialQuantifier) declaration);
-    }
-
-    @Override
-    public ExistentialQuantifier declaration() {
-        return (ExistentialQuantifier) super.declaration();
-    }
-
-    @Override
-    public ExistentialQuantifier set(int i, Object... a) {
-        return (ExistentialQuantifier) super.set(i, a);
     }
 
     @Override

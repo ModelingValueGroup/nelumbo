@@ -35,11 +35,6 @@ public abstract class Quantifier extends CompoundPredicate {
         super(args, declaration);
     }
 
-    @Override
-    public Quantifier declaration() {
-        return (Quantifier) super.declaration();
-    }
-
     public final Predicate predicate() {
         return (Predicate) get(0);
     }
