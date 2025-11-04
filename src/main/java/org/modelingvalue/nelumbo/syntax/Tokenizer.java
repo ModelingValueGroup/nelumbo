@@ -43,12 +43,13 @@ public class Tokenizer {
                 matchers[i] = null;
             }
         }
-        int index = 0;
+        int offset = 0;
         int line = 0;
         int position = 0;
-        addToken(tokens, TokenType.BEGINOFFILE, "", line, position, index);
+        int index = 0;
+        addToken(tokens, TokenType.BEGINOFFILE, "", line, position, offset);
         String previousVertical = null;
-        while (index < input.length()) {
+        while (offset < input.length()) {
             String text = null;
             TokenType type = null;
             for (int i = 0; i < matchers.length; i++) {
@@ -56,11 +57,11 @@ public class Tokenizer {
                 if (m == null) {
                     continue;
                 }
-                if (!m.find(index)) {
+                if (!m.find(offset)) {
                     matchers[i] = null;
                     continue;
                 }
-                if (m.start() == index) {
+                if (m.start() == offset) {
                     String group = m.group();
                     if (text == null || text.length() < group.length()) {
                         text = group;
@@ -69,16 +70,18 @@ public class Tokenizer {
                 }
             }
             addToken(tokens, type, text, line, position, index);
-            index += text.length();
+            offset += text.length();
             int lineIncr = text.replaceAll("\\V", "").length();
             if (0 < lineIncr) {
                 if (previousVertical == null || previousVertical.contains(text)) {
                     line += lineIncr;
                     position = 0;
                     previousVertical = previousVertical == null ? text : previousVertical + text;
+                    index += 1;
                 }
             } else {
                 previousVertical = null;
+                index += text.length();
             }
             position += text.replaceAll(".*\\v", "").length();
         }
