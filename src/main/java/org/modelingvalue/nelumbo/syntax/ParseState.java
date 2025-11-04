@@ -178,7 +178,7 @@ public class ParseState {
                     input = key;
                     token = result.addSplit(token, token.split(1));
                 }
-            } else if (type == TokenType.OPERATOR) {
+            } else if (type == TokenType.OPERATOR || type == TokenType.NAME) {
                 for (int i = text.length() - 1; i > 0; i--) {
                     String key = text.substring(0, i);
                     next = transitions().get(key);
