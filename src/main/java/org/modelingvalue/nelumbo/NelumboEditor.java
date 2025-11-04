@@ -126,13 +126,20 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
     }
 
+    private static final String[] FONT_NAMES = {//
+                                                "input mono", //
+                                                "dejavu sans mono", //
+                                                "overpass mono", //
+                                                Font.MONOSPACED//
+    };
+
     /**
      * Default color schemes for token types with style attributes
      */
     private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.of(//
                                                                                    TokenType.NUMBER,//
                                                                                    new ColorScheme(0x000077, null, true, false, false, false, false),//
-                                                                                   TokenType.DECIMAL,
+                                                                                   TokenType.DECIMAL, //
                                                                                    new ColorScheme(0x000077, null, true, false, false, false, false),//
                                                                                    TokenType.STRING,//
                                                                                    new ColorScheme(0x007700, null, false, false, false, false, false),//
@@ -148,8 +155,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                                                                                    new ColorScheme(0xcccccc, null, false, true, false, false, false),//
                                                                                    TokenType.IN_LINE_COMMENT, //
                                                                                    new ColorScheme(0xcccccc, null, false, true, false, false, false),//
-                                                                                   TokenType.ERROR,
-                                                                                   new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)//
+                                                                                   TokenType.ERROR, new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)//
                                                                                   );
 
     /**
@@ -186,6 +192,45 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         // only reaching this point after the user quits
     }
 
+    private static class NonWrappingJTextPane extends JTextPane {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        public NonWrappingJTextPane(boolean editable, int backgroundRgb) {
+            setEditorKit(new StyledEditorKit() {
+                @Serial
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public ViewFactory getViewFactory() {
+                    return new NoWrapViewFactory();
+                }
+            });
+            setFont(findFont());
+            setMargin(new Insets(15, 15, 15, 15));
+            setEditable(editable);
+            setBackground(new Color(backgroundRgb));
+            // Set line spacing for better readability
+            StyledDocument     doc            = getStyledDocument();
+            SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
+            StyleConstants.setLineSpacing(paragraphStyle, 0.2f); // 20% extra spacing
+            doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return false; // Disable line wrapping
+        }
+
+        @Override
+        public void setSize(Dimension d) {
+            if (d.width < getParent().getSize().width) {
+                d.width = getParent().getSize().width;
+            }
+            super.setSize(d);
+        }
+    }
+
     private void initWindow() {
         // Use native macOS menu bar
         System.setProperty("apple.laf.useScreenMenuBar", "true");
@@ -213,74 +258,14 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         int       y          = frameSize.height / 2;
         frame.setBounds(x, y, frameSize.width, frameSize.height);
 
-        // Create text pane with modern styling (no wrapping)
-        textPane = new JTextPane() {
-            @Serial
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public boolean getScrollableTracksViewportWidth() {
-                return false; // Disable line wrapping
-            }
-
-            @Override
-            public void setSize(Dimension d) {
-                if (d.width < getParent().getSize().width) {
-                    d.width = getParent().getSize().width;
-                }
-                super.setSize(d);
-            }
-        };
-
-        // Use a custom EditorKit that doesn't wrap lines
-        textPane.setEditorKit(new StyledEditorKit() {
-            @Serial
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public ViewFactory getViewFactory() {
-                return new NoWrapViewFactory();
-            }
-        });
-
-        Font font = new Font("input mono", Font.PLAIN, 14);
-        if (!font.getFamily().toLowerCase().contains("input mono")) {
-            font = new Font("dejavu sans mono", Font.PLAIN, 14);
-            if (!font.getFamily().toLowerCase().contains("dejavu sans mono")) {
-                font = new Font(Font.MONOSPACED, Font.PLAIN, 14);
-            }
-        }
-        textPane.setFont(font);
-        textPane.setEditable(true);
-        Insets margin = new Insets(15, 15, 15, 15);
-        textPane.setMargin(margin);
-
-        // Set line spacing for better readability
-        StyledDocument     doc            = textPane.getStyledDocument();
-        SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
-        StyleConstants.setLineSpacing(paragraphStyle, 0.2f); // 20% extra spacing
-        doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
-
-        // Create messagesPane area with modern styling
-        messagesPane = new JTextPane();
-        messagesPane.setEditable(false);
-        messagesPane.setFont(font);
-        messagesPane.setMargin(margin);
-        messagesPane.setBackground(new Color(0xF5F5F5));
-
-        // Set line spacing to match textPane
-        StyledDocument     messageDoc            = messagesPane.getStyledDocument();
-        SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
-        StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f); // 20% extra spacing
-        messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
+        textPane     = new NonWrappingJTextPane(true, 0xffffff);
+        messagesPane = new NonWrappingJTextPane(false, 0xF5F5F5);
 
         // Create scroll panes with borders
-        JScrollPane textScroll = new JScrollPane(textPane);
-        textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
-
+        JScrollPane textScroll    = new JScrollPane(textPane);
         JScrollPane messageScroll = new JScrollPane(messagesPane);
+        textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
         messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));
-
         messageScroll.getVerticalScrollBar().setModel(textScroll.getVerticalScrollBar().getModel());
 
         // Create split pane with modern styling
@@ -315,6 +300,18 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
         // Set focus on text area
         textPane.requestFocusInWindow();
+    }
+
+    private static Font findFont() {
+        Font font = null;
+        for (String fontName : FONT_NAMES) {
+            font = new Font(fontName, Font.BOLD, 14);
+            System.err.println("FONT=" + font);
+            if (font.getFamily().toLowerCase().contains(fontName)) {
+                return font;
+            }
+        }
+        return new Font(Font.MONOSPACED, Font.PLAIN, 14);
     }
 
     private void initActions() {
@@ -608,13 +605,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
             ColorScheme defaultScheme = DEFAULT_TOKEN_COLORS.get(tokenType);
 
-            if (fgValue != null
-                || bgValue != null
-                || preferences.get(boldKey, null) != null
-                || preferences.get(italicKey, null) != null
-                || preferences.get(underlineKey, null) != null
-                || preferences.get(subscriptKey, null) != null
-                || preferences.get(superscriptKey, null) != null) {
+            if (fgValue != null || bgValue != null || preferences.get(boldKey, null) != null || preferences.get(italicKey, null) != null || preferences.get(underlineKey, null) != null || preferences.get(subscriptKey, null) != null || preferences.get(superscriptKey, null) != null) {
 
                 Color   fg          = fgValue != null ? parseColorString(fgValue) : defaultScheme.foreground();
                 Color   bg          = bgValue != null ? parseColorString(bgValue) : defaultScheme.background();
@@ -699,9 +690,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         int row = 0;
 
         // Create a row for each token type that has a color
-        for (Map.Entry<TokenType, ColorScheme> entry : TOKEN_COLORS.entrySet().stream()
-                                                                   .sorted(Comparator.comparingInt(e -> e.getKey().ordinal()))
-                                                                   .toList()) {
+        for (Map.Entry<TokenType, ColorScheme> entry : TOKEN_COLORS.entrySet().stream().sorted(Comparator.comparingInt(e -> e.getKey().ordinal())).toList()) {
             TokenType   tokenType = entry.getKey();
             ColorScheme scheme    = entry.getValue();
 
