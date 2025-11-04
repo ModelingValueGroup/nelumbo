@@ -212,7 +212,13 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             }
         });
 
-        Font font = new Font(Font.MONOSPACED, Font.PLAIN, 14);
+        Font font = new Font("input mono", Font.PLAIN, 14);
+        if (!font.getFamily().toLowerCase().contains("input mono")) {
+            font = new Font("dejavu sans mono", Font.PLAIN, 14);
+            if (!font.getFamily().toLowerCase().contains("dejavu sans mono")) {
+                font = new Font(Font.MONOSPACED, Font.PLAIN, 14);
+            }
+        }
         textPane.setFont(font);
         textPane.setEditable(true);
         Insets margin = new Insets(15, 15, 15, 15);
