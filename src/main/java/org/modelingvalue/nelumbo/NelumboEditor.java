@@ -453,7 +453,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
         doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
-        messagesPane.setText("...calculating...");
+        messagesPane.setText("...");
     }
 
     private void showColors(TokenizerResult tokenizerResult) {
@@ -532,7 +532,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void saveTextContent(String text) {
         try {
-            preferences.put(PREF_TEXT_CONTENT, text);
+            preferences.put(PREF_TEXT_CONTENT, text.replaceAll("\r", ""));
 
             // Save caret position and selection
             int caretPosition  = textPane.getCaretPosition();
@@ -552,6 +552,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void loadTextContent() {
         String text = preferences.get(PREF_TEXT_CONTENT, "");
         if (!text.isEmpty()) {
+            text = text.replaceAll("\r", "");
             try {
                 StyledDocument doc = textPane.getStyledDocument();
                 doc.insertString(0, text, null);
