@@ -1,14 +1,14 @@
 
-    <Predicate> ::= true                             @org.modelingvalue.nelumbo.Boolean,
-                    false                            @org.modelingvalue.nelumbo.Boolean,
-                    unknown                          @org.modelingvalue.nelumbo.Boolean,
-                    ! <Predicate>               #25  @org.modelingvalue.nelumbo.Not,
-                    <Predicate> & <Predicate>   #22  @org.modelingvalue.nelumbo.And,
-                    <Predicate> | <Predicate>   #20  @org.modelingvalue.nelumbo.Or,
-                    E(<Predicate>)                   @org.modelingvalue.nelumbo.ExistentialQuantifier,
-                    A(<Predicate>)                   @org.modelingvalue.nelumbo.UniversalQuantifier,
-                    eq(<Node>,<Node>)                @org.modelingvalue.nelumbo.Equal,
-                    <Node> != <Node>            #30
+    <Predicate> ::= true                                              @org.modelingvalue.nelumbo.Boolean,
+                    false                                             @org.modelingvalue.nelumbo.Boolean,
+                    unknown                                           @org.modelingvalue.nelumbo.Boolean,
+                    ! <Predicate>                             #25     @org.modelingvalue.nelumbo.Not,
+                    <Predicate> & <Predicate>                 #22     @org.modelingvalue.nelumbo.And,
+                    <Predicate> | <Predicate>                 #20     @org.modelingvalue.nelumbo.Or,
+                    E(<(> <Variable> <,> , <)+>)(<Predicate>) #100 #0 @org.modelingvalue.nelumbo.ExistentialQuantifier,
+                    A(<(> <Variable> <,> , <)+>)(<Predicate>) #100 #0 @org.modelingvalue.nelumbo.UniversalQuantifier,
+                    eq(<Node>,<Node>)                                 @org.modelingvalue.nelumbo.Equal,
+                    <Node> != <Node>                          #30
 
     <Literal>  l1, l2
     <Function> f1, f2

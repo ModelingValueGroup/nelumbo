@@ -36,8 +36,8 @@ public final class UniversalQuantifier extends Quantifier {
         super(functor, elements, args);
     }
 
-    protected UniversalQuantifier(List<AstElement> elements, Predicate predicate) {
-        super(FUNCTOR, elements, new Object[]{predicate});
+    protected UniversalQuantifier(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
+        super(FUNCTOR, elements, localVars, predicate);
     }
 
     private UniversalQuantifier(Object[] args, UniversalQuantifier declaration) {
@@ -51,13 +51,14 @@ public final class UniversalQuantifier extends Quantifier {
 
     @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
+        List<Variable> localVars = localVars();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         for (Predicate predFalsehood : predResult.falsehoods()) {
-            Predicate falsehood = setBinding(predFalsehood.getBinding().retainAllKey(context.globalVars()));
+            Predicate falsehood = setBinding(predFalsehood.getBinding().removeAllKey(localVars));
             falsehoods = falsehoods.add(falsehood);
         }
         for (Predicate predFact : predResult.facts()) {
-            Predicate fact = setBinding(predFact.getBinding().retainAllKey(context.globalVars()));
+            Predicate fact = setBinding(predFact.getBinding().removeAllKey(localVars));
             if (!falsehoods.contains(fact)) {
                 facts = facts.add(fact);
             }

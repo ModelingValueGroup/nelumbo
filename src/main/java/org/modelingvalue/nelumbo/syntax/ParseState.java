@@ -24,6 +24,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
@@ -238,6 +239,15 @@ public class ParseState {
                         return result;
                     } else {
                         break;
+                    }
+                }
+            }
+            if (node instanceof Variable) {
+                ParseState next = transitions().get(Type.VARIABLE);
+                if (next != null) {
+                    if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                        node.setBranches(next.branches);
+                        return result;
                     }
                 }
             }

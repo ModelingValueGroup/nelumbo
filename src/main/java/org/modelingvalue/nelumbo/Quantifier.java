@@ -28,20 +28,24 @@ public abstract class Quantifier extends CompoundPredicate {
     private static final long serialVersionUID = -4838100281214165385L;
 
     protected Quantifier(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0]);
+        super(functor, elements, args);
+    }
+
+    protected Quantifier(Functor functor, List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
+        super(functor, elements, localVars, predicate);
     }
 
     protected Quantifier(Object[] args, Quantifier declaration) {
         super(args, declaration);
     }
 
-    public final Predicate predicate() {
-        return (Predicate) get(0);
+    @SuppressWarnings("unchecked")
+    public final List<Variable> localVars() {
+        return (List<Variable>) get(0);
     }
 
-    @Override
-    public Quantifier set(int i, Object... a) {
-        return (Quantifier) super.set(i, a);
+    public final Predicate predicate() {
+        return (Predicate) get(1);
     }
 
     @Override
@@ -57,7 +61,7 @@ public abstract class Quantifier extends CompoundPredicate {
     @Override
     protected final InferResult resolve(InferContext context) {
         Predicate predicate = predicate();
-        InferResult predResult = predicate.resolve(context.globalVars(predicate.declaration().shallowVariables()));
+        InferResult predResult = predicate.resolve(context);
         if (predResult.hasStackOverflow()) {
             return predResult;
         }

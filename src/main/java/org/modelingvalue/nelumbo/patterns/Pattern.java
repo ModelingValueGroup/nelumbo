@@ -24,6 +24,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -176,6 +177,9 @@ public abstract class Pattern extends Node {
                         if (post != null) {
                             break;
                         }
+                    }
+                    if (post == null && element instanceof Variable) {
+                        post = pre.transitions().get(Type.VARIABLE);
                     }
                 }
                 assert branche != null;
