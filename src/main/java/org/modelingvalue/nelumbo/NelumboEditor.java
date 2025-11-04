@@ -67,6 +67,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
@@ -77,31 +78,61 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private final static String INCREASE = "INCREASE";
     private final static String DECREASE = "DECREASE";
 
-    private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xff8888));
+    private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xff6666));
 
     /**
      * Defines a color scheme for a token type with foreground and background colors.
      */
     private record ColorScheme(Color foreground,
-                               Color background) {
+                               Color background,
+                               SimpleAttributeSet attr) {
 
         public ColorScheme(java.lang.Integer fore, java.lang.Integer back) {
-            this(fore == null ? null : new Color(fore), back == null ? null : new Color(back));
+            this(fore == null ? null : new Color(fore), back == null ? null : new Color(back), makeAttSet(fore, back));
+        }
+
+        public ColorScheme(Color fg, Color bg) {
+            this(fg, bg, makeAttSet(fg == null ? null : fg.getRGB(), bg == null ? null : bg.getRGB()));
+        }
+
+        static SimpleAttributeSet makeAttSet(java.lang.Integer fore, java.lang.Integer back) {
+            return makeAttSet(fore == null ? null : new Color(fore), back == null ? null : new Color(back));
+        }
+
+        static SimpleAttributeSet makeAttSet(Color fore, Color back) {
+            SimpleAttributeSet attr = new SimpleAttributeSet();
+            StyleConstants.setForeground(attr, new Color(0x000000));
+            StyleConstants.setBackground(attr, new Color(0xffffff));
+            if (fore != null) {
+                StyleConstants.setForeground(attr, fore);
+            }
+            if (back != null) {
+                StyleConstants.setBackground(attr, back);
+            }
+            return attr;
         }
     }
 
     /**
      * Default color schemes for token types
      */
-    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.of(
-            TokenType.NUMBER, new ColorScheme(0x000077, null),
-            TokenType.STRING, new ColorScheme(0x007700, null),
-            TokenType.NAME, new ColorScheme(0x0000ff, null),
-            TokenType.TYPE, new ColorScheme(0x880088, null),
-            TokenType.META_OPERATOR, new ColorScheme(0xffffff, 0x558855),
-            TokenType.OPERATOR, new ColorScheme(0x666666, null),
-            TokenType.END_LINE_COMMENT, new ColorScheme(0x008800, null),
-            TokenType.IN_LINE_COMMENT, new ColorScheme(0x008800, null)
+    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.of(//
+                                                                                   TokenType.NUMBER,//
+                                                                                   new ColorScheme(0x000077, null),//
+                                                                                   TokenType.STRING,//
+                                                                                   new ColorScheme(0x007700, null),//
+                                                                                   TokenType.NAME,//
+                                                                                   new ColorScheme(0x0000ff, null),//
+                                                                                   TokenType.TYPE,//
+                                                                                   new ColorScheme(0x880088, null),//
+                                                                                   TokenType.META_OPERATOR,//
+                                                                                   new ColorScheme(0xffffff, 0x558855),//
+                                                                                   TokenType.OPERATOR,//
+                                                                                   new ColorScheme(0x666666, null),//
+                                                                                   TokenType.END_LINE_COMMENT,//
+                                                                                   new ColorScheme(0x008800, null),//
+                                                                                   TokenType.IN_LINE_COMMENT, //
+                                                                                   new ColorScheme(0x008800, null)//
                                                                                   );
 
     /**
@@ -304,7 +335,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                 Parser.parse(Integer.class);
                 Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
             } catch (ParseException e) {
-                error(e.getMessage());
+                setMessagesAsError(e.getMessage());
             }
         }).run(this);
     }
@@ -342,7 +373,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     public void run() {
         knowledgeBase = KnowledgeBase.CURRENT.get();
         while (!quit) {
-            execute(textPane.getText());
+            execute();
             waitForRefreshRequest();
         }
     }
@@ -369,55 +400,88 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
     }
 
-    private void execute(String text) {
-        saveTextContent();
-        messagesPane.setText("");
-        textPane.getHighlighter().removeAllHighlights();
-        knowledgeBase.init();
+    private record ExecuteResult(TokenizerResult tokenizerResult,
+                                 ParserResult parserResult,
+                                 ParseException pe) {
+        public ExecuteResult(TokenizerResult tokenizerResult, ParserResult parserResult) {
+            this(tokenizerResult, parserResult, null);
+        }
 
-        // Reset all text to default color first
+        public ExecuteResult(TokenizerResult tokenizerResult, ParseException pe) {
+            this(tokenizerResult, null, pe);
+        }
+    }
+
+    private void execute() {
+        prepareForExecute();
+        String          text            = textPane.getText();
+        Tokenizer       tokenizer       = new Tokenizer(text, "Editor");
+        TokenizerResult tokenizerResult = tokenizer.tokenize();
+        showColors(tokenizerResult);
+        ExecuteResult executeResult;
+        try {
+            executeResult = new ExecuteResult(tokenizerResult, new Parser(tokenizerResult).parseMutiple());
+        } catch (ParseException pe) {
+            executeResult = new ExecuteResult(tokenizerResult, pe);
+        }
+        showColors(executeResult.tokenizerResult());
+        showResults(executeResult);
+        saveTextContent(text);
+    }
+
+    private void prepareForExecute() {
+        knowledgeBase.init();
+        textPane.getHighlighter().removeAllHighlights();
         StyledDocument     doc         = textPane.getStyledDocument();
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
         doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
+        messagesPane.setText("...calculating...");
+    }
 
+    private ExecuteResult tokenizeAndParse(String text) {
+        Tokenizer       tokenizer       = new Tokenizer(text, "Editor");
+        TokenizerResult tokenizerResult = tokenizer.tokenize();
         try {
-            Tokenizer       tokenizer       = new Tokenizer(text, "Editor");
-            TokenizerResult tokenizerResult = tokenizer.tokenize();
+            ParserResult parserResult = new Parser(tokenizerResult).parseMutiple();
+            return new ExecuteResult(tokenizerResult, parserResult);
+        } catch (ParseException pe) {
+            return new ExecuteResult(tokenizerResult, pe);
+        }
+    }
 
-            // Apply colors to all tokens based on the TOKEN_COLORS map
-            for (Token token : tokenizerResult.listAll()) {
-                ColorScheme colorScheme = TOKEN_COLORS.get(token.type());
+    private void showColors(TokenizerResult tokenizerResult) {
+        if (tokenizerResult != null) {
+            for (Token t = tokenizerResult.firstAll(); t != null; t = t.nextAll()) {
+                ColorScheme colorScheme = TOKEN_COLORS.get(t.type());
                 if (colorScheme != null) {
-                    SimpleAttributeSet attr = new SimpleAttributeSet();
-                    if (colorScheme.foreground != null) {
-                        StyleConstants.setForeground(attr, colorScheme.foreground);
-                    }
-                    if (colorScheme.background != null) {
-                        StyleConstants.setBackground(attr, colorScheme.background);
-                    }
-                    doc.setCharacterAttributes(token.index(), token.text().length(), attr, false);
+                    SimpleAttributeSet attr = colorScheme.attr();
+                    textPane.getStyledDocument().setCharacterAttributes(t.index(), t.text().length(), attr, false);
                 }
             }
+        }
+    }
 
-            Parser        parser   = new Parser(tokenizerResult);
-            StringBuilder out      = new StringBuilder();
+    private void showResults(ExecuteResult executeResult) {
+        if (executeResult.pe == null) {
+            StringBuilder messages = new StringBuilder();
             int           prevLine = 0;
             int           nextLine;
-            for (Node root : parser.parseMutiple().roots()) {
+            for (Node root : executeResult.parserResult.roots()) {
                 if (root instanceof Query query) {
                     nextLine = query.lastToken().line();
-                    out.append(emptyLines(nextLine - prevLine)).append(query.inferResult().toString()).append("\n");
+                    messages.append(emptyLines(nextLine - prevLine)).append(query.inferResult().toString()).append("\n");
                     prevLine = ++nextLine;
                 }
             }
-            output(out.toString());
-        } catch (ParseException pe) {
-            error(emptyLines(pe.line()) + pe.getShortMessage());
+            setMessages(messages.toString());
+        } else {
+            ParseException pe = executeResult.pe();
+            setMessagesAsError(emptyLines(pe.line()) + pe.getShortMessage());
             try {
                 textPane.getHighlighter().addHighlight(pe.index(), pe.index() + pe.length(), redPainter);
             } catch (BadLocationException ble) {
-                error(ble.getMessage());
+                setMessagesAsError(ble.getMessage());
             }
         }
     }
@@ -426,7 +490,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         return "\n".repeat(nr);
     }
 
-    private void error(String msg) {
+    private void setMessagesAsError(String msg) {
         messagesPane.setText(msg);
         // Apply line spacing after setting text
         StyledDocument     messageDoc            = messagesPane.getStyledDocument();
@@ -436,7 +500,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         messagesPane.repaint();
     }
 
-    private void output(String msg) {
+    private void setMessages(String msg) {
         messagesPane.setText(msg);
         // Apply line spacing after setting text
         StyledDocument     messageDoc            = messagesPane.getStyledDocument();
@@ -460,9 +524,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     public synchronized void changedUpdate(DocumentEvent e) {
     }
 
-    private void saveTextContent() {
+    private void saveTextContent(String text) {
         try {
-            String text = textPane.getText();
             preferences.put(PREF_TEXT_CONTENT, text);
 
             // Save caret position and selection
