@@ -36,16 +36,12 @@ public final class ExistentialQuantifier extends Quantifier {
         super(functor, elements, args);
     }
 
-    protected ExistentialQuantifier(List<AstElement> elements, Predicate predicate) {
-        super(FUNCTOR, elements, new Object[]{predicate});
+    protected ExistentialQuantifier(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
+        super(FUNCTOR, elements, localVars, predicate);
     }
 
     private ExistentialQuantifier(Object[] args, ExistentialQuantifier declaration) {
         super(args, declaration);
-    }
-
-    public static ExistentialQuantifier of(Node predicate) {
-        return new ExistentialQuantifier(FUNCTOR, List.of(), new Object[]{predicate});
     }
 
     @Override
@@ -54,24 +50,15 @@ public final class ExistentialQuantifier extends Quantifier {
     }
 
     @Override
-    public ExistentialQuantifier declaration() {
-        return (ExistentialQuantifier) super.declaration();
-    }
-
-    @Override
-    public ExistentialQuantifier set(int i, Object... a) {
-        return (ExistentialQuantifier) super.set(i, a);
-    }
-
-    @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
+        List<Variable> localVars = localVars();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         for (Predicate predFact : predResult.facts()) {
-            Predicate fact = setBinding(predFact.getBinding().retainAllKey(context.globalVars()));
+            Predicate fact = setBinding(predFact.getBinding().removeAllKey(localVars));
             facts = facts.add(fact);
         }
         for (Predicate predFalsehood : predResult.falsehoods()) {
-            Predicate falsehood = setBinding(predFalsehood.getBinding().retainAllKey(context.globalVars()));
+            Predicate falsehood = setBinding(predFalsehood.getBinding().removeAllKey(localVars));
             if (!facts.contains(falsehood)) {
                 falsehoods = falsehoods.add(falsehood);
             }

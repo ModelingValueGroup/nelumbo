@@ -395,8 +395,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 type = type.function();
                 function = true;
             }
-            if (!args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t)) && //
-                    !args.anyMatch(t -> Type.LITERAL.isAssignableFrom(t))) {
+            if (!args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) && //
+                    !args.anyMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;
             }
         }
@@ -414,8 +414,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             roots = new ListNode(List.of(), roots, litFunctor);
             literalFunctors.updateAndGet(m -> m.put(nodFunctor, litFunctor));
             // Implied Rule
-            Object[] nodVars = new Variable[args.size()];
-            Object[] litVars = new Variable[args.size()];
+            Variable[] nodVars = new Variable[args.size()];
+            Variable[] litVars = new Variable[args.size()];
             List<Type> litArgs = args.replaceAll(Type::literal);
             for (int v = 0; v < args.size(); v++) {
                 nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1));
@@ -430,7 +430,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
                 litCond = And.of(eq, litCond);
             }
-            ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), litCond);
+            ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), List.of(litVars), litCond);
             Rule rule = new Rule(ruleFunctor, List.of(), nodCons, exists);
             roots = new ListNode(List.of(), roots, rule);
         }
@@ -509,7 +509,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
-        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO, Map.of());
+        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
         init();
     }
 

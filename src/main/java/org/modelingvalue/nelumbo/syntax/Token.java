@@ -100,6 +100,16 @@ public final class Token implements AstElement {
         return t1;
     }
 
+    private Token splitGet1(int len) {
+        String sub = text.substring(0, len);
+        return new Token(TokenType.of(sub), sub, line, position, index, fileName);
+    }
+
+    private Token splitGet2(int len) {
+        String sub = text.substring(len);
+        return new Token(TokenType.of(sub), sub, line, position + len, index + len, fileName);
+    }
+
     public void connect(Token t1) {
         Token t2 = t1.next;
         t2.previous = t1;
@@ -110,16 +120,9 @@ public final class Token implements AstElement {
         nextAll.setPreviousAll(t2);
     }
 
-    private Token splitGet1(int len) {
-        return new Token(TokenType.OPERATOR, text.substring(0, len), line, position, index, fileName);
-    }
-
-    private Token splitGet2(int len) {
-        return new Token(type, text.substring(len), line, position + len, index + len, fileName);
-    }
-
     public Token prepend(String prefix) {
-        Token merge = new Token(type, prefix + text, line, position - prefix.length(), index - prefix.length(), fileName);
+        String sup = prefix + text;
+        Token merge = new Token(TokenType.of(sup), sup, line, position - prefix.length(), index - prefix.length(), fileName);
         merge.next = next;
         merge.nextAll = nextAll;
         return merge;

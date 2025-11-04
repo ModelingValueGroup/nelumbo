@@ -69,14 +69,13 @@ public final class Rule extends Node implements Evaluatable {
         }
         binding = variables().putAll(binding);
         Predicate consequence = consequence();
-        Map<Variable, Object> consVars = consequence.variables();
         Predicate condition = condition();
         consequence = consequence.setBinding(binding);
         condition = condition.setBinding(binding);
         if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
             System.out.println(context.prefix() + consequence + " <=> " + condition);
         }
-        InferResult condResult = condition.resolve(context.globalVars(consVars));
+        InferResult condResult = condition.resolve(context);
         InferResult proResult;
         if (condResult.hasStackOverflow()) {
             proResult = condResult;
