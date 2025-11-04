@@ -5,8 +5,8 @@
                     ! <Predicate>                             #25     @org.modelingvalue.nelumbo.Not,
                     <Predicate> & <Predicate>                 #22     @org.modelingvalue.nelumbo.And,
                     <Predicate> | <Predicate>                 #20     @org.modelingvalue.nelumbo.Or,
-                    E(<(> <Variable> <,> , <)+>)(<Predicate>) #100 #0 @org.modelingvalue.nelumbo.ExistentialQuantifier,
-                    A(<(> <Variable> <,> , <)+>)(<Predicate>) #100 #0 @org.modelingvalue.nelumbo.UniversalQuantifier,
+                    E[<(> <Variable> <,> , <)+>](<Predicate>) #100 #0 @org.modelingvalue.nelumbo.ExistentialQuantifier,
+                    A[<(> <Variable> <,> , <)+>](<Predicate>) #100 #0 @org.modelingvalue.nelumbo.UniversalQuantifier,
                     eq(<Node>,<Node>)                                 @org.modelingvalue.nelumbo.Equal,
                     <Node> != <Node>                          #30
 

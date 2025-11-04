@@ -18,12 +18,12 @@
                
     c(a)=b  <=>  pc(a,b)
     p(a)=b  <=>  pc(b,a)
-    m(a)=b  <=>  E(x)(c(x)=a & b=x)
-    f(a)=b  <=>  E(y)(c(y)=a & b=y)
+    m(a)=b  <=>  E[x](c(x)=a & b=x)
+    f(a)=b  <=>  E[y](c(y)=a & b=y)
     
     a(a)=b  <=>  d(b)=a
     d(a)=c  <=>  c(a)=c |
-                 E(b)(d(a)=b & c(b)=c)
+                 E[b](d(a)=b & c(b)=c)
 
     <Male>   ::= Hendrik, Bernhard, Claus, Willem
     <Female> ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
