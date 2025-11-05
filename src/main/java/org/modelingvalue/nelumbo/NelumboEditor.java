@@ -127,9 +127,9 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private static final String[] FONT_NAMES = {//
-                                                "input mono", //
-                                                "dejavu sans mono", //
-                                                "overpass mono", //
+                                                "input mono",//
+                                                "dejavu sans mono",//
+                                                "overpass mono",//
                                                 Font.MONOSPACED//
     };
 
@@ -139,7 +139,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.of(//
                                                                                    TokenType.NUMBER,//
                                                                                    new ColorScheme(0x000077, null, true, false, false, false, false),//
-                                                                                   TokenType.DECIMAL, //
+                                                                                   TokenType.DECIMAL,//
                                                                                    new ColorScheme(0x000077, null, true, false, false, false, false),//
                                                                                    TokenType.STRING,//
                                                                                    new ColorScheme(0x007700, null, false, false, false, false, false),//
@@ -153,9 +153,10 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                                                                                    new ColorScheme(0x666666, null, false, false, false, false, false),//
                                                                                    TokenType.END_LINE_COMMENT,//
                                                                                    new ColorScheme(0xcccccc, null, false, true, false, false, false),//
-                                                                                   TokenType.IN_LINE_COMMENT, //
+                                                                                   TokenType.IN_LINE_COMMENT,//
                                                                                    new ColorScheme(0xcccccc, null, false, true, false, false, false),//
-                                                                                   TokenType.ERROR, new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)//
+                                                                                   TokenType.ERROR,//
+                                                                                   new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)//
                                                                                   );
 
     /**
@@ -235,6 +236,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         // Use native macOS menu bar
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("apple.awt.application.name", "Nelumbo");
+        System.setProperty("flatlaf.useWindowDecorations", "false");
 
         try {
             FlatLightLaf.setup();
@@ -306,8 +308,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         Font font = null;
         for (String fontName : FONT_NAMES) {
             font = new Font(fontName, Font.BOLD, 14);
-            System.err.println("FONT=" + font);
             if (font.getFamily().toLowerCase().contains(fontName)) {
+                System.err.println("FONT=" + font);
                 return font;
             }
         }

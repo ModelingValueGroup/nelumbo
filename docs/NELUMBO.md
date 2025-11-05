@@ -225,6 +225,7 @@
 
 ## Plans
 
+* Variable bindings (Maps) in results
 * Namespaces
 * Generics (type arguments)
 * Lists and Sets

@@ -54,6 +54,16 @@ public abstract class Quantifier extends CompoundPredicate {
     }
 
     @Override
+    protected boolean doGetBinding(Object varVal, int i) {
+        return i > 0;
+    }
+
+    @Override
+    protected boolean doSetBinding(Object varVal, int i) {
+        return i > 0 || varVal instanceof Variable;
+    }
+
+    @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         return resolve(context);
     }
