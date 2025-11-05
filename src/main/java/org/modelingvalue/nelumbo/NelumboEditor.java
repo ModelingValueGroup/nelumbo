@@ -305,7 +305,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private static Font findFont() {
-        Font font = null;
+        Font font;
         for (String fontName : FONT_NAMES) {
             font = new Font(fontName, Font.BOLD, 14);
             if (font.getFamily().toLowerCase().contains(fontName)) {

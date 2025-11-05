@@ -58,10 +58,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final int                                                            INITIAL_USAGE_COUNT  = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
     private static final List<TokenType>                                                TOKEN_TYPES          = List.of(NAME, OPERATOR, STRING, SEMICOLON, SINGLEQUOTE);
-    private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(tt -> (Pattern) t(tt)).asList().add(n(Type.PATTERN, Integer.MAX_VALUE));
-    private static final Pattern                                                        ALT_NO_COMMA         = a(PATTERNS_NO_COMMA.toArray(i -> new Pattern[i]));
+    private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(Pattern::t).asList().add(n(Type.PATTERN, Integer.MAX_VALUE));
+    private static final Pattern                                                        ALT_NO_COMMA         = a(PATTERNS_NO_COMMA.toArray(Pattern[]::new));
     private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(COMMA));
-    private static final Pattern                                                        ALTERNATIVES         = a(PATTERNS.toArray(i -> new Pattern[i]));
+    private static final Pattern                                                        ALTERNATIVES         = a(PATTERNS.toArray(Pattern[]::new));
     private static final Pattern                                                        SEQUENCE             = r(ALTERNATIVES, true, null);
     private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                                          //
             r(s(t("#"), t(NUMBER)), false, null),                                                                                                                                                      //
@@ -182,7 +182,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
             }
         }
-        return patterns.size() > 1 ? s(patterns.toArray(i -> new Pattern[i])) : patterns.first();
+        return patterns.size() > 1 ? s(patterns.toArray(Pattern[]::new)) : patterns.first();
     }
 
     private static Functor equalsFunctor;
@@ -210,11 +210,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 register(Functor.of(s(t(BEGINOFFILE), r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), false, null), t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor) -> {
                             ListNode roots = new ListNode(List.of(), Type.ROOT.list());
-                            for (int i = 0; i < args.length; i++) {
-                                Node e1 = (Node) args[i];
+                            for (Object arg : args) {
+                                Node e1 = (Node) arg;
                                 if (e1 instanceof ListNode) {
                                     for (Node e2 : ((ListNode) e1).elements()) {
-                                        roots = new ListNode(List.of(), roots, (Node) e2);
+                                        roots = new ListNode(List.of(), roots, e2);
                                     }
                                 } else {
                                     roots = new ListNode(List.of(), roots, e1);
@@ -234,10 +234,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     }
                                     option = List.of();
                                 } else {
+                                    //TODO @Wim: if the first element is meta, the following line will cause an NPE
                                     option = option.add(e);
                                 }
                             }
-                            return a(elements, options.toArray(i -> new Pattern[i]));
+                            return a(elements, options.toArray(Pattern[]::new));
                         }));
 
                 register(Functor.of(s(t("<(>"), SEQUENCE, o(s(t("<,>"), SEQUENCE)), a(t("<)*>"), t("<)+>"))), //
@@ -301,16 +302,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         i++;
                                         precedence = precedence.add(Integer.parseInt(t.text()));
                                     } else if (t.text().equals("@")) {
-                                        String qname = "";
+                                        StringBuilder qname = new StringBuilder();
                                         t = t.next();
                                         do {
                                             ast = ast.add(t);
                                             i++;
-                                            qname += t.text();
+                                            qname.append(t.text());
                                             t = t.next();
                                         } while (t.text().equals(".") || t.type() == NAME);
                                         try {
-                                            constructor = Class.forName(qname).getConstructor(Functor.class, List.class, Object[].class);
+                                            constructor = Class.forName(qname.toString()).getConstructor(Functor.class, List.class, Object[].class);
                                         } catch (NoSuchMethodException | SecurityException | ClassNotFoundException ex) {
                                             CURRENT.get().addException(new ParseException(ex, "Exception during finding class with Node constructor " + qname, t.next()));
                                         }
