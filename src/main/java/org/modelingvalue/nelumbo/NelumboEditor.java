@@ -461,7 +461,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             try {
                 textPane.getHighlighter().addHighlight(pe.index(), pe.index() + pe.length(), redPainter);
             } catch (BadLocationException ble) {
-                setMessagesAsError(ble.getMessage());
+                setMessagesAsError(pe.getShortMessage());
             }
         }
     }
