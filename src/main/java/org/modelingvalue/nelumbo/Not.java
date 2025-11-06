@@ -70,7 +70,7 @@ public final class Not extends CompoundPredicate {
             } else if (predResult.isTrueCC()) {
                 return Boolean.FALSE.result();
             } else {
-                return set(0, predResult.unknown()).unknown();
+                return set(0, predResult.predicate()).unknown();
             }
         } else {
             return predResult.flipComplete();

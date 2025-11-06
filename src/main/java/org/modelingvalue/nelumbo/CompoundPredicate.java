@@ -59,7 +59,7 @@ public abstract class CompoundPredicate extends Predicate {
                 } else if (result.isTrueCC()) {
                     facts = facts.add(setBinding(entry.getKey()));
                 } else {
-                    Predicate predicate = result.unknown();
+                    Predicate predicate = result.predicate();
                     if (predicate != null) {
                         result = predicate.infer(context);
                         if (result.hasStackOverflow()) {

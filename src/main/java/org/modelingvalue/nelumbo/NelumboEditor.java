@@ -57,7 +57,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private final static String                  INCREASE   = "INCREASE";
     private final static String                  DECREASE   = "DECREASE";
 
-    private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xff6666));
+    private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xffaaaa));
 
     /**
      * Defines a color scheme for a token type with foreground and background colors,

@@ -119,6 +119,10 @@ public class Predicate extends Node {
         return super.getBinding(declaration, Map.of());
     }
 
+    public Map<Variable, Object> getBinding(Predicate declaration) {
+        return super.getBinding(declaration == null ? this.declaration : declaration, Map.of());
+    }
+
     protected final Predicate setBinding(Map<Variable, Object> vars) {
         return (Predicate) super.setBinding(declaration, vars);
     }

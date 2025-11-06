@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.Terminal;
@@ -183,6 +184,10 @@ public class Functor extends Node {
         //            sb.append(" @" + cons.getDeclaringClass().getName());
         //        }
         return sb.toString();
+    }
+
+    public Functor literal() {
+        return KnowledgeBase.CURRENT.get().literal(this);
     }
 
 }

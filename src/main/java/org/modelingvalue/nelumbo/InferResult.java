@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 
 public interface InferResult {
@@ -38,7 +39,7 @@ public interface InferResult {
 
     boolean completeFalsehoods();
 
-    default Predicate unknown() {
+    default Predicate predicate() {
         return null;
     }
 
@@ -74,8 +75,51 @@ public interface InferResult {
         return allFacts().isEmpty() && allFalsehoods().isEmpty() && cycles().isEmpty();
     }
 
+    default Set<Map<Variable, Object>> trueBindings() {
+        return allFacts().map(p -> p.getBinding(predicate()).removeAll(e -> e.getValue() instanceof Variable || e.getValue() instanceof Type)).asSet();
+    }
+
+    default Set<Map<Variable, Object>> falseBindings() {
+        return allFalsehoods().map(p -> p.getBinding(predicate()).removeAll(e -> e.getValue() instanceof Variable || e.getValue() instanceof Type)).asSet();
+    }
+
     static InferResult of(Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods, Set<Predicate> cycles) {
         return new InferResultImpl() {
+            @Override
+            public Set<Predicate> facts() {
+                return facts;
+            }
+
+            @Override
+            public Set<Predicate> falsehoods() {
+                return falsehoods;
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return completeFacts;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return completeFalsehoods;
+            }
+
+            @Override
+            public Set<Predicate> cycles() {
+                return cycles;
+            }
+        };
+    }
+
+    static InferResult of(Predicate predicate, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods, Set<Predicate> cycles) {
+        return new InferResultImpl() {
+
+            @Override
+            public Predicate predicate() {
+                return predicate;
+            }
+
             @Override
             public Set<Predicate> facts() {
                 return facts;
@@ -166,7 +210,7 @@ public interface InferResult {
             }
 
             @Override
-            public Predicate unknown() {
+            public Predicate predicate() {
                 return unknown;
             }
         };
@@ -316,7 +360,7 @@ public interface InferResult {
             }
 
             @Override
-            public Predicate unknown() {
+            public Predicate predicate() {
                 return falsehood;
             }
 
@@ -424,6 +468,10 @@ public interface InferResult {
         return of(cast(facts(), to), completeFacts(), cast(falsehoods(), to), completeFalsehoods(), cycles());
     }
 
+    default InferResult predicate(Predicate predicate) {
+        return of(predicate, facts(), completeFacts(), falsehoods(), completeFalsehoods(), cycles());
+    }
+
     static Set<Predicate> cast(Set<Predicate> set, Predicate to) {
         return set.replaceAll(p -> p.equals(to) ? to : to.castFrom(p));
     }
@@ -440,14 +488,17 @@ public interface InferResult {
                     cycleString = cycles().toString().substring(3);
                     cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
                 }
-                return toString(allFacts(), completeFacts()) + toString(allFalsehoods(), completeFalsehoods()) + cycleString;
+                return toString(trueBindings(), completeFacts()) + toString(falseBindings(), completeFalsehoods()) + cycleString;
             }
         }
 
-        private String toString(Collection<Predicate> predicates, boolean complete) {
-            List<String> stringList = predicates.map(Object::toString).sorted().asList();
+        private String toString(Set<Map<Variable, Object>> binding, boolean complete) {
+            List<String> stringList = binding.map(m -> {
+                String map = m.toString();
+                return "(" + map.substring(4, map.length() - 1) + ")";
+            }).sorted().asList();
             String result = stringList.toString().substring(4);
-            return complete ? result : result.substring(0, result.length() - 1) + (predicates.isEmpty() ? "..]" : ",..]");
+            return complete ? result : result.substring(0, result.length() - 1) + (binding.isEmpty() ? "..]" : ",..]");
         }
 
         @Override

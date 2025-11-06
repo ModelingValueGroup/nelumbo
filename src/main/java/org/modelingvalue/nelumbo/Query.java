@@ -19,7 +19,9 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 import java.util.Optional;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -37,21 +39,34 @@ public final class Query extends Node implements Evaluatable {
 
     @SuppressWarnings("unchecked")
     private static Object[] args(List<AstElement> elements, Object[] args) {
-        Predicate predicate = (Predicate) args[0];
-        predicate = predicate.setVariables(Predicate.literals(predicate.variables()));
+        Predicate nodePred = (Predicate) args[0];
+        Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.variables()));
         Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
         if (expected.isEmpty()) {
             return new Object[]{predicate};
         }
-        List<Object> flatFacts = flatten(expected.get().get(0));
-        List<Object> flatFalsehoods = flatten(expected.get().get(1));
+        List<Object> facts = expected.get().get(0);
+        List<Object> falsehoods = expected.get().get(1);
         Object[] array = new Object[5];
         array[0] = predicate;
-        array[1] = flatFacts.filter(Predicate.class).asList();
-        array[2] = !flatFacts.contains("..");
-        array[3] = flatFalsehoods.filter(Predicate.class).asList();
-        array[4] = !flatFalsehoods.contains("..");
+        array[1] = bindings(facts.filter(List.class).asList());
+        array[2] = !facts.contains("..");
+        array[3] = bindings(falsehoods.filter(List.class).asList());
+        array[4] = !falsehoods.contains("..");
         return array;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Set<Map<Variable, Object>> bindings(List<?> listListList) {
+        Set<Map<Variable, Object>> set = Set.of();
+        for (List<List<Object>> listList : (List<List<List<Object>>>) listListList) {
+            Map<Variable, Object> map = Map.of();
+            for (List<Object> list : listList) {
+                map = map.put(((Variable) list.get(0)).literal(), (Node) list.get(1));
+            }
+            set = set.add(map);
+        }
+        return set;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -59,26 +74,33 @@ public final class Query extends Node implements Evaluatable {
     public List<Object> args() {
         List<Object> args = List.of(predicate());
         if (hasExpected()) {
-            List facts = facts();
+            List<Object> trueList = List.of();
+            for (Map<Variable, Object> binding : facts()) {
+                List<List<Object>> list = List.of();
+                for (Entry<Variable, Object> e : binding) {
+                    list = list.add(List.of(e.getKey(), e.getValue()));
+                }
+                trueList = trueList.add(list);
+            }
             if (!completeFacts()) {
-                facts = facts.add("..");
+                trueList = trueList.add("..");
             }
-            List falsehoods = falsehoods();
+            List<Object> falseList = List.of();
+            for (Map<Variable, Object> binding : falsehoods()) {
+                List<List<Object>> list = List.of();
+                for (Entry<Variable, Object> e : binding) {
+                    list = list.add(List.of(e.getKey(), e.getValue()));
+                }
+                falseList = falseList.add(list);
+            }
             if (!completeFalsehoods()) {
-                falsehoods = falsehoods.add("..");
+                falseList = falseList.add("..");
             }
-            args = args.add(Optional.of(List.of(//
-                    facts.isEmpty() ? Optional.empty() : Optional.of(List.of(facts.first(), facts.sublist(1, facts.size()))), //
-                    falsehoods.isEmpty() ? Optional.empty() : Optional.of(List.of(falsehoods.first(), falsehoods.sublist(1, falsehoods.size()))))));
+            args = args.add(Optional.of(List.of(trueList, falseList)));
         } else {
             args = args.add(Optional.empty());
         }
         return args;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static List<Object> flatten(List<Object> expected) {
-        return expected.replaceAllAll(f -> f instanceof List list ? list : List.of(f));
     }
 
     private Query(Object[] array) {
@@ -100,8 +122,8 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Predicate> facts() {
-        return (List<Predicate>) get(1);
+    public Set<Map<Variable, Object>> facts() {
+        return (Set<Map<Variable, Object>>) get(1);
     }
 
     public boolean completeFacts() {
@@ -109,8 +131,8 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Predicate> falsehoods() {
-        return (List<Predicate>) get(3);
+    public Set<Map<Variable, Object>> falsehoods() {
+        return (Set<Map<Variable, Object>>) get(3);
     }
 
     public boolean completeFalsehoods() {
@@ -126,17 +148,20 @@ public final class Query extends Node implements Evaluatable {
         Predicate predicate = predicate();
         InferResult found;
         try {
-            found = predicate.infer();
+            found = predicate.infer().predicate(predicate);
         } catch (InconsistencyException ie) {
             result.addException(new ParseException(ie.getMessage(), ie.rule()));
             return;
         }
         if (hasExpected()) {
-            Set<Predicate> facts = facts().asSet();
+            toString();
+            Set<Map<Variable, Object>> trueBindings = facts();
+            Set<Predicate> truePredicates = trueBindings.map(b -> predicate.setBinding(b)).asSet();
             boolean completeFacts = completeFacts();
-            Set<Predicate> falsehoods = falsehoods().asSet();
+            Set<Map<Variable, Object>> falseBindings = falsehoods();
+            Set<Predicate> falsePredicates = falseBindings.map(b -> predicate.setBinding(b)).asSet();
             boolean completeFalsehoods = completeFalsehoods();
-            InferResult expected = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
+            InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates, completeFalsehoods, Set.of());
             if (!found.equals(expected) && !found.toString().equals(expected.toString())) {
                 List<AstElement> astElements = astElements();
                 result.addException(new ParseException("Expected result " + expected + ", found " + found, //

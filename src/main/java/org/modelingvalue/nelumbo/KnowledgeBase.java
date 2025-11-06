@@ -63,13 +63,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(COMMA));
     private static final Pattern                                                        ALTERNATIVES         = a(PATTERNS.toArray(Pattern[]::new));
     private static final Pattern                                                        SEQUENCE             = r(ALTERNATIVES, true, null);
-    private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                                          //
-            r(s(t("#"), t(NUMBER)), false, null),                                                                                                                                                      //
+    private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                               //
+            r(s(t("#"), t(NUMBER)), false, null),                                                                                                                                           //
             o(s(t("@"), r(t(NAME), true, t(".")))));
 
     private static final Pattern                                                        CONDITION            = s(n(Type.PREDICATE, 0), o(s(t("if"), n(Type.PREDICATE, 0))));
     //
-    private static final Pattern                                                        ALTERNATIVE          = a(t(".."), n(Type.PREDICATE, null));
+    private static final Pattern                                                        SINGLE               = s(n(Type.VARIABLE, 100), t("="), n(Type.NODE, 100));
+    private static final Pattern                                                        BINDING              = s(t("("), r(SINGLE, false, t(",")), t(")"));
+    private static final Pattern                                                        ALTERNATIVE          = a(t(".."), BINDING);
     private static final Pattern                                                        PREDICTION           = r(ALTERNATIVE, false, t(","));
     //
     public static final KnowledgeBase                                                   BASE                 = new KnowledgeBase(null).initBase();
@@ -364,7 +366,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 register(ruleFunctor);
 
                 register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(NEWLINE)), //
-                        Type.QUERY, false, (elements, args, functor) -> new Query(functor, elements, args)));
+                        Type.QUERY, false, (elements, args, functor) -> {
+                            return new Query(functor, elements, args);
+                        }));
 
                 register(Functor.of(s(n(Type.PREDICATE, 0), t(NEWLINE)), //
                         Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)));
@@ -536,6 +540,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public void setExceptionHandler(ParseExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
+    }
+
+    public Functor literal(Functor functor) {
+        return literalFunctors.get().get(functor);
     }
 
     @Override
