@@ -72,7 +72,7 @@
   a-b=c    <=>  add(c,b,a)
     
   -a=b     <=>  0-a=b
-  abs(a)=b <=>  a>=0 & b=a |
+  |a|=b    <=>  a>=0 & b=a |
                 a<0 & b=-a
                  
   d(a)=c   <=>  c(a)=c |
@@ -86,14 +86,14 @@
 ### Queries
 
 ```text
-  a+11=21   ?     // [10+11=21][..]
+  a+11=21   ?     // [(a=10)][..]
 ```
 
 ### Testing
 
 ```text
-  a+11=21   ?     [10+11=21][..]
-  abs(a)=10 ?     [abs(-10)=10,abs(10)=10][..]
+  a+11=21   ?   [(a=10)][..]
+  |a|=10    ?   [(a=-10),(a=10)][..]
 ```
 
 ### Proof
@@ -101,9 +101,9 @@
 ```text
   a+11=21
     a+11=21 <=> add(a,11,21)
-      add(l1,11,21) [add(10,11,21)][..]
-    l1+11=21 [10+11=21][..]
-  a+11=21 [10+11=21][..]
+      add(l1,11,21) [(l1=10)][..]
+    l1+11=21 [(l1=10)][..]
+  a+11=21 [(a=10)][..]
 ```
 
 ---
@@ -157,11 +157,12 @@
   fib(n)=f <=> f=n                 if n<=1,
                f=fib(n-1)+fib(n-2) if n>1  
     
-  fib(0)=f    ? [fib(0)=0][..]
-  fib(2)=f    ? [fib(2)=1][..]
-  fib(10)=f   ? [fib(10)=55][..]
-  fib(100)=f  ? [fib(100)=36#22r8fozas3n8w3][..]
-  fib(1000)=f ? [fib(1000)=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf][..]
+  fib(0)=f       ? [(f=0)][..]
+  fib(1)=f       ? [(f=1)][..]
+  fib(5)=f       ? [(f=5)][..]
+  fib(100)=f     ? [(f=36#22r8fozas3n8w3)][..]
+  fib(1000)=f    ? [(f=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf)][..]
+
 ```
 
 ---
@@ -225,7 +226,6 @@
 
 ## Plans
 
-* Variable bindings (Maps) in results
 * Namespaces
 * Generics (type arguments)
 * Lists and Sets

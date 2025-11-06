@@ -74,12 +74,12 @@ pc(Claus, Willem)
 pc(Willem, Amalia)
 pc(Maxima, Amalia)
 
-a(Amalia)=a         ? [a(Amalia)=Beatrix,a(Amalia)=Maxima,a(Amalia)=Hendrik,a(Amalia)=Bernhard,a(Amalia)=Juliana,a(Amalia)=Claus,a(Amalia)=Willem,a(Amalia)=Wilhelmina][..]
-m(Amalia)=Maxima    ? [m(Amalia)=Maxima][]
-m(Amalia)=Willem    ? [][m(Amalia)=Willem]
-m(Amalia)=a         ? [m(Amalia)=Maxima][..]
-f(Amalia)=a         ? [f(Amalia)=Willem][..]
-f(m(f(Amalia)))=a   ? [f(m(f(Amalia)))=Bernhard][..]
+a(Amalia)=a         ? [(a=Beatrix),(a=Maxima),(a=Hendrik),(a=Bernhard),(a=Juliana),(a=Claus),(a=Willem),(a=Wilhelmina)][..]    
+m(Amalia)=Maxima    ? [()][]
+m(Amalia)=Willem    ? [][()]
+m(Amalia)=a         ? [(a=Maxima)][..]
+f(Amalia)=a         ? [(a=Willem)][..]
+f(m(f(Amalia)))=a   ? [(a=Bernhard)][..]
 ```
 
 ### Fibonacci Example
@@ -92,14 +92,13 @@ f(m(f(Amalia)))=a   ? [f(m(f(Amalia)))=Bernhard][..]
 fib(n)=f <=> f=n                 if n<=1,
              f=fib(n-1)+fib(n-2) if n>1  
 
-fib(0)=f    ? [fib(0)=0][..]
-fib(1)=f    ? [fib(1)=1][..]
-fib(2)=f    ? [fib(2)=1][..]
-fib(3)=f    ? [fib(3)=2][..]
-fib(5)=f    ? [fib(5)=5][..]
-fib(10)=f   ? [fib(10)=55][..]
-fib(100)=f  ? [fib(100)=36#22r8fozas3n8w3][..]
-fib(1000)=f ? [fib(1000)=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf][..]
+fib(0)=f       ? [(f=0)][..]
+fib(1)=f       ? [(f=1)][..]
+fib(5)=f       ? [(f=5)][..]
+fib(100)=f     ? [(f=36#22r8fozas3n8w3)][..]
+fib(1000)=f    ? [(f=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf)][..]
+
+    
 ```
 
 ## Contributing
