@@ -467,7 +467,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private String emptyLines(int nr) {
-        return "\n".repeat(nr);
+        return "\n".repeat(Math.max(0, nr));
     }
 
     private void setMessagesAsError(String msg) {
