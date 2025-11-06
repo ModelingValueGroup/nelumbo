@@ -47,10 +47,12 @@ public class Node extends StructImpl implements AstElement {
 
     public Node(Functor functor, List<AstElement> elements, Object... args) {
         super(array(functor, elements, args));
+        init(elements);
     }
 
     public Node(Type type, List<AstElement> elements, Object... args) {
         super(array(type, elements, args));
+        init(elements);
     }
 
     protected Node(Object[] args) {
@@ -79,7 +81,17 @@ public class Node extends StructImpl implements AstElement {
     public Node setAstElements(List<AstElement> elements) {
         Object[] array = toArray();
         array[1] = elements;
-        return struct(array);
+        Node node = struct(array);
+        node.init(elements);
+        return node;
+    }
+
+    private void init(List<AstElement> elements) {
+        for (AstElement e : elements) {
+            if (e instanceof Token token) {
+                token.setNode(this);
+            }
+        }
     }
 
     @Override

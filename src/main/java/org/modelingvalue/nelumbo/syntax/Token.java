@@ -21,6 +21,7 @@ import java.util.Objects;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
@@ -44,6 +45,7 @@ public final class Token implements AstElement {
 
     private Map<Functor, List<Integer>> branches;
     private int                         cycleDepth;
+    private Node                        node;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -296,6 +298,16 @@ public final class Token implements AstElement {
     @Override
     public void setCycleDepth(int cycleDepth) {
         this.cycleDepth = cycleDepth;
+    }
+
+    public Node getNode() {
+        return node;
+    }
+
+    public void setNode(Node node) {
+        if (this.node == null) {
+            this.node = node;
+        }
     }
 
 }
