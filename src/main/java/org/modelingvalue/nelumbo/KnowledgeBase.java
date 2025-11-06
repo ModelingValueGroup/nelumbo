@@ -696,7 +696,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
             (post ? localPostPatterns : localPrePatterns).updateAndGet(l -> l.put(group, state.merge(l.get(group), override)));
         } catch (PatternMergeException pme) {
-            addException(new ParseException(pme.getMessage(), functor.pattern()));
+            addException(new ParseException(pme.getMessage(), functor));
         }
         Constructor<? extends Node> constructor = functor.constructor();
         Class<? extends Node> cls = constructor != null ? constructor.getDeclaringClass() : type.clss();
