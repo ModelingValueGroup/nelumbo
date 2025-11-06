@@ -37,13 +37,13 @@
     pc(Willem, Amalia)
     pc(Maxima, Amalia)
     
-    a(Amalia)=a         ? [a(Amalia)=Beatrix,a(Amalia)=Maxima,a(Amalia)=Hendrik,a(Amalia)=Bernhard,a(Amalia)=Juliana,a(Amalia)=Claus,a(Amalia)=Willem,a(Amalia)=Wilhelmina][..]
+    a(Amalia)=a         ? [(a=Beatrix),(a=Maxima),(a=Hendrik),(a=Bernhard),(a=Juliana),(a=Claus),(a=Willem),(a=Wilhelmina)][..]
     
-    m(Amalia)=Maxima    ? [m(Amalia)=Maxima][]
-    m(Amalia)=Willem    ? [][m(Amalia)=Willem]
-    m(Amalia)=a         ? [m(Amalia)=Maxima][..]
-    f(Amalia)=a         ? [f(Amalia)=Willem][..]
-    f(m(f(Amalia)))=a   ? [f(m(f(Amalia)))=Bernhard][..]
+    m(Amalia)=Maxima    ? [()][]
+    m(Amalia)=Willem    ? [][()]
+    m(Amalia)=a         ? [(a=Maxima)][..]
+    f(Amalia)=a         ? [(a=Willem)][..]
+    f(m(f(Amalia)))=a   ? [(a=Bernhard)][..]
 
     
 

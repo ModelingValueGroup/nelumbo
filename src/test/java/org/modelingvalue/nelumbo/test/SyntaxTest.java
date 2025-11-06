@@ -65,7 +65,7 @@ public class SyntaxTest extends NelumboTestBase {
                     <Int>  i, j, k
                     <Node> n
 
-                    10=10 ? [10=10][]
+                    10=10 ? [()][]
 
                     s=t+n ?
                     s=t+n ? [..][..]

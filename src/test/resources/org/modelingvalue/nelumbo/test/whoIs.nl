@@ -7,5 +7,5 @@
 A is B             <=> A=B
 a friend of A = B  <=> friend(A)=B
 
-Who is a friend of Piet ? [Jan is a friend of Piet, Klaas is a friend of Piet, Piet is a friend of Piet][..]
+Who is a friend of Piet   ?   [(Who=Jan),(Who=Klaas),(Who=Piet)][..]
 
