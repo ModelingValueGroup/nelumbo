@@ -42,14 +42,15 @@
 ### Patterns
 
 ```text
-  <Integer> ::= <NUMBER>                       @nelumbo.integers.Integer
-  <Integer> ::= <Integer> - <Integer>  #40,
-                <Integer> + <Integer>  #40,
-                          - <Integer>  #80
+  <Integer> ::= <NUMBER>                         // 10
+  <Integer> ::= <Integer> - <Integer>  #40,      // 5-7
+                <Integer> + <Integer>  #40,      // 5+7
+                          - <Integer>  #80,      // -7
+                fib(<Integer>)                   // fib(100)
                               
-  <Set>     ::= { <(> <Node> <,> , <)*> }      @nelumbo.sets.Set
-  <Attr>    ::= <(> local <)?> <Type> <NAME> ;
-  <Literal> ::= <(> <STRING> <|> <NUMBER> <)>
+  <Repetion>    ::= { <(> <Integer> <,> , <)*> }  // {3,5,7}
+  <Option>      ::= <(> super <)?> fast           // fast, super fast
+  <Alternation> ::= <(> A <|> B <|> C <)>         // A, B, C
 ```
 
 ---
@@ -67,16 +68,12 @@
 
 ```text
   a<=b     <=>  a<b | a=b
-
-  a+b=c    <=>  add(a,b,c)
-  a-b=c    <=>  add(c,b,a)
-    
-  -a=b     <=>  0-a=b
+  
   |a|=b    <=>  a>=0 & b=a |
                 a<0 & b=-a
-                 
-  d(a)=c   <=>  c(a)=c |
-                E[b](d(a)=b & c(b)=c)
+ 
+  descendant(x)=z <=> child(x)=z |
+                      E[y](descendant(x)=y & child(y)=z)
 ```
 
 ---
@@ -101,8 +98,8 @@
 ```text
   a+11=21
     a+11=21 <=> add(a,11,21)
-      add(l1,11,21) [(l1=10)][..]
-    l1+11=21 [(l1=10)][..]
+      add(c,11,21) [(c=10)][..]
+    c+11=21 [(c=10)][..]
   a+11=21 [(a=10)][..]
 ```
 
