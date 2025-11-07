@@ -65,7 +65,7 @@ public final class UniversalQuantifier extends Quantifier {
         }
         boolean completeFacts = predResult.completeFacts();
         boolean completeFalsehoods = predResult.completeFalsehoods();
-        if (completeFacts && facts.isEmpty() && completeFalsehoods && falsehoods.isEmpty() && isFullyBound()) {
+        if (completeFacts && facts.isEmpty() && completeFalsehoods && falsehoods.isEmpty() && nrOfUnbound() <= localVars.size()) {
             facts = facts.add(this);
         }
         return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
