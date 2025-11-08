@@ -40,7 +40,6 @@ public class Node extends StructImpl implements AstElement {
 
     private int                         hashCode         = 0;
     private Map<Variable, Object>       variables;
-    private int                         nrOfUnbound      = -1;
 
     private Map<Functor, List<Integer>> branches;
     private int                         cycleDepth;
@@ -222,34 +221,6 @@ public class Node extends StructImpl implements AstElement {
         return vars;
     }
 
-    protected final int nrOfUnbound() {
-        if (nrOfUnbound < 0) {
-            int nr = 0;
-            for (int i = 0; i < length(); i++) {
-                nr = nrOfUnbound(nr, get(i));
-            }
-            nrOfUnbound = nr;
-        }
-        return nrOfUnbound;
-    }
-
-    private int nrOfUnbound(int nr, Object val) {
-        if (val instanceof Type || val instanceof Variable) {
-            nr++;
-        } else if (val instanceof Node && !(val instanceof Terminal)) {
-            nr += ((Node) val).nrOfUnbound();
-        } else if (val instanceof List<?> list) {
-            for (Object e : list) {
-                nr = nrOfUnbound(nr, e);
-            }
-        }
-        return nr;
-    }
-
-    protected final boolean isFullyBound() {
-        return nrOfUnbound() == 0;
-    }
-
     @Override
     public final String toString() {
         return toString(new TokenType[1]);
@@ -377,7 +348,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     private Map<Variable, Object> getBinding(Object declVal, Object thisIn, Map<Variable, Object> vars, int i) {
-        Object thisVal = thisIn instanceof Type ? null : thisIn;
+        Object thisVal = thisIn instanceof Type || thisIn instanceof Variable ? null : thisIn;
         if (declVal instanceof Variable var) {
             Object varVal = vars.get(var);
             varVal = varVal instanceof Type ? null : varVal;

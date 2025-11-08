@@ -39,6 +39,7 @@ public class Predicate extends Node {
     public static Node             INCOMPLETE         = new Predicate(Type.PREDICATE, List.of(), "..");
 
     private final Predicate        declaration;
+    private int                    nrOfUnbound        = -1;
 
     public Predicate(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, args);
@@ -57,6 +58,21 @@ public class Predicate extends Node {
 
     public Predicate declaration() {
         return declaration;
+    }
+
+    protected final int nrOfUnbound() {
+        if (nrOfUnbound < 0) {
+            nrOfUnbound = countNrOfUnbound();
+        }
+        return nrOfUnbound;
+    }
+
+    protected int countNrOfUnbound() {
+        return (int) getBinding().filter(e -> e.getValue() instanceof Type).count();
+    }
+
+    protected final boolean isFullyBound() {
+        return nrOfUnbound() == 0;
     }
 
     protected Predicate castFrom(Predicate from) {

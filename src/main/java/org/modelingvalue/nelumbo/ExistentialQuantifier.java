@@ -65,8 +65,9 @@ public final class ExistentialQuantifier extends Quantifier {
         }
         boolean completeFacts = predResult.completeFacts();
         boolean completeFalsehoods = predResult.completeFalsehoods();
-        if (completeFacts && facts.isEmpty() && completeFalsehoods && falsehoods.isEmpty() && nrOfUnbound() <= localVars.size()) {
+        if (completeFacts && facts.isEmpty() && falsehoods.isEmpty() && isFullyBound()) {
             falsehoods = falsehoods.add(this);
+            completeFalsehoods = true;
         }
         return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }

@@ -49,6 +49,11 @@ public abstract class Quantifier extends CompoundPredicate {
     }
 
     @Override
+    protected int countNrOfUnbound() {
+        return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
+    }
+
+    @Override
     public Map<Variable, Object> shallowVariables() {
         return Map.of();
     }
