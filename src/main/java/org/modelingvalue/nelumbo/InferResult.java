@@ -71,6 +71,10 @@ public interface InferResult {
         return completeFacts() || completeFalsehoods();
     }
 
+    default boolean isEmpty() {
+        return allFacts().isEmpty() && allFalsehoods().isEmpty() && cycles().isEmpty();
+    }
+
     default Set<Map<Variable, Object>> trueBindings() {
         return allFacts().map(p -> p.getBinding(predicate()).removeAll(e -> e.getValue() instanceof Variable || e.getValue() instanceof Type)).asSet();
     }
