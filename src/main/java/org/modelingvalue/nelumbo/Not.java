@@ -39,12 +39,12 @@ public final class Not extends CompoundPredicate {
         super(args, declaration);
     }
 
-    public static Not of(Node predicate) {
+    public static Not of(Predicate predicate) {
         return new Not(FUNCTOR, List.of(), new Object[]{predicate});
     }
 
     @Override
-    protected Not struct(Object[] array, Predicate declaration) {
+    protected Not struct(Object[] array, Node declaration) {
         return new Not(array, (Not) declaration);
     }
 

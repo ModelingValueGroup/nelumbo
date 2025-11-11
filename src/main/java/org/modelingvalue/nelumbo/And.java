@@ -39,7 +39,7 @@ public final class And extends BinaryPredicate {
         super(args, declaration);
     }
 
-    public static And of(Node predicate1, Node predicate2) {
+    public static And of(Predicate predicate1, Predicate predicate2) {
         return new And(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
     }
 
@@ -49,7 +49,7 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And struct(Object[] array, Predicate declaration) {
+    protected And struct(Object[] array, Node declaration) {
         return new And(array, (And) declaration);
     }
 

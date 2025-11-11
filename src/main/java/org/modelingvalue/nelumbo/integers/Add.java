@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
@@ -37,7 +38,7 @@ public final class Add extends Predicate {
     }
 
     @Override
-    protected Add struct(Object[] array, Predicate declaration) {
+    protected Add struct(Object[] array, Node declaration) {
         return new Add(array, (Add) declaration);
     }
 

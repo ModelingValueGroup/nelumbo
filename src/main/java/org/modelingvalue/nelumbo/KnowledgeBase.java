@@ -449,34 +449,37 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         if (Type.RELATION.isAssignableFrom(cons.type())) {
             addException(new ParseException("Rule consequence " + cons + " is a relation.", cons));
         }
-        Map<Variable, Object> consVars = cons.variables();
+        Map<Variable, Object> consVars = cons.getBinding();
         Node node = cons.functor().equals(equalsFunctor) ? (Node) cons.get(0) : cons;
-        Map<Variable, Object> nodeVars = node == cons ? consVars : node.variables();
+        Map<Variable, Object> nodeVars = node == cons ? consVars : node.getBinding();
         Functor nodeFunctor = node.functor();
         Functor literalFunctor = literalFunctors.get().get(nodeFunctor);
         for (List<Object> condIf : (List<List<Object>>) args[1]) {
             Predicate cond = (Predicate) condIf.get(0);
             Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
-            Map<Variable, Object> condVars = cond.shallowVariables();
-            Map<Variable, Object> whenVars = when != null ? when.shallowVariables() : null;
-            Map<Variable, Object> localVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
-            if (!localVars.isEmpty()) {
-                String message = "Rule has local variables " + localVars.map(e -> e.getKey().toString()).reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + " in condition";
-                addException(when != null ? new ParseException(message, cond, when) : new ParseException(message, cond));
+            Map<Variable, Object> condVars = cond.getBinding();
+            Map<Variable, Object> whenVars = when != null ? when.getBinding() : null;
+            Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
+            if (!nonConsVars.isEmpty()) {
+                Map<Variable, Object> localVars = nonConsVars.removeAllKey(cond.allLocalVars());
+                if (when != null) {
+                    localVars = localVars.removeAllKey(when.allLocalVars());
+                }
+                if (!localVars.isEmpty()) {
+                    String message = "Rule has local variables " + nonConsVars.map(e -> e.getKey().toString()).reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + " in condition";
+                    addException(when != null ? new ParseException(message, cond, when) : new ParseException(message, cond));
+                }
             }
-            condVars = cond.variables();
-            whenVars = when != null ? when.variables() : null;
-            localVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
             if (literalFunctor != null) {
-                Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(localVars));
+                Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(nonConsVars));
                 cons = cons.setVariables(litVars);
                 cond = cond.setVariables(litVars);
                 cons = cons.replace(n -> nodeFunctor.equals(n.functor()) ? n.setFunctor(literalFunctor) : n);
                 if (when != null) {
                     when = when.setVariables(litVars);
                 }
-            } else if (!localVars.isEmpty()) {
-                Map<Variable, Object> litVars = Predicate.literals(localVars);
+            } else if (!nonConsVars.isEmpty()) {
+                Map<Variable, Object> litVars = Predicate.literals(nonConsVars);
                 cond = cond.setVariables(litVars);
                 if (when != null) {
                     when = when.setVariables(litVars);
@@ -673,12 +676,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         InferResult result = facts.get().get(predicate);
         if (result != null) {
             result = result.cast(predicate);
-            if (context.trace()) {
-                System.out.println(context.prefix() + "  " + predicate + " " + result);
-            }
-            return result;
+        } else {
+            result = predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(Set.of());
         }
-        return predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(Set.of());
+        if (context.trace()) {
+            System.out.println(context.prefix() + "  " + predicate + " " + result);
+        }
+        return result;
     }
 
     public Functor register(Functor functor) throws ParseException {

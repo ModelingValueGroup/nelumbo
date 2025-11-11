@@ -54,10 +54,11 @@ import com.formdev.flatlaf.FlatLightLaf;
 
 public class NelumboEditor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
 
-    private final static String                  INCREASE   = "INCREASE";
-    private final static String                  DECREASE   = "DECREASE";
+    private static final String                  EDITOR_FILE_NAME = "editor.nl";
+    private final static String                  INCREASE         = "INCREASE";
+    private final static String                  DECREASE         = "DECREASE";
 
-    private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xffaaaa));
+    private final static DefaultHighlightPainter redPainter       = new DefaultHighlightPainter(new Color(0xffaaaa));
 
     /**
      * Defines a color scheme for a token type with foreground and background colors,
@@ -406,7 +407,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void execute() {
         prepareForExecute();
         String text = textPane.getText();
-        Tokenizer tokenizer = new Tokenizer(text, "Editor");
+        Tokenizer tokenizer = new Tokenizer(text, EDITOR_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
         showColors(tokenizerResult);
         ExecuteResult executeResult;
@@ -457,7 +458,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             setMessages(messages.toString());
         } else {
             ParseException pe = executeResult.pe();
-            setMessagesAsError(emptyLines(pe.line()) + pe.getShortMessage());
+            setMessagesAsError((pe.fileName().equals(EDITOR_FILE_NAME) ? emptyLines(pe.line()) : "") + pe.getShortMessage());
             try {
                 textPane.getHighlighter().addHighlight(pe.index(), pe.index() + pe.length(), redPainter);
             } catch (BadLocationException ble) {

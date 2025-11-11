@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -33,13 +34,13 @@ public class AlternationPattern extends Pattern {
         super(type, elements, args);
     }
 
-    protected AlternationPattern(Object[] args) {
-        super(args);
+    protected AlternationPattern(Object[] args, AlternationPattern declaration) {
+        super(args, declaration);
     }
 
     @Override
-    protected AlternationPattern struct(Object[] array) {
-        return new AlternationPattern(array);
+    protected AlternationPattern struct(Object[] array, Node declaration) {
+        return new AlternationPattern(array, (AlternationPattern) declaration);
     }
 
     @SuppressWarnings("unchecked")

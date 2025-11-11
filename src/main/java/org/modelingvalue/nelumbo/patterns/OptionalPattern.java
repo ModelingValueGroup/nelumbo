@@ -22,6 +22,7 @@ import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -34,13 +35,13 @@ public class OptionalPattern extends Pattern {
         super(type, elements, args);
     }
 
-    protected OptionalPattern(Object[] args) {
-        super(args);
+    protected OptionalPattern(Object[] args, OptionalPattern declaration) {
+        super(args, declaration);
     }
 
     @Override
-    protected OptionalPattern struct(Object[] array) {
-        return new OptionalPattern(array);
+    protected OptionalPattern struct(Object[] array, Node declaration) {
+        return new OptionalPattern(array, (OptionalPattern) declaration);
     }
 
     public Pattern optional() {

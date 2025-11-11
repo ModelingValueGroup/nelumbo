@@ -21,10 +21,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -38,24 +38,33 @@ public class Node extends StructImpl implements AstElement {
 
     protected static final int          START            = 2;
 
+    private final Node                  declaration;
+
+    private Map<Variable, Object>       binding;
     private int                         hashCode         = 0;
-    private Map<Variable, Object>       variables;
 
     private Map<Functor, List<Integer>> branches;
     private int                         cycleDepth;
 
     public Node(Functor functor, List<AstElement> elements, Object... args) {
         super(array(functor, elements, args));
+        this.declaration = this;
         init(elements);
     }
 
     public Node(Type type, List<AstElement> elements, Object... args) {
         super(array(type, elements, args));
+        this.declaration = this;
         init(elements);
     }
 
-    protected Node(Object[] args) {
+    protected Node(Object[] args, Node declaration) {
         super(args);
+        this.declaration = declaration == null ? this : declaration;
+    }
+
+    public Node declaration() {
+        return declaration;
     }
 
     private static Object[] array(Object functor, List<AstElement> elements, Object[] args) {
@@ -74,7 +83,7 @@ public class Node extends StructImpl implements AstElement {
     public Node setFunctor(Functor functor) {
         Object[] array = toArray();
         array[0] = functor;
-        return struct(array);
+        return struct(array, null);
     }
 
     public Node setAstElements(List<AstElement> elements) {
@@ -176,49 +185,8 @@ public class Node extends StructImpl implements AstElement {
         return typeOrFunctor();
     }
 
-    public Map<Variable, Object> shallowVariables() {
-        Map<Variable, Object> vars = Map.of();
-        for (int i = 0; i < length(); i++) {
-            vars = shallowVariables(vars, get(i));
-        }
-        return vars;
-    }
-
-    private static Map<Variable, Object> shallowVariables(Map<Variable, Object> vars, Object val) {
-        if (val instanceof Variable) {
-            vars = vars.put((Variable) val, ((Variable) val).type());
-        } else if (val instanceof Node && !(val instanceof Type)) {
-            vars = vars.putAll(((Node) val).shallowVariables());
-        } else if (val instanceof Collection<?> coll) {
-            for (Object e : coll) {
-                vars = shallowVariables(vars, e);
-            }
-        }
-        return vars;
-    }
-
-    public final Map<Variable, Object> variables() {
-        if (variables == null) {
-            Map<Variable, Object> vars = Map.of();
-            for (int i = 0; i < length(); i++) {
-                vars = variables(vars, get(i));
-            }
-            variables = vars;
-        }
-        return variables;
-    }
-
-    private static Map<Variable, Object> variables(Map<Variable, Object> vars, Object val) {
-        if (val instanceof Variable var) {
-            vars = vars.put(var, var.type());
-        } else if (val instanceof Node node && !(val instanceof Type)) {
-            vars = vars.putAll(node.variables());
-        } else if (val instanceof List<?> list) {
-            for (Object e : list) {
-                vars = variables(vars, e);
-            }
-        }
-        return vars;
+    public List<Variable> localVars() {
+        return List.of();
     }
 
     @Override
@@ -320,8 +288,16 @@ public class Node extends StructImpl implements AstElement {
         return struct(array);
     }
 
-    protected Node struct(Object[] array) {
-        return new Node(array);
+    protected final Node struct(Object[] array) {
+        return struct(array, declaration);
+    }
+
+    protected Node struct(Object[] array, Node declaration) {
+        return new Node(array, declaration);
+    }
+
+    public Object get(Variable var) {
+        return get(declaration, var);
     }
 
     protected final Object get(Node declaration, Variable var) {
@@ -340,7 +316,37 @@ public class Node extends StructImpl implements AstElement {
         return null;
     }
 
-    protected final Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars) {
+    public final Set<Variable> allLocalVars() {
+        Set<Variable> allLocalVars = localVars().asSet();
+        for (int i = 0; i < length(); i++) {
+            allLocalVars = allLocalVars(get(i), allLocalVars);
+        }
+        return allLocalVars;
+    }
+
+    private Set<Variable> allLocalVars(Object val, Set<Variable> allLocalVars) {
+        if (val instanceof Node node) {
+            allLocalVars = allLocalVars.addAll(node.allLocalVars());
+        } else if (val instanceof List<?> list) {
+            for (Object e : list) {
+                allLocalVars = allLocalVars(e, allLocalVars);
+            }
+        }
+        return allLocalVars;
+    }
+
+    public final Map<Variable, Object> getBinding() {
+        if (binding == null) {
+            binding = getBinding(declaration);
+        }
+        return binding;
+    }
+
+    public final Map<Variable, Object> getBinding(Node declaration) {
+        return declaration == null ? getBinding() : getBinding(declaration, Map.of());
+    }
+
+    private Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars) {
         for (int i = 0; vars != null && i < length(); i++) {
             vars = getBinding(declaration.get(i), get(i), vars, i);
         }
@@ -362,6 +368,12 @@ public class Node extends StructImpl implements AstElement {
                 }
                 if (thisVal != null && doGetBinding(thisVal, i)) {
                     vars = vars.put(var, thisVal);
+                    if (thisVal instanceof Node thisNode) {
+                        vars = vars.putAll(thisNode.getBinding().replaceAll(e -> {
+                            Variable nodeVar = e.getKey();
+                            return Entry.of(nodeVar.rename("$" + nodeVar.name()), e.getValue());
+                        }));
+                    }
                 }
             }
         } else if (declVal instanceof Node declNode && !(declVal instanceof Type) && //
@@ -380,8 +392,12 @@ public class Node extends StructImpl implements AstElement {
         return v instanceof Type type ? type : v instanceof Node node ? node.type() : null;
     }
 
-    protected final Node set(Node declaration, Variable var, Object val) {
+    protected Node set(Variable var, Object val) {
         return setBinding(declaration, Map.of(Entry.of(var, val)));
+    }
+
+    public Node setBinding(Map<Variable, Object> vars) {
+        return setBinding(declaration, vars);
     }
 
     protected final Node setBinding(Node declaration, Map<Variable, Object> vars) {
@@ -396,7 +412,7 @@ public class Node extends StructImpl implements AstElement {
                 array[i + START] = bound;
             }
         }
-        return array != null ? struct(array) : this;
+        return array != null ? struct(array, declaration) : this;
     }
 
     private Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i) {
@@ -455,17 +471,6 @@ public class Node extends StructImpl implements AstElement {
 
     protected Node setTyped(int i, Node typed) {
         return set(i, typed);
-    }
-
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    protected boolean atomic() {
-        for (int i = 0; i < length(); i++) {
-            Object v = get(i);
-            if (!(v instanceof Node)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

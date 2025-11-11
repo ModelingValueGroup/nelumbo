@@ -39,7 +39,7 @@ public final class Or extends BinaryPredicate {
         super(args, declaration);
     }
 
-    public static Or of(Node predicate1, Node predicate2) {
+    public static Or of(Predicate predicate1, Predicate predicate2) {
         return new Or(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
     }
 
@@ -49,7 +49,7 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
-    protected Or struct(Object[] array, Predicate declaration) {
+    protected Or struct(Object[] array, Node declaration) {
         return new Or(array, (Or) declaration);
     }
 

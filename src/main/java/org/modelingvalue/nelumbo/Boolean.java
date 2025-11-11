@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -78,7 +77,7 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    protected Boolean struct(Object[] array, Predicate declaration) {
+    protected Boolean struct(Object[] array, Node declaration) {
         return new Boolean(array, (Boolean) declaration);
     }
 
@@ -93,11 +92,6 @@ public final class Boolean extends Predicate {
             result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
         }
         return result;
-    }
-
-    @Override
-    public Map<Variable, Object> getBinding() {
-        return Map.of();
     }
 
     @Override

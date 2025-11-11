@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -60,13 +61,13 @@ public final class Integer extends Terminal {
         return new BigInteger(string);
     }
 
-    private Integer(Object[] array) {
-        super(array);
+    private Integer(Object[] array, Integer declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Integer struct(Object[] array) {
-        return new Integer(array);
+    protected Integer struct(Object[] array, Node declaration) {
+        return new Integer(array, (Integer) declaration);
     }
 
     @Override

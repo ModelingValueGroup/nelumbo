@@ -36,8 +36,8 @@ public final class Rule extends Node implements Evaluatable {
         super(functor, elements, consequence, condition);
     }
 
-    private Rule(Object[] args) {
-        super(args);
+    private Rule(Object[] args, Rule declaration) {
+        super(args, declaration);
     }
 
     @Override
@@ -46,8 +46,8 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    protected Rule struct(Object[] array) {
-        return new Rule(array);
+    protected Rule struct(Object[] array, Node declaration) {
+        return new Rule(array, (Rule) declaration);
     }
 
     public final Functor consequenceFunctor() {
@@ -62,14 +62,14 @@ public final class Rule extends Node implements Evaluatable {
         return (Predicate) get(1);
     }
 
-    protected final InferResult biimply(Predicate proven, InferContext context) {
-        Map<Variable, Object> binding = proven.getBinding(consequence(), Map.of());
+    protected final InferResult biimply(Predicate predicate, InferContext context) {
+        Predicate consequence = consequence();
+        Map<Variable, Object> binding = predicate.getBinding(consequence);
         if (binding == null) {
             return null;
         }
-        binding = variables().putAll(binding);
-        Predicate consequence = consequence();
         Predicate condition = condition();
+        binding = getBinding().putAll(binding);
         consequence = consequence.setBinding(binding);
         condition = condition.setBinding(binding);
         if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
@@ -80,25 +80,25 @@ public final class Rule extends Node implements Evaluatable {
         if (condResult.hasStackOverflow()) {
             proResult = condResult;
         } else {
-            Set<Predicate> proFacts = Set.of(), proFalsehoods = Set.of();
+            Set<Predicate> facts = Set.of(), falsehoods = Set.of();
             boolean completeFacts = true, completeFalsehoods = true;
             for (Predicate condFact : condResult.facts()) {
-                Predicate proFact = proven.castFrom(consequence.setBinding(condFact.getBinding()));
-                if (proFact.isFullyBound()) {
-                    proFacts = proFacts.add(proFact);
+                Predicate fact = predicate.castFrom(consequence.setBinding(condFact.getBinding()));
+                if (fact.isFullyBound()) {
+                    facts = facts.add(fact);
                 } else {
                     completeFacts = false;
                 }
             }
             for (Predicate condFalsehood : condResult.falsehoods()) {
-                Predicate proFalsehood = proven.castFrom(consequence.setBinding(condFalsehood.getBinding()));
-                if (proFalsehood.isFullyBound()) {
-                    proFalsehoods = proFalsehoods.add(proFalsehood);
+                Predicate falsehood = predicate.castFrom(consequence.setBinding(condFalsehood.getBinding()));
+                if (falsehood.isFullyBound()) {
+                    falsehoods = falsehoods.add(falsehood);
                 } else {
                     completeFalsehoods = false;
                 }
             }
-            if (!proven.isFullyBound()) {
+            if ((facts.isEmpty() && falsehoods.isEmpty()) || !predicate.isFullyBound()) {
                 if (!condResult.completeFacts()) {
                     completeFacts = false;
                 }
@@ -106,10 +106,10 @@ public final class Rule extends Node implements Evaluatable {
                     completeFalsehoods = false;
                 }
             }
-            proResult = InferResult.of(proFacts, completeFacts, proFalsehoods, completeFalsehoods, condResult.cycles());
+            proResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, condResult.cycles());
         }
         if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
-            System.out.println(context.prefix() + proven + " " + proResult);
+            System.out.println(context.prefix() + predicate + " " + proResult);
         }
         return proResult;
     }

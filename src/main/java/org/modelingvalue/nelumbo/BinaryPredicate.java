@@ -89,15 +89,8 @@ public abstract class BinaryPredicate extends CompoundPredicate {
             } else {
                 return set(0, predResult[0].predicate(), predResult[1].predicate()).unknown();
             }
-        } else {
-            if (!predResult[0].isEmpty() && predResult[1].isEmpty()) {
-                return predResult[0];
-            } else if (predResult[0].isEmpty() && !predResult[1].isEmpty()) {
-                return predResult[1];
-            } else {
-                return add(predResult);
-            }
         }
+        return add(predResult);
     }
 
     protected abstract boolean isTrue(InferResult predResult, int i);

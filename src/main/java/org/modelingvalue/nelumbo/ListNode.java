@@ -37,8 +37,8 @@ public class ListNode extends Node {
         super(elementType.list(), elements.addAll(List.of(nodes)), List.of(nodes));
     }
 
-    private ListNode(Object[] array) {
-        super(array);
+    private ListNode(Object[] array, ListNode declaration) {
+        super(array, declaration);
     }
 
     @Override
@@ -57,8 +57,8 @@ public class ListNode extends Node {
     }
 
     @Override
-    protected ListNode struct(Object[] array) {
-        return new ListNode(array);
+    protected ListNode struct(Object[] array, Node declaration) {
+        return new ListNode(array, (ListNode) declaration);
     }
 
     @Override

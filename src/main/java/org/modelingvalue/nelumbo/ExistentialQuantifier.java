@@ -45,7 +45,7 @@ public final class ExistentialQuantifier extends Quantifier {
     }
 
     @Override
-    protected ExistentialQuantifier struct(Object[] array, Predicate declaration) {
+    protected ExistentialQuantifier struct(Object[] array, Node declaration) {
         return new ExistentialQuantifier(array, (ExistentialQuantifier) declaration);
     }
 
@@ -53,21 +53,34 @@ public final class ExistentialQuantifier extends Quantifier {
     protected InferResult resolve(InferContext context, InferResult predResult) {
         List<Variable> localVars = localVars();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
+        boolean completeFacts = true, completeFalsehoods = true;
         for (Predicate predFact : predResult.facts()) {
             Predicate fact = setBinding(predFact.getBinding().removeAllKey(localVars));
-            facts = facts.add(fact);
+            if (fact.isFullyBound()) {
+                facts = facts.add(fact);
+            } else {
+                completeFacts = false;
+            }
         }
         for (Predicate predFalsehood : predResult.falsehoods()) {
             Predicate falsehood = setBinding(predFalsehood.getBinding().removeAllKey(localVars));
             if (!facts.contains(falsehood)) {
-                falsehoods = falsehoods.add(falsehood);
+                if (falsehood.isFullyBound()) {
+                    falsehoods = falsehoods.add(falsehood);
+                } else {
+                    completeFalsehoods = false;
+                }
             }
         }
-        boolean completeFacts = predResult.completeFacts();
-        boolean completeFalsehoods = predResult.completeFalsehoods();
-        if (completeFacts && facts.isEmpty() && falsehoods.isEmpty() && isFullyBound()) {
+        if (!isFullyBound()) {
+            if (!predResult.completeFacts()) {
+                completeFacts = false;
+            }
+            if (!predResult.completeFalsehoods()) {
+                completeFalsehoods = false;
+            }
+        } else if (falsehoods.isEmpty() && facts.isEmpty()) {
             falsehoods = falsehoods.add(this);
-            completeFalsehoods = true;
         }
         return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }

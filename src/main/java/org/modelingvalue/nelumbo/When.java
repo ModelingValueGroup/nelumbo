@@ -43,7 +43,7 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected When struct(Object[] array, Predicate declaration) {
+    protected When struct(Object[] array, Node declaration) {
         return new When(array, (When) declaration);
     }
 
@@ -69,17 +69,17 @@ public final class When extends BinaryPredicate {
 
     @Override
     protected boolean isTrue(InferResult[] predResult) {
-        return predResult[1].isTrueCC();
+        return predResult[0].isTrueCC() && predResult[1].isTrueCC();
     }
 
     @Override
     protected boolean isFalse(InferResult[] predResult) {
-        return predResult[1].isFalseCC();
+        return predResult[0].isTrueCC() && predResult[1].isFalseCC();
     }
 
     @Override
     protected boolean isLeft(InferResult[] predResult) {
-        return false;
+        return predResult[1].isTrueCC();
     }
 
     @Override

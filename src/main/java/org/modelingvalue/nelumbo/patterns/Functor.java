@@ -57,13 +57,13 @@ public class Functor extends Node {
         super(Type.FUNCTOR, elements, args);
     }
 
-    private Functor(Object[] array) {
-        super(array);
+    private Functor(Object[] array, Functor declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Functor struct(Object[] array) {
-        return new Functor(array);
+    protected Functor struct(Object[] array, Node declaration) {
+        return new Functor(array, (Functor) declaration);
     }
 
     public Pattern pattern() {

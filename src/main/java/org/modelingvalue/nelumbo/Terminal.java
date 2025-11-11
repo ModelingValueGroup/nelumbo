@@ -33,13 +33,13 @@ public class Terminal extends Node {
         super(type, elements, args);
     }
 
-    protected Terminal(Object[] array) {
-        super(array);
+    protected Terminal(Object[] array, Terminal declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Terminal struct(Object[] array) {
-        return new Terminal(array);
+    protected Terminal struct(Object[] array, Node declaration) {
+        return new Terminal(array, (Terminal) declaration);
     }
 
     @Override

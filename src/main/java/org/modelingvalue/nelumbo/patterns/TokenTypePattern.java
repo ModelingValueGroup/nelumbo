@@ -20,6 +20,7 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
@@ -33,13 +34,13 @@ public class TokenTypePattern extends Pattern {
         super(type, elements, args);
     }
 
-    protected TokenTypePattern(Object[] args) {
-        super(args);
+    protected TokenTypePattern(Object[] args, TokenTypePattern declaration) {
+        super(args, declaration);
     }
 
     @Override
-    protected TokenTypePattern struct(Object[] array) {
-        return new TokenTypePattern(array);
+    protected TokenTypePattern struct(Object[] array, Node declaration) {
+        return new TokenTypePattern(array, (TokenTypePattern) declaration);
     }
 
     public TokenType tokenType() {

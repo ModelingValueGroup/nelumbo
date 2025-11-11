@@ -35,13 +35,13 @@ public class NodeTypePattern extends Pattern {
         super(type, elements, args);
     }
 
-    protected NodeTypePattern(Object[] args) {
-        super(args);
+    protected NodeTypePattern(Object[] args, NodeTypePattern declaration) {
+        super(args, declaration);
     }
 
     @Override
-    protected NodeTypePattern struct(Object[] array) {
-        return new NodeTypePattern(array);
+    protected NodeTypePattern struct(Object[] array, Node declaration) {
+        return new NodeTypePattern(array, (NodeTypePattern) declaration);
     }
 
     public Type nodeType() {

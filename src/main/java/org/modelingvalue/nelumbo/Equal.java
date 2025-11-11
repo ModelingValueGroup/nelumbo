@@ -43,7 +43,7 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected Equal struct(Object[] array, Predicate declaration) {
+    protected Equal struct(Object[] array, Node declaration) {
         return new Equal(array, (Equal) declaration);
     }
 

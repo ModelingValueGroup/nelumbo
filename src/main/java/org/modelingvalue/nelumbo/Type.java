@@ -108,8 +108,8 @@ public class Type extends Node {
         super((Type) null, List.of(), Type.class, null, DEFAULT_GROUP);
     }
 
-    private Type(Object[] array) {
-        super(array);
+    private Type(Object[] array, Type declaration) {
+        super(array, declaration);
     }
 
     private Type(Class<?> clss, String group, Type... supers) {
@@ -306,8 +306,8 @@ public class Type extends Node {
     }
 
     @Override
-    protected Type struct(Object[] array) {
-        return new Type(array);
+    protected Type struct(Object[] array, Node declaration) {
+        return new Type(array, (Type) declaration);
     }
 
     @Override

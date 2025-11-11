@@ -30,8 +30,8 @@ public final class Variable extends Node {
         super(Type.VARIABLE, elements, type, name);
     }
 
-    private Variable(Object[] array) {
-        super(array);
+    private Variable(Object[] array, Variable declaration) {
+        super(array, declaration);
     }
 
     @Override
@@ -63,8 +63,8 @@ public final class Variable extends Node {
     }
 
     @Override
-    protected Variable struct(Object[] array) {
-        return new Variable(array);
+    protected Variable struct(Object[] array, Node declaration) {
+        return new Variable(array, (Variable) declaration);
     }
 
     @Override

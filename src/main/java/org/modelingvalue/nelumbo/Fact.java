@@ -31,13 +31,13 @@ public final class Fact extends Node implements Evaluatable {
         super(functor, elements, args);
     }
 
-    private Fact(Object[] array) {
-        super(array);
+    private Fact(Object[] array, Fact declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Fact struct(Object[] array) {
-        return new Fact(array);
+    protected Fact struct(Object[] array, Node declaration) {
+        return new Fact(array, (Fact) declaration);
     }
 
     @Override

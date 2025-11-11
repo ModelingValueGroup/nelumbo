@@ -22,19 +22,13 @@ public class InconsistencyException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = -30585101694801066L;
 
-    private final Rule        rule;
     private final InferResult ruleResult;
     private final InferResult existingResult;
 
-    public InconsistencyException(Rule rule, InferResult ruleResult, InferResult existingResult) {
-        super("Rule " + rule + " causes inconsistent result " + ruleResult + " that does not biimplicate " + existingResult + ".");
-        this.rule = rule;
+    public InconsistencyException(InferResult ruleResult, InferResult existingResult) {
+        super("Inconsistent results: " + ruleResult + " does not biimplicate " + existingResult);
         this.ruleResult = ruleResult;
         this.existingResult = existingResult;
-    }
-
-    public Rule rule() {
-        return rule;
     }
 
     public InferResult ruleResult() {

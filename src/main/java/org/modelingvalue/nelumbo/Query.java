@@ -40,7 +40,7 @@ public final class Query extends Node implements Evaluatable {
     @SuppressWarnings("unchecked")
     private static Object[] args(List<AstElement> elements, Object[] args) {
         Predicate nodePred = (Predicate) args[0];
-        Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.variables()));
+        Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()));
         Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
         if (expected.isEmpty()) {
             return new Object[]{predicate};
@@ -103,13 +103,13 @@ public final class Query extends Node implements Evaluatable {
         return args;
     }
 
-    private Query(Object[] array) {
-        super(array);
+    private Query(Object[] array, Query declaration) {
+        super(array, declaration);
     }
 
     @Override
-    protected Query struct(Object[] array) {
-        return new Query(array);
+    protected Query struct(Object[] array, Node declaration) {
+        return new Query(array, (Query) declaration);
     }
 
     @Override
@@ -150,7 +150,7 @@ public final class Query extends Node implements Evaluatable {
         try {
             found = predicate.infer().predicate(predicate);
         } catch (InconsistencyException ie) {
-            result.addException(new ParseException(ie.getMessage(), ie.rule()));
+            result.addException(new ParseException(ie.getMessage(), predicate));
             return;
         }
         if (hasExpected()) {

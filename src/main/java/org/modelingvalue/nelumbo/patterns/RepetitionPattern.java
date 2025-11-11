@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -33,13 +34,13 @@ public class RepetitionPattern extends Pattern {
         super(type, elements, args);
     }
 
-    protected RepetitionPattern(Object[] args) {
-        super(args);
+    protected RepetitionPattern(Object[] args, RepetitionPattern declaration) {
+        super(args, declaration);
     }
 
     @Override
-    protected RepetitionPattern struct(Object[] array) {
-        return new RepetitionPattern(array);
+    protected RepetitionPattern struct(Object[] array, Node declaration) {
+        return new RepetitionPattern(array, (RepetitionPattern) declaration);
     }
 
     public Pattern repeated() {

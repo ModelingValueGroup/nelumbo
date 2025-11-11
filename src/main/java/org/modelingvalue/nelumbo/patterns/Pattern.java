@@ -95,12 +95,12 @@ public abstract class Pattern extends Node {
         super(type, ast, args);
     }
 
-    protected Pattern(Object[] args) {
-        super(args);
+    protected Pattern(Object[] args, Pattern declaration) {
+        super(args, declaration);
     }
 
     @Override
-    protected abstract Pattern struct(Object[] array);
+    protected abstract Pattern struct(Object[] array, Node declaration);
 
     public abstract ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche);
 

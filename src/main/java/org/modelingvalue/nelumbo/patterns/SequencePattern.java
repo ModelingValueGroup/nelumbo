@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -33,13 +34,13 @@ public class SequencePattern extends Pattern {
         super(type, elements, args);
     }
 
-    protected SequencePattern(Object[] args) {
-        super(args);
+    protected SequencePattern(Object[] args, SequencePattern declaration) {
+        super(args, declaration);
     }
 
     @Override
-    protected SequencePattern struct(Object[] array) {
-        return new SequencePattern(array);
+    protected SequencePattern struct(Object[] array, Node declaration) {
+        return new SequencePattern(array, (SequencePattern) declaration);
     }
 
     @SuppressWarnings("unchecked")

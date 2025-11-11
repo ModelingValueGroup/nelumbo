@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class Quantifier extends CompoundPredicate {
@@ -39,6 +38,7 @@ public abstract class Quantifier extends CompoundPredicate {
         super(args, declaration);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public final List<Variable> localVars() {
         return (List<Variable>) get(0);
@@ -51,11 +51,6 @@ public abstract class Quantifier extends CompoundPredicate {
     @Override
     protected int countNrOfUnbound() {
         return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
-    }
-
-    @Override
-    public Map<Variable, Object> shallowVariables() {
-        return Map.of();
     }
 
     @Override

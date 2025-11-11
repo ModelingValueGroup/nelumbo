@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
@@ -38,7 +39,7 @@ public final class Concat extends Predicate {
     }
 
     @Override
-    protected Concat struct(Object[] array, Predicate declaration) {
+    protected Concat struct(Object[] array, Node declaration) {
         return new Concat(array, (Concat) declaration);
     }
 

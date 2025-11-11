@@ -71,10 +71,6 @@ public interface InferResult {
         return completeFacts() || completeFalsehoods();
     }
 
-    default boolean isEmpty() {
-        return allFacts().isEmpty() && allFalsehoods().isEmpty() && cycles().isEmpty();
-    }
-
     default Set<Map<Variable, Object>> trueBindings() {
         return allFacts().map(p -> p.getBinding(predicate()).removeAll(e -> e.getValue() instanceof Variable || e.getValue() instanceof Type)).asSet();
     }
@@ -447,9 +443,9 @@ public interface InferResult {
         return of(allFacts(), completeFalsehoods(), allFalsehoods(), completeFacts(), cycles());
     }
 
-    default InferResult biimply(InferResult ruleResult, Rule rule) {
+    default InferResult biimply(InferResult ruleResult) {
         if (checkConsistency(ruleResult) || ruleResult.checkConsistency(this)) {
-            throw new InconsistencyException(rule, ruleResult, this);
+            throw new InconsistencyException(ruleResult, this);
         }
         Set<Predicate> facts = facts().addAll(ruleResult.facts());
         Set<Predicate> falsehoods = falsehoods().addAll(ruleResult.falsehoods());

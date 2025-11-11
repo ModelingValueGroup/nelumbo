@@ -23,6 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
@@ -39,7 +40,7 @@ public final class Integer extends Predicate {
     }
 
     @Override
-    protected Integer struct(Object[] array, Predicate declaration) {
+    protected Integer struct(Object[] array, Node declaration) {
         return new Integer(array, (Integer) declaration);
     }
 

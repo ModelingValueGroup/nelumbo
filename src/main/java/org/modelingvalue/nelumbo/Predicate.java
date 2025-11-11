@@ -38,26 +38,23 @@ public class Predicate extends Node {
 
     public static Node             INCOMPLETE         = new Predicate(Type.PREDICATE, List.of(), "..");
 
-    private final Predicate        declaration;
     private int                    nrOfUnbound        = -1;
 
     public Predicate(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, args);
-        this.declaration = this;
     }
 
     public Predicate(Type type, List<AstElement> elements, Object... args) {
         super(type, elements, args);
-        this.declaration = this;
     }
 
     protected Predicate(Object[] args, Predicate declaration) {
-        super(args);
-        this.declaration = declaration == null ? this : declaration;
+        super(args, declaration);
     }
 
+    @Override
     public Predicate declaration() {
-        return declaration;
+        return (Predicate) super.declaration();
     }
 
     protected final int nrOfUnbound() {
@@ -79,13 +76,6 @@ public class Predicate extends Node {
         Object[] array = from.toArray();
         array[0] = functor();
         return from.struct(array, declaration());
-    }
-
-    @Override
-    public Predicate setFunctor(Functor functor) {
-        Object[] array = toArray();
-        array[0] = functor;
-        return struct(array, null);
     }
 
     private Predicate resetDeclaration() {
@@ -131,33 +121,19 @@ public class Predicate extends Node {
         return predicate == this ? this : predicate.resetDeclaration();
     }
 
-    public Map<Variable, Object> getBinding() {
-        return super.getBinding(declaration, Map.of());
-    }
-
-    public Map<Variable, Object> getBinding(Predicate declaration) {
-        return super.getBinding(declaration == null ? this.declaration : declaration, Map.of());
-    }
-
-    protected final Predicate setBinding(Map<Variable, Object> vars) {
-        return (Predicate) super.setBinding(declaration, vars);
-    }
-
-    protected Predicate set(Variable var, Object val) {
-        return (Predicate) super.set(declaration, var, val);
-    }
-
-    protected final Object get(Variable var) {
-        return super.get(declaration, var);
+    @Override
+    public Predicate setBinding(Map<Variable, Object> vars) {
+        return (Predicate) super.setBinding(vars);
     }
 
     @Override
-    protected final Predicate struct(Object[] array) {
-        return struct(array, declaration);
+    protected Predicate set(Variable var, Object val) {
+        return (Predicate) super.set(var, val);
     }
 
-    protected Predicate struct(Object[] array, Predicate declaration) {
-        return new Predicate(array, declaration);
+    @Override
+    protected Predicate struct(Object[] array, Node declaration) {
+        return new Predicate(array, (Predicate) declaration);
     }
 
     public Type getType(int i) {
@@ -168,7 +144,7 @@ public class Predicate extends Node {
     public InferResult infer() {
         KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
         InferContext context = knowledgeBase.context();
-        Predicate predicate = setBinding(variables());
+        Predicate predicate = setBinding(getBinding());
         if (context.trace()) {
             System.out.println(context.prefix() + predicate);
         }
@@ -193,14 +169,14 @@ public class Predicate extends Node {
         if (equals(from)) {
             return to;
         } else {
-            Predicate decl = declaration;
+            Predicate decl = declaration();
             Object[] array = null;
             for (int i = 0; i < length(); i++) {
                 Object thisVal = get(i);
                 if (thisVal instanceof Predicate fromDecl) {
                     Predicate toDecl = fromDecl.replace(from, to);
                     if (toDecl != fromDecl) {
-                        decl = decl.set(i, toDecl.declaration);
+                        decl = decl.set(i, toDecl.declaration());
                         if (array == null) {
                             array = toArray();
                         }
@@ -227,12 +203,12 @@ public class Predicate extends Node {
     }
 
     protected final Predicate set(int from, Predicate... a) {
-        Object[] declArray = declaration.toArray();
+        Object[] declArray = declaration().toArray();
         int i = from + START;
         for (int x = 0; x < a.length; x++) {
-            declArray[i + x] = a[x].declaration;
+            declArray[i + x] = a[x].declaration();
         }
-        Predicate newDeclaration = declaration.struct(declArray, null);
+        Predicate newDeclaration = declaration().struct(declArray, null);
         Object[] predArray = toArray();
         System.arraycopy(a, 0, predArray, from + START, a.length);
         return struct(predArray, newDeclaration);
@@ -294,7 +270,7 @@ public class Predicate extends Node {
             return unknown();
         }
         InferResult result = infer(nrOfUnbound, context);
-        if (context.trace() && getClass() != Predicate.class && !result.isEmpty()) {
+        if (context.trace() && getClass() != Predicate.class && !(this instanceof Quantifier)) {
             System.out.println(context.prefix() + "  " + this + " " + result);
         }
         return result;
@@ -391,7 +367,7 @@ public class Predicate extends Node {
                 if (ruleResult.hasStackOverflow()) {
                     return ruleResult;
                 }
-                result = result.biimply(ruleResult, rule);
+                result = result.biimply(ruleResult);
             }
         }
         return result;
