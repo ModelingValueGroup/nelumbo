@@ -136,6 +136,19 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void belastingTest() {
+        run(() -> {
+            try {
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class); // ?
+                U.printResults(Parser.parse(NelumboTest.class, "belasting.nl"));
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    @RepeatedTest(10)
     public void fibonacciTest() {
         run(() -> {
             try {

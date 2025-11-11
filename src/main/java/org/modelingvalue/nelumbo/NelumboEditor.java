@@ -54,11 +54,12 @@ import com.formdev.flatlaf.FlatLightLaf;
 
 public class NelumboEditor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
 
-    private static final String                  EDITOR_FILE_NAME = "editor.nl";
-    private final static String                  INCREASE         = "INCREASE";
-    private final static String                  DECREASE         = "DECREASE";
+    private static final String                  EDITOR_FILE_NAME   = "editor.nl";
+    private static final String                  MESSAGES_FILE_NAME = "messages.nl";
+    private final static String                  INCREASE           = "INCREASE";
+    private final static String                  DECREASE           = "DECREASE";
 
-    private final static DefaultHighlightPainter redPainter       = new DefaultHighlightPainter(new Color(0xffaaaa));
+    private final static DefaultHighlightPainter redPainter         = new DefaultHighlightPainter(new Color(0xffaaaa));
 
     /**
      * Defines a color scheme for a token type with foreground and background colors,
@@ -409,16 +410,23 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         String text = textPane.getText();
         Tokenizer tokenizer = new Tokenizer(text, EDITOR_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
-        showColors(tokenizerResult);
+        showColors(textPane, tokenizerResult);
         ExecuteResult executeResult;
         try {
             executeResult = new ExecuteResult(tokenizerResult, new Parser(tokenizerResult).parseMutiple());
         } catch (ParseException pe) {
             executeResult = new ExecuteResult(tokenizerResult, pe);
         }
-        showColors(executeResult.tokenizerResult());
+        showColors(textPane, executeResult.tokenizerResult());
         showResults(executeResult);
         saveTextContent(text);
+    }
+
+    private void showMessageColors() {
+        String text = messagesPane.getText();
+        Tokenizer tokenizer = new Tokenizer(text, MESSAGES_FILE_NAME);
+        TokenizerResult tokenizerResult = tokenizer.tokenize();
+        showColors(messagesPane, tokenizerResult);
     }
 
     private void prepareForExecute() {
@@ -431,13 +439,13 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         messagesPane.setText("...");
     }
 
-    private void showColors(TokenizerResult tokenizerResult) {
+    private void showColors(JTextPane pane, TokenizerResult tokenizerResult) {
         if (tokenizerResult != null) {
             for (Token t = tokenizerResult.firstAll(); t != null; t = t.nextAll()) {
                 ColorScheme colorScheme = TOKEN_COLORS.get(t.getNode() instanceof Variable ? TokenType.VARIABLE : t.type());
                 if (colorScheme != null) {
                     SimpleAttributeSet attr = colorScheme.attr();
-                    textPane.getStyledDocument().setCharacterAttributes(t.index(), t.text().length(), attr, false);
+                    pane.getStyledDocument().setCharacterAttributes(t.index(), t.text().length(), attr, false);
                 }
             }
         }
@@ -456,6 +464,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                 }
             }
             setMessages(messages.toString());
+            showMessageColors();
         } else {
             ParseException pe = executeResult.pe();
             setMessagesAsError((pe.fileName().equals(EDITOR_FILE_NAME) ? emptyLines(pe.line()) : "") + pe.getShortMessage());
