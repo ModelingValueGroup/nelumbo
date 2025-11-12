@@ -446,11 +446,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private ListNode createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
         Predicate cons = (Predicate) args[0];
-        if (Type.RELATION.isAssignableFrom(cons.type())) {
-            addException(new ParseException("Rule consequence " + cons + " is a relation.", cons));
+        Functor consFunctor = cons.functor();
+        Functor relFunctor = literalFunctors.get().get(consFunctor);
+        if (Type.RELATION.isAssignableFrom((relFunctor != null ? relFunctor : consFunctor).resultType())) {
+            addException(new ParseException("Rule consequence " + cons + " must be a Predicate, not a Relation", cons));
         }
         Map<Variable, Object> consVars = cons.getBinding();
-        Node node = cons.functor().equals(equalsFunctor) ? (Node) cons.get(0) : cons;
+        Node node = consFunctor.equals(equalsFunctor) ? (Node) cons.get(0) : cons;
         Map<Variable, Object> nodeVars = node == cons ? consVars : node.getBinding();
         Functor nodeFunctor = node.functor();
         Functor literalFunctor = literalFunctors.get().get(nodeFunctor);

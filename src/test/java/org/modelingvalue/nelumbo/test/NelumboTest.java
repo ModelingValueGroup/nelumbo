@@ -75,7 +75,7 @@ public class NelumboTest extends NelumboTestBase {
     public void friendsTest() {
         run(() -> {
             try {
-                U.printResults(Parser.parse(NelumboTest.class, "friends.nl"));
+                U.printResults(Parser.parse(NelumboTest.class, "friendsTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -87,8 +87,8 @@ public class NelumboTest extends NelumboTestBase {
     public void whoIsTest() {
         run(() -> {
             try {
-                U.printResults(Parser.parse(NelumboTest.class, "friends.nl"));
-                U.printResults(Parser.parse(NelumboTest.class, "whoIs.nl"));
+                U.printResults(Parser.parse(NelumboTest.class, "friendsTest.nl"));
+                U.printResults(Parser.parse(NelumboTest.class, "whoIsTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
@@ -140,7 +140,7 @@ public class NelumboTest extends NelumboTestBase {
         run(() -> {
             try {
                 Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class); // ?
-                U.printResults(Parser.parse(NelumboTest.class, "belasting.nl"));
+                U.printResults(Parser.parse(NelumboTest.class, "belastingTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
