@@ -491,9 +491,18 @@ public interface InferResult {
         };
     }
 
-    default InferResult add(InferResult other) {
+    default InferResult addOr(InferResult other) {
         List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
         boolean completeFacts = completeFacts() && other.completeFacts();
+        List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
+        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
+        Set<Predicate> cycles = cycles().addAll(other.cycles());
+        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
+    }
+
+    default InferResult addAnd(InferResult other) {
+        List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
+        boolean completeFacts = completeFacts() || other.completeFacts();
         List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<Predicate> cycles = cycles().addAll(other.cycles());

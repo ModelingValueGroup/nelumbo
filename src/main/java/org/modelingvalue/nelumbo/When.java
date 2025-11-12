@@ -96,4 +96,9 @@ public final class When extends BinaryPredicate {
     public String toString(TokenType[] previous) {
         return predicate2() + " if " + predicate1();
     }
+
+    @Override
+    protected InferResult add(InferResult[] predResult) {
+        return predResult[0].addAnd(predResult[1]);
+    }
 }
