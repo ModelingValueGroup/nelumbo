@@ -48,6 +48,11 @@ public interface InferResult {
         public Set<Predicate> cycles() {
             return Set.of();
         }
+
+        @Override
+        public boolean unresolvable() {
+            return true;
+        }
     };
 
     Set<Predicate> facts();
