@@ -99,6 +99,6 @@ public final class When extends BinaryPredicate {
 
     @Override
     protected InferResult add(InferResult[] predResult) {
-        return predResult[0].addAnd(predResult[1]);
+        return predResult[0].addWhen(predResult[1]);
     }
 }
