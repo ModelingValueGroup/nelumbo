@@ -93,9 +93,4 @@ public final class Or extends BinaryPredicate {
         return predResult[0].isFalseCC();
     }
 
-    @Override
-    protected InferResult add(InferResult[] predResult) {
-        return predResult[0].addOr(predResult[1]);
-    }
-
 }

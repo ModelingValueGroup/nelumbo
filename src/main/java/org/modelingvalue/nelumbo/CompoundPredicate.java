@@ -81,6 +81,10 @@ public abstract class CompoundPredicate extends Predicate {
                 }
             }
         } while (!next.isEmpty());
+        if (facts.isEmpty() && completeFacts && falsehoods.isEmpty() && completeFalsehoods) {
+            completeFacts = false;
+            completeFalsehoods = false;
+        }
         return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 

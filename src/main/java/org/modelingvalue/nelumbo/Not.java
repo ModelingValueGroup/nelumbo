@@ -72,8 +72,10 @@ public final class Not extends CompoundPredicate {
             } else {
                 return set(0, predResult.predicate()).unknown();
             }
-        } else {
+        } else if (!predResult.unresolvable()) {
             return predResult.flipComplete();
+        } else {
+            return InferResult.EMPTY;
         }
     }
 

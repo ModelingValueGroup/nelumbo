@@ -47,7 +47,7 @@ public final class Length extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unknown();
+            return unresolvable();
         }
 
         java.lang.String string = getVal(0, 0);

@@ -47,7 +47,7 @@ public final class Integer extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unknown();
+            return unresolvable();
         }
 
         BigInteger integer = getVal(0, 0);

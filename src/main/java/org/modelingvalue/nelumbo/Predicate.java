@@ -218,6 +218,10 @@ public class Predicate extends Node {
         return InferResult.unknown(this);
     }
 
+    public final InferResult unresolvable() {
+        return InferResult.unresolvable(this);
+    }
+
     public final InferResult factCC() {
         return InferResult.factsCC(singleton());
     }
@@ -267,7 +271,7 @@ public class Predicate extends Node {
     protected InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 && context.reduce()) {
-            return unknown();
+            return unresolvable();
         }
         InferResult result = infer(nrOfUnbound, context);
         if (context.trace() && getClass() != Predicate.class && !(this instanceof Quantifier)) {
@@ -277,9 +281,8 @@ public class Predicate extends Node {
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        Functor functor = functor();
-        if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return unknown();
+        if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor().args().size() == 1)) {
+            return unresolvable();
         }
         KnowledgeBase knowledgebase = context.knowledgebase();
         if (isRelation()) {
@@ -343,7 +346,7 @@ public class Predicate extends Node {
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
-                    cycleResult = InferResult.of(nextResult.facts(), true, nextResult.falsehoods(), true, nextResult.cycles());
+                    cycleResult = InferResult.of(nextResult.facts(), true, nextResult.falsehoods(), true, nextResult.cycles().remove(this));
                     context.knowledgebase().memoization(this, cycleResult);
                     nextResult = inferRules(context.putCycleResult(this, cycleResult));
                     if (nextResult.hasStackOverflow()) {

@@ -89,14 +89,14 @@ public abstract class BinaryPredicate extends CompoundPredicate {
             } else {
                 return set(0, predResult[0].predicate(), predResult[1].predicate()).unknown();
             }
+        } else if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
+            return predResult[0].add(predResult[1]);
+        } else if (!predResult[0].unresolvable()) {
+            return predResult[0];
+        } else if (!predResult[1].unresolvable()) {
+            return predResult[1];
         } else {
-            if (!predResult[0].isEmpty() && predResult[1].isEmpty()) {
-                return predResult[0];
-            } else if (predResult[0].isEmpty() && !predResult[1].isEmpty()) {
-                return predResult[1];
-            } else {
-                return add(predResult);
-            }
+            return InferResult.EMPTY;
         }
     }
 
@@ -113,8 +113,6 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     protected abstract boolean isLeft(InferResult[] predResult);
 
     protected abstract boolean isRight(InferResult[] predResult);
-
-    protected abstract InferResult add(InferResult[] predResult);
 
     protected void order(Predicate[] predicate) {
         if (predicate[0] instanceof Boolean && !(predicate[1] instanceof Boolean)) {

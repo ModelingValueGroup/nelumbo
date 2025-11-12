@@ -45,8 +45,9 @@ public final class Multiply extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unknown();
+            return unresolvable();
         }
+
         BigInteger factor1 = getVal(0, 0);
         BigInteger factor2 = getVal(1, 0);
         BigInteger product = getVal(2, 0);
@@ -60,13 +61,13 @@ public final class Multiply extends Predicate {
             }
         } else if (factor1 != null && product != null) {
             BigInteger[] dr = product.divideAndRemainder(factor1);
-            return dr[1].equals(BigInteger.ZERO) ? set(1, Integer.of(dr[0])).factCI() : unknown();
+            return dr[1].equals(BigInteger.ZERO) ? set(1, Integer.of(dr[0])).factCI() : falsehoodCI();
         } else if (factor2 != null && product != null) {
             BigInteger[] dr = product.divideAndRemainder(factor2);
-            return dr[1].equals(BigInteger.ZERO) ? set(0, Integer.of(dr[0])).factCI() : unknown();
-        } else {
-            return unknown();
+            return dr[1].equals(BigInteger.ZERO) ? set(0, Integer.of(dr[0])).factCI() : falsehoodCI();
         }
+
+        return unknown();
     }
 
 }
