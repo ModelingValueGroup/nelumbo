@@ -23,7 +23,7 @@ import org.modelingvalue.collections.Set;
 
 public interface InferResult {
 
-    InferResult EMPTY = new InferResultImpl() {
+    InferResult UNRESOLVABLE = new InferResultImpl() {
         @Override
         public Set<Predicate> facts() {
             return Set.of();

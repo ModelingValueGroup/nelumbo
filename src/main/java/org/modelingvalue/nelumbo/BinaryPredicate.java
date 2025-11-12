@@ -96,7 +96,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         } else if (!predResult[1].unresolvable()) {
             return predResult[1];
         } else {
-            return InferResult.EMPTY;
+            return InferResult.UNRESOLVABLE;
         }
     }
 
