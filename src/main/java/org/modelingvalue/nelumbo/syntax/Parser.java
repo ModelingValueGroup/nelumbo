@@ -33,12 +33,6 @@ public final class Parser implements ParseExceptionHandler {
         return new Parser(tokenizer.tokenize()).parseEvaluate().roots();
     }
 
-    public static List<Node> parse(Class<?> clss) throws ParseException {
-        String packageName = clss.getPackageName();
-        String name = packageName.substring(packageName.lastIndexOf('.') + 1) + ".nl";
-        return parse(clss, name);
-    }
-
     public static List<Node> parse(Class<?> clss, String fileName) throws ParseException {
         try {
             InputStream stream = clss.getResourceAsStream(fileName);

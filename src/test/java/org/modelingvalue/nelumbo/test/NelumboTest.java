@@ -112,7 +112,7 @@ public class NelumboTest extends NelumboTestBase {
     public void integersTest() {
         run(() -> {
             try {
-                Parser.parse(Integer.class);
+                Parser.parse(Integer.class, "integers.nl");
                 U.printResults(Parser.parse(NelumboTest.class, "integersTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
@@ -125,8 +125,8 @@ public class NelumboTest extends NelumboTestBase {
     public void stringsTest() {
         run(() -> {
             try {
-                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class); // ?
-                Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class, "integers.nl"); // ?
+                Parser.parse(org.modelingvalue.nelumbo.strings.String.class, "strings.nl");
                 U.printResults(Parser.parse(NelumboTest.class, "stringsTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
@@ -139,7 +139,7 @@ public class NelumboTest extends NelumboTestBase {
     public void belastingTest() {
         run(() -> {
             try {
-                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class); // ?
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class, "integers.nl"); // ?
                 U.printResults(Parser.parse(NelumboTest.class, "belastingTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
@@ -152,7 +152,7 @@ public class NelumboTest extends NelumboTestBase {
     public void fibonacciTest() {
         run(() -> {
             try {
-                Parser.parse(Integer.class);
+                Parser.parse(Integer.class, "integers.nl");
                 U.printResults(Parser.parse(NelumboTest.class, "fibonacciTest.nl"));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
@@ -165,7 +165,7 @@ public class NelumboTest extends NelumboTestBase {
     public void tokenSplitTest() {
         run(() -> {
             try {
-                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class);
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class, "integers.nl"); // ?
                 String nl = "-4=-(2+2) ?";
 
                 TokenizerResult tr = new Tokenizer(nl, "NelumboTest.tokenSplitTest").tokenize();

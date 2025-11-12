@@ -327,8 +327,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void initKnowledgeBase() {
         KnowledgeBase.BASE.run(() -> {
             try {
-                Parser.parse(Integer.class);
-                Parser.parse(org.modelingvalue.nelumbo.strings.String.class);
+                Parser.parse(Integer.class, "integers.nl");
+                Parser.parse(org.modelingvalue.nelumbo.strings.String.class, "strings.nl");
             } catch (ParseException e) {
                 setMessagesAsError(e.getMessage());
             }

@@ -141,7 +141,7 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     public boolean isSyntatic() {
-        return TRACE_SYNTATIC || astElements().isEmpty() || firstToken().fileName().equals("nelumbo.nl");
+        return TRACE_SYNTATIC || astElements().isEmpty() || firstToken().fileName().equals("logic.nl");
     }
 
     @Override

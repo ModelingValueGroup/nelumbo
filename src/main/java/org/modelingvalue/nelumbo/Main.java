@@ -36,7 +36,7 @@ public final class Main {
         scanner.useDelimiter("\r\n|[\n\r\u2028\u2029\u0085]");
         KnowledgeBase.BASE.run(() -> {
             try {
-                Parser.parse(Integer.class);
+                Parser.parse(Integer.class, "integers.nl");
             } catch (ParseException e) {
                 System.err.println(ERROR + e.getMessage());
             }
@@ -45,8 +45,8 @@ public final class Main {
             while (line != null) {
                 try {
                     for (Node root : Parser.parse(line)) {
-                        if (root.type().equals(Type.QUERY)) {
-                            System.out.println(WRITE + root.toString(1));
+                        if (root instanceof Query query) {
+                            System.out.println(WRITE + query.inferResult());
                         }
                     }
                 } catch (ParseException e) {

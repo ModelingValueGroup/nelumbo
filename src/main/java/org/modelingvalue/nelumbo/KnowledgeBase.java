@@ -379,7 +379,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return node.setAstElements(node.astElements().prepend(elements.first()).append(elements.last()));
                         }));
 
-                Parser.parse(KnowledgeBase.class);
+                Parser.parse(KnowledgeBase.class, "logic.nl");
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
             }
