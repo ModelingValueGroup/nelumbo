@@ -90,7 +90,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
                 return set(0, predResult[0].predicate(), predResult[1].predicate()).unknown();
             }
         } else if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
-            return add(predResult);
+            return predResult[0].add(predResult[1]);
         } else if (!predResult[0].unresolvable()) {
             return predResult[0];
         } else if (!predResult[1].unresolvable()) {
@@ -98,10 +98,6 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         } else {
             return InferResult.UNRESOLVABLE;
         }
-    }
-
-    protected InferResult add(InferResult[] predResult) {
-        return predResult[0].add(predResult[1]);
     }
 
     protected abstract boolean isTrue(InferResult predResult, int i);
