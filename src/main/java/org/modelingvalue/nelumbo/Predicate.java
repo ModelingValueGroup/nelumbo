@@ -362,15 +362,12 @@ public class Predicate extends Node {
     }
 
     private InferResult inferRules(InferContext context) {
-        InferResult result = unknown(), ruleResult;
+        InferResult result = unknown();
         Set<Rule> rules = context.knowledgebase().getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
-            ruleResult = rule.biimply(this, context);
-            if (ruleResult != null) {
-                if (ruleResult.hasStackOverflow()) {
-                    return ruleResult;
-                }
-                result = result.biimply(ruleResult);
+            result = rule.biimply(this, context, result);
+            if (result.hasStackOverflow()) {
+                return result;
             }
         }
         return result;

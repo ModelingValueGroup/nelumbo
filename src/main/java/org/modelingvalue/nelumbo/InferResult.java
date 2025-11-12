@@ -511,35 +511,15 @@ public interface InferResult {
 
     default InferResult addWhen(InferResult other) {
         List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
-        boolean completeFacts = completeFacts() && other.completeFacts();
+        boolean completeFacts = completeFacts() || other.completeFacts();
         List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
-        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
+        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
         Set<Predicate> cycles = cycles().addAll(other.cycles());
         return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
     default InferResult flipComplete() {
         return of(allFacts(), completeFalsehoods(), allFalsehoods(), completeFacts(), cycles());
-    }
-
-    default InferResult biimply(InferResult ruleResult) {
-        if (checkConsistency(ruleResult)) {
-            throw new InconsistencyException(ruleResult, this);
-        }
-        Set<Predicate> facts = facts().addAll(ruleResult.facts());
-        Set<Predicate> falsehoods = falsehoods().addAll(ruleResult.falsehoods());
-        boolean completeFacts = completeFacts() || ruleResult.completeFacts();
-        boolean completeFalsehoods = completeFalsehoods() || ruleResult.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(ruleResult.cycles());
-        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
-    default boolean checkConsistency(InferResult other) {
-        return (completeFacts() && !other.facts().allMatch(facts()::contains)) || //
-                (completeFalsehoods() && !other.falsehoods().allMatch(falsehoods()::contains)) || //
-                (other.completeFacts() && !facts().allMatch(other.facts()::contains)) || //
-                (other.completeFalsehoods() && !falsehoods().allMatch(other.falsehoods()::contains)) || //
-                falsehoods().anyMatch(other.facts()::contains) || facts().anyMatch(other.falsehoods()::contains);
     }
 
     default InferResult cast(Predicate to) {
