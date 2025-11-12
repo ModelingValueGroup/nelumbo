@@ -523,7 +523,7 @@ public interface InferResult {
     }
 
     default InferResult biimply(InferResult ruleResult) {
-        if (checkConsistency(ruleResult) || ruleResult.checkConsistency(this)) {
+        if (checkConsistency(ruleResult)) {
             throw new InconsistencyException(ruleResult, this);
         }
         Set<Predicate> facts = facts().addAll(ruleResult.facts());
@@ -535,8 +535,11 @@ public interface InferResult {
     }
 
     default boolean checkConsistency(InferResult other) {
-        return (other.completeFacts() && !facts().allMatch(other.facts()::contains)) || //
-                (other.completeFalsehoods() && !falsehoods().allMatch(other.falsehoods()::contains));
+        return (completeFacts() && !other.facts().allMatch(facts()::contains)) || //
+                (completeFalsehoods() && !other.falsehoods().allMatch(falsehoods()::contains)) || //
+                (other.completeFacts() && !facts().allMatch(other.facts()::contains)) || //
+                (other.completeFalsehoods() && !falsehoods().allMatch(other.falsehoods()::contains)) || //
+                falsehoods().anyMatch(other.facts()::contains) || facts().anyMatch(other.falsehoods()::contains);
     }
 
     default InferResult cast(Predicate to) {
