@@ -18,6 +18,8 @@
     string_length("foo",3)            ? [()][]
     string_length(a,3)                ? [..][..]
     string_length("foo",d)            ? [(d=3)][..]
+    "foo".length=d                    ? [(d=3)][..]
+    a.length=3                        ? [..][..]
 
     integer_string(123456,"123456")   ? [()][]
     integer_string(123456,a)          ? [(a="123456")][..]
@@ -28,3 +30,5 @@
     integer_string(d,"123456    ")    ? [][..]
     integer_string(d,"NaN")           ? [][..]
     integer_string(d,"Hello, World!") ? [][..]
+    (int)a=123456                     ? [(a="123456")][..]
+    (int)"123456"=d                   ? [(d=123456)][..]

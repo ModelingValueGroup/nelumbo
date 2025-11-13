@@ -12,3 +12,5 @@
     <String>    a, b, c
 
     a+b=c       <=> string_concat(a,b,c)
+    a.length=b  <=> string_length(a,b)
+    (int)a      <=> integer_string(a)
