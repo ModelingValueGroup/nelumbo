@@ -525,7 +525,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
-        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, null, TRACE_NELUMBO);
+        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, TRACE_NELUMBO);
         init();
     }
 

@@ -93,12 +93,21 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
+    protected InferResult resolvedOnly(InferResult[] predResult) {
+        if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
+            return predResult[0].complete().add(predResult[1]);
+        } else if (!predResult[0].unresolvable()) {
+            return predResult[0].complete();
+        } else if (!predResult[1].unresolvable()) {
+            return predResult[1];
+        } else {
+            return InferResult.UNRESOLVABLE;
+        }
+    }
+
+    @Override
     public String toString(TokenType[] previous) {
         return predicate2() + " if " + predicate1();
     }
 
-    @Override
-    protected boolean[] complete(boolean[] p1, boolean[] p2) {
-        return p2;
-    }
 }

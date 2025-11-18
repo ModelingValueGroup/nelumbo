@@ -93,9 +93,4 @@ public final class Or extends BinaryPredicate {
         return predResult[0].isFalseCC();
     }
 
-    @Override
-    protected boolean[] complete(boolean[] p1, boolean[] p2) {
-        return new boolean[]{p1[0] && p2[0], p1[1] && p2[1]};
-    }
-
 }

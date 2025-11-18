@@ -34,12 +34,10 @@ public interface InferContext {
         return !shallow() && !reduce();
     }
 
-    Map<Predicate, java.lang.Boolean>[] completeness();
-
     boolean trace();
 
     static InferContext of(KnowledgeBase knowledgebase, List<Predicate> stack, Map<Predicate, InferResult> cyclic, //
-            boolean shallow, boolean reduce, Map<Predicate, java.lang.Boolean>[] completeness, boolean trace) {
+            boolean shallow, boolean reduce, boolean trace) {
         return new InferContext() {
             @Override
             public KnowledgeBase knowledgebase() {
@@ -67,11 +65,6 @@ public interface InferContext {
             }
 
             @Override
-            public Map<Predicate, java.lang.Boolean>[] completeness() {
-                return completeness;
-            }
-
-            @Override
             public boolean trace() {
                 return trace;
             }
@@ -80,31 +73,27 @@ public interface InferContext {
     }
 
     default InferContext pushOnStack(Predicate predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false, completeness(), trace());
+        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false, trace());
     }
 
     default InferContext putCycleResult(Predicate predicate, InferResult cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false, completeness(), trace());
+        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false, trace());
     }
 
     default InferContext toReduce() {
-        return of(knowledgebase(), stack(), cycleResult(), false, true, completeness(), trace());
+        return of(knowledgebase(), stack(), cycleResult(), false, true, trace());
     }
 
     default InferContext toShallow() {
-        return of(knowledgebase(), stack(), cycleResult(), true, false, completeness(), trace());
+        return of(knowledgebase(), stack(), cycleResult(), true, false, trace());
     }
 
     default InferContext toDeep() {
-        return of(knowledgebase(), stack(), cycleResult(), false, false, completeness(), trace());
-    }
-
-    default InferContext completeness(Map<Predicate, java.lang.Boolean>[] completeness) {
-        return of(knowledgebase(), stack(), cycleResult(), false, false, completeness, trace());
+        return of(knowledgebase(), stack(), cycleResult(), false, false, trace());
     }
 
     default InferContext trace(boolean trace) {
-        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), shallow(), reduce(), completeness(), trace);
+        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), shallow(), reduce(), trace);
     }
 
     default String prefix() {

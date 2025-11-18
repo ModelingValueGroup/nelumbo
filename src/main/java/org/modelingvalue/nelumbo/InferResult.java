@@ -518,8 +518,18 @@ public interface InferResult {
     default InferResult add(InferResult other) {
         List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
         List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
+        boolean completFacts = completeFacts() && other.completeFacts();
+        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(facts, true, falsehoods, true, cycles);
+        return of(facts, completFacts, falsehoods, completeFalsehoods, cycles);
+    }
+
+    default InferResult flipComplete() {
+        return of(allFacts(), completeFalsehoods(), allFalsehoods(), completeFacts(), cycles());
+    }
+
+    default InferResult complete() {
+        return of(allFacts(), true, allFalsehoods(), true, cycles());
     }
 
     default InferResult cast(Predicate to) {

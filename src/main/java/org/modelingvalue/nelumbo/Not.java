@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Not extends CompoundPredicate {
@@ -67,7 +66,7 @@ public final class Not extends CompoundPredicate {
     @Override
     protected InferResult infer(InferContext context) {
         Predicate predicate = predicate();
-        InferResult predResult = inferChild(predicate, context);
+        InferResult predResult = predicate.infer(context);
         if (predResult.hasStackOverflow()) {
             return predResult;
         } else if (context.reduce()) {
@@ -79,28 +78,9 @@ public final class Not extends CompoundPredicate {
                 return set(0, predResult.predicate()).unknown();
             }
         } else if (!predResult.unresolvable()) {
-            return predResult;
+            return predResult.flipComplete();
         } else {
             return InferResult.UNRESOLVABLE;
-        }
-    }
-
-    @Override
-    protected Map<Predicate, java.lang.Boolean> completeness() {
-        return predicate().completeness();
-    }
-
-    @Override
-    protected boolean[] complete(Map<Predicate, java.lang.Boolean>[] completeness) {
-        Predicate predicate = predicate();
-        Predicate declaration = predicate.declaration();
-        java.lang.Boolean t = completeness[0].get(declaration);
-        if (t != null) {
-            java.lang.Boolean f = completeness[1].get(declaration);
-            return new boolean[]{f, t};
-        } else {
-            boolean[] p = ((CompoundPredicate) predicate).complete(completeness);
-            return new boolean[]{p[1], p[0]};
         }
     }
 

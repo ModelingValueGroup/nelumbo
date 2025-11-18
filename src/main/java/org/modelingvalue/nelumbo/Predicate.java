@@ -413,8 +413,4 @@ public class Predicate extends Node {
         return Type.RELATION.isAssignableFrom(type());
     }
 
-    protected Map<Predicate, java.lang.Boolean> completeness() {
-        return Map.of(Entry.of(declaration(), java.lang.Boolean.TRUE));
-    }
-
 }

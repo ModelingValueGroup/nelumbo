@@ -20,7 +20,6 @@ import java.io.Serial;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
@@ -64,7 +63,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         predicate[0] = predicate(0);
         predicate[1] = predicate(1);
         for (int i = 0; i < 2; i++) {
-            predResult[i] = inferChild(predicate[i], context);
+            predResult[i] = predicate[i].infer(context);
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
             } else if (context.reduce()) {
@@ -90,15 +89,19 @@ public abstract class BinaryPredicate extends CompoundPredicate {
                 return set(0, predResult[0].predicate(), predResult[1].predicate()).unknown();
             }
         } else {
-            if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
-                return predResult[0].add(predResult[1]);
-            } else if (!predResult[0].unresolvable()) {
-                return predResult[0];
-            } else if (!predResult[1].unresolvable()) {
-                return predResult[1];
-            } else {
-                return InferResult.UNRESOLVABLE;
-            }
+            return resolvedOnly(predResult);
+        }
+    }
+
+    protected InferResult resolvedOnly(InferResult[] predResult) {
+        if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
+            return predResult[0].add(predResult[1]);
+        } else if (!predResult[0].unresolvable()) {
+            return predResult[0];
+        } else if (!predResult[1].unresolvable()) {
+            return predResult[1];
+        } else {
+            return InferResult.UNRESOLVABLE;
         }
     }
 
@@ -136,36 +139,5 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         predicate[1] = zero;
         return true;
     }
-
-    @Override
-    protected Map<Predicate, java.lang.Boolean> completeness() {
-        return predicate1().completeness().putAll(predicate2().completeness());
-    }
-
-    @Override
-    protected boolean[] complete(Map<Predicate, java.lang.Boolean>[] completeness) {
-        boolean[] p1, p2;
-        Predicate predicate = predicate1();
-        Predicate declaration = predicate.declaration();
-        java.lang.Boolean t = completeness[0].get(declaration);
-        if (t != null) {
-            java.lang.Boolean f = completeness[1].get(declaration);
-            p1 = new boolean[]{t, f};
-        } else {
-            p1 = ((CompoundPredicate) predicate).complete(completeness);
-        }
-        predicate = predicate2();
-        declaration = predicate.declaration();
-        t = completeness[0].get(declaration);
-        if (t != null) {
-            java.lang.Boolean f = completeness[1].get(declaration);
-            p2 = new boolean[]{t, f};
-        } else {
-            p2 = ((CompoundPredicate) predicate).complete(completeness);
-        }
-        return complete(p1, p2);
-    }
-
-    protected abstract boolean[] complete(boolean[] p1, boolean[] p2);
 
 }

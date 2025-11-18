@@ -45,9 +45,8 @@ public abstract class CompoundPredicate extends Predicate {
     protected InferResult resolve(InferContext context) {
         Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(), this));
         Set<Predicate> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
-        Map<Predicate, java.lang.Boolean> c = completeness();
-        Map<Predicate, java.lang.Boolean>[] completeness = new Map[]{c, c};
-        InferContext deep = context.completeness(completeness);
+        boolean completeFacts = true, completeFalsehoods = true;
+        InferContext deep = context;
         InferContext shallow = deep.toShallow();
         InferContext reduce = deep.toReduce();
         do {
@@ -56,7 +55,7 @@ public abstract class CompoundPredicate extends Predicate {
             for (Entry<Map<Variable, Object>, Predicate> entry : now) {
                 Map<Variable, Object> binding = entry.getKey();
                 Predicate predicate = entry.getValue();
-                InferResult result = inferChild(predicate, shallow);
+                InferResult result = predicate.infer(shallow);
                 if (result.hasStackOverflow()) {
                     return result;
                 }
@@ -75,9 +74,11 @@ public abstract class CompoundPredicate extends Predicate {
                             next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.FALSE));
                         }
                     }
+                    completeFacts &= result.completeFacts();
+                    completeFalsehoods &= result.completeFalsehoods();
                     cycles = cycles.addAll(result.cycles());
                 }
-                result = inferChild(predicate, reduce);
+                result = predicate.infer(reduce);
                 if (result.hasStackOverflow()) {
                     return result;
                 } else if (result.isFalseCC()) {
@@ -87,7 +88,7 @@ public abstract class CompoundPredicate extends Predicate {
                 } else {
                     predicate = result.predicate();
                     if (predicate != null) {
-                        result = inferChild(predicate, deep);
+                        result = predicate.infer(deep);
                         if (result.hasStackOverflow()) {
                             return result;
                         }
@@ -106,35 +107,19 @@ public abstract class CompoundPredicate extends Predicate {
                                     next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.FALSE));
                                 }
                             }
+                            completeFacts &= result.completeFacts();
+                            completeFalsehoods &= result.completeFalsehoods();
                             cycles = cycles.addAll(result.cycles());
                         }
                     }
                 }
             }
         } while (!next.isEmpty());
-        boolean[] complete = complete(completeness);
-        if (facts.isEmpty() && complete[0] && falsehoods.isEmpty() && complete[1]) {
-            complete[0] = false;
-            complete[1] = false;
+        if (facts.isEmpty() && completeFacts && falsehoods.isEmpty() && completeFalsehoods) {
+            completeFacts = false;
+            completeFalsehoods = false;
         }
-        return InferResult.of(facts, complete[0], falsehoods, complete[1], cycles);
+        return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
-
-    protected InferResult inferChild(Predicate predicate, InferContext context) {
-        InferResult result = predicate.infer(context);
-        if (!context.reduce() && !result.unresolvable()) {
-            Predicate declaration = predicate.declaration();
-            Map<Predicate, java.lang.Boolean>[] c = context.completeness();
-            java.lang.Boolean t = c[0].get(declaration);
-            if (t != null) {
-                java.lang.Boolean f = c[1].get(declaration);
-                c[0] = c[0].put(declaration, t && result.completeFacts());
-                c[1] = c[1].put(declaration, f && result.completeFalsehoods());
-            }
-        }
-        return result;
-    }
-
-    protected abstract boolean[] complete(Map<Predicate, java.lang.Boolean>[] completeness);
 
 }
