@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class Quantifier extends CompoundPredicate {
@@ -65,7 +66,7 @@ public abstract class Quantifier extends CompoundPredicate {
 
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        return resolve(context.reduce(false));
+        return context.shallow() ? unresolvable() : resolve(context.toDeep());
     }
 
     @Override
@@ -80,4 +81,8 @@ public abstract class Quantifier extends CompoundPredicate {
 
     protected abstract InferResult resolve(InferContext context, InferResult predResult);
 
+    @Override
+    protected final boolean[] complete(Map<Predicate, java.lang.Boolean>[] completeness) {
+        throw new UnsupportedOperationException();
+    }
 }

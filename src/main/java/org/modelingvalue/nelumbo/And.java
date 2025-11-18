@@ -94,8 +94,8 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected InferResult add(InferResult[] predResult) {
-        return predResult[0].addAnd(predResult[1]);
+    protected boolean[] complete(boolean[] p1, boolean[] p2) {
+        return new boolean[]{p1[0] && p2[0], p1[1] && p2[1]};
     }
 
 }

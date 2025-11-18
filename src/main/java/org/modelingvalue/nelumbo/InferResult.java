@@ -491,35 +491,11 @@ public interface InferResult {
         };
     }
 
-    default InferResult addOr(InferResult other) {
+    default InferResult add(InferResult other) {
         List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
-        boolean completeFacts = completeFacts() && other.completeFacts();
         List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
-        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
         Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
-    default InferResult addAnd(InferResult other) {
-        List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
-        boolean completeFacts = completeFacts() || other.completeFacts();
-        List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
-        boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
-    default InferResult addWhen(InferResult other) {
-        List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
-        boolean completeFacts = completeFacts() || other.completeFacts();
-        List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
-        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
-    default InferResult flipComplete() {
-        return of(allFacts(), completeFalsehoods(), allFalsehoods(), completeFacts(), cycles());
+        return of(facts, true, falsehoods, true, cycles);
     }
 
     default InferResult cast(Predicate to) {

@@ -78,7 +78,8 @@ public class OptionalPattern extends Pattern {
         if (it.match(branche)) {
             List<Object> inner = List.of();
             inner = optional().args(inner, it, branche.add(0), false);
-            args = args.add(Optional.of(inner.first()));
+            Object first = inner.first();
+            args = args.add(first != null ? Optional.of(first) : Optional.empty());
         } else {
             args = args.add(Optional.empty());
         }

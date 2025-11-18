@@ -24,6 +24,8 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Predicate extends Node {
@@ -116,9 +118,26 @@ public class Predicate extends Node {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal().rename(rename.apply(e.getKey().name()))));
     }
 
-    protected Predicate setVariables(Map<Variable, Object> vars) {
+    protected Predicate setVariables(Map<Variable, Object> vars) throws ParseException {
         Predicate predicate = setBinding(vars);
-        return predicate == this ? this : predicate.resetDeclaration();
+        if (predicate == this) {
+            return this;
+        }
+        KnowledgeBase kb = KnowledgeBase.CURRENT.get();
+        predicate = predicate.replace(n -> {
+            Functor functor = n.functor();
+            if (functor != null) {
+                Functor lit = kb.literal(functor);
+                if (lit != null) {
+                    List<Object> args = n.args();
+                    if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
+                        return lit.construct(n.astElements(), args.toArray(), kb);
+                    }
+                }
+            }
+            return n;
+        });
+        return predicate.resetDeclaration();
     }
 
     @Override
@@ -198,7 +217,7 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate replace(Function<Node, Node> replacer) {
+    protected Predicate replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
         return (Predicate) super.replace(replacer);
     }
 
@@ -272,16 +291,19 @@ public class Predicate extends Node {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 && context.reduce()) {
             return unresolvable();
+        } else if (nrOfUnbound == 0 && context.shallow()) {
+            return unresolvable();
         }
         InferResult result = infer(nrOfUnbound, context);
-        if (context.trace() && getClass() != Predicate.class && !(this instanceof Quantifier)) {
+        if (context.trace() && !result.unresolvable() && getClass() != Predicate.class && !(this instanceof Quantifier)) {
             System.out.println(context.prefix() + "  " + this + " " + result);
         }
         return result;
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor().args().size() == 1)) {
+        Functor functor = functor();
+        if (nrOfUnbound > 1 || (context.shallow() && !isShallow(nrOfUnbound, functor)) || (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
             return unresolvable();
         }
         KnowledgeBase knowledgebase = context.knowledgebase();
@@ -313,6 +335,16 @@ public class Predicate extends Node {
             knowledgebase.memoization(this, result);
             return result;
         }
+    }
+
+    private boolean isShallow(int nrOfUnbound, Functor functor) {
+        if (nrOfUnbound == 1 && KnowledgeBase.equalsFunctor().equals(functor)) {
+            Node a = getVal(0);
+            Node b = getVal(1);
+            return (b == null && a != null && Type.LITERAL.isAssignableFrom(a.type())) || //
+                    (a == null && b != null && Type.LITERAL.isAssignableFrom(b.type()));
+        }
+        return false;
     }
 
     private static InferResult flatten(InferResult result, List<Predicate> overflow, InferContext context) {
@@ -375,6 +407,10 @@ public class Predicate extends Node {
 
     public boolean isRelation() {
         return Type.RELATION.isAssignableFrom(type());
+    }
+
+    protected Map<Predicate, java.lang.Boolean> completeness() {
+        return Map.of(Entry.of(declaration(), java.lang.Boolean.TRUE));
     }
 
 }

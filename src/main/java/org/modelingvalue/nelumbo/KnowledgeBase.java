@@ -190,6 +190,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static Functor equalsFunctor;
     private static Functor ruleFunctor;
 
+    public static Functor equalsFunctor() {
+        return equalsFunctor;
+    }
+
+    public static Functor ruleFunctor() {
+        return ruleFunctor;
+    }
+
     @SuppressWarnings({"unchecked", "CodeBlock2Expr"})
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
@@ -236,7 +244,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     }
                                     option = List.of();
                                 } else {
-                                    //TODO @Wim: if the first element is meta, the following line will cause an NPE
                                     option = option.add(e);
                                 }
                             }
@@ -447,8 +454,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
         Predicate cons = (Predicate) args[0];
         Functor consFunctor = cons.functor();
-        Functor relFunctor = literalFunctors.get().get(consFunctor);
-        if (Type.RELATION.isAssignableFrom((relFunctor != null ? relFunctor : consFunctor).resultType())) {
+        Functor litFunctor = literalFunctors.get().get(consFunctor);
+        if (Type.RELATION.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
             addException(new ParseException("Rule consequence " + cons + " must be a Predicate, not a Relation", cons));
         }
         Map<Variable, Object> consVars = cons.getBinding();
@@ -476,7 +483,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(nonConsVars));
                 cons = cons.setVariables(litVars);
                 cond = cond.setVariables(litVars);
-                cons = cons.replace(n -> nodeFunctor.equals(n.functor()) ? n.setFunctor(literalFunctor) : n);
                 if (when != null) {
                     when = when.setVariables(litVars);
                 }
@@ -519,7 +525,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
-        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
+        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, null, TRACE_NELUMBO);
         init();
     }
 

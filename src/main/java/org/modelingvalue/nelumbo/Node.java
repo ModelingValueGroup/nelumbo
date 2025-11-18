@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -28,6 +27,8 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -443,7 +444,7 @@ public class Node extends StructImpl implements AstElement {
         return true;
     }
 
-    protected Node replace(Function<Node, Node> replacer) {
+    protected Node replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
         Node to = replacer.apply(this);
         if (to != this) {
             return to;

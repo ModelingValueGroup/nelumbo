@@ -88,8 +88,8 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected void order(Predicate[] predicate) {
-        // Do not change order
+    protected boolean order(Predicate[] predicate) {
+        return false;
     }
 
     @Override
@@ -98,7 +98,7 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected InferResult add(InferResult[] predResult) {
-        return predResult[0].addWhen(predResult[1]);
+    protected boolean[] complete(boolean[] p1, boolean[] p2) {
+        return p2;
     }
 }

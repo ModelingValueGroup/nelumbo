@@ -33,12 +33,12 @@ public final class Query extends Node implements Evaluatable {
 
     private InferResult       inferResult;
 
-    public Query(Functor functor, List<AstElement> elements, Object... args) {
+    public Query(Functor functor, List<AstElement> elements, Object... args) throws ParseException {
         super(functor, elements, args(elements, args));
     }
 
     @SuppressWarnings("unchecked")
-    private static Object[] args(List<AstElement> elements, Object[] args) {
+    private static Object[] args(List<AstElement> elements, Object[] args) throws ParseException {
         Predicate nodePred = (Predicate) args[0];
         Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()));
         Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];

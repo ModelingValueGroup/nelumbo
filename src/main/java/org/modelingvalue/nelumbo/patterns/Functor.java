@@ -50,7 +50,7 @@ public class Functor extends Node {
     }
 
     private String     name;
-    private List<Type> args;
+    private List<Type> argTypes;
     private ParseState start;
 
     private Functor(List<AstElement> elements, Object... args) {
@@ -114,10 +114,10 @@ public class Functor extends Node {
 
     @SuppressWarnings("unchecked")
     public List<Type> argTypes() {
-        if (args == null) {
-            args = pattern().argTypes(List.of());
+        if (argTypes == null) {
+            argTypes = pattern().argTypes(List.of());
         }
-        return args;
+        return argTypes;
     }
 
     @Override

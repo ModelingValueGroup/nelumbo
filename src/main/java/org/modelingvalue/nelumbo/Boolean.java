@@ -88,6 +88,9 @@ public final class Boolean extends Predicate {
 
     @Override
     protected InferResult infer(InferContext context) {
+        if (context != null && context.shallow()) {
+            return unresolvable();
+        }
         if (result == null) {
             result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
         }

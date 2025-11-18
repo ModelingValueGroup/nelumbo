@@ -72,7 +72,7 @@ public final class Rule extends Node implements Evaluatable {
         binding = getBinding().putAll(binding);
         consequence = consequence.setBinding(binding);
         condition = condition.setBinding(binding);
-        if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
+        if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + consequence + " <=> " + condition);
         }
         InferResult condResult = condition.resolve(context);
@@ -107,7 +107,7 @@ public final class Rule extends Node implements Evaluatable {
         }
         InferResult ruleResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, //
                 condResult.cycles());
-        if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
+        if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + predicate + " " + ruleResult);
         }
         for (Predicate fact : result.facts()) {
@@ -140,8 +140,8 @@ public final class Rule extends Node implements Evaluatable {
         knowledgeBase.addRule(this);
     }
 
-    public boolean isSyntatic() {
-        return TRACE_SYNTATIC || astElements().isEmpty() || firstToken().fileName().equals("logic.nl");
+    private boolean isSyntatic() {
+        return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().equals("logic.nl"));
     }
 
     @Override
