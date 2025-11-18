@@ -46,12 +46,16 @@ public final class GreaterThan extends Predicate {
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
             return unresolvable();
-        } else if (nrOfUnbound == 1) {
-            return unknown();
         }
 
         BigInteger l = getVal(0, 0);
         BigInteger r = getVal(1, 0);
+        if (l == null) {
+            return set(0, get(1)).falsehoodsII();
+        }
+        if (r == null) {
+            return set(1, get(0)).falsehoodsII();
+        }
         return l.compareTo(r) > 0 ? factCC() : falsehoodCC();
     }
 

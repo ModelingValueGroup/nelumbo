@@ -264,7 +264,11 @@ public class Predicate extends Node {
     }
 
     public final InferResult falsehoodCI() {
-        return InferResult.falsehoodsCI(this);
+        return InferResult.falsehoodCI(this);
+    }
+
+    public final InferResult falsehoodsII() {
+        return InferResult.falsehoodsII(singleton());
     }
 
     public final Set<Predicate> singleton() {

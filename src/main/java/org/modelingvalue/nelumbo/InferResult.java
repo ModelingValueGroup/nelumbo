@@ -403,7 +403,7 @@ public interface InferResult {
         };
     }
 
-    static InferResult falsehoodsCI(Predicate falsehood) {
+    static InferResult falsehoodCI(Predicate falsehood) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -430,6 +430,30 @@ public interface InferResult {
                 return falsehood;
             }
 
+        };
+    }
+
+    static InferResult falsehoodsII(Set<Predicate> falsehoods) {
+        return new InferResultImpl() {
+            @Override
+            public Set<Predicate> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<Predicate> falsehoods() {
+                return falsehoods;
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return false;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
+            }
         };
     }
 
