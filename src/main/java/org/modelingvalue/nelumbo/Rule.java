@@ -23,6 +23,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
@@ -62,7 +63,7 @@ public final class Rule extends Node implements Evaluatable {
         return (Predicate) get(1);
     }
 
-    protected final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {
+    public final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {
         Predicate consequence = consequence();
         Map<Variable, Object> binding = predicate.getBinding(consequence);
         if (binding == null) {

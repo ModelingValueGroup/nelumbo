@@ -289,7 +289,7 @@ public class Node extends StructImpl implements AstElement {
         return struct(array);
     }
 
-    protected final Node struct(Object[] array) {
+    public final Node struct(Object[] array) {
         return struct(array, declaration);
     }
 
@@ -466,7 +466,7 @@ public class Node extends StructImpl implements AstElement {
         }
     }
 
-    protected Node setType(int i, Type type) {
+    public Node setType(int i, Type type) {
         return set(i, type);
     }
 

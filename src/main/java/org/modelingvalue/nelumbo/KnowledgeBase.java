@@ -36,6 +36,10 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
+import org.modelingvalue.nelumbo.logic.And;
+import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
+import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.logic.When;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
@@ -386,7 +390,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return node.setAstElements(node.astElements().prepend(elements.first()).append(elements.last()));
                         }));
 
-                Parser.parse(KnowledgeBase.class, "logic.nl");
+                Parser.parse(Predicate.class, "logic.nl");
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
             }
@@ -597,7 +601,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return facts.get();
     }
 
-    void memoization(Predicate predicate, InferResult result) {
+    public void memoization(Predicate predicate, InferResult result) {
         boolean known = result.cycles().isEmpty() && result.isComplete();
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();

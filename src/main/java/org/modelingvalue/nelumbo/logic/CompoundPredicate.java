@@ -14,7 +14,7 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
@@ -22,6 +22,11 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class CompoundPredicate extends Predicate {
@@ -42,7 +47,7 @@ public abstract class CompoundPredicate extends Predicate {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected InferResult resolve(InferContext context) {
+    public InferResult resolve(InferContext context) {
         Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(), this));
         Set<Predicate> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;

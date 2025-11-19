@@ -14,7 +14,7 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 import java.util.function.Function;
@@ -23,6 +23,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
@@ -70,11 +71,11 @@ public class Predicate extends Node {
         return (int) getBinding().filter(e -> e.getValue() instanceof Type).count();
     }
 
-    protected final boolean isFullyBound() {
+    public final boolean isFullyBound() {
         return nrOfUnbound() == 0;
     }
 
-    protected Predicate castFrom(Predicate from) {
+    public Predicate castFrom(Predicate from) {
         Object[] array = from.toArray();
         array[0] = functor();
         return from.struct(array, declaration());
@@ -110,7 +111,7 @@ public class Predicate extends Node {
         return setBinding(vars);
     }
 
-    protected static Map<Variable, Object> literals(Map<Variable, Object> vars) {
+    public static Map<Variable, Object> literals(Map<Variable, Object> vars) {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal()));
     }
 
@@ -118,7 +119,7 @@ public class Predicate extends Node {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal().rename(rename.apply(e.getKey().name()))));
     }
 
-    protected Predicate setVariables(Map<Variable, Object> vars) throws ParseException {
+    public Predicate setVariables(Map<Variable, Object> vars) throws ParseException {
         Predicate predicate = setBinding(vars);
         if (predicate == this) {
             return this;
@@ -276,7 +277,7 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate setType(int i, Type type) {
+    public Predicate setType(int i, Type type) {
         Object[] array = setArray(i, type);
         return array != null ? struct(array, null) : this;
     }
@@ -287,7 +288,7 @@ public class Predicate extends Node {
         return array != null ? struct(array, null) : this;
     }
 
-    protected InferResult resolve(InferContext context) {
+    public InferResult resolve(InferContext context) {
         return infer(nrOfUnbound(), context);
     }
 

@@ -23,7 +23,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Concat extends Predicate {

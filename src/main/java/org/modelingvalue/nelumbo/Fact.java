@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParserResult;

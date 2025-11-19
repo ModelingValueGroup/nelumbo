@@ -14,83 +14,75 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
-public final class And extends BinaryPredicate {
+public abstract class Quantifier extends CompoundPredicate {
+
     @Serial
-    private static final long serialVersionUID = -7248491569810098948L;
+    private static final long serialVersionUID = -4838100281214165385L;
 
-    private static Functor    FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(And.class, f -> FUNCTOR = f);
+    protected Quantifier(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args);
     }
 
-    public And(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    protected Quantifier(Functor functor, List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
+        super(functor, elements, localVars, predicate);
     }
 
-    private And(Object[] args, And declaration) {
+    protected Quantifier(Object[] args, Quantifier declaration) {
         super(args, declaration);
     }
 
-    public static And of(Predicate predicate1, Predicate predicate2) {
-        return new And(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
+    @Override
+    @SuppressWarnings("unchecked")
+    public final List<Variable> localVars() {
+        return (List<Variable>) get(0);
+    }
+
+    public final Predicate predicate() {
+        return (Predicate) get(1);
     }
 
     @Override
-    public And declaration() {
-        return (And) super.declaration();
+    protected int countNrOfUnbound() {
+        return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
     }
 
     @Override
-    protected And struct(Object[] array, Node declaration) {
-        return new And(array, (And) declaration);
+    protected boolean doGetBinding(Object varVal, int i) {
+        return i > 0;
     }
 
     @Override
-    public And set(int i, Object... a) {
-        return (And) super.set(i, a);
+    protected boolean doSetBinding(Object varVal, int i) {
+        return i > 0 || varVal instanceof Variable;
     }
 
     @Override
-    protected boolean isTrue(InferResult predResult, int i) {
-        return false;
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        return context.shallow() ? unresolvable() : resolve(context.toDeep());
     }
 
     @Override
-    protected boolean isFalse(InferResult predResult, int i) {
-        return predResult.isFalseCC();
+    public final InferResult resolve(InferContext context) {
+        Predicate predicate = predicate();
+        InferResult predResult = predicate.resolve(context);
+        if (predResult.hasStackOverflow()) {
+            return predResult;
+        }
+        return resolve(context, predResult);
     }
 
-    @Override
-    protected boolean isUnknown(InferResult predResult, int i) {
-        return false;
-    }
-
-    @Override
-    protected boolean isTrue(InferResult[] predResult) {
-        return predResult[0].isTrueCC() && predResult[1].isTrueCC();
-    }
-
-    @Override
-    protected boolean isFalse(InferResult[] predResult) {
-        return false;
-    }
-
-    @Override
-    protected boolean isLeft(InferResult[] predResult) {
-        return predResult[1].isTrueCC();
-    }
-
-    @Override
-    protected boolean isRight(InferResult[] predResult) {
-        return predResult[0].isTrueCC();
-    }
+    protected abstract InferResult resolve(InferContext context, InferResult predResult);
 
 }

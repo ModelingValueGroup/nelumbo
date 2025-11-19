@@ -14,11 +14,15 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -82,7 +86,7 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    protected InferResult resolve(InferContext context) {
+    public InferResult resolve(InferContext context) {
         return infer(context);
     }
 
