@@ -179,10 +179,6 @@ public class Functor extends Node {
         if (pattern.string(args, 0, sb, previous, false) < 0) {
             return null;
         }
-        //        Constructor<? extends Node> cons = constructor();
-        //        if (cons != null) {
-        //            sb.append(" @" + cons.getDeclaringClass().getName());
-        //        }
         return sb.toString();
     }
 
