@@ -518,20 +518,20 @@ public class Node extends StructImpl implements AstElement {
         this.branches = branches;
     }
 
-    public MatchState state(MatchState state) {
+    public MatchState<Rule> state(MatchState<Rule> state) {
         for (Object arg : args().reverse()) {
             if (arg instanceof Type type) {
-                state = new MatchState(type, state);
+                state = new MatchState<Rule>(type, state);
             } else if (arg instanceof Variable var) {
-                state = new MatchState(var.type(), state);
+                state = new MatchState<Rule>(var.type(), state);
             } else if (arg instanceof Node node) {
                 state = node.state(state);
             } else {
-                state = new MatchState(arg.getClass(), state);
+                state = new MatchState<Rule>(arg.getClass(), state);
             }
         }
         Functor functor = functor();
         assert functor != null;
-        return new MatchState(functor, state);
+        return new MatchState<Rule>(functor, state);
     }
 }

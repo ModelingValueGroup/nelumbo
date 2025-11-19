@@ -518,7 +518,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private final AtomicReference<Map<Functor, Functor>>                literalFunctors   = new AtomicReference<>();
     //
-    private final AtomicReference<MatchState>                           matchSignatures   = new AtomicReference<>();
+    private final AtomicReference<MatchState<Rule>>                     matchSignatures   = new AtomicReference<>();
     //
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization       = new AtomicReference<>();
     private final InferContext                                          context;
@@ -648,7 +648,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public void addRule(Rule rule) {
         rules.updateAndGet(s -> s.add(rule));
-        MatchState state = rule.consequence().state(new MatchState(rule));
+        MatchState<Rule> state = rule.consequence().state(new MatchState<Rule>(rule));
         matchSignatures.updateAndGet(state::merge);
         resetMemoization();
     }

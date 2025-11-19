@@ -21,50 +21,50 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
-public class MatchState {
+public class MatchState<E> {
 
-    private static final Set<Rule>        EMPTY_RULES = Set.of();
-    public static final MatchState        EMPTY       = new MatchState();
+    @SuppressWarnings("rawtypes")
+    public static final MatchState           EMPTY = new MatchState<>();
 
-    private final Map<Object, MatchState> transitions;
-    private final Set<Rule>               rules;
+    private final Map<Object, MatchState<E>> transitions;
+    private final Set<E>                     elements;
 
     private MatchState() {
         this.transitions = Map.of();
-        this.rules = EMPTY_RULES;
+        this.elements = Set.of();
     }
 
-    public MatchState(Rule rule) {
+    public MatchState(E element) {
         this.transitions = Map.of();
-        this.rules = rule != null ? EMPTY_RULES.add(rule) : EMPTY_RULES;
+        this.elements = element != null ? Set.of(element) : Set.of();
     }
 
-    public MatchState(Functor functor, MatchState to) {
+    public MatchState(Functor functor, MatchState<E> to) {
         this.transitions = Map.of(Entry.of(functor, to));
-        this.rules = EMPTY_RULES;
+        this.elements = Set.of();
     }
 
-    public MatchState(Type type, MatchState to) {
+    public MatchState(Type type, MatchState<E> to) {
         this.transitions = Map.of(Entry.of(type, to));
-        this.rules = EMPTY_RULES;
+        this.elements = Set.of();
     }
 
-    public MatchState(Class<?> clss, MatchState to) {
+    public MatchState(Class<?> clss, MatchState<E> to) {
         this.transitions = Map.of(Entry.of(clss, to));
-        this.rules = EMPTY_RULES;
+        this.elements = Set.of();
     }
 
-    private MatchState(Map<Object, MatchState> transitions, Set<Rule> rules) {
+    private MatchState(Map<Object, MatchState<E>> transitions, Set<E> elements) {
         this.transitions = transitions;
-        this.rules = rules;
+        this.elements = elements;
     }
 
-    public Map<Object, MatchState> transitions() {
+    public Map<Object, MatchState<E>> transitions() {
         return transitions;
     }
 
-    public Set<Rule> rules() {
-        return rules;
+    public Set<E> elements() {
+        return elements;
     }
 
     @Override
@@ -72,35 +72,35 @@ public class MatchState {
         return transitions().toKeys().asSet().toString().substring(3);
     }
 
-    public MatchState merge(MatchState state) {
+    public MatchState<E> merge(MatchState<E> state) {
         if (state == null) {
             return this;
         }
-        Map<Object, MatchState> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b));
+        Map<Object, MatchState<E>> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b));
         for (Object key : transitions.toKeys()) {
             if (key instanceof Type subType) {
                 for (Type superType : subType.allSupers()) {
                     if (!superType.equals(subType)) {
-                        MatchState superState = transitions.get(superType);
+                        MatchState<E> superState = transitions.get(superType);
                         if (superState != null) {
-                            MatchState subState = transitions.get(subType);
-                            MatchState mergedState = subState.merge(superState);
+                            MatchState<E> subState = transitions.get(subType);
+                            MatchState<E> mergedState = subState.merge(superState);
                             transitions = transitions.put(subType, mergedState);
                         }
                     }
                 }
             }
         }
-        return new MatchState(transitions, rules().addAll(state.rules()));
+        return new MatchState<E>(transitions, elements().addAll(state.elements()));
     }
 
-    public Set<Rule> match(Object obj) {
-        MatchState state = doMatch(obj);
-        return state != null ? state.rules() : EMPTY_RULES;
+    public Set<E> match(Object obj) {
+        MatchState<E> state = doMatch(obj);
+        return state != null ? state.elements() : Set.of();
     }
 
-    private MatchState doMatch(Object obj) {
-        MatchState state;
+    private MatchState<E> doMatch(Object obj) {
+        MatchState<E> state;
         if (obj instanceof Type type) {
             state = matchType(type);
         } else if (obj instanceof Variable var) {
@@ -124,8 +124,8 @@ public class MatchState {
         return state;
     }
 
-    private MatchState matchType(Type type) {
-        MatchState state = null;
+    private MatchState<E> matchType(Type type) {
+        MatchState<E> state = null;
         for (Type sup : type.allSupers()) {
             state = transitions().get(sup);
             if (state != null) {
