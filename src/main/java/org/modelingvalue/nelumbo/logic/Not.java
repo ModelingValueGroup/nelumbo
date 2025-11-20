@@ -14,11 +14,16 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Not extends CompoundPredicate {
@@ -49,6 +54,11 @@ public final class Not extends CompoundPredicate {
     }
 
     @Override
+    public Not set(int i, Object... a) {
+        return (Not) super.set(i, a);
+    }
+
+    @Override
     public Not declaration() {
         return (Not) super.declaration();
     }
@@ -72,14 +82,11 @@ public final class Not extends CompoundPredicate {
             } else {
                 return set(0, predResult.predicate()).unknown();
             }
-        } else {
+        } else if (!predResult.unresolvable()) {
             return predResult.flipComplete();
+        } else {
+            return InferResult.UNRESOLVABLE;
         }
-    }
-
-    @Override
-    public Not set(int i, Object... a) {
-        return (Not) super.set(i, a);
     }
 
 }

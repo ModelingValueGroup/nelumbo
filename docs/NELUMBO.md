@@ -67,10 +67,10 @@
 ### Rules
 
 ```text
-  a<=b     <=>  a<b | a=b
+  a<=b    <=>  a<b | a=b
   
-  |a|=b    <=>  a>=0 & b=a |
-                a<0 & b=-a
+  |a|=b   <=>  b=a   if a>=0,
+               b=-a  if a<0
  
   descendant(x)=z <=> child(x)=z |
                       E[y](descendant(x)=y & child(y)=z)

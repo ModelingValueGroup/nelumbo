@@ -14,94 +14,75 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Boolean extends Predicate {
+public abstract class Quantifier extends CompoundPredicate {
+
     @Serial
-    private static final long serialVersionUID = -8515171118744898263L;
-    //
-    public static Boolean     TRUE;
-    public static Boolean     FALSE;
-    public static Boolean     UNKNOWN;
-    //
-    private InferResult       result;
+    private static final long serialVersionUID = -4838100281214165385L;
 
-    public Boolean(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse(functor.name()));
-        if (TRUE == null && isTrue()) {
-            TRUE = this;
-        } else if (FALSE == null && isFalse()) {
-            FALSE = this;
-        } else if (UNKNOWN == null && isUnknown()) {
-            UNKNOWN = this;
-        }
+    protected Quantifier(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args);
     }
 
-    @Override
-    public List<Object> args() {
-        return List.of();
+    protected Quantifier(Functor functor, List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
+        super(functor, elements, localVars, predicate);
     }
 
-    private static java.lang.Boolean parse(String arg) {
-        return "true".equalsIgnoreCase(arg) ? java.lang.Boolean.TRUE : //
-                "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
-    }
-
-    private Boolean(Object[] args, Boolean declaration) {
+    protected Quantifier(Object[] args, Quantifier declaration) {
         super(args, declaration);
     }
 
-    public boolean isTrue() {
-        java.lang.Boolean b = (java.lang.Boolean) get(0);
-        return b != null && b;
+    @Override
+    @SuppressWarnings("unchecked")
+    public final List<Variable> localVars() {
+        return (List<Variable>) get(0);
     }
 
-    public boolean isFalse() {
-        java.lang.Boolean b = (java.lang.Boolean) get(0);
-        return b != null && !b;
-    }
-
-    public boolean isUnknown() {
-        java.lang.Boolean b = (java.lang.Boolean) get(0);
-        return b == null;
-    }
-
-    public InferResult result() {
-        return infer(null);
+    public final Predicate predicate() {
+        return (Predicate) get(1);
     }
 
     @Override
-    protected Boolean struct(Object[] array, Node declaration) {
-        return new Boolean(array, (Boolean) declaration);
+    protected int countNrOfUnbound() {
+        return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
     }
 
     @Override
-    protected InferResult resolve(InferContext context) {
-        return infer(context);
+    protected boolean doGetBinding(Object varVal, int i) {
+        return i > 0;
     }
 
     @Override
-    protected InferResult infer(InferContext context) {
-        if (result == null) {
-            result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
+    protected boolean doSetBinding(Object varVal, int i) {
+        return i > 0 || varVal instanceof Variable;
+    }
+
+    @Override
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        return context.shallow() ? unresolvable() : resolve(context.toDeep());
+    }
+
+    @Override
+    public final InferResult resolve(InferContext context) {
+        Predicate predicate = predicate();
+        InferResult predResult = predicate.resolve(context);
+        if (predResult.hasStackOverflow()) {
+            return predResult;
         }
-        return result;
+        return resolve(context, predResult);
     }
 
-    @Override
-    public Boolean set(int i, Object... a) {
-        return (Boolean) super.set(i, a);
-    }
-
-    @Override
-    public String toString(TokenType[] previous) {
-        return isUnknown() ? "unknown" : toString(0);
-    }
+    protected abstract InferResult resolve(InferContext context, InferResult predResult);
 
 }

@@ -101,7 +101,21 @@ public class NodeTypePattern extends Pattern {
         if (args.get(ai) instanceof Node node && (//
         nodeType().isAssignableFrom(node instanceof Type type ? type : node.type()) || //
                 (node instanceof Variable && nodeType().isAssignableFrom(Type.VARIABLE)))) {
+            boolean parenthetical = false;
+            Functor functor = node.functor();
+            if (functor != null) {
+                NodeTypePattern left = functor.left();
+                if (left != null) {
+                    parenthetical = innerPrecedence() > left.leftPrecedence();
+                }
+            }
+            if (parenthetical) {
+                sb.append('(');
+            }
             sb.append(node.toString(previous));
+            if (parenthetical) {
+                sb.append(')');
+            }
             return ai + 1;
         }
         return -1;

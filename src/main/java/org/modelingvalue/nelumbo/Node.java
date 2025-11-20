@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -28,6 +27,8 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -288,7 +289,7 @@ public class Node extends StructImpl implements AstElement {
         return struct(array);
     }
 
-    protected final Node struct(Object[] array) {
+    public final Node struct(Object[] array) {
         return struct(array, declaration);
     }
 
@@ -443,7 +444,7 @@ public class Node extends StructImpl implements AstElement {
         return true;
     }
 
-    protected Node replace(Function<Node, Node> replacer) {
+    protected Node replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
         Node to = replacer.apply(this);
         if (to != this) {
             return to;
@@ -465,7 +466,7 @@ public class Node extends StructImpl implements AstElement {
         }
     }
 
-    protected Node setType(int i, Type type) {
+    public Node setType(int i, Type type) {
         return set(i, type);
     }
 
@@ -517,20 +518,20 @@ public class Node extends StructImpl implements AstElement {
         this.branches = branches;
     }
 
-    public MatchState state(MatchState state) {
+    public MatchState<Rule> state(MatchState<Rule> state) {
         for (Object arg : args().reverse()) {
             if (arg instanceof Type type) {
-                state = new MatchState(type, state);
+                state = new MatchState<Rule>(type, state);
             } else if (arg instanceof Variable var) {
-                state = new MatchState(var.type(), state);
+                state = new MatchState<Rule>(var.type(), state);
             } else if (arg instanceof Node node) {
                 state = node.state(state);
             } else {
-                state = new MatchState(arg.getClass(), state);
+                state = new MatchState<Rule>(arg.getClass(), state);
             }
         }
         Functor functor = functor();
         assert functor != null;
-        return new MatchState(functor, state);
+        return new MatchState<Rule>(functor, state);
     }
 }

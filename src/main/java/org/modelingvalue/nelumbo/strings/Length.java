@@ -24,7 +24,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Length extends Predicate {
@@ -47,7 +47,7 @@ public final class Length extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unknown();
+            return unresolvable();
         }
 
         java.lang.String string = getVal(0, 0);

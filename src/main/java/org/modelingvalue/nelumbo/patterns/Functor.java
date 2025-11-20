@@ -24,9 +24,9 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Predicate;
 import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -50,7 +50,7 @@ public class Functor extends Node {
     }
 
     private String     name;
-    private List<Type> args;
+    private List<Type> argTypes;
     private ParseState start;
 
     private Functor(List<AstElement> elements, Object... args) {
@@ -114,10 +114,10 @@ public class Functor extends Node {
 
     @SuppressWarnings("unchecked")
     public List<Type> argTypes() {
-        if (args == null) {
-            args = pattern().argTypes(List.of());
+        if (argTypes == null) {
+            argTypes = pattern().argTypes(List.of());
         }
-        return args;
+        return argTypes;
     }
 
     @Override
@@ -179,10 +179,6 @@ public class Functor extends Node {
         if (pattern.string(args, 0, sb, previous, false) < 0) {
             return null;
         }
-        //        Constructor<? extends Node> cons = constructor();
-        //        if (cons != null) {
-        //            sb.append(" @" + cons.getDeclaringClass().getName());
-        //        }
         return sb.toString();
     }
 

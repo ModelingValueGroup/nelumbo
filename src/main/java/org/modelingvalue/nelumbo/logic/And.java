@@ -14,42 +14,52 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.syntax.TokenType;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.patterns.Functor;
 
-public final class When extends BinaryPredicate {
+public final class And extends BinaryPredicate {
     @Serial
-    private static final long serialVersionUID = 9105566742523301113L;
+    private static final long serialVersionUID = -7248491569810098948L;
 
-    private When(Node when, Node predicate) {
-        super(Type.PREDICATE, List.of(), when, predicate);
+    private static Functor    FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(And.class, f -> FUNCTOR = f);
     }
 
-    private When(Object[] args, When declaration) {
+    public And(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
+    }
+
+    private And(Object[] args, And declaration) {
         super(args, declaration);
     }
 
-    public static When of(Node when, Node predicate) {
-        return new When(when, predicate);
+    public static And of(Predicate predicate1, Predicate predicate2) {
+        return new And(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
     }
 
     @Override
-    public When declaration() {
-        return (When) super.declaration();
+    public And declaration() {
+        return (And) super.declaration();
     }
 
     @Override
-    protected When struct(Object[] array, Node declaration) {
-        return new When(array, (When) declaration);
+    protected And struct(Object[] array, Node declaration) {
+        return new And(array, (And) declaration);
     }
 
     @Override
-    public When set(int i, Object... a) {
-        return (When) super.set(i, a);
+    public And set(int i, Object... a) {
+        return (And) super.set(i, a);
     }
 
     @Override
@@ -59,12 +69,12 @@ public final class When extends BinaryPredicate {
 
     @Override
     protected boolean isFalse(InferResult predResult, int i) {
-        return false;
+        return predResult.isFalseCC();
     }
 
     @Override
     protected boolean isUnknown(InferResult predResult, int i) {
-        return i == 0 && predResult.isFalseCC();
+        return false;
     }
 
     @Override
@@ -74,7 +84,7 @@ public final class When extends BinaryPredicate {
 
     @Override
     protected boolean isFalse(InferResult[] predResult) {
-        return predResult[0].isTrueCC() && predResult[1].isFalseCC();
+        return false;
     }
 
     @Override
@@ -87,18 +97,4 @@ public final class When extends BinaryPredicate {
         return predResult[0].isTrueCC();
     }
 
-    @Override
-    protected InferResult add(InferResult[] predResult) {
-        return predResult[0].addAnd(predResult[1]);
-    }
-
-    @Override
-    protected void order(Predicate[] predicate) {
-        // Do not change order
-    }
-
-    @Override
-    public String toString(TokenType[] previous) {
-        return predicate2() + " if " + predicate1();
-    }
 }

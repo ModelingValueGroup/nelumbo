@@ -23,6 +23,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
@@ -62,56 +63,72 @@ public final class Rule extends Node implements Evaluatable {
         return (Predicate) get(1);
     }
 
-    protected final InferResult biimply(Predicate predicate, InferContext context) {
+    public final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {
         Predicate consequence = consequence();
         Map<Variable, Object> binding = predicate.getBinding(consequence);
         if (binding == null) {
-            return null;
+            return result;
         }
         Predicate condition = condition();
         binding = getBinding().putAll(binding);
         consequence = consequence.setBinding(binding);
         condition = condition.setBinding(binding);
-        if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
+        if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + consequence + " <=> " + condition);
         }
         InferResult condResult = condition.resolve(context);
-        InferResult proResult;
         if (condResult.hasStackOverflow()) {
-            proResult = condResult;
-        } else {
-            Set<Predicate> facts = Set.of(), falsehoods = Set.of();
-            boolean completeFacts = true, completeFalsehoods = true;
-            for (Predicate condFact : condResult.facts()) {
-                Predicate fact = predicate.castFrom(consequence.setBinding(condFact.getBinding()));
-                if (fact.isFullyBound()) {
-                    facts = facts.add(fact);
-                } else {
-                    completeFacts = false;
-                }
-            }
-            for (Predicate condFalsehood : condResult.falsehoods()) {
-                Predicate falsehood = predicate.castFrom(consequence.setBinding(condFalsehood.getBinding()));
-                if (falsehood.isFullyBound()) {
-                    falsehoods = falsehoods.add(falsehood);
-                } else {
-                    completeFalsehoods = false;
-                }
-            }
-            if ((facts.isEmpty() && falsehoods.isEmpty()) || !predicate.isFullyBound()) {
-                if (!condResult.completeFacts()) {
-                    completeFacts = false;
-                }
-                if (!condResult.completeFalsehoods()) {
-                    completeFalsehoods = false;
-                }
-            }
-            proResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, condResult.cycles());
+            return condResult;
         }
-        if (context.trace() && (TRACE_SYNTATIC || !isSyntatic())) {
-            System.out.println(context.prefix() + predicate + " " + proResult);
+        Set<Predicate> facts = Set.of(), falsehoods = Set.of();
+        boolean completeFacts = true, completeFalsehoods = true;
+        for (Predicate condFact : condResult.facts()) {
+            Predicate fact = predicate.castFrom(consequence.setBinding(condFact.getBinding()));
+            if (fact.isFullyBound()) {
+                facts = facts.add(fact);
+            } else {
+                completeFacts = false;
+            }
         }
-        return proResult;
+        for (Predicate condFalsehood : condResult.falsehoods()) {
+            Predicate falsehood = predicate.castFrom(consequence.setBinding(condFalsehood.getBinding()));
+            if (falsehood.isFullyBound()) {
+                falsehoods = falsehoods.add(falsehood);
+            } else {
+                completeFalsehoods = false;
+            }
+        }
+        if ((facts.isEmpty() && falsehoods.isEmpty()) || !predicate.isFullyBound()) {
+            if (!condResult.completeFacts()) {
+                completeFacts = false;
+            }
+            if (!condResult.completeFalsehoods()) {
+                completeFalsehoods = false;
+            }
+        }
+        InferResult ruleResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, //
+                condResult.cycles());
+        if (context.trace() && !isSyntatic()) {
+            System.out.println(context.prefix() + predicate + " " + ruleResult);
+        }
+        for (Predicate fact : result.facts()) {
+            if (falsehoods.contains(fact) || (completeFacts && //
+                    biimply(fact, context, fact.unknown()).isFalseCC())) {
+                throw new InconsistencyException(ruleResult, result);
+            }
+            facts = facts.add(fact);
+        }
+        for (Predicate falsehood : result.falsehoods()) {
+            if (facts.contains(falsehood) || (completeFalsehoods && //
+                    biimply(falsehood, context, falsehood.unknown()).isTrueCC())) {
+                throw new InconsistencyException(ruleResult, result);
+            }
+            falsehoods = falsehoods.add(falsehood);
+        }
+        completeFacts |= result.completeFacts();
+        completeFalsehoods |= result.completeFalsehoods();
+        return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, //
+                result.cycles().addAll(ruleResult.cycles()));
     }
 
     @Override
@@ -124,8 +141,8 @@ public final class Rule extends Node implements Evaluatable {
         knowledgeBase.addRule(this);
     }
 
-    public boolean isSyntatic() {
-        return TRACE_SYNTATIC || astElements().isEmpty() || firstToken().fileName().equals("nelumbo.nl");
+    private boolean isSyntatic() {
+        return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().equals("logic.nl"));
     }
 
     @Override

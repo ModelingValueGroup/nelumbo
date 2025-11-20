@@ -23,7 +23,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Add extends Predicate {
@@ -45,8 +45,9 @@ public final class Add extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unknown();
+            return unresolvable();
         }
+
         BigInteger addend1 = getVal(0, 0);
         BigInteger addend2 = getVal(1, 0);
         BigInteger sum = getVal(2, 0);
@@ -62,9 +63,9 @@ public final class Add extends Predicate {
             return set(1, Integer.of(sum.subtract(addend1))).factCI();
         } else if (addend2 != null && sum != null) {
             return set(0, Integer.of(sum.subtract(addend2))).factCI();
-        } else {
-            return unknown();
         }
+
+        return unknown();
     }
 
 }

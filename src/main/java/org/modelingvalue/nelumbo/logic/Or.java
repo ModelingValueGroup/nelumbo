@@ -14,70 +14,87 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
-public abstract class Quantifier extends CompoundPredicate {
-
+public final class Or extends BinaryPredicate {
     @Serial
-    private static final long serialVersionUID = -4838100281214165385L;
+    private static final long serialVersionUID = -1732549494864415986L;
 
-    protected Quantifier(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+    private static Functor    FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(Or.class, f -> FUNCTOR = f);
     }
 
-    protected Quantifier(Functor functor, List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(functor, elements, localVars, predicate);
+    public Or(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    protected Quantifier(Object[] args, Quantifier declaration) {
+    private Or(Object[] args, Or declaration) {
         super(args, declaration);
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public final List<Variable> localVars() {
-        return (List<Variable>) get(0);
-    }
-
-    public final Predicate predicate() {
-        return (Predicate) get(1);
+    public static Or of(Predicate predicate1, Predicate predicate2) {
+        return new Or(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
     }
 
     @Override
-    protected int countNrOfUnbound() {
-        return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
+    public Or declaration() {
+        return (Or) super.declaration();
     }
 
     @Override
-    protected boolean doGetBinding(Object varVal, int i) {
-        return i > 0;
+    protected Or struct(Object[] array, Node declaration) {
+        return new Or(array, (Or) declaration);
     }
 
     @Override
-    protected boolean doSetBinding(Object varVal, int i) {
-        return i > 0 || varVal instanceof Variable;
+    public Or set(int i, Object... a) {
+        return (Or) super.set(i, a);
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        return resolve(context);
+    protected boolean isTrue(InferResult predResult, int i) {
+        return predResult.isTrueCC();
     }
 
     @Override
-    protected final InferResult resolve(InferContext context) {
-        Predicate predicate = predicate();
-        InferResult predResult = predicate.resolve(context);
-        if (predResult.hasStackOverflow()) {
-            return predResult;
-        }
-        return resolve(context, predResult);
+    protected boolean isFalse(InferResult predResult, int i) {
+        return false;
     }
 
-    protected abstract InferResult resolve(InferContext context, InferResult predResult);
+    @Override
+    protected boolean isUnknown(InferResult predResult, int i) {
+        return false;
+    }
+
+    @Override
+    protected boolean isTrue(InferResult[] predResult) {
+        return false;
+    }
+
+    @Override
+    protected boolean isFalse(InferResult[] predResult) {
+        return predResult[0].isFalseCC() && predResult[1].isFalseCC();
+    }
+
+    @Override
+    protected boolean isLeft(InferResult[] predResult) {
+        return predResult[1].isFalseCC();
+    }
+
+    @Override
+    protected boolean isRight(InferResult[] predResult) {
+        return predResult[0].isFalseCC();
+    }
 
 }

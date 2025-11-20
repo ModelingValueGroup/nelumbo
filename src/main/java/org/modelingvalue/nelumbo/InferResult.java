@@ -20,8 +20,41 @@ import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.logic.Predicate;
 
 public interface InferResult {
+
+    InferResult UNRESOLVABLE = new InferResultImpl() {
+        @Override
+        public Set<Predicate> facts() {
+            return Set.of();
+        }
+
+        @Override
+        public Set<Predicate> falsehoods() {
+            return Set.of();
+        }
+
+        @Override
+        public boolean completeFacts() {
+            return true;
+        }
+
+        @Override
+        public boolean completeFalsehoods() {
+            return true;
+        }
+
+        @Override
+        public Set<Predicate> cycles() {
+            return Set.of();
+        }
+
+        @Override
+        public boolean unresolvable() {
+            return true;
+        }
+    };
 
     Set<Predicate> facts();
 
@@ -38,6 +71,10 @@ public interface InferResult {
     boolean completeFacts();
 
     boolean completeFalsehoods();
+
+    default boolean unresolvable() {
+        return false;
+    }
 
     default Predicate predicate() {
         return null;
@@ -69,10 +106,6 @@ public interface InferResult {
 
     default boolean isComplete() {
         return completeFacts() || completeFalsehoods();
-    }
-
-    default boolean isEmpty() {
-        return allFacts().isEmpty() && allFalsehoods().isEmpty() && cycles().isEmpty();
     }
 
     default Set<Map<Variable, Object>> trueBindings() {
@@ -216,6 +249,40 @@ public interface InferResult {
         };
     }
 
+    static InferResult unresolvable(Predicate unknown) {
+        return new InferResultImpl() {
+            @Override
+            public Set<Predicate> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<Predicate> falsehoods() {
+                return Set.of();
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return false;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
+            }
+
+            @Override
+            public Predicate predicate() {
+                return unknown;
+            }
+
+            @Override
+            public boolean unresolvable() {
+                return true;
+            }
+        };
+    }
+
     static InferResult factsCI(Set<Predicate> facts) {
         return new InferResultImpl() {
             @Override
@@ -337,7 +404,7 @@ public interface InferResult {
         };
     }
 
-    static InferResult falsehoodsCI(Predicate falsehood) {
+    static InferResult falsehoodCI(Predicate falsehood) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -364,6 +431,30 @@ public interface InferResult {
                 return falsehood;
             }
 
+        };
+    }
+
+    static InferResult falsehoodsII(Set<Predicate> falsehoods) {
+        return new InferResultImpl() {
+            @Override
+            public Set<Predicate> facts() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<Predicate> falsehoods() {
+                return falsehoods;
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return false;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
+            }
         };
     }
 
@@ -425,43 +516,21 @@ public interface InferResult {
         };
     }
 
-    default InferResult addAnd(InferResult other) {
+    default InferResult add(InferResult other) {
         List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
-        boolean completeFacts = completeFacts() || other.completeFacts();
         List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
+        boolean completFacts = completeFacts() && other.completeFacts();
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
-    default InferResult addOr(InferResult other) {
-        List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
-        boolean completeFacts = completeFacts() && other.completeFacts();
-        List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
-        boolean completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
+        return of(facts, completFacts, falsehoods, completeFalsehoods, cycles);
     }
 
     default InferResult flipComplete() {
         return of(allFacts(), completeFalsehoods(), allFalsehoods(), completeFacts(), cycles());
     }
 
-    default InferResult biimply(InferResult ruleResult) {
-        if (checkConsistency(ruleResult) || ruleResult.checkConsistency(this)) {
-            throw new InconsistencyException(ruleResult, this);
-        }
-        Set<Predicate> facts = facts().addAll(ruleResult.facts());
-        Set<Predicate> falsehoods = falsehoods().addAll(ruleResult.falsehoods());
-        boolean completeFacts = completeFacts() || ruleResult.completeFacts();
-        boolean completeFalsehoods = completeFalsehoods() || ruleResult.completeFalsehoods();
-        Set<Predicate> cycles = cycles().addAll(ruleResult.cycles());
-        return of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
-    default boolean checkConsistency(InferResult other) {
-        return (other.completeFacts() && !facts().allMatch(other.facts()::contains)) || //
-                (other.completeFalsehoods() && !falsehoods().allMatch(other.falsehoods()::contains));
+    default InferResult complete() {
+        return of(allFacts(), true, allFalsehoods(), true, cycles());
     }
 
     default InferResult cast(Predicate to) {

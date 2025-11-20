@@ -23,7 +23,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Concat extends Predicate {
@@ -46,8 +46,9 @@ public final class Concat extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unknown();
+            return unresolvable();
         }
+
         java.lang.String addend1 = getVal(0, 0);
         java.lang.String addend2 = getVal(1, 0);
         java.lang.String sum = getVal(2, 0);
@@ -71,9 +72,9 @@ public final class Concat extends Predicate {
             } else {
                 return falsehoodCI();
             }
-        } else {
-            return unknown();
         }
+
+        return unknown();
     }
 
 }

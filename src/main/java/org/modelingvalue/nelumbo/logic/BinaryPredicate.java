@@ -14,12 +14,16 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
@@ -62,7 +66,6 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         InferResult[] predResult = new InferResult[2];
         predicate[0] = predicate(0);
         predicate[1] = predicate(1);
-        order(predicate);
         for (int i = 0; i < 2; i++) {
             predResult[i] = predicate[i].infer(context);
             if (predResult[i].hasStackOverflow()) {
@@ -90,13 +93,19 @@ public abstract class BinaryPredicate extends CompoundPredicate {
                 return set(0, predResult[0].predicate(), predResult[1].predicate()).unknown();
             }
         } else {
-            if (!predResult[0].isEmpty() && predResult[1].isEmpty()) {
-                return predResult[0];
-            } else if (predResult[0].isEmpty() && !predResult[1].isEmpty()) {
-                return predResult[1];
-            } else {
-                return add(predResult);
-            }
+            return resolvedOnly(predResult);
+        }
+    }
+
+    protected InferResult resolvedOnly(InferResult[] predResult) {
+        if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
+            return predResult[0].add(predResult[1]);
+        } else if (!predResult[0].unresolvable()) {
+            return predResult[0];
+        } else if (!predResult[1].unresolvable()) {
+            return predResult[1];
+        } else {
+            return InferResult.UNRESOLVABLE;
         }
     }
 
@@ -114,26 +123,25 @@ public abstract class BinaryPredicate extends CompoundPredicate {
 
     protected abstract boolean isRight(InferResult[] predResult);
 
-    protected abstract InferResult add(InferResult[] predResult);
-
-    protected void order(Predicate[] predicate) {
+    protected boolean order(Predicate[] predicate) {
         if (predicate[0] instanceof Boolean && !(predicate[1] instanceof Boolean)) {
-            return;
+            return false;
         } else if (predicate[1] instanceof Boolean && !(predicate[0] instanceof Boolean)) {
-            flip(predicate);
+            return flip(predicate);
         } else if (REVERSE_NELUMBO) {
-            flip(predicate);
-        } else if (RANDOM_NELUMBO) {
-            if (ThreadLocalRandom.current().nextBoolean()) {
-                flip(predicate);
-            }
+            return flip(predicate);
+        } else if (RANDOM_NELUMBO && ThreadLocalRandom.current().nextBoolean()) {
+            return flip(predicate);
+        } else {
+            return false;
         }
     }
 
-    private static void flip(Predicate[] predicate) {
+    private static boolean flip(Predicate[] predicate) {
         Predicate zero = predicate[0];
         predicate[0] = predicate[1];
         predicate[1] = zero;
+        return true;
     }
 
 }

@@ -14,7 +14,7 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 import java.util.function.Function;
@@ -23,7 +23,10 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Predicate extends Node {
@@ -68,11 +71,11 @@ public class Predicate extends Node {
         return (int) getBinding().filter(e -> e.getValue() instanceof Type).count();
     }
 
-    protected final boolean isFullyBound() {
+    public final boolean isFullyBound() {
         return nrOfUnbound() == 0;
     }
 
-    protected Predicate castFrom(Predicate from) {
+    public Predicate castFrom(Predicate from) {
         Object[] array = from.toArray();
         array[0] = functor();
         return from.struct(array, declaration());
@@ -108,7 +111,7 @@ public class Predicate extends Node {
         return setBinding(vars);
     }
 
-    protected static Map<Variable, Object> literals(Map<Variable, Object> vars) {
+    public static Map<Variable, Object> literals(Map<Variable, Object> vars) {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal()));
     }
 
@@ -116,9 +119,26 @@ public class Predicate extends Node {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal().rename(rename.apply(e.getKey().name()))));
     }
 
-    protected Predicate setVariables(Map<Variable, Object> vars) {
+    public Predicate setVariables(Map<Variable, Object> vars) throws ParseException {
         Predicate predicate = setBinding(vars);
-        return predicate == this ? this : predicate.resetDeclaration();
+        if (predicate == this) {
+            return this;
+        }
+        KnowledgeBase kb = KnowledgeBase.CURRENT.get();
+        predicate = predicate.replace(n -> {
+            Functor functor = n.functor();
+            if (functor != null) {
+                Functor lit = kb.literal(functor);
+                if (lit != null) {
+                    List<Object> args = n.args();
+                    if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
+                        return lit.construct(n.astElements(), args.toArray(), kb);
+                    }
+                }
+            }
+            return n;
+        });
+        return predicate.resetDeclaration();
     }
 
     @Override
@@ -198,7 +218,7 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate replace(Function<Node, Node> replacer) {
+    protected Predicate replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
         return (Predicate) super.replace(replacer);
     }
 
@@ -216,6 +236,10 @@ public class Predicate extends Node {
 
     public final InferResult unknown() {
         return InferResult.unknown(this);
+    }
+
+    public final InferResult unresolvable() {
+        return InferResult.unresolvable(this);
     }
 
     public final InferResult factCC() {
@@ -241,7 +265,11 @@ public class Predicate extends Node {
     }
 
     public final InferResult falsehoodCI() {
-        return InferResult.falsehoodsCI(this);
+        return InferResult.falsehoodCI(this);
+    }
+
+    public final InferResult falsehoodsII() {
+        return InferResult.falsehoodsII(singleton());
     }
 
     public final Set<Predicate> singleton() {
@@ -249,7 +277,7 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate setType(int i, Type type) {
+    public Predicate setType(int i, Type type) {
         Object[] array = setArray(i, type);
         return array != null ? struct(array, null) : this;
     }
@@ -260,17 +288,19 @@ public class Predicate extends Node {
         return array != null ? struct(array, null) : this;
     }
 
-    protected InferResult resolve(InferContext context) {
+    public InferResult resolve(InferContext context) {
         return infer(nrOfUnbound(), context);
     }
 
     protected InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 && context.reduce()) {
-            return unknown();
+            return unresolvable();
+        } else if (nrOfUnbound == 0 && context.shallow()) {
+            return unresolvable();
         }
         InferResult result = infer(nrOfUnbound, context);
-        if (context.trace() && getClass() != Predicate.class && !(this instanceof Quantifier)) {
+        if (context.trace() && !result.unresolvable() && getClass() != Predicate.class && !(this instanceof Quantifier)) {
             System.out.println(context.prefix() + "  " + this + " " + result);
         }
         return result;
@@ -278,8 +308,8 @@ public class Predicate extends Node {
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         Functor functor = functor();
-        if (nrOfUnbound > 1 || (nrOfUnbound == 1 && functor.args().size() == 1)) {
-            return unknown();
+        if (nrOfUnbound > 1 || (context.shallow() && !isShallow(nrOfUnbound, functor)) || (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
+            return unresolvable();
         }
         KnowledgeBase knowledgebase = context.knowledgebase();
         if (isRelation()) {
@@ -310,6 +340,16 @@ public class Predicate extends Node {
             knowledgebase.memoization(this, result);
             return result;
         }
+    }
+
+    private boolean isShallow(int nrOfUnbound, Functor functor) {
+        if (nrOfUnbound == 1 && KnowledgeBase.equalsFunctor().equals(functor)) {
+            Node a = getVal(0);
+            Node b = getVal(1);
+            return (b == null && a != null && Type.LITERAL.isAssignableFrom(a.type())) || //
+                    (a == null && b != null && Type.LITERAL.isAssignableFrom(b.type()));
+        }
+        return false;
     }
 
     private static InferResult flatten(InferResult result, List<Predicate> overflow, InferContext context) {
@@ -343,7 +383,7 @@ public class Predicate extends Node {
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
-                    cycleResult = InferResult.of(nextResult.facts(), true, nextResult.falsehoods(), true, nextResult.cycles());
+                    cycleResult = InferResult.of(nextResult.facts(), true, nextResult.falsehoods(), true, nextResult.cycles().remove(this));
                     context.knowledgebase().memoization(this, cycleResult);
                     nextResult = inferRules(context.putCycleResult(this, cycleResult));
                     if (nextResult.hasStackOverflow()) {
@@ -359,15 +399,12 @@ public class Predicate extends Node {
     }
 
     private InferResult inferRules(InferContext context) {
-        InferResult result = unknown(), ruleResult;
+        InferResult result = unknown();
         Set<Rule> rules = context.knowledgebase().getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
-            ruleResult = rule.biimply(this, context);
-            if (ruleResult != null) {
-                if (ruleResult.hasStackOverflow()) {
-                    return ruleResult;
-                }
-                result = result.biimply(ruleResult);
+            result = rule.biimply(this, context, result);
+            if (result.hasStackOverflow()) {
+                return result;
             }
         }
         return result;

@@ -33,6 +33,12 @@ import org.modelingvalue.collections.QualifiedSet;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
+import org.modelingvalue.collections.util.ContextPool;
+import org.modelingvalue.collections.util.ContextThread;
+import org.modelingvalue.nelumbo.logic.And;
+import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
+import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.logic.When;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
@@ -157,6 +163,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static Functor equalsFunctor;
     private static Functor ruleFunctor;
 
+    public static Functor equalsFunctor() {
+        return equalsFunctor;
+    }
+
+    public static Functor ruleFunctor() {
+        return ruleFunctor;
+    }
+
     @SuppressWarnings({"unchecked", "CodeBlock2Expr"})
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
@@ -203,7 +217,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     }
                                     option = List.of();
                                 } else {
-                                    //TODO @Wim: if the first element is meta, the following line will cause an NPE
                                     option = option.add(e);
                                 }
                             }
@@ -346,7 +359,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return node.setAstElements(node.astElements().prepend(elements.first()).append(elements.last()));
                         }));
 
-                Parser.parse(KnowledgeBase.class);
+                Parser.parse(Predicate.class, "logic.nl");
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
             }
@@ -413,11 +426,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private ListNode createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
         Predicate cons = (Predicate) args[0];
-        if (Type.RELATION.isAssignableFrom(cons.type())) {
-            addException(new ParseException("Rule consequence " + cons + " is a relation.", cons));
+        Functor consFunctor = cons.functor();
+        Functor litFunctor = literalFunctors.get().get(consFunctor);
+        if (Type.RELATION.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
+            addException(new ParseException("Rule consequence " + cons + " must be a Predicate, not a Relation", cons));
         }
         Map<Variable, Object> consVars = cons.getBinding();
-        Node node = cons.functor().equals(equalsFunctor) ? (Node) cons.get(0) : cons;
+        Node node = consFunctor.equals(equalsFunctor) ? (Node) cons.get(0) : cons;
         Map<Variable, Object> nodeVars = node == cons ? consVars : node.getBinding();
         Functor nodeFunctor = node.functor();
         Functor literalFunctor = literalFunctors.get().get(nodeFunctor);
@@ -441,7 +456,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(nonConsVars));
                 cons = cons.setVariables(litVars);
                 cond = cond.setVariables(litVars);
-                cons = cons.replace(n -> nodeFunctor.equals(n.functor()) ? n.setFunctor(literalFunctor) : n);
                 if (when != null) {
                     when = when.setVariables(litVars);
                 }
@@ -473,7 +487,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private final AtomicReference<Map<Functor, Functor>>                literalFunctors   = new AtomicReference<>();
     //
-    private final AtomicReference<MatchState>                           matchSignatures   = new AtomicReference<>();
+    private final AtomicReference<MatchState<Rule>>                     matchSignatures   = new AtomicReference<>();
     //
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization       = new AtomicReference<>();
     private final InferContext                                          context;
@@ -484,7 +498,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
-        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, TRACE_NELUMBO);
+        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, TRACE_NELUMBO);
         init();
     }
 
@@ -556,7 +570,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return facts.get();
     }
 
-    void memoization(Predicate predicate, InferResult result) {
+    public void memoization(Predicate predicate, InferResult result) {
         boolean known = result.cycles().isEmpty() && result.isComplete();
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();
@@ -603,7 +617,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public void addRule(Rule rule) {
         rules.updateAndGet(s -> s.add(rule));
-        MatchState state = rule.consequence().state(new MatchState(rule));
+        MatchState<Rule> state = rule.consequence().state(new MatchState<Rule>(rule));
         matchSignatures.updateAndGet(state::merge);
         resetMemoization();
     }

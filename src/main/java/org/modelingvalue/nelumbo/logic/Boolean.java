@@ -14,80 +14,106 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.integers;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
-import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Integer extends Terminal {
+public final class Boolean extends Predicate {
     @Serial
-    private static final long       serialVersionUID = 2454372545442550574L;
+    private static final long serialVersionUID = -8515171118744898263L;
+    //
+    public static Boolean     TRUE;
+    public static Boolean     FALSE;
+    public static Boolean     UNKNOWN;
+    //
+    private InferResult       result;
 
-    private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
-    private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
-
-    private static Functor          FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(Integer.class, f -> FUNCTOR = f);
-    }
-
-    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse((String) args[0]));
-    }
-
-    private Integer(Functor functor, List<AstElement> elements, BigInteger val) {
-        super(functor, elements, val);
-    }
-
-    public static Integer of(BigInteger val) {
-        return new Integer(FUNCTOR, List.of(), val);
-    }
-
-    private static BigInteger parse(String string) {
-        int i = string.indexOf('#');
-        if (i > 0) {
-            int radix = java.lang.Integer.parseInt(string.substring(0, i));
-            return new BigInteger(string.substring(i + 1), radix);
+    public Boolean(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse(functor.name()));
+        if (TRUE == null && isTrue()) {
+            TRUE = this;
+        } else if (FALSE == null && isFalse()) {
+            FALSE = this;
+        } else if (UNKNOWN == null && isUnknown()) {
+            UNKNOWN = this;
         }
-        return new BigInteger(string);
-    }
-
-    private Integer(Object[] array, Integer declaration) {
-        super(array, declaration);
     }
 
     @Override
-    protected Integer struct(Object[] array, Node declaration) {
-        return new Integer(array, (Integer) declaration);
+    public List<Object> args() {
+        return List.of();
+    }
+
+    private static java.lang.Boolean parse(String arg) {
+        return "true".equalsIgnoreCase(arg) ? java.lang.Boolean.TRUE : //
+                "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
+    }
+
+    private Boolean(Object[] args, Boolean declaration) {
+        super(args, declaration);
+    }
+
+    public boolean isTrue() {
+        java.lang.Boolean b = (java.lang.Boolean) get(0);
+        return b != null && b;
+    }
+
+    public boolean isFalse() {
+        java.lang.Boolean b = (java.lang.Boolean) get(0);
+        return b != null && !b;
+    }
+
+    public boolean isUnknown() {
+        java.lang.Boolean b = (java.lang.Boolean) get(0);
+        return b == null;
+    }
+
+    public InferResult result() {
+        return infer(null);
     }
 
     @Override
-    public Integer set(int i, Object... a) {
-        return (Integer) super.set(i, a);
+    protected Boolean struct(Object[] array, Node declaration) {
+        return new Boolean(array, (Boolean) declaration);
     }
 
-    public BigInteger value() {
-        return (BigInteger) get(0);
+    @Override
+    public InferResult resolve(InferContext context) {
+        return infer(context);
+    }
+
+    @Override
+    protected InferResult infer(InferContext context) {
+        if (context != null && context.shallow()) {
+            return unresolvable();
+        }
+        if (result == null) {
+            result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
+        }
+        return result;
+    }
+
+    @Override
+    public Boolean set(int i, Object... a) {
+        return (Boolean) super.set(i, a);
     }
 
     @Override
     public String toString(TokenType[] previous) {
-        BigInteger value = value();
-        String string = value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX)) : value.toString();
+        String string = isUnknown() ? "unknown" : toString(0);
         if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
-            previous[0] = TokenType.NUMBER;
+            previous[0] = TokenType.NAME;
             return " " + string;
         }
-        previous[0] = TokenType.NUMBER;
+        previous[0] = TokenType.NAME;
         return string;
     }
 

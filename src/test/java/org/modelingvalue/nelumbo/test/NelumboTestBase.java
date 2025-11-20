@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Predicate;
+import org.modelingvalue.nelumbo.logic.Predicate;
 
 @SuppressWarnings("unused")
 public class NelumboTestBase {

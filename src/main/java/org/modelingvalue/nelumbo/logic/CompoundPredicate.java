@@ -14,7 +14,7 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
@@ -22,6 +22,11 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public abstract class CompoundPredicate extends Predicate {
@@ -40,38 +45,72 @@ public abstract class CompoundPredicate extends Predicate {
         super(args, declaration);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected InferResult resolve(InferContext context) {
+    public InferResult resolve(InferContext context) {
         Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(), this));
-        Set<Predicate> facts = Set.of(), falsehoods = Set.of();
+        Set<Predicate> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
-        Set<Predicate> cycles = Set.of();
-        InferContext reduce = context.reduce(true);
+        InferContext deep = context;
+        InferContext shallow = deep.toShallow();
+        InferContext reduce = deep.toReduce();
         do {
             now = next;
             next = Map.of();
             for (Entry<Map<Variable, Object>, Predicate> entry : now) {
-                InferResult result = entry.getValue().infer(reduce);
+                Map<Variable, Object> binding = entry.getKey();
+                Predicate predicate = entry.getValue();
+                InferResult result = predicate.infer(shallow);
+                if (result.hasStackOverflow()) {
+                    return result;
+                }
+                if (!result.unresolvable()) {
+                    for (Predicate pred : result.allFacts()) {
+                        Map<Variable, Object> b = pred.getBinding();
+                        if (!b.isEmpty()) {
+                            b = binding.putAll(b);
+                            next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.TRUE));
+                        }
+                    }
+                    for (Predicate pred : result.allFalsehoods()) {
+                        Map<Variable, Object> b = pred.getBinding();
+                        if (!b.isEmpty()) {
+                            b = binding.putAll(b);
+                            next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.FALSE));
+                        }
+                    }
+                    completeFacts &= result.completeFacts();
+                    completeFalsehoods &= result.completeFalsehoods();
+                    cycles = cycles.addAll(result.cycles());
+                }
+                result = predicate.infer(reduce);
                 if (result.hasStackOverflow()) {
                     return result;
                 } else if (result.isFalseCC()) {
-                    falsehoods = falsehoods.add(setBinding(entry.getKey()));
+                    falsehoods = falsehoods.add(setBinding(binding));
                 } else if (result.isTrueCC()) {
-                    facts = facts.add(setBinding(entry.getKey()));
+                    facts = facts.add(setBinding(binding));
                 } else {
-                    Predicate predicate = result.predicate();
+                    predicate = result.predicate();
                     if (predicate != null) {
-                        result = predicate.infer(context);
+                        result = predicate.infer(deep);
                         if (result.hasStackOverflow()) {
                             return result;
-                        } else {
+                        }
+                        if (!result.unresolvable()) {
                             for (Predicate pred : result.allFacts()) {
-                                Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
-                                next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.TRUE));
+                                Map<Variable, Object> b = pred.getBinding();
+                                if (!b.isEmpty()) {
+                                    b = binding.putAll(b);
+                                    next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.TRUE));
+                                }
                             }
                             for (Predicate pred : result.allFalsehoods()) {
-                                Map<Variable, Object> binding = entry.getKey().putAll(pred.getBinding());
-                                next = next.put(binding, predicate.setBinding(binding).replace(pred, Boolean.FALSE));
+                                Map<Variable, Object> b = pred.getBinding();
+                                if (!b.isEmpty()) {
+                                    b = binding.putAll(b);
+                                    next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.FALSE));
+                                }
                             }
                             completeFacts &= result.completeFacts();
                             completeFalsehoods &= result.completeFalsehoods();
@@ -81,6 +120,10 @@ public abstract class CompoundPredicate extends Predicate {
                 }
             }
         } while (!next.isEmpty());
+        if (facts.isEmpty() && completeFacts && falsehoods.isEmpty() && completeFalsehoods) {
+            completeFacts = false;
+            completeFalsehoods = false;
+        }
         return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 

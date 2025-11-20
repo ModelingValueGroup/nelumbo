@@ -80,8 +80,16 @@ public class RepetitionPattern extends Pattern {
             end = separator.state(end, left, functor, branche.add(1));
         }
         end = end.merge(next);
-        ParseState state = repeated().state(end, left, functor, branche.add(0)).merge(start);
-        return mandatory() ? state : state.merge(next);
+        Pattern repeated = repeated();
+        ParseState state = repeated.state(end, left, functor, branche.add(0)).merge(start);
+        if (!mandatory()) {
+            if (separator != null) {
+                state = separator.state(state, left, functor, branche.add(1)).merge(next);
+                state = repeated.state(state, left, functor, branche.add(0));
+            }
+            state = state.merge(next);
+        }
+        return state;
     }
 
     @Override
