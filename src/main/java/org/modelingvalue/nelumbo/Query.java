@@ -154,6 +154,7 @@ public final class Query extends Node implements Evaluatable {
             result.addException(new ParseException(ie.getMessage(), predicate));
             return;
         }
+        inferResult = found;
         if (hasExpected()) {
             toString();
             Set<Map<Variable, Object>> trueBindings = facts();
@@ -169,7 +170,6 @@ public final class Query extends Node implements Evaluatable {
                         astElements.sublist(2, astElements.size()).toArray(i -> new AstElement[i])));
             }
         }
-        inferResult = found;
     }
 
     public InferResult inferResult() {

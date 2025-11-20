@@ -73,12 +73,15 @@ public final class Parser implements ParseExceptionHandler {
 
     public ParserResult parseEvaluate() throws ParseException {
         ParserResult parserResult = parse(new ParserResult(true), false);
-        // parserResult.print();
         parserResult.evaluate();
         return parserResult;
     }
 
     public ParserResult parseMutiple() throws ParseException {
+        return parse(new ParserResult(true), true);
+    }
+
+    public ParserResult parseMutipleEvaluate() throws ParseException {
         ParserResult parserResult = parse(new ParserResult(true), true);
         parserResult.evaluate();
         return parserResult;

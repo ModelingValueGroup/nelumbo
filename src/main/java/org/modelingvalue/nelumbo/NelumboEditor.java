@@ -26,6 +26,7 @@ import java.io.Serial;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
@@ -432,6 +433,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void prepareForExecute() {
         knowledgeBase.init();
         textPane.getHighlighter().removeAllHighlights();
+        messagesPane.getHighlighter().removeAllHighlights();
         StyledDocument doc = textPane.getStyledDocument();
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
@@ -454,25 +456,55 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void showResults(ExecuteResult executeResult) {
         if (executeResult.pe == null) {
             StringBuilder messages = new StringBuilder();
+            int index = 0;
             int prevLine = 0;
             int nextLine;
+            LinkedList<Object[]> highlights = new LinkedList<>();
             for (Node root : executeResult.parserResult.roots()) {
-                if (root instanceof Query query) {
-                    nextLine = query.lastToken().line();
-                    messages.append(emptyLines(nextLine - prevLine)).append(query.inferResult().toString()).append("\n");
-                    prevLine = ++nextLine;
+                if (root instanceof Evaluatable eval) {
+                    ParseException pe = null;
+                    String mess = null;
+                    try {
+                        eval.evaluate(knowledgeBase, executeResult.parserResult);
+                    } catch (ParseException exc) {
+                        pe = exc;
+                        mess = pe.getShortMessage();
+                    }
+                    if (eval instanceof Query query && query.inferResult() != null) {
+                        mess = query.inferResult().toString();
+                    }
+                    if (mess != null) {
+                        nextLine = eval.lastToken().line();
+                        messages.append(emptyLines(nextLine - prevLine)).append(mess).append("\n");
+                        index += nextLine - prevLine;
+                        if (pe != null && eval instanceof Query query && query.inferResult() != null) {
+                            highlights.add(new Object[]{index, mess.length(), pe.getShortMessage()});
+                        }
+                        if (pe != null) {
+                            setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage());
+                        }
+                        prevLine = ++nextLine;
+                        index += mess.length();
+                    }
                 }
             }
             setMessages(messages.toString());
+            for (Object[] h : highlights) {
+                setHighlight(messagesPane, (int) h[0], (int) h[1], (String) h[2]);
+            }
             showMessageColors();
         } else {
             ParseException pe = executeResult.pe();
             setMessagesAsError((pe.fileName().equals(EDITOR_FILE_NAME) ? emptyLines(pe.line()) : "") + pe.getShortMessage());
-            try {
-                textPane.getHighlighter().addHighlight(pe.index(), pe.index() + pe.length(), redPainter);
-            } catch (BadLocationException ble) {
-                setMessagesAsError(pe.getShortMessage());
-            }
+            setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage());
+        }
+    }
+
+    private void setHighlight(JTextPane pane, int index, int length, String message) {
+        try {
+            pane.getHighlighter().addHighlight(index, index + length, redPainter);
+        } catch (BadLocationException ble) {
+            setMessagesAsError(message);
         }
     }
 
