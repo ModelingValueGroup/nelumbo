@@ -3,7 +3,18 @@
     "allow": [
       "mcp__ide__getDiagnostics",
       "Bash(./gradlew compileJava:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(mkdir:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl:*)",
+      "WebFetch(domain:mvnrepository.com)",
+      "WebFetch(domain:teavm.org)",
+      "Bash(git checkout:*)",
+      "Bash(claude doctor:*)",
+      "Bash(echo:*)",
+      "Bash(/Users/tom/.nvm/versions/node/v24.11.1/bin/npm --version)"
     ],
     "deny": [],
     "ask": []

@@ -14,20 +14,30 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo;
 
-include("js")
+/**
+ * Browser/TeaVM implementation of ExecutionContext that executes everything synchronously
+ * since threading is not available in the browser environment
+ */
+public class BrowserExecutionContext implements ExecutionContext {
 
-plugins {
-    id("com.gradle.enterprise") version ("3.5")
-}
+    @Override
+    public KnowledgeBase invoke(Runnable runnable, KnowledgeBase knowledgeBase) {
+        // Create a new KnowledgeBase for this execution context (same as JVM version)
+        KnowledgeBase newKnowledgeBase = new KnowledgeBase(knowledgeBase);
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-println("Gradle: inEclipse=$inEclipse")
-if (inEclipse != null && inEclipse == "true") {
-    includeBuild("../immutable-collections") {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-        }
+        // Execute synchronously in the current context
+        KnowledgeBase.CURRENT.run(newKnowledgeBase, runnable);
+        newKnowledgeBase.stopped = true;
+
+        return newKnowledgeBase;
+    }
+
+    @Override
+    public void executeAsync(Runnable task) {
+        // In browser environment, execute synchronously since we don't have threading
+        // For memoization cleanup, this is acceptable - the web session is typically short-lived
+        task.run();
     }
 }

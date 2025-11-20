@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
 import java.util.Optional;
-import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -34,8 +33,6 @@ import org.modelingvalue.collections.QualifiedSet;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
-import org.modelingvalue.collections.util.ContextPool;
-import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
@@ -51,7 +48,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     public static final Context<KnowledgeBase>                                          CURRENT              = Context.of();
     //
-    private static final ContextPool                                                    POOL                 = ContextThread.createPool();
+    private static final ExecutionContext                                               EXECUTION_CONTEXT    = ExecutionContext.getInstance();
     private static final QualifiedSet<Predicate, Inference>                             EMPTY_MEMOIZ         = QualifiedSet.of(Inference::premise);
     private static final int                                                            MAX_LOGIC_MEMOIZ     = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
     private static final int                                                            MAX_LOGIC_MEMOIZ_D4  = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
@@ -103,36 +100,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
-    private static final class LogicTask extends ForkJoinTask<KnowledgeBase> {
-        @Serial
-        private static final long   serialVersionUID = -1375078574164947441L;
-
-        private final Runnable      runnable;
-        private final KnowledgeBase knowledgebase;
-
-        public LogicTask(Runnable runnable, KnowledgeBase init) {
-            this.runnable = runnable;
-            this.knowledgebase = new KnowledgeBase(init);
-        }
-
-        @Override
-        public KnowledgeBase getRawResult() {
-            return knowledgebase;
-        }
-
-        @Override
-        protected void setRawResult(KnowledgeBase knowledgebase) {
-        }
-
-        @Override
-        protected boolean exec() {
-            CURRENT.run(knowledgebase, runnable);
-            knowledgebase.stopped = true;
-            return true;
-        }
-
-    }
-
     public static Set<Type> generalizations(Type type, Type top) {
         Set<Type> result = Set.of();
         for (Type g : type.supers()) {
@@ -144,7 +111,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public KnowledgeBase run(Runnable runnable) {
-        return POOL.invoke(new LogicTask(runnable, this));
+        return EXECUTION_CONTEXT.invoke(runnable, this);
     }
 
     private Functor addType(Type type, boolean predefined) throws ParseException {
@@ -512,7 +479,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final InferContext                                          context;
     private final KnowledgeBase                                         init;
 
-    private boolean                                                     stopped;
+    boolean                                                             stopped;  // package-private for ExecutionContext implementations
     private ParseExceptionHandler                                       exceptionHandler;
 
     public KnowledgeBase(KnowledgeBase init) {
@@ -610,7 +577,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             return array;
         });
         if (mem[2].size() > MAX_LOGIC_MEMOIZ) {
-            POOL.execute(this::cleanup);
+            EXECUTION_CONTEXT.executeAsync(this::cleanup);
         }
     }
 

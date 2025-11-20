@@ -14,20 +14,57 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo;
 
-include("js")
+import java.io.Serial;
+import java.util.concurrent.ForkJoinTask;
 
-plugins {
-    id("com.gradle.enterprise") version ("3.5")
-}
+import org.modelingvalue.collections.util.ContextPool;
+import org.modelingvalue.collections.util.ContextThread;
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-println("Gradle: inEclipse=$inEclipse")
-if (inEclipse != null && inEclipse == "true") {
-    includeBuild("../immutable-collections") {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
+/**
+ * JVM implementation of ExecutionContext that uses ForkJoinPool for parallel execution
+ */
+public class JvmExecutionContext implements ExecutionContext {
+
+    private static final ContextPool POOL = ContextThread.createPool();
+
+    @Override
+    public KnowledgeBase invoke(Runnable runnable, KnowledgeBase knowledgeBase) {
+        return POOL.invoke(new LogicTask(runnable, knowledgeBase));
+    }
+
+    @Override
+    public void executeAsync(Runnable task) {
+        POOL.execute(task);
+    }
+
+    private static final class LogicTask extends ForkJoinTask<KnowledgeBase> {
+        @Serial
+        private static final long   serialVersionUID = -1375078574164947441L;
+
+        private final Runnable      runnable;
+        private final KnowledgeBase knowledgebase;
+
+        public LogicTask(Runnable runnable, KnowledgeBase init) {
+            this.runnable = runnable;
+            this.knowledgebase = new KnowledgeBase(init);
+        }
+
+        @Override
+        public KnowledgeBase getRawResult() {
+            return knowledgebase;
+        }
+
+        @Override
+        protected void setRawResult(KnowledgeBase knowledgebase) {
+        }
+
+        @Override
+        protected boolean exec() {
+            KnowledgeBase.CURRENT.run(knowledgebase, runnable);
+            knowledgebase.stopped = true;
+            return true;
         }
     }
 }

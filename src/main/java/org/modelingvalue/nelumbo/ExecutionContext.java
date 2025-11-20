@@ -14,20 +14,46 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo;
 
-include("js")
+/**
+ * Abstraction for execution context that handles threading differently
+ * depending on the environment (JVM with threads vs browser/TeaVM without threads)
+ */
+public interface ExecutionContext {
 
-plugins {
-    id("com.gradle.enterprise") version ("3.5")
-}
+    /**
+     * Execute a runnable with a given KnowledgeBase context and return the updated KnowledgeBase
+     *
+     * @param runnable The code to execute
+     * @param knowledgeBase The initial KnowledgeBase state
+     * @return The updated KnowledgeBase after execution
+     */
+    KnowledgeBase invoke(Runnable runnable, KnowledgeBase knowledgeBase);
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-println("Gradle: inEclipse=$inEclipse")
-if (inEclipse != null && inEclipse == "true") {
-    includeBuild("../immutable-collections") {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
+    /**
+     * Execute a task asynchronously (or synchronously in environments without threading)
+     *
+     * @param task The task to execute
+     */
+    void executeAsync(Runnable task);
+
+    /**
+     * Get the platform-specific implementation
+     * This method is called once during initialization to select the right implementation
+     *
+     * @return The appropriate ExecutionContext for the current platform
+     */
+    static ExecutionContext getInstance() {
+        // Try to detect if we're running in TeaVM/browser environment
+        // TeaVM doesn't support ForkJoinPool, so we can use that as a detection mechanism
+        try {
+            Class.forName("java.util.concurrent.ForkJoinPool");
+            // We're in a JVM environment, use threaded implementation
+            return new JvmExecutionContext();
+        } catch (ClassNotFoundException e) {
+            // We're in TeaVM/browser environment, use synchronous implementation
+            return new BrowserExecutionContext();
         }
     }
 }
