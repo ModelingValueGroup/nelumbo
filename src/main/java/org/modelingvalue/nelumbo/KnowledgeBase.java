@@ -162,7 +162,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private Functor addVariable(Variable var) throws ParseException {
-        return register(Functor.of(t(var.toString()), var.type(), true, (elements, args, functor) -> {
+        return register(Functor.of(t(var.toString()), Type.VARIABLE, true, (elements, args, functor) -> {
             Variable result = var.setAstElements(elements);
             return result.setFunctor(functor);
         }));
@@ -384,6 +384,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 register(Functor.of(s(n(Type.PREDICATE, 0), t(NEWLINE)), //
                         Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)));
 
+                //                register(Functor.of(s(n(Type.ROOT, null), t("::>"), r(n(Type.ROOT, null), true, t(",")), t(NEWLINE)), //
+                //                        Type.ROOT.list(), false, (elements, args, functor) -> {
+                //                            Node left = (Node) args[0];
+                //                            ListNode roots = new ListNode(List.of(), Type.ROOT);
+                //                            for (Node right : (List<Node>) args[1]) {
+                //                                roots = new ListNode(List.of(), roots, transform(left, right));
+                //                            }
+                //                            return roots;
+                //                        }));
+
                 register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
                         Type.NODE, false, (elements, args, functor) -> {
                             Node node = (Node) args[0];
@@ -399,6 +409,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
+    //    private Node transform(Node left, Node right) {
+    //        return right;
+    //    }
+
     private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
@@ -407,11 +421,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 type = type.literal();
             }
         } else {
-            if (!Type.PREDICATE.isAssignableFrom(type)) {
+            if (!Type.PREDICATE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {
                 type = type.function();
                 function = true;
             }
-            if (!args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) && //
+            if (!Type.ROOT.isAssignableFrom(type) && //
+                    !args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) && //
                     !args.anyMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;
             }
@@ -730,6 +745,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
         functors.accumulateAndGet(Set.of(functor), Set::addAll);
         return functor;
+    }
+
+    public Variable variable(Token token, Parser parser) throws ParseException {
+        ParseState state = localPrePatterns.get().get(Type.DEFAULT_GROUP);
+        if (state != null) {
+            state = state.transitions().get(token.text());
+            if (state != null && state.functor() != null && state.functor().resultType() == Type.VARIABLE) {
+                return (Variable) state.functor().construct(List.of(token), new Object[0], parser);
+            }
+        }
+        return null;
     }
 
     public PatternResult preParse(Token token, String group, Node left, Parser parser) throws ParseException {

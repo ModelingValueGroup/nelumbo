@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -68,7 +69,11 @@ public class TokenTypePattern extends Pattern {
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         TokenType type = tokenType();
         if (!isEmpty(type)) {
-            args = args.add(((Token) it.element).text());
+            if (it.element instanceof Variable var) {
+                args = args.add(var);
+            } else {
+                args = args.add(((Token) it.element).text());
+            }
         }
         it.next();
         return args;

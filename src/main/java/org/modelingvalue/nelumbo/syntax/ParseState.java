@@ -22,6 +22,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
@@ -167,39 +168,53 @@ public class ParseState {
         if (transitions().isEmpty()) {
             return null;
         }
-        Object input = null;
+        AstElement element = null;
         String text = token.text();
         ParseState next = transitions().get(text);
         if (next != null) {
-            input = text;
+            element = token;
         } else {
             TokenType type = token.type();
             if (isNumeric(type) && token.text().startsWith("-") && transitions().get(type) == null) {
                 String key = "-";
                 next = transitions().get(key);
                 if (next != null) {
-                    input = key;
                     token = result.addSplit(token, token.split(1));
+                    element = token;
                 }
             } else if (type == TokenType.OPERATOR || type == TokenType.NAME) {
                 for (int i = text.length() - 1; i > 0; i--) {
                     String key = text.substring(0, i);
                     next = transitions().get(key);
                     if (next != null) {
-                        input = key;
                         token = result.addSplit(token, token.split(i));
+                        element = token;
                         break;
                     }
                 }
             }
             if (next == null) {
-                next = transitions().get(type);
-                if (next != null) {
-                    input = type;
-                } else {
-                    next = transitions().get(TokenType.NEWLINE);
-                    if (next != null && !Pattern.isEndOfLine(token)) {
-                        next = null;
+                if (type == TokenType.NAME) {
+                    Variable var = result.parser().variable(token);
+                    if (var != null) {
+                        TokenType tt = var.type().tokenType();
+                        if (tt != null) {
+                            next = transitions().get(tt);
+                            if (next != null) {
+                                element = var;
+                            }
+                        }
+                    }
+                }
+                if (next == null) {
+                    next = transitions().get(type);
+                    if (next != null) {
+                        element = token;
+                    } else {
+                        next = transitions().get(TokenType.NEWLINE);
+                        if (next != null && !Pattern.isEndOfLine(token)) {
+                            next = null;
+                        }
                     }
                 }
             }
@@ -208,9 +223,9 @@ public class ParseState {
             if (repetitions == null) {
                 return result;
             }
-            if (input != null) {
-                result.add(token);
-                token.setBranches(next.branches);
+            if (element != null) {
+                result.add(element);
+                element.setBranches(next.branches);
             }
             return next.parse(token.next(), result, repetitions, pre);
         }
