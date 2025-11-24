@@ -424,7 +424,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
         doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
-        messagesPane.setText("...");
+        messagesPane.setText("");
     }
 
     private void showColors(JTextPane pane, TokenizerResult tokenizerResult) {
