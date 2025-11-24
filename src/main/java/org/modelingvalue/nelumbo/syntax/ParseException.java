@@ -40,7 +40,7 @@ public class ParseException extends Exception {
 
     private static Token lastToken(AstElement... elements) {
         Token lastToken = elements[elements.length - 1].lastToken();
-        for (String fixed = lastToken.type().fixed(); fixed != null && fixed.isEmpty(); fixed = lastToken.type().fixed()) {
+        for (String fixed = lastToken.type().fixed(); fixed != null && fixed.isEmpty() && lastToken.previous() != null; fixed = lastToken.type().fixed()) {
             lastToken = lastToken.previous();
         }
         return lastToken;
@@ -48,7 +48,7 @@ public class ParseException extends Exception {
 
     private static Token firstToken(AstElement... elements) {
         Token firstToken = elements[0].firstToken();
-        for (String fixed = firstToken.type().fixed(); fixed != null && fixed.isEmpty(); fixed = firstToken.type().fixed()) {
+        for (String fixed = firstToken.type().fixed(); fixed != null && fixed.isEmpty() && firstToken.next() != null; fixed = firstToken.type().fixed()) {
             firstToken = firstToken.next();
         }
         return firstToken;
