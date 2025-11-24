@@ -149,4 +149,9 @@ public final class PatternResult implements ParseExceptionHandler {
         parser.addException(exception);
     }
 
+    @Override
+    public List<ParseException> exceptions() {
+        return parser.exceptions();
+    }
+
 }

@@ -42,6 +42,7 @@ import javax.swing.text.StyledEditorKit;
 import javax.swing.text.TextAction;
 import javax.swing.text.ViewFactory;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -61,6 +62,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private final static String                  DECREASE           = "DECREASE";
 
     private final static DefaultHighlightPainter redPainter         = new DefaultHighlightPainter(new Color(0xffaaaa));
+    private final static DefaultHighlightPainter greenPainter       = new DefaultHighlightPainter(new Color(0xaaffaa));
 
     /**
      * Defines a color scheme for a token type with foreground and background colors,
@@ -396,30 +398,14 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
     }
 
-    private record ExecuteResult(TokenizerResult tokenizerResult, ParserResult parserResult, ParseException pe) {
-        public ExecuteResult(TokenizerResult tokenizerResult, ParserResult parserResult) {
-            this(tokenizerResult, parserResult, null);
-        }
-
-        public ExecuteResult(TokenizerResult tokenizerResult, ParseException pe) {
-            this(tokenizerResult, null, pe);
-        }
-    }
-
     private void execute() {
         prepareForExecute();
         String text = textPane.getText();
         Tokenizer tokenizer = new Tokenizer(text, EDITOR_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
+        ParserResult result = new Parser(tokenizerResult).parseMutipleNonThrowing();
         showColors(textPane, tokenizerResult);
-        ExecuteResult executeResult;
-        try {
-            executeResult = new ExecuteResult(tokenizerResult, new Parser(tokenizerResult).parseMutiple());
-        } catch (ParseException pe) {
-            executeResult = new ExecuteResult(tokenizerResult, pe);
-        }
-        showColors(textPane, executeResult.tokenizerResult());
-        showResults(executeResult);
+        showResults(result);
         saveTextContent(text);
     }
 
@@ -453,19 +439,22 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
     }
 
-    private void showResults(ExecuteResult executeResult) {
-        if (executeResult.pe == null) {
+    private record Highlight(int index, int length, String error) {
+    }
+
+    private void showResults(ParserResult result) {
+        List<ParseException> exceptions = result.exceptions();
+        if (exceptions.isEmpty()) {
+            ParserResult throwing = new ParserResult(true);
             StringBuilder messages = new StringBuilder();
-            int index = 0;
-            int prevLine = 0;
-            int nextLine;
-            LinkedList<Object[]> messagesHighlights = new LinkedList<>();
-            for (Node root : executeResult.parserResult.roots()) {
+            int index = 0, prevLine = 0, nextLine;
+            LinkedList<Highlight> messagesHighlights = new LinkedList<>();
+            for (Node root : result.roots()) {
                 if (root instanceof Evaluatable eval) {
                     ParseException pe = null;
                     String mess = null;
                     try {
-                        eval.evaluate(knowledgeBase, executeResult.parserResult);
+                        eval.evaluate(knowledgeBase, throwing);
                     } catch (ParseException exc) {
                         pe = exc;
                         mess = pe.getShortMessage();
@@ -478,31 +467,39 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                         messages.append(emptyLines(nextLine - prevLine)).append(mess).append("\n");
                         index += nextLine - prevLine;
                         if (pe != null && eval instanceof Query query && query.inferResult() != null) {
-                            messagesHighlights.add(new Object[]{index, mess.length(), pe.getShortMessage()});
+                            messagesHighlights.add(new Highlight(index, mess.length(), pe.getShortMessage()));
                         }
                         if (pe != null) {
-                            setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage());
+                            setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage(), redPainter);
                         }
                         prevLine = ++nextLine;
                         index += mess.length() + 1;
                         setMessages(messages.toString());
                         showMessageColors();
-                        for (Object[] h : messagesHighlights) {
-                            setHighlight(messagesPane, (int) h[0], (int) h[1], (String) h[2]);
+                        for (Highlight h : messagesHighlights) {
+                            setHighlight(messagesPane, h.index, h.length, h.error, greenPainter);
                         }
                     }
                 }
             }
         } else {
-            ParseException pe = executeResult.pe();
-            setMessages((pe.fileName().equals(EDITOR_FILE_NAME) ? emptyLines(pe.line()) : "") + pe.getShortMessage());
-            setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage());
+            StringBuilder messages = new StringBuilder();
+            int prevLine = 0, nextLine;
+            for (ParseException pe : exceptions) {
+                nextLine = pe.line();
+                messages.append(emptyLines(nextLine - prevLine)).append(pe.getShortMessage()).append("\n");
+                if (pe != null) {
+                    setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage(), redPainter);
+                }
+                prevLine = ++nextLine;
+            }
+            setMessages(messages.toString());
         }
     }
 
-    private void setHighlight(JTextPane pane, int index, int length, String message) {
+    private void setHighlight(JTextPane pane, int index, int length, String message, DefaultHighlightPainter painter) {
         try {
-            pane.getHighlighter().addHighlight(index, index + length, redPainter);
+            pane.getHighlighter().addHighlight(index, index + length, painter);
         } catch (BadLocationException ble) {
             setMessages(message);
         }

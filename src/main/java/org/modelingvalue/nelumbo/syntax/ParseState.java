@@ -125,7 +125,9 @@ public class ParseState {
         for (RepetitionPattern start : startRepetitions()) {
             innerRepetitions = innerRepetitions.put(start, this);
         }
+        int nrOfExceptions;
         do {
+            nrOfExceptions = result.exceptions().size();
             if (token(token, result, innerRepetitions, pre) == null) {
                 if (pre && group() != null) {
                     result.endPreParse(this, token);
@@ -147,7 +149,7 @@ public class ParseState {
         if (functor() == null) {
             if (pre) {
                 return null;
-            } else {
+            } else if (nrOfExceptions == result.exceptions().size()) {
                 result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token));
             }
         }
@@ -224,36 +226,49 @@ public class ParseState {
         if (group() == null) {
             return null;
         }
-        Token nextToken = token.next();
-        if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
-            token = result.addMerge(token, nextToken.prepend("-"));
-        }
-        Node node = result.parser().parseNode(token, innerPrecedence(), group());
-        if (node != null) {
-            result.add(node);
-            for (Type sup : node.type().allSupers()) {
-                ParseState next = transitions().get(sup);
-                if (next != null) {
-                    if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
-                        node.setBranches(next.branches);
-                        return result;
-                    } else {
-                        break;
+        while (true) {
+            int nrOfExceptions = result.exceptions().size();
+            Token nextToken = token.next();
+            if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
+                token = result.addMerge(token, nextToken.prepend("-"));
+            }
+            Node node = result.parser().parseNode(token, innerPrecedence(), group());
+            if (node != null) {
+                result.add(node);
+                for (Type sup : node.type().allSupers()) {
+                    ParseState next = transitions().get(sup);
+                    if (next != null) {
+                        if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                            node.setBranches(next.branches);
+                            return result;
+                        } else {
+                            break;
+                        }
                     }
                 }
-            }
-            if (node instanceof Variable) {
-                ParseState next = transitions().get(Type.VARIABLE);
-                if (next != null) {
-                    if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
-                        node.setBranches(next.branches);
-                        return result;
+                if (node instanceof Variable) {
+                    ParseState next = transitions().get(Type.VARIABLE);
+                    if (next != null) {
+                        if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                            node.setBranches(next.branches);
+                            return result;
+                        }
                     }
                 }
+                result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
+                return result;
+            } else if (token.type() != TokenType.ENDOFFILE && Pattern.isEndOfLine(token) && result.exceptions().size() > nrOfExceptions) {
+                token = token.next();
+                while (!Pattern.isEndOfLine(token)) {
+                    token = token.next();
+                }
+                if (token.type() == TokenType.ENDOFFILE) {
+                    return null;
+                }
+            } else {
+                return null;
             }
-            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
         }
-        return result;
     }
 
     private String expectedTypes() {

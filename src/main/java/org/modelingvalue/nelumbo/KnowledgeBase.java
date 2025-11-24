@@ -570,6 +570,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
+    @Override
+    public List<ParseException> exceptions() {
+        return exceptionHandler.exceptions();
+    }
+
     public void endParsing(boolean mutiple) {
         this.exceptionHandler = null;
         if (!mutiple) {

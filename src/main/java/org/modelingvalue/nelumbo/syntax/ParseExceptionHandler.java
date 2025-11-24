@@ -16,8 +16,12 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.collections.List;
+
 public interface ParseExceptionHandler {
 
     void addException(ParseException exception) throws ParseException;
+
+    List<ParseException> exceptions();
 
 }

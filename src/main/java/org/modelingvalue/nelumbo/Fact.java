@@ -22,7 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 
 public final class Fact extends Node implements Evaluatable {
     @Serial
@@ -51,14 +51,14 @@ public final class Fact extends Node implements Evaluatable {
     }
 
     @Override
-    public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
+    public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
         Predicate predicate = predicate();
         if (!predicate.isRelation()) {
-            result.addException(new ParseException("Fact " + predicate + " is not a relation.", predicate));
+            handler.addException(new ParseException("Fact " + predicate + " is not a relation.", predicate));
             return;
         }
         if (!predicate.isFullyBound()) {
-            result.addException(new ParseException("Fact " + predicate + " has variables.", predicate));
+            handler.addException(new ParseException("Fact " + predicate + " has variables.", predicate));
             return;
         }
         knowledgeBase.addFact(predicate);

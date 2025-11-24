@@ -77,14 +77,12 @@ public final class Parser implements ParseExceptionHandler {
         return parserResult;
     }
 
-    public ParserResult parseMutiple() throws ParseException {
-        return parse(new ParserResult(true), true);
-    }
-
-    public ParserResult parseMutipleEvaluate() throws ParseException {
-        ParserResult parserResult = parse(new ParserResult(true), true);
-        parserResult.evaluate();
-        return parserResult;
+    public ParserResult parseMutipleNonThrowing() {
+        try {
+            return parse(new ParserResult(false), true);
+        } catch (ParseException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private ParserResult parse(ParserResult result, boolean mutiple) throws ParseException {
@@ -148,6 +146,11 @@ public final class Parser implements ParseExceptionHandler {
     @Override
     public void addException(ParseException exception) throws ParseException {
         result.addException(exception);
+    }
+
+    @Override
+    public List<ParseException> exceptions() {
+        return result.exceptions();
     }
 
 }
