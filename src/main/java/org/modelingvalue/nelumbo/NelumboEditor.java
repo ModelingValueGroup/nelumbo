@@ -331,7 +331,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                 Parser.parse(Integer.class, "integers.nl");
                 Parser.parse(org.modelingvalue.nelumbo.strings.String.class, "strings.nl");
             } catch (ParseException e) {
-                setMessagesAsError(e.getMessage());
+                setMessages(e.getMessage());
             }
         }).run(this);
     }
@@ -459,7 +459,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             int index = 0;
             int prevLine = 0;
             int nextLine;
-            LinkedList<Object[]> highlights = new LinkedList<>();
+            LinkedList<Object[]> messagesHighlights = new LinkedList<>();
             for (Node root : executeResult.parserResult.roots()) {
                 if (root instanceof Evaluatable eval) {
                     ParseException pe = null;
@@ -478,24 +478,24 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                         messages.append(emptyLines(nextLine - prevLine)).append(mess).append("\n");
                         index += nextLine - prevLine;
                         if (pe != null && eval instanceof Query query && query.inferResult() != null) {
-                            highlights.add(new Object[]{index, mess.length(), pe.getShortMessage()});
+                            messagesHighlights.add(new Object[]{index, mess.length(), pe.getShortMessage()});
                         }
                         if (pe != null) {
                             setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage());
                         }
                         prevLine = ++nextLine;
-                        index += mess.length();
+                        index += mess.length() + 1;
+                        setMessages(messages.toString());
+                        showMessageColors();
+                        for (Object[] h : messagesHighlights) {
+                            setHighlight(messagesPane, (int) h[0], (int) h[1], (String) h[2]);
+                        }
                     }
                 }
             }
-            setMessages(messages.toString());
-            for (Object[] h : highlights) {
-                setHighlight(messagesPane, (int) h[0], (int) h[1], (String) h[2]);
-            }
-            showMessageColors();
         } else {
             ParseException pe = executeResult.pe();
-            setMessagesAsError((pe.fileName().equals(EDITOR_FILE_NAME) ? emptyLines(pe.line()) : "") + pe.getShortMessage());
+            setMessages((pe.fileName().equals(EDITOR_FILE_NAME) ? emptyLines(pe.line()) : "") + pe.getShortMessage());
             setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage());
         }
     }
@@ -504,22 +504,12 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         try {
             pane.getHighlighter().addHighlight(index, index + length, redPainter);
         } catch (BadLocationException ble) {
-            setMessagesAsError(message);
+            setMessages(message);
         }
     }
 
     private String emptyLines(int nr) {
         return "\n".repeat(Math.max(0, nr));
-    }
-
-    private void setMessagesAsError(String msg) {
-        messagesPane.setText(msg);
-        // Apply line spacing after setting text
-        StyledDocument messageDoc = messagesPane.getStyledDocument();
-        SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
-        StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f);
-        messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
-        messagesPane.repaint();
     }
 
     private void setMessages(String msg) {
