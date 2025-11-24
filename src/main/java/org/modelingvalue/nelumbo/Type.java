@@ -87,14 +87,17 @@ public class Type extends Node {
                 }
 
                 @Override
-                public Set<Type> supers() {
-                    return Set.of();
-                }
-
-                @Override
                 public String group() {
                     return DEFAULT_GROUP;
                 }
+
+                @Override
+                public Object[] toArray() {
+                    Object[] array = super.toArray();
+                    array[0] = this;
+                    return array;
+                }
+
             };
         }
         return TYPE;
@@ -106,7 +109,7 @@ public class Type extends Node {
     private List<Type> allSupers;
 
     private Type() {
-        super((Type) null, List.of(), Type.class, null, DEFAULT_GROUP);
+        super((Type) null, List.of(), Type.class, Set.of(), DEFAULT_GROUP);
     }
 
     private Type(Object[] array, Type declaration) {
