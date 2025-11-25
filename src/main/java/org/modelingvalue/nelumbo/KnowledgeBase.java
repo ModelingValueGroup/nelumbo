@@ -425,7 +425,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 type = type.function();
                 function = true;
             }
-            if (!Type.ROOT.isAssignableFrom(type) && //
+            if (!Type.ROOT.isAssignableFrom(type) && !args.allMatch(t -> Type.NODE.equals(t.element())) && //
                     !args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) && //
                     !args.anyMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;
