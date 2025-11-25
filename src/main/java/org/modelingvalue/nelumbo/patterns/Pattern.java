@@ -212,7 +212,7 @@ public abstract class Pattern extends Node {
     }
 
     public static boolean isEndOfLine(Token token) {
-        return token.type() == TokenType.ENDOFFILE || token.line() > token.previous().line() || token.text().equals("::>") || token.text().equals(",");
+        return token.type() == TokenType.ENDOFFILE || token.line() > token.previous().line();
     }
 
     protected void addText(StringBuffer sb, TokenType[] previous, String text) {
