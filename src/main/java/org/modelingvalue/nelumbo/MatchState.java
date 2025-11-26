@@ -106,7 +106,8 @@ public class MatchState<E> {
         } else if (obj instanceof Variable var) {
             state = matchType(var.type());
         } else if (obj instanceof Node node) {
-            state = transitions().get(node.functor());
+            Functor functor = node.functor();
+            state = functor != null ? transitions().get(functor) : null;
             if (state != null) {
                 for (Object arg : node.args()) {
                     state = state.doMatch(arg);
