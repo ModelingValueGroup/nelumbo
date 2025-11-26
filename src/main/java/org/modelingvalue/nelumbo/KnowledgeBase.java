@@ -289,6 +289,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return tt != null ? t(elements, tt) : n(elements, type, null);
                         }));
 
+                register(Functor.of(n(Type.VARIABLE, Integer.MAX_VALUE), //
+                        Type.PATTERN, false, (elements, args, functor) -> {
+                            Variable var = (Variable) args[0];
+                            return v(elements, var);
+                        }));
+
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(",")), t(NEWLINE)), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             Type type = (Type) elements.get(0);
@@ -384,14 +390,21 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 register(Functor.of(s(n(Type.PREDICATE, 0), t(NEWLINE)), //
                         Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)));
 
-                //                register(Functor.of(s(n(Type.ROOT, null), t("::>"), r(n(Type.ROOT, null), true, t(",")), t(NEWLINE)), //
+                //                register(Functor.of(s(n(Type.ROOT, 0), t("{"), r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), false, null), t("}"), t(NEWLINE)), //
                 //                        Type.ROOT.list(), false, (elements, args, functor) -> {
                 //                            Node left = (Node) args[0];
                 //                            ListNode roots = new ListNode(List.of(), Type.ROOT);
-                //                            for (Node right : (List<Node>) args[1]) {
-                //                                roots = new ListNode(List.of(), roots, transform(left, right));
+                //                            for (Object arg : (List<Node>) args[1]) {
+                //                                Node e1 = (Node) arg;
+                //                                if (e1 instanceof ListNode) {
+                //                                    for (Node e2 : ((ListNode) e1).elements()) {
+                //                                        roots = new ListNode(List.of(), roots, transform(left, e2));
+                //                                    }
+                //                                } else {
+                //                                    roots = new ListNode(List.of(), roots, transform(left, e1));
+                //                                }
                 //                            }
-                //                            return roots;
+                //                            return roots.setAstElements(roots.astElements().add(elements.last()));
                 //                        }));
 
                 register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
