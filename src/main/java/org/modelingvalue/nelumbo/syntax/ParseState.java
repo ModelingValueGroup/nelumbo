@@ -214,6 +214,8 @@ public class ParseState {
                         next = transitions().get(TokenType.NEWLINE);
                         if (next != null && !Pattern.isEndOfLine(token)) {
                             next = null;
+                        } else {
+                            token = token.previous();
                         }
                     }
                 }
