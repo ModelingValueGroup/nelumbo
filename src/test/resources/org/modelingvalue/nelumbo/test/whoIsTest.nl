@@ -2,10 +2,10 @@
 <Predicate> ::= <Person> is <Person>   #30
 <Person>    ::= a friend of <Person>   #35
 
-<Person> A, B, Who
+<Person> X, Y, Who
 
-A is B             <=> A=B
-a friend of A = B  <=> friend(A)=B
+X is Y             <=> X=Y
+a friend of X = Y  <=> friend(X)=Y
 
 Who is a friend of Piet   ?   [(Who=Jan),(Who=Klaas),(Who=Piet)][..]
 
