@@ -221,7 +221,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.PREDICATE, false);
                 register(equalsFunctor);
 
-                register(Functor.of(s(t(BEGINOFFILE), r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), false, null), t(ENDOFFILE)), //
+                register(Functor.of(s(t(BEGINOFFILE), r(s(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), t(NEWLINE)), false, null), t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor) -> {
                             ListNode roots = new ListNode(List.of(), Type.ROOT.list());
                             for (Object arg : args) {
@@ -295,18 +295,21 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return v(elements, var);
                         }));
 
-                register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(",")), t(NEWLINE)), //
+                register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             Type type = (Type) elements.get(0);
                             ListNode roots = new ListNode(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
                             List<Integer> precedence = List.of();
-                            for (int i = 2; i < elements.size(); i++) {
-                                AstElement e = elements.get(i);
-                                ast = ast.add(e);
-                                if (e instanceof Token t) {
-                                    if (t.text().equals(",") || t.type() == NEWLINE) {
+                            for (int i = 2; i <= elements.size(); i++) {
+                                AstElement e = i < elements.size() ? elements.get(i) : null;
+                                if (e != null) {
+                                    ast = ast.add(e);
+                                }
+                                if (e == null || e instanceof Token) {
+                                    Token t = (Token) e;
+                                    if (t == null || t.text().equals(",")) {
                                         Pattern pattern = pattern(pttrn);
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
@@ -344,7 +347,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots.setAstElements(roots.astElements().add(elements.last()));
                         }));
 
-                register(Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME))), t(NEWLINE)), //
+                register(Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
                             String name = (String) args[0];
                             name = name.substring(1, name.length() - 1);
@@ -357,11 +360,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return CURRENT.get().addType(type, false).setAstElements(elements);
                         }));
 
-                register(Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(",")), t(NEWLINE)), //
+                register(Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             Type type = (Type) elements.get(0);
                             ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
-                            for (int i = 1; i < elements.size() - 1; i++) {
+                            for (int i = 1; i < elements.size(); i++) {
                                 Token token = (Token) elements.get(i);
                                 Token comma = null;
                                 if (token.text().equals(",")) {
@@ -378,34 +381,34 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots.setAstElements(roots.astElements().add(elements.last()));
                         }));
 
-                ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=>"), r(CONDITION, true, t(",")), t(NEWLINE)), //
+                ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=>"), r(CONDITION, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> CURRENT.get().createRules(functor, elements, args));
                 register(ruleFunctor);
 
-                register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]"))), t(NEWLINE)), //
+                register(Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]")))), //
                         Type.QUERY, false, (elements, args, functor) -> {
                             return new Query(functor, elements, args);
                         }));
 
-                register(Functor.of(s(n(Type.PREDICATE, 0), t(NEWLINE)), //
+                register(Functor.of(s(n(Type.PREDICATE, 0)), //
                         Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)));
 
-                //                register(Functor.of(s(n(Type.ROOT, 0), t("{"), r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), false, null), t("}"), t(NEWLINE)), //
-                //                        Type.ROOT.list(), false, (elements, args, functor) -> {
-                //                            Node left = (Node) args[0];
-                //                            ListNode roots = new ListNode(List.of(), Type.ROOT);
-                //                            for (Object arg : (List<Node>) args[1]) {
-                //                                Node e1 = (Node) arg;
-                //                                if (e1 instanceof ListNode) {
-                //                                    for (Node e2 : ((ListNode) e1).elements()) {
-                //                                        roots = new ListNode(List.of(), roots, transform(left, e2));
-                //                                    }
-                //                                } else {
-                //                                    roots = new ListNode(List.of(), roots, transform(left, e1));
-                //                                }
-                //                            }
-                //                            return roots.setAstElements(roots.astElements().add(elements.last()));
-                //                        }));
+                register(Functor.of(s(n(Type.ROOT, 0), t("::>"), r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), true, t(","))), //
+                        Type.ROOT.list(), false, (elements, args, functor) -> {
+                            Node left = (Node) args[0];
+                            ListNode roots = new ListNode(List.of(), Type.ROOT);
+                            for (Object arg : (List<Node>) args[1]) {
+                                Node e1 = (Node) arg;
+                                if (e1 instanceof ListNode) {
+                                    for (Node e2 : ((ListNode) e1).elements()) {
+                                        roots = new ListNode(List.of(), roots, transform(left, e2));
+                                    }
+                                } else {
+                                    roots = new ListNode(List.of(), roots, transform(left, e1));
+                                }
+                            }
+                            return roots.setAstElements(roots.astElements().add(elements.last()));
+                        }));
 
                 register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
                         Type.NODE, false, (elements, args, functor) -> {
@@ -422,9 +425,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    //    private Node transform(Node left, Node right) {
-    //        return right;
-    //    }
+    private Node transform(Node left, Node right) {
+        return right;
+    }
 
     private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
         boolean toLiteral = false, function = false;

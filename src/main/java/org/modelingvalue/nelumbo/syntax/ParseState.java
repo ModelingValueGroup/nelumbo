@@ -133,6 +133,8 @@ public class ParseState {
                 if (pre && group() != null) {
                     result.endPreParse(this, token);
                     return result;
+                } else if (token != null && token.type() == TokenType.NEWLINE && functor() != null) {
+                    result.endPostParse(functor(), token);
                 } else if (node(token, result, innerRepetitions, pre) == null) {
                     break;
                 }
@@ -147,14 +149,16 @@ public class ParseState {
             result.endRepetition(endRepetitions(), token, 1);
             return result;
         }
-        if (functor() == null) {
-            if (pre) {
-                return null;
-            } else if (nrOfExceptions == result.exceptions().size()) {
-                result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token));
+        if (result.functor() == null) {
+            if (functor() == null) {
+                if (pre) {
+                    return null;
+                } else if (nrOfExceptions == result.exceptions().size()) {
+                    result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token));
+                }
             }
+            result.endPostParse(functor(), token);
         }
-        result.endPostParse(functor(), token);
         return result;
     }
 
@@ -214,6 +218,8 @@ public class ParseState {
                         next = transitions().get(TokenType.NEWLINE);
                         if (next != null && !Pattern.isEndOfLine(token)) {
                             next = null;
+                        } else {
+                            token = token.previous();
                         }
                     }
                 }

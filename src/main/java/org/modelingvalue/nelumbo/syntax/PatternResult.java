@@ -95,16 +95,20 @@ public final class PatternResult implements ParseExceptionHandler {
         this.nextToken = nextToken;
     }
 
+    public void clearDepth() {
+        depth = 0;
+    }
+
     public void countDepth() {
         if (depth > 0) {
             depth++;
         }
     }
 
-    public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken, int depth) {
+    public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken, int i) {
         this.endRepetitions = endRepetitions;
         this.nextToken = nextToken;
-        this.depth += depth;
+        this.depth += i;
     }
 
     public List<AstElement> elements() {
