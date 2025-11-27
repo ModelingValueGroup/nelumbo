@@ -4,19 +4,19 @@
 <Relation> ::= friends(<Person>,<Person>)
 <Person>   ::= friend(<Person>)
 
-<Person> a, b, c
+<Person> A, B, C
 
-friend(a)=c <=> friends(a,c) |
-                friends(c,a)  |
-                friend(friend(a))=c
+friend(A)=C <=> friends(A,C) |
+                friends(C,A)  |
+                friend(friend(A))=C
 
 <Person>   ::= Piet, Jan, Klaas, Kees, Bart
 
 friends(Piet, Jan)
 friends(Jan,  Klaas)
 
-friend(Piet)=b    ? [(b=Jan),(b=Klaas),(b=Piet)][..]
-friend(Jan)=b     ? [(b=Jan),(b=Klaas),(b=Piet)][..]
+friend(Piet)=B    ? [(B=Jan),(B=Klaas),(B=Piet)][..]
+friend(Jan)=B     ? [(B=Jan),(B=Klaas),(B=Piet)][..]
 friend(Klaas)=Jan ? [()][]
 friend(Kees)=Kees ? [][()]
 
