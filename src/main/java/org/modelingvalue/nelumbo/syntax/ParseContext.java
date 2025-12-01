@@ -1,5 +1,7 @@
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.collections.Set;
+
 public interface ParseContext {
 
     ParseState state();
@@ -39,6 +41,12 @@ public interface ParseContext {
             }
 
         };
+    }
+
+    default Set<ParseState> outerStates() {
+        Set result = Set.of();
+
+        return result;
     }
 
 }

@@ -152,7 +152,7 @@ public class ParseState {
                 if (pre) {
                     return null;
                 } else if (nrOfExceptions == result.exceptions().size()) {
-                    result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token));
+                    result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(result.context()), token));
                 }
             }
             result.endPostParse(functor(), token);
@@ -160,10 +160,27 @@ public class ParseState {
         return result;
     }
 
-    private String expectedTokens() {
-        return transitions().toKeys().filter(k -> k instanceof String || k instanceof TokenType).//
-                map(o -> o instanceof String ? ("\"" + o + "\"") : o.toString()).//
-                reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
+    private String expectedTokens(ParseContext ctx) {
+        return outerStates(ctx).add(this).flatMap(s -> s.transitions().toKeys()).//
+                filter(k -> k instanceof String || k instanceof TokenType).//
+                map(o -> o instanceof String ? ("'" + o + "'") : o.toString()).//
+                reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b);
+    }
+
+    private Set<ParseState> outerStates(ParseContext ctx) {
+        Set<ParseState> result = Set.of();
+        if (functor() != null) {
+            Type type = functor().resultType();
+            for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
+                for (Type sup : type.allSupers()) {
+                    ParseState next = pc.state().transitions().get(sup);
+                    if (next != null) {
+                        result = result.add(next);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     private PatternResult token(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
