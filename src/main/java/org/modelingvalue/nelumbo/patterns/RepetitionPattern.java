@@ -94,7 +94,8 @@ public class RepetitionPattern extends Pattern {
 
     @Override
     public List<Type> argTypes(List<Type> types) {
-        return types.add(repeated().argTypes(List.of()).first().list());
+        List<Type> argTypes = repeated().argTypes(List.of());
+        return argTypes != null ? types.add(argTypes.first().list()) : null;
     }
 
     @SuppressWarnings("unchecked")

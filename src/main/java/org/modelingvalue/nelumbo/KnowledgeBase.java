@@ -178,6 +178,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         text = text.substring(1, text.length() - 1);
                     }
                     patterns = patterns.add(t(text));
+                } else if (e instanceof Variable var) {
+                    patterns = patterns.add(v(var));
                 } else {
                     Pattern pattern = (Pattern) e;
                     if (pattern instanceof SequencePattern sp) {
@@ -297,7 +299,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            Type type = (Type) elements.get(0);
+                            Node type = (Node) elements.get(0);
                             ListNode roots = new ListNode(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
@@ -314,7 +316,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
                                         }
-                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern);
+                                        List<Type> argTypes = pattern.argTypes(List.of());
+                                        if (argTypes == null || type instanceof Variable var) {
+                                            // TODO
+                                            System.err.println("!!!!!!!!!!!!!! " + type + " ::= " + pattern);
+                                        } else {
+                                            roots = CURRENT.get().createFunctor((Type) type, roots, ast, constructor, pattern, argTypes);
+                                        }
                                         ast = pttrn = List.of();
                                         constructor = null;
                                         precedence = List.of();
@@ -393,7 +401,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 register(Functor.of(s(n(Type.PREDICATE, 0)), //
                         Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)));
 
-                register(Functor.of(s(n(Type.ROOT, 0), t("::>"), r(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), true, t(","))), //
+                register(Functor.of(s(n(Type.ROOT, -200), t("::>"), r(a(n(Type.ROOT.list(), -200), n(Type.ROOT, -200)), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             Node left = (Node) args[0];
                             ListNode roots = new ListNode(List.of(), Type.ROOT);
@@ -429,9 +437,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return right;
     }
 
-    private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
+    private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern, List<Type> args) throws ParseException {
         boolean toLiteral = false, function = false;
-        List<Type> args = pattern.argTypes(List.of());
         if (pattern instanceof TokenTypePattern || pattern instanceof TokenTextPattern) {
             if (!Type.PREDICATE.isAssignableFrom(type)) {
                 type = type.literal();

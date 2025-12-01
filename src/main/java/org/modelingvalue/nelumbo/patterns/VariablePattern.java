@@ -60,7 +60,7 @@ public class VariablePattern extends Pattern {
 
     @Override
     public List<Type> argTypes(List<Type> types) {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
