@@ -118,7 +118,7 @@ public class ParseState {
     }
 
     public PatternResult parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions, boolean pre) throws ParseException {
-        if (pre && !startRepetitions().isEmpty()) {
+        if (pre && !startRepetitions().isEmpty() && !result.isEmpty()) {
             result.endPreParse(this, token);
             return result;
         }
