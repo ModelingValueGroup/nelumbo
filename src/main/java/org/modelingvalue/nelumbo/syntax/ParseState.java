@@ -248,8 +248,8 @@ public class ParseState {
                 }
             }
             Type type = functor().resultType();
-            for (Type sup : type.allSupers()) {
-                for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
+            for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
+                for (Type sup : type.allSupers()) {
                     next = pc.state().transitions().get(sup);
                     if (next != null && next.token(token, result, ctx.outer(), null, pre) != null) {
                         result.endPostParse(functor(), token);
