@@ -30,6 +30,7 @@ public final class PatternResult implements ParseExceptionHandler {
 
     private final MutableList<AstElement>         elements;
     private final Parser                          parser;
+    private final ParseContext                    context;
     private final MutableList<Pair<Token, Token>> splitted;
     private final MutableList<Pair<Token, Token>> merged;
 
@@ -39,8 +40,9 @@ public final class PatternResult implements ParseExceptionHandler {
     private Token                                 nextToken;
     private int                                   depth;
 
-    public PatternResult(Parser parser) {
+    public PatternResult(Parser parser, ParseContext context) {
         this.parser = parser;
+        this.context = context;
         elements = MutableList.of(List.of());
         splitted = MutableList.of(List.of());
         merged = MutableList.of(List.of());
@@ -59,6 +61,10 @@ public final class PatternResult implements ParseExceptionHandler {
 
     public Parser parser() {
         return parser;
+    }
+
+    public ParseContext context() {
+        return context;
     }
 
     public Functor functor() {
@@ -124,7 +130,7 @@ public final class PatternResult implements ParseExceptionHandler {
         }
     }
 
-    public Node postParse(Parser parser) throws ParseException {
+    public Node postParse(ParseContext ctx) throws ParseException {
         for (Pair<Token, Token> split : splitted) {
             split.a().connect(split.b());
         }

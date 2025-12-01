@@ -122,6 +122,19 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void queryOnlyTest() {
+        run(() -> {
+            try {
+                Parser.parse(Integer.class, "integers.nl");
+                U.printResults(Parser.parse(NelumboTest.class, "queryOnly.nl"));
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    @RepeatedTest(10)
     public void stringsTest() {
         run(() -> {
             try {

@@ -774,24 +774,24 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return null;
     }
 
-    public PatternResult preParse(Token token, String group, Node left, Parser parser) throws ParseException {
-        ParseState state = (left != null ? localPostPatterns : localPrePatterns).get().get(group);
-        return state != null ? preParse(token, left, parser, state) : null;
+    public PatternResult preParse(Token token, ParseContext ctx, Node left, Parser parser) throws ParseException {
+        ParseState state = (left != null ? localPostPatterns : localPrePatterns).get().get(ctx.group());
+        return state != null ? preParse(token, left, parser, state, ctx) : null;
     }
 
-    private PatternResult preParse(Token token, Node left, Parser parser, ParseState state) throws ParseException {
+    private PatternResult preParse(Token token, Node left, Parser parser, ParseState state, ParseContext ctx) throws ParseException {
         if (left != null) {
             for (Type sup : left.type().allSupers()) {
                 ParseState found = state.transitions().get(sup);
                 if (found != null) {
-                    PatternResult result = new PatternResult(parser);
+                    PatternResult result = new PatternResult(parser, ctx);
                     result.add(left);
                     return found.parse(token, result, Map.of(), true);
                 }
             }
             return null;
         }
-        return state.parse(token, new PatternResult(parser), Map.of(), true);
+        return state.parse(token, new PatternResult(parser, ctx), Map.of(), true);
     }
 
     public void print(PrintStream stream, boolean withTokens) {

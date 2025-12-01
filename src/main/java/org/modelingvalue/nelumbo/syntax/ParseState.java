@@ -129,12 +129,10 @@ public class ParseState {
         int nrOfExceptions;
         do {
             nrOfExceptions = result.exceptions().size();
-            if (token(token, result, innerRepetitions, pre) == null) {
+            if (token(token, result, result.context(), innerRepetitions, pre) == null) {
                 if (pre && group() != null) {
                     result.endPreParse(this, token);
                     return result;
-                } else if (token != null && token.type() == TokenType.NEWLINE && functor() != null) {
-                    result.endPostParse(functor(), token);
                 } else if (node(token, result, innerRepetitions, pre) == null) {
                     break;
                 }
@@ -168,7 +166,7 @@ public class ParseState {
                 reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
-    private PatternResult token(Token token, PatternResult result, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
+    private PatternResult token(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
         if (transitions().isEmpty()) {
             return null;
         }
@@ -216,10 +214,18 @@ public class ParseState {
                         element = token;
                     } else {
                         next = transitions().get(TokenType.NEWLINE);
-                        if (next != null && !Pattern.isEndOfLine(token)) {
-                            next = null;
-                        } else {
-                            token = token.previous();
+                        if (next != null) {
+                            if (Pattern.isEndOfLine(token)) {
+                                for (Token prev = token.previousAll(); prev != token.previous(); prev = prev.previousAll()) {
+                                    if (prev.type() == TokenType.NEWLINE) {
+                                        element = prev;
+                                        break;
+                                    }
+                                }
+                                token = token.previous();
+                            } else {
+                                next = null;
+                            }
                         }
                     }
                 }
@@ -234,6 +240,23 @@ public class ParseState {
                 element.setBranches(next.branches);
             }
             return next.parse(token.next(), result, repetitions, pre);
+        }
+        if (!pre && repetitions != null && functor() != null) {
+            for (Entry<RepetitionPattern, ParseState> r : repetitions) {
+                if (r.getValue() != this && r.getValue().token(token, result, ctx, null, pre) != null) {
+                    return null;
+                }
+            }
+            Type type = functor().resultType();
+            for (Type sup : type.allSupers()) {
+                for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
+                    next = pc.state().transitions().get(sup);
+                    if (next != null && next.token(token, result, ctx.outer(), null, pre) != null) {
+                        result.endPostParse(functor(), token);
+                        return result;
+                    }
+                }
+            }
         }
         return null;
 
@@ -253,7 +276,7 @@ public class ParseState {
             if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
                 token = result.addMerge(token, nextToken.prepend("-"));
             }
-            Node node = result.parser().parseNode(token, innerPrecedence(), group());
+            Node node = result.parser().parseNode(token, ParseContext.of(this, group(), innerPrecedence(), result.context()));
             if (node != null) {
                 result.add(node);
                 for (Type sup : node.type().allSupers()) {

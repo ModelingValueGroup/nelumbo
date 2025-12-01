@@ -178,15 +178,15 @@ public abstract class Pattern extends Node {
                     if (post == null && isEndOfLine(token)) {
                         post = pre.transitions().get(TokenType.NEWLINE);
                     }
-                } else {
-                    Type type = ((Node) element).type();
+                } else if (element instanceof Node node) {
+                    Type type = node.type();
                     for (Type sup : type.allSupers()) {
                         post = pre.transitions().get(sup);
                         if (post != null) {
                             break;
                         }
                     }
-                    if (post == null && element instanceof Variable) {
+                    if (post == null && node instanceof Variable) {
                         TokenType tt = type.tokenType();
                         if (tt != null) {
                             post = pre.transitions().get(tt);
