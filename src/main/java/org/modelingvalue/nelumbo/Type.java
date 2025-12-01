@@ -82,11 +82,6 @@ public class Type extends Node {
                 }
 
                 @Override
-                public int hashCode() {
-                    return 0;
-                }
-
-                @Override
                 public String group() {
                     return DEFAULT_GROUP;
                 }
@@ -95,9 +90,14 @@ public class Type extends Node {
                 public Object[] toArray() {
                     Object[] array = super.toArray();
                     array[0] = this;
+                    array[3] = supers();
                     return array;
                 }
 
+                @Override
+                public Set<Type> supers() {
+                    return Set.of(Type.NODE);
+                }
             };
         }
         return TYPE;
@@ -334,6 +334,20 @@ public class Type extends Node {
     @Override
     protected Node typeForEquals() {
         return TYPE();
+    }
+
+    public boolean isTypeType() {
+        return get(0) instanceof Class cls && cls == Type.class;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (isTypeType() && obj instanceof Type type && type.isTypeType()) || super.equals(obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return isTypeType() ? 0 : super.hashCode();
     }
 
 }
