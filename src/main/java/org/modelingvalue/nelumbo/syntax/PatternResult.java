@@ -39,6 +39,7 @@ public final class PatternResult implements ParseExceptionHandler {
     private Set<RepetitionPattern>                endRepetitions;
     private Token                                 nextToken;
     private int                                   depth;
+    private boolean                               hasLeft;
 
     public PatternResult(Parser parser, ParseContext context) {
         this.parser = parser;
@@ -119,6 +120,20 @@ public final class PatternResult implements ParseExceptionHandler {
 
     public List<AstElement> elements() {
         return elements.toImmutable();
+    }
+
+    public boolean isEmpty() {
+        int size = elements.size();
+        return (hasLeft ? size - 1 : size) == 0;
+    }
+
+    public boolean hasLeft() {
+        return hasLeft;
+    }
+
+    public void left(AstElement element) {
+        elements.add(element);
+        hasLeft = true;
     }
 
     public void add(AstElement element) {

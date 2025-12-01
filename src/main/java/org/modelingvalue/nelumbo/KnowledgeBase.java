@@ -785,7 +785,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 ParseState found = state.transitions().get(sup);
                 if (found != null) {
                     PatternResult result = new PatternResult(parser, ctx);
-                    result.add(left);
+                    result.left(left);
                     return found.parse(token, result, Map.of(), true);
                 }
             }

@@ -149,11 +149,10 @@ public class ParseState {
         }
         if (result.functor() == null) {
             if (functor() == null) {
-                if (pre) {
-                    return null;
-                } else if (nrOfExceptions == result.exceptions().size()) {
+                if ((!pre || !result.isEmpty()) && nrOfExceptions == result.exceptions().size()) {
                     result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(result.context()), token));
                 }
+                return null;
             }
             result.endPostParse(functor(), token);
         }
