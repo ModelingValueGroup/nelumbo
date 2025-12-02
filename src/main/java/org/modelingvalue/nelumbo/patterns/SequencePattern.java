@@ -101,9 +101,6 @@ public class SequencePattern extends Pattern {
     public List<Type> argTypes(List<Type> types) {
         for (Pattern element : elements()) {
             types = element.argTypes(types);
-            if (types == null) {
-                return null;
-            }
         }
         return types;
     }

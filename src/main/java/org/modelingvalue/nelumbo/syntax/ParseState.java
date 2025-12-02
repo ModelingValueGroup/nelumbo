@@ -133,6 +133,8 @@ public class ParseState {
                 if (pre && group() != null) {
                     result.endPreParse(this, token);
                     return result;
+                } else if (!pre && token != null && outerEnd(token, result, result.context(), outerRepetitions) != null) {
+                    result.endPostParse(functor(), token);
                 } else if (node(token, result, innerRepetitions, pre) == null) {
                     break;
                 }
@@ -257,25 +259,28 @@ public class ParseState {
             }
             return next.parse(token.next(), result, repetitions, pre);
         }
-        if (!pre && repetitions != null && functor() != null) {
+        return null;
+
+    }
+
+    private PatternResult outerEnd(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions) throws ParseException {
+        if (functor() != null) {
             for (Entry<RepetitionPattern, ParseState> r : repetitions) {
-                if (r.getValue() != this && r.getValue().token(token, result, ctx, null, pre) != null) {
+                if (endRepetitions().contains(r.getKey()) && r.getValue().token(token, result, ctx, null, true) != null) {
                     return null;
                 }
             }
             Type type = functor().resultType();
             for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
                 for (Type sup : type.allSupers()) {
-                    next = pc.state().transitions().get(sup);
-                    if (next != null && next.token(token, result, ctx.outer(), null, pre) != null) {
-                        result.endPostParse(functor(), token);
+                    ParseState next = pc.state().transitions().get(sup);
+                    if (next != null && next.token(token, result, ctx.outer(), null, true) != null) {
                         return result;
                     }
                 }
             }
         }
         return null;
-
     }
 
     private static boolean isNumeric(TokenType type) {

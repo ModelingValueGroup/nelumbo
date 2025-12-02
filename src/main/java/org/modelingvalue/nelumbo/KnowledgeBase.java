@@ -299,7 +299,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            Node type = (Node) elements.get(0);
+                            Type type = (Type) elements.get(0);
                             ListNode roots = new ListNode(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
@@ -316,13 +316,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
                                         }
-                                        List<Type> argTypes = pattern.argTypes(List.of());
-                                        if (argTypes == null || type instanceof Variable var) {
-                                            // TODO
-                                            System.err.println("!!!!!!!!!!!!!! " + type + " ::= " + pattern);
-                                        } else {
-                                            roots = CURRENT.get().createFunctor((Type) type, roots, ast, constructor, pattern, argTypes);
-                                        }
+                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern);
                                         ast = pttrn = List.of();
                                         constructor = null;
                                         precedence = List.of();
@@ -437,8 +431,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return right;
     }
 
-    private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern, List<Type> args) throws ParseException {
+    private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
         boolean toLiteral = false, function = false;
+        List<Type> args = pattern.argTypes(List.of());
         if (pattern instanceof TokenTypePattern || pattern instanceof TokenTextPattern) {
             if (!Type.PREDICATE.isAssignableFrom(type)) {
                 type = type.literal();
