@@ -118,6 +118,10 @@ public class ParseState {
     }
 
     public PatternResult parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions, boolean pre) throws ParseException {
+        ParseContext ctx = result.context();
+        if (ctx.state() == this && ctx.token() == token) {
+            return null;
+        }
         if (pre && !startRepetitions().isEmpty() && !result.isEmpty()) {
             result.endPreParse(this, token);
             return result;
@@ -129,11 +133,11 @@ public class ParseState {
         int nrOfExceptions;
         do {
             nrOfExceptions = result.exceptions().size();
-            if (token(token, result, result.context(), innerRepetitions, pre) == null) {
+            if (token(token, result, ctx, innerRepetitions, pre) == null) {
                 if (pre && group() != null) {
                     result.endPreParse(this, token);
                     return result;
-                } else if (!pre && token != null && outerEnd(token, result, result.context(), outerRepetitions) != null) {
+                } else if (!pre && token != null && outerEnd(token, result, ctx, outerRepetitions) != null) {
                     result.endPostParse(functor(), token);
                 } else if (node(token, result, innerRepetitions, pre) == null) {
                     break;
@@ -152,7 +156,7 @@ public class ParseState {
         if (result.functor() == null) {
             if (functor() == null) {
                 if ((!pre || !result.isEmpty()) && nrOfExceptions == result.exceptions().size()) {
-                    result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(result.context()), token));
+                    result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(ctx), token));
                 }
                 return null;
             }
@@ -301,7 +305,7 @@ public class ParseState {
             if (transitions().get(Type.TYPE()) != null) {
                 inner = Integer.MAX_VALUE;
             }
-            Node node = result.parser().parseNode(token, ParseContext.of(this, group(), inner, result.context()));
+            Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner, result.context()));
             if (node != null) {
                 result.add(node);
                 for (Type sup : node.type().allSupers()) {
