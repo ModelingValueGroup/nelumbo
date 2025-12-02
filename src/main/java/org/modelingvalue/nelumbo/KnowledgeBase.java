@@ -61,18 +61,18 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final int                                                            MAX_LOGIC_MEMOIZ_D4  = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
     private static final int                                                            INITIAL_USAGE_COUNT  = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
+    //
+    private static final Pattern                                                        ROOTS                = r(s(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), t(NEWLINE)), false, null);
     private static final List<TokenType>                                                TOKEN_TYPES          = List.of(NAME, OPERATOR, STRING, SEMICOLON, SINGLEQUOTE);
     private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(Pattern::t).asList().add(n(Type.PATTERN, Integer.MAX_VALUE));
     private static final Pattern                                                        ALT_NO_COMMA         = a(PATTERNS_NO_COMMA.toArray(Pattern[]::new));
     private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(COMMA));
     private static final Pattern                                                        ALTERNATIVES         = a(PATTERNS.toArray(Pattern[]::new));
     private static final Pattern                                                        SEQUENCE             = r(ALTERNATIVES, true, null);
-    private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                               //
-            r(s(t("#"), t(NUMBER)), false, null),                                                                                                                                           //
+    private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                                  //
+            r(s(t("#"), t(NUMBER)), false, null),                                                                                                                                              //
             o(s(t("@"), r(t(NAME), true, t(".")))));
-
     private static final Pattern                                                        CONDITION            = s(n(Type.PREDICATE, 0), o(s(t("if"), n(Type.PREDICATE, 0))));
-    //
     private static final Pattern                                                        SINGLE               = s(n(Type.VARIABLE, 100), t("="), n(Type.NODE, 100));
     private static final Pattern                                                        BINDING              = s(t("("), r(SINGLE, false, t(",")), t(")"));
     private static final Pattern                                                        ALTERNATIVE          = a(t(".."), BINDING);
@@ -223,7 +223,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.PREDICATE, false);
                 register(equalsFunctor);
 
-                register(Functor.of(s(t(BEGINOFFILE), r(s(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), t(NEWLINE)), false, null), t(ENDOFFILE)), //
+                register(Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor) -> {
                             ListNode roots = new ListNode(List.of(), Type.ROOT.list());
                             for (Object arg : args) {
@@ -401,7 +401,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 register(Functor.of(s(n(Type.PREDICATE, 0)), //
                         Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)));
 
-                register(Functor.of(s(n(Type.ROOT, -200), t("::>"), r(a(n(Type.ROOT.list(), -200), n(Type.ROOT, -200)), true, t(","))), //
+                register(Functor.of(s(n(Type.ROOT, null), t("::>"), t("{"), ROOTS, t("}")), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             Node left = (Node) args[0];
                             ListNode roots = new ListNode(List.of(), Type.ROOT);
