@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -67,6 +68,12 @@ public class VariablePattern extends Pattern {
     @Override
     public List<Type> argTypes(List<Type> types) {
         return types.add(variable().type());
+    }
+
+    @Override
+    public Pattern setTypes(Function<Type, Type> typeFunction) {
+        Variable var = variable();
+        return set(0, new Variable(List.of(), typeFunction.apply(var.type()), var.name()));
     }
 
     @Override

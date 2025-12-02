@@ -228,8 +228,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             ListNode roots = new ListNode(List.of(), Type.ROOT.list());
                             for (Object arg : args) {
                                 Node e1 = (Node) arg;
-                                if (e1 instanceof ListNode) {
-                                    for (Node e2 : ((ListNode) e1).elements()) {
+                                if (e1 instanceof ListNode list) {
+                                    for (Node e2 : list.elements()) {
                                         roots = new ListNode(List.of(), roots, e2);
                                     }
                                 } else {
@@ -392,20 +392,18 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)));
 
                 register(Functor.of(s(n(Type.ROOT, null), t("::>"), t("{"), ROOTS, t("}")), //
-                        Type.ROOT.list(), false, (elements, args, functor) -> {
-                            Node left = (Node) args[0];
-                            ListNode roots = new ListNode(List.of(), Type.ROOT);
+                        Type.TRANSFORM, false, (elements, args, functor) -> {
+                            Node source = (Node) args[0];
+                            List<Node> targets = List.of();
                             for (Object arg : (List<Node>) args[1]) {
-                                Node e1 = (Node) arg;
-                                if (e1 instanceof ListNode) {
-                                    for (Node e2 : ((ListNode) e1).elements()) {
-                                        roots = new ListNode(List.of(), roots, transform(left, e2));
-                                    }
+                                Node e = (Node) arg;
+                                if (e instanceof ListNode list) {
+                                    targets = targets.addAll(list.elements());
                                 } else {
-                                    roots = new ListNode(List.of(), roots, transform(left, e1));
+                                    targets = targets.add(e);
                                 }
                             }
-                            return roots.setAstElements(roots.astElements().add(elements.last()));
+                            return new Transform(functor, elements, source, targets);
                         }));
 
                 register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
@@ -421,10 +419,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         });
         return this;
 
-    }
-
-    private Node transform(Node left, Node right) {
-        return right;
     }
 
     private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
