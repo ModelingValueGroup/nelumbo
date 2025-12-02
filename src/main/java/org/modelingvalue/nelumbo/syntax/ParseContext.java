@@ -20,18 +20,25 @@ public interface ParseContext {
 
     ParseState state();
 
+    Token token();
+
     int precedence();
 
     String group();
 
     ParseContext outer();
 
-    static ParseContext of(ParseState state, String group, int precedence, ParseContext outer) {
+    static ParseContext of(ParseState state, Token token, String group, int precedence, ParseContext outer) {
         return new ParseContext() {
 
             @Override
             public ParseState state() {
                 return state;
+            }
+
+            @Override
+            public Token token() {
+                return token;
             }
 
             @Override
