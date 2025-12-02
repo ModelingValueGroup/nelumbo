@@ -136,6 +136,10 @@ public class Type extends Node {
         super(TYPE(), List.of(), type, Set.of(), DEFAULT_GROUP);
     }
 
+    protected Type(Variable var) {
+        super(TYPE(), List.of(), var, Set.of(), DEFAULT_GROUP);
+    }
+
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
         super(TYPE(), elements, name, supers.asSet(), group);
     }
@@ -266,14 +270,14 @@ public class Type extends Node {
     @SuppressWarnings("unchecked")
     public String name() {
         Object type = get(0);
-        if (type instanceof Set) {
-            return ((Set<Type>) type).map(t -> t.name()).sorted().sequential().reduce("", (a, b) -> a + b);
-        }
-        if (type instanceof TokenType) {
-            return ((TokenType) type).name();
-        }
-        if (type instanceof Class) {
-            return ((Class<?>) type).getSimpleName();
+        if (type instanceof Set set) {
+            return ((Set<Type>) set).map(t -> t.name()).sorted().sequential().reduce("", (a, b) -> a + b);
+        } else if (type instanceof TokenType tt) {
+            return tt.name();
+        } else if (type instanceof Variable var) {
+            return var.name();
+        } else if (type instanceof Class cls) {
+            return cls.getSimpleName();
         }
         return (String) type;
     }

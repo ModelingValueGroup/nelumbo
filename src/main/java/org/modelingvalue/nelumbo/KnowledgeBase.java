@@ -293,7 +293,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            Type type = (Type) elements.get(0);
+                            AstElement node = elements.get(0);
+                            Type type = node instanceof Variable var ? new Type(var) : (Type) node;
                             ListNode roots = new ListNode(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
@@ -358,7 +359,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 register(Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            Type type = (Type) elements.get(0);
+                            AstElement node = elements.get(0);
+                            Type type = node instanceof Variable var ? new Type(var) : (Type) node;
                             ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
                             for (int i = 1; i < elements.size(); i++) {
                                 Token token = (Token) elements.get(i);

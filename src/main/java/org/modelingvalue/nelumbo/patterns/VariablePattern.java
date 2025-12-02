@@ -55,12 +55,18 @@ public class VariablePattern extends Pattern {
 
     @Override
     public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
-        throw new UnsupportedOperationException();
+        Type type = variable().type();
+        TokenType tokenType = type.tokenType();
+        if (tokenType != null) {
+            return t(tokenType).state(next, left, functor, branche);
+        } else {
+            return n(type, null).state(next, left, functor, branche);
+        }
     }
 
     @Override
     public List<Type> argTypes(List<Type> types) {
-        return null;
+        return types.add(variable().type());
     }
 
     @Override

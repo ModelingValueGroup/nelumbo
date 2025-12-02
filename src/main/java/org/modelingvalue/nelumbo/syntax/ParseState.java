@@ -297,7 +297,11 @@ public class ParseState {
             if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
                 token = result.addMerge(token, nextToken.prepend("-"));
             }
-            Node node = result.parser().parseNode(token, ParseContext.of(this, group(), innerPrecedence(), result.context()));
+            Integer inner = innerPrecedence();
+            if (transitions().get(Type.TYPE()) != null) {
+                inner = Integer.MAX_VALUE;
+            }
+            Node node = result.parser().parseNode(token, ParseContext.of(this, group(), inner, result.context()));
             if (node != null) {
                 result.add(node);
                 for (Type sup : node.type().allSupers()) {
