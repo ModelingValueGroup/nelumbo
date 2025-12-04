@@ -221,11 +221,14 @@ public class ParseState {
                 if (type == TokenType.NAME) {
                     Variable var = result.parser().variable(token);
                     if (var != null) {
-                        TokenType tt = var.type().tokenType();
-                        if (tt != null) {
-                            next = transitions().get(tt);
-                            if (next != null) {
+                        Type vt = var.type();
+                        TokenType tt = vt.tokenType();
+                        next = transitions().get(tt != null ? tt : vt);
+                        if (next != null) {
+                            if (tt != null) {
                                 element = var;
+                            } else {
+                                return null;
                             }
                         }
                     }
