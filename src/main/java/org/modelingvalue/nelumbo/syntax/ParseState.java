@@ -193,67 +193,62 @@ public class ParseState {
             return null;
         }
         AstElement element = null;
+        ParseState next = null;
+        TokenType type = token.type();
         String text = token.text();
-        ParseState next = transitions().get(text);
+        next = transitions().get(text);
         if (next != null) {
             element = token;
-        } else {
-            TokenType type = token.type();
-            if (isNumeric(type) && token.text().startsWith("-") && transitions().get(type) == null) {
-                String key = "-";
+        } else if (isNumeric(type) && token.text().startsWith("-") && transitions().get(type) == null) {
+            String key = "-";
+            next = transitions().get(key);
+            if (next != null) {
+                token = result.addSplit(token, token.split(1));
+                element = token;
+            }
+        } else if (type == TokenType.OPERATOR || type == TokenType.NAME) {
+            for (int i = text.length() - 1; i > 0; i--) {
+                String key = text.substring(0, i);
                 next = transitions().get(key);
                 if (next != null) {
-                    token = result.addSplit(token, token.split(1));
+                    token = result.addSplit(token, token.split(i));
                     element = token;
-                }
-            } else if (type == TokenType.OPERATOR || type == TokenType.NAME) {
-                for (int i = text.length() - 1; i > 0; i--) {
-                    String key = text.substring(0, i);
-                    next = transitions().get(key);
-                    if (next != null) {
-                        token = result.addSplit(token, token.split(i));
-                        element = token;
-                        break;
-                    }
+                    break;
                 }
             }
-            if (next == null) {
-                if (type == TokenType.NAME) {
-                    Variable var = result.parser().variable(token);
-                    if (var != null) {
-                        Type vt = var.type();
-                        TokenType tt = vt.tokenType();
-                        next = transitions().get(tt != null ? tt : vt);
-                        if (next != null) {
-                            if (tt != null) {
-                                element = var;
-                            } else {
-                                return null;
-                            }
+        }
+        if (next == null) {
+            next = transitions().get(TokenType.NEWLINE);
+            if (next != null) {
+                if (Pattern.isEndOfLine(token)) {
+                    for (Token prev = token.previousAll(); prev != token.previous(); prev = prev.previousAll()) {
+                        if (prev.type() == TokenType.NEWLINE) {
+                            element = prev;
+                            break;
                         }
                     }
+                    token = token.previous();
+                } else {
+                    next = null;
                 }
-                if (next == null) {
-                    next = transitions().get(type);
-                    if (next != null) {
-                        element = token;
-                    } else {
-                        next = transitions().get(TokenType.NEWLINE);
-                        if (next != null) {
-                            if (Pattern.isEndOfLine(token)) {
-                                for (Token prev = token.previousAll(); prev != token.previous(); prev = prev.previousAll()) {
-                                    if (prev.type() == TokenType.NEWLINE) {
-                                        element = prev;
-                                        break;
-                                    }
-                                }
-                                token = token.previous();
-                            } else {
-                                next = null;
-                            }
-                        }
-                    }
+            }
+        }
+        if (next == null && type == TokenType.NAME) {
+            Variable var = result.parser().variable(token);
+            if (var != null) {
+                TokenType tt = var.type().tokenType();
+                next = tt != null ? transitions().get(tt) : null;
+                if (next != null) {
+                    element = var;
+                } else {
+                    return null;
                 }
+            }
+        }
+        if (next == null) {
+            next = transitions().get(type);
+            if (next != null) {
+                element = token;
             }
         }
         if (next != null) {
@@ -305,12 +300,21 @@ public class ParseState {
                 token = result.addMerge(token, nextToken.prepend("-"));
             }
             Integer inner = innerPrecedence();
-            if (transitions().get(Type.TYPE()) != null) {
+            if (transitions().get(Type.TYPE()) != null || transitions().get(Type.VARIABLE) != null) {
                 inner = Integer.MAX_VALUE;
             }
             Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner, result.context()));
             if (node != null) {
                 result.add(node);
+                if (node instanceof Variable) {
+                    ParseState next = transitions().get(Type.VARIABLE);
+                    if (next != null) {
+                        if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                            node.setBranches(next.branches);
+                            return result;
+                        }
+                    }
+                }
                 for (Type sup : node.type().allSupers()) {
                     ParseState next = transitions().get(sup);
                     if (next != null) {
@@ -319,15 +323,6 @@ public class ParseState {
                             return result;
                         } else {
                             break;
-                        }
-                    }
-                }
-                if (node instanceof Variable) {
-                    ParseState next = transitions().get(Type.VARIABLE);
-                    if (next != null) {
-                        if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
-                            node.setBranches(next.branches);
-                            return result;
                         }
                     }
                 }

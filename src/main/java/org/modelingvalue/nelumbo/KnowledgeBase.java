@@ -286,9 +286,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 register(Functor.of(n(Type.TYPE(), Integer.MAX_VALUE), //
                         Type.PATTERN, false, (elements, args, functor) -> {
-                            Type type = (Type) args[0];
-                            TokenType tt = type.tokenType();
-                            return tt != null ? t(elements, tt) : n(elements, type, null);
+                            if (args[0] instanceof Variable var) {
+                                return v(elements, var);
+                            } else {
+                                Type type = (Type) args[0];
+                                TokenType tt = type.tokenType();
+                                return tt != null ? t(elements, tt) : n(elements, type, null);
+                            }
                         }));
 
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //

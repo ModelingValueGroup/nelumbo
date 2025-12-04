@@ -266,6 +266,9 @@ public class Type extends Node {
 
     public TokenType tokenType() {
         Object type = get(0);
+        if (type instanceof Variable var) {
+            type = var.type();
+        }
         return type instanceof TokenType ? ((TokenType) type) : null;
     }
 
