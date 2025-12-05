@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -44,7 +45,13 @@ public class TokenTextPattern extends Pattern {
     }
 
     public String tokenText() {
-        return (String) get(0);
+        Object val = get(0);
+        return val instanceof Variable var ? var.name() : (String) val;
+    }
+
+    public Variable variable() {
+        Object val = get(0);
+        return val instanceof Variable var ? var : null;
     }
 
     @Override

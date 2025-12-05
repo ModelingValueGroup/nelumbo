@@ -134,12 +134,12 @@ public class Type extends Node {
         super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group(supers));
     }
 
-    protected Type(TokenType type) {
+    public Type(TokenType type) {
         super(TYPE(), List.of(), type, Set.of(), DEFAULT_GROUP);
     }
 
-    protected Type(Variable var) {
-        super(TYPE(), List.of(), var, Set.of(), DEFAULT_GROUP);
+    public Type(Variable var) {
+        super(TYPE(), List.of(), var, Set.of(NODE), DEFAULT_GROUP);
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
@@ -267,7 +267,7 @@ public class Type extends Node {
     public TokenType tokenType() {
         Object type = get(0);
         if (type instanceof Variable var) {
-            type = var.type();
+            type = var.type().tokenType();
         }
         return type instanceof TokenType ? ((TokenType) type) : null;
     }
@@ -291,6 +291,11 @@ public class Type extends Node {
     public Class<? extends Node> clss() {
         Object type = get(0);
         return type instanceof Class clss ? clss : null;
+    }
+
+    public Variable variable() {
+        Object type = get(0);
+        return type instanceof Variable var ? var : null;
     }
 
     @Override

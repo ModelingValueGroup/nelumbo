@@ -162,7 +162,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private Functor addVariable(Variable var) throws ParseException {
-        return register(Functor.of(t(var.toString()), Type.VARIABLE, true, (elements, args, functor) -> {
+        String string = var.type().equals(Type.TYPE()) ? ("<" + var.name() + ">") : var.name();
+        return register(Functor.of(t(string), Type.VARIABLE, true, (elements, args, functor) -> {
             Variable result = var.setAstElements(elements);
             return result.setFunctor(functor);
         }));
@@ -286,13 +287,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 register(Functor.of(n(Type.TYPE(), Integer.MAX_VALUE), //
                         Type.PATTERN, false, (elements, args, functor) -> {
-                            if (args[0] instanceof Variable var) {
-                                return v(elements, var);
-                            } else {
-                                Type type = (Type) args[0];
-                                TokenType tt = type.tokenType();
-                                return tt != null ? t(elements, tt) : n(elements, type, null);
-                            }
+                            Type type = args[0] instanceof Variable var ? new Type(var) : (Type) args[0];
+                            TokenType tt = type.tokenType();
+                            return tt != null ? t(elements, tt) : n(elements, type, null);
                         }));
 
                 register(Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //

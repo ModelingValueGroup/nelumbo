@@ -233,7 +233,7 @@ public class ParseState {
                 }
             }
         }
-        if (next == null && type == TokenType.NAME) {
+        if (next == null && (type == TokenType.NAME || type == TokenType.TYPE)) {
             Variable var = result.parser().variable(token);
             if (var != null) {
                 TokenType tt = var.type().tokenType();

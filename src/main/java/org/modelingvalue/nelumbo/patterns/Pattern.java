@@ -96,7 +96,10 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern v(List<AstElement> ast, Variable var) {
-        return new VariablePattern(Type.PATTERN, ast, var);
+        Type type = var.type();
+        TokenType tt = type.tokenType();
+        return tt != null ? new TokenTextPattern(Type.PATTERN, ast, var) : //
+                new NodeTypePattern(Type.PATTERN, ast, new Type(var), null);
     }
 
     protected Pattern(Type type, List<AstElement> ast, Object... args) {

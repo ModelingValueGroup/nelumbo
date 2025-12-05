@@ -48,6 +48,10 @@ public class NodeTypePattern extends Pattern {
         return (Type) get(0);
     }
 
+    public Variable variable() {
+        return nodeType().variable();
+    }
+
     public Integer leftPrecedence() {
         Integer precedence = (Integer) get(1);
         return precedence != null ? precedence : Integer.MAX_VALUE;
