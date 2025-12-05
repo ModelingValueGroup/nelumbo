@@ -50,6 +50,7 @@ public class Type extends Node {
     public static final Type   FACT             = new Type(Fact.class, ROOT);
     public static final Type   PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.NODE);
     public static final Type   QUERY            = new Type(Query.class, Type.ROOT);
+    public static final Type   TRANSFORM        = new Type(Transform.class, Type.ROOT);
 
     public static List<Type> predefined() {
         return List.of(TYPE(), //
@@ -65,7 +66,8 @@ public class Type extends Node {
                 FUNCTOR, //
                 FACT, //
                 PATTERN, //
-                QUERY);
+                QUERY, //
+                TRANSFORM);
     }
 
     private static Type TYPE = null;
@@ -82,18 +84,21 @@ public class Type extends Node {
                 }
 
                 @Override
-                public int hashCode() {
-                    return 0;
+                public String group() {
+                    return DEFAULT_GROUP;
+                }
+
+                @Override
+                public Object[] toArray() {
+                    Object[] array = super.toArray();
+                    array[0] = this;
+                    array[3] = supers();
+                    return array;
                 }
 
                 @Override
                 public Set<Type> supers() {
-                    return Set.of();
-                }
-
-                @Override
-                public String group() {
-                    return DEFAULT_GROUP;
+                    return Set.of(Type.NODE);
                 }
             };
         }
@@ -106,7 +111,7 @@ public class Type extends Node {
     private List<Type> allSupers;
 
     private Type() {
-        super((Type) null, List.of(), Type.class, null, DEFAULT_GROUP);
+        super((Type) null, List.of(), Type.class, Set.of(), DEFAULT_GROUP);
     }
 
     private Type(Object[] array, Type declaration) {
@@ -131,6 +136,10 @@ public class Type extends Node {
 
     protected Type(TokenType type) {
         super(TYPE(), List.of(), type, Set.of(), DEFAULT_GROUP);
+    }
+
+    protected Type(Variable var) {
+        super(TYPE(), List.of(), var, Set.of(), DEFAULT_GROUP);
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
@@ -257,20 +266,23 @@ public class Type extends Node {
 
     public TokenType tokenType() {
         Object type = get(0);
+        if (type instanceof Variable var) {
+            type = var.type();
+        }
         return type instanceof TokenType ? ((TokenType) type) : null;
     }
 
     @SuppressWarnings("unchecked")
     public String name() {
         Object type = get(0);
-        if (type instanceof Set) {
-            return ((Set<Type>) type).map(t -> t.name()).sorted().sequential().reduce("", (a, b) -> a + b);
-        }
-        if (type instanceof TokenType) {
-            return ((TokenType) type).name();
-        }
-        if (type instanceof Class) {
-            return ((Class<?>) type).getSimpleName();
+        if (type instanceof Set set) {
+            return ((Set<Type>) set).map(t -> t.name()).sorted().sequential().reduce("", (a, b) -> a + b);
+        } else if (type instanceof TokenType tt) {
+            return tt.name();
+        } else if (type instanceof Variable var) {
+            return var.name();
+        } else if (type instanceof Class cls) {
+            return cls.getSimpleName();
         }
         return (String) type;
     }
@@ -331,6 +343,20 @@ public class Type extends Node {
     @Override
     protected Node typeForEquals() {
         return TYPE();
+    }
+
+    public boolean isTypeType() {
+        return get(0) instanceof Class cls && cls == Type.class;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (isTypeType() && obj instanceof Type type && type.isTypeType()) || super.equals(obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return isTypeType() ? 0 : super.hashCode();
     }
 
 }

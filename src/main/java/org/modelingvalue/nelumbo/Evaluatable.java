@@ -17,10 +17,10 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 
-public interface Evaluatable {
+public interface Evaluatable extends AstElement {
 
-    void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException;
+    void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException;
 
 }

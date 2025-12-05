@@ -26,7 +26,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Rule extends Node implements Evaluatable {
@@ -137,7 +137,7 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    public void evaluate(KnowledgeBase knowledgeBase, ParserResult result) throws ParseException {
+    public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
         knowledgeBase.addRule(this);
     }
 

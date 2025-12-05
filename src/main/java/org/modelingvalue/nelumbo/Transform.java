@@ -19,49 +19,38 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 
-public final class Fact extends Node implements Evaluatable {
+public final class Transform extends Node {
     @Serial
-    private static final long serialVersionUID = 6226473785860814115L;
+    private static final long serialVersionUID = -5542746717620873208L;
 
-    public Fact(Functor functor, List<AstElement> elements, Object... args) {
+    public Transform(Functor functor, List<AstElement> elements, Object... args) throws ParseException {
         super(functor, elements, args);
     }
 
-    private Fact(Object[] array, Fact declaration) {
+    private Transform(Object[] array, Transform declaration) {
         super(array, declaration);
     }
 
     @Override
-    protected Fact struct(Object[] array, Node declaration) {
-        return new Fact(array, (Fact) declaration);
+    protected Transform struct(Object[] array, Node declaration) {
+        return new Transform(array, (Transform) declaration);
     }
 
     @Override
-    public Fact set(int i, Object... a) {
-        return (Fact) super.set(i, a);
+    public Transform set(int i, Object... a) {
+        return (Transform) super.set(i, a);
     }
 
-    public Predicate predicate() {
-        return (Predicate) get(0);
+    public Node source() {
+        return (Node) get(0);
     }
 
-    @Override
-    public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
-        Predicate predicate = predicate();
-        if (!predicate.isRelation()) {
-            handler.addException(new ParseException("Fact " + predicate + " is not a relation.", predicate));
-            return;
-        }
-        if (!predicate.isFullyBound()) {
-            handler.addException(new ParseException("Fact " + predicate + " has variables.", predicate));
-            return;
-        }
-        knowledgeBase.addFact(predicate);
+    @SuppressWarnings("unchecked")
+    public List<Node> targets() {
+        return (List<Node>) get(1);
     }
 
 }

@@ -54,3 +54,11 @@ jobs:
                     path: docs/site
                     if-no-files-found: error
                     retention-days: 30
+                    
+            -   name: "upload-fat-jar"
+                uses: actions/upload-artifact@v5
+                with:
+                    name: fatjar
+                    path: build/libs/nelumbo*all.jar
+                    if-no-files-found: error
+                    retention-days: 30

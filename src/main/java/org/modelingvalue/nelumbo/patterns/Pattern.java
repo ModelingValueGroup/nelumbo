@@ -61,6 +61,10 @@ public abstract class Pattern extends Node {
         return t(List.of(), tokenType);
     }
 
+    public static Pattern v(Variable var) {
+        return v(List.of(), var);
+    }
+
     public static Pattern a(List<AstElement> ast, Pattern... options) {
         return new AlternationPattern(Type.PATTERN, ast, List.of(options));
     }
@@ -89,6 +93,10 @@ public abstract class Pattern extends Node {
 
     public static Pattern t(List<AstElement> ast, TokenType tokenType) {
         return new TokenTypePattern(Type.PATTERN, ast, tokenType);
+    }
+
+    public static Pattern v(List<AstElement> ast, Variable var) {
+        return new VariablePattern(Type.PATTERN, ast, var);
     }
 
     protected Pattern(Type type, List<AstElement> ast, Object... args) {
@@ -170,16 +178,21 @@ public abstract class Pattern extends Node {
                     if (post == null && isEndOfLine(token)) {
                         post = pre.transitions().get(TokenType.NEWLINE);
                     }
-                } else {
-                    Type type = ((Node) element).type();
+                } else if (element instanceof Node node) {
+                    Type type = node.type();
                     for (Type sup : type.allSupers()) {
                         post = pre.transitions().get(sup);
                         if (post != null) {
                             break;
                         }
                     }
-                    if (post == null && element instanceof Variable) {
-                        post = pre.transitions().get(Type.VARIABLE);
+                    if (post == null && node instanceof Variable) {
+                        TokenType tt = type.tokenType();
+                        if (tt != null) {
+                            post = pre.transitions().get(tt);
+                        } else {
+                            post = pre.transitions().get(Type.VARIABLE);
+                        }
                     }
                 }
                 assert branche != null;
@@ -207,7 +220,7 @@ public abstract class Pattern extends Node {
     }
 
     public static boolean isEndOfLine(Token token) {
-        return token.type() == TokenType.ENDOFFILE || token.line() > token.previous().line();
+        return token.type() == TokenType.ENDOFFILE || (token.previous() != null && token.line() > token.previous().line());
     }
 
     protected void addText(StringBuffer sb, TokenType[] previous, String text) {

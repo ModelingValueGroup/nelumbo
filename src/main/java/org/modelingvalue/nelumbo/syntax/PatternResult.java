@@ -30,6 +30,7 @@ public final class PatternResult implements ParseExceptionHandler {
 
     private final MutableList<AstElement>         elements;
     private final Parser                          parser;
+    private final ParseContext                    context;
     private final MutableList<Pair<Token, Token>> splitted;
     private final MutableList<Pair<Token, Token>> merged;
 
@@ -38,9 +39,11 @@ public final class PatternResult implements ParseExceptionHandler {
     private Set<RepetitionPattern>                endRepetitions;
     private Token                                 nextToken;
     private int                                   depth;
+    private boolean                               hasLeft;
 
-    public PatternResult(Parser parser) {
+    public PatternResult(Parser parser, ParseContext context) {
         this.parser = parser;
+        this.context = context;
         elements = MutableList.of(List.of());
         splitted = MutableList.of(List.of());
         merged = MutableList.of(List.of());
@@ -59,6 +62,10 @@ public final class PatternResult implements ParseExceptionHandler {
 
     public Parser parser() {
         return parser;
+    }
+
+    public ParseContext context() {
+        return context;
     }
 
     public Functor functor() {
@@ -95,20 +102,38 @@ public final class PatternResult implements ParseExceptionHandler {
         this.nextToken = nextToken;
     }
 
+    public void clearDepth() {
+        depth = 0;
+    }
+
     public void countDepth() {
         if (depth > 0) {
             depth++;
         }
     }
 
-    public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken, int depth) {
+    public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken, int i) {
         this.endRepetitions = endRepetitions;
         this.nextToken = nextToken;
-        this.depth += depth;
+        this.depth += i;
     }
 
     public List<AstElement> elements() {
         return elements.toImmutable();
+    }
+
+    public boolean isEmpty() {
+        int size = elements.size();
+        return (hasLeft ? size - 1 : size) == 0;
+    }
+
+    public boolean hasLeft() {
+        return hasLeft;
+    }
+
+    public void left(AstElement element) {
+        elements.add(element);
+        hasLeft = true;
     }
 
     public void add(AstElement element) {
@@ -120,7 +145,7 @@ public final class PatternResult implements ParseExceptionHandler {
         }
     }
 
-    public Node postParse(Parser parser) throws ParseException {
+    public Node postParse(ParseContext ctx) throws ParseException {
         for (Pair<Token, Token> split : splitted) {
             split.a().connect(split.b());
         }
@@ -147,6 +172,11 @@ public final class PatternResult implements ParseExceptionHandler {
     @Override
     public void addException(ParseException exception) throws ParseException {
         parser.addException(exception);
+    }
+
+    @Override
+    public List<ParseException> exceptions() {
+        return parser.exceptions();
     }
 
 }

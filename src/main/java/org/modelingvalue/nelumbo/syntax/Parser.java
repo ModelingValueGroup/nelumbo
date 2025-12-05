@@ -24,6 +24,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public final class Parser implements ParseExceptionHandler {
@@ -73,15 +74,16 @@ public final class Parser implements ParseExceptionHandler {
 
     public ParserResult parseEvaluate() throws ParseException {
         ParserResult parserResult = parse(new ParserResult(true), false);
-        // parserResult.print();
         parserResult.evaluate();
         return parserResult;
     }
 
-    public ParserResult parseMutiple() throws ParseException {
-        ParserResult parserResult = parse(new ParserResult(true), true);
-        parserResult.evaluate();
-        return parserResult;
+    public ParserResult parseMutipleNonThrowing() {
+        try {
+            return parse(new ParserResult(false), true);
+        } catch (ParseException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private ParserResult parse(ParserResult result, boolean mutiple) throws ParseException {
@@ -89,12 +91,12 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            Node node = parseNode(token, Integer.MIN_VALUE, Type.TOP_GROUP);
+            Node node = parseNode(token, ParseContext.of(null, null, Type.TOP_GROUP, Integer.MIN_VALUE, null));
             if (node != null) {
                 result.setRoot(node);
                 token = node.nextToken();
                 if (token != null) {
-                    addException(new ParseException("Unexpected token " + token.text() + " after end of input", token));
+                    addException(new ParseException("Unexpected token " + token + " after end of input", token));
                 }
             }
             return result;
@@ -104,22 +106,22 @@ public final class Parser implements ParseExceptionHandler {
         }
     }
 
-    public Node parseNode(Token token, int precedence, String group) throws ParseException {
-        PatternResult result = preParse(token, group, null);
+    public Node parseNode(Token token, ParseContext ctx) throws ParseException {
+        PatternResult result = preParse(token, ctx, null);
         if (result == null) {
-            addException(new ParseException("No syntax pattern found for " + token.text(), token));
+            addException(new ParseException("No syntax pattern found for " + token, token));
             return null;
         }
-        Node left = result.postParse(this);
-        if (left != null && precedence < Integer.MAX_VALUE) {
+        Node left = result.postParse(ctx);
+        if (left != null && ctx.precedence() < Integer.MAX_VALUE) {
             token = left.nextToken();
             if (token != null) {
-                result = preParse(token, group, left);
+                result = preParse(token, ctx, left);
                 while (result != null) {
-                    if (precedence >= result.leftPrecedence()) {
+                    if (ctx.precedence() >= result.leftPrecedence()) {
                         return left;
                     }
-                    left = result.postParse(this);
+                    left = result.postParse(ctx);
                     if (left == null) {
                         break;
                     }
@@ -127,15 +129,19 @@ public final class Parser implements ParseExceptionHandler {
                     if (token == null) {
                         return left;
                     }
-                    result = preParse(token, group, left);
+                    result = preParse(token, ctx, left);
                 }
             }
         }
         return left;
     }
 
-    public PatternResult preParse(Token token, String group, Node left) throws ParseException {
-        return knowledgeBase.preParse(token, group, left, this);
+    public Variable variable(Token token) throws ParseException {
+        return knowledgeBase.variable(token, this);
+    }
+
+    public PatternResult preParse(Token token, ParseContext ctx, Node left) throws ParseException {
+        return knowledgeBase.preParse(token, ctx, left, this);
     }
 
     public KnowledgeBase knowledgeBase() {
@@ -145,6 +151,11 @@ public final class Parser implements ParseExceptionHandler {
     @Override
     public void addException(ParseException exception) throws ParseException {
         result.addException(exception);
+    }
+
+    @Override
+    public List<ParseException> exceptions() {
+        return result.exceptions();
     }
 
 }

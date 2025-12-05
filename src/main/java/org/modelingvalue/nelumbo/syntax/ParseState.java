@@ -22,6 +22,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
@@ -117,7 +118,11 @@ public class ParseState {
     }
 
     public PatternResult parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions, boolean pre) throws ParseException {
-        if (pre && !startRepetitions().isEmpty()) {
+        ParseContext ctx = result.context();
+        if (ctx.state() == this && ctx.token() == token) {
+            return null;
+        }
+        if (pre && !startRepetitions().isEmpty() && !result.isEmpty()) {
             result.endPreParse(this, token);
             return result;
         }
@@ -125,11 +130,15 @@ public class ParseState {
         for (RepetitionPattern start : startRepetitions()) {
             innerRepetitions = innerRepetitions.put(start, this);
         }
+        int nrOfExceptions;
         do {
-            if (token(token, result, innerRepetitions, pre) == null) {
+            nrOfExceptions = result.exceptions().size();
+            if (token(token, result, ctx, innerRepetitions, pre) == null) {
                 if (pre && group() != null) {
                     result.endPreParse(this, token);
                     return result;
+                } else if (!pre && token != null && outerEnd(token, result, ctx, outerRepetitions) != null) {
+                    result.endPostParse(functor(), token);
                 } else if (node(token, result, innerRepetitions, pre) == null) {
                     break;
                 }
@@ -144,76 +153,136 @@ public class ParseState {
             result.endRepetition(endRepetitions(), token, 1);
             return result;
         }
-        if (functor() == null) {
-            if (pre) {
+        if (result.functor() == null) {
+            if (functor() == null) {
+                if ((!pre || !result.isEmpty()) && nrOfExceptions == result.exceptions().size()) {
+                    result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(ctx), token));
+                }
                 return null;
-            } else {
-                result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(), token));
             }
+            result.endPostParse(functor(), token);
         }
-        result.endPostParse(functor(), token);
         return result;
     }
 
-    private String expectedTokens() {
-        return transitions().toKeys().filter(k -> k instanceof String || k instanceof TokenType).//
-                map(o -> o instanceof String ? ("\"" + o + "\"") : o.toString()).//
-                reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
+    private String expectedTokens(ParseContext ctx) {
+        return outerStates(ctx).add(this).flatMap(s -> s.transitions().toKeys()).//
+                filter(k -> k instanceof String || k instanceof TokenType).//
+                map(o -> o instanceof String ? ("'" + o + "'") : o.toString()).//
+                reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b);
     }
 
-    private PatternResult token(Token token, PatternResult result, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
-        if (transitions().isEmpty()) {
-            return null;
-        }
-        Object input = null;
-        String text = token.text();
-        ParseState next = transitions().get(text);
-        if (next != null) {
-            input = text;
-        } else {
-            TokenType type = token.type();
-            if (isNumeric(type) && token.text().startsWith("-") && transitions().get(type) == null) {
-                String key = "-";
-                next = transitions().get(key);
-                if (next != null) {
-                    input = key;
-                    token = result.addSplit(token, token.split(1));
-                }
-            } else if (type == TokenType.OPERATOR || type == TokenType.NAME) {
-                for (int i = text.length() - 1; i > 0; i--) {
-                    String key = text.substring(0, i);
-                    next = transitions().get(key);
+    private Set<ParseState> outerStates(ParseContext ctx) {
+        Set<ParseState> result = Set.of();
+        if (functor() != null) {
+            Type type = functor().resultType();
+            for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
+                for (Type sup : type.allSupers()) {
+                    ParseState next = pc.state().transitions().get(sup);
                     if (next != null) {
-                        input = key;
-                        token = result.addSplit(token, token.split(i));
-                        break;
+                        result = result.add(next);
                     }
                 }
             }
-            if (next == null) {
-                next = transitions().get(type);
+        }
+        return result;
+    }
+
+    private PatternResult token(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
+        if (transitions().isEmpty()) {
+            return null;
+        }
+        AstElement element = null;
+        ParseState next = null;
+        TokenType type = token.type();
+        String text = token.text();
+        next = transitions().get(text);
+        if (next != null) {
+            element = token;
+        } else if (isNumeric(type) && token.text().startsWith("-") && transitions().get(type) == null) {
+            String key = "-";
+            next = transitions().get(key);
+            if (next != null) {
+                token = result.addSplit(token, token.split(1));
+                element = token;
+            }
+        } else if (type == TokenType.OPERATOR || type == TokenType.NAME) {
+            for (int i = text.length() - 1; i > 0; i--) {
+                String key = text.substring(0, i);
+                next = transitions().get(key);
                 if (next != null) {
-                    input = type;
-                } else {
-                    next = transitions().get(TokenType.NEWLINE);
-                    if (next != null && !Pattern.isEndOfLine(token)) {
-                        next = null;
-                    }
+                    token = result.addSplit(token, token.split(i));
+                    element = token;
+                    break;
                 }
+            }
+        }
+        if (next == null) {
+            next = transitions().get(TokenType.NEWLINE);
+            if (next != null) {
+                if (Pattern.isEndOfLine(token)) {
+                    for (Token prev = token.previousAll(); prev != token.previous(); prev = prev.previousAll()) {
+                        if (prev.type() == TokenType.NEWLINE) {
+                            element = prev;
+                            break;
+                        }
+                    }
+                    token = token.previous();
+                } else {
+                    next = null;
+                }
+            }
+        }
+        if (next == null && type == TokenType.NAME) {
+            Variable var = result.parser().variable(token);
+            if (var != null) {
+                TokenType tt = var.type().tokenType();
+                next = tt != null ? transitions().get(tt) : null;
+                if (next != null) {
+                    element = var;
+                } else {
+                    return null;
+                }
+            }
+        }
+        if (next == null) {
+            next = transitions().get(type);
+            if (next != null) {
+                element = token;
             }
         }
         if (next != null) {
             if (repetitions == null) {
                 return result;
             }
-            if (input != null) {
-                result.add(token);
-                token.setBranches(next.branches);
+            if (element != null) {
+                result.add(element);
+                element.setBranches(next.branches);
             }
             return next.parse(token.next(), result, repetitions, pre);
         }
         return null;
 
+    }
+
+    private PatternResult outerEnd(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions) throws ParseException {
+        if (functor() != null) {
+            for (Entry<RepetitionPattern, ParseState> r : repetitions) {
+                if (endRepetitions().contains(r.getKey()) && r.getValue().token(token, result, ctx, null, true) != null) {
+                    return null;
+                }
+            }
+            Type type = functor().resultType();
+            for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
+                for (Type sup : type.allSupers()) {
+                    ParseState next = pc.state().transitions().get(sup);
+                    if (next != null && next.token(token, result, ctx.outer(), null, true) != null) {
+                        return result;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean isNumeric(TokenType type) {
@@ -224,36 +293,53 @@ public class ParseState {
         if (group() == null) {
             return null;
         }
-        Token nextToken = token.next();
-        if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
-            token = result.addMerge(token, nextToken.prepend("-"));
-        }
-        Node node = result.parser().parseNode(token, innerPrecedence(), group());
-        if (node != null) {
-            result.add(node);
-            for (Type sup : node.type().allSupers()) {
-                ParseState next = transitions().get(sup);
-                if (next != null) {
-                    if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
-                        node.setBranches(next.branches);
-                        return result;
-                    } else {
-                        break;
+        while (true) {
+            int nrOfExceptions = result.exceptions().size();
+            Token nextToken = token.next();
+            if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
+                token = result.addMerge(token, nextToken.prepend("-"));
+            }
+            Integer inner = innerPrecedence();
+            if (transitions().get(Type.TYPE()) != null || transitions().get(Type.VARIABLE) != null) {
+                inner = Integer.MAX_VALUE;
+            }
+            Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner, result.context()));
+            if (node != null) {
+                result.add(node);
+                if (node instanceof Variable) {
+                    ParseState next = transitions().get(Type.VARIABLE);
+                    if (next != null) {
+                        if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                            node.setBranches(next.branches);
+                            return result;
+                        }
                     }
                 }
-            }
-            if (node instanceof Variable) {
-                ParseState next = transitions().get(Type.VARIABLE);
-                if (next != null) {
-                    if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
-                        node.setBranches(next.branches);
-                        return result;
+                for (Type sup : node.type().allSupers()) {
+                    ParseState next = transitions().get(sup);
+                    if (next != null) {
+                        if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                            node.setBranches(next.branches);
+                            return result;
+                        } else {
+                            break;
+                        }
                     }
                 }
+                result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
+                return result;
+            } else if (token.type() != TokenType.ENDOFFILE && Pattern.isEndOfLine(token) && result.exceptions().size() > nrOfExceptions) {
+                token = token.next();
+                while (!Pattern.isEndOfLine(token)) {
+                    token = token.next();
+                }
+                if (token.type() == TokenType.ENDOFFILE) {
+                    return null;
+                }
+            } else {
+                return null;
             }
-            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
         }
-        return result;
     }
 
     private String expectedTypes() {

@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -24,83 +25,65 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
-import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class TokenTypePattern extends Pattern {
+public class VariablePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 2405616043878166113L;
 
-    public TokenTypePattern(Type type, List<AstElement> elements, Object... args) {
+    public VariablePattern(Type type, List<AstElement> elements, Object... args) {
         super(type, elements, args);
     }
 
-    protected TokenTypePattern(Object[] args, TokenTypePattern declaration) {
+    protected VariablePattern(Object[] args, VariablePattern declaration) {
         super(args, declaration);
     }
 
     @Override
-    protected TokenTypePattern struct(Object[] array, Node declaration) {
-        return new TokenTypePattern(array, (TokenTypePattern) declaration);
+    protected VariablePattern struct(Object[] array, Node declaration) {
+        return new VariablePattern(array, (VariablePattern) declaration);
     }
 
-    public TokenType tokenType() {
-        return (TokenType) get(0);
+    public Variable variable() {
+        return (Variable) get(0);
     }
 
     @Override
     public String toString(TokenType[] previous) {
-        return "<" + tokenType() + ">";
+        Variable var = variable();
+        return var.name();
     }
 
     @Override
     public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
-        return new ParseState(tokenType(), next.merge(new ParseState(functor, branche)));
+        Type type = variable().type();
+        TokenType tokenType = type.tokenType();
+        if (tokenType != null) {
+            return t(tokenType).state(next, left, functor, branche);
+        } else {
+            return n(type, null).state(next, left, functor, branche);
+        }
     }
 
     @Override
     public List<Type> argTypes(List<Type> types) {
-        TokenType type = tokenType();
-        return !isEmpty(type) ? types.add(Type.STRING) : types;
+        return types.add(variable().type());
+    }
+
+    @Override
+    public Pattern setTypes(Function<Type, Type> typeFunction) {
+        Variable var = variable();
+        return set(0, new Variable(List.of(), typeFunction.apply(var.type()), var.name()));
     }
 
     @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        TokenType type = tokenType();
-        if (!isEmpty(type)) {
-            if (it.element instanceof Variable var) {
-                args = args.add(var);
-            } else {
-                args = args.add(((Token) it.element).text());
-            }
-        }
-        it.next();
-        return args;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
-        TokenType type = tokenType();
-        if (!isEmpty(type)) {
-            Object val = args.get(ai);
-            if (val instanceof String text && type.pattern().matcher(text).matches()) {
-                addText(sb, previous, text);
-                return ai + 1;
-            } else {
-                String text = val != null ? val.toString() : null;
-                if (text != null && type.pattern().matcher(text).matches()) {
-                    addText(sb, previous, text);
-                    return ai + 1;
-                } else {
-                    return -1;
-                }
-            }
-        }
-        return ai;
-    }
-
-    private static boolean isEmpty(TokenType type) {
-        return type == TokenType.NEWLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE;
+        throw new UnsupportedOperationException();
     }
 
 }

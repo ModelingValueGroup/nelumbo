@@ -18,7 +18,6 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 
 public class ParseException extends Exception {
@@ -36,11 +35,27 @@ public class ParseException extends Exception {
     }
 
     public ParseException(Throwable cause, String s, AstElement... elements) {
-        this(cause, s, elements[0].firstToken(), elements[elements.length - 1].lastToken());
+        this(cause, s, firstToken(elements), lastToken(elements));
     }
 
-    public ParseException(String s, List<Token> tokens) {
-        this(null, s, tokens.first(), tokens.last());
+    private static Token lastToken(AstElement... elements) {
+        Token lastToken = elements[elements.length - 1].lastToken();
+        if (lastToken != null) {
+            for (String fixed = lastToken.type().fixed(); fixed != null && fixed.isEmpty() && lastToken.previous() != null; fixed = lastToken.type().fixed()) {
+                lastToken = lastToken.previous();
+            }
+        }
+        return lastToken;
+    }
+
+    private static Token firstToken(AstElement... elements) {
+        Token firstToken = elements[0].firstToken();
+        if (firstToken != null) {
+            for (String fixed = firstToken.type().fixed(); fixed != null && fixed.isEmpty() && firstToken.next() != null; fixed = firstToken.type().fixed()) {
+                firstToken = firstToken.next();
+            }
+        }
+        return firstToken;
     }
 
     private ParseException(Throwable cause, String message, Token firstToken, Token lastToken) {
@@ -62,7 +77,7 @@ public class ParseException extends Exception {
         this(cause, message, 0, 0, 0, 0, fileName);
     }
 
-    public ParseException(Throwable cause, String message, int line, int position, int index, int length, String fileName) {
+    private ParseException(Throwable cause, String message, int line, int position, int index, int length, String fileName) {
         super(message, cause);
         this.line = line;
         this.position = position;

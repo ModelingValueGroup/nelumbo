@@ -14,54 +14,54 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.syntax;
 
-import java.io.Serial;
+public interface ParseContext {
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.logic.Predicate;
-import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
+    ParseState state();
 
-public final class Fact extends Node implements Evaluatable {
-    @Serial
-    private static final long serialVersionUID = 6226473785860814115L;
+    Token token();
 
-    public Fact(Functor functor, List<AstElement> elements, Object... args) {
-        super(functor, elements, args);
-    }
+    int precedence();
 
-    private Fact(Object[] array, Fact declaration) {
-        super(array, declaration);
-    }
+    String group();
 
-    @Override
-    protected Fact struct(Object[] array, Node declaration) {
-        return new Fact(array, (Fact) declaration);
-    }
+    ParseContext outer();
 
-    @Override
-    public Fact set(int i, Object... a) {
-        return (Fact) super.set(i, a);
-    }
+    static ParseContext of(ParseState state, Token token, String group, int precedence, ParseContext outer) {
+        return new ParseContext() {
 
-    public Predicate predicate() {
-        return (Predicate) get(0);
-    }
+            @Override
+            public ParseState state() {
+                return state;
+            }
 
-    @Override
-    public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
-        Predicate predicate = predicate();
-        if (!predicate.isRelation()) {
-            handler.addException(new ParseException("Fact " + predicate + " is not a relation.", predicate));
-            return;
-        }
-        if (!predicate.isFullyBound()) {
-            handler.addException(new ParseException("Fact " + predicate + " has variables.", predicate));
-            return;
-        }
-        knowledgeBase.addFact(predicate);
+            @Override
+            public Token token() {
+                return token;
+            }
+
+            @Override
+            public int precedence() {
+                return precedence;
+            }
+
+            @Override
+            public String group() {
+                return group;
+            }
+
+            @Override
+            public ParseContext outer() {
+                return outer;
+            }
+
+            @Override
+            public String toString() {
+                return (state == null ? "" : state + " ") + precedence + " " + group + (outer == null ? "" : " " + outer);
+            }
+
+        };
     }
 
 }

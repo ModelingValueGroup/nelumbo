@@ -26,6 +26,7 @@ import java.io.Serial;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
@@ -41,6 +42,7 @@ import javax.swing.text.StyledEditorKit;
 import javax.swing.text.TextAction;
 import javax.swing.text.ViewFactory;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
@@ -60,6 +62,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private final static String                  DECREASE           = "DECREASE";
 
     private final static DefaultHighlightPainter redPainter         = new DefaultHighlightPainter(new Color(0xffaaaa));
+    private final static DefaultHighlightPainter greenPainter       = new DefaultHighlightPainter(new Color(0xaaffaa));
 
     /**
      * Defines a color scheme for a token type with foreground and background colors,
@@ -330,7 +333,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                 Parser.parse(Integer.class, "integers.nl");
                 Parser.parse(org.modelingvalue.nelumbo.strings.String.class, "strings.nl");
             } catch (ParseException e) {
-                setMessagesAsError(e.getMessage());
+                setMessages(e.getMessage());
             }
         }).run(this);
     }
@@ -395,30 +398,14 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
     }
 
-    private record ExecuteResult(TokenizerResult tokenizerResult, ParserResult parserResult, ParseException pe) {
-        public ExecuteResult(TokenizerResult tokenizerResult, ParserResult parserResult) {
-            this(tokenizerResult, parserResult, null);
-        }
-
-        public ExecuteResult(TokenizerResult tokenizerResult, ParseException pe) {
-            this(tokenizerResult, null, pe);
-        }
-    }
-
     private void execute() {
         prepareForExecute();
         String text = textPane.getText();
         Tokenizer tokenizer = new Tokenizer(text, EDITOR_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
+        ParserResult result = new Parser(tokenizerResult).parseMutipleNonThrowing();
         showColors(textPane, tokenizerResult);
-        ExecuteResult executeResult;
-        try {
-            executeResult = new ExecuteResult(tokenizerResult, new Parser(tokenizerResult).parseMutiple());
-        } catch (ParseException pe) {
-            executeResult = new ExecuteResult(tokenizerResult, pe);
-        }
-        showColors(textPane, executeResult.tokenizerResult());
-        showResults(executeResult);
+        showResults(result);
         saveTextContent(text);
     }
 
@@ -432,11 +419,12 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void prepareForExecute() {
         knowledgeBase.init();
         textPane.getHighlighter().removeAllHighlights();
+        messagesPane.getHighlighter().removeAllHighlights();
         StyledDocument doc = textPane.getStyledDocument();
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
         doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
-        messagesPane.setText("...");
+        messagesPane.setText("");
     }
 
     private void showColors(JTextPane pane, TokenizerResult tokenizerResult) {
@@ -451,43 +439,74 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
     }
 
-    private void showResults(ExecuteResult executeResult) {
-        if (executeResult.pe == null) {
+    private record Highlight(int index, int length, String error) {
+    }
+
+    private void showResults(ParserResult result) {
+        List<ParseException> exceptions = result.exceptions();
+        if (exceptions.isEmpty()) {
+            ParserResult throwing = new ParserResult(true);
             StringBuilder messages = new StringBuilder();
-            int prevLine = 0;
-            int nextLine;
-            for (Node root : executeResult.parserResult.roots()) {
-                if (root instanceof Query query) {
-                    nextLine = query.lastToken().line();
-                    messages.append(emptyLines(nextLine - prevLine)).append(query.inferResult().toString()).append("\n");
-                    prevLine = ++nextLine;
+            int index = 0, prevLine = 0, nextLine;
+            LinkedList<Highlight> messagesHighlights = new LinkedList<>();
+            for (Node root : result.roots()) {
+                if (root instanceof Evaluatable eval) {
+                    ParseException pe = null;
+                    String mess = null;
+                    try {
+                        eval.evaluate(knowledgeBase, throwing);
+                    } catch (ParseException exc) {
+                        pe = exc;
+                        mess = pe.getShortMessage();
+                    }
+                    if (eval instanceof Query query && query.inferResult() != null) {
+                        mess = query.inferResult().toString();
+                    }
+                    if (mess != null) {
+                        nextLine = eval.lastToken().line();
+                        messages.append(emptyLines(nextLine - prevLine)).append(mess).append("\n");
+                        index += nextLine - prevLine;
+                        if (pe != null && eval instanceof Query query && query.inferResult() != null) {
+                            messagesHighlights.add(new Highlight(index, mess.length(), pe.getShortMessage()));
+                        }
+                        if (pe != null) {
+                            setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage(), redPainter);
+                        }
+                        prevLine = ++nextLine;
+                        index += mess.length() + 1;
+                        setMessages(messages.toString());
+                        showMessageColors();
+                        for (Highlight h : messagesHighlights) {
+                            setHighlight(messagesPane, h.index, h.length, h.error, greenPainter);
+                        }
+                    }
                 }
             }
-            setMessages(messages.toString());
-            showMessageColors();
         } else {
-            ParseException pe = executeResult.pe();
-            setMessagesAsError((pe.fileName().equals(EDITOR_FILE_NAME) ? emptyLines(pe.line()) : "") + pe.getShortMessage());
-            try {
-                textPane.getHighlighter().addHighlight(pe.index(), pe.index() + pe.length(), redPainter);
-            } catch (BadLocationException ble) {
-                setMessagesAsError(pe.getShortMessage());
+            StringBuilder messages = new StringBuilder();
+            int prevLine = 0, nextLine;
+            for (ParseException pe : exceptions) {
+                nextLine = pe.line();
+                messages.append(emptyLines(nextLine - prevLine)).append(pe.getShortMessage()).append("\n");
+                if (pe != null) {
+                    setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage(), redPainter);
+                }
+                prevLine = ++nextLine;
             }
+            setMessages(messages.toString());
+        }
+    }
+
+    private void setHighlight(JTextPane pane, int index, int length, String message, DefaultHighlightPainter painter) {
+        try {
+            pane.getHighlighter().addHighlight(index, index + length, painter);
+        } catch (BadLocationException ble) {
+            setMessages(message);
         }
     }
 
     private String emptyLines(int nr) {
         return "\n".repeat(Math.max(0, nr));
-    }
-
-    private void setMessagesAsError(String msg) {
-        messagesPane.setText(msg);
-        // Apply line spacing after setting text
-        StyledDocument messageDoc = messagesPane.getStyledDocument();
-        SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
-        StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f);
-        messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
-        messagesPane.repaint();
     }
 
     private void setMessages(String msg) {
