@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            default="false"
+            id="org.modelingvalue.nelumbo.lsp.eclipse"
+            name="name">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.lsp4e.languageServer">
+      <server
+            class="org.modelingvalue.nelumbo.lsp.eclipse.NelumboStreamConnectionProvider"
+            id="org.modelingvalue.nelumbo.lsp.eclipse"
+            label="org.modelingvalue.nelumbo.lsp.eclipse">
+      </server>
+      <contentTypeMapping
+            contentType="nelumbo"
+            id="org.modelingvalue.nelumbo.lsp.eclipse">
+      </contentTypeMapping>
+   </extension>
+   <extension
+         point="org.eclipse.core.contenttype.contentTypes">
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            file-extensions="nl"
+            id="nelumbo"
+            name="nelumbo"
+            priority="normal">
+      </content-type>
+   </extension>
+
+</plugin>

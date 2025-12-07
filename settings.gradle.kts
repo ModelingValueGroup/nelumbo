@@ -16,7 +16,10 @@
 
 rootProject.name = "nelumbo"
 
-include()
+// LSP components
+include("lsp:server")
+include("lsp:plugins:eclipse")
+include("lsp:plugins:intellij")
 
 plugins {
     id("com.gradle.enterprise") version ("3.5")

@@ -20,7 +20,6 @@ plugins {
     `java-library`
     `maven-publish`
     id("org.modelingvalue.gradle.mvgplugin") version "1.1.3"
-    id("com.gradleup.shadow") version "9.2.2"
     idea
     eclipse
 }
@@ -33,24 +32,6 @@ mvgcorrector {
 dependencies {
     implementation("org.modelingvalue:immutable-collections:4.1.0-BRANCHED")
     implementation("com.formdev:flatlaf:3.6.2")
-}
-tasks {
-    shadowJar {
-        archiveClassifier.set("all")
-        doFirst {
-            // Clean only previous shadow jars; leave regular publication jars intact
-            val libsDir = layout.buildDirectory.dir("libs")
-            libsDir.get().asFile.listFiles()
-                ?.filter { f -> f.isFile && (f.name.endsWith("-all.jar") || f.name.contains("-all-")) }
-                ?.forEach { it.delete() }
-        }
-    }
-}
-
-// Ensure `gradle clean` also removes the generated documentation site
-// This is safe if the directory does not exist
-tasks.named<Delete>("clean") {
-    delete(file("docs/site"))
 }
 
 publishing {
@@ -84,4 +65,12 @@ tasks.register<Exec>("generate-slides") {
         cp nelumbo.svg site/assets
         """
     )
+}
+
+tasks.named<Delete>("clean") {
+    delete(file("docs/site"))
+    delete(rootProject.layout.buildDirectory)
+    delete(file("lsp/server/build"))
+    delete(file("lsp/plugins/eclipse/build"))
+    delete(file("lsp/plugins/intellij/build"))
 }

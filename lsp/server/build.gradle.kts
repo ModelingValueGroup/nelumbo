@@ -1,0 +1,67 @@
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2025 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+plugins {
+    id("com.gradleup.shadow") version "9.2.2"
+    java
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+val archiveName = "nelumbo-lsp-server"
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation(project(":"))
+    implementation("org.modelingvalue:immutable-collections:4.1.0-BRANCHED")
+    implementation("org.ow2.asm:asm-tree:9.7.1")
+    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.24.0")
+    // Include websocket launchers so Main.start(ws) can find a WebSocket launcher at runtime
+    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:0.24.0")
+    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:0.24.0")
+    // Jakarta WebSocket server (Tyrus)
+    implementation("org.glassfish.tyrus:tyrus-server:2.2.0")
+    implementation("org.glassfish.tyrus:tyrus-container-grizzly-server:2.2.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.20.1")
+    implementation("org.tomlj:tomlj:1.1.1")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+tasks.shadowJar {
+    archiveBaseName.set(archiveName)
+    // Produce a single shaded jar without the default "-all" classifier
+    archiveClassifier.set("")
+    manifest {
+        attributes["Main-Class"] = "org.modelingvalue.nelumbo.lsp.Main"
+    }
+}
+
+tasks.jar {
+    // Disable plain jar to avoid duplicate artifact name; we use the shaded jar as the main distribution
+    enabled = false
+}

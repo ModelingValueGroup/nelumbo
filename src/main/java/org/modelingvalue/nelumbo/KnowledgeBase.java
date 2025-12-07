@@ -788,7 +788,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public void print(PrintStream stream, boolean withTokens) {
-        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "functors", U.Colors.code(0));
+        System.out.printf("    %s%-96s%s%n", U.colorCode(46), "functors", U.colorCode(0));
         for (Functor e : functors()) {
             stream.printf("        %-20s ::= %s%n", e.resultType(), e);
             if (withTokens) {
@@ -797,7 +797,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
             }
         }
-        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "rules", U.Colors.code(0));
+        System.out.printf("    %s%-96s%s%n", U.colorCode(46), "rules", U.colorCode(0));
         for (Rule r : rules()) {
             stream.println("        " + r);
             if (withTokens) {
@@ -806,7 +806,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
             }
         }
-        System.out.printf("    %s%-96s%s%n", U.Colors.code(46), "facts", U.Colors.code(0));
+        System.out.printf("    %s%-96s%s%n", U.colorCode(46), "facts", U.colorCode(0));
         for (Entry<Predicate, InferResult> e : facts()) {
             if (e.getValue().isTrueCC()) {
                 stream.println("        " + e.getKey());

@@ -20,6 +20,11 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class U {
+    public static final String COLOR_PRE  = "\u001B[";
+    public static final String WHITE_TEXT = COLOR_PRE + "37m";
+    public static final String BLACK_TEXT = COLOR_PRE + "30m";
+    public static final String RESET      = COLOR_PRE + "0m";
+
     public static String traceable(String s) {
         return s//
                 .replaceAll(" ", "\\\\.")//
@@ -31,7 +36,7 @@ public class U {
     public static void printKnowledgeBase(String msg, boolean withTokens) {
         if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println();
-            System.out.printf("%s %-99s%s%n", Colors.code(42), msg + ":", Colors.code(0));
+            System.out.printf("%s %-99s%s%n", colorCode(42), msg + ":", colorCode(0));
             KnowledgeBase.CURRENT.get().print(System.out, withTokens);
         }
     }
@@ -58,70 +63,23 @@ public class U {
     public static void printNode(String msg, List<Node> nodes) {
         if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println();
-            System.out.printf("%s %-99s%s%n", Colors.code(42), msg + ":", Colors.code(0));
+            System.out.printf("%s %-99s%s%n", colorCode(42), msg + ":", colorCode(0));
             for (Node node : nodes) {
-                System.out.printf("    %s%-96s%s%n", Colors.code(46), node.toString(), Colors.code(0));
+                System.out.printf("    %s%-96s%s%n", colorCode(46), node.toString(), colorCode(0));
                 printTokens("    :::tokens::", node.tokens());
             }
         }
     }
 
-    public static class Colors {
-        private static final String COLOR      = "\u001B[";
-        private static final String RESET      = COLOR + "0m";
-        private static final String BLACK_TEXT = COLOR + "30m";
-        private static final String WHITE_TEXT = COLOR + "37m";
-
-        public static String code(int code) {
-            if (code == 0) {
-                return RESET;
-            }
-            String textCode = "";
-            if ((40 <= code && code <= 47) || (100 <= code && code <= 107)) {
-                // bg color
-                textCode = code == 40 || code == 100 ? WHITE_TEXT : BLACK_TEXT;
-            }
-            return COLOR + code + "m" + textCode;
+    public static String colorCode(int code) {
+        if (code == 0) {
+            return RESET;
         }
-
-        private static String colorCodeTestPattern(int code, String s) {
-            return code(code) + String.format(" %3d %s", code, s) + RESET;
+        String textCode = "";
+        if ((40 <= code && code <= 47) || (100 <= code && code <= 107)) {
+            // bg color
+            textCode = code == 40 || code == 100 ? WHITE_TEXT : BLACK_TEXT;
         }
-
-        public static void main(String[] args) {
-            System.out.println("VT100 Color Test Pattern:");
-
-            // Standard colors (30-37 foreground, 40-47 background)
-            System.out.print("    Standard colors:\n        ");
-            for (int i = 30; i < 38; i++) {
-                System.out.print(colorCodeTestPattern(i, ""));
-            }
-            System.out.println();
-            System.out.print("    Background:\n        ");
-            for (int i = 40; i < 48; i++) {
-                System.out.print(colorCodeTestPattern(i, ""));
-            }
-            System.out.println();
-            // Bright colors (90-97 foreground, 100-107 background)
-            System.out.print("    Bright colors:\n        ");
-            for (int i = 90; i < 98; i++) {
-                System.out.print(colorCodeTestPattern(i, ""));
-            }
-            System.out.println();
-            System.out.print("    Bright background:\n        ");
-            for (int i = 100; i < 108; i++) {
-                System.out.print(colorCodeTestPattern(i, ""));
-            }
-
-            // Text styles
-            System.out.println("\n\nText styles:");
-            System.out.println(colorCodeTestPattern(1, "Bold"));
-            System.out.println(colorCodeTestPattern(3, "Italic"));
-            System.out.println(colorCodeTestPattern(4, "Underline"));
-            System.out.println(colorCodeTestPattern(7, "Inverse"));
-            System.out.println(colorCodeTestPattern(9, "Strikethrough"));
-        }
-
+        return COLOR_PRE + code + "m" + textCode;
     }
-
 }

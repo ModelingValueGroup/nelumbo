@@ -85,6 +85,7 @@ hs_err_pid*
 .gradle
 .gradletasknamecache
 gradle-app.setting
+.intellijPlatform/
 
 # MVG
 /TEST-*.txt

@@ -3,7 +3,15 @@
     "allow": [
       "mcp__ide__getDiagnostics",
       "Bash(./gradlew compileJava:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(git stash:*)",
+      "Bash(cat:*)",
+      "Bash(java --version:*)",
+      "WebSearch",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,60 @@
+{
+  "name": "nelumbo-lsp-vscode",
+  "displayName": "nelumbo LSP",
+  "publisher": "modelingvaluegroup",
+  "author": "Modeling Value Group",
+  "version": "0.2.1",
+  "description": "nelumbo language",
+  "icon": "icons/logo.png",
+  "main": "out/extensions.js",
+  "scripts": {
+    "build": "esbuild src/extensions.ts --bundle --outfile=out/extensions.js --external:vscode --platform=node --format=cjs --sourcemap --target=node18",
+    "compile": "tsc -b .",
+    "package": "npm ci && npm run build && npx vsce package"
+  },
+  "activationEvents": [
+    "onLanguage:nelumbo"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/modelingvalue/nelumbo-lsp"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "nelumbo",
+        "extensions": [
+          ".nl"
+        ],
+        "aliases": [
+          "nelumbo"
+        ],
+        "icon": {
+          "light": "./icons/logo.svg",
+          "dark": "./icons/logo.svg"
+        }
+      }
+    ]
+  },
+  "engines": {
+    "vscode": "^1.103.0",
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "nelumbo",
+    "lsp",
+    "language"
+  ],
+  "license": "GNU Lesser General Public License",
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.103.0",
+    "esbuild": "^0.23.0",
+    "@vscode/vsce": "^3.1.1",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "glob": "^8.1.0",
+    "vscode-languageclient": "^9.0.1"
+  }
+}

@@ -1,0 +1,73 @@
+<idea-plugin>
+    <id>org.modelingvalue.nelumbo</id>
+    <name>nelumbo</name>
+    <vendor
+            email="nelumbo@modelingvalue.nl"
+            url="https://modelingvalue.nl">
+        Modeling Value Group
+    </vendor>
+    <description>
+        <![CDATA[
+            <h1>A language server for nelumbo</h1>
+            <p>Provides support for nelumbo in IntelliJ IDEA.</p>
+            <h2>Features</h2>
+            <ul>
+                <li>Syntax highlighting.</li>
+                <li>Compiler checking.</li>
+                <li>Folding code block.</li>
+                <li>Format nl file.</li>
+                <li>Go to definition.</li>
+                <li>Find symbol.</li>
+            </ul>
+        ]]>
+    </description>
+    <change-notes>
+        <![CDATA[Please see the project's GitHub releases page for release notes.]]>
+    </change-notes>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.redhat.devtools.lsp4ij</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType
+                implementationClass="org.modelingvalue.nelumbo.lsp.intellij.NelumboFileType"
+                name="nelumbo"
+                language="nelumbo"
+                extensions="nl"
+                fieldName="INSTANCE"
+        />
+        <statusBarWidgetFactory
+                implementation="org.modelingvalue.nelumbo.lsp.intellij.status.StatusBarItemFactory"
+                id="org.modelingvalue.nelumbo.lsp.intellij.status.StatusBarItemFactory"
+        />
+        <applicationService
+                serviceImplementation="org.modelingvalue.nelumbo.lsp.intellij.setting.PluginSetting"/>
+        <applicationConfigurable
+                instance="org.modelingvalue.nelumbo.lsp.intellij.setting.SettingConfigurable"
+                id="org.modelingvalue.nelumbo.lsp.intellij.setting.SettingConfigurable"
+                parentId="tools"
+                displayName="nelumbo"
+        />
+    </extensions>
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <server
+                id="nelumbo"
+                name="nelumbo"
+                factoryClass="org.modelingvalue.nelumbo.lsp.intellij.NelumboLanguageServerFactory"
+        >
+            <description>
+                <![CDATA[
+                    <h1>A language server for nelumbo</h1>
+                    <p>Provides support for nelumbo in IntelliJ IDEA.</p>
+                ]]>
+            </description>
+        </server>
+        <languageMapping language="nelumbo" serverId="nelumbo"/>
+    </extensions>
+    <actions>
+        <action
+                class="org.modelingvalue.nelumbo.lsp.intellij.action.ViewLogs"
+                id="org.modelingvalue.nelumbo.lsp.intellij.action.ViewLogs"
+                text="View Logs"
+                description="View the logs of the language server"
+        />
+    </actions>
+</idea-plugin>
