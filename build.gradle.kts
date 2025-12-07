@@ -31,7 +31,7 @@ mvgcorrector {
 
 dependencies {
     implementation("org.modelingvalue:immutable-collections:4.1.0-BRANCHED")
-    implementation("com.formdev:flatlaf:3.6.2")
+    implementation("com.formdev:flatlaf:3.7")
 }
 
 publishing {
