@@ -164,8 +164,7 @@ public final class PatternResult implements ParseExceptionHandler {
             List<AstElement> elements = elements();
             Node node = functor.construct(elements, functor.args(elements), this);
             if (Type.ROOT.isAssignableFrom(node.type())) {
-                Node bound = node.setBinding(node.getBinding());
-                Set<Transform> transforms = KnowledgeBase.CURRENT.get().getTransforms(bound);
+                Set<Transform> transforms = KnowledgeBase.CURRENT.get().getTransforms(node);
                 if (!transforms.isEmpty()) {
                     System.err.println("!!!! " + node + " " + transforms);
                 }
