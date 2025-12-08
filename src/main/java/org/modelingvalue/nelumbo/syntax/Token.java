@@ -312,7 +312,7 @@ public final class Token implements AstElement {
         }
     }
 
-    public Pattern pattern() {
+    public Pattern declaration() {
         if (node != null) {
             Functor functor = node.functor();
             if (functor != null) {
@@ -326,7 +326,7 @@ public final class Token implements AstElement {
         if (node instanceof Variable var) {
             return var;
         }
-        Pattern pattern = pattern();
+        Pattern pattern = declaration();
         return pattern != null ? pattern.variable() : null;
     }
 
