@@ -35,7 +35,7 @@ repositories {
 dependencies {
     implementation(project(":"))
     implementation("org.modelingvalue:immutable-collections:4.1.0-BRANCHED")
-    implementation("org.ow2.asm:asm-tree:9.7.1")
+    implementation("org.ow2.asm:asm-tree:9.9")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.24.0")
     // Include websocket launchers so Main.start(ws) can find a WebSocket launcher at runtime
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:0.24.0")
