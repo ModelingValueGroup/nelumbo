@@ -80,6 +80,7 @@ hs_err_pid*
 
 # Gradle (https://github.com/github/gitignore/blob/master/Gradle.gitignore)
 !gradle-wrapper.jar
+!lsp/plugins/eclipse/libs/*.jar
 !src/**/build/
 **/build/
 .gradle
