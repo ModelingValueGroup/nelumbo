@@ -20,6 +20,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class MatchState<E> {
 
@@ -46,6 +47,11 @@ public class MatchState<E> {
 
     public MatchState(Type type, MatchState<E> to) {
         this.transitions = Map.of(Entry.of(type, to));
+        this.elements = Set.of();
+    }
+
+    public MatchState(TokenType tokenType, MatchState<E> to) {
+        this.transitions = Map.of(Entry.of(tokenType, to));
         this.elements = Set.of();
     }
 
@@ -119,6 +125,8 @@ public class MatchState<E> {
             if (state == null) {
                 state = matchType(node.type());
             }
+        } else if (obj instanceof String text) {
+            state = transitions().get(TokenType.of(text));
         } else {
             state = transitions().get(obj.getClass());
         }
@@ -133,6 +141,7 @@ public class MatchState<E> {
                 return state;
             }
         }
+        state = transitions().get(Type.TYPE());
         return state;
     }
 

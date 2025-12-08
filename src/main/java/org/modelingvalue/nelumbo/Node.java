@@ -521,9 +521,20 @@ public class Node extends StructImpl implements AstElement {
     public <E> MatchState<E> state(MatchState<E> state) {
         for (Object arg : args().reverse()) {
             if (arg instanceof Type type) {
-                state = new MatchState<E>(type, state);
+                TokenType tt = type.tokenType();
+                if (tt != null) {
+                    state = new MatchState<E>(tt, state);
+                } else {
+                    state = new MatchState<E>(type, state);
+                }
             } else if (arg instanceof Variable var) {
-                state = new MatchState<E>(var.type(), state);
+                Type type = var.type();
+                TokenType tt = type.tokenType();
+                if (tt != null) {
+                    state = new MatchState<E>(tt, state);
+                } else {
+                    state = new MatchState<E>(type, state);
+                }
             } else if (arg instanceof Node node) {
                 state = node.state(state);
             } else {
