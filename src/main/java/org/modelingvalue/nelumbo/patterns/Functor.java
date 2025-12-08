@@ -31,6 +31,7 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.ThrowingTriFunction;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Functor extends Node {
@@ -184,6 +185,10 @@ public class Functor extends Node {
 
     public Functor literal() {
         return KnowledgeBase.CURRENT.get().literal(this);
+    }
+
+    public Pattern declaration(Token token) {
+        return pattern().declaration(token);
     }
 
 }

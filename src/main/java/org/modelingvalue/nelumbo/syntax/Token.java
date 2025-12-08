@@ -316,7 +316,7 @@ public final class Token implements AstElement {
         if (node != null) {
             Functor functor = node.functor();
             if (functor != null) {
-                return functor.pattern().declaration(this);
+                return functor.declaration(this);
             }
         }
         return null;
