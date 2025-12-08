@@ -171,27 +171,35 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private Pattern pattern(List<AstElement> elements) {
         List<Pattern> patterns = List.of();
-        for (AstElement e : elements) {
+        for (int i = 0; i < elements.size(); i++) {
+            AstElement e = elements.get(i);
             if (!e.isMeta()) {
                 if (e instanceof Token t) {
                     String text = t.text();
                     if (t.type() == STRING) {
                         text = text.substring(1, text.length() - 1);
                     }
-                    patterns = patterns.add(t(text));
-                } else if (e instanceof Variable var) {
-                    patterns = patterns.add(v(var));
+                    Pattern tokenPattern = t(List.of(t), text);
+                    patterns = patterns.add(tokenPattern);
+                    elements = elements.replace(i, tokenPattern);
+                } else if (e instanceof Variable v) {
+                    Pattern variablePattern = v(v);
+                    patterns = patterns.add(variablePattern);
+                    elements = elements.replace(i, variablePattern);
                 } else {
                     Pattern pattern = (Pattern) e;
                     if (pattern instanceof SequencePattern sp) {
                         patterns = patterns.addAll(sp.elements());
+                        elements = elements.removeIndex(i);
+                        elements = elements.insertList(i, sp.astElements());
+                        i = i - 1 + sp.astElements().size();
                     } else {
                         patterns = patterns.add(pattern);
                     }
                 }
             }
         }
-        return patterns.size() > 1 ? s(patterns.toArray(Pattern[]::new)) : patterns.first();
+        return patterns.size() > 1 ? s(elements, patterns.toArray(Pattern[]::new)) : patterns.first();
     }
 
     private static Functor equalsFunctor;
