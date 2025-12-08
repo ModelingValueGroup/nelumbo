@@ -20,6 +20,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("org.modelingvalue.gradle.mvgplugin") version "1.1.3"
+    id("com.gradleup.shadow") version "9.2.2"
     idea
     eclipse
 }
@@ -32,6 +33,19 @@ mvgcorrector {
 dependencies {
     implementation("org.modelingvalue:immutable-collections:4.1.0-BRANCHED")
     implementation("com.formdev:flatlaf:3.7")
+}
+
+tasks {
+    shadowJar {
+        archiveClassifier.set("all")
+        doFirst {
+            // Clean only previous shadow jars; leave regular publication jars intact
+            val libsDir = layout.buildDirectory.dir("libs")
+            libsDir.get().asFile.listFiles()
+                ?.filter { f -> f.isFile && (f.name.endsWith("-all.jar") || f.name.contains("-all-")) }
+                ?.forEach { it.delete() }
+        }
+    }
 }
 
 publishing {
