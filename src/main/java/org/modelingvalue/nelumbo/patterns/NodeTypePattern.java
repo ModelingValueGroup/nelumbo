@@ -25,6 +25,7 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NodeTypePattern extends Pattern {
@@ -48,6 +49,7 @@ public class NodeTypePattern extends Pattern {
         return (Type) get(0);
     }
 
+    @Override
     public Variable variable() {
         return nodeType().variable();
     }
@@ -123,6 +125,11 @@ public class NodeTypePattern extends Pattern {
             return ai + 1;
         }
         return -1;
+    }
+
+    @Override
+    public Pattern declaration(Token token) {
+        return null;
     }
 
 }

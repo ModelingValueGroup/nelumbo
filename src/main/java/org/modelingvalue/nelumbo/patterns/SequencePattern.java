@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class SequencePattern extends Pattern {
@@ -135,6 +136,17 @@ public class SequencePattern extends Pattern {
             return ai + 1;
         }
         return -1;
+    }
+
+    @Override
+    public Pattern declaration(Token token) {
+        for (Pattern element : elements()) {
+            Pattern decl = element.declaration(token);
+            if (decl != null) {
+                return decl;
+            }
+        }
+        return null;
     }
 
 }

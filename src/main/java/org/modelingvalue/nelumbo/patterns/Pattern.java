@@ -237,4 +237,10 @@ public abstract class Pattern extends Node {
         previous[0] = type;
     }
 
+    public Variable variable() {
+        return null;
+    }
+
+    public abstract Pattern declaration(Token token);
+
 }

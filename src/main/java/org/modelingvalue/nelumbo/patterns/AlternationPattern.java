@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class AlternationPattern extends Pattern {
@@ -114,6 +115,17 @@ public class AlternationPattern extends Pattern {
             }
         }
         return -1;
+    }
+
+    @Override
+    public Pattern declaration(Token token) {
+        for (Pattern option : options()) {
+            Pattern decl = option.declaration(token);
+            if (decl != null) {
+                return decl;
+            }
+        }
+        return null;
     }
 
 }

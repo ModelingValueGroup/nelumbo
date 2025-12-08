@@ -430,7 +430,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void showColors(JTextPane pane, TokenizerResult tokenizerResult) {
         if (tokenizerResult != null) {
             for (Token t = tokenizerResult.firstAll(); t != null; t = t.nextAll()) {
-                ColorScheme colorScheme = TOKEN_COLORS.get(t.getNode() instanceof Variable ? TokenType.VARIABLE : t.type());
+                ColorScheme colorScheme = TOKEN_COLORS.get(t.variable() != null ? TokenType.VARIABLE : t.type());
                 if (colorScheme != null) {
                     SimpleAttributeSet attr = colorScheme.attr();
                     pane.getStyledDocument().setCharacterAttributes(t.index(), t.text().length(), attr, false);

@@ -49,6 +49,7 @@ public class TokenTextPattern extends Pattern {
         return val instanceof Variable var ? var.name() : (String) val;
     }
 
+    @Override
     public Variable variable() {
         Object val = get(0);
         return val instanceof Variable var ? var : null;
@@ -94,6 +95,11 @@ public class TokenTextPattern extends Pattern {
         }
         addText(sb, previous, tokenText());
         return ai;
+    }
+
+    @Override
+    public Pattern declaration(Token token) {
+        return tokenText().equals(token.text()) ? this : null;
     }
 
 }

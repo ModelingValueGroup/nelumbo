@@ -23,7 +23,9 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.patterns.Pattern;
 
 @SuppressWarnings({"unused"})
 public final class Token implements AstElement {
@@ -308,6 +310,24 @@ public final class Token implements AstElement {
         if (this.node == null) {
             this.node = node;
         }
+    }
+
+    public Pattern pattern() {
+        if (node != null) {
+            Functor functor = node.functor();
+            if (functor != null) {
+                return functor.pattern().declaration(this);
+            }
+        }
+        return null;
+    }
+
+    public Variable variable() {
+        if (node instanceof Variable var) {
+            return var;
+        }
+        Pattern pattern = pattern();
+        return pattern != null ? pattern.variable() : null;
     }
 
 }

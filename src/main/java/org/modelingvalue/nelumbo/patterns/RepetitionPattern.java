@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class RepetitionPattern extends Pattern {
@@ -131,6 +132,17 @@ public class RepetitionPattern extends Pattern {
             return ai + 1;
         }
         return -1;
+    }
+
+    @Override
+    public Pattern declaration(Token token) {
+        Pattern decl = repeated().declaration(token);
+        if (decl != null) {
+            return decl;
+        }
+        Pattern separator = separator();
+        decl = separator != null ? separator.declaration(token) : null;
+        return decl;
     }
 
 }

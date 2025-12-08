@@ -25,6 +25,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class OptionalPattern extends Pattern {
@@ -100,6 +101,11 @@ public class OptionalPattern extends Pattern {
             return ai + 1;
         }
         return -1;
+    }
+
+    @Override
+    public Pattern declaration(Token token) {
+        return optional().declaration(token);
     }
 
 }

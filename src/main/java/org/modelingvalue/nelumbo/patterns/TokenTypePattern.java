@@ -103,4 +103,9 @@ public class TokenTypePattern extends Pattern {
         return type == TokenType.NEWLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE;
     }
 
+    @Override
+    public Pattern declaration(Token token) {
+        return null;
+    }
+
 }
