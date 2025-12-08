@@ -412,7 +412,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     targets = targets.add(e);
                                 }
                             }
-                            return new Transform(functor, elements, source, targets);
+                            Transform transform = new Transform(functor, elements, source, targets);
+                            return CURRENT.get().addTransform(transform);
                         }));
 
                 register(Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
@@ -538,21 +539,23 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return roots.setAstElements(roots.astElements().add(elements.last()));
     }
 
-    private final AtomicReference<Set<Functor>>                         functors          = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, InferResult>>          facts             = new AtomicReference<>();
-    private final AtomicReference<Set<Rule>>                            rules             = new AtomicReference<>();
+    private final AtomicReference<Set<Functor>>                         functors            = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, InferResult>>          facts               = new AtomicReference<>();
+    private final AtomicReference<Set<Rule>>                            rules               = new AtomicReference<>();
+    private final AtomicReference<Set<Transform>>                       transforms          = new AtomicReference<>();
     //
-    private final AtomicReference<Map<String, ParseState>>              prePatterns       = new AtomicReference<>();
-    private final AtomicReference<Map<String, ParseState>>              postPatterns      = new AtomicReference<>();
+    private final AtomicReference<Map<String, ParseState>>              prePatterns         = new AtomicReference<>();
+    private final AtomicReference<Map<String, ParseState>>              postPatterns        = new AtomicReference<>();
     //
-    private final AtomicReference<Map<String, ParseState>>              localPrePatterns  = new AtomicReference<>();
-    private final AtomicReference<Map<String, ParseState>>              localPostPatterns = new AtomicReference<>();
+    private final AtomicReference<Map<String, ParseState>>              localPrePatterns    = new AtomicReference<>();
+    private final AtomicReference<Map<String, ParseState>>              localPostPatterns   = new AtomicReference<>();
     //
-    private final AtomicReference<Map<Functor, Functor>>                literalFunctors   = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>>                literalFunctors     = new AtomicReference<>();
     //
-    private final AtomicReference<MatchState<Rule>>                     matchSignatures   = new AtomicReference<>();
+    private final AtomicReference<MatchState<Rule>>                     ruleSignatures      = new AtomicReference<>();
+    private final AtomicReference<MatchState<Transform>>                transformSignatures = new AtomicReference<>();
     //
-    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization       = new AtomicReference<>();
+    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization         = new AtomicReference<>();
     private final InferContext                                          context;
     private final KnowledgeBase                                         init;
 
@@ -570,12 +573,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         functors.set(init != null ? init.functors.get() : Set.of());
         facts.set(init != null ? init.facts.get() : Map.of());
         rules.set(init != null ? init.rules.get() : Set.of());
+        transforms.set(init != null ? init.transforms.get() : Set.of());
         prePatterns.set(init != null ? init.prePatterns.get() : Map.of());
         postPatterns.set(init != null ? init.postPatterns.get() : Map.of());
         localPrePatterns.set(prePatterns.get());
         localPostPatterns.set(postPatterns.get());
         literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
-        matchSignatures.set(init != null ? init.matchSignatures.get() : MatchState.EMPTY);
+        ruleSignatures.set(init != null ? init.ruleSignatures.get() : MatchState.EMPTY);
+        transformSignatures.set(init != null ? init.transformSignatures.get() : MatchState.EMPTY);
         resetMemoization();
         endParsing(false);
     }
@@ -683,15 +688,30 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
-    public void addRule(Rule rule) {
+    public Rule addRule(Rule rule) {
         rules.updateAndGet(s -> s.add(rule));
         MatchState<Rule> state = rule.consequence().state(new MatchState<Rule>(rule));
-        matchSignatures.updateAndGet(state::merge);
+        ruleSignatures.updateAndGet(state::merge);
         resetMemoization();
+        return rule;
     }
 
     public Set<Rule> getRules(Predicate predicate) {
-        return matchSignatures.get().match(predicate);
+        return ruleSignatures.get().match(predicate);
+    }
+
+    public Transform addTransform(Transform transform) {
+        transforms.updateAndGet(s -> s.add(transform));
+        Node source = transform.source();
+        assert Type.ROOT.isAssignableFrom(source.type());
+        MatchState<Transform> state = source.state(new MatchState<Transform>(transform));
+        transformSignatures.updateAndGet(state::merge);
+        return transform;
+    }
+
+    public Set<Transform> getTransforms(Node root) {
+        assert Type.ROOT.isAssignableFrom(root.type());
+        return transformSignatures.get().match(root);
     }
 
     public void addFact(Predicate fact) {
