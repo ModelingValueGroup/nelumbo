@@ -150,4 +150,10 @@ public final class Rule extends Node implements Evaluatable {
         return consequence() + " <=> " + condition();
     }
 
+    @Override
+    public Rule init(KnowledgeBase knowledgeBase) throws ParseException {
+        knowledgeBase.addRule(this);
+        return this;
+    }
+
 }

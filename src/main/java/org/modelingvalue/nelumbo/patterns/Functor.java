@@ -21,11 +21,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
@@ -77,6 +79,11 @@ public class Functor extends Node {
 
     public boolean local() {
         return (Boolean) get(2);
+    }
+
+    @Override
+    public Functor setBinding(Map<Variable, Object> vars) {
+        return (Functor) super.setBinding(vars);
     }
 
     @SuppressWarnings("unchecked")
@@ -189,6 +196,11 @@ public class Functor extends Node {
 
     public Pattern declaration(Token token) {
         return pattern().declaration(token);
+    }
+
+    @Override
+    public Functor init(KnowledgeBase knowledgeBase) throws ParseException {
+        return knowledgeBase.register(this);
     }
 
 }

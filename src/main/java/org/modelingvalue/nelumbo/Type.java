@@ -293,9 +293,28 @@ public class Type extends Node {
         return type instanceof Class clss ? clss : null;
     }
 
+    @SuppressWarnings("unchecked")
     public Variable variable() {
         Object type = get(0);
+        if (type instanceof Set set) {
+            for (Type t : (Set<Type>) set) {
+                Variable var = t.variable();
+                if (var != null) {
+                    return var;
+                }
+            }
+        }
         return type instanceof Variable var ? var : null;
+    }
+
+    public Type rewrite(Type type) {
+        if (isLiteral()) {
+            return type.literal();
+        } else if (isFunction()) {
+            return type.function();
+        } else {
+            return type;
+        }
     }
 
     @Override

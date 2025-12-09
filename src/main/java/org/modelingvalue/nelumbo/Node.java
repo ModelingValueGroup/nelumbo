@@ -26,6 +26,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
@@ -66,6 +67,16 @@ public class Node extends StructImpl implements AstElement {
 
     public Node declaration() {
         return declaration;
+    }
+
+    public Node resetDeclaration() {
+        Object[] array = toArray();
+        for (int i = START; i < array.length; i++) {
+            if (array[i] instanceof Predicate) {
+                array[i] = ((Predicate) array[i]).resetDeclaration();
+            }
+        }
+        return struct(array, null);
     }
 
     private static Object[] array(Object functor, List<AstElement> elements, Object[] args) {
@@ -401,7 +412,7 @@ public class Node extends StructImpl implements AstElement {
         return setBinding(declaration, vars);
     }
 
-    protected final Node setBinding(Node declaration, Map<Variable, Object> vars) {
+    protected Node setBinding(Node declaration, Map<Variable, Object> vars) {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
@@ -422,6 +433,13 @@ public class Node extends StructImpl implements AstElement {
             if (varVal != null && doSetBinding(varVal, i)) {
                 return varVal;
             }
+            if (thisVal instanceof Variable thisVar) {
+                Type from = thisVar.type();
+                Variable var = from.variable();
+                if (var != null && vars.get(var) instanceof Type to) {
+                    return var.setType(from.rewrite(to));
+                }
+            }
         } else if (declVal instanceof Node declNode && !(declNode instanceof Type) && //
                 thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
             return thisNode.setBinding(declNode, vars);
@@ -432,6 +450,11 @@ public class Node extends StructImpl implements AstElement {
                 list = list.add(setBinding(declList.get(ii), thisList.get(ii), vars, i));
             }
             return thisList.equals(list) ? thisList : list;
+        } else if (declVal instanceof Type declType && thisVal instanceof Type thisType) {
+            Variable var = declType.variable();
+            if (var != null && vars.get(var) instanceof Type type) {
+                return thisType.rewrite(type);
+            }
         }
         return thisVal;
     }
@@ -545,4 +568,12 @@ public class Node extends StructImpl implements AstElement {
         assert functor != null;
         return new MatchState<E>(functor, state);
     }
+
+    public Node init(KnowledgeBase knowledgeBase) throws ParseException {
+        for (Transform transform : knowledgeBase.getTransforms(this)) {
+            transform.rewrite(this, knowledgeBase);
+        }
+        return this;
+    }
+
 }

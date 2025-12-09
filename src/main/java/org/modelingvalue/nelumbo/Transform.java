@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
@@ -51,6 +52,41 @@ public final class Transform extends Node {
     @SuppressWarnings("unchecked")
     public List<Node> targets() {
         return (List<Node>) get(1);
+    }
+
+    public void rewrite(Node node, KnowledgeBase knowledgeBase) throws ParseException {
+        Node source = source();
+        Map<Variable, Object> binding = node.getBinding(source);
+        if (binding == null) {
+            return;
+        }
+        Map<Functor, Functor> map = Map.of();
+        for (Node target : targets()) {
+            if (target instanceof Functor functor) {
+                Functor rewrite = functor.setBinding(binding);
+                if (rewrite != target) {
+                    map = map.put(functor, rewrite);
+                    rewrite.init(knowledgeBase);
+                }
+            }
+        }
+        Map<Functor, Functor> m = map;
+        for (Node target : targets()) {
+            if (!(target instanceof Functor)) {
+                Node rewrite = target.replace(n -> {
+                    if (n.typeOrFunctor() instanceof Functor f) {
+                        Functor r = m.get(f);
+                        if (r != null) {
+                            return n.setFunctor(r);
+                        }
+                    }
+                    return n;
+                }).setBinding(binding).resetDeclaration();
+                if (rewrite != target) {
+                    rewrite.init(knowledgeBase);
+                }
+            }
+        }
     }
 
 }

@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -52,6 +53,20 @@ public class NodeTypePattern extends Pattern {
     @Override
     public Variable variable() {
         return nodeType().variable();
+    }
+
+    @Override
+    public NodeTypePattern set(int i, Object... a) {
+        return (NodeTypePattern) super.set(i, a);
+    }
+
+    @Override
+    protected NodeTypePattern setBinding(Node declaration, Map<Variable, Object> vars) {
+        Variable var = variable();
+        if (var != null && vars.get(var) instanceof Type type) {
+            return set(0, nodeType().rewrite(type));
+        }
+        return (NodeTypePattern) super.setBinding(declaration, vars);
     }
 
     public Integer leftPrecedence() {

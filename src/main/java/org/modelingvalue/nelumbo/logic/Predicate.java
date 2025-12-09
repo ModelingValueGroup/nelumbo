@@ -81,16 +81,6 @@ public class Predicate extends Node {
         return from.struct(array, declaration());
     }
 
-    private Predicate resetDeclaration() {
-        Object[] array = toArray();
-        for (int i = START; i < array.length; i++) {
-            if (array[i] instanceof Predicate) {
-                array[i] = ((Predicate) array[i]).resetDeclaration();
-            }
-        }
-        return struct(array, null);
-    }
-
     @SuppressWarnings("unused")
     protected Predicate clearDeclaration() {
         return struct(toArray(), null);
@@ -139,6 +129,11 @@ public class Predicate extends Node {
             return n;
         });
         return predicate.resetDeclaration();
+    }
+
+    @Override
+    public Predicate resetDeclaration() {
+        return (Predicate) super.resetDeclaration();
     }
 
     @Override

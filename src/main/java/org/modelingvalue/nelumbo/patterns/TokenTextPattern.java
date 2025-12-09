@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.patterns;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -53,6 +54,20 @@ public class TokenTextPattern extends Pattern {
     public Variable variable() {
         Object val = get(0);
         return val instanceof Variable var ? var : null;
+    }
+
+    @Override
+    public TokenTextPattern set(int i, Object... a) {
+        return (TokenTextPattern) super.set(i, a);
+    }
+
+    @Override
+    protected TokenTextPattern setBinding(Node declaration, Map<Variable, Object> vars) {
+        Variable var = variable();
+        if (var != null && vars.get(var) instanceof String text) {
+            return set(0, text);
+        }
+        return (TokenTextPattern) super.setBinding(declaration, vars);
     }
 
     @Override

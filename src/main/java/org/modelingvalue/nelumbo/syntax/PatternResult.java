@@ -22,9 +22,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Transform;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
@@ -164,10 +162,7 @@ public final class PatternResult implements ParseExceptionHandler {
             List<AstElement> elements = elements();
             Node node = functor.construct(elements, functor.args(elements), this);
             if (Type.ROOT.isAssignableFrom(node.type())) {
-                Set<Transform> transforms = KnowledgeBase.CURRENT.get().getTransforms(node);
-                if (!transforms.isEmpty()) {
-                    System.err.println("!!!! " + node + " " + transforms);
-                }
+                node.init(parser.knowledgeBase());
             }
             return node;
         }

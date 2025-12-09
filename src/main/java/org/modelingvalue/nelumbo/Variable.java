@@ -87,4 +87,8 @@ public final class Variable extends Node {
         return Type.VARIABLE;
     }
 
+    public Variable setType(Type type) {
+        return set(0, type);
+    }
+
 }
