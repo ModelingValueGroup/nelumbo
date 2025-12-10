@@ -26,7 +26,6 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
-import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
@@ -72,11 +71,22 @@ public class Node extends StructImpl implements AstElement {
     public Node resetDeclaration() {
         Object[] array = toArray();
         for (int i = START; i < array.length; i++) {
-            if (array[i] instanceof Predicate) {
-                array[i] = ((Predicate) array[i]).resetDeclaration();
-            }
+            array[i] = resetDeclaration(array[i]);
         }
         return struct(array, null);
+    }
+
+    private Object resetDeclaration(Object from) {
+        if (from instanceof Node node) {
+            return node.resetDeclaration();
+        } else if (from instanceof List list) {
+            List<Object> l = List.of();
+            for (Object e : list) {
+                l = l.add(resetDeclaration(e));
+            }
+            return l;
+        }
+        return from;
     }
 
     private static Object[] array(Object functor, List<AstElement> elements, Object[] args) {
@@ -436,8 +446,10 @@ public class Node extends StructImpl implements AstElement {
             if (thisVal instanceof Variable thisVar) {
                 Type from = thisVar.type();
                 Variable var = from.variable();
-                if (var != null && vars.get(var) instanceof Type to) {
-                    return var.setType(from.rewrite(to));
+                if (var != null) {
+                    if (vars.get(var) instanceof Type to) {
+                        return thisVar.setType(from.rewrite(to));
+                    }
                 }
             }
         } else if (declVal instanceof Node declNode && !(declNode instanceof Type) && //
@@ -474,19 +486,30 @@ public class Node extends StructImpl implements AstElement {
         } else {
             Object[] array = null;
             for (int i = 0; i < length(); i++) {
-                Object thisVal = get(i);
-                if (thisVal instanceof Node fromNode) {
-                    Node toNode = fromNode.replace(replacer);
-                    if (toNode != fromNode) {
-                        if (array == null) {
-                            array = toArray();
-                        }
-                        array[i + START] = toNode;
+                Object fromVal = get(i);
+                Object toVal = replace(fromVal, replacer);
+                if (toVal != fromVal) {
+                    if (array == null) {
+                        array = toArray();
                     }
+                    array[i + START] = toVal;
                 }
             }
             return array != null ? struct(array) : this;
         }
+    }
+
+    private Object replace(Object from, ThrowingFunction<Node, Node> replacer) throws ParseException {
+        if (from instanceof Node fromNode) {
+            return fromNode.replace(replacer);
+        } else if (from instanceof List fromList) {
+            List<Object> toList = List.of();
+            for (Object e : fromList) {
+                toList = toList.add(replace(e, replacer));
+            }
+            return fromList.equals(toList) ? fromList : toList;
+        }
+        return from;
     }
 
     public Node setType(int i, Type type) {

@@ -54,37 +54,39 @@ public final class Transform extends Node {
         return (List<Node>) get(1);
     }
 
+    @Override
+    public Node init(KnowledgeBase knowledgeBase) throws ParseException {
+        knowledgeBase.addTransform(this);
+        return this;
+    }
+
     public void rewrite(Node node, KnowledgeBase knowledgeBase) throws ParseException {
         Node source = source();
         Map<Variable, Object> binding = node.getBinding(source);
         if (binding == null) {
             return;
         }
-        Map<Functor, Functor> map = Map.of();
+        Map<Functor, Functor> functors = Map.of();
         for (Node target : targets()) {
-            if (target instanceof Functor functor) {
-                Functor rewrite = functor.setBinding(binding);
-                if (rewrite != target) {
-                    map = map.put(functor, rewrite);
-                    rewrite.init(knowledgeBase);
-                }
+            if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())) {
+                Functor rewrite = functor.setBinding(binding).resetDeclaration();
+                functors = functors.put(functor, rewrite);
+                rewrite.init(knowledgeBase);
             }
         }
-        Map<Functor, Functor> m = map;
+        Map<Functor, Functor> fm = functors;
         for (Node target : targets()) {
             if (!(target instanceof Functor)) {
                 Node rewrite = target.replace(n -> {
                     if (n.typeOrFunctor() instanceof Functor f) {
-                        Functor r = m.get(f);
+                        Functor r = fm.get(f);
                         if (r != null) {
                             return n.setFunctor(r);
                         }
                     }
                     return n;
                 }).setBinding(binding).resetDeclaration();
-                if (rewrite != target) {
-                    rewrite.init(knowledgeBase);
-                }
+                rewrite.init(knowledgeBase);
             }
         }
     }

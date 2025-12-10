@@ -152,7 +152,7 @@ public final class Rule extends Node implements Evaluatable {
 
     @Override
     public Rule init(KnowledgeBase knowledgeBase) throws ParseException {
-        knowledgeBase.addRule(this);
+        evaluate(knowledgeBase, knowledgeBase);
         return this;
     }
 

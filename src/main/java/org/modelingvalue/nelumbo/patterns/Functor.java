@@ -86,6 +86,11 @@ public class Functor extends Node {
         return (Functor) super.setBinding(vars);
     }
 
+    @Override
+    public Functor resetDeclaration() {
+        return (Functor) super.resetDeclaration();
+    }
+
     @SuppressWarnings("unchecked")
     public Constructor<? extends Node> constructor() {
         Object val = get(3);
