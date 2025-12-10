@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -70,6 +71,12 @@ public final class Transform extends Node {
         for (Node target : targets()) {
             if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())) {
                 Functor rewrite = functor.setBinding(binding).resetDeclaration();
+                for (Entry<Functor, Functor> e : functors) {
+                    if (functor.equals(knowledgeBase.literal(e.getKey()))) {
+                        knowledgeBase.addLiteral(e.getValue(), rewrite);
+                        break;
+                    }
+                }
                 functors = functors.put(functor, rewrite);
                 rewrite.init(knowledgeBase);
             }

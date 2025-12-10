@@ -176,6 +176,11 @@ public class Predicate extends Node {
     }
 
     @Override
+    public Predicate setFunctor(Functor functor) {
+        return (Predicate) super.setFunctor(functor);
+    }
+
+    @Override
     public Predicate set(int i, Object... a) {
         return (Predicate) super.set(i, a);
     }

@@ -457,7 +457,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Functor litFunctor = Functor.of(ast, litPattern, type, false, constructor);
             register(litFunctor, true);
             roots = new ListNode(List.of(), roots, litFunctor);
-            literalFunctors.updateAndGet(m -> m.put(nodFunctor, litFunctor));
+            addLiteral(nodFunctor, litFunctor);
             // Implied Rule
             Variable[] nodVars = new Variable[args.size()];
             Variable[] litVars = new Variable[args.size()];
@@ -480,6 +480,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             roots = new ListNode(List.of(), roots, rule);
         }
         return roots;
+    }
+
+    public void addLiteral(Functor nodFunctor, Functor litFunctor) {
+        literalFunctors.updateAndGet(m -> m.put(nodFunctor, litFunctor));
     }
 
     @SuppressWarnings("unchecked")

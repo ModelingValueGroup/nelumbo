@@ -67,8 +67,13 @@ public final class Fact extends Node implements Evaluatable {
     @Override
     public Node init(KnowledgeBase knowledgeBase) throws ParseException {
         Predicate predicate = predicate();
+        Functor nodeFunctor = predicate.functor();
+        Functor literalFunctor = knowledgeBase.literal(nodeFunctor);
+        if (literalFunctor != null) {
+            predicate = predicate.setFunctor(literalFunctor);
+        }
         if (predicate.isRelation() && predicate.isFullyBound()) {
-            evaluate(knowledgeBase, knowledgeBase);
+            knowledgeBase.addFact(predicate);
         }
         return this;
     }
