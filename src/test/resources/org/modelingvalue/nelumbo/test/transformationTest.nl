@@ -31,11 +31,14 @@ attr <Person> address <String>
 
 Piet.name := "Piet"
 Piet.address := "Kalverstraat"
+Jan.name := "Jan"
+Jan.address := "Kalverstraat"
 
 // Queries
 
 <String> s
 <Person> p
 
-p.name="Piet"  ? [(p=Piet)][..]
-Piet.address=s ? [(s="Kalverstraat")][..]
+p.name="Piet"            ? [(p=Piet)][..]
+Piet.address=s           ? [(s="Kalverstraat")][..]
+p.address="Kalverstraat" ? [(p=Piet),(p=Jan)][..]
