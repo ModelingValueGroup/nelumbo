@@ -24,15 +24,17 @@ attr <OT> AN <AT>  ::> {
 
 attr <Person> name <String>
 attr <Person> address <String>
+attr <Person> friend <Person>
 
 // Example
 
 <Person> ::= Piet, Jan 
 
-Piet.name := "Piet"
+Piet.name    := "Piet"
 Piet.address := "Kalverstraat"
-Jan.name := "Jan"
-Jan.address := "Kalverstraat"
+Jan.name     := "Jan"
+Jan.address  := "Kalverstraat"
+Jan.friend   := Piet
 
 // Queries
 
@@ -42,3 +44,4 @@ Jan.address := "Kalverstraat"
 p.name="Piet"            ? [(p=Piet)][..]
 Piet.address=s           ? [(s="Kalverstraat")][..]
 p.address="Kalverstraat" ? [(p=Piet),(p=Jan)][..]
+Jan.friend.name=s        ? [(s="Piet")][..]
