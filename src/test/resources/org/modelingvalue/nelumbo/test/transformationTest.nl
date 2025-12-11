@@ -1,4 +1,6 @@
 
+// Language
+
 <Root> ::= attr <Type> <NAME> <Type>
 
 <Type> OT, AT 
@@ -16,14 +18,24 @@ attr <OT> AN <AT>  ::> {
     }
 } 
 
+// Model
+
 <Person> :: <Node>
+
 attr <Person> name <String>
 attr <Person> address <String>
 
+// Example
+
 <Person> ::= Piet, Jan 
+
+Piet.name := "Piet"
+Piet.address := "Kalverstraat"
+
+// Queries
+
 <String> s
 <Person> p
 
-Piet.name := "Piet"
-
-Piet.name=s ? [(s="Piet")][..]
+p.name="Piet"  ? [(p=Piet)][..]
+Piet.address=s ? [(s="Kalverstraat")][..]
