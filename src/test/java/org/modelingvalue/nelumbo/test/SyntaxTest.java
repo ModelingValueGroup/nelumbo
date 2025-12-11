@@ -16,11 +16,18 @@
 
 package org.modelingvalue.nelumbo.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
@@ -30,12 +37,12 @@ public class SyntaxTest extends NelumboTestBase {
         setProp("PARALLEL_COLLECTIONS", "false");
         setProp("REVERSE_NELUMBO", "false");
         setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "true");
+        setProp("TRACE_NELUMBO", "false");
         setProp("VERBOSE_TESTS", "false");
     }
 
     @Test()
-    public void test1() {
+    public void exampleTest() {
         run(() -> {
             String example = """
 
@@ -74,8 +81,46 @@ public class SyntaxTest extends NelumboTestBase {
 
                     """;
             try {
-                TokenizerResult tr = new Tokenizer(example, "SyntaxTest.test1").tokenize();
+                TokenizerResult tr = new Tokenizer(example, "SyntaxTest.exampleTest").tokenize();
                 new Parser(tr).parseEvaluate();
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    @Test
+    public void tokenSplitTest() {
+        run(() -> {
+            try {
+                Parser.parse(org.modelingvalue.nelumbo.integers.Integer.class, "integers.nl"); // ?
+                String nl = "-4=-(2+2) ?";
+
+                TokenizerResult tr = new Tokenizer(nl, "SyntaxTest.tokenSplitTest").tokenize();
+                //U.printTokens("before-parse", tokens);
+                List<Token> all = tr.listAll();
+                assertEquals(11, all.size(), "wrong number of tokens returned by tokenize()");
+                assertEquals(",-4,=-,(,2,+,2,), ,?,", //
+                        all.map(Token::text).collect(Collectors.joining(",")), //
+                        "token texts before-parse not as expected");
+
+                List<Node> result = new Parser(tr).parseEvaluate().roots();
+                //U.printTokens("after-parse", tokens);
+                all = tr.listAll();
+                assertEquals(12, all.size(), "wrong number of tokens after parse()");
+                assertEquals(",-4,=,-,(,2,+,2,), ,?,", //
+                        all.map(Token::text).collect(Collectors.joining(",")), //
+                        "token texts after-parse not as expected");
+                assertEquals(1, result.size(), "wrong number of result nodes");
+
+                assertEquals(",-4,=,-,(,2,+,2,),?,", tr.list().map(Token::text).collect(Collectors.joining(",")), //
+                        "result tokens text not as expected");
+                assertEquals("NUMBER,OPERATOR,OPERATOR,LEFT,NUMBER,OPERATOR,NUMBER,RIGHT,OPERATOR", //
+                        result.first().tokens().map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
+                        "result tokens type not as expected");
+
+                U.printNode("all result nodes", result);
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);
