@@ -348,14 +348,10 @@ public class ParseState {
     }
 
     public ParseState merge(ParseState state) {
-        return merge(state, false);
-    }
-
-    public ParseState merge(ParseState state, boolean override) {
         if (state == null) {
             return this;
         }
-        Map<Object, ParseState> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b, override));
+        Map<Object, ParseState> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b));
         for (Object key : transitions.toKeys()) {
             if (key instanceof Type subType) {
                 for (Type superType : subType.allSupers()) {
@@ -363,7 +359,7 @@ public class ParseState {
                         ParseState superState = transitions.get(superType);
                         if (superState != null) {
                             ParseState subState = transitions.get(subType);
-                            ParseState mergedState = subState.merge(superState, true);
+                            ParseState mergedState = subState.merge(superState);
                             transitions = transitions.put(subType, mergedState);
                         }
                     }
@@ -371,20 +367,18 @@ public class ParseState {
             }
         }
         return new ParseState(transitions, //
-                merge(functor(), state.functor(), override), //
-                merge(leftPrecedence(), state.leftPrecedence(), false), //
-                merge(innerPrecedence(), state.innerPrecedence(), false), //
-                merge(group(), state.group(), false), //
+                functor() == null ? state.functor() : state.functor() == null ? functor() : //
+                        functor().equals(state.functor()) ? functor() : functor().mostSpecific(state.functor()), //
+                merge(leftPrecedence(), state.leftPrecedence()), //
+                merge(innerPrecedence(), state.innerPrecedence()), //
+                merge(group(), state.group()), //
                 startRepetitions().addAll(state.startRepetitions()), //
                 endRepetitions().addAll(state.endRepetitions()), //
-                branches().addAll(state.branches(), (a, b) -> merge(a, b, false)));
+                branches().addAll(state.branches(), (a, b) -> merge(a, b)));
     }
 
-    private static <T> T merge(T t1, T t2, boolean override) {
+    private static <T> T merge(T t1, T t2) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
-            if (override) {
-                return t1;
-            }
             throw new PatternMergeException("Non deterministic pattern merge " + t1 + " <> " + t2);
         }
         return t1 == null ? t2 : t1;

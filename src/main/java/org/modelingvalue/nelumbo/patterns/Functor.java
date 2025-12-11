@@ -32,6 +32,7 @@ import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.PatternMergeException;
 import org.modelingvalue.nelumbo.syntax.ThrowingTriFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -206,6 +207,23 @@ public class Functor extends Node {
     @Override
     public Functor init(KnowledgeBase knowledgeBase) throws ParseException {
         return knowledgeBase.register(this);
+    }
+
+    public Functor mostSpecific(Functor other) {
+        List<Type> thisTypes = argTypes();
+        List<Type> otherTypes = other.argTypes();
+        for (int i = 0; i < thisTypes.size() && i < otherTypes.size(); i++) {
+            Type thisType = thisTypes.get(i);
+            Type otherType = otherTypes.get(i);
+            if (!thisType.equals(otherType)) {
+                if (thisType.isAssignableFrom(otherType)) {
+                    return other;
+                } else if (otherType.isAssignableFrom(thisType)) {
+                    return this;
+                }
+            }
+        }
+        throw new PatternMergeException("Non deterministic pattern merge " + this + " <> " + other);
     }
 
 }

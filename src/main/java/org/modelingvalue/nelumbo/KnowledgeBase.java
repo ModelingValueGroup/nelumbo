@@ -44,7 +44,6 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
 import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
-import org.modelingvalue.nelumbo.patterns.TokenTypePattern;
 import org.modelingvalue.nelumbo.syntax.*;
 
 @SuppressWarnings("DuplicatedCode")
@@ -431,7 +430,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
-        if (pattern instanceof TokenTypePattern || pattern instanceof TokenTextPattern) {
+        if (!args.anyMatch(Type.NODE::isAssignableFrom)) {
             if (!Type.PREDICATE.isAssignableFrom(type)) {
                 type = type.literal();
             }
@@ -455,7 +454,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::literal);
             Functor litFunctor = Functor.of(ast, litPattern, type, false, constructor);
-            register(litFunctor, true);
+            register(litFunctor);
             roots = new ListNode(List.of(), roots, litFunctor);
             addLiteral(nodFunctor, litFunctor);
             // Implied Rule
@@ -755,19 +754,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Functor register(Functor functor) throws ParseException {
-        return register(functor, false);
-    }
-
-    private Functor register(Functor functor, boolean override) throws ParseException {
         boolean post = functor.left() != null;
         Type type = functor.resultType();
         String group = type.group();
         try {
             ParseState state = functor.start();
             if (!functor.local()) {
-                (post ? postPatterns : prePatterns).updateAndGet(p -> p.put(group, state.merge(p.get(group), override)));
+                (post ? postPatterns : prePatterns).updateAndGet(p -> p.put(group, state.merge(p.get(group))));
             }
-            (post ? localPostPatterns : localPrePatterns).updateAndGet(l -> l.put(group, state.merge(l.get(group), override)));
+            (post ? localPostPatterns : localPrePatterns).updateAndGet(l -> l.put(group, state.merge(l.get(group))));
         } catch (PatternMergeException pme) {
             addException(new ParseException(pme.getMessage(), functor));
         }
