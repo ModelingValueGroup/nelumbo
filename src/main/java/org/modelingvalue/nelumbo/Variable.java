@@ -30,6 +30,10 @@ public final class Variable extends Node {
         super(Type.VARIABLE, elements, type, name);
     }
 
+    protected Variable(List<AstElement> elements, Type type, Variable var) {
+        super(Type.VARIABLE, elements, type, var);
+    }
+
     private Variable(Object[] array, Variable declaration) {
         super(array, declaration);
     }
@@ -59,7 +63,8 @@ public final class Variable extends Node {
     }
 
     public String name() {
-        return (String) get(1);
+        Object n = get(1);
+        return n instanceof Variable var ? var.name() : (String) n;
     }
 
     @Override

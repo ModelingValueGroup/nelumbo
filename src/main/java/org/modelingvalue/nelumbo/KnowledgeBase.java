@@ -366,21 +366,24 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            AstElement node = elements.get(0);
-                            Type type = node instanceof Variable var ? new Type(var) : (Type) node;
+                            AstElement e = elements.get(0);
+                            Type type = e instanceof Variable var ? new Type(var) : (Type) e;
                             ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
                             for (int i = 1; i < elements.size(); i++) {
-                                Token token = (Token) elements.get(i);
+                                e = elements.get(i);
                                 Token comma = null;
-                                if (token.text().equals(",")) {
-                                    comma = token;
-                                    token = (Token) elements.get(++i);
+                                if (e instanceof Token t && t.text().equals(",")) {
+                                    comma = t;
+                                    e = elements.get(++i);
                                 }
-                                Variable var = new Variable(List.of(token), type, token.text());
+                                List<AstElement> el = List.of(e);
+                                Variable var = e instanceof Variable v ? //
+                                        new Variable(el, type, v) : //
+                                        new Variable(el, type, ((Token) e).text());
                                 if (comma != null) {
                                     roots.setAstElements(roots.astElements().add(comma));
                                 }
-                                Functor varFun = CURRENT.get().addVariable(var).setAstElements(List.of(token));
+                                Functor varFun = CURRENT.get().addVariable(var).setAstElements(el);
                                 roots = new ListNode(List.of(), roots, varFun);
                             }
                             return roots.setAstElements(roots.astElements().add(elements.last()));
