@@ -160,11 +160,15 @@ public final class PatternResult implements ParseExceptionHandler {
         }
         if (functor != null) {
             List<AstElement> elements = elements();
-            Node node = functor.construct(elements, functor.args(elements), this);
-            if (Type.ROOT.isAssignableFrom(node.type())) {
-                node.init(parser.knowledgeBase());
+            try {
+                Node node = functor.construct(elements, functor.args(elements), this);
+                if (Type.ROOT.isAssignableFrom(node.type())) {
+                    node.init(parser.knowledgeBase());
+                }
+                return node;
+            } catch (RuntimeException rte) {
+                addException(new ParseException(rte, rte.getLocalizedMessage(), elements));
             }
-            return node;
         }
         return null;
     }
