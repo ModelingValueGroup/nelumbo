@@ -18,7 +18,6 @@ package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -144,20 +143,28 @@ public class Functor extends Node {
         if (constructor != null) {
             try {
                 return constructor.newInstance(this, elements, args);
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
-                handler.addException(new ParseException(e, "Exception during Node construction", elements));
+            } catch (Exception e) {
+                handleException(elements, handler, e);
             }
         }
         ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function = function();
         if (function != null) {
             try {
                 return function.apply(elements, args, this);
-            } catch (ParseException pe) {
-                handler.addException(pe);
+            } catch (Exception e) {
+                handleException(elements, handler, e);
             }
         }
         return Type.PREDICATE.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : //
                 Type.TERMINAL.isAssignableFrom(resultType()) ? new Terminal(this, elements, args) : new Node(this, elements, args);
+    }
+
+    private void handleException(List<AstElement> elements, ParseExceptionHandler handler, Exception e) throws ParseException {
+        if (e instanceof ParseException pe) {
+            handler.addException(pe);
+        } else {
+            handler.addException(new ParseException(e, "Exception during Node construction", elements));
+        }
     }
 
     public ParseState start() {
@@ -181,7 +188,7 @@ public class Functor extends Node {
     public Object[] args(List<AstElement> elements) {
         Pattern pattern = pattern();
         List<Object> args = pattern.args(List.of(), new Pattern.ElementIterator(elements, start(), this), List.of(), false);
-        return pattern instanceof SequencePattern && args.get(0) instanceof List seq ? seq.toArray() : args.toArray();
+        return pattern instanceof SequencePattern && args.size() == 1 && args.get(0) instanceof List seq ? seq.toArray() : args.toArray();
     }
 
     public String string(List<Object> args, TokenType[] previous) {
@@ -222,6 +229,14 @@ public class Functor extends Node {
                     return this;
                 }
             }
+        }
+        boolean thisIsVar = Type.VARIABLE.isAssignableFrom(resultType());
+        boolean otherIsVar = Type.VARIABLE.isAssignableFrom(other.resultType());
+        if (thisIsVar && !otherIsVar) {
+            return other;
+        }
+        if (!thisIsVar && otherIsVar) {
+            return this;
         }
         throw new PatternMergeException("Non deterministic pattern merge " + this + " <> " + other);
     }
