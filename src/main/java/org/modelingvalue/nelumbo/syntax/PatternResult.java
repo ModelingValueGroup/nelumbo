@@ -41,6 +41,7 @@ public final class PatternResult implements ParseExceptionHandler {
     private Token                                 nextToken;
     private int                                   depth;
     private boolean                               hasLeft;
+    private boolean                               hasException;
 
     public PatternResult(Parser parser, ParseContext context) {
         this.parser = parser;
@@ -176,12 +177,17 @@ public final class PatternResult implements ParseExceptionHandler {
 
     @Override
     public void addException(ParseException exception) throws ParseException {
+        hasException = true;
         parser.addException(exception);
     }
 
     @Override
     public List<ParseException> exceptions() {
         return parser.exceptions();
+    }
+
+    public boolean hasException() {
+        return hasException;
     }
 
 }

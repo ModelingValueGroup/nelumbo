@@ -154,7 +154,7 @@ public class ParseState {
             return true;
         }
         if (result.functor() == null) {
-            if (functor() == null) {
+            if (functor() == null || result.hasException()) {
                 if ((!pre || !result.isEmpty()) && nrOfExceptions == result.exceptions().size()) {
                     result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(ctx), token));
                 }
