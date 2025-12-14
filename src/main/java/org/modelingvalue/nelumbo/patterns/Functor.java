@@ -230,14 +230,6 @@ public class Functor extends Node {
                 }
             }
         }
-        boolean thisIsVar = Type.VARIABLE.isAssignableFrom(resultType());
-        boolean otherIsVar = Type.VARIABLE.isAssignableFrom(other.resultType());
-        if (thisIsVar && !otherIsVar) {
-            return other;
-        }
-        if (!thisIsVar && otherIsVar) {
-            return this;
-        }
         throw new PatternMergeException("Non deterministic pattern merge " + this + " <> " + other);
     }
 
