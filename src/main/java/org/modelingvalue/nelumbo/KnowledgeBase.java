@@ -759,7 +759,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     public Functor register(Functor functor) throws ParseException {
         boolean post = functor.left() != null;
         Type type = functor.resultType();
-        String group = type.group();
+        String group = Type.VARIABLE.isAssignableFrom(type) ? //
+                ((Variable) functor.construct(List.of(), new Object[0], this)).type().group() : //
+                type.group();
         try {
             ParseState state = functor.start();
             if (!functor.local()) {
