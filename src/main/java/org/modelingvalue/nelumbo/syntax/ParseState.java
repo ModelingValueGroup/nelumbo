@@ -117,14 +117,14 @@ public class ParseState {
         return branches;
     }
 
-    public PatternResult parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions, boolean pre) throws ParseException {
+    public boolean parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions, boolean pre) throws ParseException {
         ParseContext ctx = result.context();
         if (ctx.state() == this && ctx.token() == token) {
-            return null;
+            return false;
         }
         if (pre && !startRepetitions().isEmpty() && !result.isEmpty()) {
             result.endPreParse(this, token);
-            return result;
+            return true;
         }
         Map<RepetitionPattern, ParseState> innerRepetitions = outerRepetitions;
         for (RepetitionPattern start : startRepetitions()) {
@@ -133,36 +133,36 @@ public class ParseState {
         int nrOfExceptions;
         do {
             nrOfExceptions = result.exceptions().size();
-            if (token(token, result, ctx, innerRepetitions, pre) == null) {
+            if (!token(token, result, ctx, innerRepetitions, pre)) {
                 if (pre && group() != null) {
                     result.endPreParse(this, token);
-                    return result;
-                } else if (!pre && token != null && outerEnd(token, result, ctx, outerRepetitions) != null) {
+                    return true;
+                } else if (!pre && token != null && outerEnd(token, result, ctx, outerRepetitions)) {
                     result.endPostParse(functor(), token);
-                } else if (node(token, result, innerRepetitions, pre) == null) {
+                } else if (!node(token, result, innerRepetitions, pre)) {
                     break;
                 }
             }
             if (!startRepetitions().anyMatch(result.endRepetitions()::contains)) {
                 result.countDepth();
-                return result;
+                return true;
             }
             token = result.nextToken();
         } while (true);
         if (endRepetitions().anyMatch(outerRepetitions::containsKey)) {
             result.endRepetition(endRepetitions(), token, 1);
-            return result;
+            return true;
         }
         if (result.functor() == null) {
             if (functor() == null) {
                 if ((!pre || !result.isEmpty()) && nrOfExceptions == result.exceptions().size()) {
                     result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(ctx), token));
                 }
-                return null;
+                return false;
             }
             result.endPostParse(functor(), token);
         }
-        return result;
+        return true;
     }
 
     private String expectedTokens(ParseContext ctx) {
@@ -188,9 +188,9 @@ public class ParseState {
         return result;
     }
 
-    private PatternResult token(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
+    private boolean token(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
         if (transitions().isEmpty()) {
-            return null;
+            return false;
         }
         AstElement element = null;
         ParseState next = null;
@@ -241,7 +241,7 @@ public class ParseState {
                 if (next != null) {
                     element = var;
                 } else {
-                    return null;
+                    return false;
                 }
             }
         }
@@ -253,7 +253,7 @@ public class ParseState {
         }
         if (next != null) {
             if (repetitions == null) {
-                return result;
+                return true;
             }
             if (element != null) {
                 result.add(element);
@@ -261,37 +261,37 @@ public class ParseState {
             }
             return next.parse(token.next(), result, repetitions, pre);
         }
-        return null;
+        return false;
 
     }
 
-    private PatternResult outerEnd(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions) throws ParseException {
+    private boolean outerEnd(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions) throws ParseException {
         if (functor() != null) {
             for (Entry<RepetitionPattern, ParseState> r : repetitions) {
-                if (endRepetitions().contains(r.getKey()) && r.getValue().token(token, result, ctx, null, true) != null) {
-                    return null;
+                if (endRepetitions().contains(r.getKey()) && r.getValue().token(token, result, ctx, null, true)) {
+                    return false;
                 }
             }
             Type type = functor().resultType();
             for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
                 for (Type sup : type.allSupers()) {
                     ParseState next = pc.state().transitions().get(sup);
-                    if (next != null && next.token(token, result, ctx.outer(), null, true) != null) {
-                        return result;
+                    if (next != null && next.token(token, result, ctx.outer(), null, true)) {
+                        return true;
                     }
                 }
             }
         }
-        return null;
+        return false;
     }
 
     private static boolean isNumeric(TokenType type) {
         return type == TokenType.NUMBER || type == TokenType.DECIMAL;
     }
 
-    private PatternResult node(Token token, PatternResult result, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
+    private boolean node(Token token, PatternResult result, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
         if (group() == null) {
-            return null;
+            return false;
         }
         while (true) {
             int nrOfExceptions = result.exceptions().size();
@@ -309,35 +309,35 @@ public class ParseState {
                 if (node instanceof Variable) {
                     ParseState next = transitions().get(Type.VARIABLE);
                     if (next != null) {
-                        if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                        if (next.parse(node.nextToken(), result, repetitions, pre)) {
                             node.setBranches(next.branches);
-                            return result;
+                            return true;
                         }
                     }
                 }
                 for (Type sup : node.type().allSupers()) {
                     ParseState next = transitions().get(sup);
                     if (next != null) {
-                        if (next.parse(node.nextToken(), result, repetitions, pre) != null) {
+                        if (next.parse(node.nextToken(), result, repetitions, pre)) {
                             node.setBranches(next.branches);
-                            return result;
+                            return true;
                         } else {
                             break;
                         }
                     }
                 }
                 result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
-                return result;
+                return true;
             } else if (token.type() != TokenType.ENDOFFILE && Pattern.isEndOfLine(token) && result.exceptions().size() > nrOfExceptions) {
                 token = token.next();
                 while (!Pattern.isEndOfLine(token)) {
                     token = token.next();
                 }
                 if (token.type() == TokenType.ENDOFFILE) {
-                    return null;
+                    return false;
                 }
             } else {
-                return null;
+                return false;
             }
         }
     }

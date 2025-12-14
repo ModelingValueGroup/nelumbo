@@ -805,12 +805,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 if (found != null) {
                     PatternResult result = new PatternResult(parser, ctx);
                     result.left(left);
-                    return found.parse(token, result, Map.of(), true);
+                    return found.parse(token, result, Map.of(), true) ? result : null;
                 }
             }
             return null;
         }
-        return state.parse(token, new PatternResult(parser, ctx), Map.of(), true);
+        PatternResult result = new PatternResult(parser, ctx);
+        return state.parse(token, result, Map.of(), true) ? result : null;
     }
 
     public void print(PrintStream stream, boolean withTokens) {
