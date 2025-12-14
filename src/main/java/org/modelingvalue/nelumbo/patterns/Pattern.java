@@ -193,6 +193,9 @@ public abstract class Pattern extends Node {
                         TokenType tt = type.tokenType();
                         if (tt != null) {
                             post = pre.transitions().get(tt);
+                            if (post == null && tt == TokenType.NAME) {
+                                post = pre.transitions().get(TokenType.TYPE);
+                            }
                         } else {
                             post = pre.transitions().get(Type.VARIABLE);
                         }

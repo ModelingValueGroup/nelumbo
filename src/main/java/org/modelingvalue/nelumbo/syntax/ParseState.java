@@ -234,10 +234,16 @@ public class ParseState {
             }
         }
         if (next == null && (type == TokenType.NAME || type == TokenType.TYPE)) {
-            Variable var = result.parser().variable(token);
+            Variable var = result.parser().variable(token, ctx);
             if (var != null) {
                 TokenType tt = var.type().tokenType();
                 next = tt != null ? transitions().get(tt) : null;
+                if (next == null && tt == TokenType.NAME) {
+                    next = transitions().get(TokenType.TYPE);
+                    if (next != null) {
+                        var = var.rename("<" + var.name() + ">");
+                    }
+                }
                 if (next != null) {
                     element = var;
                 } else {

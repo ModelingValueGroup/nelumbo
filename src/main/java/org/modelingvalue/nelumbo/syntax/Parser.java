@@ -136,8 +136,8 @@ public final class Parser implements ParseExceptionHandler {
         return left;
     }
 
-    public Variable variable(Token token) throws ParseException {
-        return knowledgeBase.variable(token, this);
+    public Variable variable(Token token, ParseContext ctx) throws ParseException {
+        return knowledgeBase.variable(token, ctx, this);
     }
 
     public PatternResult preParse(Token token, ParseContext ctx, Node left) throws ParseException {

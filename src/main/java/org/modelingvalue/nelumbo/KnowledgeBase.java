@@ -353,7 +353,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
-                            String name = (String) args[0];
+                            String name = args[0] instanceof Variable var ? var.name() : (String) args[0];
                             name = name.substring(1, name.length() - 1);
                             Set<Type> supers = Set.of();
                             for (Type sup : (List<Type>) args[1]) {
@@ -784,12 +784,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return functor;
     }
 
-    public Variable variable(Token token, Parser parser) throws ParseException {
-        ParseState state = localPrePatterns.get().get(Type.DEFAULT_GROUP);
+    public Variable variable(Token token, ParseContext ctx, Parser parser) throws ParseException {
+        ParseState state = localPrePatterns.get().get(ctx.group());
         if (state != null) {
-            state = state.transitions().get(token.text());
-            if (state != null && state.functor() != null && state.functor().resultType() == Type.VARIABLE) {
-                return (Variable) state.functor().construct(List.of(token), new Object[0], parser);
+            ParseState found = state.transitions().get(token.text());
+            if (found == null && token.type() == TokenType.TYPE) {
+                found = state.transitions().get(token.text().substring(1, token.text().length() - 1));
+            }
+            if (found != null && found.functor() != null && found.functor().resultType() == Type.VARIABLE) {
+                return (Variable) found.functor().construct(List.of(token), new Object[0], parser);
             }
         }
         return null;
