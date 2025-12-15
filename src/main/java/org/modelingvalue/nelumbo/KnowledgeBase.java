@@ -418,7 +418,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     targets = targets.add(e);
                                 }
                             }
-                            return new Transform(functor, elements, source, targets).init(CURRENT.get());
+                            return new Transform(functor, elements, source, targets);
                         }).init(this);
 
                 Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
