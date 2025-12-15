@@ -394,7 +394,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }).init(this);
 
                 ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=>"), r(CONDITION, true, t(","))), //
-                        Type.ROOT.list(), false, (elements, args, functor) -> CURRENT.get().createRules(functor, elements, args)).init(this);
+                        Type.ROOT.list(), false, (elements, args, functor) -> {
+                            return CURRENT.get().createRules(functor, elements, args);
+                        }).init(this);
 
                 Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]")))), //
                         Type.QUERY, false, (elements, args, functor) -> {
