@@ -286,10 +286,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }).init(this);
 
                 Functor.of(s(t("<(>"), SEQUENCE, t("<)?>")), //
-                        Type.PATTERN, false, (elements, args, functor) -> o(elements, pattern(elements))).init(this);
+                        Type.PATTERN, false, (elements, args, functor) -> {
+                            return o(elements, pattern(elements));
+                        }).init(this);
 
                 Functor.of(s(t(LEFT), SEQUENCE, t(RIGHT)), //
-                        Type.PATTERN, false, (elements, args, functor) -> s(elements, pattern(elements))).init(this);
+                        Type.PATTERN, false, (elements, args, functor) -> {
+                            return s(elements, pattern(elements));
+                        }).init(this);
 
                 Functor.of(n(Type.TYPE(), Integer.MAX_VALUE), //
                         Type.PATTERN, false, (elements, args, functor) -> {
@@ -398,7 +402,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }).init(this);
 
                 Functor.of(s(n(Type.PREDICATE, 0)), //
-                        Type.FACT, false, (elements, args, functor) -> new Fact(functor, elements, args)).init(this);
+                        Type.FACT, false, (elements, args, functor) -> {
+                            return new Fact(functor, elements, args);
+                        }).init(this);
 
                 Functor.of(s(n(Type.ROOT, null), t("::>"), t("{"), ROOTS, t("}")), //
                         Type.TRANSFORM, false, (elements, args, functor) -> {
