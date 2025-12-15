@@ -323,7 +323,8 @@ public final class Token implements AstElement {
     }
 
     public Variable variable() {
-        if (node instanceof Variable var) {
+        Variable var = node != null ? node.variable() : null;
+        if (var != null) {
             return var;
         }
         Pattern pattern = declaration();

@@ -96,4 +96,9 @@ public final class Variable extends Node {
         return set(0, type);
     }
 
+    @Override
+    public Variable variable() {
+        return this;
+    }
+
 }

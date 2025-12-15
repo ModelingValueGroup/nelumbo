@@ -298,6 +298,7 @@ public class Type extends Node {
         return type instanceof Class clss ? clss : null;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Variable variable() {
         Object type = get(0);

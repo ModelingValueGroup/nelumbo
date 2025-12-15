@@ -613,4 +613,8 @@ public class Node extends StructImpl implements AstElement {
         return this;
     }
 
+    public Variable variable() {
+        return null;
+    }
+
 }
