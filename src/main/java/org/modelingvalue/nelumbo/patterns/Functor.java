@@ -44,6 +44,10 @@ public class Functor extends Node {
         return new Functor(elements, pattern, result, local, constructor);
     }
 
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function) {
+        return new Functor(elements, pattern, result, local, function);
+    }
+
     public static Functor of(Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function) {
         return new Functor(List.of(), pattern, result, local, function);
     }

@@ -150,8 +150,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return POOL.invoke(new LogicTask(runnable, this));
     }
 
-    private Functor addType(Type type, boolean predefined) throws ParseException {
-        return Functor.of(t(type.toString()), //
+    private Functor addType(Type type, boolean predefined, List<AstElement> el) throws ParseException {
+        return Functor.of(el, t(type.toString()), //
                 Type.TYPE(), false, (elements, args, functor) -> {
                     Type result = type.setAstElements(elements);
                     if (!predefined) {
@@ -161,9 +161,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }).init(this);
     }
 
-    private Functor addVariable(Variable var) throws ParseException {
+    private Functor addVariable(Variable var, List<AstElement> el) throws ParseException {
         String string = var.type().equals(Type.TYPE()) ? ("<" + var.name() + ">") : var.name();
-        return Functor.of(t(string), //
+        return Functor.of(el, t(string), //
                 Type.VARIABLE, true, (elements, args, functor) -> {
                     Variable result = var.setAstElements(elements);
                     return result.setFunctor(functor);
@@ -220,12 +220,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             try {
 
                 for (Type type : Type.predefined()) {
-                    addType(type, true);
+                    addType(type, true, List.of());
                 }
 
                 for (TokenType tokenType : values()) {
                     if (!tokenType.skip()) {
-                        addType(new Type(tokenType), true);
+                        addType(new Type(tokenType), true, List.of());
                     }
                 }
 
@@ -367,7 +367,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             }
                             String group = ((Optional<String>) args[2]).orElse(Type.DEFAULT_GROUP);
                             Type type = new Type(elements, name, supers, group);
-                            return CURRENT.get().addType(type, false).setAstElements(elements);
+                            return CURRENT.get().addType(type, false, elements);
                         }).init(this);
 
                 Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(","))), //
@@ -389,7 +389,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 if (comma != null) {
                                     roots.setAstElements(roots.astElements().add(comma));
                                 }
-                                Functor varFun = CURRENT.get().addVariable(var).setAstElements(el);
+                                Functor varFun = CURRENT.get().addVariable(var, el);
                                 roots = new ListNode(List.of(), roots, varFun);
                             }
                             return roots.setAstElements(roots.astElements().add(elements.last()));
