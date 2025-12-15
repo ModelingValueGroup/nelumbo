@@ -151,21 +151,23 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private Functor addType(Type type, boolean predefined) throws ParseException {
-        return Functor.of(t(type.toString()), Type.TYPE(), false, (elements, args, functor) -> {
-            Type result = type.setAstElements(elements);
-            if (!predefined) {
-                result = result.setFunctor(functor);
-            }
-            return result;
-        }).init(this);
+        return Functor.of(t(type.toString()), //
+                Type.TYPE(), false, (elements, args, functor) -> {
+                    Type result = type.setAstElements(elements);
+                    if (!predefined) {
+                        result = result.setFunctor(functor);
+                    }
+                    return result;
+                }).init(this);
     }
 
     private Functor addVariable(Variable var) throws ParseException {
         String string = var.type().equals(Type.TYPE()) ? ("<" + var.name() + ">") : var.name();
-        return Functor.of(t(string), Type.VARIABLE, true, (elements, args, functor) -> {
-            Variable result = var.setAstElements(elements);
-            return result.setFunctor(functor);
-        }).init(this);
+        return Functor.of(t(string), //
+                Type.VARIABLE, true, (elements, args, functor) -> {
+                    Variable result = var.setAstElements(elements);
+                    return result.setFunctor(functor);
+                }).init(this);
     }
 
     private Pattern pattern(List<AstElement> elements) {
