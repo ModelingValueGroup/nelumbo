@@ -140,6 +140,15 @@ public class ParseState {
                 } else if (!pre && token != null && outerEnd(token, result, ctx, outerRepetitions)) {
                     result.endPostParse(functor(), token);
                 } else if (!node(token, result, innerRepetitions, pre)) {
+                    if (result.exceptions().size() > nrOfExceptions && token.type() != TokenType.ENDOFFILE && Pattern.isEndOfLine(token)) {
+                        token = token.next();
+                        while (!Pattern.isEndOfLine(token)) {
+                            token = token.next();
+                        }
+                        if (token.type() != TokenType.ENDOFFILE) {
+                            continue;
+                        }
+                    }
                     break;
                 }
             }
@@ -299,53 +308,41 @@ public class ParseState {
         if (group() == null) {
             return false;
         }
-        while (true) {
-            int nrOfExceptions = result.exceptions().size();
-            Token nextToken = token.next();
-            if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
-                token = result.addMerge(token, nextToken.prepend("-"));
-            }
-            Integer inner = innerPrecedence();
-            if (transitions().get(Type.TYPE()) != null || transitions().get(Type.VARIABLE) != null) {
-                inner = Integer.MAX_VALUE;
-            }
-            Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner, result.context()));
-            if (node != null) {
-                result.add(node);
-                if (node instanceof Variable) {
-                    ParseState next = transitions().get(Type.VARIABLE);
-                    if (next != null) {
-                        if (next.parse(node.nextToken(), result, repetitions, pre)) {
-                            node.setBranches(next.branches);
-                            return true;
-                        }
-                    }
-                }
-                for (Type sup : node.type().allSupers()) {
-                    ParseState next = transitions().get(sup);
-                    if (next != null) {
-                        if (next.parse(node.nextToken(), result, repetitions, pre)) {
-                            node.setBranches(next.branches);
-                            return true;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
-                return true;
-            } else if (token.type() != TokenType.ENDOFFILE && Pattern.isEndOfLine(token) && result.exceptions().size() > nrOfExceptions) {
-                token = token.next();
-                while (!Pattern.isEndOfLine(token)) {
-                    token = token.next();
-                }
-                if (token.type() == TokenType.ENDOFFILE) {
-                    return false;
-                }
-            } else {
-                return false;
-            }
+        Token nextToken = token.next();
+        if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
+            token = result.addMerge(token, nextToken.prepend("-"));
         }
+        Integer inner = innerPrecedence();
+        if (transitions().get(Type.TYPE()) != null || transitions().get(Type.VARIABLE) != null) {
+            inner = Integer.MAX_VALUE;
+        }
+        Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner, result.context()));
+        if (node != null) {
+            result.add(node);
+            if (node instanceof Variable) {
+                ParseState next = transitions().get(Type.VARIABLE);
+                if (next != null) {
+                    if (next.parse(node.nextToken(), result, repetitions, pre)) {
+                        node.setBranches(next.branches);
+                        return true;
+                    }
+                }
+            }
+            for (Type sup : node.type().allSupers()) {
+                ParseState next = transitions().get(sup);
+                if (next != null) {
+                    if (next.parse(node.nextToken(), result, repetitions, pre)) {
+                        node.setBranches(next.branches);
+                        return true;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
+            return true;
+        }
+        return false;
     }
 
     private String expectedTypes() {

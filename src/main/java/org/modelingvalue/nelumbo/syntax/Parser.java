@@ -107,9 +107,12 @@ public final class Parser implements ParseExceptionHandler {
     }
 
     public Node parseNode(Token token, ParseContext ctx) throws ParseException {
+        int nrOfExceptions = exceptions().size();
         PatternResult result = preParse(token, ctx, null);
         if (result == null) {
-            addException(new ParseException("No syntax pattern found for " + token, token));
+            if (nrOfExceptions == exceptions().size()) {
+                addException(new ParseException("No syntax pattern found for " + token, token));
+            }
             return null;
         }
         Node left = result.postParse(ctx);
