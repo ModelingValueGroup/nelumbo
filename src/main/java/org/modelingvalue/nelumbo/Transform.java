@@ -23,6 +23,8 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.patterns.Pattern;
+import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 public final class Transform extends Node {
@@ -59,7 +61,7 @@ public final class Transform extends Node {
     public Set<Functor> literals() {
         Set<Functor> literals = Set.of();
         for (Node target : targets()) {
-            if (target instanceof Functor functor && Type.LITERAL.isAssignableFrom(functor.resultType())) {
+            if (target instanceof Functor functor && functor.pattern() instanceof TokenTextPattern) {
                 literals = literals.add(functor);
             }
         }
@@ -72,15 +74,14 @@ public final class Transform extends Node {
         return this;
     }
 
-    public void rewrite(Node node, KnowledgeBase knowledgeBase) throws ParseException {
-        Node source = source();
-        Map<Variable, Object> binding = node.getBinding(source);
+    public void rewrite(Node start, Node node, KnowledgeBase knowledgeBase) throws ParseException {
+        Map<Variable, Object> binding = node.getBinding(start);
         if (binding == null) {
             return;
         }
         Map<Functor, Functor> functors = Map.of();
         for (Node target : targets()) {
-            if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())) {
+            if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType()) && !functor.pattern().equals(start)) {
                 Functor rewrite = functor.setBinding(binding).setAstElements(node.astElements()).resetDeclaration();
                 for (Entry<Functor, Functor> e : functors) {
                     if (functor.equals(knowledgeBase.literal(e.getKey()))) {
@@ -91,6 +92,9 @@ public final class Transform extends Node {
                 functors = functors.put(functor, rewrite);
                 rewrite.init(knowledgeBase);
             }
+        }
+        if (start instanceof Pattern) {
+            return;
         }
         Map<Functor, Functor> fm = functors;
         for (Node target : targets()) {

@@ -36,6 +36,7 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.logic.And;
 import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -151,7 +152,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private Functor addType(Type type, boolean predefined) throws ParseException {
-        return Functor.of(type.astElements(), t(type.toString()), //
+        Variable var = type.variable();
+        Pattern pattern = var != null ? t(var) : t(type.toString());
+        return Functor.of(type.astElements(), pattern, //
                 Type.TYPE(), false, (elements, args, functor) -> {
                     Type result = type.setAstElements(elements);
                     if (!predefined) {
@@ -162,6 +165,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private Functor addVariable(Variable var) throws ParseException {
+        Type literal = var.type().literal();
+        for (Pair<Functor, Transform> pair : literalTransforms.get().getOrDefault(literal, Set.of())) {
+            pair.b().rewrite(pair.a().pattern(), t(var), this);
+        }
         String string = var.type().equals(Type.TYPE()) ? ("<" + var.name() + ">") : var.name();
         return Functor.of(var.astElements(), t(string), //
                 Type.VARIABLE, true, (elements, args, functor) -> {
@@ -359,14 +366,19 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
-                            String name = args[0] instanceof Variable var ? var.name() : (String) args[0];
-                            name = name.substring(1, name.length() - 1);
                             Set<Type> supers = Set.of();
                             for (Type sup : (List<Type>) args[1]) {
                                 supers = supers.add(sup);
                             }
                             String group = ((Optional<String>) args[2]).orElse(Type.DEFAULT_GROUP);
-                            Type type = new Type(elements, name, supers, group);
+                            Type type;
+                            if (args[0] instanceof Variable var) {
+                                type = new Type(elements, var, group);
+                            } else {
+                                String name = (String) args[0];
+                                name = name.substring(1, name.length() - 1);
+                                type = new Type(elements, name, supers, group);
+                            }
                             return CURRENT.get().addType(type, false);
                         }).init(this);
 
@@ -551,29 +563,29 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return roots.setAstElements(roots.astElements().add(elements.last()));
     }
 
-    private final AtomicReference<Set<Functor>>                         functors            = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, InferResult>>          facts               = new AtomicReference<>();
-    private final AtomicReference<Set<Rule>>                            rules               = new AtomicReference<>();
-    private final AtomicReference<Set<Transform>>                       transforms          = new AtomicReference<>();
-    private final AtomicReference<Map<Type, Set<Transform>>>            literalTransforms   = new AtomicReference<>();
+    private final AtomicReference<Set<Functor>>                             functors            = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, InferResult>>              facts               = new AtomicReference<>();
+    private final AtomicReference<Set<Rule>>                                rules               = new AtomicReference<>();
+    private final AtomicReference<Set<Transform>>                           transforms          = new AtomicReference<>();
+    private final AtomicReference<Map<Type, Set<Pair<Functor, Transform>>>> literalTransforms   = new AtomicReference<>();
     //
-    private final AtomicReference<Map<String, ParseState>>              prePatterns         = new AtomicReference<>();
-    private final AtomicReference<Map<String, ParseState>>              postPatterns        = new AtomicReference<>();
+    private final AtomicReference<Map<String, ParseState>>                  prePatterns         = new AtomicReference<>();
+    private final AtomicReference<Map<String, ParseState>>                  postPatterns        = new AtomicReference<>();
     //
-    private final AtomicReference<Map<String, ParseState>>              localPrePatterns    = new AtomicReference<>();
-    private final AtomicReference<Map<String, ParseState>>              localPostPatterns   = new AtomicReference<>();
+    private final AtomicReference<Map<String, ParseState>>                  localPrePatterns    = new AtomicReference<>();
+    private final AtomicReference<Map<String, ParseState>>                  localPostPatterns   = new AtomicReference<>();
     //
-    private final AtomicReference<Map<Functor, Functor>>                literalFunctors     = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>>                    literalFunctors     = new AtomicReference<>();
     //
-    private final AtomicReference<MatchState<Rule>>                     ruleSignatures      = new AtomicReference<>();
-    private final AtomicReference<MatchState<Transform>>                transformSignatures = new AtomicReference<>();
+    private final AtomicReference<MatchState<Rule>>                         ruleSignatures      = new AtomicReference<>();
+    private final AtomicReference<MatchState<Transform>>                    transformSignatures = new AtomicReference<>();
     //
-    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization         = new AtomicReference<>();
-    private final InferContext                                          context;
-    private final KnowledgeBase                                         init;
+    private final AtomicReference<QualifiedSet<Predicate, Inference>[]>     memoization         = new AtomicReference<>();
+    private final InferContext                                              context;
+    private final KnowledgeBase                                             init;
 
-    private boolean                                                     stopped;
-    private ParseExceptionHandler                                       exceptionHandler;
+    private boolean                                                         stopped;
+    private ParseExceptionHandler                                           exceptionHandler;
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
@@ -722,7 +734,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         transformSignatures.updateAndGet(state::merge);
         for (Functor functor : transform.literals()) {
             Type literal = functor.resultType();
-            literalTransforms.updateAndGet(m -> m.put(literal, m.getOrDefault(literal, Set.of()).add(transform)));
+            literalTransforms.updateAndGet(m -> m.put(literal, m.getOrDefault(literal, Set.of()).//
+                    add(Pair.of(functor, transform))));
         }
         return transform;
     }

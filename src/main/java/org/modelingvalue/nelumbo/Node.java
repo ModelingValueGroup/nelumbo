@@ -377,8 +377,8 @@ public class Node extends StructImpl implements AstElement {
 
     private Map<Variable, Object> getBinding(Object declVal, Object thisIn, Map<Variable, Object> vars, int i) {
         Object thisVal = thisIn instanceof Type || thisIn instanceof Variable ? null : thisIn;
-        if (declVal instanceof Variable var) {
-            Object varVal = vars.get(var);
+        if (declVal instanceof Variable declVar) {
+            Object varVal = vars.get(declVar);
             varVal = varVal instanceof Type ? null : varVal;
             if (varVal != null) {
                 if (thisVal != null && !thisVal.equals(varVal)) {
@@ -386,10 +386,14 @@ public class Node extends StructImpl implements AstElement {
                 }
             } else {
                 if (thisVal == null) {
-                    thisVal = typeOf(thisIn);
+                    if (thisIn instanceof Variable thisVar && !thisVar.equals(declVar)) {
+                        thisVal = thisVar;
+                    } else {
+                        thisVal = typeOf(thisIn);
+                    }
                 }
                 if (thisVal != null && doGetBinding(thisVal, i)) {
-                    vars = vars.put(var, thisVal);
+                    vars = vars.put(declVar, thisVal);
                     if (thisVal instanceof Node thisNode) {
                         vars = vars.putAll(thisNode.getBinding().replaceAll(e -> {
                             Variable nodeVar = e.getKey();
@@ -440,6 +444,16 @@ public class Node extends StructImpl implements AstElement {
     private Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i) {
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
+            if (varVal == null) {
+                String name = declVar.name();
+                if (name.startsWith("<")) {
+                    declVar = declVar.rename(name.substring(1, name.length() - 1));
+                    varVal = vars.get(declVar);
+                    if (varVal instanceof Variable valVar) {
+                        varVal = valVar.rename("<" + valVar.name() + ">");
+                    }
+                }
+            }
             if (varVal != null && doSetBinding(varVal, i)) {
                 return varVal;
             }
@@ -594,7 +608,7 @@ public class Node extends StructImpl implements AstElement {
 
     public Node init(KnowledgeBase knowledgeBase) throws ParseException {
         for (Transform transform : knowledgeBase.getTransforms(this)) {
-            transform.rewrite(this, knowledgeBase);
+            transform.rewrite(transform.source(), this, knowledgeBase);
         }
         return this;
     }
