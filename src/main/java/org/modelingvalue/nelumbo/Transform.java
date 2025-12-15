@@ -82,7 +82,7 @@ public final class Transform extends Node {
         Map<Functor, Functor> functors = Map.of();
         for (Node target : targets()) {
             if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType()) && !functor.pattern().equals(start)) {
-                Functor rewrite = functor.setBinding(binding).setAstElements(node.astElements()).resetDeclaration();
+                Functor rewrite = functor.setBinding(binding).resetDeclaration();
                 for (Entry<Functor, Functor> e : functors) {
                     if (functor.equals(knowledgeBase.literal(e.getKey()))) {
                         knowledgeBase.addLiteral(e.getValue(), rewrite);

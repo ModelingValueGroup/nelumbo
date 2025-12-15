@@ -167,7 +167,7 @@ public class Functor extends Node {
         if (e instanceof ParseException pe) {
             handler.addException(pe);
         } else {
-            handler.addException(new ParseException(e, "Exception during Node construction", elements));
+            handler.addException(new ParseException(e, "Exception during Node construction: " + e, elements));
         }
     }
 
@@ -235,6 +235,16 @@ public class Functor extends Node {
             }
         }
         throw new PatternMergeException("Non deterministic pattern merge " + this + " <> " + other);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
+    protected Functor setBinding(Node declaration, Map<Variable, Object> vars) {
+        Functor functor = (Functor) super.setBinding(declaration, vars);
+        List<AstElement> from = astElements();
+        List to = (List) setBinding(from, from, vars, -1);
+        to = to.replaceAll(e -> e instanceof String s ? Pattern.t(s) : e);
+        return from.equals(to) ? functor : functor.setAstElements(to);
     }
 
 }

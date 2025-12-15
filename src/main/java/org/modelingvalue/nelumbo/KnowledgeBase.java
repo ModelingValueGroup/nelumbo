@@ -153,10 +153,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private Functor addType(Type type, boolean predefined) throws ParseException {
         Variable var = type.variable();
-        Pattern pattern = var != null ? t(var) : t(type.toString());
-        return Functor.of(type.astElements(), pattern, //
+        Pattern pattern = var != null ? t(List.of(type), var) : t(List.of(type), type.toString());
+        return Functor.of(List.of(type), pattern, //
                 Type.TYPE(), false, (elements, args, functor) -> {
-                    Type result = type.setAstElements(elements);
+                    Type result = ((Type) functor.astElements().first()).setAstElements(elements);
                     if (!predefined) {
                         result = result.setFunctor(functor);
                     }
@@ -167,12 +167,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private Functor addVariable(Variable var) throws ParseException {
         Type literal = var.type().literal();
         for (Pair<Functor, Transform> pair : literalTransforms.get().getOrDefault(literal, Set.of())) {
-            pair.b().rewrite(pair.a().pattern(), t(var), this);
+            pair.b().rewrite(pair.a().pattern(), t(List.of(var), var), this);
         }
         String string = var.type().equals(Type.TYPE()) ? ("<" + var.name() + ">") : var.name();
-        return Functor.of(var.astElements(), t(string), //
+        return Functor.of(List.of(var), t(List.of(var), string), //
                 Type.VARIABLE, true, (elements, args, functor) -> {
-                    Variable result = var.setAstElements(elements);
+                    Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
                     return result.setFunctor(functor);
                 }).init(this);
     }

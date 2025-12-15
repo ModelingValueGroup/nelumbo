@@ -441,7 +441,7 @@ public class Node extends StructImpl implements AstElement {
         return array != null ? struct(array, declaration) : this;
     }
 
-    private Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i) {
+    protected final Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i) {
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
             if (varVal == null) {
@@ -477,9 +477,21 @@ public class Node extends StructImpl implements AstElement {
             }
             return thisList.equals(list) ? thisList : list;
         } else if (declVal instanceof Type declType && thisVal instanceof Type thisType) {
-            Variable var = declType.variable();
-            if (var != null && vars.get(var) instanceof Type type) {
-                return thisType.rewrite(type);
+            Variable declVar = declType.variable();
+            if (declVar != null) {
+                Object varVal = vars.get(declVar);
+                if (varVal == null) {
+                    String name = declVar.name();
+                    if (name.startsWith("<")) {
+                        declVar = declVar.rename(name.substring(1, name.length() - 1));
+                        varVal = vars.get(declVar);
+                    }
+                }
+                if (varVal instanceof Type type) {
+                    return thisType.rewrite(type);
+                } else if (varVal instanceof Variable valVar) {
+                    return new Type(valVar);
+                }
             }
         }
         return thisVal;
