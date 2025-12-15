@@ -21,6 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
@@ -53,6 +54,16 @@ public final class Transform extends Node {
     @SuppressWarnings("unchecked")
     public List<Node> targets() {
         return (List<Node>) get(1);
+    }
+
+    public Set<Functor> literals() {
+        Set<Functor> literals = Set.of();
+        for (Node target : targets()) {
+            if (target instanceof Functor functor && Type.LITERAL.isAssignableFrom(functor.resultType())) {
+                literals = literals.add(functor);
+            }
+        }
+        return literals;
     }
 
     @Override

@@ -150,8 +150,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return POOL.invoke(new LogicTask(runnable, this));
     }
 
-    private Functor addType(Type type, boolean predefined, List<AstElement> el) throws ParseException {
-        return Functor.of(el, t(type.toString()), //
+    private Functor addType(Type type, boolean predefined) throws ParseException {
+        return Functor.of(type.astElements(), t(type.toString()), //
                 Type.TYPE(), false, (elements, args, functor) -> {
                     Type result = type.setAstElements(elements);
                     if (!predefined) {
@@ -161,9 +161,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }).init(this);
     }
 
-    private Functor addVariable(Variable var, List<AstElement> el) throws ParseException {
+    private Functor addVariable(Variable var) throws ParseException {
         String string = var.type().equals(Type.TYPE()) ? ("<" + var.name() + ">") : var.name();
-        return Functor.of(el, t(string), //
+        return Functor.of(var.astElements(), t(string), //
                 Type.VARIABLE, true, (elements, args, functor) -> {
                     Variable result = var.setAstElements(elements);
                     return result.setFunctor(functor);
@@ -220,12 +220,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             try {
 
                 for (Type type : Type.predefined()) {
-                    addType(type, true, List.of());
+                    addType(type, true);
                 }
 
                 for (TokenType tokenType : values()) {
                     if (!tokenType.skip()) {
-                        addType(new Type(tokenType), true, List.of());
+                        addType(new Type(tokenType), true);
                     }
                 }
 
@@ -367,7 +367,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             }
                             String group = ((Optional<String>) args[2]).orElse(Type.DEFAULT_GROUP);
                             Type type = new Type(elements, name, supers, group);
-                            return CURRENT.get().addType(type, false, elements);
+                            return CURRENT.get().addType(type, false);
                         }).init(this);
 
                 Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(","))), //
@@ -389,7 +389,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 if (comma != null) {
                                     roots.setAstElements(roots.astElements().add(comma));
                                 }
-                                Functor varFun = CURRENT.get().addVariable(var, el);
+                                Functor varFun = CURRENT.get().addVariable(var);
                                 roots = new ListNode(List.of(), roots, varFun);
                             }
                             return roots.setAstElements(roots.astElements().add(elements.last()));
@@ -555,6 +555,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final AtomicReference<Map<Predicate, InferResult>>          facts               = new AtomicReference<>();
     private final AtomicReference<Set<Rule>>                            rules               = new AtomicReference<>();
     private final AtomicReference<Set<Transform>>                       transforms          = new AtomicReference<>();
+    private final AtomicReference<Map<Type, Set<Transform>>>            literalTransforms   = new AtomicReference<>();
     //
     private final AtomicReference<Map<String, ParseState>>              prePatterns         = new AtomicReference<>();
     private final AtomicReference<Map<String, ParseState>>              postPatterns        = new AtomicReference<>();
@@ -586,6 +587,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         facts.set(init != null ? init.facts.get() : Map.of());
         rules.set(init != null ? init.rules.get() : Set.of());
         transforms.set(init != null ? init.transforms.get() : Set.of());
+        literalTransforms.set(init != null ? init.literalTransforms.get() : Map.of());
         prePatterns.set(init != null ? init.prePatterns.get() : Map.of());
         postPatterns.set(init != null ? init.postPatterns.get() : Map.of());
         localPrePatterns.set(prePatterns.get());
@@ -718,6 +720,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         assert Type.ROOT.isAssignableFrom(source.type());
         MatchState<Transform> state = source.state(new MatchState<Transform>(transform));
         transformSignatures.updateAndGet(state::merge);
+        for (Functor functor : transform.literals()) {
+            Type literal = functor.resultType();
+            literalTransforms.updateAndGet(m -> m.put(literal, m.getOrDefault(literal, Set.of()).add(transform)));
+        }
         return transform;
     }
 
