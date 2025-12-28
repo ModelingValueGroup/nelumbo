@@ -11,7 +11,9 @@
       "Bash(cat:*)",
       "Bash(java --version:*)",
       "WebSearch",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "WebFetch(domain:mvnrepository.com)",
+      "WebFetch(domain:central.sonatype.com)"
     ],
     "deny": [],
     "ask": []
