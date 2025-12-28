@@ -30,8 +30,8 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2025.2")
-        plugin("com.redhat.devtools.lsp4ij:0.15.0")
+        intellijIdea("2025.3.1")
+        plugin("com.redhat.devtools.lsp4ij:0.19.1")
     }
 }
 
@@ -89,6 +89,22 @@ tasks {
 
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+
+    runIde {
+        // Enable auto-reload for plugin development
+        autoReload.set(true)
+
+        // JVM arguments for development
+        jvmArgs(
+            "-Didea.auto.reload.plugins=true",
+            "-Dide.plugins.snapshot.on.unload.fail=true"
+        )
+    }
+
+    // Configure prepareSandbox to handle plugin updates
+    prepareSandbox {
+        // The sandbox will be prepared with latest compatible versions
     }
 
     named<Zip>("buildPlugin") {

@@ -55,10 +55,10 @@ jobs:
                     if-no-files-found: error
                     retention-days: 30
                     
-            -   name: "upload-fat-jar"
+            -   name: "upload-editor-jar"
                 uses: actions/upload-artifact@v6
                 with:
-                    name: fatjar
-                    path: build/libs/nelumbo*all.jar
+                    name: editor
+                    path: build/libs/nelumbo*editor.jar
                     if-no-files-found: error
                     retention-days: 30

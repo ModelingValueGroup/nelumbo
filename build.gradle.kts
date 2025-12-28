@@ -37,12 +37,12 @@ dependencies {
 
 tasks {
     shadowJar {
-        archiveClassifier.set("all")
+        archiveClassifier.set("editor")
         doFirst {
             // Clean only previous shadow jars; leave regular publication jars intact
             val libsDir = layout.buildDirectory.dir("libs")
             libsDir.get().asFile.listFiles()
-                ?.filter { f -> f.isFile && (f.name.endsWith("-all.jar") || f.name.contains("-all-")) }
+                ?.filter { f -> f.isFile && (f.name.endsWith("-editor.jar") || f.name.contains("-editor-")) }
                 ?.forEach { it.delete() }
         }
     }
