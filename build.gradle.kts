@@ -16,7 +16,7 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-defaultTasks("mvgCorrector", "test", "publish", "mvgTagger")
+defaultTasks("mvgCorrector", "test", "publish", "mvgTagger", "editorJar")
 
 plugins {
     `java-library`
