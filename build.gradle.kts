@@ -14,6 +14,8 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 defaultTasks("mvgCorrector", "test", "publish", "mvgTagger")
 
 plugins {
@@ -36,8 +38,17 @@ dependencies {
 }
 
 tasks {
-    shadowJar {
+    register<ShadowJar>("editorJar") {
         archiveClassifier.set("editor")
+        manifest {
+            attributes["Main-Class"] = "org.modelingvalue.nelumbo.NelumboEditor"
+        }
+        from(sourceSets.main.get().output)
+        configurations = listOf(project.configurations.runtimeClasspath.get())
+
+        // Exclude signature files from signed dependencies to avoid SecurityException
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+
         doFirst {
             // Clean only previous shadow jars; leave regular publication jars intact
             val libsDir = layout.buildDirectory.dir("libs")
@@ -45,6 +56,11 @@ tasks {
                 ?.filter { f -> f.isFile && (f.name.endsWith("-editor.jar") || f.name.contains("-editor-")) }
                 ?.forEach { it.delete() }
         }
+    }
+
+    shadowJar {
+        // Disable default shadowJar task; use editorJar instead
+        enabled = false
     }
 }
 

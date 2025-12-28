@@ -54,7 +54,7 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.register<ShadowJar>("editorJar") {
+tasks.register<ShadowJar>("serverJar") {
     archiveBaseName.set(archiveName)
     // Produce a single shaded jar without the default "-all" classifier
     archiveClassifier.set("")
@@ -63,10 +63,13 @@ tasks.register<ShadowJar>("editorJar") {
     }
     from(sourceSets.main.get().output)
     configurations = listOf(project.configurations.runtimeClasspath.get())
+
+    // Exclude signature files from signed dependencies to avoid SecurityException
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
 }
 
 tasks.shadowJar {
-    // Disable default shadowJar task; use editorJar instead
+    // Disable default shadowJar task; use serverJar instead
     enabled = false
 }
 

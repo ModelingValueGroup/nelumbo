@@ -57,7 +57,7 @@ tasks {
     // Some versions of gradle-intellij-plugin repackage resources differently, so we also copy
     // the server jar directly into src/main/resources before build.
     val prepareServerResource by registering(Copy::class) {
-        dependsOn(":lsp:server:editorJar")
+        dependsOn(":lsp:server:serverJar")
         // Always run to ensure server.jar is refreshed and overwrites any existing file
         outputs.upToDateWhen { false }
         // Proactively delete any existing server.jar to avoid stale copies
