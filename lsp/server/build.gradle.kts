@@ -14,6 +14,8 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id("com.gradleup.shadow") version "9.3.0"
     java
@@ -52,13 +54,20 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.shadowJar {
+tasks.register<ShadowJar>("editorJar") {
     archiveBaseName.set(archiveName)
     // Produce a single shaded jar without the default "-all" classifier
     archiveClassifier.set("")
     manifest {
         attributes["Main-Class"] = "org.modelingvalue.nelumbo.lsp.Main"
     }
+    from(sourceSets.main.get().output)
+    configurations = listOf(project.configurations.runtimeClasspath.get())
+}
+
+tasks.shadowJar {
+    // Disable default shadowJar task; use editorJar instead
+    enabled = false
 }
 
 tasks.jar {
