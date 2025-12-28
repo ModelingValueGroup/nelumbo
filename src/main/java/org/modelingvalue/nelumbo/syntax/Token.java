@@ -30,20 +30,20 @@ import org.modelingvalue.nelumbo.patterns.Pattern;
 @SuppressWarnings({"unused"})
 public final class Token implements AstElement {
 
-    private final TokenType             type;
-    private final String                text;
-    private final int                   line;        // line number in the input file (0-based)
-    private final int                   position;    // position (column) in the line (0-based)
-    private final int                   index;       // position in the input stream (0-based)
-    private final String                fileName;
-    private final int                   numLines;    // number of lines of this token (1...n)
-    private final int                   positionEnd; // position (column) in the line (0-based) after the token
+    private final TokenType type;
+    private final String    text;
+    private final int       line;        // line number in the input file (0-based)
+    private final int       position;    // position (column) in the line (0-based)
+    private final int       index;       // position in the input stream (0-based)
+    private final String    fileName;
+    private final int       numLines;    // number of lines of this token (1...n)
+    private final int       positionEnd; // position (column) in the line (0-based) after the token
 
-    private Token                       next;
-    private Token                       previous;
+    private Token next;
+    private Token previous;
 
-    private Token                       nextAll;
-    private Token                       previousAll;
+    private Token nextAll;
+    private Token previousAll;
 
     private Map<Functor, List<Integer>> branches;
     private int                         cycleDepth;
@@ -56,13 +56,13 @@ public final class Token implements AstElement {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type = type;
-        this.text = text;
-        this.line = line;
-        this.position = position;
-        this.index = index;
-        this.fileName = fileName;
-        this.numLines = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
+        this.type        = type;
+        this.text        = text;
+        this.line        = line;
+        this.position    = position;
+        this.index       = index;
+        this.fileName    = fileName;
+        this.numLines    = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
         this.positionEnd = numLines == 1 ? position + text.length() : text.length() - text.lastIndexOf('\n');
     }
 
@@ -97,9 +97,9 @@ public final class Token implements AstElement {
     public Token split(int i) {
         Token t1 = splitGet1(i);
         Token t2 = splitGet2(i);
-        t1.next = t2;
+        t1.next    = t2;
         t1.nextAll = t2;
-        t2.next = next();
+        t2.next    = next();
         t2.nextAll = nextAll();
         return t1;
     }
@@ -116,7 +116,7 @@ public final class Token implements AstElement {
 
     public void connect(Token t1) {
         Token t2 = t1.next;
-        t2.previous = t1;
+        t2.previous    = t1;
         t2.previousAll = t1;
         previous.setNext(t1);
         previousAll.setNextAll(t1);
@@ -125,9 +125,9 @@ public final class Token implements AstElement {
     }
 
     public Token prepend(String prefix) {
-        String sup = prefix + text;
-        Token merge = new Token(TokenType.of(sup), sup, line, position - prefix.length(), index - prefix.length(), fileName);
-        merge.next = next;
+        String sup   = prefix + text;
+        Token  merge = new Token(TokenType.of(sup), sup, line, position - prefix.length(), index - prefix.length(), fileName);
+        merge.next    = next;
         merge.nextAll = nextAll;
         return merge;
     }
@@ -258,9 +258,9 @@ public final class Token implements AstElement {
 
     public List<Token> list(Token last) {
         List<Token> list = List.of(this);
-        Token t = this;
+        Token       t    = this;
         while (t != last) {
-            t = t.next();
+            t    = t.next();
             list = list.add(t);
         }
         return list;
@@ -268,9 +268,9 @@ public final class Token implements AstElement {
 
     public List<Token> listAll(Token last) {
         List<Token> list = List.of(this);
-        Token t = this;
+        Token       t    = this;
         while (t != last) {
-            t = t.nextAll();
+            t    = t.nextAll();
             list = list.add(t);
         }
         return list;

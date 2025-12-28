@@ -53,7 +53,8 @@ public record NlDocument(String content,
         TokenizerResult tokenizerResult = new Tokenizer(content, uri).tokenize();
         List<Pair<String, Range>> errors = new ArrayList<>(tokenizerResult.listAll()//
                                                                           .filter(t -> t.type() == TokenType.ERROR)//
-                                                                          .map(t -> Pair.of("illegal token: " + t.textTraced(), new Range(new Position(t.line(), t.position()), new Position(t.line(), t.position() + 1)))).toList());
+                                                                          .map(t -> Pair.of("illegal token: " + t.textTraced(), new Range(new Position(t.line(), t.position()), new Position(t.line(), t.position() + 1))))//
+                                                                          .toList());
         List<Node> nodes = parse(tokenizerResult, errors);
         if (TRACE) {
             System.err.println("NlDocument.of(): " + tokenizerResult.listAll().size() + " tokens, " + nodes.size() + " nodes, " + errors.size() + " errors");
@@ -105,7 +106,15 @@ public record NlDocument(String content,
         if (TRACE) {
             System.err.println("NlDocument.nodeAt: " + tokens().size() + " tokens");
         }
-        return nodeList.stream().peek(node -> System.err.println("NlDocument.nodeAt: " + node + " of tokens: " + U.render(node.tokens().toList()))).filter(node -> U.findToken(position, node.tokens().toList()) != null).findFirst().orElse(null);
+        return nodeList.stream()//
+                       .peek(node -> {
+                           if (TRACE) {
+                               System.err.println("NlDocument.nodeAt: " + node + " of tokens: " + U.render(node.tokens().toList()));
+                           }
+                       })//
+                       .filter(node -> U.findToken(position, node.tokens().toList()) != null)//
+                       .findFirst()//
+                       .orElse(null);
     }
 
     private static void publishDiagnosticsAsync(String uri, List<Pair<String, Range>> errors) {
