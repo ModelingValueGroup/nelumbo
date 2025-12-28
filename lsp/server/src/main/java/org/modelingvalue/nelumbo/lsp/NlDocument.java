@@ -43,6 +43,8 @@ public record NlDocument(String content,
                          TokenizerResult tokenizerResult,
                          List<Node> nodeList) {
 
+    private static final boolean TRACE = Boolean.getBoolean("NlDocument.TRACE");
+
     public static NlDocument of(NlDocument document, String content) {
         return of(content, document.version(), document.uri());
     }
@@ -53,18 +55,18 @@ public record NlDocument(String content,
                                                                           .filter(t -> t.type() == TokenType.ERROR)//
                                                                           .map(t -> Pair.of("illegal token: " + t.textTraced(), new Range(new Position(t.line(), t.position()), new Position(t.line(), t.position() + 1)))).toList());
         List<Node> nodes = parse(tokenizerResult, errors);
-        System.err.println("    NlDocument.of: " + tokenizerResult.listAll().size() + " tokens, " + nodes.size() + " nodes, " + errors.size() + " errors");
-        TRACE_NODES(nodes, "");
-        if (!errors.isEmpty()) {
-            publishDiagnosticsAsync(uri, errors);
+        if (TRACE) {
+            System.err.println("NlDocument.of(): " + tokenizerResult.listAll().size() + " tokens, " + nodes.size() + " nodes, " + errors.size() + " errors");
+            TRACE_NODES(nodes, "    ");
         }
+        publishDiagnosticsAsync(uri, errors);
         return new NlDocument(content, version, uri, tokenizerResult, nodes);
     }
 
     private static void TRACE_NODES(List<? extends AstElement> nodes, String indent) {
         nodes.forEach(a -> {
             if (a instanceof Token t) {
-                System.err.println(indent + "T:" + t.type() + ":" + t);
+                System.err.println(indent + "T:" + t.type() + ":" + t + " '" + t.textTraced() + "' " + t.position() + ".." + t.positionEnd());
             } else if (a instanceof Node n) {
                 System.err.println(indent + "N:" + n.type() + ":" + n + (n.functor() == null ? "" : "  -> " + n.functor()));
                 TRACE_NODES(n.astElements().toMutable(), indent + "  ");
@@ -83,7 +85,9 @@ public record NlDocument(String content,
                                                                     Pair.of(e.getMessage(), new Range(new Position(e.line(), e.position()), new Position(e.line(), e.position())))//
                                                            ).toList());
             }
-            System.err.println("===== " + parserResult.roots().size() + " roots ===== " + parserResult.exceptions().size() + " exceptions =====");
+            if (TRACE) {
+                System.err.println("===== " + parserResult.roots().size() + " roots ===== " + parserResult.exceptions().size() + " exceptions =====");
+            }
             l.addAll(parserResult.roots().toMutable());
         });
         return l;
@@ -98,7 +102,9 @@ public record NlDocument(String content,
     }
 
     public Node nodeAt(Position position) {
-        System.err.println("NlDocument.nodeAt: " + tokens().size() + " tokens");
+        if (TRACE) {
+            System.err.println("NlDocument.nodeAt: " + tokens().size() + " tokens");
+        }
         return nodeList.stream().peek(node -> System.err.println("NlDocument.nodeAt: " + node + " of tokens: " + U.render(node.tokens().toList()))).filter(node -> U.findToken(position, node.tokens().toList()) != null).findFirst().orElse(null);
     }
 

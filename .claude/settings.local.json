@@ -13,7 +13,8 @@
       "WebSearch",
       "Bash(cp:*)",
       "WebFetch(domain:mvnrepository.com)",
-      "WebFetch(domain:central.sonatype.com)"
+      "WebFetch(domain:central.sonatype.com)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

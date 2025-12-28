@@ -95,25 +95,25 @@ public class NlTextDocumentService implements TextDocumentService {
 
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
-        System.err.println("~~~ didOpen: " + params.getTextDocument().getUri());
+        System.err.println("~~~ didOpen           : " + params.getTextDocument().getUri());
         documentSyncService.didOpen(params);
     }
 
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
-        System.err.println("~~~ didChange: " + params.getTextDocument().getUri());
+        System.err.println("~~~ didChange         : " + params.getTextDocument().getUri());
         documentSyncService.didChange(params);
     }
 
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
-        System.err.println("~~~ didClose: " + params.getTextDocument().getUri());
+        System.err.println("~~~ didClose          : " + params.getTextDocument().getUri());
         documentSyncService.didClose(params);
     }
 
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
-        System.err.println("~~~ didSave: " + params.getTextDocument().getUri());
+        System.err.println("~~~ didSave           : " + params.getTextDocument().getUri());
         documentSyncService.didSave(params);
     }
 
@@ -125,67 +125,67 @@ public class NlTextDocumentService implements TextDocumentService {
 
     @Override
     public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
-        System.err.println("~~~ foldingRange: " + params.getTextDocument().getUri());
+        System.err.println("~~~ foldingRange      : " + params.getTextDocument().getUri());
         return documentFoldingRangeService.foldingRange(params);
     }
 
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
-        System.err.println("~~~ completion: " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
+        System.err.println("~~~ completion        : " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
         return documentCompletionService.completion(params);
     }
 
     @Override
     public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
-        System.err.println("~~~ documentSymbol: " + params.getTextDocument().getUri());
+        System.err.println("~~~ documentSymbol    : " + params.getTextDocument().getUri());
         return documentSymbolService.documentSymbol(params);
     }
 
     @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-        System.err.println("~~~ formatting: " + params.getTextDocument().getUri() + " " + params.getOptions());
+        System.err.println("~~~ formatting        : " + params.getTextDocument().getUri() + " " + params.getOptions());
         return documentFormattingService.formatting(params);
     }
 
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
-        System.err.println("~~~ hover: " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
+        System.err.println("~~~ hover             : " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
         return documentHoverService.hover(params);
     }
 
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params) {
-        System.err.println("~~~ definition: " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
+        System.err.println("~~~ definition        : " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
         return documentDefinitionService.definition(params);
     }
 
     @Override
     public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-        System.err.println("~~~ codeLens: " + params.getTextDocument().getUri());
+        System.err.println("~~~ codeLens          : " + params.getTextDocument().getUri());
         return documentCodeLensService.codeLens(params);
     }
 
     @Override
     public CompletableFuture<CodeLens> resolveCodeLens(CodeLens params) {
-        System.err.println("~~~ resolveCodeLens: " + params.getCommand().getCommand());
+        System.err.println("~~~ resolveCodeLens   : " + params.getCommand().getCommand());
         return documentCodeLensService.resolveCodeLens(params);
     }
 
     @Override
     public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
-        System.err.println("~~~ codeAction: " + params.getTextDocument().getUri() + " " + U.render(params.getRange()));
+        System.err.println("~~~ codeAction        : " + params.getTextDocument().getUri() + " " + U.render(params.getRange()));
         return documentCodeActionService.codeAction(params);
     }
 
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(TypeDefinitionParams params) {
-        System.err.println("~~~ typeDefinition: " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
+        System.err.println("~~~ typeDefinition    : " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
         return documentTypeDefinitionService.typeDefinition(params);
     }
 
     @Override
     public CompletableFuture<List<SelectionRange>> selectionRange(SelectionRangeParams params) {
-        System.err.println("~~~ selectionRange: " + params.getTextDocument().getUri() + " " + params.getPositions().stream().map(U::render).toList());
+        System.err.println("~~~ selectionRange    : " + params.getTextDocument().getUri() + " " + params.getPositions().stream().map(U::render).toList());
         return selectionRangeService.selectionRange(params);
     }
 }

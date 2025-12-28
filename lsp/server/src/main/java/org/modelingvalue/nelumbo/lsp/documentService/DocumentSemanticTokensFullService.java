@@ -24,8 +24,9 @@ import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
-import org.modelingvalue.nelumbo.lsp.SemanticMapping;
+import org.modelingvalue.nelumbo.lsp.LspTokenMapping;
 import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
     private static final boolean TRACE = Boolean.getBoolean("DocumentSemanticTokensFullService.TRACE");
@@ -51,8 +52,11 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
         private       int           prevCharNum = 0;
 
         public void add(Token token) {
-            int semTokenTypeNum     = SemanticMapping.toSemanticTokenType(token.type());
-            int semTokenModifierNum = SemanticMapping.toSemanticTokenModifier(token.type());
+            // Check if token should be treated as VARIABLE (same logic as NelumboEditor)
+            TokenType effectiveType = token.variable() != null ? TokenType.VARIABLE : token.type();
+
+            int semTokenTypeNum     = LspTokenMapping.toLspTokenType(effectiveType);
+            int semTokenModifierNum = LspTokenMapping.toLspTokenModifier(effectiveType);
             if (semTokenTypeNum != -1) {
                 StringBuilder sb           = TRACE ? new StringBuilder() : null;
                 int           firstLineNum = token.line();

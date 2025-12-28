@@ -23,53 +23,66 @@ import static org.eclipse.lsp4j.SemanticTokenTypes.Operator;
 import static org.eclipse.lsp4j.SemanticTokenTypes.String;
 import static org.eclipse.lsp4j.SemanticTokenTypes.Type;
 import static org.eclipse.lsp4j.SemanticTokenTypes.Variable;
+import static org.modelingvalue.nelumbo.syntax.TokenType.BEGINOFFILE;
 import static org.modelingvalue.nelumbo.syntax.TokenType.COMMA;
 import static org.modelingvalue.nelumbo.syntax.TokenType.DECIMAL;
+import static org.modelingvalue.nelumbo.syntax.TokenType.ENDOFFILE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.ENDOFLINE;
 import static org.modelingvalue.nelumbo.syntax.TokenType.END_LINE_COMMENT;
 import static org.modelingvalue.nelumbo.syntax.TokenType.ERROR;
 import static org.modelingvalue.nelumbo.syntax.TokenType.HSPACE;
 import static org.modelingvalue.nelumbo.syntax.TokenType.IN_LINE_COMMENT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.LEFT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.META_OPERATOR;
 import static org.modelingvalue.nelumbo.syntax.TokenType.NAME;
 import static org.modelingvalue.nelumbo.syntax.TokenType.NEWLINE;
 import static org.modelingvalue.nelumbo.syntax.TokenType.NUMBER;
 import static org.modelingvalue.nelumbo.syntax.TokenType.OPERATOR;
+import static org.modelingvalue.nelumbo.syntax.TokenType.RIGHT;
 import static org.modelingvalue.nelumbo.syntax.TokenType.SEMICOLON;
+import static org.modelingvalue.nelumbo.syntax.TokenType.SINGLEQUOTE;
 import static org.modelingvalue.nelumbo.syntax.TokenType.STRING;
 import static org.modelingvalue.nelumbo.syntax.TokenType.TYPE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.VARIABLE;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class SemanticMapping {
-    private record Mapping(TokenType tokenType,
-                           String... typesAndModifiers) {
-        public String semanticTokenType() {
-            return typesAndModifiers.length == 0 ? null : typesAndModifiers[0];
-        }
+@SuppressWarnings("RedundantStringFormatCall")
+public final class LspTokenMapping {
+    private static final boolean TRACE = Boolean.getBoolean("LspTokenMapping.TRACE");
 
-        public Stream<String> semanticTokenModifier() {
-            return typesAndModifiers.length == 0 ? Stream.of() : Stream.of(typesAndModifiers).skip(1);
-        }
+    private record Mapping(TokenType tokenType,
+                           String lspTokenType,
+                           String... lspTokenModifier) {
     }
 
     private static List<Mapping> makeMappings() {
         return List.of(//
-                       new Mapping(COMMA),//
-                       new Mapping(DECIMAL, Number),//
-                       new Mapping(END_LINE_COMMENT, Comment),//
-                       new Mapping(ERROR),//
-                       new Mapping(HSPACE),//
-                       new Mapping(IN_LINE_COMMENT, Comment),//
-                       new Mapping(NAME, Variable, Static),//
-                       new Mapping(NEWLINE),//
-                       new Mapping(NUMBER, Number),//
-                       new Mapping(OPERATOR, Operator),//
-                       new Mapping(SEMICOLON),//
-                       new Mapping(STRING, String),//
-                       new Mapping(TYPE, Type)//
+                new Mapping(SINGLEQUOTE, null),//
+                new Mapping(SEMICOLON, null),//
+                new Mapping(COMMA, null),//
+                new Mapping(LEFT, null),//
+                new Mapping(RIGHT, null),//
+                new Mapping(STRING, String),//
+                new Mapping(NUMBER, Number),//
+                new Mapping(DECIMAL, Number),//
+                new Mapping(NAME, Variable, Static),//
+                new Mapping(TYPE, Type),//
+                new Mapping(META_OPERATOR, null),//
+                new Mapping(OPERATOR, Operator),//
+                new Mapping(NEWLINE, null),//
+                new Mapping(HSPACE, null),//
+                new Mapping(END_LINE_COMMENT, Comment),//
+                new Mapping(IN_LINE_COMMENT, Comment),//
+                new Mapping(ERROR, null),//
+                new Mapping(BEGINOFFILE, null),//
+                new Mapping(ENDOFFILE, null),//
+                new Mapping(ENDOFLINE, null),//
+                new Mapping(VARIABLE, Variable)//
                       );
     }
 
@@ -79,19 +92,33 @@ public final class SemanticMapping {
     private static final int[]         TYPE_MAP      = makeTypeIndexTable();
     private static final int[]         MODIFIER_MAP  = makeModifierMaskTable();
 
-    public static int toSemanticTokenType(TokenType type) {
+    public static int toLspTokenType(TokenType type) {
         return TYPE_MAP[type.ordinal()];
     }
 
-    public static int toSemanticTokenModifier(TokenType type) {
+    public static int toLspTokenModifier(TokenType type) {
         return MODIFIER_MAP[type.ordinal()];
     }
 
-    public static List<String> allSemanticTypes() {
+    public static List<String> lspTypes() {
+        if (TRACE) {
+            System.err.println("LSP TOKEN TYPES:");
+            for (int i = 0; i < TYPE_LIST.size(); i++) {
+                String n   = TYPE_LIST.get(i);
+                System.err.println(java.lang.String.format("   [%2d] %s", i, n));
+            }
+        }
         return TYPE_LIST;
     }
 
-    public static List<String> allSemanticModifiers() {
+    public static List<String> lspModifiers() {
+        if (TRACE) {
+            System.err.println("LSP TOKEN MODIFIERS:");
+            for (int i = 0; i < MODIFIER_LIST.size(); i++) {
+                String n = MODIFIER_LIST.get(i);
+                System.err.println(java.lang.String.format("   [%2d] %s", i, n));
+            }
+        }
         return MODIFIER_LIST;
     }
 
@@ -99,14 +126,14 @@ public final class SemanticMapping {
 
     private static List<String> makeTypeList() {
         return MAPPINGS.stream()//
-                       .map(Mapping::semanticTokenType)//
+                       .map(Mapping::lspTokenType)//
                        .distinct()//
                        .filter(Objects::nonNull).toList();
     }
 
     private static List<String> makeModifierList() {
         return MAPPINGS.stream()//
-                       .flatMap(Mapping::semanticTokenModifier)//
+                       .flatMap(mapping -> Arrays.stream(mapping.lspTokenModifier()))//
                        .distinct()//
                        .toList();
     }
@@ -114,8 +141,9 @@ public final class SemanticMapping {
     private static int[] makeTypeIndexTable() {
         int[] table = new int[TokenType.values().length];
         for (Mapping mapping : MAPPINGS) {
-            int i = mapping.tokenType().ordinal();
-            table[i] = mapping.semanticTokenType() == null ? -1 : TYPE_LIST.indexOf(mapping.semanticTokenType());
+            int    i = mapping.tokenType().ordinal();
+            String t = mapping.lspTokenType();
+            table[i] = t == null ? -1 : TYPE_LIST.indexOf(t);
         }
         return table;
     }
@@ -124,7 +152,7 @@ public final class SemanticMapping {
         int[] table = new int[TokenType.values().length];
         for (Mapping mapping : MAPPINGS) {
             int i = mapping.tokenType().ordinal();
-            mapping.semanticTokenModifier().forEach(m -> table[i] |= 1 << MODIFIER_LIST.indexOf(m));
+            Arrays.stream(mapping.lspTokenModifier()).forEach(m -> table[i] |= 1 << MODIFIER_LIST.indexOf(m));
         }
         return table;
     }

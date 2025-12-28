@@ -44,6 +44,7 @@ import org.modelingvalue.nelumbo.NelumboConstants;
 
 public class NelumboLanguageServer implements LanguageServer {
     private final Workspace          workspace = new Workspace();
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private       ClientCapabilities capabilities;
 
     @Override
@@ -97,7 +98,7 @@ public class NelumboLanguageServer implements LanguageServer {
     }
 
     private static SemanticTokensWithRegistrationOptions makeSemanticTokensCapabilities() {
-        SemanticTokensLegend legend = new SemanticTokensLegend(SemanticMapping.allSemanticTypes(), SemanticMapping.allSemanticModifiers());
+        SemanticTokensLegend legend = new SemanticTokensLegend(LspTokenMapping.lspTypes(), LspTokenMapping.lspModifiers());
         return new SemanticTokensWithRegistrationOptions(legend, true);
     }
 
