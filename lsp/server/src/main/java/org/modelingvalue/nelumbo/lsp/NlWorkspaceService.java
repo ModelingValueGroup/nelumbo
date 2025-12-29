@@ -47,16 +47,32 @@ public class NlWorkspaceService implements WorkspaceService {
 
     @Override
     public void didChangeConfiguration(DidChangeConfigurationParams params) {
-        System.err.println("~~~ didChangeConfiguration: " + params.getSettings());
+        System.err.println("~~~ didChangeConfiguration:\n   " + params.getSettings());
+        //
+        //{
+        //  "Formatting": {
+        //    "PropsSpaceLine": "HAS_ANNOTATION"
+        //  },
+        //  "Classpath": {
+        //    "FindConfiguration": true,
+        //    "FindOtherProject": true
+        //  },
+        //  "Debugging": false
+        //}
+        //
         JsonObject settings = (JsonObject) params.getSettings();
         if (settings != null && !settings.isEmpty()) {
             try {
-                ObjectMapper jacksonObjectMapper = new ObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.UPPER_CAMEL_CASE);
-                Setting      setting             = jacksonObjectMapper.readValue(settings.toString(), Setting.class);
+                ObjectMapper jacksonObjectMapper = new ObjectMapper()
+                                                           .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                                           .setPropertyNamingStrategy(PropertyNamingStrategies.UPPER_CAMEL_CASE);
+                String  json    = settings.toString();
+                Setting setting = jacksonObjectMapper.readValue(json, Setting.class);
                 workspace.setSetting(setting);
                 Path settingFile = U.getLocation(Main.class).getParent().resolve("settings.json");
                 workspace.getSetting().save(settingFile);
             } catch (Exception e) {
+                System.err.println("Error parsing settings: " + e.getMessage());
                 throw new RuntimeException(e);
             }
         }
@@ -65,18 +81,18 @@ public class NlWorkspaceService implements WorkspaceService {
     @Override
     public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
         // Empty implementation
-        System.err.println("~~~ didChangeWatchedFiles: " + params.getChanges());
+        System.err.println("~~~ didChangeWatchedFiles:\n    " + params.getChanges());
     }
 
     @Override
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
-        System.err.println("~~~ executeCommand: " + params.getCommand() + "(" + params.getArguments() + ")");
+        System.err.println("~~~ executeCommand:\n    " + params.getCommand() + "(" + params.getArguments() + ")");
         return executeCommand.executeCommand(params);
     }
 
     @Override
     public CompletableFuture<Either<List<? extends SymbolInformation>, List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
-        System.err.println("~~~ symbol: " + params.getQuery());
+        System.err.println("~~~ symbol:\n    " + params.getQuery());
         return symbol.symbol(params);
     }
 }

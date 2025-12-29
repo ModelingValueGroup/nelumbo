@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
@@ -40,8 +41,12 @@ public class DocumentDefinitionService extends DocumentServiceAdapter {
         if (document == null) {
             return CompletableFuture.completedFuture(null);
         }
-        Token t  = document.tokenAt(params.getPosition());
-        Token tt = document.next(document.next(t));
+        Position pos   = params.getPosition();
+        Token    token = document.tokenAt(pos);
+        Token tt = document.next(document.next(token));
+        if (workspace().getSetting().debugging()) {
+            System.err.println("    hover " + U.render(pos) + ": token=" + token+", target token=" + tt );
+        }
         if (tt == null) {
             return CompletableFuture.completedFuture(null);
         }

@@ -51,10 +51,7 @@ import java.util.Objects;
 
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-@SuppressWarnings("RedundantStringFormatCall")
 public final class LspTokenMapping {
-    private static final boolean TRACE = Boolean.getBoolean("LspTokenMapping.TRACE");
-
     private record Mapping(TokenType tokenType,
                            String lspTokenType,
                            String... lspTokenModifier) {
@@ -101,24 +98,10 @@ public final class LspTokenMapping {
     }
 
     public static List<String> lspTypes() {
-        if (TRACE) {
-            System.err.println("LSP TOKEN TYPES:");
-            for (int i = 0; i < TYPE_LIST.size(); i++) {
-                String n   = TYPE_LIST.get(i);
-                System.err.println(java.lang.String.format("   [%2d] %s", i, n));
-            }
-        }
         return TYPE_LIST;
     }
 
     public static List<String> lspModifiers() {
-        if (TRACE) {
-            System.err.println("LSP TOKEN MODIFIERS:");
-            for (int i = 0; i < MODIFIER_LIST.size(); i++) {
-                String n = MODIFIER_LIST.get(i);
-                System.err.println(java.lang.String.format("   [%2d] %s", i, n));
-            }
-        }
         return MODIFIER_LIST;
     }
 

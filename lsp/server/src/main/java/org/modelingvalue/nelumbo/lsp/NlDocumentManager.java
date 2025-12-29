@@ -31,7 +31,7 @@ public class NlDocumentManager {
     }
 
     public void addDocument(String uri, String content, int version) {
-        documentCache.put(uri, NlDocument.of(content, version, uri));
+        documentCache.put(uri, NlDocument.of(workspace, content, version, uri));
     }
 
     public void updateDocument(String uri, String content) {

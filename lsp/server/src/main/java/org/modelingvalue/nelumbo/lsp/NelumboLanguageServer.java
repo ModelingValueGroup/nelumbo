@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.lsp;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -97,8 +98,24 @@ public class NelumboLanguageServer implements LanguageServer {
         return textDocumentSyncOptions;
     }
 
-    private static SemanticTokensWithRegistrationOptions makeSemanticTokensCapabilities() {
-        SemanticTokensLegend legend = new SemanticTokensLegend(LspTokenMapping.lspTypes(), LspTokenMapping.lspModifiers());
+    @SuppressWarnings("RedundantStringFormatCall")
+    private SemanticTokensWithRegistrationOptions makeSemanticTokensCapabilities() {
+        List<String> tokenTypes     = LspTokenMapping.lspTypes();
+        List<String> tokenModifiers = LspTokenMapping.lspModifiers();
+        if (workspace.getSetting().debugging()) {
+            System.err.println("LSP TOKEN TYPES:");
+            for (int i = 0; i < tokenTypes.size(); i++) {
+                String n = tokenTypes.get(i);
+                System.err.println(java.lang.String.format("   [%2d] %s", i, n));
+            }
+            System.err.println("LSP TOKEN MODIFIERS:");
+            for (int i = 0; i < tokenModifiers.size(); i++) {
+                String n = tokenModifiers.get(i);
+                System.err.println(java.lang.String.format("   [%2d] %s", i, n));
+            }
+        }
+
+        SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
         return new SemanticTokensWithRegistrationOptions(legend, true);
     }
 

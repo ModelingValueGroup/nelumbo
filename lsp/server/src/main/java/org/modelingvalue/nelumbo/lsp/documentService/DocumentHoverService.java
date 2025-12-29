@@ -46,12 +46,15 @@ public class DocumentHoverService extends DocumentServiceAdapter {
         if (token == null) {
             return CompletableFuture.completedFuture(null);
         }
-        Node          node  = document.nodeAt(pos);
+        Node node = document.nodeAt(pos);
+        if (workspace().getSetting().debugging()) {
+            System.err.println("    hover " + U.render(pos) + ": token=" + token + ", node=" + node);
+        }
         String        text  = U.escapeMarkdown(token.toString()) + "<br>" + (node == null ? "_no node_" : U.escapeMarkdown(node.toString()));
         MarkupContent mc    = new MarkupContent(MarkupKind.MARKDOWN, text);
         Range         range = U.range(token);
         Hover         hover = new Hover(mc, range);
-        System.err.println("    hover " + U.render(pos) + ": token=" + token + ", node=" + node);
         return CompletableFuture.completedFuture(hover);
     }
 }
+

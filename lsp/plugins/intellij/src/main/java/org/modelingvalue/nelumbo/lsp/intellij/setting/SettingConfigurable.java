@@ -34,30 +34,32 @@ import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.jdesktop.swingx.JXTitledSeparator;
 import org.jetbrains.annotations.Nls;
 import org.modelingvalue.nelumbo.lsp.intellij.Constants;
-import org.modelingvalue.nelumbo.lsp.intellij.setting.PluginSetting.Setting.Nelumbo.OptionSubject1.FutureOptionAEnum;
+import org.modelingvalue.nelumbo.lsp.intellij.setting.PluginSetting.Setting.Nelumbo.Formatting.PropsSpaceLine;
 
 public class SettingConfigurable implements Configurable {
 
-    private final ComboBox<FutureOptionAEnum> futureOptionCombo   = new ComboBox<>();
-    private final JBCheckBox                  optACheckbox        = new JBCheckBox("Option 1");
-    private final JBCheckBox                  optBCheckbox        = new JBCheckBox("Option 2");
-    private final JBCheckBox                  useJetBrainsRuntime = new JBCheckBox("Use Jetbrains Runtime");
+    private final ComboBox<PropsSpaceLine> propsSpaceLineCombo       = new ComboBox<>();
+    private final JBCheckBox               findConfigurationCheckbox = new JBCheckBox("Find Configuration");
+    private final JBCheckBox               findOtherProjectCheckbox  = new JBCheckBox("Find Other Project");
+    private final JBCheckBox               debuggingCheckbox         = new JBCheckBox("Debugging");
+    private final JBCheckBox               useJetBrainsRuntime       = new JBCheckBox("Use Jetbrains Runtime");
 
     public SettingConfigurable() {
-        for (FutureOptionAEnum v : FutureOptionAEnum.values()) {
-            futureOptionCombo.addItem(v);
+        for (PropsSpaceLine v : PropsSpaceLine.values()) {
+            propsSpaceLineCombo.addItem(v);
         }
     }
 
     @Override
     public JComponent createComponent() {
         FormBuilder builder = FormBuilder.createFormBuilder();
-        builder.addComponent(new JXTitledSeparator("OptionSubject1"));
-        builder.addLabeledComponent(new JLabel("Future Option"), futureOptionCombo, 1, false);
-        builder.addComponent(new JXTitledSeparator("OptionSubject2"));
-        builder.addComponent(optACheckbox, 1);
-        builder.addComponent(optBCheckbox, 1);
+        builder.addComponent(new JXTitledSeparator("Formatting"));
+        builder.addLabeledComponent(new JLabel("Props Space Line"), propsSpaceLineCombo, 1, false);
+        builder.addComponent(new JXTitledSeparator("Classpath"));
+        builder.addComponent(findConfigurationCheckbox, 1);
+        builder.addComponent(findOtherProjectCheckbox, 1);
         builder.addComponent(new JXTitledSeparator("Other"));
+        builder.addComponent(debuggingCheckbox, 1);
         return builder.addComponentFillVertically(new JPanel(), 0).getPanel();
     }
 
@@ -65,9 +67,10 @@ public class SettingConfigurable implements Configurable {
     public boolean isModified() {
         PluginSetting.Setting settings = PluginSetting.getInstance().getState();
         if (settings != null) {
-            return settings.nelumbo.optionSubject1.futureOptionA != futureOptionCombo.getSelectedItem() //
-                   || settings.nelumbo.optionSubject2.optA != optACheckbox.isSelected()//
-                   || settings.nelumbo.optionSubject2.optB != optBCheckbox.isSelected()//
+            return settings.nelumbo.formatting.propsSpaceLine != propsSpaceLineCombo.getSelectedItem() //
+                   || settings.nelumbo.classpath.findConfiguration != findConfigurationCheckbox.isSelected()//
+                   || settings.nelumbo.classpath.findOtherProject != findOtherProjectCheckbox.isSelected()//
+                   || settings.nelumbo.debugging != debuggingCheckbox.isSelected()//
                    || settings.useJetBrainsRuntime != useJetBrainsRuntime.isSelected();
         }
         return false;
@@ -77,10 +80,11 @@ public class SettingConfigurable implements Configurable {
     public void apply() {
         PluginSetting.Setting settings = PluginSetting.getInstance().getState();
         if (settings != null) {
-            settings.nelumbo.optionSubject1.futureOptionA = (FutureOptionAEnum) futureOptionCombo.getSelectedItem();
-            settings.nelumbo.optionSubject2.optA          = optACheckbox.isSelected();
-            settings.nelumbo.optionSubject2.optB          = optBCheckbox.isSelected();
-            settings.useJetBrainsRuntime                  = useJetBrainsRuntime.isSelected();
+            settings.nelumbo.formatting.propsSpaceLine   = (PropsSpaceLine) propsSpaceLineCombo.getSelectedItem();
+            settings.nelumbo.classpath.findConfiguration = findConfigurationCheckbox.isSelected();
+            settings.nelumbo.classpath.findOtherProject  = findOtherProjectCheckbox.isSelected();
+            settings.nelumbo.debugging                   = debuggingCheckbox.isSelected();
+            settings.useJetBrainsRuntime                 = useJetBrainsRuntime.isSelected();
             if (ProjectManager.getInstance().getOpenProjects().length > 0) {
                 var project = ProjectManager.getInstance().getOpenProjects()[0];
                 LanguageServerManager.getInstance(project).getLanguageServer(Constants.SERVER_ID).thenApply(server -> {
@@ -99,15 +103,16 @@ public class SettingConfigurable implements Configurable {
     public void reset() {
         PluginSetting.Setting settings = PluginSetting.getInstance().getState();
         if (settings != null) {
-            futureOptionCombo.setSelectedItem(settings.nelumbo.optionSubject1.futureOptionA);
-            optACheckbox.setSelected(settings.nelumbo.optionSubject2.optA);
-            optBCheckbox.setSelected(settings.nelumbo.optionSubject2.optB);
+            propsSpaceLineCombo.setSelectedItem(settings.nelumbo.formatting.propsSpaceLine);
+            findConfigurationCheckbox.setSelected(settings.nelumbo.classpath.findConfiguration);
+            findOtherProjectCheckbox.setSelected(settings.nelumbo.classpath.findOtherProject);
+            debuggingCheckbox.setSelected(settings.nelumbo.debugging);
             useJetBrainsRuntime.setSelected(settings.useJetBrainsRuntime);
         }
     }
 
     @Override
-    @Nls(capitalization=Nls.Capitalization.Title)
+    @Nls(capitalization = Nls.Capitalization.Title)
     public String getDisplayName() {
         return Constants.NAME;
     }

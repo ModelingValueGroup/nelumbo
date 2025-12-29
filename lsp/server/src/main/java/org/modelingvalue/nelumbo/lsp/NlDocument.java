@@ -37,31 +37,30 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
-public record NlDocument(String content,
+public record NlDocument(Workspace workspace,
+                         String content,
                          int version,
                          String uri,
                          TokenizerResult tokenizerResult,
                          List<Node> nodeList) {
 
-    private static final boolean TRACE = Boolean.getBoolean("NlDocument.TRACE");
-
-    public static NlDocument of(NlDocument document, String content) {
-        return of(content, document.version(), document.uri());
+    public static NlDocument of(NlDocument document, String newContent) {
+        return of(document.workspace(), newContent, document.version(), document.uri());
     }
 
-    public static NlDocument of(String content, int version, String uri) {
+    public static NlDocument of(Workspace workspace, String content, int version, String uri) {
         TokenizerResult tokenizerResult = new Tokenizer(content, uri).tokenize();
         List<Pair<String, Range>> errors = new ArrayList<>(tokenizerResult.listAll()//
                                                                           .filter(t -> t.type() == TokenType.ERROR)//
                                                                           .map(t -> Pair.of("illegal token: " + t.textTraced(), new Range(new Position(t.line(), t.position()), new Position(t.line(), t.position() + 1))))//
                                                                           .toList());
-        List<Node> nodes = parse(tokenizerResult, errors);
-        if (TRACE) {
+        List<Node> nodes = parse(workspace, tokenizerResult, errors);
+        if (workspace.getSetting().debugging()) {
             System.err.println("NlDocument.of(): " + tokenizerResult.listAll().size() + " tokens, " + nodes.size() + " nodes, " + errors.size() + " errors");
             TRACE_NODES(nodes, "    ");
         }
         publishDiagnosticsAsync(uri, errors);
-        return new NlDocument(content, version, uri, tokenizerResult, nodes);
+        return new NlDocument(workspace, content, version, uri, tokenizerResult, nodes);
     }
 
     private static void TRACE_NODES(List<? extends AstElement> nodes, String indent) {
@@ -77,7 +76,7 @@ public record NlDocument(String content,
         });
     }
 
-    private static List<Node> parse(TokenizerResult tokenizerResult, List<Pair<String, Range>> errors) {
+    private static List<Node> parse(Workspace workspace, TokenizerResult tokenizerResult, List<Pair<String, Range>> errors) {
         List<Node> l = new ArrayList<>();
         KnowledgeBase.BASE.run(() -> {
             ParserResult parserResult = new Parser(tokenizerResult).parseNonThrowing();
@@ -86,7 +85,7 @@ public record NlDocument(String content,
                                                                     Pair.of(e.getMessage(), new Range(new Position(e.line(), e.position()), new Position(e.line(), e.position())))//
                                                            ).toList());
             }
-            if (TRACE) {
+            if (workspace.getSetting().debugging()) {
                 System.err.println("===== " + parserResult.roots().size() + " roots ===== " + parserResult.exceptions().size() + " exceptions =====");
             }
             l.addAll(parserResult.roots().toMutable());
@@ -103,12 +102,12 @@ public record NlDocument(String content,
     }
 
     public Node nodeAt(Position position) {
-        if (TRACE) {
+        if (workspace.getSetting().debugging()) {
             System.err.println("NlDocument.nodeAt: " + tokens().size() + " tokens");
         }
         return nodeList.stream()//
                        .peek(node -> {
-                           if (TRACE) {
+                           if (workspace.getSetting().debugging()) {
                                System.err.println("NlDocument.nodeAt: " + node + " of tokens: " + U.render(node.tokens().toList()));
                            }
                        })//

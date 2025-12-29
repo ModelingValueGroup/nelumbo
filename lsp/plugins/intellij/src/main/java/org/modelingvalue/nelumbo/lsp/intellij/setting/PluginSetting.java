@@ -32,20 +32,21 @@ public class PluginSetting implements PersistentStateComponent<PluginSetting.Set
         public boolean useJetBrainsRuntime = true;
 
         public static class Nelumbo {
-            public OptionSubject1 optionSubject1 = new OptionSubject1();
-            public OptionSubject2 optionSubject2 = new OptionSubject2();
+            public Formatting formatting = new Formatting();
+            public Classpath  classpath  = new Classpath();
+            public boolean    debugging  = false;
 
-            public static class OptionSubject1 {
-                public FutureOptionAEnum futureOptionA = FutureOptionAEnum.FUTURE_OPTION_3;
+            public static class Formatting {
+                public PropsSpaceLine propsSpaceLine = PropsSpaceLine.HAS_ANNOTATION;
 
-                public enum FutureOptionAEnum {
-                    FUTURE_OPTION_1, FUTURE_OPTION_2, FUTURE_OPTION_3
+                public enum PropsSpaceLine {
+                    ALWAYS, NEVER, HAS_ANNOTATION
                 }
             }
 
-            public static class OptionSubject2 {
-                public boolean optA = true;
-                public boolean optB = true;
+            public static class Classpath {
+                public boolean findConfiguration = true;
+                public boolean findOtherProject  = true;
             }
         }
     }

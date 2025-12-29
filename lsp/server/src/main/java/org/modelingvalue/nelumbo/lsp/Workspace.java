@@ -75,11 +75,13 @@ public class Workspace {
         List<Path> projects = folders.stream().flatMap(folder -> findProjects(Paths.get(URI.create(folder))).stream()).toList();
 
         Setting.Classpath classpath = setting.classpath();
-        if (classpath.findConfiguration()) {
-            findConfiguration(projects);
-        }
-        if (classpath.findOtherProject()) {
-            indexClasses();
+        if (classpath != null) {
+            if (classpath.findConfiguration()) {
+                findConfiguration(projects);
+            }
+            if (classpath.findOtherProject()) {
+                indexClasses();
+            }
         }
         processSource(projects);
     }

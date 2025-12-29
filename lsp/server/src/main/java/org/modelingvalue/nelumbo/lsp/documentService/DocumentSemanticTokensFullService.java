@@ -22,15 +22,13 @@ import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.modelingvalue.nelumbo.lsp.LspTokenMapping;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
-import org.modelingvalue.nelumbo.lsp.LspTokenMapping;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
-    private static final boolean TRACE = Boolean.getBoolean("DocumentSemanticTokensFullService.TRACE");
-
     public DocumentSemanticTokensFullService(NlDocumentManager documentManager) {
         super(documentManager);
     }
@@ -46,10 +44,11 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
         return CompletableFuture.supplyAsync(() -> new SemanticTokens(maker.data()));
     }
 
-    private static class SemanticTokenMaker {
+    private class SemanticTokenMaker {
         private final List<Integer> data        = new ArrayList<>();
         private       int           prevLineNum = 0;
         private       int           prevCharNum = 0;
+        private final boolean       debugging   = workspace().getSetting().debugging();
 
         public void add(Token token) {
             // Check if token should be treated as VARIABLE (same logic as NelumboEditor)
@@ -58,7 +57,7 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
             int semTokenTypeNum     = LspTokenMapping.toLspTokenType(effectiveType);
             int semTokenModifierNum = LspTokenMapping.toLspTokenModifier(effectiveType);
             if (semTokenTypeNum != -1) {
-                StringBuilder sb           = TRACE ? new StringBuilder() : null;
+                StringBuilder sb           = debugging ? new StringBuilder() : null;
                 int           firstLineNum = token.line();
                 int           firstCharNum = token.position();
 
@@ -78,14 +77,14 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                     data.add(semTokenTypeNum);      // token type
                     data.add(semTokenModifierNum);  // token modifiers
 
-                    if (TRACE) {
+                    if (debugging) {
                         sb.append(String.format("line=%2d  char=%2d  line+=%2d  char+=%2d  len=%2d  type=%2d  txt='%s'%n", lineNum, charNum, lineNumRel, charNumRel, tokenPart.length(), semTokenTypeNum, tokenPart));
                     }
 
                     prevLineNum = lineNum;
                     prevCharNum = charNum;
                 }
-                if (TRACE) {
+                if (debugging) {
                     System.err.print(sb);
                 }
             }

@@ -74,8 +74,8 @@ public class NlTextDocumentService implements TextDocumentService {
     private final DocumentDefinitionService         documentDefinitionService;
     private final DocumentCodeLensService           documentCodeLensService;
     private final DocumentCodeActionService         documentCodeActionService;
-    private final DocumentTypeDefinitionService documentTypeDefinitionService;
-    private final SelectionRangeService         selectionRangeService;
+    private final DocumentTypeDefinitionService     documentTypeDefinitionService;
+    private final SelectionRangeService             selectionRangeService;
 
     public NlTextDocumentService(Workspace workspace) {
         NlDocumentManager documentManager = new NlDocumentManager(workspace);
@@ -89,8 +89,8 @@ public class NlTextDocumentService implements TextDocumentService {
         this.documentDefinitionService         = new DocumentDefinitionService(documentManager);
         this.documentCodeLensService           = new DocumentCodeLensService(documentManager);
         this.documentCodeActionService         = new DocumentCodeActionService(documentManager);
-        this.documentTypeDefinitionService = new DocumentTypeDefinitionService(documentManager);
-        this.selectionRangeService         = new SelectionRangeService(documentManager);
+        this.documentTypeDefinitionService     = new DocumentTypeDefinitionService(documentManager);
+        this.selectionRangeService             = new SelectionRangeService(documentManager);
     }
 
     @Override
@@ -131,7 +131,7 @@ public class NlTextDocumentService implements TextDocumentService {
 
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
-        System.err.println("~~~ completion        : " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
+        System.err.println("~~~ completion        : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getPosition()));
         return documentCompletionService.completion(params);
     }
 
@@ -143,19 +143,19 @@ public class NlTextDocumentService implements TextDocumentService {
 
     @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-        System.err.println("~~~ formatting        : " + params.getTextDocument().getUri() + " " + params.getOptions());
+        System.err.println("~~~ formatting        : " + params.getTextDocument().getUri() + "\n    " + params.getOptions());
         return documentFormattingService.formatting(params);
     }
 
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
-        System.err.println("~~~ hover             : " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
+        System.err.println("~~~ hover             : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getPosition()));
         return documentHoverService.hover(params);
     }
 
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params) {
-        System.err.println("~~~ definition        : " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
+        System.err.println("~~~ definition        : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getPosition()));
         return documentDefinitionService.definition(params);
     }
 
@@ -173,19 +173,19 @@ public class NlTextDocumentService implements TextDocumentService {
 
     @Override
     public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
-        System.err.println("~~~ codeAction        : " + params.getTextDocument().getUri() + " " + U.render(params.getRange()));
+        System.err.println("~~~ codeAction        : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getRange()));
         return documentCodeActionService.codeAction(params);
     }
 
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(TypeDefinitionParams params) {
-        System.err.println("~~~ typeDefinition    : " + params.getTextDocument().getUri() + " " + U.render(params.getPosition()));
+        System.err.println("~~~ typeDefinition    : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getPosition()));
         return documentTypeDefinitionService.typeDefinition(params);
     }
 
     @Override
     public CompletableFuture<List<SelectionRange>> selectionRange(SelectionRangeParams params) {
-        System.err.println("~~~ selectionRange    : " + params.getTextDocument().getUri() + " " + params.getPositions().stream().map(U::render).toList());
+        System.err.println("~~~ selectionRange    : " + params.getTextDocument().getUri() + "\n    " + params.getPositions().stream().map(U::render).toList());
         return selectionRangeService.selectionRange(params);
     }
 }
