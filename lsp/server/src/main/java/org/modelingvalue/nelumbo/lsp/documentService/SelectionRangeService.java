@@ -47,7 +47,7 @@ public class SelectionRangeService extends DocumentServiceAdapter {
     private static SelectionRange makeSelectionRange(NlDocument document, Position p) {
         SelectionRange sr = new SelectionRange(U.range(document.tokens()), null);
 
-        List<Node> nodes = document.nodeList();
+        List<Node> nodes = document.parserResult().roots().toMutable();
         while (true) {
             Node node = nodes.stream().filter(n -> U.positionInRange(p, n)).findFirst().orElse(null);
             if (node == null) {

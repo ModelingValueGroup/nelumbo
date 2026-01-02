@@ -70,18 +70,18 @@ public class U {
     }
 
     private static final List<String> CLASSPATH_DIRS          = Arrays.asList(//
-                                                                              "out/server/classes/java/main",//
-                                                                              "out/server/classes/java/test" //
+            "out/server/classes/java/main",//
+            "out/server/classes/java/test" //
                                                                              );
     private static final List<String> NO_CLASS_PATH_DIR_NAMES = Arrays.asList(//
-                                                                              "node_modules", //
-                                                                              "src"//
+            "node_modules", //
+            "src"//
                                                                              );
     private static final List<String> PROJECT_INDICATORS      = Arrays.asList(//
-                                                                              "build.gradle.kts",//
-                                                                              "build.gradle", //
-                                                                              "pom.xml", //
-                                                                              ".git"//
+            "build.gradle.kts",//
+            "build.gradle", //
+            "pom.xml", //
+            ".git"//
                                                                              );
 
     @SuppressWarnings("unused")
@@ -286,46 +286,88 @@ public class U {
     }
 
     public static String render(List<Token> l) {
-        return l.stream().map(U::render).reduce((a, b) -> a + "-" + b).orElse("");
+        return l.stream().map(U::render).reduce((a, b) -> a + " " + b).orElse("");
     }
 
     public static String render(Token t) {
+        assert t != null;
         return t.toString();
     }
 
-    public static Token findToken(Position p, List<Token> tl) {
-        if (tl != null && !tl.isEmpty() && p != null) {
-            int l = p.getLine();
-            int c = p.getCharacter();
-            return tl.stream().filter(t -> t.contains(l, c)).findFirst().orElse(null);
+    public static String renderSpan(Node n) {
+        if (n == null) {
+            return renderSpan(null, null);
+        } else {
+            return renderSpan(n.firstToken(), n.lastToken());
         }
-        return null;
+    }
+
+    public static String renderSpan(Token t) {
+        return renderSpan(t, t);
+    }
+
+    public static String renderSpan(Token t1, Token t2) {
+        String l1 = t1 == null ? "???" : String.format("%03d", t1.line() + 1);
+        String l2 = t2 == null ? "???" : String.format("%03d", t2.lastLine() + 1);
+        String c1 = t1 == null ? "???" : String.format("%03d", t1.position() + 1);
+        String c2 = t2 == null ? "???" : String.format("%03d", t2.lastPosition() + 1);
+        if (!l1.equals(l2)) {
+            return String.format("%s:%s..%s:%s", l1, c1, l2, c2);
+        } else if (!c1.equals(c2)) {
+            return String.format("%s:%s..%s    ", l1, c1, c2);
+        } else {
+            return String.format("%s:%s         ", l1, c1);
+        }
+    }
+
+    public static Token findToken(Position p, List<Token> tl) {
+        if (tl == null || tl.isEmpty() || p == null) {
+            return null;
+        }
+        return tl.stream()//
+                 .filter(t -> contains(p, t))//
+                 .findFirst()//
+                 .orElse(null);
+    }
+
+    public static Node findNode(Position p, List<Node> nl) {
+        if (nl == null || nl.isEmpty() || p == null) {
+            return null;
+        }
+        return nl.stream()//
+                 .filter(n -> contains(p, n))//
+                 .findFirst()//
+                 .orElse(null);
     }
 
     public static Range range(Token t) {
+        assert t != null;
         return new Range(startPosition(t), endPosition(t));
     }
 
-    private static Position startPosition(Token t) {
-        return new Position(t.line(), t.position());
-    }
-
     public static Range range(List<Token> ts) {
+        assert ts != null && !ts.isEmpty();
         return new Range(startPosition(ts), endPosition(ts));
     }
 
-    private static Position endPosition(Token t) {
-        return new Position(t.lineEnd(), t.positionEnd());
+    private static Position startPosition(Token t) {
+        assert t != null;
+        return new Position(t.line(), t.position());
     }
 
     private static Position startPosition(List<Token> ts) {
-        assert !ts.isEmpty();
-        return new Position(ts.getFirst().line(), ts.getFirst().position());
+        assert ts != null && !ts.isEmpty();
+        return startPosition(ts.getFirst());
+    }
+
+    private static Position endPosition(Token t) {
+        assert t != null;
+        return new Position(t.lastLine(), t.positionEnd());
     }
 
     private static Position endPosition(List<Token> ts) {
-        assert !ts.isEmpty();
-        return new Position(ts.getLast().lineEnd(), ts.getLast().positionEnd());
+        assert ts != null && !ts.isEmpty();
+        return endPosition(ts.getLast());
     }
 
     public static boolean positionInRange(Position p, Node n) {
@@ -342,5 +384,29 @@ public class U {
         int rec = range.getEnd().getCharacter();
 
         return rsl <= pl && pl <= rel && (rsl != pl || rsc <= pc) && (rel != pl || pc <= rec);
+    }
+
+    public static boolean contains(Position p, Node n) {
+        return contains(p, n.tokens().toList());
+    }
+
+    public static boolean contains(Position p, Token t) {
+        return t.contains(p.getLine(), p.getCharacter());
+    }
+
+    public static boolean contains(Position p, List<Token> ts) {
+        return ts.stream().anyMatch(t -> contains(p, t));
+    }
+
+    /**
+     * Printf-style formatting to stderr that guarantees atomic writes.
+     * This prevents spurious newlines when IntelliJ's LSP client reads stderr.
+     * Uses String.format() + println() internally which writes atomically.
+     */
+    public static void errf(String format, Object... args) {
+        synchronized (System.err) {
+            //noinspection RedundantStringFormatCall
+            System.err.println(String.format(format, args));
+        }
     }
 }

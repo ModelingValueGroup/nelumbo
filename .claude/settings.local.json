@@ -14,7 +14,8 @@
       "Bash(cp:*)",
       "WebFetch(domain:mvnrepository.com)",
       "WebFetch(domain:central.sonatype.com)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

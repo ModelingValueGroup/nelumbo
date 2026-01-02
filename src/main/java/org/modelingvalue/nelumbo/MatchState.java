@@ -25,44 +25,44 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 public class MatchState<E> {
 
     @SuppressWarnings("rawtypes")
-    public static final MatchState           EMPTY = new MatchState<>();
+    public static final MatchState EMPTY = new MatchState<>();
 
     private final Map<Object, MatchState<E>> transitions;
     private final Set<E>                     elements;
 
     private MatchState() {
         this.transitions = Map.of();
-        this.elements = Set.of();
+        this.elements    = Set.of();
     }
 
     public MatchState(E element) {
         this.transitions = Map.of();
-        this.elements = element != null ? Set.of(element) : Set.of();
+        this.elements    = element != null ? Set.of(element) : Set.of();
     }
 
     public MatchState(Functor functor, MatchState<E> to) {
         this.transitions = Map.of(Entry.of(functor, to));
-        this.elements = Set.of();
+        this.elements    = Set.of();
     }
 
     public MatchState(Type type, MatchState<E> to) {
         this.transitions = Map.of(Entry.of(type, to));
-        this.elements = Set.of();
+        this.elements    = Set.of();
     }
 
     public MatchState(TokenType tokenType, MatchState<E> to) {
         this.transitions = Map.of(Entry.of(tokenType, to));
-        this.elements = Set.of();
+        this.elements    = Set.of();
     }
 
     public MatchState(Class<?> clss, MatchState<E> to) {
         this.transitions = Map.of(Entry.of(clss, to));
-        this.elements = Set.of();
+        this.elements    = Set.of();
     }
 
     private MatchState(Map<Object, MatchState<E>> transitions, Set<E> elements) {
         this.transitions = transitions;
-        this.elements = elements;
+        this.elements    = elements;
     }
 
     public Map<Object, MatchState<E>> transitions() {
@@ -82,14 +82,14 @@ public class MatchState<E> {
         if (state == null) {
             return this;
         }
-        Map<Object, MatchState<E>> transitions = transitions().addAll(state.transitions(), (a, b) -> a.merge(b));
+        Map<Object, MatchState<E>> transitions = transitions().addAll(state.transitions(), MatchState::merge);
         for (Object key : transitions.toKeys()) {
             if (key instanceof Type subType) {
                 for (Type superType : subType.allSupers()) {
                     if (!superType.equals(subType)) {
                         MatchState<E> superState = transitions.get(superType);
                         if (superState != null) {
-                            MatchState<E> subState = transitions.get(subType);
+                            MatchState<E> subState    = transitions.get(subType);
                             MatchState<E> mergedState = subState.merge(superState);
                             transitions = transitions.put(subType, mergedState);
                         }
@@ -97,7 +97,7 @@ public class MatchState<E> {
                 }
             }
         }
-        return new MatchState<E>(transitions, elements().addAll(state.elements()));
+        return new MatchState<>(transitions, elements().addAll(state.elements()));
     }
 
     public Set<E> match(Object obj) {
@@ -107,34 +107,32 @@ public class MatchState<E> {
 
     private MatchState<E> doMatch(Object obj) {
         MatchState<E> state;
-        if (obj instanceof Type type) {
-            state = matchType(type);
-        } else if (obj instanceof Variable var) {
-            state = matchType(var.type());
-        } else if (obj instanceof Node node) {
-            Functor functor = node.functor();
-            state = functor != null ? transitions().get(functor) : null;
-            if (state != null) {
-                for (Object arg : node.args()) {
-                    state = state.doMatch(arg);
-                    if (state == null) {
-                        break;
+        switch (obj) {
+            case Type type -> state = matchType(type);
+            case Variable var -> state = matchType(var.type());
+            case Node node -> {
+                Functor functor = node.functor();
+                state = functor != null ? transitions().get(functor) : null;
+                if (state != null) {
+                    for (Object arg : node.args()) {
+                        state = state.doMatch(arg);
+                        if (state == null) {
+                            break;
+                        }
                     }
                 }
+                if (state == null) {
+                    state = matchType(node.type());
+                }
             }
-            if (state == null) {
-                state = matchType(node.type());
-            }
-        } else if (obj instanceof String text) {
-            state = transitions().get(TokenType.of(text));
-        } else {
-            state = transitions().get(obj.getClass());
+            case String text -> state = transitions().get(TokenType.of(text));
+            default -> state = transitions().get(obj.getClass());
         }
         return state;
     }
 
     private MatchState<E> matchType(Type type) {
-        MatchState<E> state = null;
+        MatchState<E> state;
         for (Type sup : type.allSupers()) {
             state = transitions().get(sup);
             if (state != null) {

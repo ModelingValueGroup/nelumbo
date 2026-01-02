@@ -16,6 +16,7 @@
 
 package org.modelingvalue.nelumbo.lsp.documentService;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.Hover;
@@ -25,6 +26,7 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.lsp.U;
@@ -46,11 +48,11 @@ public class DocumentHoverService extends DocumentServiceAdapter {
         if (token == null) {
             return CompletableFuture.completedFuture(null);
         }
-        Node node = document.nodeAt(pos);
-        if (workspace().getSetting().debugging()) {
-            System.err.println("    hover " + U.render(pos) + ": token=" + token + ", node=" + node);
+        List<Node> nodes = document.nodesAt(pos);
+        if (Main.debugging()) {
+            System.err.println("    hover " + U.render(pos) + ": token=" + token + ", top-node=" + (nodes == null || nodes.isEmpty() ? "_no node_" : nodes.getFirst()));
         }
-        String        text  = U.escapeMarkdown(token.toString()) + "<br>" + (node == null ? "_no node_" : U.escapeMarkdown(node.toString()));
+        String        text  = U.escapeMarkdown(token.toString()) + "<br>" + (nodes == null || nodes.isEmpty() ? "_no node_" : U.escapeMarkdown(nodes.getFirst().toString()));
         MarkupContent mc    = new MarkupContent(MarkupKind.MARKDOWN, text);
         Range         range = U.range(token);
         Hover         hover = new Hover(mc, range);

@@ -48,6 +48,10 @@ public class NelumboLanguageServer implements LanguageServer {
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private       ClientCapabilities capabilities;
 
+    public Workspace getWorkspace() {
+        return workspace;
+    }
+
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         capabilities = params.getCapabilities();
@@ -102,7 +106,7 @@ public class NelumboLanguageServer implements LanguageServer {
     private SemanticTokensWithRegistrationOptions makeSemanticTokensCapabilities() {
         List<String> tokenTypes     = LspTokenMapping.lspTypes();
         List<String> tokenModifiers = LspTokenMapping.lspModifiers();
-        if (workspace.getSetting().debugging()) {
+        if (Main.debugging()) {
             System.err.println("LSP TOKEN TYPES:");
             for (int i = 0; i < tokenTypes.size(); i++) {
                 String n = tokenTypes.get(i);

@@ -41,11 +41,21 @@ public final class Parser implements ParseExceptionHandler {
                 throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
             InputStream buffer = new BufferedInputStream(stream);
-            String base = new String(buffer.readAllBytes());
+            String      base   = new String(buffer.readAllBytes());
             return new Parser(new Tokenizer(base, fileName).tokenize()).parseEvaluate().roots();
         } catch (IOException e) {
             throw new ParseException(e, "IOException during parse", fileName);
         }
+    }
+
+    public static ParserResult parse(TokenizerResult tokenizerResult) {
+        return parse(KnowledgeBase.BASE, tokenizerResult);
+    }
+
+    public static ParserResult parse(KnowledgeBase knowledgeBase, TokenizerResult tokenizerResult) {
+        ParserResult[] pra = new ParserResult[1];
+        knowledgeBase.run(() -> pra[0] = new Parser(tokenizerResult).parseNonThrowing());
+        return pra[0];
     }
 
     // Instance
@@ -53,10 +63,10 @@ public final class Parser implements ParseExceptionHandler {
     private final KnowledgeBase   knowledgeBase;
     private final TokenizerResult tokenizerResult;
 
-    private ParserResult          result;
+    private ParserResult result;
 
     public Parser(TokenizerResult tokenizerResult) {
-        this.knowledgeBase = KnowledgeBase.CURRENT.get();
+        this.knowledgeBase   = KnowledgeBase.CURRENT.get();
         this.tokenizerResult = tokenizerResult;
     }
 
@@ -91,7 +101,7 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            Node node = parseNode(token, ParseContext.of(null, null, Type.TOP_GROUP, Integer.MIN_VALUE, null));
+            Node  node  = parseNode(token, ParseContext.of(null, null, Type.TOP_GROUP, Integer.MIN_VALUE, null));
             if (node != null) {
                 result.setRoot(node);
                 token = node.nextToken();
@@ -107,8 +117,8 @@ public final class Parser implements ParseExceptionHandler {
     }
 
     public Node parseNode(Token token, ParseContext ctx) throws ParseException {
-        int nrOfExceptions = exceptions().size();
-        PatternResult result = preParse(token, ctx, null);
+        int           nrOfExceptions = exceptions().size();
+        PatternResult result         = preParse(token, ctx, null);
         if (result == null) {
             if (nrOfExceptions == exceptions().size()) {
                 addException(new ParseException("No syntax pattern found for " + token, token));

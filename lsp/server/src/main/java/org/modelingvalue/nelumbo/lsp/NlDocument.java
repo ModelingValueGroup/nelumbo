@@ -26,9 +26,7 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
@@ -42,7 +40,7 @@ public record NlDocument(Workspace workspace,
                          int version,
                          String uri,
                          TokenizerResult tokenizerResult,
-                         List<Node> nodeList) {
+                         ParserResult parserResult) {
 
     public static NlDocument of(NlDocument document, String newContent) {
         return of(document.workspace(), newContent, document.version(), document.uri());
@@ -50,47 +48,33 @@ public record NlDocument(Workspace workspace,
 
     public static NlDocument of(Workspace workspace, String content, int version, String uri) {
         TokenizerResult tokenizerResult = new Tokenizer(content, uri).tokenize();
-        List<Pair<String, Range>> errors = new ArrayList<>(tokenizerResult.listAll()//
-                                                                          .filter(t -> t.type() == TokenType.ERROR)//
-                                                                          .map(t -> Pair.of("illegal token: " + t.textTraced(), new Range(new Position(t.line(), t.position()), new Position(t.line(), t.position() + 1))))//
-                                                                          .toList());
-        List<Node> nodes = parse(workspace, tokenizerResult, errors);
-        if (workspace.getSetting().debugging()) {
-            System.err.println("NlDocument.of(): " + tokenizerResult.listAll().size() + " tokens, " + nodes.size() + " nodes, " + errors.size() + " errors");
-            TRACE_NODES(nodes, "    ");
+        ParserResult    parserResult    = Parser.parse(tokenizerResult);
+        publishDiagnosticsAsync(uri, tokenizerResult, parserResult);
+        if (Main.debugging()) {
+            U.errf("    #tokens    : %4d", tokenizerResult.listAll().size());
+            U.errf("    #root-nodes: %4d", parserResult.roots().size());
+            if (!parserResult.roots().isEmpty()) {
+                TRACE_NODE(parserResult.root(), "    ");
+            }
         }
-        publishDiagnosticsAsync(uri, errors);
-        return new NlDocument(workspace, content, version, uri, tokenizerResult, nodes);
+        return new NlDocument(workspace, content, version, uri, tokenizerResult, parserResult);
     }
 
-    private static void TRACE_NODES(List<? extends AstElement> nodes, String indent) {
-        nodes.forEach(a -> {
-            if (a instanceof Token t) {
-                System.err.println(indent + "T:" + t.type() + ":" + t + " '" + t.textTraced() + "' " + t.position() + ".." + t.positionEnd());
-            } else if (a instanceof Node n) {
-                System.err.println(indent + "N:" + n.type() + ":" + n + (n.functor() == null ? "" : "  -> " + n.functor()));
-                TRACE_NODES(n.astElements().toMutable(), indent + "  ");
-            } else {
-                System.err.println(indent + "?:" + a.getClass().getSimpleName() + ":" + a);
-            }
-        });
-    }
-
-    private static List<Node> parse(Workspace workspace, TokenizerResult tokenizerResult, List<Pair<String, Range>> errors) {
-        List<Node> l = new ArrayList<>();
-        KnowledgeBase.BASE.run(() -> {
-            ParserResult parserResult = new Parser(tokenizerResult).parseNonThrowing();
-            if (!parserResult.exceptions().isEmpty()) {
-                errors.addAll(parserResult.exceptions().map(e -> //
-                                                                    Pair.of(e.getMessage(), new Range(new Position(e.line(), e.position()), new Position(e.line(), e.position())))//
-                                                           ).toList());
-            }
-            if (workspace.getSetting().debugging()) {
-                System.err.println("===== " + parserResult.roots().size() + " roots ===== " + parserResult.exceptions().size() + " exceptions =====");
-            }
-            l.addAll(parserResult.roots().toMutable());
-        });
-        return l;
+    private static void TRACE_NODE(AstElement node, String indent) {
+        if (node instanceof Token t) {
+            //noinspection RedundantStringFormatCall
+            System.err.println(String.format("    %s%sT:%-16s  '%s'", U.renderSpan(t), indent, t.type(), t.textTraced()));
+        } else if (node instanceof Node n) {
+            Node   declaration = n.declaration();
+            String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + U.renderSpan(declaration);
+            //noinspection RedundantStringFormatCall
+            System.err.println(String.format("    %s%sN:%-16s  '%s'  => %s", U.renderSpan(n), indent, n.type(), n, decl));
+            n.astElements().forEach(e -> TRACE_NODE(e, indent + "  "));
+        } else if (node != null) {
+            System.err.println("                    " + indent + "????? " + node.getClass().getSimpleName() + "   " + node);
+        } else {
+            System.err.println("                    " + indent + "<null>");
+        }
     }
 
     public List<Token> tokens() {
@@ -101,29 +85,34 @@ public record NlDocument(Workspace workspace,
         return U.findToken(position, tokens());
     }
 
-    public Node nodeAt(Position position) {
-        if (workspace.getSetting().debugging()) {
-            System.err.println("NlDocument.nodeAt: " + tokens().size() + " tokens");
+    public List<Node> nodesAt(Position position) {
+        //TODO TOM implement properly: return all nodes that contain the position
+        List<Node> found = new ArrayList<>();
+        List<Node> l     = parserResult.roots().toMutable();
+        for (Node node : l) {
+            if (U.contains(position, node)) {
+                found.add(node);
+                //l = node.children().toList();
+                return found;
+            }
         }
-        return nodeList.stream()//
-                       .peek(node -> {
-                           if (workspace.getSetting().debugging()) {
-                               System.err.println("NlDocument.nodeAt: " + node + " of tokens: " + U.render(node.tokens().toList()));
-                           }
-                       })//
-                       .filter(node -> U.findToken(position, node.tokens().toList()) != null)//
-                       .findFirst()//
-                       .orElse(null);
+        return null;
     }
 
-    private static void publishDiagnosticsAsync(String uri, List<Pair<String, Range>> errors) {
+    private static void publishDiagnosticsAsync(String uri, TokenizerResult tokenizerResult, ParserResult parserResult) {
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        diagnostics.addAll(tokenizerResult.listAll()//
+                                          .filter(t -> t.type() == TokenType.ERROR)//
+                                          .map(t -> new Diagnostic(new Range(new Position(t.line(), t.position()), new Position(t.line(), t.position() + 1)), "illegal token: " + t.textTraced(), DiagnosticSeverity.Error, "nelumbo"))//
+                                          .toList());
+        diagnostics.addAll(parserResult.exceptions() //
+                                       .map(e -> new Diagnostic(new Range(new Position(e.line(), e.position()), new Position(e.line(), e.position())), e.getMessage(), DiagnosticSeverity.Error, "nelumbo"))//
+                                       .toList());
+        if (Main.debugging() && !diagnostics.isEmpty()) {
+            U.errf("    #errors    : %4d", diagnostics.size());
+        }
         try (ExecutorService svc = Executors.newSingleThreadExecutor()) {
-            svc.submit(() -> {
-                List<Diagnostic> l = errors.stream()//
-                                           .map(p -> new Diagnostic(p.b(), p.a(), DiagnosticSeverity.Error, "nelumbo"))//
-                                           .toList();
-                Main.client.publishDiagnostics(new PublishDiagnosticsParams(uri, l));
-            });
+            svc.submit(() -> Main.client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics)));
         }
     }
 

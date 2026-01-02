@@ -49,7 +49,7 @@ public interface AstElement {
 
     boolean isMeta();
 
-    List<Integer> getBranche(Functor functor);
+    List<Integer> getBranches(Functor functor);
 
     void setBranches(Map<Functor, List<Integer>> branches);
 

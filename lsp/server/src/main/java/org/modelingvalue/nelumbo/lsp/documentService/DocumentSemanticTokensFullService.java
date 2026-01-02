@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.modelingvalue.nelumbo.lsp.LspTokenMapping;
+import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.syntax.Token;
@@ -44,11 +45,11 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
         return CompletableFuture.supplyAsync(() -> new SemanticTokens(maker.data()));
     }
 
-    private class SemanticTokenMaker {
+    private static class SemanticTokenMaker {
         private final List<Integer> data        = new ArrayList<>();
         private       int           prevLineNum = 0;
         private       int           prevCharNum = 0;
-        private final boolean       debugging   = workspace().getSetting().debugging();
+        private final boolean       debugging   = Main.debugging();
 
         public void add(Token token) {
             // Check if token should be treated as VARIABLE (same logic as NelumboEditor)

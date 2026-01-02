@@ -178,7 +178,7 @@ public abstract class Pattern extends Node {
                 if (first && functor.left() != null) {
                     branche = LEFT_BRANCHE;
                 } else {
-                    branche = element.getBranche(functor);
+                    branche = element.getBranches(functor);
                 }
                 ParseState post = null;
                 if (element instanceof Token token) {

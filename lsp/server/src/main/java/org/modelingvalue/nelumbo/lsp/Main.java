@@ -35,9 +35,10 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.websocket.jakarta.WebSocketLauncherBuilder;
 
 public class Main {
-    public static final int            DEFAULT_PORT = 44660;
-    public static final Logger         LOGGER       = Logger.getLogger("NelumboLanguageServer");
-    public static       LanguageClient client;
+    public static final int                   DEFAULT_PORT = 44660;
+    public static final Logger                LOGGER       = Logger.getLogger("NelumboLanguageServer");
+    public static       NelumboLanguageServer server;
+    public static       LanguageClient        client;
 
     public static void main(String[] args) {
         if (args != null && 0 < args.length && args[0].equals("ws")) {
@@ -57,7 +58,7 @@ public class Main {
 
     public static void start(InputStream input, OutputStream output) {
         Locale.setDefault(Locale.ENGLISH);
-        NelumboLanguageServer    server   = new NelumboLanguageServer();
+        server = new NelumboLanguageServer();
         Launcher<LanguageClient> launcher = Launcher.createLauncher(server, LanguageClient.class, input, output);
         client = launcher.getRemoteProxy();
         LOGGER.info("Starting Language Server");
@@ -75,6 +76,16 @@ public class Main {
             Main.LOGGER.log(Level.SEVERE, "Failed to start WebSocket LSP server", e);
             System.exit(1);
         }
+    }
+
+    public static boolean debugging() {
+        if (server == null) {
+            return false;
+        }
+        if (server.getWorkspace() == null) {
+            return false;
+        }
+        return server.getWorkspace().getSetting().debugging();
     }
 
     // ... existing code ...
@@ -98,7 +109,7 @@ public class Main {
     }
 
     // WebSocket endpoint that bridges the session into LSP4J via WebSocketLauncherBuilder
-    @ServerEndpoint(value="/")
+    @ServerEndpoint(value = "/")
     public static class LspEndpoint {
         @OnOpen
         public void onOpen(Session session) {

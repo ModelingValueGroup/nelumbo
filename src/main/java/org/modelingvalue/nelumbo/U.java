@@ -25,6 +25,19 @@ public class U {
     public static final String BLACK_TEXT = COLOR_PRE + "30m";
     public static final String RESET      = COLOR_PRE + "0m";
 
+    public static int numLines(String s) {
+        if (s == null || s.isEmpty()) {
+            return 0;
+        }
+        int count = 1;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == '\n') {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public static String traceable(String s) {
         return s//
                 .replaceAll(" ", "\\\\.")//

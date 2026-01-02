@@ -24,6 +24,7 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.lsp.U;
@@ -44,7 +45,7 @@ public class DocumentDefinitionService extends DocumentServiceAdapter {
         Position pos   = params.getPosition();
         Token    token = document.tokenAt(pos);
         Token tt = document.next(document.next(token));
-        if (workspace().getSetting().debugging()) {
+        if (Main.debugging()) {
             System.err.println("    hover " + U.render(pos) + ": token=" + token+", target token=" + tt );
         }
         if (tt == null) {

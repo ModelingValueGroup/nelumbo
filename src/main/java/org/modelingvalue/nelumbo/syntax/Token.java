@@ -32,12 +32,17 @@ public final class Token implements AstElement {
 
     private final TokenType type;
     private final String    text;
-    private final int       line;        // line number in the input file (0-based)
-    private final int       position;    // position (column) in the line (0-based)
-    private final int       index;       // position in the input stream (0-based)
+    private final int       numLines;       // number of lines of this token (1...n)
+    private final int       numChars;       // number of characters in this token (0...n)
+    private final int       index;          // position in the input stream (0-based)
+    private final int       indexEnd;       // position in the input stream (0-based) after the token
+    private final int       line;           // line number in the input file (0-based)
+    private final int       lineEnd;        // line number in the input file (0-based) after the token
+    private final int       lastLine;       // last line number in the input file (0-based)
+    private final int       position;       // position (column) in the line (0-based)
+    private final int       positionEnd;    // position (column) in the line (0-based) after the token
+    private final int       lastPosition;   // last position (column) in the line (0-based)
     private final String    fileName;
-    private final int       numLines;    // number of lines of this token (1...n)
-    private final int       positionEnd; // position (column) in the line (0-based) after the token
 
     private Token next;
     private Token previous;
@@ -56,14 +61,19 @@ public final class Token implements AstElement {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type        = type;
-        this.text        = text;
-        this.line        = line;
-        this.position    = position;
-        this.index       = index;
-        this.fileName    = fileName;
-        this.numLines    = (int) text.chars().filter(ch -> ch == '\n').count() + 1;
-        this.positionEnd = numLines == 1 ? position + text.length() : text.length() - text.lastIndexOf('\n');
+        this.type         = type;
+        this.text         = text;
+        this.index        = index;
+        this.numLines     = U.numLines(text);
+        this.numChars     = text.length();
+        this.indexEnd     = index + numChars;
+        this.line         = line;
+        this.lineEnd      = line + numLines;
+        this.lastLine     = lineEnd - 1;
+        this.position     = position;
+        this.positionEnd  = numLines == 1 ? position + numChars : numChars - text.lastIndexOf('\n');
+        this.lastPosition = positionEnd - 1;
+        this.fileName     = fileName;
     }
 
     public void setNext(Token next) {
@@ -173,8 +183,12 @@ public final class Token implements AstElement {
         return line;
     }
 
+    public int lastLine() {
+        return lastLine;
+    }
+
     public int lineEnd() {
-        return line + numLines - 1;
+        return lineEnd;
     }
 
     public int numLines() {
@@ -185,12 +199,16 @@ public final class Token implements AstElement {
         return position;
     }
 
+    public int lastPosition() {
+        return lastPosition;
+    }
+
     public int positionEnd() {
         return positionEnd;
     }
 
     public int numChars() {
-        return text.length();
+        return numChars;
     }
 
     public int index() {
@@ -198,20 +216,28 @@ public final class Token implements AstElement {
     }
 
     public int indexEnd() {
-        return index + numChars();
+        return indexEnd;
     }
 
     public boolean contains(int l, int c) {
         if (numLines == 1) {
+            // check within one liner:
             return line == l && position <= c && c < positionEnd;
-        } else if (l < line || lineEnd() <= l) {
-            return false;
-        } else if (l == line) {
-            return position <= c;
-        } else if (l == lineEnd() - 1) {
-            return c < positionEnd;
         } else {
-            return true;
+            // multi line:
+            if (!(line <= l && l < lineEnd())) {
+                // not within the token lines => not contained
+                return false;
+            } else if (l == line) {
+                // on first line of the token => check column (this token extends to the end of the line)
+                return position <= c;
+            } else if (l == lastLine()) {
+                // on last line of the token => check column (this token starts at the beginning of the line)
+                return c < positionEnd;
+            } else {
+                // on some middle line of the token => always contained
+                return true;
+            }
         }
     }
 
@@ -225,14 +251,13 @@ public final class Token implements AstElement {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null || obj.getClass() != this.getClass()) {
-            return false;
-        }
-        var that = (Token) obj;
-        return Objects.equals(this.type, that.type) && Objects.equals(this.text, that.text) && this.line == that.line && this.position == that.position && this.index == that.index && Objects.equals(this.fileName, that.fileName);
+        return obj == this || obj instanceof Token that//
+                              && Objects.equals(this.type, that.type)//
+                              && Objects.equals(this.text, that.text)//
+                              && this.line == that.line//
+                              && this.position == that.position//
+                              && this.index == that.index//
+                              && Objects.equals(this.fileName, that.fileName);
     }
 
     @Override
@@ -282,7 +307,7 @@ public final class Token implements AstElement {
     }
 
     @Override
-    public List<Integer> getBranche(Functor functor) {
+    public List<Integer> getBranches(Functor functor) {
         return branches.get(functor);
     }
 
