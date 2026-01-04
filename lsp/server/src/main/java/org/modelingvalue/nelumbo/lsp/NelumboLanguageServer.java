@@ -102,21 +102,17 @@ public class NelumboLanguageServer implements LanguageServer {
         return textDocumentSyncOptions;
     }
 
-    @SuppressWarnings("RedundantStringFormatCall")
     private SemanticTokensWithRegistrationOptions makeSemanticTokensCapabilities() {
         List<String> tokenTypes     = LspTokenMapping.lspTypes();
         List<String> tokenModifiers = LspTokenMapping.lspModifiers();
-        if (Main.debugging()) {
-            System.err.println("LSP TOKEN TYPES:");
-            for (int i = 0; i < tokenTypes.size(); i++) {
-                String n = tokenTypes.get(i);
-                System.err.println(java.lang.String.format("   [%2d] %s", i, n));
-            }
-            System.err.println("LSP TOKEN MODIFIERS:");
-            for (int i = 0; i < tokenModifiers.size(); i++) {
-                String n = tokenModifiers.get(i);
-                System.err.println(java.lang.String.format("   [%2d] %s", i, n));
-            }
+
+        U.DEBUG("LSP TOKEN TYPES:");
+        for (int i = 0; i < tokenTypes.size(); i++) {
+            U.DEBUG("   [%2d] %s", i, tokenTypes.get(i));
+        }
+        U.DEBUG("LSP TOKEN MODIFIERS:");
+        for (int i = 0; i < tokenModifiers.size(); i++) {
+            U.DEBUG("   [%2d] %s", i, tokenModifiers.get(i));
         }
 
         SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);

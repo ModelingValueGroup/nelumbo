@@ -50,31 +50,14 @@ public record NlDocument(Workspace workspace,
         TokenizerResult tokenizerResult = new Tokenizer(content, uri).tokenize();
         ParserResult    parserResult    = Parser.parse(tokenizerResult);
         publishDiagnosticsAsync(uri, tokenizerResult, parserResult);
-        if (Main.debugging()) {
-            U.errf("    #tokens    : %4d", tokenizerResult.listAll().size());
-            U.errf("    #root-nodes: %4d", parserResult.roots().size());
-            if (!parserResult.roots().isEmpty()) {
-                TRACE_NODE(parserResult.root(), "    ");
-            }
-        }
-        return new NlDocument(workspace, content, version, uri, tokenizerResult, parserResult);
-    }
 
-    private static void TRACE_NODE(AstElement node, String indent) {
-        if (node instanceof Token t) {
-            //noinspection RedundantStringFormatCall
-            System.err.println(String.format("    %s%sT:%-16s  '%s'", U.renderSpan(t), indent, t.type(), t.textTraced()));
-        } else if (node instanceof Node n) {
-            Node   declaration = n.declaration();
-            String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + U.renderSpan(declaration);
-            //noinspection RedundantStringFormatCall
-            System.err.println(String.format("    %s%sN:%-16s  '%s'  => %s", U.renderSpan(n), indent, n.type(), n, decl));
-            n.astElements().forEach(e -> TRACE_NODE(e, indent + "  "));
-        } else if (node != null) {
-            System.err.println("                    " + indent + "????? " + node.getClass().getSimpleName() + "   " + node);
-        } else {
-            System.err.println("                    " + indent + "<null>");
+        U.DEBUG("    #tokens    : %4d", tokenizerResult.listAll().size());
+        U.DEBUG("    #root-nodes: %4d", parserResult.roots().size());
+        if (!parserResult.roots().isEmpty()) {
+            U.DEBUG_NODE(parserResult.root(), "    ");
         }
+
+        return new NlDocument(workspace, content, version, uri, tokenizerResult, parserResult);
     }
 
     public List<Token> tokens() {
@@ -86,17 +69,17 @@ public record NlDocument(Workspace workspace,
     }
 
     public List<Node> nodesAt(Position position) {
-        //TODO TOM implement properly: return all nodes that contain the position
-        List<Node> found = new ArrayList<>();
-        List<Node> l     = parserResult.roots().toMutable();
-        for (Node node : l) {
-            if (U.contains(position, node)) {
-                found.add(node);
-                //l = node.children().toList();
-                return found;
+        return findNodes(position, parserResult.roots()).toMutable();
+    }
+
+    private static org.modelingvalue.collections.List<Node> findNodes(Position position, org.modelingvalue.collections.List<? extends AstElement> in) {
+        for (AstElement a : in) {
+            if (a instanceof Node node && U.contains(position, node)) {
+                org.modelingvalue.collections.List<AstElement> astElements = node.astElements();
+                return findNodes(position, astElements).add(node);
             }
         }
-        return null;
+        return org.modelingvalue.collections.List.of();
     }
 
     private static void publishDiagnosticsAsync(String uri, TokenizerResult tokenizerResult, ParserResult parserResult) {
@@ -109,7 +92,7 @@ public record NlDocument(Workspace workspace,
                                        .map(e -> new Diagnostic(new Range(new Position(e.line(), e.position()), new Position(e.line(), e.position())), e.getMessage(), DiagnosticSeverity.Error, "nelumbo"))//
                                        .toList());
         if (Main.debugging() && !diagnostics.isEmpty()) {
-            U.errf("    #errors    : %4d", diagnostics.size());
+            U.DEBUG("    #errors    : %4d", diagnostics.size());
         }
         try (ExecutorService svc = Executors.newSingleThreadExecutor()) {
             svc.submit(() -> Main.client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics)));

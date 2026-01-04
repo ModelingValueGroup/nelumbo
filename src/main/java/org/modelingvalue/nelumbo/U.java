@@ -26,16 +26,16 @@ public class U {
     public static final String RESET      = COLOR_PRE + "0m";
 
     public static int numLines(String s) {
-        if (s == null || s.isEmpty()) {
-            return 0;
-        }
-        int count = 1;
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) == '\n') {
-                count++;
+        int length = 0;
+        if (s != null && !s.isEmpty()) {
+            length++;
+            for (int i = 0; i < s.length(); i++) {
+                if (s.charAt(i) == '\n') {
+                    length++;
+                }
             }
         }
-        return count;
+        return length;
     }
 
     public static String traceable(String s) {

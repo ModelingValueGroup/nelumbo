@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -42,6 +43,7 @@ import org.eclipse.lsp4j.WorkDoneProgressBegin;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.syntax.Token;
 
@@ -264,21 +266,24 @@ public class U {
         progressEnd(what);
     }
 
-    public static String render(Range r) {
-        return String.format("[%s...%s]", render(r.getStart()), render(r.getEnd()));
-    }
-
     public static String render(SelectionRange sr) {
         StringBuilder b = new StringBuilder();
         while (sr != null) {
-            b.append(render(sr.getRange())).append(" <- ");
+            if (!b.isEmpty()) {
+                b.append(" <- ");
+            }
+            b.append(render(sr.getRange()));
             sr = sr.getParent();
         }
         return b.toString();
     }
 
+    public static String render(Range r) {
+        return renderSpan(r.getStart(), r.getEnd());
+    }
+
     public static String render(Position p) {
-        return String.format("[%2d:%2d]", p.getLine(), p.getCharacter());
+        return String.format("%03d:%03d", p.getLine(), p.getCharacter());
     }
 
     public static String render(Position p, List<Token> l) {
@@ -295,28 +300,40 @@ public class U {
     }
 
     public static String renderSpan(Node n) {
-        if (n == null) {
-            return renderSpan(null, null);
-        } else {
-            return renderSpan(n.firstToken(), n.lastToken());
-        }
+        return n == null ? "???" : renderSpan(n.firstToken(), n.lastToken());
     }
 
     public static String renderSpan(Token t) {
-        return renderSpan(t, t);
+        return t == null ? "???" : renderSpan(t, t);
+    }
+
+    public static String renderSpan(Position t1, Position t2) {
+        Integer l1 = t1 == null ? null : t1.getLine();
+        Integer l2 = t1 == null ? null : t2.getLine();
+        Integer c1 = t1 == null ? null : t1.getCharacter();
+        Integer c2 = t1 == null ? null : t2.getCharacter();
+        return renderSpan(l1, l2, c1, c2);
     }
 
     public static String renderSpan(Token t1, Token t2) {
-        String l1 = t1 == null ? "???" : String.format("%03d", t1.line() + 1);
-        String l2 = t2 == null ? "???" : String.format("%03d", t2.lastLine() + 1);
-        String c1 = t1 == null ? "???" : String.format("%03d", t1.position() + 1);
-        String c2 = t2 == null ? "???" : String.format("%03d", t2.lastPosition() + 1);
-        if (!l1.equals(l2)) {
-            return String.format("%s:%s..%s:%s", l1, c1, l2, c2);
-        } else if (!c1.equals(c2)) {
-            return String.format("%s:%s..%s    ", l1, c1, c2);
+        Integer l1 = t1 == null ? null : t1.line() + 1;
+        Integer l2 = t1 == null ? null : (t2.numLines() == 0 ? t2.line() : t2.lastLine()) + 1;
+        Integer c1 = t1 == null ? null : t1.position() + 1;
+        Integer c2 = t1 == null ? null : (t2.numChars() == 0 ? t2.position() : t2.lastPosition()) + 1;
+        return renderSpan(l1, l2, c1, c2);
+    }
+
+    private static String renderSpan(Integer l1, Integer l2, Integer c1, Integer c2) {
+        String sl1 = l1 == null ? "???" : String.format("%03d", l1);
+        String sl2 = l2 == null ? "???" : String.format("%03d", l2);
+        String sc1 = l1 == null ? "???" : String.format("%03d", c1);
+        String sc2 = l2 == null ? "???" : String.format("%03d", c2);
+        if (!Objects.equals(l1, l2)) {
+            return String.format("%s:%s..%s:%s", sl1, sc1, sl2, sc2);
+        } else if (!Objects.equals(c1, c2)) {
+            return String.format("%s:%s..%s    ", sl1, sc1, sc2);
         } else {
-            return String.format("%s:%s         ", l1, c1);
+            return String.format("%s:%s         ", sl1, sc1);
         }
     }
 
@@ -345,6 +362,11 @@ public class U {
         return new Range(startPosition(t), endPosition(t));
     }
 
+    public static Range range(Node n) {
+        assert n != null;
+        return new Range(startPosition(n), endPosition(n));
+    }
+
     public static Range range(List<Token> ts) {
         assert ts != null && !ts.isEmpty();
         return new Range(startPosition(ts), endPosition(ts));
@@ -352,7 +374,12 @@ public class U {
 
     private static Position startPosition(Token t) {
         assert t != null;
-        return new Position(t.line(), t.position());
+        return new Position(t.line() + 1, t.position() + 1);
+    }
+
+    private static Position startPosition(Node n) {
+        assert n != null;
+        return startPosition(n.firstToken());
     }
 
     private static Position startPosition(List<Token> ts) {
@@ -362,28 +389,17 @@ public class U {
 
     private static Position endPosition(Token t) {
         assert t != null;
-        return new Position(t.lastLine(), t.positionEnd());
+        return new Position(t.lastLine() + 1, t.lastPosition() + 1);
+    }
+
+    private static Position endPosition(Node n) {
+        assert n != null;
+        return endPosition(n.lastToken());
     }
 
     private static Position endPosition(List<Token> ts) {
         assert ts != null && !ts.isEmpty();
         return endPosition(ts.getLast());
-    }
-
-    public static boolean positionInRange(Position p, Node n) {
-        List<Token> tokens = n.tokens().toList();
-        return !tokens.isEmpty() && positionInRange(p, range(tokens));
-    }
-
-    private static boolean positionInRange(Position p, Range range) {
-        int pl  = p.getLine();
-        int pc  = p.getCharacter();
-        int rsl = range.getStart().getLine();
-        int rsc = range.getStart().getCharacter();
-        int rel = range.getEnd().getLine();
-        int rec = range.getEnd().getCharacter();
-
-        return rsl <= pl && pl <= rel && (rsl != pl || rsc <= pc) && (rel != pl || pc <= rec);
     }
 
     public static boolean contains(Position p, Node n) {
@@ -398,15 +414,47 @@ public class U {
         return ts.stream().anyMatch(t -> contains(p, t));
     }
 
-    /**
-     * Printf-style formatting to stderr that guarantees atomic writes.
-     * This prevents spurious newlines when IntelliJ's LSP client reads stderr.
-     * Uses String.format() + println() internally which writes atomically.
-     */
-    public static void errf(String format, Object... args) {
-        synchronized (System.err) {
-            //noinspection RedundantStringFormatCall
-            System.err.println(String.format(format, args));
+    public static SelectionRange makeSelectionRange(NlDocument document, Position p) {
+        DEBUG("    SelectionRange at %10s:", U.render(p));
+        Node           root  = document.parserResult().root();
+        List<Node>     nodes = document.nodesAt(p).reversed();
+        SelectionRange sr    = new SelectionRange(range(root), null);
+        DEBUG("        - %10s (file root)", U.render(sr));
+        for (Node node : nodes) {
+            Range range = range(node);
+            DEBUG("        - %10s (node = %s)", U.render(range), node);
+            sr = new SelectionRange(range, sr);
+        }
+        Token token = findToken(p, document.tokens());
+        Range range = range(token);
+        DEBUG("        - %10s (token = %s)", U.render(range), token.debug());
+        sr = new SelectionRange(range, sr);
+        return sr;
+    }
+
+    public static void DEBUG(String format, Object... args) {
+        if (Main.debugging()) {
+            synchronized (System.err) {
+                //noinspection RedundantStringFormatCall
+                System.err.println(String.format(format, args));
+            }
+        }
+    }
+
+    public static void DEBUG_NODE(AstElement node, String indent) {
+        if (Main.debugging()) {
+            if (node instanceof Token t) {
+                DEBUG("    %s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
+            } else if (node instanceof Node n) {
+                Node   declaration = n.declaration();
+                String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
+                DEBUG("    %s%sN:%-16s  '%s'  => %s", renderSpan(n), indent, n.type(), n, decl);
+                n.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
+            } else if (node != null) {
+                DEBUG("                    %s????? %s   %s", indent, node.getClass().getSimpleName(), node);
+            } else {
+                DEBUG("                    %s<null>", indent);
+            }
         }
     }
 }

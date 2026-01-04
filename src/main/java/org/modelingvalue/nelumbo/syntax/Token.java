@@ -69,10 +69,10 @@ public final class Token implements AstElement {
         this.indexEnd     = index + numChars;
         this.line         = line;
         this.lineEnd      = line + numLines;
-        this.lastLine     = lineEnd - 1;
+        this.lastLine     = numLines == 0 ? lineEnd : lineEnd - 1;
         this.position     = position;
-        this.positionEnd  = numLines == 1 ? position + numChars : numChars - text.lastIndexOf('\n');
-        this.lastPosition = positionEnd - 1;
+        this.positionEnd  = numLines == 0 || numLines == 1 ? position + numChars : numChars - text.lastIndexOf('\n');
+        this.lastPosition = Math.max(position, positionEnd - 1);
         this.fileName     = fileName;
     }
 
@@ -269,6 +269,15 @@ public final class Token implements AstElement {
     public String toString() {
         String textTraced = textTraced();
         return textTraced.isEmpty() && !type().variable() ? type().name() : "'" + textTraced + "'";
+    }
+
+    public String debug() {
+        return String.format("%s:[%d:%d...%d:%d]:[#%d:#%d]:[%d:%d]:%s:%s", //
+                             fileName, //
+                             line, position, lastLine, lastPosition, //
+                             numLines, numChars,//
+                             lineEnd, positionEnd,//
+                             type, textTraced());
     }
 
     @Override

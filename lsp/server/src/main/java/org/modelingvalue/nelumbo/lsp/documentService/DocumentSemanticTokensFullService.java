@@ -26,6 +26,7 @@ import org.modelingvalue.nelumbo.lsp.LspTokenMapping;
 import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
+import org.modelingvalue.nelumbo.lsp.U;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -57,7 +58,9 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
 
             int semTokenTypeNum     = LspTokenMapping.toLspTokenType(effectiveType);
             int semTokenModifierNum = LspTokenMapping.toLspTokenModifier(effectiveType);
-            if (semTokenTypeNum != -1) {
+            if (semTokenTypeNum == -1) {
+                U.DEBUG("        ---%s: %s", U.renderSpan(token), token);
+            } else {
                 StringBuilder sb           = debugging ? new StringBuilder() : null;
                 int           firstLineNum = token.line();
                 int           firstCharNum = token.position();
@@ -79,15 +82,13 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                     data.add(semTokenModifierNum);  // token modifiers
 
                     if (debugging) {
-                        sb.append(String.format("line=%2d  char=%2d  line+=%2d  char+=%2d  len=%2d  type=%2d  txt='%s'%n", lineNum, charNum, lineNumRel, charNumRel, tokenPart.length(), semTokenTypeNum, tokenPart));
+                        sb.append(String.format("        line=%2d  char=%2d  line+=%2d  char+=%2d  len=%2d  type=%2d  txt='%s'", lineNum, charNum, lineNumRel, charNumRel, tokenPart.length(), semTokenTypeNum, tokenPart));
                     }
 
                     prevLineNum = lineNum;
                     prevCharNum = charNum;
                 }
-                if (debugging) {
-                    System.err.print(sb);
-                }
+                U.DEBUG("%s", sb);
             }
         }
 
