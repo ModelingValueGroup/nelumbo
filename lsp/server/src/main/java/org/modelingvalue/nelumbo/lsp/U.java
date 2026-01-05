@@ -422,8 +422,10 @@ public class U {
         DEBUG("        - %10s (file root)", U.render(sr));
         for (Node node : nodes) {
             Range range = range(node);
-            DEBUG("        - %10s (node = %s)", U.render(range), node);
-            sr = new SelectionRange(range, sr);
+            if (!range.equals(sr.getRange())) {
+                DEBUG("        - %10s (node = %s)", U.render(range), node);
+                sr = new SelectionRange(range, sr);
+            }
         }
         Token token = findToken(p, document.tokens());
         Range range = range(token);
