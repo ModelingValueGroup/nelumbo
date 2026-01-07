@@ -152,7 +152,6 @@ public class Node extends StructImpl implements AstElement {
         return (List<AstElement>) super.get(1);
     }
 
-    @SuppressWarnings("unchecked")
     public List<Object> args() {
         List<Object> args = List.of();
         for (int i = 0; i < length(); i++) {
@@ -408,7 +407,7 @@ public class Node extends StructImpl implements AstElement {
                 }
             }
         } else if (declVal instanceof Node declNode && !(declVal instanceof Type) && //
-                   thisVal instanceof Node thisNode && !(thisVal instanceof Type)) {
+                   thisVal instanceof Node thisNode) {
             vars = thisNode.getBinding(declNode, vars);
         } else if (declVal instanceof List<?> declList && thisVal instanceof List<?> thisList && //
                    declList.size() == thisList.size()) {
@@ -533,7 +532,7 @@ public class Node extends StructImpl implements AstElement {
     private Object replace(Object from, ThrowingFunction<Node, Node> replacer) throws ParseException {
         if (from instanceof Node fromNode) {
             return fromNode.replace(replacer);
-        } else if (from instanceof List fromList) {
+        } else if (from instanceof List<?> fromList) {
             List<Object> toList = List.of();
             for (Object e : fromList) {
                 toList = toList.add(replace(e, replacer));

@@ -33,6 +33,7 @@ public class ListNode extends Node {
         super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
     }
 
+    @SuppressWarnings("unused")
     public ListNode(List<AstElement> elements, Type elementType, Node... nodes) {
         super(elementType.list(), elements.addAll(List.of(nodes)), List.of(nodes));
     }
@@ -54,6 +55,11 @@ public class ListNode extends Node {
     @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elements() {
         return (List<T>) get(0);
+    }
+
+    @SuppressWarnings("unused")
+    public <T extends Node> List<T> elementsFlattened() {
+        return null;// TODO Tom
     }
 
     @Override

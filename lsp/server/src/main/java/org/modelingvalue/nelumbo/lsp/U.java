@@ -44,9 +44,11 @@ import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.syntax.Token;
 
+@SuppressWarnings("unused")
 public class U {
     /**
      * Escape a string so it is safe to embed inside Markdown (for LSP hover, etc.).
@@ -445,17 +447,26 @@ public class U {
 
     public static void DEBUG_NODE(AstElement node, String indent) {
         if (Main.debugging()) {
-            if (node instanceof Token t) {
-                DEBUG("    %s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
-            } else if (node instanceof Node n) {
-                Node   declaration = n.declaration();
-                String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
-                DEBUG("    %s%sN:%-16s  '%s'  => %s", renderSpan(n), indent, n.type(), n, decl);
-                n.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
-            } else if (node != null) {
-                DEBUG("                    %s????? %s   %s", indent, node.getClass().getSimpleName(), node);
-            } else {
-                DEBUG("                    %s<null>", indent);
+            switch (node) {
+                case Token t -> DEBUG("    %s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
+                case ListNode l -> {
+                    Node   declaration = l.declaration();
+                    String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
+                    DEBUG("    %s%sL[%d]:%-16s  '%s'  => %s", renderSpan(l), indent, l.elements().size(), l.type(), l, decl);
+                    l.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
+                }
+                case Node n -> {
+                    Node   declaration = n.declaration();
+                    String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
+                    DEBUG("    %s%sN:%-16s  '%s'  => %s", renderSpan(n), indent, n.type(), n, decl);
+                    n.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
+                }
+                case null -> {
+                    DEBUG("                    %s<null>", indent);
+                }
+                default -> {
+                    DEBUG("                    %s????? %s   %s", indent, node.getClass().getSimpleName(), node);
+                }
             }
         }
     }
