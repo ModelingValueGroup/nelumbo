@@ -55,11 +55,6 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         return predicate(1);
     }
 
-    private Predicate predicate(int i) {
-        Predicate p = getVal(i);
-        return p != null ? p : Boolean.UNKNOWN;
-    }
-
     @Override
     protected final InferResult infer(InferContext context) {
         Predicate[] predicate = new Predicate[2];

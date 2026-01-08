@@ -40,7 +40,7 @@ public final class Query extends Node implements Evaluatable {
 
     @SuppressWarnings("unchecked")
     private static Object[] args(List<AstElement> elements, Object[] args) throws ParseException {
-        Predicate nodePred = (Predicate) args[0];
+        Predicate nodePred = Predicate.predicate((Node) args[0]);
         Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()));
         Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
         if (expected.isEmpty()) {
@@ -73,7 +73,7 @@ public final class Query extends Node implements Evaluatable {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public List<Object> args() {
-        List<Object> args = List.of(predicate());
+        List<Object> args = List.of(get(0));
         if (hasExpected()) {
             List<Object> trueList = List.of();
             for (Map<Variable, Object> binding : facts()) {
@@ -119,7 +119,7 @@ public final class Query extends Node implements Evaluatable {
     }
 
     public Predicate predicate() {
-        return (Predicate) get(0);
+        return Predicate.predicate((Node) get(0));
     }
 
     @SuppressWarnings("unchecked")

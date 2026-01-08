@@ -25,6 +25,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -125,6 +126,14 @@ public abstract class CompoundPredicate extends Predicate {
             completeFalsehoods = false;
         }
         return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
+    }
+
+    protected Predicate predicate(int i) {
+        Node node = (Node) get(i);
+        if (node instanceof Type) {
+            node = (Node) declaration().get(i);
+        }
+        return predicate(node);
     }
 
 }

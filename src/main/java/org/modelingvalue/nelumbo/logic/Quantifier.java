@@ -50,7 +50,7 @@ public abstract class Quantifier extends CompoundPredicate {
     }
 
     public final Predicate predicate() {
-        return (Predicate) get(1);
+        return predicate(1);
     }
 
     @Override

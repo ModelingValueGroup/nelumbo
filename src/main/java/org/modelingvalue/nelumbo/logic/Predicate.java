@@ -414,4 +414,13 @@ public class Predicate extends Node {
         return Type.RELATION.isAssignableFrom(type());
     }
 
+    public static Predicate predicate(Node node) {
+        if (node instanceof Predicate pred) {
+            return pred;
+        } else if (node instanceof Variable var) {
+            return new Boolean(var);
+        }
+        throw new IllegalArgumentException("Must be Variable or Precdicate, is: " + node);
+    }
+
 }

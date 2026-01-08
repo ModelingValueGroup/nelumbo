@@ -28,6 +28,27 @@
     !true           ? [][()]
     !false          ? [()][]
     !unknown        ? [..][..]
+    
+    
+    <Predicate> p
+
+    p               ? [(p=true)][(p=false)]
+    !p              ? [(p=false)][(p=true)]
+    
+    p&true          ? [(p=true)][(p=false)]
+    true&p          ? [(p=true)][(p=false)]
+    p|false         ? [(p=true)][(p=false)]
+    false|p         ? [(p=true)][(p=false)]
+    
+    p&false         ? [][()]
+    false&p         ? [][()]
+    p|true          ? [()][]
+    true|p          ? [()][]
+    
+    p|unknown       ? [(p=true),..][..]
+    unknown|p       ? [(p=true),..][..]
+    p&unknown       ? [..][(p=false),..]
+    unknown&p       ? [..][(p=false),..]
 
     // Identity
 

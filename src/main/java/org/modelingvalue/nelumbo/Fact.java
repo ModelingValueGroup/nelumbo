@@ -47,7 +47,7 @@ public final class Fact extends Node implements Evaluatable {
     }
 
     public Predicate predicate() {
-        return (Predicate) get(0);
+        return Predicate.predicate((Node) get(0));
     }
 
     @Override

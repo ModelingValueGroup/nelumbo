@@ -19,10 +19,12 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -47,6 +49,10 @@ public final class Boolean extends Predicate {
         }
     }
 
+    public Boolean(Variable var) {
+        super(UNKNOWN.functor(), List.of(), var);
+    }
+
     @Override
     public List<Object> args() {
         return List.of();
@@ -61,18 +67,36 @@ public final class Boolean extends Predicate {
         super(args, declaration);
     }
 
+    private java.lang.Boolean getBoolean() {
+        Object object = get(0);
+        return object instanceof java.lang.Boolean b ? b : null;
+    }
+
+    @Override
+    public Variable variable() {
+        Object object = get(0);
+        if (object instanceof Variable v) {
+            return v;
+        }
+        object = declaration().get(0);
+        if (object instanceof Variable v) {
+            return v;
+        }
+        return null;
+    }
+
     public boolean isTrue() {
-        java.lang.Boolean b = (java.lang.Boolean) get(0);
+        java.lang.Boolean b = getBoolean();
         return b != null && b;
     }
 
     public boolean isFalse() {
-        java.lang.Boolean b = (java.lang.Boolean) get(0);
+        java.lang.Boolean b = getBoolean();
         return b != null && !b;
     }
 
     public boolean isUnknown() {
-        java.lang.Boolean b = (java.lang.Boolean) get(0);
+        java.lang.Boolean b = getBoolean();
         return b == null;
     }
 
@@ -96,7 +120,13 @@ public final class Boolean extends Predicate {
             return unresolvable();
         }
         if (result == null) {
-            result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
+            Variable var = variable();
+            if (var != null) {
+                result = InferResult.of(this, Set.of(set(0, java.lang.Boolean.TRUE)), true, //
+                        Set.of(set(0, java.lang.Boolean.FALSE)), true, Set.of());
+            } else {
+                result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
+            }
         }
         return result;
     }
@@ -108,7 +138,8 @@ public final class Boolean extends Predicate {
 
     @Override
     public String toString(TokenType[] previous) {
-        String string = isUnknown() ? "unknown" : toString(0);
+        Variable var = variable();
+        String string = var != null ? var.name() : isUnknown() ? "unknown" : toString(0);
         if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
             previous[0] = TokenType.NAME;
             return " " + string;

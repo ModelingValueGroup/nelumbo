@@ -64,8 +64,7 @@ public final class Not extends CompoundPredicate {
     }
 
     public final Predicate predicate() {
-        Predicate p = getVal(0);
-        return p != null ? p : Boolean.UNKNOWN;
+        return predicate(0);
     }
 
     @Override
