@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.Token;
 
+@SuppressWarnings("unused")
 public class U {
     public static final String COLOR_PRE  = "\u001B[";
     public static final String WHITE_TEXT = COLOR_PRE + "37m";
@@ -66,8 +67,8 @@ public class U {
     public static void printResults(List<Node> roots) {
         if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
             for (Node root : roots) {
-                if (root.type().equals(Type.QUERY)) {
-                    System.out.println(root.toString(1));
+                if (root instanceof Query query) {
+                    System.out.println(query.inferResult());
                 }
             }
         }
