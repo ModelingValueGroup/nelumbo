@@ -56,4 +56,6 @@ public interface AstElement {
     void setCycleDepth(int depth);
 
     int getCycleDepth();
+
+    Variable variable();
 }

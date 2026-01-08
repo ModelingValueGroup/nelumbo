@@ -112,7 +112,9 @@ public class NodeTypePattern extends Pattern {
 
     @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        args = args.add((Node) it.element);
+        Node node = (Node) it.element;
+        Variable var = node.variable();
+        args = args.add(var != null ? var : node);
         it.next();
         return args;
     }

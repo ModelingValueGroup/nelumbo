@@ -625,6 +625,7 @@ public class Node extends StructImpl implements AstElement {
         return this;
     }
 
+    @Override
     public Variable variable() {
         return null;
     }

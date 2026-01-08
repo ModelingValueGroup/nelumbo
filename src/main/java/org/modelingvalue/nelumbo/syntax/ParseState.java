@@ -242,19 +242,25 @@ public class ParseState {
                 }
             }
         }
-        if (next == null && (type == TokenType.NAME || type == TokenType.TYPE)) {
-            Variable var = result.parser().variable(token, ctx);
-            if (var != null) {
+        if (next == null && (type == TokenType.NAME || type == TokenType.TYPE || type == TokenType.STRING)) {
+            String name = text;
+            if (type != TokenType.NAME) {
+                name = name.substring(1, name.length() - 1);
+            }
+            Functor functor = result.parser().variable(name, ctx);
+            if (functor != null) {
+                Variable var = (Variable) functor.construct(List.of(token), new Object[0], result);
                 TokenType tt = var.type().tokenType();
                 next = tt != null ? transitions().get(tt) : null;
                 if (next == null && tt == TokenType.NAME) {
-                    next = transitions().get(TokenType.TYPE);
-                    if (next != null) {
-                        var = var.rename("<" + var.name() + ">");
-                    }
+                    next = transitions().get(type);
                 }
                 if (next != null) {
-                    element = var;
+                    if (type != TokenType.NAME) {
+                        var = var.rename(text).setType(new Type(type));
+                    }
+                    token = result.addReplace(token, token.setVariable(var));
+                    element = token;
                 } else {
                     return false;
                 }

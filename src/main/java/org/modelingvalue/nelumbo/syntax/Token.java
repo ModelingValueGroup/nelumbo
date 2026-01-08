@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.patterns.Pattern;
 public final class Token implements AstElement {
 
     private final TokenType             type;
-    private final String                text;
+    private final Object                object;
     private final int                   line;        // line number in the input file (0-based)
     private final int                   position;    // position (column) in the line (0-based)
     private final int                   index;       // position in the input stream (0-based)
@@ -50,14 +50,23 @@ public final class Token implements AstElement {
     private Node                        node;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
+        this(type, (Object) text, line, position, index, fileName);
+    }
+
+    public Token(Variable var, int line, int position, int index, String fileName) {
+        this(var.type().tokenType(), (Object) var, line, position, index, fileName);
+    }
+
+    private Token(TokenType type, Object object, int line, int position, int index, String fileName) {
         if (type == null) {
             throw new NullPointerException("type can not be null");
         }
-        if (text == null) {
+        if (object == null) {
             throw new NullPointerException("text can not be null");
         }
+        String text = object.toString();
         this.type = type;
-        this.text = text;
+        this.object = object;
         this.line = line;
         this.position = position;
         this.index = index;
@@ -105,12 +114,12 @@ public final class Token implements AstElement {
     }
 
     private Token splitGet1(int len) {
-        String sub = text.substring(0, len);
+        String sub = text().substring(0, len);
         return new Token(TokenType.of(sub), sub, line, position, index, fileName);
     }
 
     private Token splitGet2(int len) {
-        String sub = text.substring(len);
+        String sub = text().substring(len);
         return new Token(TokenType.of(sub), sub, line, position + len, index + len, fileName);
     }
 
@@ -125,7 +134,7 @@ public final class Token implements AstElement {
     }
 
     public Token prepend(String prefix) {
-        String sup = prefix + text;
+        String sup = prefix + text();
         Token merge = new Token(TokenType.of(sup), sup, line, position - prefix.length(), index - prefix.length(), fileName);
         merge.next = next;
         merge.nextAll = nextAll;
@@ -139,6 +148,22 @@ public final class Token implements AstElement {
         previousAll.setNextAll(merge);
         merge.next.setPrevious(merge);
         merge.nextAll.setPreviousAll(merge);
+    }
+
+    public Token setVariable(Variable var) {
+        Token replacement = new Token(var, line, position, index, fileName);
+        replacement.next = next;
+        replacement.nextAll = nextAll;
+        return replacement;
+    }
+
+    public void replace(Token replacement) {
+        replacement.setPrevious(previous);
+        replacement.setPreviousAll(previousAll);
+        previous.setNext(replacement);
+        previousAll.setNextAll(replacement);
+        replacement.next.setPrevious(replacement);
+        replacement.nextAll.setPreviousAll(replacement);
     }
 
     public Token next() {
@@ -162,11 +187,11 @@ public final class Token implements AstElement {
     }
 
     public String text() {
-        return text;
+        return object.toString();
     }
 
     public String textTraced() {
-        return U.traceable(text);
+        return U.traceable(text());
     }
 
     public int line() {
@@ -190,7 +215,7 @@ public final class Token implements AstElement {
     }
 
     public int numChars() {
-        return text.length();
+        return text().length();
     }
 
     public int index() {
@@ -232,12 +257,14 @@ public final class Token implements AstElement {
             return false;
         }
         var that = (Token) obj;
-        return Objects.equals(this.type, that.type) && Objects.equals(this.text, that.text) && this.line == that.line && this.position == that.position && this.index == that.index && Objects.equals(this.fileName, that.fileName);
+        return Objects.equals(this.type, that.type) && Objects.equals(this.object, that.object) && //
+                this.line == that.line && this.position == that.position && //
+                this.index == that.index && Objects.equals(this.fileName, that.fileName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, text, line, position, index, fileName);
+        return Objects.hash(type, object, line, position, index, fileName);
     }
 
     @Override
@@ -322,7 +349,11 @@ public final class Token implements AstElement {
         return null;
     }
 
+    @Override
     public Variable variable() {
+        if (object instanceof Variable var) {
+            return var;
+        }
         Variable var = node != null ? node.variable() : null;
         if (var != null) {
             return var;

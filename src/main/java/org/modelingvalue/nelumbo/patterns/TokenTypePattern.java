@@ -68,11 +68,9 @@ public class TokenTypePattern extends Pattern {
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         TokenType type = tokenType();
         if (!isEmpty(type)) {
-            if (it.element instanceof Variable var) {
-                args = args.add(var);
-            } else {
-                args = args.add(((Token) it.element).text());
-            }
+            Token token = (Token) it.element;
+            Variable var = token.variable();
+            args = args.add(var != null ? var : token.text());
         }
         it.next();
         return args;

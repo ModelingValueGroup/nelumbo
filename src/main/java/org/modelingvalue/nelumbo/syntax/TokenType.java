@@ -27,10 +27,10 @@ public enum TokenType {
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, null, false), //
     NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", false, null, false), //
     DECIMAL("-?[0-9]+\\.[0-9]+", false, null, false), //
-    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, null, false), //
-    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, null, false), //
+    NAME("[a-zA-Z_$][0-9a-zA-Z_$]*", false, null, false), //
+    TYPE("<[a-zA-Z_$][0-9a-zA-Z_$]*>", false, null, false), //
     META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", false, null, false), //
-    OPERATOR("[~!@#$%^&*=+|:<>.?/-]+", false, null, true), //
+    OPERATOR("[~!@#%^&*=+|:<>.?/-]+", false, null, true), //
     NEWLINE("\\v", false, "", true), //
     HSPACE("\\h+", true, "", false), //
     END_LINE_COMMENT("//[^\\v]*", true, null, false), //
@@ -39,7 +39,7 @@ public enum TokenType {
     BEGINOFFILE("", false, "", false), //
     ENDOFFILE("", false, "", false), //
     ENDOFLINE("", false, "", false), //
-    VARIABLE("[a-zA-Z_][0-9a-zA-Z_]*", true, null, false), //
+    VARIABLE("[a-zA-Z_$][0-9a-zA-Z_$]*", true, null, false), //
     ;
 
     private final Pattern pattern; // the pattern that matches tokens of this token type

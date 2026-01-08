@@ -24,7 +24,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public final class Parser implements ParseExceptionHandler {
@@ -139,8 +139,8 @@ public final class Parser implements ParseExceptionHandler {
         return left;
     }
 
-    public Variable variable(Token token, ParseContext ctx) throws ParseException {
-        return knowledgeBase.variable(token, ctx, this);
+    public Functor variable(String name, ParseContext ctx) throws ParseException {
+        return knowledgeBase.variable(name, ctx);
     }
 
     public PatternResult preParse(Token token, ParseContext ctx, Node left) throws ParseException {
