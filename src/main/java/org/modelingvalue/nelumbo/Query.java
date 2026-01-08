@@ -35,11 +35,11 @@ public final class Query extends Node implements Evaluatable {
     private InferResult       inferResult;
 
     public Query(Functor functor, List<AstElement> elements, Object... args) throws ParseException {
-        super(functor, elements, args(elements, args));
+        super(functor, elements, args(args));
     }
 
     @SuppressWarnings("unchecked")
-    private static Object[] args(List<AstElement> elements, Object[] args) throws ParseException {
+    private static Object[] args(Object[] args) throws ParseException {
         Predicate nodePred = Predicate.predicate((Node) args[0]);
         Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()));
         Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
@@ -63,14 +63,13 @@ public final class Query extends Node implements Evaluatable {
         for (List<List<Object>> listList : (List<List<List<Object>>>) listListList) {
             Map<Variable, Object> map = Map.of();
             for (List<Object> list : listList) {
-                map = map.put(((Variable) list.get(0)).literal(), (Node) list.get(1));
+                map = map.put(((Variable) list.get(0)).literal(), list.get(1));
             }
             set = set.add(map);
         }
         return set;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public List<Object> args() {
         List<Object> args = List.of(get(0));
@@ -156,18 +155,17 @@ public final class Query extends Node implements Evaluatable {
         }
         inferResult = found;
         if (hasExpected()) {
-            toString();
             Set<Map<Variable, Object>> trueBindings = facts();
-            Set<Predicate> truePredicates = trueBindings.map(b -> predicate.setBinding(b)).asSet();
+            Set<Predicate> truePredicates = trueBindings.map(predicate::setBinding).asSet();
             boolean completeFacts = completeFacts();
             Set<Map<Variable, Object>> falseBindings = falsehoods();
-            Set<Predicate> falsePredicates = falseBindings.map(b -> predicate.setBinding(b)).asSet();
+            Set<Predicate> falsePredicates = falseBindings.map(predicate::setBinding).asSet();
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates, completeFalsehoods, Set.of());
             if (!found.equals(expected) && !found.toString().equals(expected.toString())) {
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //
-                        astElements.sublist(2, astElements.size()).toArray(i -> new AstElement[i])));
+                        astElements.sublist(2, astElements.size()).toArray(AstElement[]::new)));
             }
         }
     }
