@@ -274,9 +274,9 @@ public final class Token implements AstElement {
     public String debug() {
         return String.format("%s:[%d:%d...%d:%d]:[#%d:#%d]:[%d:%d]:%s:%s", //
                              fileName, //
-                             line, position, lastLine, lastPosition, //
+                             line + 1, position + 1, lastLine + 1, lastPosition + 1, //
                              numLines, numChars,//
-                             lineEnd, positionEnd,//
+                             lineEnd + 1, positionEnd + 1,//
                              type, textTraced());
     }
 

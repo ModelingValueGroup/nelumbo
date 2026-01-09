@@ -285,7 +285,7 @@ public class U {
     }
 
     public static String render(Position p) {
-        return String.format("%03d:%03d", p.getLine(), p.getCharacter());
+        return String.format("%d:%d", p.getLine() + 1, p.getCharacter() + 1);
     }
 
     public static String render(Position p, List<Token> l) {
@@ -318,18 +318,18 @@ public class U {
     }
 
     public static String renderSpan(Token t1, Token t2) {
-        Integer l1 = t1 == null ? null : t1.line() + 1;
-        Integer l2 = t1 == null ? null : (t2.numLines() == 0 ? t2.line() : t2.lastLine()) + 1;
-        Integer c1 = t1 == null ? null : t1.position() + 1;
-        Integer c2 = t1 == null ? null : (t2.numChars() == 0 ? t2.position() : t2.lastPosition()) + 1;
+        Integer l1 = t1 == null ? null : t1.line();
+        Integer l2 = t1 == null ? null : (t2.numLines() == 0 ? t2.line() : t2.lastLine());
+        Integer c1 = t1 == null ? null : t1.position();
+        Integer c2 = t1 == null ? null : (t2.numChars() == 0 ? t2.position() : t2.lastPosition());
         return renderSpan(l1, l2, c1, c2);
     }
 
     private static String renderSpan(Integer l1, Integer l2, Integer c1, Integer c2) {
-        String sl1 = l1 == null ? "???" : String.format("%03d", l1);
-        String sl2 = l2 == null ? "???" : String.format("%03d", l2);
-        String sc1 = l1 == null ? "???" : String.format("%03d", c1);
-        String sc2 = l2 == null ? "???" : String.format("%03d", c2);
+        String sl1 = l1 == null ? "???" : String.format("%d", l1 + 1);
+        String sl2 = l2 == null ? "???" : String.format("%d", l2 + 1);
+        String sc1 = l1 == null ? "???" : String.format("%d", c1 + 1);
+        String sc2 = l2 == null ? "???" : String.format("%d", c2 + 1);
         if (!Objects.equals(l1, l2)) {
             return String.format("%s:%s..%s:%s", sl1, sc1, sl2, sc2);
         } else if (!Objects.equals(c1, c2)) {
@@ -376,7 +376,7 @@ public class U {
 
     private static Position startPosition(Token t) {
         assert t != null;
-        return new Position(t.line() + 1, t.position() + 1);
+        return new Position(t.line(), t.position());
     }
 
     private static Position startPosition(Node n) {
@@ -391,7 +391,7 @@ public class U {
 
     private static Position endPosition(Token t) {
         assert t != null;
-        return new Position(t.lastLine() + 1, t.lastPosition() + 1);
+        return new Position(t.lastLine(), t.lastPosition());
     }
 
     private static Position endPosition(Node n) {

@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Collectors;
 
@@ -40,18 +41,18 @@ public class TokenizerTest extends NelumboTestBase {
     @Test
     public void tokenizerTest() {
         String example = """
-                // COMMENT
-                    -abb + bcc *
-                       c - dee // ANOTHER COMMENT
-                    e = 8.9 / 2
-                """;
+                         // COMMENT
+                             -abb + bcc *
+                                c - dee // ANOTHER COMMENT
+                             e = 8.9 / 2
+                         """;
 
         TokenizerResult result = new Tokenizer(example, "tokenizerTest").tokenize();
-        List<Token> tokens = result.list();
-        List<Token> all = result.listAll();
+        List<Token>     tokens = result.list();
+        List<Token>     all    = result.listAll();
 
-        String reassembled = all.map(Token::text).collect(Collectors.joining());
-        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        String reassembled   = all.map(Token::text).collect(Collectors.joining());
+        String types         = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
         String expectedTypes = "BEGINOFFILE END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE ENDOFFILE";
 
         U.printTokens("tokens", tokens);
@@ -63,46 +64,18 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals(expectedTypes, types, "unexpected token types in token list");
 
         //==========================================================================================
-        assertEquals(TokenType.END_LINE_COMMENT, all.get(1).type());
-        assertEquals(0, all.get(1).line());
-        assertEquals(0, all.get(1).position());
-
-        assertEquals(TokenType.NEWLINE, all.get(2).type());
-        assertEquals(0, all.get(2).line());
-        assertEquals(10, all.get(2).position());
-
-        assertEquals(TokenType.HSPACE, all.get(3).type());
-        assertEquals(1, all.get(3).line());
-        assertEquals(0, all.get(3).position());
-
-        assertEquals(TokenType.OPERATOR, all.get(4).type());
-        assertEquals(1, all.get(4).line());
-        assertEquals(4, all.get(4).position());
-
-        assertEquals(TokenType.NAME, all.get(5).type());
-        assertEquals(1, all.get(5).line());
-        assertEquals(5, all.get(5).position());
+        assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
+        assertEqualsToken(0, 10, all, 2, TokenType.NEWLINE);
+        assertEqualsToken(1, 0, all, 3, TokenType.HSPACE);
+        assertEqualsToken(1, 4, all, 4, TokenType.OPERATOR);
+        assertEqualsToken(1, 5, all, 5, TokenType.NAME);
 
         //==========================================================================================
-        assertEquals(TokenType.OPERATOR, tokens.get(1).type());
-        assertEquals(1, tokens.get(1).line());
-        assertEquals(4, tokens.get(1).position());
-
-        assertEquals(TokenType.NAME, tokens.get(2).type());
-        assertEquals(1, tokens.get(2).line());
-        assertEquals(5, tokens.get(2).position());
-
-        assertEquals(TokenType.OPERATOR, tokens.get(3).type());
-        assertEquals(1, tokens.get(3).line());
-        assertEquals(9, tokens.get(3).position());
-
-        assertEquals(TokenType.NAME, tokens.get(4).type());
-        assertEquals(1, tokens.get(4).line());
-        assertEquals(11, tokens.get(4).position());
-
-        assertEquals(TokenType.OPERATOR, tokens.get(5).type());
-        assertEquals(1, tokens.get(5).line());
-        assertEquals(15, tokens.get(5).position());
+        assertEqualsToken(1, 4, tokens, 1, TokenType.OPERATOR);
+        assertEqualsToken(1, 5, tokens, 2, TokenType.NAME);
+        assertEqualsToken(1, 9, tokens, 3, TokenType.OPERATOR);
+        assertEqualsToken(1, 11, tokens, 4, TokenType.NAME);
+        assertEqualsToken(1, 15, tokens, 5, TokenType.OPERATOR);
     }
 
     @Test
@@ -110,8 +83,8 @@ public class TokenizerTest extends NelumboTestBase {
         String example = "/* unterminated comment";
 
         TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();
-        List<Token> tokens = result.list();
-        List<Token> all = result.listAll();
+        List<Token>     tokens = result.list();
+        List<Token>     all    = result.listAll();
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
@@ -119,21 +92,19 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals(2, tokens.size(), "wrong number of tokens returned by tokenize()");
         assertEquals(3, all.size(), "wrong number of tokens returned by tokenize(all)");
 
-        assertEquals(TokenType.IN_LINE_COMMENT, all.get(1).type());
-        assertEquals(0, all.get(1).line());
-        assertEquals(0, all.get(1).position());
+        assertEqualsToken(0, 0, all, 1, TokenType.IN_LINE_COMMENT);
     }
 
     @Test
     public void tokenizerComment2Test() {
         String example = "<a/*a*/>•a";
 
-        TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();
-        List<Token> tokens = result.list();
-        List<Token> all = result.listAll();
-        String reassembled = all.map(Token::text).collect(Collectors.joining());
-        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String expectedTypes = "BEGINOFFILE OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME ENDOFFILE";
+        TokenizerResult result        = new Tokenizer(example, "tokenizerCommentTest").tokenize();
+        List<Token>     tokens        = result.list();
+        List<Token>     all           = result.listAll();
+        String          reassembled   = all.map(Token::text).collect(Collectors.joining());
+        String          types         = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        String          expectedTypes = "BEGINOFFILE OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME ENDOFFILE";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
@@ -144,42 +115,141 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals(expectedTypes, types, "unexpected token types in token list");
 
         //==========================================================================================
-        assertEquals(TokenType.OPERATOR, all.get(1).type());
-        assertEquals(0, all.get(1).line());
-        assertEquals(0, all.get(1).position());
-
-        assertEquals(TokenType.NAME, all.get(2).type());
-        assertEquals(0, all.get(2).line());
-        assertEquals(1, all.get(2).position());
-
-        assertEquals(TokenType.IN_LINE_COMMENT, all.get(3).type());
-        assertEquals(0, all.get(3).line());
-        assertEquals(2, all.get(3).position());
-
-        assertEquals(TokenType.OPERATOR, all.get(4).type());
-        assertEquals(0, all.get(4).line());
-        assertEquals(7, all.get(4).position());
-
-        assertEquals(TokenType.ERROR, all.get(5).type());
-        assertEquals(0, all.get(5).line());
-        assertEquals(8, all.get(5).position());
+        assertEqualsToken(0, 0, all, 1, TokenType.OPERATOR);
+        assertEqualsToken(0, 1, all, 2, TokenType.NAME);
+        assertEqualsToken(0, 2, all, 3, TokenType.IN_LINE_COMMENT);
+        assertEqualsToken(0, 7, all, 4, TokenType.OPERATOR);
+        assertEqualsToken(0, 8, all, 5, TokenType.ERROR);
 
         //==========================================================================================
-        assertEquals(TokenType.OPERATOR, tokens.get(1).type());
-        assertEquals(0, tokens.get(1).line());
-        assertEquals(0, tokens.get(1).position());
-
-        assertEquals(TokenType.NAME, tokens.get(2).type());
-        assertEquals(0, tokens.get(2).line());
-        assertEquals(1, tokens.get(2).position());
-
-        assertEquals(TokenType.OPERATOR, tokens.get(3).type());
-        assertEquals(0, tokens.get(3).line());
-        assertEquals(7, tokens.get(3).position());
-
-        assertEquals(TokenType.ERROR, tokens.get(4).type());
-        assertEquals(0, tokens.get(4).line());
-        assertEquals(8, tokens.get(4).position());
+        assertEqualsToken(0, 0, tokens, 1, TokenType.OPERATOR);
+        assertEqualsToken(0, 1, tokens, 2, TokenType.NAME);
+        assertEqualsToken(0, 7, tokens, 3, TokenType.OPERATOR);
+        assertEqualsToken(0, 8, tokens, 4, TokenType.ERROR);
     }
 
+    @Test
+    public void tokenizerEmptyCommentTest() {
+        List<Token> all = tokenizeAll("//");
+        assertEquals(3, all.size(), "wrong number of tokens for '//'");
+        assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
+        assertEquals("//", all.get(1).text(), "empty comment should have text '//'");
+    }
+
+    @Test
+    public void tokenizerCommentWithSpaceTest() {
+        List<Token> all = tokenizeAll("// ");
+        assertEquals(3, all.size(), "wrong number of tokens for '// '");
+        assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
+        assertEquals("// ", all.get(1).text(), "comment with space should have text '// '");
+    }
+
+    @Test
+    public void tokenizerCommentWithTextTest() {
+        List<Token> all = tokenizeAll("// text");
+        assertEquals(3, all.size(), "wrong number of tokens for '// text'");
+        assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
+        assertEquals("// text", all.get(1).text(), "comment should include full text");
+    }
+
+    @Test
+    public void tokenizerTripleSlashCommentTest() {
+        List<Token> all = tokenizeAll("///");
+        assertEquals(3, all.size(), "wrong number of tokens for '///'");
+        assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
+        assertEquals("///", all.get(1).text(), "/// should be a comment");
+    }
+
+    @Test
+    public void tokenizerCommentWithSpecialCharsTest() {
+        List<Token> all = tokenizeAll("//===");
+        assertEquals(3, all.size(), "wrong number of tokens for '//==='");
+        assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
+        assertEquals("//===", all.get(1).text(), "//=== should be a comment");
+    }
+
+    @Test
+    public void tokenizerSingleSlashOperatorTest() {
+        List<Token> all = tokenizeAll("/");
+        assertEquals(3, all.size(), "wrong number of tokens for '/'");
+        assertEqualsToken(0, 0, all, 1, TokenType.OPERATOR);
+        assertEquals("/", all.get(1).text(), "single slash should be operator");
+    }
+
+    @Test
+    public void tokenizerSlashEqualsOperatorTest() {
+        List<Token> all = tokenizeAll("/=");
+        assertEquals(3, all.size(), "wrong number of tokens for '/='");
+        assertEqualsToken(0, 0, all, 1, TokenType.OPERATOR);
+        assertEquals("/=", all.get(1).text(), "/= should be operator");
+    }
+
+    @Test
+    public void tokenizerCodeFollowedByEmptyCommentTest() {
+        List<Token> all = tokenizeAll("a//");
+        assertEquals(4, all.size(), "wrong number of tokens for 'a//'");
+        assertEqualsToken(0, 0, all, 1, TokenType.NAME);
+        assertEqualsToken(0, 1, all, 2, TokenType.END_LINE_COMMENT);
+        assertEquals("//", all.get(2).text(), "trailing // should be comment");
+    }
+
+    @Test
+    public void tokenizerCodeWithSpaceAndEmptyCommentTest() {
+        List<Token> all = tokenizeAll("a //");
+        assertEquals(5, all.size(), "wrong number of tokens for 'a //'");
+        assertEqualsToken(0, 0, all, 1, TokenType.NAME);
+        assertEqualsToken(0, 1, all, 2, TokenType.HSPACE);
+        assertEqualsToken(0, 2, all, 3, TokenType.END_LINE_COMMENT);
+        assertEquals("//", all.get(3).text(), "trailing // should be comment");
+    }
+
+    @Test
+    public void tokenizerDivisionExpressionTest() {
+        List<Token> all = tokenizeAll("a/b");
+        assertEquals(5, all.size(), "wrong number of tokens for 'a/b'");
+        assertEqualsToken(0, 0, all, 1, TokenType.NAME);
+        assertEqualsToken(0, 1, all, 2, TokenType.OPERATOR);
+        assertEqualsToken(0, 2, all, 3, TokenType.NAME);
+        assertEquals("/", all.get(2).text(), "/ in division should be operator");
+    }
+
+    @Test
+    public void tokenizerEmptyCommentWithNewlineTest() {
+        List<Token> all = tokenizeAll("//\n");
+        assertEquals(4, all.size(), "wrong number of tokens for '//\\n'");
+        assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
+        assertEqualsToken(0, 2, all, 2, TokenType.NEWLINE);
+        assertEquals("//", all.get(1).text(), "// before newline should be comment");
+    }
+
+    @Test
+    public void tokenizerMultipleEmptyCommentsTest() {
+        List<Token> all = tokenizeAll("//\n//\n//");
+        assertEquals(7, all.size(), "wrong number of tokens for multiple //");
+        assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
+        assertEqualsToken(0, 2, all, 2, TokenType.NEWLINE);
+        assertEqualsToken(1, 0, all, 3, TokenType.END_LINE_COMMENT);
+        assertEqualsToken(1, 2, all, 4, TokenType.NEWLINE);
+        assertEqualsToken(2, 0, all, 5, TokenType.END_LINE_COMMENT);
+    }
+
+    @Test
+    public void tokenizerMixedOperatorsTest() {
+        List<Token> all = tokenizeAll("+-*/");
+        assertEquals(3, all.size(), "wrong number of tokens for '+-*/'");
+        assertEqualsToken(0, 0, all, 1, TokenType.OPERATOR);
+        assertEquals("+-*/", all.get(1).text(), "mixed operators should be single token");
+    }
+
+    private static List<Token> tokenizeAll(String input) {
+        return new Tokenizer(input, "test").tokenize().listAll();
+    }
+
+    private static void assertEqualsToken(int expectedLine, int expectedPosition, List<Token> tokens, int index, TokenType type) {
+        assertTrue(index < tokens.size(), "token index out of bounds");
+        Token token = tokens.get(index);
+        assertEquals(type, token.type());
+        assertEquals(expectedLine, token.line());
+        assertEquals(expectedPosition, token.position());
+    }
 }

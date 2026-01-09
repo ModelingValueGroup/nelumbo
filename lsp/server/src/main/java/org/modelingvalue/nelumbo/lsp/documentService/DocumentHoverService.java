@@ -48,16 +48,18 @@ public class DocumentHoverService extends DocumentServiceAdapter {
             return CompletableFuture.completedFuture(null);
         }
         List<Node>    nodes = document.nodesAt(pos);
-        StringBuilder text  = new StringBuilder(U.escapeMarkdown(token.toString()));
-
-        U.DEBUG("    hover %s: token=%s", U.render(pos), token);
+        StringBuilder text  = new StringBuilder();
+        U.DEBUG("    hover [%s]:", U.render(pos));
+        text.append(String.format("under [%s]:", U.render(pos)));
+        U.DEBUG("     - token %s", token);
+        text.append(String.format("\n<br> - [%s] TOKEN %s", U.renderSpan(token), U.escapeMarkdown(token.textTraced())));
         if (nodes.isEmpty()) {
-            U.DEBUG("        <no nodes found at %s>", U.render(pos));
-            text.append("\n<br> - &le;no nodes found at ").append(U.render(pos)).append("&gt;");
+            U.DEBUG("        <no nodes found>");
+            text.append("\n<br> - <i>no nodes found</i>");
         } else {
             for (Node node : nodes) {
-                U.DEBUG("        - %s", node);
-                text.append("\n<br> - ").append(U.escapeMarkdown(node.toString()));
+                U.DEBUG("        - [%s} %s", U.renderSpan(node), node);
+                text.append(String.format("\n<br> - [%s] NODE %s", U.renderSpan(node), U.escapeMarkdown(node.toString())));
             }
         }
 

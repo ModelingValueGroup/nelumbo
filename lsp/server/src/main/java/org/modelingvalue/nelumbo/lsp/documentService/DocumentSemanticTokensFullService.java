@@ -56,33 +56,28 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
             // Check if token should be treated as VARIABLE (same logic as NelumboEditor)
             TokenType effectiveType = token.variable() != null ? TokenType.VARIABLE : token.type();
 
-            int semTokenTypeNum     = LspTokenMapping.toLspTokenType(effectiveType);
-            int semTokenModifierNum = LspTokenMapping.toLspTokenModifier(effectiveType);
-            if (semTokenTypeNum == -1) {
+            int tokenType = LspTokenMapping.toLspTokenType(effectiveType);
+            int tokenMod  = LspTokenMapping.toLspTokenModifier(effectiveType);
+            if (tokenType == -1) {
                 U.DEBUG("        ---%s: %s", U.renderSpan(token), token);
             } else {
-                StringBuilder sb           = debugging ? new StringBuilder() : null;
-                int           firstLineNum = token.line();
-                int           firstCharNum = token.position();
+                StringBuilder sb                = debugging ? new StringBuilder() : null;
+                int           firstLineNum      = token.line();
+                int           firstCharPosition = token.position();
 
-                String[] tokenParts = token.text().split("\n");
-                for (int index = 0; index < tokenParts.length; index++) {
-                    String tokenPart = tokenParts[index];
+                String[] tokenLines = token.text().split("\n");
+                for (int index = 0; index < tokenLines.length; index++) {
+                    String tokenLine = tokenLines[index];
 
                     int lineNum = firstLineNum + index;
-                    int charNum = index == 0 ? firstCharNum : 0;
+                    int charNum = index == 0 ? firstCharPosition : 0;
 
-                    int lineNumRel = lineNum - prevLineNum;
-                    int charNumRel = lineNumRel == 0 ? charNum - prevCharNum : charNum;
+                    int lineIncr     = lineNum - prevLineNum;
+                    int positionIncr = lineIncr == 0 ? charNum - prevCharNum : charNum;
 
-                    data.add(lineNumRel);           // line increment
-                    data.add(charNumRel);           // char increment
-                    data.add(tokenPart.length());   // tokenPart length
-                    data.add(semTokenTypeNum);      // token type
-                    data.add(semTokenModifierNum);  // token modifiers
-
+                    extracted(lineIncr, positionIncr, tokenLine, tokenType, tokenMod);
                     if (debugging) {
-                        sb.append(String.format("        line=%2d  char=%2d  line+=%2d  char+=%2d  len=%2d  type=%2d  txt='%s'", lineNum, charNum, lineNumRel, charNumRel, tokenPart.length(), semTokenTypeNum, tokenPart));
+                        sb.append(String.format("        [%2d:%2d]  incr=[+%2d:+%2d]  #%d  type/mod=%d/%d  '%s'", lineNum, charNum, lineIncr, positionIncr, tokenLine.length(), tokenType, tokenMod, tokenLine));
                     }
 
                     prevLineNum = lineNum;
@@ -90,6 +85,14 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                 }
                 U.DEBUG("%s", sb);
             }
+        }
+
+        private void extracted(int lineIncrement, int positionIncrement, String tokenLine, int tokenType, int tokenMod) {
+            data.add(lineIncrement);
+            data.add(positionIncrement);
+            data.add(tokenLine.length());
+            data.add(tokenType);
+            data.add(tokenMod);
         }
 
         public List<Integer> data() {
