@@ -56,11 +56,11 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     public final Predicate consequence() {
-        return (Predicate) get(0);
+        return Predicate.predicate((Node) get(0));
     }
 
     public final Predicate condition() {
-        return (Predicate) get(1);
+        return Predicate.predicate((Node) get(1));
     }
 
     public final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {
