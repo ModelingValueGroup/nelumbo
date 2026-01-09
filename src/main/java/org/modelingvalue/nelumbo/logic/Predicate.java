@@ -417,6 +417,8 @@ public class Predicate extends Node {
     public static Predicate predicate(Node node) {
         if (node instanceof Predicate pred) {
             return pred;
+        } else if (node == null) {
+            return null;
         } else if (node instanceof Variable var) {
             return new Boolean(var);
         }

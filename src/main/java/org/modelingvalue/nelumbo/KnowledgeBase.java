@@ -520,7 +520,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     @SuppressWarnings("unchecked")
     private ListNode createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
         ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
-        Predicate cons = (Predicate) args[0];
+        Predicate cons = Predicate.predicate((Node) args[0]);
         Functor consFunctor = cons.functor();
         Functor litFunctor = literalFunctors.get().get(consFunctor);
         if (Type.RELATION.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
@@ -532,8 +532,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Functor nodeFunctor = node.functor();
         Functor literalFunctor = literalFunctors.get().get(nodeFunctor);
         for (List<Object> condIf : (List<List<Object>>) args[1]) {
-            Predicate cond = (Predicate) condIf.get(0);
-            Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
+            Predicate cond = Predicate.predicate((Node) condIf.get(0));
+            Predicate when = Predicate.predicate((Node) ((Optional<Object>) condIf.get(1)).orElse(null));
             Map<Variable, Object> condVars = cond.getBinding();
             Map<Variable, Object> whenVars = when != null ? when.getBinding() : null;
             Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
