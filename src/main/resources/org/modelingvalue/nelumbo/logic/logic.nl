@@ -5,11 +5,18 @@
                     ! <Predicate>                             #25     @org.modelingvalue.nelumbo.logic.Not,
                     <Predicate> & <Predicate>                 #22     @org.modelingvalue.nelumbo.logic.And,
                     <Predicate> | <Predicate>                 #20     @org.modelingvalue.nelumbo.logic.Or,
+                    <Predicate> -> <Predicate>                #18,
+                    <Predicate> <-> <Predicate>               #16,
                     E[<(> <Variable> <,> , <)+>](<Predicate>) #100 #0 @org.modelingvalue.nelumbo.logic.ExistentialQuantifier,
                     A[<(> <Variable> <,> , <)+>](<Predicate>) #100 #0 @org.modelingvalue.nelumbo.logic.UniversalQuantifier,
                     eq(<Node>,<Node>)                                 @org.modelingvalue.nelumbo.logic.Equal,
                     <Node> != <Node>                          #30
 
+    <Predicate> p1, p2
+    
+    p1->p2  <=> !p1|p2
+    p1<->p2 <=> (p1->p2)&(p2->p1)
+     
     <Literal>  l1, l2
     <Function> f1, f2
     <Node>     n1, n2

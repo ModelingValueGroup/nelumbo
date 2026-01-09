@@ -49,6 +49,28 @@
     unknown|p       ? [(p=true),..][..]
     p&unknown       ? [..][(p=false),..]
     unknown&p       ? [..][(p=false),..]
+    
+    // -> and <->
+
+    true->true      ? [()][]
+    true->false     ? [][()]
+    false->false    ? [()][]
+    false->true     ? [()][]
+
+    true->unknown   ? [..][..]
+    false->unknown  ? [()][]
+    unknown->false  ? [..][..]
+    unknown->true   ? [()][]
+
+    true<->true     ? [()][]
+    true<->false    ? [][()]
+    false<->false   ? [()][]
+    false<->true    ? [][()]
+    
+    true<->unknown  ? [..][..]
+    false<->unknown ? [..][..]
+    unknown<->false ? [..][..]
+    unknown<->true  ? [..][..]
 
     // Identity
 
