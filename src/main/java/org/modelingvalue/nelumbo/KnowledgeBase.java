@@ -274,6 +274,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     }
                                     option = List.of();
                                 } else {
+                                    assert option != null;
                                     option = option.add(e);
                                 }
                             }
@@ -459,6 +460,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
+    @SuppressWarnings("ConstantValue")
     private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
@@ -471,9 +473,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 type = type.function();
                 function = true;
             }
-            if (!Type.ROOT.isAssignableFrom(type) && !args.allMatch(t -> Type.NODE.equals(t.element())) && //
-                    !args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) && //
-                    args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
+            if (!Type.ROOT.isAssignableFrom(type) //
+                && !args.allMatch(t -> Type.NODE.equals(t.element())) //
+                && !args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
+                && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;
             }
         }
