@@ -18,7 +18,6 @@ package org.modelingvalue.nelumbo;
 
 import java.util.Scanner;
 
-import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 
@@ -35,11 +34,6 @@ public final class Main {
         Scanner scanner = new Scanner(System.in);
         scanner.useDelimiter("\r\n|[\n\r\u2028\u2029\u0085]");
         KnowledgeBase.BASE.run(() -> {
-            try {
-                Parser.parse(Integer.class, "integers.nl");
-            } catch (ParseException e) {
-                System.err.println(ERROR + e.getMessage());
-            }
             System.out.print(READ);
             String line = scanner.next();
             while (line != null) {
