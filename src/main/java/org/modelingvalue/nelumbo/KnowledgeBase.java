@@ -391,6 +391,31 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return CURRENT.get().addType(type, false);
                         }).init(this);
 
+                Functor.of(s(t("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
+                        Type.ROOT.list(), false, (elements, args, functor) -> {
+                            ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
+                            KnowledgeBase kb = CURRENT.get();
+                            StringBuffer sb = new StringBuffer();
+                            List<AstElement> el = List.of();
+                            for (int i = 1; i <= elements.size(); i++) {
+                                Token t = i < elements.size() ? (Token) elements.get(i) : null;
+                                if (t == null || t.text().equals(",")) {
+                                    Import ip = new Import(el, sb.toString());
+                                    roots = new ListNode(List.of(), roots, ip);
+                                    if (t != null) {
+                                        roots = roots.setAstElements(roots.astElements().add(t));
+                                    }
+                                    el = List.of();
+                                    sb = new StringBuffer();
+                                    ip.init(kb);
+                                } else {
+                                    sb.append(t.text());
+                                    el = el.add(t);
+                                }
+                            }
+                            return roots;
+                        }).init(this);
+
                 Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             AstElement e = elements.get(0);
@@ -408,7 +433,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         new Variable(el, type, v) : //
                                         new Variable(el, type, ((Token) e).text());
                                 if (comma != null) {
-                                    roots.setAstElements(roots.astElements().add(comma));
+                                    roots = roots.setAstElements(roots.astElements().add(comma));
                                 }
                                 Functor varFun = CURRENT.get().addVariable(var);
                                 roots = new ListNode(List.of(), roots, varFun);
@@ -451,7 +476,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return node.setAstElements(node.astElements().prepend(elements.first()).append(elements.last()));
                         }).init(this);
 
-                Parser.parse(Predicate.class, "logic.nl");
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
             }
@@ -474,9 +498,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 function = true;
             }
             if (!Type.ROOT.isAssignableFrom(type) //
-                && !args.allMatch(t -> Type.NODE.equals(t.element())) //
-                && !args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
-                && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
+                    && !args.allMatch(t -> Type.NODE.equals(t.element())) //
+                    && !args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
+                    && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;
             }
         }
@@ -587,6 +611,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private final AtomicReference<Map<Functor, Functor>>                    literalFunctors     = new AtomicReference<>();
     //
+    private final AtomicReference<Set<String>>                              imported            = new AtomicReference<>();
+    //
     private final AtomicReference<MatchState<Rule>>                         ruleSignatures      = new AtomicReference<>();
     private final AtomicReference<MatchState<Transform>>                    transformSignatures = new AtomicReference<>();
     //
@@ -617,6 +643,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
         ruleSignatures.set(init != null ? init.ruleSignatures.get() : MatchState.EMPTY);
         transformSignatures.set(init != null ? init.transformSignatures.get() : MatchState.EMPTY);
+        imported.set(init != null ? init.imported.get() : Set.of());
         resetMemoization();
         endParsing(false);
     }
@@ -894,6 +921,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public InferContext context() {
         return context;
+    }
+
+    public void doImport(String name) throws ParseException {
+        if (!imported.get().contains(name)) {
+            imported.updateAndGet(s -> s.add(name));
+            String path = "/" + name.replace('.', '/') + ".nl";
+            Parser.parse(getClass(), path);
+        }
     }
 
 }

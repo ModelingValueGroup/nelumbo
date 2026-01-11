@@ -1,4 +1,6 @@
 
+import      nelumbo.integers
+
 <Person> :: <Node>
  
 <Relation>  ::= het inkomen van <Person> is <Integer> euro

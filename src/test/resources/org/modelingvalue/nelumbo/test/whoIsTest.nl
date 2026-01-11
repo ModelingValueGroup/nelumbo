@@ -1,4 +1,6 @@
 
+import      org.modelingvalue.nelumbo.test.friendsTest
+
 <Predicate> ::= <Person> is <Person>   #30
 <Person>    ::= a friend of <Person>   #35
 

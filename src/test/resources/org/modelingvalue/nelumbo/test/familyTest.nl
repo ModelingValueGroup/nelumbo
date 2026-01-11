@@ -1,4 +1,6 @@
 
+    import      nelumbo.logic
+
     <Person>    :: <Node>
     <Male>      :: <Person>
     <Female>    :: <Person>

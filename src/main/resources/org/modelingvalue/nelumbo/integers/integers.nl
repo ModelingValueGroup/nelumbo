@@ -1,4 +1,6 @@
 
+    import      nelumbo.logic
+    
     <Integer>   :: <Node>
    
     <Integer>   ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.Integer

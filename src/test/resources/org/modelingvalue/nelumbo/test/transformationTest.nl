@@ -1,4 +1,6 @@
 
+import nelumbo.strings
+
 // Language
 
 <Root> ::= attr <Type> <NAME> <Type>

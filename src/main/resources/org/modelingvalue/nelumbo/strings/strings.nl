@@ -1,4 +1,6 @@
 
+    import      nelumbo.integers
+
     <String>    :: <Node>
 
     <String>    ::= <STRING>                                        @org.modelingvalue.nelumbo.strings.String

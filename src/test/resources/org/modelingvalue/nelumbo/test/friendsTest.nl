@@ -1,4 +1,6 @@
 
+import     nelumbo.logic
+
 <Person>   :: <Node>
 
 <Relation> ::= friends(<Person>,<Person>)

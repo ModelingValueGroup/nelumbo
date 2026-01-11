@@ -1,4 +1,6 @@
 
+    import      nelumbo.integers
+
     <Integer> ::= fib(<Integer>)
 
     <Integer> n, f

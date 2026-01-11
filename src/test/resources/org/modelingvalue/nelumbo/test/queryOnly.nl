@@ -1,4 +1,6 @@
 
+import    nelumbo.integers
+
 <Integer> a,b
 
 22+11=a  ? 

@@ -1,4 +1,6 @@
 
+    import    nelumbo.strings
+
     <String> a, b, c
     <Integer> d
     

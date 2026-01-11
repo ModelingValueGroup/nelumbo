@@ -16,43 +16,7 @@
 
 package org.modelingvalue.nelumbo;
 
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextPane;
-import javax.swing.KeyStroke;
-import javax.swing.UIManager;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.StyledEditorKit;
-import javax.swing.text.TextAction;
-import javax.swing.text.ViewFactory;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.Taskbar;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.WindowAdapter;
@@ -66,9 +30,19 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
-import com.formdev.flatlaf.FlatLightLaf;
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.TextAction;
+import javax.swing.text.ViewFactory;
+
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.integers.Integer;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
@@ -76,6 +50,8 @@ import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
+
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class NelumboEditor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
 
@@ -351,14 +327,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void initKnowledgeBase() {
-        KnowledgeBase.BASE.run(() -> {
-            try {
-                Parser.parse(Integer.class, "integers.nl");
-                Parser.parse(org.modelingvalue.nelumbo.strings.String.class, "strings.nl");
-            } catch (ParseException e) {
-                setMessages(e.getMessage());
-            }
-        }).run(this);
+        KnowledgeBase.BASE.run(this);
     }
 
     private void increase() {

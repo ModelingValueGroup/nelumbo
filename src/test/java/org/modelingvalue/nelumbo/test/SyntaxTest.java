@@ -46,6 +46,8 @@ public class SyntaxTest extends NelumboTestBase {
         run(() -> {
             String example = """
 
+                    import     nelumbo.logic
+
                     <Set>      ::  <Node>
                     <Int>      ::  <Node>
                     <List>     ::  <Node>

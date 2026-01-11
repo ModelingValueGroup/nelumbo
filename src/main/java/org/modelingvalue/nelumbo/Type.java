@@ -51,6 +51,7 @@ public class Type extends Node {
     public static final Type   PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.NODE);
     public static final Type   QUERY            = new Type(Query.class, Type.ROOT);
     public static final Type   TRANSFORM        = new Type(Transform.class, Type.ROOT);
+    public static final Type   IMPORT           = new Type(Import.class, Type.ROOT);
 
     public static List<Type> predefined() {
         return List.of(TYPE(), //
@@ -67,7 +68,8 @@ public class Type extends Node {
                 FACT, //
                 PATTERN, //
                 QUERY, //
-                TRANSFORM);
+                TRANSFORM, //
+                IMPORT);
     }
 
     private static Type TYPE = null;
