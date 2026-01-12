@@ -22,6 +22,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -30,7 +31,7 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
-public class ParseState {
+public class ParseState implements Mergeable<ParseState> {
     @Serial
     private static final long                 serialVersionUID = 7933114430825879121L;
 
@@ -375,15 +376,15 @@ public class ParseState {
         return new ParseState(transitions, //
                 functor() == null ? state.functor() : state.functor() == null ? functor() : //
                         functor().equals(state.functor()) ? functor() : functor().mostSpecific(state.functor()), //
-                merge(leftPrecedence(), state.leftPrecedence()), //
-                merge(innerPrecedence(), state.innerPrecedence()), //
-                merge(group(), state.group()), //
+                elementMerge(leftPrecedence(), state.leftPrecedence()), //
+                elementMerge(innerPrecedence(), state.innerPrecedence()), //
+                elementMerge(group(), state.group()), //
                 startRepetitions().addAll(state.startRepetitions()), //
                 endRepetitions().addAll(state.endRepetitions()), //
-                branches().addAll(state.branches(), (a, b) -> merge(a, b)));
+                branches().addAll(state.branches(), (a, b) -> elementMerge(a, b)));
     }
 
-    private static <T> T merge(T t1, T t2) {
+    private static <T> T elementMerge(T t1, T t2) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
             throw new PatternMergeException("Non deterministic pattern merge " + t1 + " <> " + t2);
         }
@@ -393,6 +394,25 @@ public class ParseState {
     @Override
     public String toString() {
         return transitions().toKeys().asSet().toString().substring(3);
+    }
+
+    @Override
+    public ParseState merge(ParseState[] branches, int length) {
+        ParseState state = this;
+        for (int i = 0; i < length; i++) {
+            state = branches[i].merge(state);
+        }
+        return state;
+    }
+
+    @Override
+    public ParseState getMerger() {
+        return EMPTY;
+    }
+
+    @Override
+    public Class<?> getMeetClass() {
+        return ParseState.class;
     }
 
 }

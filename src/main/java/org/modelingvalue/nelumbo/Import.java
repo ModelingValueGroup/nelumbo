@@ -55,7 +55,7 @@ public final class Import extends Node {
             name = name + "." + name.substring(i + 1);
             name = "org.modelingvalue." + name;
         }
-        knowledgeBase.doImport(name);
+        knowledgeBase.doImport(name, this);
         return this;
     }
 

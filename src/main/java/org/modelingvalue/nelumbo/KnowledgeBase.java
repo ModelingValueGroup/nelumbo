@@ -597,6 +597,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return roots.setAstElements(roots.astElements().add(elements.last()));
     }
 
+    private final static AtomicReference<Map<String, KnowledgeBase>>        IMPORT_MAP          = new AtomicReference<>(Map.of());
+
     private final AtomicReference<Set<Functor>>                             functors            = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, InferResult>>              facts               = new AtomicReference<>();
     private final AtomicReference<Set<Rule>>                                rules               = new AtomicReference<>();
@@ -646,6 +648,27 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         imported.set(init != null ? init.imported.get() : Set.of());
         resetMemoization();
         endParsing(false);
+    }
+
+    public void merge(KnowledgeBase kb, AstElement element) throws ParseException {
+        try {
+            functors.updateAndGet(s -> s.addAll(kb.functors.get()));
+            facts.updateAndGet(s -> s.addAll(kb.facts.get()));
+            rules.updateAndGet(s -> s.addAll(kb.rules.get()));
+            transforms.updateAndGet(s -> s.addAll(kb.transforms.get()));
+            literalTransforms.updateAndGet(s -> s.addAll(kb.literalTransforms.get()));
+            prePatterns.updateAndGet(s -> s.addAll(kb.prePatterns.get()));
+            postPatterns.updateAndGet(s -> s.addAll(kb.postPatterns.get()));
+            localPrePatterns.updateAndGet(s -> s.addAll(kb.prePatterns.get()));
+            localPostPatterns.updateAndGet(s -> s.addAll(kb.postPatterns.get()));
+            literalFunctors.updateAndGet(s -> s.addAll(kb.literalFunctors.get()));
+            ruleSignatures.updateAndGet(s -> kb.ruleSignatures.get().merge(s));
+            transformSignatures.updateAndGet(s -> kb.transformSignatures.get().merge(s));
+            imported.updateAndGet(s -> s.addAll(kb.imported.get()));
+            resetMemoization();
+        } catch (Exception exc) {
+            addException(new ParseException(exc.getMessage(), element));
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -923,11 +946,27 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return context;
     }
 
-    public void doImport(String name) throws ParseException {
+    public void doImport(String name, Import imp) throws ParseException {
         if (!imported.get().contains(name)) {
+            KnowledgeBase kb = IMPORT_MAP.get().get(name);
+            if (kb == null) {
+                String path = "/" + name.replace('.', '/') + ".nl";
+                ParseException[] exc = new ParseException[1];
+                KnowledgeBase nw = BASE.run(() -> {
+                    try {
+                        Parser.parse(KnowledgeBase.class, path);
+                    } catch (ParseException e) {
+                        exc[0] = e;
+                    }
+                });
+                if (exc[0] != null) {
+                    addException(exc[0]);
+                }
+                IMPORT_MAP.updateAndGet(m -> m.put(name, nw));
+                kb = nw;
+            }
+            merge(kb, imp);
             imported.updateAndGet(s -> s.add(name));
-            String path = "/" + name.replace('.', '/') + ".nl";
-            Parser.parse(getClass(), path);
         }
     }
 
