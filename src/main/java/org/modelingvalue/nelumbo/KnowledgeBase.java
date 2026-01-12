@@ -957,7 +957,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
-    public static Map<String, KnowledgeBase> importmap() {
+    public static Map<String, KnowledgeBase> importMap() {
         return IMPORT_MAP.get();
     }
 
