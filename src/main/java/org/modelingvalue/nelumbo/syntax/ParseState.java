@@ -208,12 +208,14 @@ public class ParseState {
         next = transitions().get(text);
         if (next != null) {
             element = token;
+            token.setKeyword();
         } else if (isNumeric(type) && token.text().startsWith("-") && transitions().get(type) == null) {
             String key = "-";
             next = transitions().get(key);
             if (next != null) {
                 token = result.addSplit(token, token.split(1));
                 element = token;
+                token.setKeyword();
             }
         } else if (type == TokenType.OPERATOR || type == TokenType.NAME) {
             for (int i = text.length() - 1; i > 0; i--) {
@@ -222,6 +224,7 @@ public class ParseState {
                 if (next != null) {
                     token = result.addSplit(token, token.split(i));
                     element = token;
+                    token.setKeyword();
                     break;
                 }
             }

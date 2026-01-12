@@ -132,6 +132,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             Map.entry(TokenType.ERROR,                                                                             //
                     new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)),                         //
             Map.entry(TokenType.VARIABLE,                                                                          //
+                    new ColorScheme(0x0000ff, null, true, false, false, false, false)),                            //
+            Map.entry(TokenType.KEYWORD,                                                                           //
                     new ColorScheme(0x0000ff, null, true, false, false, false, false))                             //
     );
 
@@ -422,7 +424,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void showColors(JTextPane pane, TokenizerResult tokenizerResult) {
         if (tokenizerResult != null) {
             for (Token t = tokenizerResult.firstAll(); t != null; t = t.nextAll()) {
-                ColorScheme colorScheme = TOKEN_COLORS.get(t.variable() != null ? TokenType.VARIABLE : t.type());
+                ColorScheme colorScheme = TOKEN_COLORS.get(t.variable() != null ? TokenType.VARIABLE : //
+                        t.type() == TokenType.NAME && t.isKeyword() ? TokenType.KEYWORD : t.type());
                 if (colorScheme != null) {
                     SimpleAttributeSet attr = colorScheme.attr();
                     pane.getStyledDocument().setCharacterAttributes(t.index(), t.text().length(), attr, false);

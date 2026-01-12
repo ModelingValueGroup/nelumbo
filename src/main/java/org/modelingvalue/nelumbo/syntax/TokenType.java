@@ -40,6 +40,7 @@ public enum TokenType {
     ENDOFFILE("", false, "", false), //
     ENDOFLINE("", false, "", false), //
     VARIABLE("[a-zA-Z_][0-9a-zA-Z_]*", true, null, false), //
+    KEYWORD("[a-zA-Z_][0-9a-zA-Z_]*", true, null, false), //
     ;
 
     private final Pattern pattern; // the pattern that matches tokens of this token type
