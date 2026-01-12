@@ -946,28 +946,41 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return context;
     }
 
+    public Set<String> imported() {
+        return imported.get();
+    }
+
     public void doImport(String name, Import imp) throws ParseException {
         if (!imported.get().contains(name)) {
-            KnowledgeBase kb = IMPORT_MAP.get().get(name);
-            if (kb == null) {
-                String path = "/" + name.replace('.', '/') + ".nl";
-                ParseException[] exc = new ParseException[1];
-                KnowledgeBase nw = BASE.run(() -> {
-                    try {
-                        Parser.parse(KnowledgeBase.class, path);
-                    } catch (ParseException e) {
-                        exc[0] = e;
-                    }
-                });
-                if (exc[0] != null) {
-                    addException(exc[0]);
-                }
-                IMPORT_MAP.updateAndGet(m -> m.put(name, nw));
-                kb = nw;
-            }
-            merge(kb, imp);
+            merge(knowledgeBase(name), imp);
             imported.updateAndGet(s -> s.add(name));
         }
+    }
+
+    public static Map<String, KnowledgeBase> importmap() {
+        return IMPORT_MAP.get();
+    }
+
+    public static KnowledgeBase knowledgeBase(String name) throws ParseException {
+        KnowledgeBase kb = IMPORT_MAP.get().get(name);
+        if (kb == null) {
+            String path = "/" + name.replace('.', '/') + ".nl";
+            ParseException[] exc = new ParseException[1];
+            KnowledgeBase nw = BASE.run(() -> {
+                try {
+                    Parser.parse(KnowledgeBase.class, path);
+                } catch (ParseException e) {
+                    exc[0] = e;
+                }
+            });
+            if (exc[0] != null) {
+                throw exc[0];
+            } else {
+                IMPORT_MAP.updateAndGet(m -> m.put(name, nw));
+            }
+            kb = nw;
+        }
+        return kb;
     }
 
 }
