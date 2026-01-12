@@ -48,22 +48,21 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
 
     private static class SemanticTokenMaker {
         private final List<Integer> data        = new ArrayList<>();
-        private       int           prevLineNum = 0;
-        private       int           prevCharNum = 0;
+        private int                 prevLineNum = 0;
+        private int                 prevCharNum = 0;
         private final boolean       debugging   = Main.debugging();
 
         public void add(Token token) {
-            // Check if token should be treated as VARIABLE (same logic as NelumboEditor)
-            TokenType effectiveType = token.variable() != null ? TokenType.VARIABLE : token.type();
+            TokenType colorType = token.colorType();
 
-            int tokenType = LspTokenMapping.toLspTokenType(effectiveType);
-            int tokenMod  = LspTokenMapping.toLspTokenModifier(effectiveType);
+            int tokenType = LspTokenMapping.toLspTokenType(colorType);
+            int tokenMod = LspTokenMapping.toLspTokenModifier(colorType);
             if (tokenType == -1) {
                 U.DEBUG("        ---%s: %s", U.renderSpan(token), token);
             } else {
-                StringBuilder sb                = debugging ? new StringBuilder() : null;
-                int           firstLineNum      = token.line();
-                int           firstCharPosition = token.position();
+                StringBuilder sb = debugging ? new StringBuilder() : null;
+                int firstLineNum = token.line();
+                int firstCharPosition = token.position();
 
                 String[] tokenLines = token.text().split("\n");
                 for (int index = 0; index < tokenLines.length; index++) {
@@ -72,7 +71,7 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                     int lineNum = firstLineNum + index;
                     int charNum = index == 0 ? firstCharPosition : 0;
 
-                    int lineIncr     = lineNum - prevLineNum;
+                    int lineIncr = lineNum - prevLineNum;
                     int positionIncr = lineIncr == 0 ? charNum - prevCharNum : charNum;
 
                     extracted(lineIncr, positionIncr, tokenLine, tokenType, tokenMod);
