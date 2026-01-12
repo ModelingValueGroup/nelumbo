@@ -374,4 +374,8 @@ public final class Token implements AstElement {
         isKeyword = true;
     }
 
+    public TokenType colorType() {
+        return variable() != null ? TokenType.VARIABLE : type() == TokenType.NAME && isKeyword() ? TokenType.KEYWORD : type();
+    }
+
 }
