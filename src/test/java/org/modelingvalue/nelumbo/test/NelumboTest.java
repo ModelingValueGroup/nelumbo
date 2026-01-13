@@ -111,6 +111,18 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void collectionsTest() {
+        run(() -> {
+            try {
+                U.printResults(Parser.parse(NelumboTest.class, "collectionsTest.nl"));
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    @RepeatedTest(10)
     public void queryOnlyTest() {
         run(() -> {
             try {

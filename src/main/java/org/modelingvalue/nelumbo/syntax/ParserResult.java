@@ -20,8 +20,8 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NList;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.collections.NList;
 
 public class ParserResult implements ParseExceptionHandler {
 

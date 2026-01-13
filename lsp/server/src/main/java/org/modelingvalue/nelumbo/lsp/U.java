@@ -44,8 +44,8 @@ import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.NList;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 @SuppressWarnings("unused")
