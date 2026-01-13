@@ -24,7 +24,6 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -159,8 +158,7 @@ public class Functor extends Node {
                 handleException(elements, handler, e);
             }
         }
-        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : //
-                Type.TERMINAL.isAssignableFrom(resultType()) ? new Terminal(this, elements, args) : new Node(this, elements, args);
+        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : new Node(this, elements, args);
     }
 
     private void handleException(List<AstElement> elements, ParseExceptionHandler handler, Exception e) throws ParseException {

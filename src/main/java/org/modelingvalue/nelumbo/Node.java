@@ -247,26 +247,6 @@ public class Node extends StructImpl implements AstElement {
         return StringUtil.toString(get(i));
     }
 
-    public Map<Terminal, int[]> terminals() {
-        Map<Terminal, int[]> terminals = Map.of();
-        for (int i = 0; i < length(); i++) {
-            Object val = get(i);
-            if (val instanceof Terminal terminal) {
-                terminals = terminals.put(terminal, new int[]{i});
-            } else if (val instanceof Node node && !(node instanceof Variable) && !(node instanceof Type)) {
-                int ii = i;
-                terminals = terminals.putAll(node.terminals().replaceAll(e -> {
-                    int[] value = e.getValue();
-                    int[] idx = new int[value.length + 1];
-                    System.arraycopy(value, 0, idx, 1, value.length);
-                    idx[0] = ii;
-                    return Entry.of(e.getKey(), idx);
-                }));
-            }
-        }
-        return terminals;
-    }
-
     @SuppressWarnings("unchecked")
     public <V> V getVal(int... is) {
         Object val = this;

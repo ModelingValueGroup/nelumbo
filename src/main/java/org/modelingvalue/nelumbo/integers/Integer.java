@@ -23,11 +23,10 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Integer extends Terminal {
+public final class Integer extends Node {
     @Serial
     private static final long       serialVersionUID = 2454372545442550574L;
 

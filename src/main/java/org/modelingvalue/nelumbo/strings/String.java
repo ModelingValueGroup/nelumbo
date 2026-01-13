@@ -22,11 +22,10 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Terminal;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class String extends Terminal {
+public final class String extends Node {
 
     @Serial
     private static final long             serialVersionUID = 8360866611309554234L;
@@ -64,7 +63,7 @@ public final class String extends Terminal {
     }
 
     @Override
-    protected Terminal struct(Object[] array, Node declaration) {
+    protected String struct(Object[] array, Node declaration) {
         return new String(array, (String) declaration);
     }
 

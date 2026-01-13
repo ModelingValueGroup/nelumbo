@@ -51,8 +51,7 @@ public final class Type extends Node {
     public static final Type    OBJECT           = new Type("Object", $OBJECT);
     public static final Type    TYPE             = new Type("Type", OBJECT);
     public static final Type    FUNCTION         = new Type("Function", OBJECT);
-    public static final Type    TERMINAL         = new Type("Terminal", OBJECT);
-    public static final Type    LITERAL          = new Type("Literal", TERMINAL);
+    public static final Type    LITERAL          = new Type("Literal", OBJECT);
     public static final Type    ROOT             = new Type("Root", OBJECT);
     public static final Type    BOOLEAN          = new Type("Boolean", OBJECT);
     public static final Type    FACT_TYPE        = new Type("FactType", BOOLEAN);
@@ -70,7 +69,6 @@ public final class Type extends Node {
                 OBJECT, //
                 TYPE, //
                 FUNCTION, //
-                TERMINAL, //
                 LITERAL, //
                 ROOT, //
                 BOOLEAN, //
