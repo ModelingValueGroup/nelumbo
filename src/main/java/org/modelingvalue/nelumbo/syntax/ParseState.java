@@ -317,7 +317,7 @@ public class ParseState implements Mergeable<ParseState> {
             token = result.addMerge(token, nextToken.prepend("-"));
         }
         Integer inner = innerPrecedence();
-        if (transitions().get(Type.TYPE()) != null || transitions().get(Type.VARIABLE) != null) {
+        if (transitions().get(Type.TYPE) != null || transitions().get(Type.VARIABLE) != null) {
             inner = Integer.MAX_VALUE;
         }
         Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner, result.context()));

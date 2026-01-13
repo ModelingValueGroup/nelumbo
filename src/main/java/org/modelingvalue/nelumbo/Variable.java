@@ -88,7 +88,7 @@ public final class Variable extends Node {
     }
 
     @Override
-    protected Node typeForEquals() {
+    protected Object typeForEquals() {
         return Type.VARIABLE;
     }
 

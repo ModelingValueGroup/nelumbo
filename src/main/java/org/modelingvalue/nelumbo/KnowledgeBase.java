@@ -155,7 +155,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Variable var = type.variable();
         Pattern pattern = var != null ? t(List.of(type), var) : t(List.of(type), type.toString());
         return Functor.of(List.of(type), pattern, //
-                Type.TYPE(), false, (elements, args, functor) -> {
+                Type.TYPE, false, (elements, args, functor) -> {
                     Type result = ((Type) functor.astElements().first()).setAstElements(elements);
                     if (!predefined) {
                         result = result.setFunctor(functor);
@@ -169,7 +169,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         for (Pair<Functor, Transform> pair : literalTransforms.get().getOrDefault(literal, Set.of())) {
             pair.b().rewrite(pair.a().pattern(), t(List.of(var), var), this);
         }
-        String string = var.type().equals(Type.TYPE()) ? ("<" + var.name() + ">") : var.name();
+        String string = var.type().equals(Type.TYPE) ? ("<" + var.name() + ">") : var.name();
         return Functor.of(List.of(var), t(List.of(var), string), //
                 Type.VARIABLE, true, (elements, args, functor) -> {
                     Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
@@ -313,14 +313,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return s(elements, pattern(elements));
                         }).init(this);
 
-                Functor.of(n(Type.TYPE(), Integer.MAX_VALUE), //
+                Functor.of(n(Type.TYPE, Integer.MAX_VALUE), //
                         Type.PATTERN, false, (elements, args, functor) -> {
                             Type type = args[0] instanceof Variable var ? new Type(var) : (Type) args[0];
                             TokenType tt = type.tokenType();
                             return tt != null ? t(elements, tt) : n(elements, type, null);
                         }).init(this);
 
-                Functor.of(s(n(Type.TYPE(), null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
+                Functor.of(s(n(Type.TYPE, null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             AstElement node = elements.get(0);
                             Type type = node instanceof Variable var ? new Type(var) : (Type) node;
@@ -373,7 +373,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots.setAstElements(roots.astElements().add(node).add(elements.last()));
                         }).init(this);
 
-                Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
+                Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
                             Set<Type> supers = Set.of();
                             for (Type sup : (List<Type>) args[1]) {
@@ -416,7 +416,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }).init(this);
 
-                Functor.of(s(n(Type.TYPE(), null), r(t(NAME), true, t(","))), //
+                Functor.of(s(n(Type.TYPE, null), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             AstElement e = elements.get(0);
                             Type type = e instanceof Variable var ? new Type(var) : (Type) e;
@@ -863,8 +863,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             addException(new ParseException(pme.getMessage(), functor));
         }
         Constructor<? extends Node> constructor = functor.constructor();
-        Class<? extends Node> cls = constructor != null ? constructor.getDeclaringClass() : type.clss();
-        if (cls != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
+        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
+            Class<? extends Node> cls = constructor.getDeclaringClass();
             Consumer<Functor> setter = FUNCTOR_REGISTRATION.get().get(cls);
             if (setter != null) {
                 setter.accept(functor);

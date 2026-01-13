@@ -61,7 +61,7 @@ public class TokenTypePattern extends Pattern {
     @Override
     public List<Type> argTypes(List<Type> types) {
         TokenType type = tokenType();
-        return !isEmpty(type) ? types.add(Type.STRING) : types;
+        return !isEmpty(type) ? types.add(Type.$STRING) : types;
     }
 
     @Override

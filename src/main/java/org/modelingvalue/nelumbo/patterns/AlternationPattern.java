@@ -92,7 +92,7 @@ public class AlternationPattern extends Pattern {
 
     @Override
     public List<Type> argTypes(List<Type> types) {
-        return types.add(Type.OBJECT);
+        return types.add(Type.$OBJECT);
     }
 
     @Override

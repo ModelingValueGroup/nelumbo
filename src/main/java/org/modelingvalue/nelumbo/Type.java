@@ -22,40 +22,53 @@ import java.util.Optional;
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class Type extends Node {
+public final class Type extends Node {
     @Serial
-    private static final long  serialVersionUID = -4583279157841144493L;
+    private static final long   serialVersionUID = -4583279157841144493L;
     //
-    public static final String DEFAULT_GROUP    = "_";
-    public static final String TOP_GROUP        = "TOP";
-    public static final String PATTERN_GROUP    = "PATTERN";
+    public static final String  DEFAULT_GROUP    = "_";
+    public static final String  TOP_GROUP        = "TOP";
+    public static final String  PATTERN_GROUP    = "PATTERN";
     //
-    public static final Type   OBJECT           = new Type(Object.class);
-    public static final Type   STRING           = new Type(String.class, OBJECT);
+    private static final Object EQUALS_TYPE      = new Object() {
+                                                     @Override
+                                                     public String toString() {
+                                                         return "<Type>";
+                                                     }
+
+                                                     @Override
+                                                     public int hashCode() {
+                                                         return 0;
+                                                     }
+                                                 };
     //
-    public static final Type   NODE             = new Type(Node.class, OBJECT);
-    public static final Type   FUNCTION         = new Type("Function", NODE);
-    public static final Type   TERMINAL         = new Type(Terminal.class, NODE);
-    public static final Type   LITERAL          = new Type("Literal", TERMINAL);
-    public static final Type   ROOT             = new Type("Root", NODE);
-    public static final Type   PREDICATE        = new Type(Predicate.class, NODE);
-    public static final Type   RELATION         = new Type("Relation", PREDICATE);
-    public static final Type   VARIABLE         = new Type(Variable.class, NODE);
-    public static final Type   RULE             = new Type(Rule.class, ROOT);
-    public static final Type   FUNCTOR          = new Type(Functor.class, ROOT);
-    public static final Type   FACT             = new Type(Fact.class, ROOT);
-    public static final Type   PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.NODE);
-    public static final Type   QUERY            = new Type(Query.class, Type.ROOT);
-    public static final Type   TRANSFORM        = new Type(Transform.class, Type.ROOT);
-    public static final Type   IMPORT           = new Type(Import.class, Type.ROOT);
+    public static final Type    $OBJECT          = new Type(Object.class);
+    public static final Type    $STRING          = new Type(String.class, $OBJECT);
+    //
+    public static final Type    NODE             = new Type("Node", $OBJECT);
+    public static final Type    TYPE             = new Type("Type", NODE);
+    public static final Type    FUNCTION         = new Type("Function", NODE);
+    public static final Type    TERMINAL         = new Type("Terminal", NODE);
+    public static final Type    LITERAL          = new Type("Literal", TERMINAL);
+    public static final Type    ROOT             = new Type("Root", NODE);
+    public static final Type    PREDICATE        = new Type("Predicate", NODE);
+    public static final Type    RELATION         = new Type("Relation", PREDICATE);
+    public static final Type    VARIABLE         = new Type("Variable", NODE);
+    public static final Type    RULE             = new Type("Rule", ROOT);
+    public static final Type    FUNCTOR          = new Type("Functor", ROOT);
+    public static final Type    FACT             = new Type("Fact", ROOT);
+    public static final Type    PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.NODE);
+    public static final Type    QUERY            = new Type("Query", Type.ROOT);
+    public static final Type    TRANSFORM        = new Type("Transform", Type.ROOT);
+    public static final Type    IMPORT           = new Type("Import", Type.ROOT);
 
     public static List<Type> predefined() {
-        return List.of(TYPE(), //
+        return List.of(//
                 NODE, //
+                TYPE, //
                 FUNCTION, //
                 TERMINAL, //
                 LITERAL, //
@@ -72,72 +85,39 @@ public class Type extends Node {
                 IMPORT);
     }
 
-    private static Type TYPE = null;
-
-    public static Type TYPE() {
-        if (TYPE == null) {
-            TYPE = new Type() {
-                @Serial
-                private static final long serialVersionUID = -2303866849518548877L;
-
-                @Override
-                public Node typeOrFunctor() {
-                    return this;
-                }
-
-                @Override
-                public String group() {
-                    return DEFAULT_GROUP;
-                }
-
-                @Override
-                public Object[] toArray() {
-                    Object[] array = super.toArray();
-                    array[0] = this;
-                    array[3] = supers();
-                    return array;
-                }
-
-                @Override
-                public Set<Type> supers() {
-                    return Set.of(Type.NODE);
-                }
-            };
-        }
-        return TYPE;
-    }
-
     private Type       list;
     private Type       literal;
     private Type       function;
     private List<Type> allSupers;
 
-    private Type() {
-        super((Type) null, List.of(), Type.class, Set.of(), DEFAULT_GROUP);
+    @Override
+    public Node typeOrFunctor() {
+        return TYPE;
+    }
+
+    @Override
+    protected Object typeForEquals() {
+        return EQUALS_TYPE;
     }
 
     private Type(Object[] array, Type declaration) {
         super(array, declaration);
     }
 
-    private Type(Class<?> clss, String group, Type... supers) {
-        super(TYPE(), List.of(), clss, Set.of(supers), group);
-    }
-
-    private Type(Class<?> clss, Type... supers) {
-        super(TYPE(), List.of(), clss, Set.of(supers), group(supers));
+    public Type(Class<?> clss, Type... supers) {
+        super(TYPE, List.of(), clss, supers.length == 0 ? Set.of() : Set.of(supers), group(supers));
     }
 
     public Type(String name, String group, Type... supers) {
-        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group);
+        super(TYPE, List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group);
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE(), List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group(supers));
+        super(TYPE, List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group(supers));
     }
 
     public Type(TokenType type) {
-        super(TYPE(), List.of(), type, Set.of(), DEFAULT_GROUP);
+        super(TYPE, List.of(), type, Set.of(), DEFAULT_GROUP);
     }
 
     public Type(Variable var) {
@@ -145,15 +125,15 @@ public class Type extends Node {
     }
 
     public Type(List<AstElement> elements, Variable var, String group) {
-        super(TYPE(), elements, var, Set.of(NODE), group);
+        super(TYPE, elements, var, Set.of(NODE), group);
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
-        super(TYPE(), elements, name, supers.asSet(), group);
+        super(TYPE, elements, name, supers.asSet(), group);
     }
 
     public Type(Type super1, Type super2) {
-        super(TYPE(), //
+        super(TYPE, //
                 List.of(), //
                 Set.of(super1, super2), //
                 Set.of(super1, super2) //
@@ -163,7 +143,7 @@ public class Type extends Node {
     }
 
     private Type(Type element, String group) {
-        super(TYPE(), List.of(element), "List" + element, Set.of(NODE), group, element);
+        super(TYPE, List.of(element), "List" + element, Set.of(NODE), group, element);
     }
 
     private static Object group(Type... supers) {
@@ -289,7 +269,7 @@ public class Type extends Node {
             String name = var.name();
             return name.startsWith("<") ? name.substring(1, name.length() - 1) : name;
         } else if (type instanceof Class cls) {
-            return cls.getSimpleName();
+            return "$" + cls.getSimpleName();
         }
         return (String) type;
     }
@@ -368,27 +348,8 @@ public class Type extends Node {
     }
 
     public boolean isAssignableFrom(Class<?> type) {
-        Object clss = get(0);
-        return clss instanceof Class && ((Class<?>) clss).isAssignableFrom(type);
-    }
-
-    @Override
-    protected Node typeForEquals() {
-        return TYPE();
-    }
-
-    public boolean isTypeType() {
-        return get(0) instanceof Class cls && cls == Type.class;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return (isTypeType() && obj instanceof Type type && type.isTypeType()) || super.equals(obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return isTypeType() ? 0 : super.hashCode();
+        Class<?> clss = clss();
+        return clss != null && clss.isAssignableFrom(type);
     }
 
 }
