@@ -10,7 +10,15 @@
                 integer_string(<Integer>,<String>)              @org.modelingvalue.nelumbo.strings.ToInteger
 
   <String>  ::=  <String> + <String>  #40
+  <Integer> ::=  len(<String>)
+  <Integer> ::=  int(<String>)
+  <String>  ::=  str(<Integer>)
 
   <String>  a, b, c
+  <Integer> x
 
   a+b=c     <=> string_concat(a,b,c)
+  a+b=c     <=> string_concat(a,b,c)
+  len(a)=x  <=> string_length(a,x)
+  int(a)=x  <=> integer_string(x,a)
+  str(x)=a  <=> integer_string(x,a)
