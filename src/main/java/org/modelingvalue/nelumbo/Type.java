@@ -84,6 +84,7 @@ public final class Type extends Node {
     }
 
     private Type       list;
+    private Type       set;
     private Type       literal;
     private Type       function;
     private List<Type> allSupers;
@@ -140,8 +141,8 @@ public final class Type extends Node {
                 , super1.group());
     }
 
-    private Type(Type element, String group) {
-        super(TYPE, List.of(element), "List" + element, Set.of(OBJECT), group, element);
+    private Type(String type, Type element, String group) {
+        super(TYPE, List.of(element), type + element, Set.of(OBJECT), group, element);
     }
 
     private static Object group(Type... supers) {
@@ -159,7 +160,7 @@ public final class Type extends Node {
     }
 
     public Type element() {
-        if (isList()) {
+        if (isCollection()) {
             return (Type) get(3);
         } else {
             return this;
@@ -175,7 +176,7 @@ public final class Type extends Node {
         return (Set<Type>) get(0);
     }
 
-    public boolean isList() {
+    public boolean isCollection() {
         return length() == 4;
     }
 
@@ -238,14 +239,28 @@ public final class Type extends Node {
         return list(group());
     }
 
+    public Type set() {
+        return set(group());
+    }
+
     public Type list(String group) {
         if (!group.equals(group())) {
-            return new Type(this, group);
+            return new Type("List", this, group);
         }
         if (list == null) {
-            list = new Type(this, group);
+            list = new Type("List", this, group);
         }
         return list;
+    }
+
+    public Type set(String group) {
+        if (!group.equals(group())) {
+            return new Type("Set", this, group);
+        }
+        if (set == null) {
+            set = new Type("Set", this, group);
+        }
+        return set;
     }
 
     public TokenType tokenType() {

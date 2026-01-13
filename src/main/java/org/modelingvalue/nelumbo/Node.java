@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.modelingvalue.collections.ContainingCollection;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -302,26 +303,6 @@ public class Node extends StructImpl implements AstElement {
         return new Node(array, declaration);
     }
 
-    public Object get(Variable var) {
-        return get(declaration, var);
-    }
-
-    protected final Object get(Node declaration, Variable var) {
-        for (int i = 0; i < length(); i++) {
-            Object thisVal = get(i);
-            Object declVal = declaration.get(i);
-            if (declVal.equals(var)) {
-                return thisVal;
-            } else if (thisVal instanceof Node && !(thisVal instanceof Type)) {
-                Object varVal = ((Node) thisVal).get((Node) declVal, var);
-                if (varVal != null) {
-                    return varVal;
-                }
-            }
-        }
-        return null;
-    }
-
     public final Set<Variable> allLocalVars() {
         Set<Variable> allLocalVars = localVars().asSet();
         for (int i = 0; i < length(); i++) {
@@ -389,7 +370,7 @@ public class Node extends StructImpl implements AstElement {
         } else if (declVal instanceof Node declNode && !(declVal instanceof Type) && //
                 thisVal instanceof Node thisNode) {
             vars = thisNode.getBinding(declNode, vars);
-        } else if (declVal instanceof List<?> declList && thisVal instanceof List<?> thisList && //
+        } else if (declVal instanceof ContainingCollection<?> declList && thisVal instanceof ContainingCollection<?> thisList && //
                 declList.size() == thisList.size()) {
             for (int ii = 0; ii < declList.size(); ii++) {
                 vars = getBinding(declList.get(ii), thisList.get(ii), vars, i);
@@ -425,6 +406,7 @@ public class Node extends StructImpl implements AstElement {
         return array != null ? struct(array, declaration) : this;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     protected final Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i) {
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
@@ -453,9 +435,9 @@ public class Node extends StructImpl implements AstElement {
         } else if (declVal instanceof Node declNode && !(declNode instanceof Type) && //
                 thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
             return thisNode.setBinding(declNode, vars);
-        } else if (declVal instanceof List<?> declList && thisVal instanceof List<?> thisList && //
+        } else if (declVal instanceof ContainingCollection declList && thisVal instanceof ContainingCollection thisList && //
                 declList.size() == thisList.size()) {
-            List<Object> list = List.of();
+            ContainingCollection list = declList.clear();
             for (int ii = 0; ii < declList.size(); ii++) {
                 list = list.add(setBinding(declList.get(ii), thisList.get(ii), vars, i));
             }
@@ -509,11 +491,12 @@ public class Node extends StructImpl implements AstElement {
         }
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private Object replace(Object from, ThrowingFunction<Node, Node> replacer) throws ParseException {
         if (from instanceof Node fromNode) {
             return fromNode.replace(replacer);
-        } else if (from instanceof List<?> fromList) {
-            List<Object> toList = List.of();
+        } else if (from instanceof ContainingCollection fromList) {
+            ContainingCollection toList = fromList.clear();
             for (Object e : fromList) {
                 toList = toList.add(replace(e, replacer));
             }
