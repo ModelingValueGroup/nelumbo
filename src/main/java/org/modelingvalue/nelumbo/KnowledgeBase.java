@@ -352,10 +352,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     pttrn = pttrn.add(e);
                                 }
                             }
-                            List<AstElement> xxx = roots.astElements();
-                            AstElement       yyy = elements.last();
-                            List<AstElement> zzz = xxx.add(node).add(yyy);
-                            return roots.setAstElements(zzz);
+                            return roots.setAstElements(roots.astElements().add(node).add(elements.last()));
                         }).init(this);
 
                 Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //

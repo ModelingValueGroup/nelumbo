@@ -16,19 +16,20 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import static org.modelingvalue.nelumbo.syntax.TokenType.Constants.CONTINUES_ON_NEXT_LINE;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Constants.LAYOUT;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Constants.NOT_MATCHED;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Constants.SKIP;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Constants.VARIABLE_CONTENT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.CONTINUES_ON_NEXT_LINE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.LAYOUT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.NOT_MATCHED;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.SKIP;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.VARIABLE_CONTENT;
 
+import java.util.EnumSet;
 import java.util.regex.Pattern;
 
 public enum TokenType {
     SINGLEQUOTE("'"), //
     SEMICOLON(";"), //
     COMMA(",", CONTINUES_ON_NEXT_LINE), //
-    LEFT("[\\(\\[\\{]", CONTINUES_ON_NEXT_LINE + VARIABLE_CONTENT), //
+    LEFT("[\\(\\[\\{]", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     RIGHT("[\\)\\]\\}]", VARIABLE_CONTENT), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //
     NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", VARIABLE_CONTENT), //
@@ -36,42 +37,47 @@ public enum TokenType {
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", VARIABLE_CONTENT), //
     TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", VARIABLE_CONTENT), //
     META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", VARIABLE_CONTENT), //
-    OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE + VARIABLE_CONTENT), //
-    NEWLINE("\\v", CONTINUES_ON_NEXT_LINE + LAYOUT), //
-    HSPACE("\\h+", SKIP + LAYOUT), //
-    END_LINE_COMMENT("//[^\\v]*", SKIP + VARIABLE_CONTENT), //
-    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP + VARIABLE_CONTENT), //
+    OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
+    NEWLINE("\\v", CONTINUES_ON_NEXT_LINE, LAYOUT), //
+    HSPACE("\\h+", SKIP, LAYOUT), //
+    END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
+    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     ERROR(".", VARIABLE_CONTENT), //
     //================ rest is not actually matched:
     BEGINOFFILE, //
     ENDOFFILE, //
     ENDOFLINE, //
-    VARIABLE("[a-zA-Z_][0-9a-zA-Z_]*", SKIP + VARIABLE_CONTENT + NOT_MATCHED), //
-    KEYWORD("[a-zA-Z_][0-9a-zA-Z_]*", SKIP + VARIABLE_CONTENT + NOT_MATCHED), //
+    VARIABLE("[a-zA-Z_][0-9a-zA-Z_]*", SKIP, VARIABLE_CONTENT, NOT_MATCHED), //
+    KEYWORD("[a-zA-Z_][0-9a-zA-Z_]*", SKIP, VARIABLE_CONTENT, NOT_MATCHED), //
     ;
 
-    private final Pattern pattern;              // the pattern that matches tokens of this token type
-    private final boolean skip;                 // indicates a non semantic part that may be ignored by the parser
-    private final boolean continuesOnNextLine;  // indicates that a NEWLINE token after this token is to be ignored when parsing
-    private final boolean layout;               // indicates that this token type is layout and should be ignored by the parser
-    private final boolean variableContent;      // indicates that this token type has a variable content
-    private final boolean notMatched;           // indicates that this token type is not actually matched by the lexer
+    public enum Flag {
+        SKIP,                   // indicates a non semantic part that may be ignored by the parser
+        CONTINUES_ON_NEXT_LINE, // indicates that a NEWLINE token after this token is to be ignored when parsing
+        NOT_MATCHED,            // indicates that this token type is not actually matched by the lexer
+        VARIABLE_CONTENT,       // indicates that this token type has a variable content
+        LAYOUT                  // indicates that this token type is layout and should be ignored by the parser
+    }
+
+    private final Pattern pattern;
+    private final boolean skip;
+    private final boolean continuesOnNextLine;
+    private final boolean layout;
+    private final boolean variableContent;
+    private final boolean notMatched;
 
     TokenType() {
-        this("", LAYOUT + NOT_MATCHED);
+        this("", LAYOUT, NOT_MATCHED);
     }
 
-    TokenType(String regexp) {
-        this(regexp, "");
-    }
-
-    TokenType(String regexp, String flags) {
-        this.pattern             = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
-        this.skip                = flags.contains(SKIP);
-        this.continuesOnNextLine = flags.contains(CONTINUES_ON_NEXT_LINE);
-        this.layout              = flags.contains(LAYOUT);
-        this.variableContent     = flags.contains(VARIABLE_CONTENT);
-        this.notMatched          = flags.contains(NOT_MATCHED);
+    TokenType(String regexp, Flag... flags) {
+        this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
+        EnumSet<Flag> flagset = flags.length == 0 ? EnumSet.noneOf(Flag.class) : EnumSet.of(flags[0], flags);
+        this.skip                = flagset.contains(SKIP);
+        this.continuesOnNextLine = flagset.contains(CONTINUES_ON_NEXT_LINE);
+        this.layout              = flagset.contains(LAYOUT);
+        this.variableContent     = flagset.contains(VARIABLE_CONTENT);
+        this.notMatched          = flagset.contains(NOT_MATCHED);
     }
 
     public boolean isSkip() {
@@ -168,13 +174,5 @@ public enum TokenType {
         public TokenType type() {
             return matchedType;
         }
-    }
-
-    interface Constants {
-        String SKIP                   = "S";
-        String CONTINUES_ON_NEXT_LINE = "C";
-        String NOT_MATCHED            = "N";
-        String VARIABLE_CONTENT       = "V";
-        String LAYOUT                 = "L";
     }
 }

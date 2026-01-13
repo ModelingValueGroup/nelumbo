@@ -17,6 +17,9 @@
 package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Iterator;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -58,12 +61,20 @@ public class ListNode extends Node {
 
     @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elementsFlattened() {
-        List<T> result = List.of();
-        for (Node element : elements()) {
-            if (element instanceof ListNode list) {
-                result = result.addAll(list.elementsFlattened());
+        List<T>               result = List.of();
+        Deque<Iterator<Node>> stack  = new ArrayDeque<>();
+        stack.push(elements().iterator());
+        while (!stack.isEmpty()) {
+            Iterator<Node> iter = stack.peek();
+            if (iter.hasNext()) {
+                Node element = iter.next();
+                if (element instanceof ListNode list) {
+                    stack.push(list.elements().iterator());
+                } else {
+                    result = result.add((T) element);
+                }
             } else {
-                result = result.add((T) element);
+                stack.pop();
             }
         }
         return result;
