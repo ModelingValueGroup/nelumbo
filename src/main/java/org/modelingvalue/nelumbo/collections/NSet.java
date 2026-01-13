@@ -14,62 +14,57 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.strings;
+package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
-import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.logic.Predicate;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Integer extends Predicate {
+public class NSet extends Node {
     @Serial
-    private static final long serialVersionUID = -2874326869672600959L;
+    private static final long serialVersionUID = 840888260991475386L;
 
-    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public NSet(List<AstElement> elements, Type elementType, Object[] args) {
+        super(elementType.set(), elements, Set.of(args));
     }
 
-    private Integer(Object[] array, Integer declaration) {
+    private NSet(Object[] array, NSet declaration) {
         super(array, declaration);
     }
 
     @Override
-    protected Integer struct(Object[] array, Node declaration) {
-        return new Integer(array, (Integer) declaration);
+    public NSet setAstElements(List<AstElement> elements) {
+        return (NSet) super.setAstElements(elements);
+    }
+
+    @SuppressWarnings("unused")
+    public Type elementType() {
+        return type().element();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> Set<T> elements() {
+        return (Set<T>) get(0);
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
-            return unresolvable();
-        }
-
-        BigInteger integer = getVal(0, 0);
-        java.lang.String string = getVal(1, 0);
-        if (string != null) {
-            try {
-                BigInteger parsed = BigInteger.valueOf(java.lang.Integer.parseInt(string));
-                if (integer != null) {
-                    boolean eq = integer.equals(parsed);
-                    return eq ? factCC() : falsehoodCC();
-                } else {
-                    return set(0, org.modelingvalue.nelumbo.integers.Integer.of(parsed)).factCI();
-                }
-            } catch (NumberFormatException e) {
-                return integer != null ? falsehoodCC() : falsehoodCI();
-            }
-        } else if (integer != null) {
-            java.lang.String s = integer.toString();
-            return set(1, org.modelingvalue.nelumbo.strings.String.of(s)).factCI();
-        }
-
-        return unknown();
+    protected NSet struct(Object[] array, Node declaration) {
+        return new NSet(array, (NSet) declaration);
     }
 
+    @Override
+    public NSet set(int i, Object... a) {
+        return (NSet) super.set(i, a);
+    }
+
+    @Override
+    public String toString(TokenType[] previous) {
+        String string = elements().toString();
+        return "{" + string.substring(4, string.length() - 1) + "}";
+    }
 }

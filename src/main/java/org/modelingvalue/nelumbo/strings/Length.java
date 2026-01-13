@@ -50,7 +50,7 @@ public final class Length extends Predicate {
             return unresolvable();
         }
 
-        java.lang.String string = getVal(0, 0);
+        String string = getVal(0, 0);
         BigInteger length = getVal(1, 0);
         if (string != null) {
             BigInteger actual = BigInteger.valueOf(string.length());
@@ -58,7 +58,7 @@ public final class Length extends Predicate {
                 boolean eq = length.equals(actual);
                 return eq ? factCC() : falsehoodCC();
             } else {
-                return set(1, org.modelingvalue.nelumbo.integers.Integer.of(actual)).factCI();
+                return set(1, org.modelingvalue.nelumbo.integers.NInteger.of(actual)).factCI();
             }
         }
 

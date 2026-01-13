@@ -28,17 +28,17 @@ import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Boolean extends Predicate {
+public final class NBoolean extends Predicate {
     @Serial
     private static final long serialVersionUID = -8515171118744898263L;
     //
-    public static Boolean     TRUE;
-    public static Boolean     FALSE;
-    public static Boolean     UNKNOWN;
+    public static NBoolean     TRUE;
+    public static NBoolean     FALSE;
+    public static NBoolean     UNKNOWN;
     //
     private InferResult       result;
 
-    public Boolean(Functor functor, List<AstElement> elements, Object[] args) {
+    public NBoolean(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, parse(functor.name()));
         if (TRUE == null && isTrue()) {
             TRUE = this;
@@ -49,7 +49,7 @@ public final class Boolean extends Predicate {
         }
     }
 
-    public Boolean(Variable var) {
+    public NBoolean(Variable var) {
         super(UNKNOWN.functor(), List.of(), var);
     }
 
@@ -58,18 +58,18 @@ public final class Boolean extends Predicate {
         return List.of();
     }
 
-    private static java.lang.Boolean parse(String arg) {
-        return "true".equalsIgnoreCase(arg) ? java.lang.Boolean.TRUE : //
-                "false".equalsIgnoreCase(arg) ? java.lang.Boolean.FALSE : null;
+    private static Boolean parse(String arg) {
+        return "true".equalsIgnoreCase(arg) ? Boolean.TRUE : //
+                "false".equalsIgnoreCase(arg) ? Boolean.FALSE : null;
     }
 
-    private Boolean(Object[] args, Boolean declaration) {
+    private NBoolean(Object[] args, NBoolean declaration) {
         super(args, declaration);
     }
 
-    private java.lang.Boolean getBoolean() {
+    private Boolean getBoolean() {
         Object object = get(0);
-        return object instanceof java.lang.Boolean b ? b : null;
+        return object instanceof Boolean b ? b : null;
     }
 
     @Override
@@ -86,17 +86,17 @@ public final class Boolean extends Predicate {
     }
 
     public boolean isTrue() {
-        java.lang.Boolean b = getBoolean();
+        Boolean b = getBoolean();
         return b != null && b;
     }
 
     public boolean isFalse() {
-        java.lang.Boolean b = getBoolean();
+        Boolean b = getBoolean();
         return b != null && !b;
     }
 
     public boolean isUnknown() {
-        java.lang.Boolean b = getBoolean();
+        Boolean b = getBoolean();
         return b == null;
     }
 
@@ -105,8 +105,8 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    protected Boolean struct(Object[] array, Node declaration) {
-        return new Boolean(array, (Boolean) declaration);
+    protected NBoolean struct(Object[] array, Node declaration) {
+        return new NBoolean(array, (NBoolean) declaration);
     }
 
     @Override
@@ -122,8 +122,8 @@ public final class Boolean extends Predicate {
         if (result == null) {
             Variable var = variable();
             if (var != null) {
-                result = InferResult.of(this, Set.of(set(0, java.lang.Boolean.TRUE)), true, //
-                        Set.of(set(0, java.lang.Boolean.FALSE)), true, Set.of());
+                result = InferResult.of(this, Set.of(set(0, Boolean.TRUE)), true, //
+                        Set.of(set(0, Boolean.FALSE)), true, Set.of());
             } else {
                 result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
             }
@@ -132,8 +132,8 @@ public final class Boolean extends Predicate {
     }
 
     @Override
-    public Boolean set(int i, Object... a) {
-        return (Boolean) super.set(i, a);
+    public NBoolean set(int i, Object... a) {
+        return (NBoolean) super.set(i, a);
     }
 
     @Override

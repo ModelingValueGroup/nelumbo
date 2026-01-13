@@ -57,14 +57,14 @@ public final class Multiply extends Predicate {
                 boolean eq = p.equals(product);
                 return eq ? factCC() : falsehoodCC();
             } else {
-                return set(2, Integer.of(p)).factCI();
+                return set(2, NInteger.of(p)).factCI();
             }
         } else if (factor1 != null && product != null) {
             BigInteger[] dr = product.divideAndRemainder(factor1);
-            return dr[1].equals(BigInteger.ZERO) ? set(1, Integer.of(dr[0])).factCI() : falsehoodCI();
+            return dr[1].equals(BigInteger.ZERO) ? set(1, NInteger.of(dr[0])).factCI() : falsehoodCI();
         } else if (factor2 != null && product != null) {
             BigInteger[] dr = product.divideAndRemainder(factor2);
-            return dr[1].equals(BigInteger.ZERO) ? set(0, Integer.of(dr[0])).factCI() : falsehoodCI();
+            return dr[1].equals(BigInteger.ZERO) ? set(0, NInteger.of(dr[0])).factCI() : falsehoodCI();
         }
 
         return unknown();

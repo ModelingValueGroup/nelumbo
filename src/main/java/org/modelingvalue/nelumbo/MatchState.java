@@ -140,7 +140,7 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
                 return state;
             }
         }
-        state = transitions().get(Type.TYPE());
+        state = transitions().get(Type.TYPE);
         return state;
     }
 

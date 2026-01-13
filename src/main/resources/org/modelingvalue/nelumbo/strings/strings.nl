@@ -1,16 +1,24 @@
 
-    import      nelumbo.integers
+  import    nelumbo.integers
 
-    <String>    :: <Node>
+  <String>  :: <Object>
 
-    <String>    ::= <STRING>                                        @org.modelingvalue.nelumbo.strings.String
+  <String>  ::= <STRING>                                        @org.modelingvalue.nelumbo.strings.NString
 
-    <Predicate> ::= string_concat(<String>,<String>,<String>)       @org.modelingvalue.nelumbo.strings.Concat,
-                    string_length(<String>,<Integer>)               @org.modelingvalue.nelumbo.strings.Length,
-                    integer_string(<Integer>,<String>)              @org.modelingvalue.nelumbo.strings.Integer
+  <Boolean> ::= string_concat(<String>,<String>,<String>)       @org.modelingvalue.nelumbo.strings.Concat,
+                string_length(<String>,<Integer>)               @org.modelingvalue.nelumbo.strings.Length,
+                integer_string(<Integer>,<String>)              @org.modelingvalue.nelumbo.strings.ToInteger
 
-    <String>    ::=  <String> + <String>  #40
+  <String>  ::=  <String> + <String>  #40
+  <Integer> ::=  len(<String>)
+  <Integer> ::=  int(<String>)
+  <String>  ::=  str(<Integer>)
 
-    <String>    a, b, c
+  <String>  a, b, c
+  <Integer> x
 
-    a+b=c       <=> string_concat(a,b,c)
+  a+b=c     <=> string_concat(a,b,c)
+  a+b=c     <=> string_concat(a,b,c)
+  len(a)=x  <=> string_length(a,x)
+  int(a)=x  <=> integer_string(x,a)
+  str(x)=a  <=> integer_string(x,a)

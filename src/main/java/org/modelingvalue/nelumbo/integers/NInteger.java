@@ -16,56 +16,78 @@
 
 package org.modelingvalue.nelumbo.integers;
 
+import java.io.Serial;
 import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Add extends Predicate {
-    private static final long serialVersionUID = 2384355866476367685L;
+public final class NInteger extends Node {
+    @Serial
+    private static final long       serialVersionUID = 2454372545442550574L;
 
-    public Add(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1], args[2]);
+    private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
+
+    private static Functor          FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(NInteger.class, f -> FUNCTOR = f);
     }
 
-    private Add(Object[] array, Add declaration) {
+    public NInteger(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse((String) args[0]));
+    }
+
+    private NInteger(Functor functor, List<AstElement> elements, BigInteger val) {
+        super(functor, elements, val);
+    }
+
+    public static NInteger of(BigInteger val) {
+        return new NInteger(FUNCTOR, List.of(), val);
+    }
+
+    private static BigInteger parse(String string) {
+        int i = string.indexOf('#');
+        if (i > 0) {
+            int radix = Integer.parseInt(string.substring(0, i));
+            return new BigInteger(string.substring(i + 1), radix);
+        }
+        return new BigInteger(string);
+    }
+
+    private NInteger(Object[] array, NInteger declaration) {
         super(array, declaration);
     }
 
     @Override
-    protected Add struct(Object[] array, Node declaration) {
-        return new Add(array, (Add) declaration);
+    protected NInteger struct(Object[] array, Node declaration) {
+        return new NInteger(array, (NInteger) declaration);
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
-            return unresolvable();
-        }
+    public NInteger set(int i, Object... a) {
+        return (NInteger) super.set(i, a);
+    }
 
-        BigInteger addend1 = getVal(0, 0);
-        BigInteger addend2 = getVal(1, 0);
-        BigInteger sum = getVal(2, 0);
-        if (addend1 != null && addend2 != null) {
-            BigInteger s = addend1.add(addend2);
-            if (sum != null) {
-                boolean eq = s.equals(sum);
-                return eq ? factCC() : falsehoodCC();
-            } else {
-                return set(2, NInteger.of(s)).factCI();
-            }
-        } else if (addend1 != null && sum != null) {
-            return set(1, NInteger.of(sum.subtract(addend1))).factCI();
-        } else if (addend2 != null && sum != null) {
-            return set(0, NInteger.of(sum.subtract(addend2))).factCI();
-        }
+    public BigInteger value() {
+        return (BigInteger) get(0);
+    }
 
-        return unknown();
+    @Override
+    public String toString(TokenType[] previous) {
+        BigInteger value = value();
+        String string = value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX)) : value.toString();
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
+            previous[0] = TokenType.NUMBER;
+            return " " + string;
+        }
+        previous[0] = TokenType.NUMBER;
+        return string;
     }
 
 }

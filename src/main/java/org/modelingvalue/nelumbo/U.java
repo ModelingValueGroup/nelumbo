@@ -48,7 +48,7 @@ public class U {
     }
 
     public static void printKnowledgeBase(String msg, boolean withTokens) {
-        if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println();
             System.out.printf("%s %-99s%s%n", colorCode(42), msg + ":", colorCode(0));
             KnowledgeBase.CURRENT.get().print(System.out, withTokens);
@@ -56,7 +56,7 @@ public class U {
     }
 
     public static void printTokens(String msg, List<Token> tokens) {
-        if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println(msg + ":");
             for (Token token : tokens) {
                 System.out.println("    Token: " + token);
@@ -65,7 +65,7 @@ public class U {
     }
 
     public static void printResults(List<Node> roots) {
-        if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
             for (Node root : roots) {
                 if (root instanceof Query query) {
                     System.out.println(query.inferResult());
@@ -75,7 +75,7 @@ public class U {
     }
 
     public static void printNode(String msg, List<Node> nodes) {
-        if (java.lang.Boolean.getBoolean("VERBOSE_TESTS")) {
+        if (Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println();
             System.out.printf("%s %-99s%s%n", colorCode(42), msg + ":", colorCode(0));
             for (Node node : nodes) {

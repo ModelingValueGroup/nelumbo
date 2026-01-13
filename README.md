@@ -36,11 +36,11 @@ occur.
 ### Family Relations Example
 
 ```text
-<Person>    :: <Node>
+<Person>    :: <Object>
 <Male>      :: <Person>
 <Female>    :: <Person>
 
-<Relation>  ::= pc(<Person>,<Person>)   // parent-child
+<FactType>  ::= pc(<Person>,<Person>)   // parent-child
 
 <Person>    ::= p(<Person>),   // parent
                 c(<Person>),   // child

@@ -44,8 +44,8 @@ import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.ListNode;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 @SuppressWarnings("unused")
@@ -449,7 +449,7 @@ public class U {
         if (Main.debugging()) {
             switch (node) {
                 case Token t -> DEBUG("    %-20s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
-                case ListNode l -> {
+                case NList l -> {
                     Node   declaration = l.declaration();
                     String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
                     DEBUG("    %-20s%sL[%d]:%-16s  '%s'  => %s", renderSpan(l), indent, l.elements().size(), l.type(), l, decl);

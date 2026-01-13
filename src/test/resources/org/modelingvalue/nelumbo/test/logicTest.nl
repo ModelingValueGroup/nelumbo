@@ -32,7 +32,7 @@
     !unknown        ? [..][..]
     
     
-    <Predicate> p
+    <Boolean> p
 
     p               ? [(p=true)][(p=false)]
     !p              ? [(p=false)][(p=true)]
@@ -76,7 +76,7 @@
 
     // Identity
 
-	<Test> :: <Node>
+	<Test> :: <Object>
 	<Test> ::= T1, T2
 
     T1=T1           ? [()][]

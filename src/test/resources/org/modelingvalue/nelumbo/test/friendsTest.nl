@@ -1,9 +1,9 @@
 
 import     nelumbo.logic
 
-<Person>   :: <Node>
+<Person>   :: <Object>
 
-<Relation> ::= friends(<Person>,<Person>)
+<FactType> ::= friends(<Person>,<Person>)
 <Person>   ::= friend(<Person>)
 
 <Person> A, B, C

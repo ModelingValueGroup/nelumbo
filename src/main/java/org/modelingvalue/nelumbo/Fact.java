@@ -54,7 +54,7 @@ public final class Fact extends Node implements Evaluatable {
     public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
         Predicate predicate = predicate();
         if (!predicate.isRelation()) {
-            handler.addException(new ParseException("Fact " + predicate + " is not a relation.", predicate));
+            handler.addException(new ParseException("The type of " + predicate + " is not FactType.", predicate));
             return;
         }
         if (!predicate.isFullyBound()) {

@@ -14,81 +14,87 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.integers;
+package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
-import java.math.BigInteger;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Iterator;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Terminal;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Integer extends Terminal {
+public class NList extends Node {
     @Serial
-    private static final long       serialVersionUID = 2454372545442550574L;
+    private static final long serialVersionUID = 2275866157289787141L;
 
-    private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
-    private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
-
-    private static Functor          FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(Integer.class, f -> FUNCTOR = f);
+    public NList(List<AstElement> elements, Type elementType) {
+        super(elementType.list(), elements, List.of());
     }
 
-    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse((String) args[0]));
+    public NList(Type elementType, List<AstElement> elements, List<Node> args) {
+        super(elementType.list(), elements, args);
     }
 
-    private Integer(Functor functor, List<AstElement> elements, BigInteger val) {
-        super(functor, elements, val);
+    public NList(List<AstElement> elements, NList list, Node last) {
+        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
     }
 
-    public static Integer of(BigInteger val) {
-        return new Integer(FUNCTOR, List.of(), val);
-    }
-
-    private static BigInteger parse(String string) {
-        int i = string.indexOf('#');
-        if (i > 0) {
-            int radix = java.lang.Integer.parseInt(string.substring(0, i));
-            return new BigInteger(string.substring(i + 1), radix);
-        }
-        return new BigInteger(string);
-    }
-
-    private Integer(Object[] array, Integer declaration) {
+    private NList(Object[] array, NList declaration) {
         super(array, declaration);
     }
 
     @Override
-    protected Integer struct(Object[] array, Node declaration) {
-        return new Integer(array, (Integer) declaration);
+    public NList setAstElements(List<AstElement> elements) {
+        return (NList) super.setAstElements(elements);
+    }
+
+    @SuppressWarnings("unused")
+    public Type elementType() {
+        return type().element();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> List<T> elements() {
+        return (List<T>) get(0);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Node> List<T> elementsFlattened() {
+        List<T>               result = List.of();
+        Deque<Iterator<Node>> stack  = new ArrayDeque<>();
+        stack.push(elements().iterator());
+        while (!stack.isEmpty()) {
+            Iterator<Node> iter = stack.peek();
+            if (iter.hasNext()) {
+                Node element = iter.next();
+                if (element instanceof NList list) {
+                    stack.push(list.elements().iterator());
+                } else {
+                    result = result.add((T) element);
+                }
+            } else {
+                stack.pop();
+            }
+        }
+        return result;
     }
 
     @Override
-    public Integer set(int i, Object... a) {
-        return (Integer) super.set(i, a);
+    protected NList struct(Object[] array, Node declaration) {
+        return new NList(array, (NList) declaration);
     }
 
-    public BigInteger value() {
-        return (BigInteger) get(0);
+    @Override
+    public NList set(int i, Object... a) {
+        return (NList) super.set(i, a);
     }
 
     @Override
     public String toString(TokenType[] previous) {
-        BigInteger value = value();
-        String string = value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX)) : value.toString();
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
-            previous[0] = TokenType.NUMBER;
-            return " " + string;
-        }
-        previous[0] = TokenType.NUMBER;
-        return string;
+        return elements().toString().substring(4);
     }
-
 }

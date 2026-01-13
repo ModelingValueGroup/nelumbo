@@ -14,37 +14,71 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.strings;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class Terminal extends Node {
+public final class NString extends Node {
+
     @Serial
-    private static final long serialVersionUID = 7548506547559092927L;
+    private static final long             serialVersionUID = 8360866611309554234L;
 
-    public Terminal(Functor functor, List<AstElement> elements, Object... args) {
-        super(functor, elements, args);
+    private static final String DELIM            = "\"";
+
+    private static Functor                FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(NString.class, f -> FUNCTOR = f);
     }
 
-    public Terminal(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public NString(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse((String) args[0]));
     }
 
-    protected Terminal(Object[] array, Terminal declaration) {
+    private NString(Functor functor, List<AstElement> elements, String val) {
+        super(functor, elements, val);
+    }
+
+    public static NString of(String val) {
+        return new NString(FUNCTOR, List.of(), val);
+    }
+
+    public static String strip(String val) {
+        return val != null && val.startsWith(DELIM) ? val.substring(1, val.length() - 1) : null;
+    }
+
+    private static String parse(String string) {
+        return strip(string);
+    }
+
+    private NString(Object[] array, NString declaration) {
         super(array, declaration);
     }
 
     @Override
-    protected Terminal struct(Object[] array, Node declaration) {
-        return new Terminal(array, (Terminal) declaration);
+    protected NString struct(Object[] array, Node declaration) {
+        return new NString(array, (NString) declaration);
     }
 
     @Override
-    public Terminal set(int i, Object... a) {
-        return (Terminal) super.set(i, a);
+    public NString set(int i, Object... a) {
+        return (NString) super.set(i, a);
+    }
+
+    public String value() {
+        return (String) get(0);
+    }
+
+    @Override
+    public String toString(TokenType[] previous) {
+        return DELIM + value() + DELIM;
     }
 
 }

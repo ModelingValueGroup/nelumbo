@@ -70,14 +70,14 @@ public abstract class CompoundPredicate extends Predicate {
                         Map<Variable, Object> b = pred.getBinding();
                         if (!b.isEmpty()) {
                             b = binding.putAll(b);
-                            next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.TRUE));
+                            next = next.put(b, predicate.setBinding(b).replace(pred, NBoolean.TRUE));
                         }
                     }
                     for (Predicate pred : result.allFalsehoods()) {
                         Map<Variable, Object> b = pred.getBinding();
                         if (!b.isEmpty()) {
                             b = binding.putAll(b);
-                            next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.FALSE));
+                            next = next.put(b, predicate.setBinding(b).replace(pred, NBoolean.FALSE));
                         }
                     }
                     completeFacts &= result.completeFacts();
@@ -103,14 +103,14 @@ public abstract class CompoundPredicate extends Predicate {
                                 Map<Variable, Object> b = pred.getBinding();
                                 if (!b.isEmpty()) {
                                     b = binding.putAll(b);
-                                    next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.TRUE));
+                                    next = next.put(b, predicate.setBinding(b).replace(pred, NBoolean.TRUE));
                                 }
                             }
                             for (Predicate pred : result.allFalsehoods()) {
                                 Map<Variable, Object> b = pred.getBinding();
                                 if (!b.isEmpty()) {
                                     b = binding.putAll(b);
-                                    next = next.put(b, predicate.setBinding(b).replace(pred, Boolean.FALSE));
+                                    next = next.put(b, predicate.setBinding(b).replace(pred, NBoolean.FALSE));
                                 }
                             }
                             completeFacts &= result.completeFacts();
