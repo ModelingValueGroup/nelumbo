@@ -1,16 +1,16 @@
 
-  <Boolean> ::= true                                              @org.modelingvalue.nelumbo.logic.Boolean,
-                false                                             @org.modelingvalue.nelumbo.logic.Boolean,
-                unknown                                           @org.modelingvalue.nelumbo.logic.Boolean,
+  <Boolean> ::= true                                            @org.modelingvalue.nelumbo.logic.Boolean,
+                false                                           @org.modelingvalue.nelumbo.logic.Boolean,
+                unknown                                         @org.modelingvalue.nelumbo.logic.Boolean,
                 ! <Boolean>                             #25     @org.modelingvalue.nelumbo.logic.Not,
-                <Boolean> & <Boolean>                 #22     @org.modelingvalue.nelumbo.logic.And,
-                <Boolean> | <Boolean>                 #20     @org.modelingvalue.nelumbo.logic.Or,
-                <Boolean> -> <Boolean>                #18,
-                <Boolean> <-> <Boolean>               #16,
+                <Boolean> & <Boolean>                   #22     @org.modelingvalue.nelumbo.logic.And,
+                <Boolean> | <Boolean>                   #20     @org.modelingvalue.nelumbo.logic.Or,
+                <Boolean> -> <Boolean>                  #18,
+                <Boolean> <-> <Boolean>                 #16,
                 E[<(> <Variable> <,> , <)+>](<Boolean>) #100 #0 @org.modelingvalue.nelumbo.logic.ExistentialQuantifier,
                 A[<(> <Variable> <,> , <)+>](<Boolean>) #100 #0 @org.modelingvalue.nelumbo.logic.UniversalQuantifier,
-                eq(<Object>,<Object>)                                 @org.modelingvalue.nelumbo.logic.Equal,
-                <Object> != <Object>                          #30
+                eq(<Object>,<Object>)                           @org.modelingvalue.nelumbo.logic.Equal,
+                <Object> != <Object>                    #30
 
   <Boolean> p1, p2
     
