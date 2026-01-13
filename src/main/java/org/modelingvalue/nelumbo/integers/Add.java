@@ -57,12 +57,12 @@ public final class Add extends Predicate {
                 boolean eq = s.equals(sum);
                 return eq ? factCC() : falsehoodCC();
             } else {
-                return set(2, Integer.of(s)).factCI();
+                return set(2, NInteger.of(s)).factCI();
             }
         } else if (addend1 != null && sum != null) {
-            return set(1, Integer.of(sum.subtract(addend1))).factCI();
+            return set(1, NInteger.of(sum.subtract(addend1))).factCI();
         } else if (addend2 != null && sum != null) {
-            return set(0, Integer.of(sum.subtract(addend2))).factCI();
+            return set(0, NInteger.of(sum.subtract(addend2))).factCI();
         }
 
         return unknown();

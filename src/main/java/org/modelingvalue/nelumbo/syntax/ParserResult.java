@@ -20,7 +20,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.ListNode;
+import org.modelingvalue.nelumbo.NList;
 import org.modelingvalue.nelumbo.Node;
 
 public class ParserResult implements ParseExceptionHandler {
@@ -36,7 +36,7 @@ public class ParserResult implements ParseExceptionHandler {
     }
 
     public List<Node> roots() {
-        return root instanceof ListNode listRoot ? listRoot.elements() : root != null ? List.of(root) : List.of();
+        return root instanceof NList listRoot ? listRoot.elements() : root != null ? List.of(root) : List.of();
     }
 
     public Node root() {

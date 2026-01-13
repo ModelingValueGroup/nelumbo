@@ -50,8 +50,8 @@ import org.modelingvalue.nelumbo.syntax.*;
 @SuppressWarnings("DuplicatedCode")
 public final class KnowledgeBase implements ParseExceptionHandler {
 
-    private static final boolean                                                        TRACE_NELUMBO        = java.lang.Boolean.getBoolean("TRACE_NELUMBO");
-    public static final boolean                                                         TRACE_SYNTATIC       = java.lang.Boolean.getBoolean("TRACE_SYNTATIC");
+    private static final boolean                                                        TRACE_NELUMBO        = Boolean.getBoolean("TRACE_NELUMBO");
+    public static final boolean                                                         TRACE_SYNTATIC       = Boolean.getBoolean("TRACE_SYNTATIC");
     //
     public static final Context<KnowledgeBase>                                          CURRENT              = Context.of();
     //
@@ -242,19 +242,19 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor) -> {
-                            ListNode roots = new ListNode(List.of(), Type.ROOT.list());
+                            NList roots = new NList(List.of(), Type.ROOT.list());
                             for (AstElement e1 : elements) {
                                 if (e1 instanceof Node e1n) {
-                                    if (e1n instanceof ListNode list) {
+                                    if (e1n instanceof NList list) {
                                         for (AstElement e2 : list.astElements()) {
                                             if (e2 instanceof Node e2n) {
-                                                roots = new ListNode(List.of(), roots, e2n);
+                                                roots = new NList(List.of(), roots, e2n);
                                             } else {
                                                 roots = roots.setAstElements(roots.astElements().add(e2));
                                             }
                                         }
                                     } else {
-                                        roots = new ListNode(List.of(), roots, e1n);
+                                        roots = new NList(List.of(), roots, e1n);
                                     }
                                 } else {
                                     roots = roots.setAstElements(roots.astElements().add(e1));
@@ -324,7 +324,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             AstElement node = elements.get(0);
                             Type type = node instanceof Variable var ? new Type(var) : (Type) node;
-                            ListNode roots = new ListNode(elements.sublist(0, 2), Type.ROOT);
+                            NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
                             List<Integer> precedence = List.of();
@@ -393,7 +393,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(t("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
+                            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             KnowledgeBase kb = CURRENT.get();
                             StringBuffer sb = new StringBuffer();
                             List<AstElement> el = List.of();
@@ -401,7 +401,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 Token t = i < elements.size() ? (Token) elements.get(i) : null;
                                 if (t == null || t.text().equals(",")) {
                                     Import ip = new Import(el, sb.toString());
-                                    roots = new ListNode(List.of(), roots, ip);
+                                    roots = new NList(List.of(), roots, ip);
                                     if (t != null) {
                                         roots = roots.setAstElements(roots.astElements().add(t));
                                     }
@@ -420,7 +420,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             AstElement e = elements.get(0);
                             Type type = e instanceof Variable var ? new Type(var) : (Type) e;
-                            ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
+                            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             for (int i = 1; i < elements.size(); i++) {
                                 e = elements.get(i);
                                 Token comma = null;
@@ -436,7 +436,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     roots = roots.setAstElements(roots.astElements().add(comma));
                                 }
                                 Functor varFun = CURRENT.get().addVariable(var);
-                                roots = new ListNode(List.of(), roots, varFun);
+                                roots = new NList(List.of(), roots, varFun);
                             }
                             return roots.setAstElements(roots.astElements().add(elements.last()));
                         }).init(this);
@@ -461,7 +461,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             Node source = (Node) args[0];
                             List<Node> targets = List.of();
                             for (Node arg : (List<Node>) args[1]) {
-                                if (arg instanceof ListNode list) {
+                                if (arg instanceof NList list) {
                                     targets = targets.addAll(list.elements());
                                 } else {
                                     targets = targets.add(arg);
@@ -485,7 +485,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     @SuppressWarnings("ConstantValue")
-    private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
+    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         if (args.noneMatch(Type.OBJECT::isAssignableFrom)) {
@@ -506,7 +506,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
         Functor nodFunctor = Functor.of(ast, pattern, nodType, false, toLiteral ? null : constructor).init(this);
-        roots = new ListNode(List.of(), roots, nodFunctor);
+        roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && constructor != null) {
             nodFunctor.construct(List.of(), new Object[0], this);
         }
@@ -514,7 +514,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Pattern litPattern = pattern.setTypes(Type::literal);
             Functor litFunctor = Functor.of(ast, litPattern, type, false, constructor);
             register(litFunctor);
-            roots = new ListNode(List.of(), roots, litFunctor);
+            roots = new NList(List.of(), roots, litFunctor);
             addLiteral(nodFunctor, litFunctor);
             // Implied Rule
             Variable[] nodVars = new Variable[args.size()];
@@ -535,7 +535,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
             ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), List.of(litVars), litCond);
             Rule rule = new Rule(ruleFunctor, List.of(), nodCons, exists);
-            roots = new ListNode(List.of(), roots, rule);
+            roots = new NList(List.of(), roots, rule);
         }
         return roots;
     }
@@ -545,8 +545,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private ListNode createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
-        ListNode roots = new ListNode(elements.sublist(0, 1), Type.ROOT);
+    private NList createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
+        NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
         Predicate cons = Predicate.predicate((Node) args[0]);
         Functor consFunctor = cons.functor();
         Functor litFunctor = literalFunctors.get().get(consFunctor);
@@ -592,7 +592,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                     when != null ? List.of(cond, when) : List.of(cond), //
                     cons, //
                     when != null ? When.of(when, cond) : cond);
-            roots = new ListNode(List.of(), roots, rule);
+            roots = new NList(List.of(), roots, rule);
         }
         return roots.setAstElements(roots.astElements().add(elements.last()));
     }

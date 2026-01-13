@@ -14,62 +14,66 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.strings;
+package org.modelingvalue.nelumbo;
 
 import java.io.Serial;
-import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.InferResult;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.logic.Predicate;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Integer extends Predicate {
+public class NList extends Node {
     @Serial
-    private static final long serialVersionUID = -2874326869672600959L;
+    private static final long serialVersionUID = 2275866157289787141L;
 
-    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public NList(List<AstElement> elements, Type elementType) {
+        super(elementType.list(), elements, List.of());
     }
 
-    private Integer(Object[] array, Integer declaration) {
+    public NList(List<AstElement> elements, NList list, Node last) {
+        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
+    }
+
+    @SuppressWarnings("unused")
+    public NList(List<AstElement> elements, Type elementType, Node... nodes) {
+        super(elementType.list(), elements.addAll(List.of(nodes)), List.of(nodes));
+    }
+
+    private NList(Object[] array, NList declaration) {
         super(array, declaration);
     }
 
     @Override
-    protected Integer struct(Object[] array, Node declaration) {
-        return new Integer(array, (Integer) declaration);
+    public NList setAstElements(List<AstElement> elements) {
+        return (NList) super.setAstElements(elements);
+    }
+
+    @SuppressWarnings("unused")
+    public Type elementType() {
+        return type().element();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Node> List<T> elements() {
+        return (List<T>) get(0);
+    }
+
+    @SuppressWarnings("unused")
+    public <T extends Node> List<T> elementsFlattened() {
+        return null;// TODO Tom
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
-            return unresolvable();
-        }
-
-        BigInteger integer = getVal(0, 0);
-        java.lang.String string = getVal(1, 0);
-        if (string != null) {
-            try {
-                BigInteger parsed = BigInteger.valueOf(java.lang.Integer.parseInt(string));
-                if (integer != null) {
-                    boolean eq = integer.equals(parsed);
-                    return eq ? factCC() : falsehoodCC();
-                } else {
-                    return set(0, org.modelingvalue.nelumbo.integers.Integer.of(parsed)).factCI();
-                }
-            } catch (NumberFormatException e) {
-                return integer != null ? falsehoodCC() : falsehoodCI();
-            }
-        } else if (integer != null) {
-            java.lang.String s = integer.toString();
-            return set(1, org.modelingvalue.nelumbo.strings.String.of(s)).factCI();
-        }
-
-        return unknown();
+    protected NList struct(Object[] array, Node declaration) {
+        return new NList(array, (NList) declaration);
     }
 
+    @Override
+    public NList set(int i, Object... a) {
+        return (NList) super.set(i, a);
+    }
+
+    @Override
+    public String toString(TokenType[] previous) {
+        return elements().toString().substring(4);
+    }
 }

@@ -69,7 +69,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
      */
     private record ColorScheme(Color foreground, Color background, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript, SimpleAttributeSet attr) {
 
-        public ColorScheme(java.lang.Integer fore, java.lang.Integer back, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript) {
+        public ColorScheme(Integer fore, Integer back, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript) {
             this(fore == null ? null : new Color(fore), back == null ? null : new Color(back), bold, italic, underline, subscript, superscript, makeAttSet(fore, back, bold, italic, underline, subscript, superscript));
         }
 
@@ -77,7 +77,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             this(fg, bg, bold, italic, underline, subscript, superscript, makeAttSet(fg == null ? null : fg.getRGB(), bg == null ? null : bg.getRGB(), bold, italic, underline, subscript, superscript));
         }
 
-        static SimpleAttributeSet makeAttSet(java.lang.Integer fore, java.lang.Integer back, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript) {
+        static SimpleAttributeSet makeAttSet(Integer fore, Integer back, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript) {
             return makeAttSet(fore == null ? null : new Color(fore), back == null ? null : new Color(back), bold, italic, underline, subscript, superscript);
         }
 
@@ -663,7 +663,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private Color parseColorString(String colorStr) {
         if (colorStr.startsWith("#")) {
-            return new Color(java.lang.Integer.parseInt(colorStr.substring(1), 16));
+            return new Color(Integer.parseInt(colorStr.substring(1), 16));
         }
         return Color.BLACK;
     }

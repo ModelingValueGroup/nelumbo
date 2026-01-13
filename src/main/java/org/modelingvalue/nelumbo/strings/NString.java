@@ -14,66 +14,71 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.strings;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class ListNode extends Node {
+public final class NString extends Node {
+
     @Serial
-    private static final long serialVersionUID = 2275866157289787141L;
+    private static final long             serialVersionUID = 8360866611309554234L;
 
-    public ListNode(List<AstElement> elements, Type elementType) {
-        super(elementType.list(), elements, List.of());
+    private static final String DELIM            = "\"";
+
+    private static Functor                FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(NString.class, f -> FUNCTOR = f);
     }
 
-    public ListNode(List<AstElement> elements, ListNode list, Node last) {
-        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
+    public NString(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, parse((String) args[0]));
     }
 
-    @SuppressWarnings("unused")
-    public ListNode(List<AstElement> elements, Type elementType, Node... nodes) {
-        super(elementType.list(), elements.addAll(List.of(nodes)), List.of(nodes));
+    private NString(Functor functor, List<AstElement> elements, String val) {
+        super(functor, elements, val);
     }
 
-    private ListNode(Object[] array, ListNode declaration) {
+    public static NString of(String val) {
+        return new NString(FUNCTOR, List.of(), val);
+    }
+
+    public static String strip(String val) {
+        return val != null && val.startsWith(DELIM) ? val.substring(1, val.length() - 1) : null;
+    }
+
+    private static String parse(String string) {
+        return strip(string);
+    }
+
+    private NString(Object[] array, NString declaration) {
         super(array, declaration);
     }
 
     @Override
-    public ListNode setAstElements(List<AstElement> elements) {
-        return (ListNode) super.setAstElements(elements);
-    }
-
-    @SuppressWarnings("unused")
-    public Type elementType() {
-        return type().element();
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends Node> List<T> elements() {
-        return (List<T>) get(0);
-    }
-
-    @SuppressWarnings("unused")
-    public <T extends Node> List<T> elementsFlattened() {
-        return null;// TODO Tom
+    protected NString struct(Object[] array, Node declaration) {
+        return new NString(array, (NString) declaration);
     }
 
     @Override
-    protected ListNode struct(Object[] array, Node declaration) {
-        return new ListNode(array, (ListNode) declaration);
+    public NString set(int i, Object... a) {
+        return (NString) super.set(i, a);
     }
 
-    @Override
-    public ListNode set(int i, Object... a) {
-        return (ListNode) super.set(i, a);
+    public String value() {
+        return (String) get(0);
     }
 
     @Override
     public String toString(TokenType[] previous) {
-        return elements().toString().substring(4);
+        return DELIM + value() + DELIM;
     }
+
 }

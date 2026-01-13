@@ -67,19 +67,19 @@ public abstract class BinaryPredicate extends CompoundPredicate {
                 return predResult[i];
             } else if (context.reduce()) {
                 if (isTrue(predResult[i], i)) {
-                    return Boolean.TRUE.result();
+                    return NBoolean.TRUE.result();
                 } else if (isFalse(predResult[i], i)) {
-                    return Boolean.FALSE.result();
+                    return NBoolean.FALSE.result();
                 } else if (isUnknown(predResult[i], i)) {
-                    return Boolean.UNKNOWN.result();
+                    return NBoolean.UNKNOWN.result();
                 }
             }
         }
         if (context.reduce()) {
             if (isTrue(predResult)) {
-                return Boolean.TRUE.result();
+                return NBoolean.TRUE.result();
             } else if (isFalse(predResult)) {
-                return Boolean.FALSE.result();
+                return NBoolean.FALSE.result();
             } else if (isLeft(predResult)) {
                 return predResult[0];
             } else if (isRight(predResult)) {
@@ -119,9 +119,9 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     protected abstract boolean isRight(InferResult[] predResult);
 
     protected boolean order(Predicate[] predicate) {
-        if (predicate[0] instanceof Boolean && !(predicate[1] instanceof Boolean)) {
+        if (predicate[0] instanceof NBoolean && !(predicate[1] instanceof NBoolean)) {
             return false;
-        } else if (predicate[1] instanceof Boolean && !(predicate[0] instanceof Boolean)) {
+        } else if (predicate[1] instanceof NBoolean && !(predicate[0] instanceof NBoolean)) {
             return flip(predicate);
         } else if (REVERSE_NELUMBO) {
             return flip(predicate);

@@ -33,8 +33,8 @@ public class Predicate extends Node {
     @Serial
     private static final long      serialVersionUID   = -1605559565948158856L;
 
-    protected static final boolean RANDOM_NELUMBO     = java.lang.Boolean.getBoolean("RANDOM_NELUMBO");
-    protected static final boolean REVERSE_NELUMBO    = java.lang.Boolean.getBoolean("REVERSE_NELUMBO");
+    protected static final boolean RANDOM_NELUMBO     = Boolean.getBoolean("RANDOM_NELUMBO");
+    protected static final boolean REVERSE_NELUMBO    = Boolean.getBoolean("REVERSE_NELUMBO");
     protected static final int     MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
 
     private static final int       MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
@@ -420,7 +420,7 @@ public class Predicate extends Node {
         } else if (node == null) {
             return null;
         } else if (node instanceof Variable var) {
-            return new Boolean(var);
+            return new NBoolean(var);
         }
         throw new IllegalArgumentException("Must be Variable or Precdicate, is: " + node);
     }

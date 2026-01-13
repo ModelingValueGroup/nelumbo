@@ -26,7 +26,7 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Integer extends Node {
+public final class NInteger extends Node {
     @Serial
     private static final long       serialVersionUID = 2454372545442550574L;
 
@@ -36,42 +36,42 @@ public final class Integer extends Node {
     private static Functor          FUNCTOR;
 
     static {
-        KnowledgeBase.registerFunctorSetter(Integer.class, f -> FUNCTOR = f);
+        KnowledgeBase.registerFunctorSetter(NInteger.class, f -> FUNCTOR = f);
     }
 
-    public Integer(Functor functor, List<AstElement> elements, Object[] args) {
+    public NInteger(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, parse((String) args[0]));
     }
 
-    private Integer(Functor functor, List<AstElement> elements, BigInteger val) {
+    private NInteger(Functor functor, List<AstElement> elements, BigInteger val) {
         super(functor, elements, val);
     }
 
-    public static Integer of(BigInteger val) {
-        return new Integer(FUNCTOR, List.of(), val);
+    public static NInteger of(BigInteger val) {
+        return new NInteger(FUNCTOR, List.of(), val);
     }
 
     private static BigInteger parse(String string) {
         int i = string.indexOf('#');
         if (i > 0) {
-            int radix = java.lang.Integer.parseInt(string.substring(0, i));
+            int radix = Integer.parseInt(string.substring(0, i));
             return new BigInteger(string.substring(i + 1), radix);
         }
         return new BigInteger(string);
     }
 
-    private Integer(Object[] array, Integer declaration) {
+    private NInteger(Object[] array, NInteger declaration) {
         super(array, declaration);
     }
 
     @Override
-    protected Integer struct(Object[] array, Node declaration) {
-        return new Integer(array, (Integer) declaration);
+    protected NInteger struct(Object[] array, Node declaration) {
+        return new NInteger(array, (NInteger) declaration);
     }
 
     @Override
-    public Integer set(int i, Object... a) {
-        return (Integer) super.set(i, a);
+    public NInteger set(int i, Object... a) {
+        return (NInteger) super.set(i, a);
     }
 
     public BigInteger value() {

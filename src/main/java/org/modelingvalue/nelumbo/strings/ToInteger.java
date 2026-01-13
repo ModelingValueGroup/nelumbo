@@ -17,68 +17,59 @@
 package org.modelingvalue.nelumbo.strings;
 
 import java.io.Serial;
+import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class String extends Node {
-
+public final class ToInteger extends Predicate {
     @Serial
-    private static final long             serialVersionUID = 8360866611309554234L;
+    private static final long serialVersionUID = -2874326869672600959L;
 
-    private static final java.lang.String DELIM            = "\"";
-
-    private static Functor                FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(String.class, f -> FUNCTOR = f);
+    public ToInteger(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
     }
 
-    public String(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse((java.lang.String) args[0]));
-    }
-
-    private String(Functor functor, List<AstElement> elements, java.lang.String val) {
-        super(functor, elements, val);
-    }
-
-    public static String of(java.lang.String val) {
-        return new String(FUNCTOR, List.of(), val);
-    }
-
-    public static java.lang.String strip(java.lang.String val) {
-        return val != null && val.startsWith(DELIM) ? val.substring(1, val.length() - 1) : null;
-    }
-
-    private static java.lang.String parse(java.lang.String string) {
-        return strip(string);
-    }
-
-    private String(Object[] array, String declaration) {
+    private ToInteger(Object[] array, ToInteger declaration) {
         super(array, declaration);
     }
 
     @Override
-    protected String struct(Object[] array, Node declaration) {
-        return new String(array, (String) declaration);
+    protected ToInteger struct(Object[] array, Node declaration) {
+        return new ToInteger(array, (ToInteger) declaration);
     }
 
     @Override
-    public String set(int i, Object... a) {
-        return (String) super.set(i, a);
-    }
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        if (nrOfUnbound > 1) {
+            return unresolvable();
+        }
 
-    public java.lang.String value() {
-        return (java.lang.String) get(0);
-    }
+        BigInteger integer = getVal(0, 0);
+        String string = getVal(1, 0);
+        if (string != null) {
+            try {
+                BigInteger parsed = BigInteger.valueOf(Integer.parseInt(string));
+                if (integer != null) {
+                    boolean eq = integer.equals(parsed);
+                    return eq ? factCC() : falsehoodCC();
+                } else {
+                    return set(0, org.modelingvalue.nelumbo.integers.NInteger.of(parsed)).factCI();
+                }
+            } catch (NumberFormatException e) {
+                return integer != null ? falsehoodCC() : falsehoodCI();
+            }
+        } else if (integer != null) {
+            String s = integer.toString();
+            return set(1, org.modelingvalue.nelumbo.strings.NString.of(s)).factCI();
+        }
 
-    @Override
-    public java.lang.String toString(TokenType[] previous) {
-        return DELIM + value() + DELIM;
+        return unknown();
     }
 
 }

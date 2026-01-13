@@ -49,26 +49,26 @@ public final class Concat extends Predicate {
             return unresolvable();
         }
 
-        java.lang.String addend1 = getVal(0, 0);
-        java.lang.String addend2 = getVal(1, 0);
-        java.lang.String sum = getVal(2, 0);
+        String addend1 = getVal(0, 0);
+        String addend2 = getVal(1, 0);
+        String sum = getVal(2, 0);
         if (addend1 != null && addend2 != null) {
-            java.lang.String s = addend1 + addend2;
+            String s = addend1 + addend2;
             if (sum != null) {
                 boolean eq = s.equals(sum);
                 return eq ? factCC() : falsehoodCC();
             } else {
-                return set(2, org.modelingvalue.nelumbo.strings.String.of(s)).factCI();
+                return set(2, org.modelingvalue.nelumbo.strings.NString.of(s)).factCI();
             }
         } else if (addend1 != null && sum != null) {
             if (sum.startsWith(addend1)) {
-                return set(1, org.modelingvalue.nelumbo.strings.String.of(sum.substring(addend1.length()))).factCI();
+                return set(1, org.modelingvalue.nelumbo.strings.NString.of(sum.substring(addend1.length()))).factCI();
             } else {
                 return falsehoodCI();
             }
         } else if (addend2 != null && sum != null) {
             if (sum.endsWith(addend2)) {
-                return set(0, org.modelingvalue.nelumbo.strings.String.of(sum.substring(0, addend2.length()))).factCI();
+                return set(0, org.modelingvalue.nelumbo.strings.NString.of(sum.substring(0, addend2.length()))).factCI();
             } else {
                 return falsehoodCI();
             }

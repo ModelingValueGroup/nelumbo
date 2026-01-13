@@ -1,7 +1,7 @@
 
-  <Boolean> ::= true                                            @org.modelingvalue.nelumbo.logic.Boolean,
-                false                                           @org.modelingvalue.nelumbo.logic.Boolean,
-                unknown                                         @org.modelingvalue.nelumbo.logic.Boolean,
+  <Boolean> ::= true                                            @org.modelingvalue.nelumbo.logic.NBoolean,
+                false                                           @org.modelingvalue.nelumbo.logic.NBoolean,
+                unknown                                         @org.modelingvalue.nelumbo.logic.NBoolean,
                 ! <Boolean>                             #25     @org.modelingvalue.nelumbo.logic.Not,
                 <Boolean> & <Boolean>                   #22     @org.modelingvalue.nelumbo.logic.And,
                 <Boolean> | <Boolean>                   #20     @org.modelingvalue.nelumbo.logic.Or,

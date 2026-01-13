@@ -127,7 +127,7 @@ public final class Query extends Node implements Evaluatable {
     }
 
     public boolean completeFacts() {
-        return (java.lang.Boolean) get(2);
+        return (Boolean) get(2);
     }
 
     @SuppressWarnings("unchecked")
@@ -136,7 +136,7 @@ public final class Query extends Node implements Evaluatable {
     }
 
     public boolean completeFalsehoods() {
-        return (java.lang.Boolean) get(4);
+        return (Boolean) get(4);
     }
 
     public boolean hasExpected() {

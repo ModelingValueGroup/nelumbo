@@ -3,7 +3,7 @@
     
   <Integer> :: <Object>
    
-  <Integer> ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.Integer
+  <Integer> ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.NInteger
   
   <Boolean> ::= add(<Integer>,<Integer>,<Integer>)   @org.modelingvalue.nelumbo.integers.Add,
                 mult(<Integer>,<Integer>,<Integer>)  @org.modelingvalue.nelumbo.integers.Multiply,
