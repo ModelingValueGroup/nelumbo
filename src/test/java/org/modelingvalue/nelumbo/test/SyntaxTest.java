@@ -48,31 +48,31 @@ public class SyntaxTest extends NelumboTestBase {
 
                     import     nelumbo.logic
 
-                    <Set>      ::  <Node>
-                    <Int>      ::  <Node>
-                    <List>     ::  <Node>
-                    <Option>   ::  <Node>
-                    <Altern>   ::  <Node>
-                    <Test>     ::  <Node>                      #TEST
+                    <Set>      ::  <Object>
+                    <Int>      ::  <Object>
+                    <List>     ::  <Object>
+                    <Option>   ::  <Object>
+                    <Altern>   ::  <Object>
+                    <Test>     ::  <Object>                      #TEST
 
                     <Int>      ::= <Set>.size,
                                    <NUMBER>
 
-                    <Set>      ::= <Set> + <Node>              #40,
-                                   <Set> - <Node>              #40,
-                                   { <(> <Node> <,> , <)*> }   @org.modelingvalue.nelumbo.Node
+                    <Set>      ::= <Set> + <Object>              #40,
+                                   <Set> - <Object>              #40,
+                                   { <(> <Object> <,> , <)*> }   @org.modelingvalue.nelumbo.Node
 
-                    <List>     ::= [ <(> <Node> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
-                    <List>     ::= [[ <(> <Node> <,> , <)+> ]] @org.modelingvalue.nelumbo.Node
-                    <Option>   ::= ?[ <(> XX <)?> ]?           @org.modelingvalue.nelumbo.Node
-                    <Altern>   ::= +[ <(> XX <|> YY <)> ]+     @org.modelingvalue.nelumbo.Node
+                    <List>     ::= [ <(> <Object> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
+                    <List>     ::= [[ <(> <Object> <,> , <)+> ]] @org.modelingvalue.nelumbo.Node
+                    <Option>   ::= ?[ <(> XX <)?> ]?             @org.modelingvalue.nelumbo.Node
+                    <Altern>   ::= +[ <(> XX <|> YY <)> ]+       @org.modelingvalue.nelumbo.Node
 
 
-                    <Node>     ::= <List>.get(<Int>)
+                    <Object>   ::= <List>.get(<Int>)
 
                     <Set>  s, t, u
                     <Int>  i, j, k
-                    <Node> n
+                    <Object> n
 
                     10=10 ? [()][]
 

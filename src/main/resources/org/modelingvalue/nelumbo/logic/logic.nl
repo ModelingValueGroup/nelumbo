@@ -9,8 +9,8 @@
                     <Predicate> <-> <Predicate>               #16,
                     E[<(> <Variable> <,> , <)+>](<Predicate>) #100 #0 @org.modelingvalue.nelumbo.logic.ExistentialQuantifier,
                     A[<(> <Variable> <,> , <)+>](<Predicate>) #100 #0 @org.modelingvalue.nelumbo.logic.UniversalQuantifier,
-                    eq(<Node>,<Node>)                                 @org.modelingvalue.nelumbo.logic.Equal,
-                    <Node> != <Node>                          #30
+                    eq(<Object>,<Object>)                                 @org.modelingvalue.nelumbo.logic.Equal,
+                    <Object> != <Object>                          #30
 
     <Predicate> p1, p2
     
@@ -19,7 +19,7 @@
      
     <Literal>  l1, l2
     <Function> f1, f2
-    <Node>     n1, n2
+    <Object>     n1, n2
 
     l1=l2  <=> eq(l1, l2)
     l1=f1  <=> f1=l1

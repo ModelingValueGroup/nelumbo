@@ -1,7 +1,7 @@
 
 import      nelumbo.integers
 
-<Person> :: <Node>
+<Person> :: <Object>
  
 <Relation>  ::= het inkomen van <Person> is <Integer> euro
 <Relation>  ::= <Person> mag <Integer> euro aftrekken

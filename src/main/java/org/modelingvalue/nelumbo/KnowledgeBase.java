@@ -73,7 +73,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             r(s(t("#"), t(NUMBER)), false, null),                                                                                                                                              //
             o(s(t("@"), r(t(NAME), true, t(".")))));
     private static final Pattern                                                        CONDITION            = s(n(Type.PREDICATE, 0), o(s(t("if"), n(Type.PREDICATE, 0))));
-    private static final Pattern                                                        SINGLE               = s(n(Type.VARIABLE, 100), t("="), n(Type.NODE, 100));
+    private static final Pattern                                                        SINGLE               = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
     private static final Pattern                                                        BINDING              = s(t("("), r(SINGLE, false, t(",")), t(")"));
     private static final Pattern                                                        ALTERNATIVE          = a(t(".."), BINDING);
     private static final Pattern                                                        PREDICTION           = r(ALTERNATIVE, false, t(","));
@@ -237,7 +237,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                     }
                 }
 
-                equalsFunctor = Functor.of(s(n(Type.NODE, 30), t("="), n(Type.NODE, 30)), // 
+                equalsFunctor = Functor.of(s(n(Type.OBJECT, 30), t("="), n(Type.OBJECT, 30)), // 
                         Type.PREDICATE, false).init(this);
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
@@ -470,8 +470,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return new Transform(functor, elements, source, targets);
                         }).init(this);
 
-                Functor.of(s(t("("), n(Type.NODE, 0), t(")")), //
-                        Type.NODE, false, (elements, args, functor) -> {
+                Functor.of(s(t("("), n(Type.OBJECT, 0), t(")")), //
+                        Type.OBJECT, false, (elements, args, functor) -> {
                             Node node = (Node) args[0];
                             return node.setAstElements(node.astElements().prepend(elements.first()).append(elements.last()));
                         }).init(this);
@@ -488,7 +488,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private ListNode createFunctor(Type type, ListNode roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
-        if (args.noneMatch(Type.NODE::isAssignableFrom)) {
+        if (args.noneMatch(Type.OBJECT::isAssignableFrom)) {
             if (!Type.PREDICATE.isAssignableFrom(type)) {
                 type = type.literal();
             }
@@ -498,7 +498,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 function = true;
             }
             if (!Type.ROOT.isAssignableFrom(type) //
-                    && !args.allMatch(t -> Type.NODE.equals(t.element())) //
+                    && !args.allMatch(t -> Type.OBJECT.equals(t.element())) //
                     && !args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
                     && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;

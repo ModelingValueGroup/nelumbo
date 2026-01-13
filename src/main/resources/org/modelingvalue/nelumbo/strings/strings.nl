@@ -1,7 +1,7 @@
 
     import      nelumbo.integers
 
-    <String>    :: <Node>
+    <String>    :: <Object>
 
     <String>    ::= <STRING>                                        @org.modelingvalue.nelumbo.strings.String
 

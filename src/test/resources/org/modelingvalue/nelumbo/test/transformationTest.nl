@@ -22,7 +22,7 @@ attr <OT> AN <AT>  ::> {
 
 // Model
 
-<Person> :: <Node>
+<Person> :: <Object>
 
 attr <Person> name <String>
 attr <Person> address <String>

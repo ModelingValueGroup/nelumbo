@@ -1,7 +1,7 @@
 
     import      nelumbo.logic
 
-    <Person>    :: <Node>
+    <Person>    :: <Object>
     <Male>      :: <Person>
     <Female>    :: <Person>
 

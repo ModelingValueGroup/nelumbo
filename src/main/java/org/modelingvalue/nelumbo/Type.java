@@ -48,26 +48,26 @@ public final class Type extends Node {
     public static final Type    $OBJECT          = new Type(Object.class);
     public static final Type    $STRING          = new Type(String.class, $OBJECT);
     //
-    public static final Type    NODE             = new Type("Node", $OBJECT);
-    public static final Type    TYPE             = new Type("Type", NODE);
-    public static final Type    FUNCTION         = new Type("Function", NODE);
-    public static final Type    TERMINAL         = new Type("Terminal", NODE);
+    public static final Type    OBJECT           = new Type("Object", $OBJECT);
+    public static final Type    TYPE             = new Type("Type", OBJECT);
+    public static final Type    FUNCTION         = new Type("Function", OBJECT);
+    public static final Type    TERMINAL         = new Type("Terminal", OBJECT);
     public static final Type    LITERAL          = new Type("Literal", TERMINAL);
-    public static final Type    ROOT             = new Type("Root", NODE);
-    public static final Type    PREDICATE        = new Type("Predicate", NODE);
+    public static final Type    ROOT             = new Type("Root", OBJECT);
+    public static final Type    PREDICATE        = new Type("Predicate", OBJECT);
     public static final Type    RELATION         = new Type("Relation", PREDICATE);
-    public static final Type    VARIABLE         = new Type("Variable", NODE);
+    public static final Type    VARIABLE         = new Type("Variable", OBJECT);
     public static final Type    RULE             = new Type("Rule", ROOT);
     public static final Type    FUNCTOR          = new Type("Functor", ROOT);
     public static final Type    FACT             = new Type("Fact", ROOT);
-    public static final Type    PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.NODE);
+    public static final Type    PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
     public static final Type    QUERY            = new Type("Query", Type.ROOT);
     public static final Type    TRANSFORM        = new Type("Transform", Type.ROOT);
     public static final Type    IMPORT           = new Type("Import", Type.ROOT);
 
     public static List<Type> predefined() {
         return List.of(//
-                NODE, //
+                OBJECT, //
                 TYPE, //
                 FUNCTION, //
                 TERMINAL, //
@@ -109,11 +109,11 @@ public final class Type extends Node {
     }
 
     public Type(String name, String group, Type... supers) {
-        super(TYPE, List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group);
+        super(TYPE, List.of(), name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group);
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE, List.of(), name, supers.length == 0 ? Set.of(NODE) : Set.of(supers), group(supers));
+        super(TYPE, List.of(), name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group(supers));
     }
 
     public Type(TokenType type) {
@@ -125,7 +125,7 @@ public final class Type extends Node {
     }
 
     public Type(List<AstElement> elements, Variable var, String group) {
-        super(TYPE, elements, var, Set.of(NODE), group);
+        super(TYPE, elements, var, Set.of(OBJECT), group);
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
@@ -137,13 +137,13 @@ public final class Type extends Node {
                 List.of(), //
                 Set.of(super1, super2), //
                 Set.of(super1, super2) //
-                        .addAll(super1.supers().remove(NODE).replaceAll(s1 -> new Type(s1, super2))) //
-                        .addAll(super2.supers().remove(NODE).replaceAll(s2 -> new Type(super1, s2))) //
+                        .addAll(super1.supers().remove(OBJECT).replaceAll(s1 -> new Type(s1, super2))) //
+                        .addAll(super2.supers().remove(OBJECT).replaceAll(s2 -> new Type(super1, s2))) //
                 , super1.group());
     }
 
     private Type(Type element, String group) {
-        super(TYPE, List.of(element), "List" + element, Set.of(NODE), group, element);
+        super(TYPE, List.of(element), "List" + element, Set.of(OBJECT), group, element);
     }
 
     private static Object group(Type... supers) {
@@ -189,7 +189,7 @@ public final class Type extends Node {
         if (isFunction()) {
             return this;
         } else if (function == null) {
-            return function = equals(NODE) ? FUNCTION : new Type(this, FUNCTION);
+            return function = equals(OBJECT) ? FUNCTION : new Type(this, FUNCTION);
         }
         return function;
     }
@@ -227,7 +227,7 @@ public final class Type extends Node {
         if (isLiteral()) {
             return this;
         } else if (literal == null) {
-            return literal = equals(NODE) ? LITERAL : new Type(this, LITERAL);
+            return literal = equals(OBJECT) ? LITERAL : new Type(this, LITERAL);
         }
         return literal;
     }

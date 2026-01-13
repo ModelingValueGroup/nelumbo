@@ -1,7 +1,7 @@
 
     import      nelumbo.logic
     
-    <Integer>   :: <Node>
+    <Integer>   :: <Object>
    
     <Integer>   ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.Integer
   
