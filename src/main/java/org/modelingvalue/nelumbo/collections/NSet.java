@@ -29,8 +29,8 @@ public class NSet extends Node {
     @Serial
     private static final long serialVersionUID = 840888260991475386L;
 
-    public NSet(List<AstElement> elements, Type elementType, Node... nodes) {
-        super(elementType.set(), elements, Set.of(nodes));
+    public NSet(List<AstElement> elements, Type elementType, Object[] args) {
+        super(elementType.set(), elements, Set.of(args));
     }
 
     private NSet(Object[] array, NSet declaration) {
@@ -48,7 +48,7 @@ public class NSet extends Node {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Node> Set<T> elements() {
+    public <T> Set<T> elements() {
         return (Set<T>) get(0);
     }
 

@@ -154,10 +154,20 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private Functor addType(Type type, boolean predefined) throws ParseException {
         Variable var = type.variable();
-        Pattern pattern = var != null ? t(List.of(type), var) : t(List.of(type), type.toString());
+        Pattern pattern;
+        if (var != null) {
+            pattern = t(List.of(type), var);
+        } else if (type.isCollection()) {
+            pattern = s(List.of(type), t("<" + type.name() + ">"), t("("), n(Type.TYPE, null), t(")"));
+        } else {
+            pattern = t(List.of(type), type.toString());
+        }
         return Functor.of(List.of(type), pattern, //
                 Type.TYPE, false, (elements, args, functor) -> {
                     Type result = ((Type) functor.astElements().first()).setAstElements(elements);
+                    if (result.isCollection() && args[0] instanceof Type elem) {
+                        result = result.setElement(elem);
+                    }
                     if (!predefined) {
                         result = result.setFunctor(functor);
                     }
@@ -374,22 +384,32 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots.setAstElements(roots.astElements().add(node).add(elements.last()));
                         }).init(this);
 
-                Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
+                Functor.of(s(t(TYPE), o(s(t("("), n(Type.VARIABLE, Integer.MAX_VALUE), t(")"))), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
+                            KnowledgeBase kb = CURRENT.get();
                             Set<Type> supers = Set.of();
-                            for (Type sup : (List<Type>) args[1]) {
+                            for (Type sup : (List<Type>) args[2]) {
                                 supers = supers.add(sup);
                             }
-                            String group = ((Optional<String>) args[2]).orElse(Type.DEFAULT_GROUP);
+                            String group = ((Optional<String>) args[3]).orElse(Type.DEFAULT_GROUP);
                             Type type;
                             if (args[0] instanceof Variable var) {
                                 type = new Type(elements, var, group);
                             } else {
                                 String name = (String) args[0];
                                 name = name.substring(1, name.length() - 1);
-                                type = new Type(elements, name, supers, group);
+                                Optional<Variable> opt = (Optional<Variable>) args[1];
+                                if (opt.isPresent()) {
+                                    Variable var = opt.get();
+                                    if (!var.type().equals(Type.TYPE)) {
+                                        kb.addException(new ParseException("Type argument " + var + " must be a Variable of type <Type>", elements.first()));
+                                    }
+                                    type = new Type(elements, name, supers, group, new Type(var));
+                                } else {
+                                    type = new Type(elements, name, supers, group);
+                                }
                             }
-                            return CURRENT.get().addType(type, false);
+                            return kb.addType(type, false);
                         }).init(this);
 
                 Functor.of(s(t("import"), r(r(t(NAME), true, t(".")), true, t(","))), //

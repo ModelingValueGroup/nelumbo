@@ -131,6 +131,14 @@ public final class Type extends Node {
         super(TYPE, elements, name, supers.asSet(), group);
     }
 
+    private Type(String type, Type element, String group) {
+        this(List.of(element), type, Set.of(OBJECT), group, element);
+    }
+
+    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, Type element) {
+        super(TYPE, elements, name, supers.asSet(), group, element);
+    }
+
     public Type(Type super1, Type super2) {
         super(TYPE, //
                 List.of(), //
@@ -139,10 +147,6 @@ public final class Type extends Node {
                         .addAll(super1.supers().remove(OBJECT).replaceAll(s1 -> new Type(s1, super2))) //
                         .addAll(super2.supers().remove(OBJECT).replaceAll(s2 -> new Type(super1, s2))) //
                 , super1.group());
-    }
-
-    private Type(String type, Type element, String group) {
-        super(TYPE, List.of(element), type + element, Set.of(OBJECT), group, element);
     }
 
     private static Object group(Type... supers) {
@@ -165,6 +169,10 @@ public final class Type extends Node {
         } else {
             return this;
         }
+    }
+
+    public Type setElement(Type element) {
+        return set(3, element);
     }
 
     public String group() {
@@ -320,7 +328,11 @@ public final class Type extends Node {
 
     @Override
     public String toString(TokenType[] previous) {
-        return "<" + name() + ">";
+        String string = "<" + name() + ">";
+        if (isCollection()) {
+            return string + "(" + element() + ")";
+        }
+        return string;
     }
 
     @SuppressWarnings("unchecked")

@@ -37,8 +37,8 @@ public class NList extends Node {
     }
 
     @SuppressWarnings("unused")
-    public NList(List<AstElement> elements, Type elementType, Node... nodes) {
-        super(elementType.list(), elements.addAll(List.of(nodes)), List.of(nodes));
+    public NList(List<AstElement> elements, Type elementType, Object[] args) {
+        super(elementType.list(), elements, List.of(args));
     }
 
     private NList(Object[] array, NList declaration) {
@@ -56,7 +56,7 @@ public class NList extends Node {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Node> List<T> elements() {
+    public <T> List<T> elements() {
         return (List<T>) get(0);
     }
 
