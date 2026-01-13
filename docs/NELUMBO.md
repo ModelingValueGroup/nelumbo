@@ -31,8 +31,8 @@
 ### Types
 
 ```text
-  <Smart>   :: <Node>
-  <Living>  :: <Node>
+  <Smart>   :: <Object>
+  <Living>  :: <Object>
   <LLM>     :: <Smart>
   <Person>  :: <Smart>, <Living>
   <Male>    :: <Person>
@@ -110,8 +110,8 @@
 ### Declaration
 
 ```text
-  <Predicate> ::= add(<Integer>,<Integer>,<Integer>)
-                  @org.modelingvalue.nelumbo.integers.Add
+  <Boolean> ::= add(<Integer>,<Integer>,<Integer>)
+                @org.modelingvalue.nelumbo.integers.Add
 ```
 
 ### Java Code
@@ -185,10 +185,10 @@
 
 ---
 
-### Relations and Facts
+### FactTypes and Facts
 
 ```text
-  <Relation>  ::= pc(<Person>,<Person>)   // parent-child
+  <FactType>  ::= pc(<Person>,<Person>)   // parent-child
 
   // Facts
   pc(Beatrix, Willem)
@@ -200,7 +200,7 @@
 ### Predicates
 
 ```text
-  <Predicate> ::= <Integer> <= <Integer>  #30
+  <Boolean> ::= <Integer> <= <Integer>  #30
                     
   a<=b    <=>  a<b | a=b
 ```

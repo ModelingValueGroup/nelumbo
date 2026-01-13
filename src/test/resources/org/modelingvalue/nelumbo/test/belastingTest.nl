@@ -3,9 +3,9 @@ import      nelumbo.integers
 
 <Person> :: <Object>
  
-<Relation>  ::= het inkomen van <Person> is <Integer> euro
-<Relation>  ::= <Person> mag <Integer> euro aftrekken
-<Predicate> ::= <Person> moet <Integer> euro belasting betalen
+<FactType> ::= het inkomen van <Person> is <Integer> euro
+<FactType> ::= <Person> mag <Integer> euro aftrekken
+<Boolean>  ::= <Person> moet <Integer> euro belasting betalen
  
 <Integer> x,i,a
 <Person>  p

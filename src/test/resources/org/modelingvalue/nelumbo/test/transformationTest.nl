@@ -10,7 +10,7 @@ import nelumbo.strings
 
 attr <OT> AN <AT>  ::> { 
     <AT>       ::= <OT>.AN
-    <Relation> ::= AN(<OT>,<AT>)
+    <FactType> ::= AN(<OT>,<AT>)
     <Root>     ::= <OT>.AN := <AT> 
     <OT> o
     <AT> a

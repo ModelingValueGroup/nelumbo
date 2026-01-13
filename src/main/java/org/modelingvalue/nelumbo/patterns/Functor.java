@@ -159,7 +159,7 @@ public class Functor extends Node {
                 handleException(elements, handler, e);
             }
         }
-        return Type.PREDICATE.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : //
+        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : //
                 Type.TERMINAL.isAssignableFrom(resultType()) ? new Terminal(this, elements, args) : new Node(this, elements, args);
     }
 

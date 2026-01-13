@@ -5,7 +5,7 @@
     <Male>      :: <Person>
     <Female>    :: <Person>
 
-    <Relation>  ::= pc(<Person>,<Person>)   // parent-child
+    <FactType>  ::= pc(<Person>,<Person>)   // parent-child
 
     <Person>    ::= p(<Person>),   // parent
                     c(<Person>),   // child

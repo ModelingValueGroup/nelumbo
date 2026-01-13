@@ -72,7 +72,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                                  //
             r(s(t("#"), t(NUMBER)), false, null),                                                                                                                                              //
             o(s(t("@"), r(t(NAME), true, t(".")))));
-    private static final Pattern                                                        CONDITION            = s(n(Type.PREDICATE, 0), o(s(t("if"), n(Type.PREDICATE, 0))));
+    private static final Pattern                                                        CONDITION            = s(n(Type.BOOLEAN, 0), o(s(t("if"), n(Type.BOOLEAN, 0))));
     private static final Pattern                                                        SINGLE               = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
     private static final Pattern                                                        BINDING              = s(t("("), r(SINGLE, false, t(",")), t(")"));
     private static final Pattern                                                        ALTERNATIVE          = a(t(".."), BINDING);
@@ -238,7 +238,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
 
                 equalsFunctor = Functor.of(s(n(Type.OBJECT, 30), t("="), n(Type.OBJECT, 30)), // 
-                        Type.PREDICATE, false).init(this);
+                        Type.BOOLEAN, false).init(this);
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor) -> {
@@ -441,17 +441,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots.setAstElements(roots.astElements().add(elements.last()));
                         }).init(this);
 
-                ruleFunctor = Functor.of(s(n(Type.PREDICATE, 0), t("<=>"), r(CONDITION, true, t(","))), //
+                ruleFunctor = Functor.of(s(n(Type.BOOLEAN, 0), t("<=>"), r(CONDITION, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             return CURRENT.get().createRules(functor, elements, args);
                         }).init(this);
 
-                Functor.of(s(n(Type.PREDICATE, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]")))), //
+                Functor.of(s(n(Type.BOOLEAN, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]")))), //
                         Type.QUERY, false, (elements, args, functor) -> {
                             return new Query(functor, elements, args);
                         }).init(this);
 
-                Functor.of(s(n(Type.PREDICATE, 0)), //
+                Functor.of(s(n(Type.BOOLEAN, 0)), //
                         Type.FACT, false, (elements, args, functor) -> {
                             return new Fact(functor, elements, args);
                         }).init(this);
@@ -489,22 +489,22 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         if (args.noneMatch(Type.OBJECT::isAssignableFrom)) {
-            if (!Type.PREDICATE.isAssignableFrom(type)) {
+            if (!Type.BOOLEAN.isAssignableFrom(type)) {
                 type = type.literal();
             }
         } else {
-            if (!Type.PREDICATE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {
+            if (!Type.BOOLEAN.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {
                 type = type.function();
                 function = true;
             }
             if (!Type.ROOT.isAssignableFrom(type) //
                     && !args.allMatch(t -> Type.OBJECT.equals(t.element())) //
-                    && !args.allMatch(t -> Type.PREDICATE.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
+                    && !args.allMatch(t -> Type.BOOLEAN.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
                     && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;
             }
         }
-        Type nodType = toLiteral && Type.RELATION.isAssignableFrom(type) ? Type.PREDICATE : type;
+        Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
         Functor nodFunctor = Functor.of(ast, pattern, nodType, false, toLiteral ? null : constructor).init(this);
         roots = new ListNode(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && constructor != null) {
@@ -550,8 +550,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Predicate cons = Predicate.predicate((Node) args[0]);
         Functor consFunctor = cons.functor();
         Functor litFunctor = literalFunctors.get().get(consFunctor);
-        if (Type.RELATION.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
-            addException(new ParseException("Rule consequence " + cons + " must be a Predicate, not a Relation", cons));
+        if (Type.FACT_TYPE.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
+            addException(new ParseException("Rule consequence " + cons + " must be a Predicate, not a FactType", cons));
         }
         Map<Variable, Object> consVars = cons.getBinding();
         Node node = consFunctor.equals(equalsFunctor) ? (Node) cons.get(0) : cons;

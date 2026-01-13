@@ -32,7 +32,7 @@
     !unknown        ? [..][..]
     
     
-    <Predicate> p
+    <Boolean> p
 
     p               ? [(p=true)][(p=false)]
     !p              ? [(p=false)][(p=true)]

@@ -29,7 +29,7 @@ public final class When extends BinaryPredicate {
     private static final long serialVersionUID = 9105566742523301113L;
 
     private When(Node when, Node predicate) {
-        super(Type.PREDICATE, List.of(), when, predicate);
+        super(Type.BOOLEAN, List.of(), when, predicate);
     }
 
     private When(Object[] args, When declaration) {

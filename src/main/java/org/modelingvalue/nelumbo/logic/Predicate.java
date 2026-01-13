@@ -39,7 +39,7 @@ public class Predicate extends Node {
 
     private static final int       MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
-    public static Node             INCOMPLETE         = new Predicate(Type.PREDICATE, List.of(), "..");
+    public static Node             INCOMPLETE         = new Predicate(Type.BOOLEAN, List.of(), "..");
 
     private int                    nrOfUnbound        = -1;
 
@@ -411,7 +411,7 @@ public class Predicate extends Node {
     }
 
     public boolean isRelation() {
-        return Type.RELATION.isAssignableFrom(type());
+        return Type.FACT_TYPE.isAssignableFrom(type());
     }
 
     public static Predicate predicate(Node node) {

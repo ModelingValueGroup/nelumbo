@@ -54,8 +54,8 @@ public final class Type extends Node {
     public static final Type    TERMINAL         = new Type("Terminal", OBJECT);
     public static final Type    LITERAL          = new Type("Literal", TERMINAL);
     public static final Type    ROOT             = new Type("Root", OBJECT);
-    public static final Type    PREDICATE        = new Type("Predicate", OBJECT);
-    public static final Type    RELATION         = new Type("Relation", PREDICATE);
+    public static final Type    BOOLEAN          = new Type("Boolean", OBJECT);
+    public static final Type    FACT_TYPE        = new Type("FactType", BOOLEAN);
     public static final Type    VARIABLE         = new Type("Variable", OBJECT);
     public static final Type    RULE             = new Type("Rule", ROOT);
     public static final Type    FUNCTOR          = new Type("Functor", ROOT);
@@ -73,8 +73,8 @@ public final class Type extends Node {
                 TERMINAL, //
                 LITERAL, //
                 ROOT, //
-                PREDICATE, //
-                RELATION, //
+                BOOLEAN, //
+                FACT_TYPE, //
                 VARIABLE, //
                 RULE, //
                 FUNCTOR, //
