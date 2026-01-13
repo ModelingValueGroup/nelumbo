@@ -29,13 +29,12 @@ public class ListNode extends Node {
         super(elementType.list(), elements, List.of());
     }
 
-    public ListNode(List<AstElement> elements, ListNode list, Node last) {
-        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
+    public ListNode(Type elementType, List<AstElement> elements, List<Node> args) {
+        super(elementType.list(), elements, args);
     }
 
-    @SuppressWarnings("unused")
-    public ListNode(List<AstElement> elements, Type elementType, Node... nodes) {
-        super(elementType.list(), elements.addAll(List.of(nodes)), List.of(nodes));
+    public ListNode(List<AstElement> elements, ListNode list, Node last) {
+        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
     }
 
     private ListNode(Object[] array, ListNode declaration) {
@@ -57,9 +56,17 @@ public class ListNode extends Node {
         return (List<T>) get(0);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elementsFlattened() {
-        return null;// TODO Tom
+        List<T> result = List.of();
+        for (Node element : elements()) {
+            if (element instanceof ListNode list) {
+                result = result.addAll(list.elementsFlattened());
+            } else {
+                result = result.add((T) element);
+            }
+        }
+        return result;
     }
 
     @Override

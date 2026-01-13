@@ -83,12 +83,12 @@ public class TokenTypePattern extends Pattern {
         TokenType type = tokenType();
         if (!isEmpty(type)) {
             Object val = args.get(ai);
-            if (val instanceof String text && type.pattern().matcher(text).matches()) {
+            if (val instanceof String text && type.matches(text)) {
                 addText(sb, previous, text);
                 return ai + 1;
             } else {
                 String text = val != null ? val.toString() : null;
-                if (text != null && type.pattern().matcher(text).matches()) {
+                if (text != null && type.matches(text)) {
                     addText(sb, previous, text);
                     return ai + 1;
                 } else {

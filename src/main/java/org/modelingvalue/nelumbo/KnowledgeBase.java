@@ -232,7 +232,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
 
                 for (TokenType tokenType : values()) {
-                    if (!tokenType.skip()) {
+                    if (!tokenType.isSkip()) {
                         addType(new Type(tokenType), true);
                     }
                 }
@@ -242,25 +242,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor) -> {
-                            ListNode roots = new ListNode(List.of(), Type.ROOT.list());
-                            for (AstElement e1 : elements) {
-                                if (e1 instanceof Node e1n) {
-                                    if (e1n instanceof ListNode list) {
-                                        for (AstElement e2 : list.astElements()) {
-                                            if (e2 instanceof Node e2n) {
-                                                roots = new ListNode(List.of(), roots, e2n);
-                                            } else {
-                                                roots = roots.setAstElements(roots.astElements().add(e2));
-                                            }
-                                        }
-                                    } else {
-                                        roots = new ListNode(List.of(), roots, e1n);
-                                    }
-                                } else {
-                                    roots = roots.setAstElements(roots.astElements().add(e1));
-                                }
-                            }
-                            return roots;
+                            return new ListNode(Type.ROOT.list(), elements, elements.filter(Node.class).asList());
                         }).init(this);
 
                 Functor.of(s(t("<(>"), r(SEQUENCE, true, t("<|>")), t("<)>")), //
@@ -370,7 +352,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     pttrn = pttrn.add(e);
                                 }
                             }
-                            return roots.setAstElements(roots.astElements().add(node).add(elements.last()));
+                            List<AstElement> xxx = roots.astElements();
+                            AstElement       yyy = elements.last();
+                            List<AstElement> zzz = xxx.add(node).add(yyy);
+                            return roots.setAstElements(zzz);
                         }).init(this);
 
                 Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE(), Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
@@ -462,7 +447,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             List<Node> targets = List.of();
                             for (Node arg : (List<Node>) args[1]) {
                                 if (arg instanceof ListNode list) {
-                                    targets = targets.addAll(list.elements());
+                                    targets = targets.addAll(list.elementsFlattened());
                                 } else {
                                     targets = targets.add(arg);
                                 }

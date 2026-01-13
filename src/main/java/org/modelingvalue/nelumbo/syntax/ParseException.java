@@ -25,11 +25,11 @@ public class ParseException extends Exception {
     @Serial
     private static final long serialVersionUID = -8359192414582977261L;
 
-    private final int         line;
-    private final int         position;
-    private final int         index;
-    private final int         length;
-    private final String      fileName;
+    private final int    line;
+    private final int    position;
+    private final int    index;
+    private final int    length;
+    private final String fileName;
 
     public ParseException(String s, AstElement... elements) {
         this(null, s, elements);
@@ -48,17 +48,17 @@ public class ParseException extends Exception {
     }
 
     private static Token lastToken(List<AstElement> elements) {
-        return lastToken(elements.toArray(i -> new AstElement[i]));
+        return lastToken(elements.toArray(AstElement[]::new));
     }
 
     private static Token firstToken(List<AstElement> elements) {
-        return firstToken(elements.toArray(i -> new AstElement[i]));
+        return firstToken(elements.toArray(AstElement[]::new));
     }
 
     private static Token lastToken(AstElement... elements) {
         Token lastToken = elements[elements.length - 1].lastToken();
         if (lastToken != null) {
-            for (String fixed = lastToken.type().fixed(); fixed != null && fixed.isEmpty() && lastToken.previous() != null; fixed = lastToken.type().fixed()) {
+            while (lastToken.type().isLayout() && lastToken.previous() != null) {
                 lastToken = lastToken.previous();
             }
         }
@@ -68,7 +68,7 @@ public class ParseException extends Exception {
     private static Token firstToken(AstElement... elements) {
         Token firstToken = elements[0].firstToken();
         if (firstToken != null) {
-            for (String fixed = firstToken.type().fixed(); fixed != null && fixed.isEmpty() && firstToken.next() != null; fixed = firstToken.type().fixed()) {
+            while (firstToken.type().isLayout() && firstToken.next() != null) {
                 firstToken = firstToken.next();
             }
         }
@@ -77,13 +77,13 @@ public class ParseException extends Exception {
 
     private ParseException(Throwable cause, String message, Token firstToken, Token lastToken) {
         this(cause, //
-                message, //
-                firstToken != null ? firstToken.line() : -1, //
-                firstToken != null ? firstToken.position() : -1, //
-                firstToken != null ? firstToken.index() : -1, //
-                firstToken != null ? lastToken.position() - firstToken.position() + lastToken.text().length() : -1, //
-                firstToken != null ? firstToken.fileName() : ""//
-        );
+             message, //
+             firstToken != null ? firstToken.line() : -1, //
+             firstToken != null ? firstToken.position() : -1, //
+             firstToken != null ? firstToken.index() : -1, //
+             firstToken != null ? lastToken.position() - firstToken.position() + lastToken.text().length() : -1, //
+             firstToken != null ? firstToken.fileName() : ""//
+            );
     }
 
     public ParseException(String message, String fileName) {
@@ -96,10 +96,10 @@ public class ParseException extends Exception {
 
     private ParseException(Throwable cause, String message, int line, int position, int index, int length, String fileName) {
         super(message, cause);
-        this.line = line;
+        this.line     = line;
         this.position = position;
-        this.index = index;
-        this.length = length;
+        this.index    = index;
+        this.length   = length;
         this.fileName = fileName;
     }
 

@@ -36,7 +36,7 @@ public class ParserResult implements ParseExceptionHandler {
     }
 
     public List<Node> roots() {
-        return root instanceof ListNode listRoot ? listRoot.elements() : root != null ? List.of(root) : List.of();
+        return root instanceof ListNode listRoot ? listRoot.elementsFlattened() : root != null ? List.of(root) : List.of();
     }
 
     public Node root() {
