@@ -64,13 +64,13 @@ public class NList extends Node {
 
     @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elementsFlattened() {
-        List<T>               result = List.of();
-        Deque<Iterator<Node>> stack  = new ArrayDeque<>();
+        List<T>            result = List.of();
+        Deque<Iterator<?>> stack  = new ArrayDeque<>();
         stack.push(elements().iterator());
         while (!stack.isEmpty()) {
-            Iterator<Node> iter = stack.peek();
+            Iterator<?> iter = stack.peek();
             if (iter.hasNext()) {
-                Node element = iter.next();
+                Object element = iter.next();
                 if (element instanceof NList list) {
                     stack.push(list.elements().iterator());
                 } else {
