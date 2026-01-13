@@ -48,29 +48,29 @@ public class SyntaxTest extends NelumboTestBase {
 
                     import     nelumbo.logic
 
-                    <Set>      ::  <Object>
+                    <ESet>     ::  <Object>
                     <Int>      ::  <Object>
-                    <List>     ::  <Object>
+                    <EList>    ::  <Object>
                     <Option>   ::  <Object>
                     <Altern>   ::  <Object>
                     <Test>     ::  <Object>                      #TEST
 
-                    <Int>      ::= <Set>.size,
+                    <Int>      ::= <ESet>.size,
                                    <NUMBER>
 
-                    <Set>      ::= <Set> + <Object>              #40,
-                                   <Set> - <Object>              #40,
+                    <ESet>     ::= <ESet> + <Object>              #40,
+                                   <ESet> - <Object>              #40,
                                    { <(> <Object> <,> , <)*> }   @org.modelingvalue.nelumbo.Node
 
-                    <List>     ::= [ <(> <Object> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
-                    <List>     ::= [[ <(> <Object> <,> , <)+> ]] @org.modelingvalue.nelumbo.Node
+                    <EList>    ::= [ <(> <Object> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
+                    <EList>    ::= [[ <(> <Object> <,> , <)+> ]] @org.modelingvalue.nelumbo.Node
                     <Option>   ::= ?[ <(> XX <)?> ]?             @org.modelingvalue.nelumbo.Node
                     <Altern>   ::= +[ <(> XX <|> YY <)> ]+       @org.modelingvalue.nelumbo.Node
 
 
-                    <Object>   ::= <List>.get(<Int>)
+                    <Object>   ::= <EList>.get(<Int>)
 
-                    <Set>  s, t, u
+                    <ESet>  s, t, u
                     <Int>  i, j, k
                     <Object> n
 

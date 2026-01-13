@@ -63,6 +63,10 @@ public final class Type extends Node {
     public static final Type    QUERY            = new Type("Query", Type.ROOT);
     public static final Type    TRANSFORM        = new Type("Transform", Type.ROOT);
     public static final Type    IMPORT           = new Type("Import", Type.ROOT);
+    private static final Type   TYPE_ARG_VAR     = new Type(new Variable(List.of(), TYPE, "E"));
+    public static final Type    COLLECTION       = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type    SET              = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type    LIST             = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
 
     public static List<Type> predefined() {
         return List.of(//
@@ -80,7 +84,10 @@ public final class Type extends Node {
                 PATTERN, //
                 QUERY, //
                 TRANSFORM, //
-                IMPORT);
+                IMPORT, //
+                COLLECTION, //
+                SET, //
+                LIST);
     }
 
     private Type       list;
@@ -131,12 +138,8 @@ public final class Type extends Node {
         super(TYPE, elements, name, supers.asSet(), group);
     }
 
-    private Type(String type, Type element, String group) {
-        this(List.of(element), type, Set.of(OBJECT), group, element);
-    }
-
-    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, Type element) {
-        super(TYPE, elements, name, supers.asSet(), group, element);
+    private Type(String name, Type sup, Type element, String group) {
+        super(TYPE, List.of(), name, Set.of(sup), group, element);
     }
 
     public Type(Type super1, Type super2) {
@@ -177,6 +180,10 @@ public final class Type extends Node {
 
     public String group() {
         return (String) get(2);
+    }
+
+    public Type setGroup(String group) {
+        return set(2, group);
     }
 
     @SuppressWarnings("unchecked")
@@ -252,21 +259,21 @@ public final class Type extends Node {
     }
 
     public Type list(String group) {
-        if (!group.equals(group())) {
-            return new Type("List", this, group);
-        }
         if (list == null) {
-            list = new Type("List", this, group);
+            list = LIST.setElement(this);
+        }
+        if (!group.equals(group())) {
+            return list.setGroup(group);
         }
         return list;
     }
 
     public Type set(String group) {
-        if (!group.equals(group())) {
-            return new Type("Set", this, group);
-        }
         if (set == null) {
-            set = new Type("Set", this, group);
+            set = SET.setElement(this);
+        }
+        if (!group.equals(group())) {
+            return set.setGroup(group);
         }
         return set;
     }
