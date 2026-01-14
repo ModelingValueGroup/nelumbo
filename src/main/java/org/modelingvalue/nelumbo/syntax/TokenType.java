@@ -156,30 +156,27 @@ public enum TokenType {
         }
 
         public boolean hasMore() {
-            if (input.length() <= offset) {
+            int len = input.length();
+            if (len <= offset) {
                 return false;
             }
-            String    text = null;
-            TokenType type = null;
+            int       matchEnd  = -1;
+            TokenType matchType = null;
             for (int i = 0; i < matchers.length; i++) {
                 final Matcher m = matchers[i];
                 if (m != null) {
-                    if (!m.find(offset)) {
-                        matchers[i] = null;
-                    } else if (m.start() == offset) {
-                        String group = m.group();
-                        if (text == null || text.length() < group.length()) {
-                            text = group;
-                            type = tokenTypes[i];
-                        }
+                    m.region(offset, len);
+                    if (m.lookingAt() && m.end() > matchEnd) {
+                        matchEnd  = m.end();
+                        matchType = tokenTypes[i];
                     }
                 }
             }
-            assert text != null;
-            assert type != null;
-            offset += text.length();
-            matchedText = text;
-            matchedType = type;
+            assert matchEnd >= 0;
+            assert matchType != null;
+            matchedText = input.substring(offset, matchEnd);
+            matchedType = matchType;
+            offset      = matchEnd;
             return true;
         }
 
