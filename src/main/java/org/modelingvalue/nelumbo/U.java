@@ -27,16 +27,31 @@ public class U {
     public static final String RESET      = COLOR_PRE + "0m";
 
     public static int numLines(String s) {
-        int length = 0;
-        if (s != null && !s.isEmpty()) {
-            length++;
-            for (int i = 0; i < s.length(); i++) {
-                if (s.charAt(i) == '\n') {
-                    length++;
-                }
+        if (s == null || s.isEmpty()) {
+            return 0;
+        }
+        return numNewLines(s) + 1;
+    }
+
+    public static int numNewLines(String s) {
+        int len = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == '\n') {
+                len++;
             }
         }
-        return length;
+        return len;
+    }
+
+    public static int lastLineLength(String s) {
+        if (s == null || s.isEmpty()) {
+            return 0;
+        }
+        int lastNewlineIndex = s.lastIndexOf('\n');
+        if (lastNewlineIndex == -1) {
+            return s.length();
+        }
+        return s.length() - lastNewlineIndex - 1;
     }
 
     public static String traceable(String s) {

@@ -53,6 +53,33 @@ public enum TokenType {
     TYPE, //
     ;
 
+    // Combined patterns for efficient matching - built once at class load
+    private static final Pattern     COMBINED_FULL_MATCH_PATTERN;
+    private static final Pattern     COMBINED_PATTERN;
+    private static final TokenType[] COMBINED_PATTERN_LOOKUP;
+
+    static {
+        StringBuilder sb     = new StringBuilder();
+        String        sep    = "";
+        int           group  = 1;
+        TokenType[]   lookup = new TokenType[TokenType.values().length + 1]; // index 0 unused (groups start at 1)
+        for (TokenType tt : TokenType.values()) {
+            if (!tt.isNotMatched()) {
+                // Convert internal capturing groups to non-capturing (but not escaped literal parens like \()
+                String p = tt.pattern.pattern().replaceAll("(?<!\\\\)\\((?!\\?)", "(?:");
+                sb.append(sep).append("(").append(p).append(")");
+                sep           = "|";
+                lookup[group] = tt;
+                group++;
+            }
+        }
+        String fullRegexp = sb.toString();
+        //noinspection RegExpUnnecessaryNonCapturingGroup
+        COMBINED_FULL_MATCH_PATTERN = Pattern.compile("^(?:" + fullRegexp + ")$", Pattern.DOTALL);
+        COMBINED_PATTERN            = Pattern.compile(fullRegexp, Pattern.MULTILINE | Pattern.DOTALL);
+        COMBINED_PATTERN_LOOKUP     = Arrays.copyOf(lookup, group);
+    }
+
     public enum Flag {
         SKIP,                   // indicates a non semantic part that may be ignored by the parser
         CONTINUES_ON_NEXT_LINE, // indicates that a NEWLINE token after this token is to be ignored when parsing
@@ -112,12 +139,23 @@ public enum TokenType {
     }
 
     public static TokenType of(String text) {
-        for (TokenType tt : TokenType.values()) {
-            if (!tt.isNotMatched() && tt.matches(text)) {
-                return tt;
+        Matcher m = COMBINED_FULL_MATCH_PATTERN.matcher(text);
+        if (m.matches()) {
+            int group = findGroup(m);
+            if (group != 0) {
+                return COMBINED_PATTERN_LOOKUP[group];
             }
         }
         return null;
+    }
+
+    private static int findGroup(Matcher m) {
+        for (int group = 1; group < COMBINED_PATTERN_LOOKUP.length; group++) {
+            if (m.start(group) >= 0) {
+                return group;
+            }
+        }
+        return 0;
     }
 
     public static TokenMatcher getMatcher(String input) {
@@ -125,28 +163,6 @@ public enum TokenType {
     }
 
     public static class TokenMatcher {
-        private static final Pattern     COMBINED_PATTERN;
-        private static final TokenType[] COMBINED_PATTERN_LOOKUP;
-
-        static {
-            StringBuilder sb     = new StringBuilder();
-            String        sep    = "";
-            int           group  = 1;
-            TokenType[]   lookup = new TokenType[TokenType.values().length + 1]; // index 0 is unused because group numbering starts at 1
-            for (TokenType tt : TokenType.values()) {
-                if (!tt.isNotMatched()) {
-                    // Convert internal capturing groups to non-capturing (but not escaped literal parens like \()
-                    String p = tt.pattern.pattern().replaceAll("(?<!\\\\)\\((?!\\?)", "(?:");
-                    sb.append(sep).append("(").append(p).append(")");
-                    sep           = "|";
-                    lookup[group] = tt;
-                    group++;
-                }
-            }
-            COMBINED_PATTERN        = Pattern.compile(sb.toString(), Pattern.MULTILINE | Pattern.DOTALL);
-            COMBINED_PATTERN_LOOKUP = Arrays.copyOf(lookup, group);
-        }
-
         private final Matcher   matcher;
         private final int       inputLength;
         private       String    matchedText;
@@ -162,14 +178,12 @@ public enum TokenType {
                 return false;
             }
             if (matcher.lookingAt()) {
-                for (int group = 1; group <= COMBINED_PATTERN_LOOKUP.length; group++) {
-                    int start = matcher.start(group);
-                    if (0 <= start) {
-                        matchedText = matcher.group(group);
-                        matchedType = COMBINED_PATTERN_LOOKUP[group];
-                        matcher.region(matcher.end(), inputLength);
-                        return true;
-                    }
+                int group = findGroup(matcher);
+                if (group != 0) {
+                    matchedText = matcher.group(group);
+                    matchedType = COMBINED_PATTERN_LOOKUP[group];
+                    matcher.region(matcher.end(), inputLength);
+                    return true;
                 }
             }
             throw new IllegalStateException("TokenMatcher does not match input at: " + matcher.regionStart());
