@@ -48,21 +48,21 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
 
     private static class SemanticTokenMaker {
         private final List<Integer> data        = new ArrayList<>();
-        private int                 prevLineNum = 0;
-        private int                 prevCharNum = 0;
+        private       int           prevLineNum = 0;
+        private       int           prevCharNum = 0;
         private final boolean       debugging   = Main.debugging();
 
         public void add(Token token) {
             TokenType colorType = token.colorType();
 
-            int tokenType = LspTokenMapping.toLspTokenType(colorType);
-            int tokenMod = LspTokenMapping.toLspTokenModifier(colorType);
+            int tokenType = LspTokenMapping.toLspTokenTypeNum(colorType);
+            int tokenMod  = LspTokenMapping.toLspTokenModifierMask(colorType);
             if (tokenType == -1) {
                 U.DEBUG("        ---%s: %s", U.renderSpan(token), token);
             } else {
-                StringBuilder sb = debugging ? new StringBuilder() : null;
-                int firstLineNum = token.line();
-                int firstCharPosition = token.position();
+                StringBuilder sb                = debugging ? new StringBuilder() : null;
+                int           firstLineNum      = token.line();
+                int           firstCharPosition = token.position();
 
                 String[] tokenLines = token.text().split("\n");
                 for (int index = 0; index < tokenLines.length; index++) {
@@ -71,12 +71,14 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                     int lineNum = firstLineNum + index;
                     int charNum = index == 0 ? firstCharPosition : 0;
 
-                    int lineIncr = lineNum - prevLineNum;
+                    int lineIncr     = lineNum - prevLineNum;
                     int positionIncr = lineIncr == 0 ? charNum - prevCharNum : charNum;
 
                     extracted(lineIncr, positionIncr, tokenLine, tokenType, tokenMod);
                     if (debugging) {
-                        sb.append(String.format("        [%2d:%2d]  incr=[+%2d:+%2d]  #%d  type/mod=%d/%d  '%s'", lineNum, charNum, lineIncr, positionIncr, tokenLine.length(), tokenType, tokenMod, tokenLine));
+                        String tokenTypeName = LspTokenMapping.toLspTokenTypeName(colorType);
+                        String tokenModName  = LspTokenMapping.toLspTokenModifierName(colorType);
+                        sb.append(String.format("        [%2d:%2d]  incr=[+%2d:+%2d]  #%d  type/mod=%s:%d/%s:%d  '%s'", lineNum, charNum, lineIncr, positionIncr, tokenLine.length(), tokenTypeName, tokenType, tokenModName, tokenMod, tokenLine));
                     }
 
                     prevLineNum = lineNum;

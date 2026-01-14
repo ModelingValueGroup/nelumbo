@@ -103,8 +103,8 @@ public class NelumboLanguageServer implements LanguageServer {
     }
 
     private SemanticTokensWithRegistrationOptions makeSemanticTokensCapabilities() {
-        List<String> tokenTypes     = LspTokenMapping.lspTypes();
-        List<String> tokenModifiers = LspTokenMapping.lspModifiers();
+        List<String> tokenTypes     = LspTokenMapping.allLSPTypes();
+        List<String> tokenModifiers = LspTokenMapping.allLSPModifiers();
 
         U.DEBUG("LSP TOKEN TYPES:");
         for (int i = 0; i < tokenTypes.size(); i++) {
