@@ -123,27 +123,27 @@ public final class LspTokenMapping {
 
     public static List<TokenType> allDefinedTokenTypes() {
         return MAPPING.stream()//
-                      .map(Mapping::tokenType)//
-                      .distinct()//
-                      .filter(Objects::nonNull)//
-                      .toList();
+                       .map(Mapping::tokenType)//
+                       .distinct()//
+                       .filter(Objects::nonNull)//
+                       .toList();
     }
 
     //========================================================================================================================
 
     private static List<String> makeTypeList() {
         return MAPPING.stream()//
-                      .map(Mapping::lspTokenType)//
-                      .distinct()//
-                      .filter(Objects::nonNull)//
-                      .toList();
+                       .map(Mapping::lspTokenType)//
+                       .distinct()//
+                       .filter(Objects::nonNull)//
+                       .toList();
     }
 
     private static List<String> makeModifierList() {
         return MAPPING.stream()//
-                      .flatMap(mapping -> Arrays.stream(mapping.lspTokenModifiers()))//
-                      .distinct()//
-                      .toList();
+                       .flatMap(mapping -> Arrays.stream(mapping.lspTokenModifiers()))//
+                       .distinct()//
+                       .toList();
     }
 
     private static String[] makeTypeNameTable() {

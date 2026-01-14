@@ -58,8 +58,8 @@ public class SyntaxTest extends NelumboTestBase {
                     <Int>      ::= <ESet>.size,
                                    <NUMBER>
 
-                    <ESet>     ::= <ESet> + <Object>              #40,
-                                   <ESet> - <Object>              #40,
+                    <ESet>     ::= <ESet> + <Object>             #40,
+                                   <ESet> - <Object>             #40,
                                    { <(> <Object> <,> , <)*> }   @org.modelingvalue.nelumbo.Node
 
                     <EList>    ::= [ <(> <Object> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
@@ -70,8 +70,8 @@ public class SyntaxTest extends NelumboTestBase {
 
                     <Object>   ::= <EList>.get(<Int>)
 
-                    <ESet>  s, t, u
-                    <Int>  i, j, k
+                    <ESet>   s, t, u
+                    <Int>    i, j, k
                     <Object> n
 
                     10=10 ? [()][]

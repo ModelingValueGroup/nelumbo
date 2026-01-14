@@ -16,11 +16,7 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.CONTINUES_ON_NEXT_LINE;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.LAYOUT;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.NOT_MATCHED;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.SKIP;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.VARIABLE_CONTENT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.*;
 
 import java.util.EnumSet;
 import java.util.regex.Pattern;
@@ -35,7 +31,6 @@ public enum TokenType {
     NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", VARIABLE_CONTENT), //
     DECIMAL("-?[0-9]+\\.[0-9]+", VARIABLE_CONTENT), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", VARIABLE_CONTENT), //
-    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", VARIABLE_CONTENT), //
     META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", VARIABLE_CONTENT), //
     OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     NEWLINE("\\v", CONTINUES_ON_NEXT_LINE, LAYOUT), //
@@ -47,16 +42,19 @@ public enum TokenType {
     BEGINOFFILE, //
     ENDOFFILE, //
     ENDOFLINE, //
-    VARIABLE("[a-zA-Z_][0-9a-zA-Z_]*", SKIP, VARIABLE_CONTENT, NOT_MATCHED), //
-    KEYWORD("[a-zA-Z_][0-9a-zA-Z_]*", SKIP, VARIABLE_CONTENT, NOT_MATCHED), //
+    VARIABLE, //
+    KEYWORD, //
+    TYPE, //
     ;
 
+    public final static int NR_OF_NON_MATCHED = 6;
+
     public enum Flag {
-        SKIP,                   // indicates a non semantic part that may be ignored by the parser
+        SKIP, // indicates a non semantic part that may be ignored by the parser
         CONTINUES_ON_NEXT_LINE, // indicates that a NEWLINE token after this token is to be ignored when parsing
-        NOT_MATCHED,            // indicates that this token type is not actually matched by the lexer
-        VARIABLE_CONTENT,       // indicates that this token type has a variable content
-        LAYOUT                  // indicates that this token type is layout and should be ignored by the parser
+        NOT_MATCHED, // indicates that this token type is not actually matched by the lexer
+        VARIABLE_CONTENT, // indicates that this token type has a variable content
+        LAYOUT // indicates that this token type is layout and should be ignored by the parser
     }
 
     private final Pattern pattern;
@@ -73,11 +71,15 @@ public enum TokenType {
     TokenType(String regexp, Flag... flags) {
         this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
         EnumSet<Flag> flagset = flags.length == 0 ? EnumSet.noneOf(Flag.class) : EnumSet.of(flags[0], flags);
-        this.skip                = flagset.contains(SKIP);
+        this.skip = flagset.contains(SKIP);
         this.continuesOnNextLine = flagset.contains(CONTINUES_ON_NEXT_LINE);
-        this.layout              = flagset.contains(LAYOUT);
-        this.variableContent     = flagset.contains(VARIABLE_CONTENT);
-        this.notMatched          = flagset.contains(NOT_MATCHED);
+        this.layout = flagset.contains(LAYOUT);
+        this.variableContent = flagset.contains(VARIABLE_CONTENT);
+        this.notMatched = flagset.contains(NOT_MATCHED);
+    }
+
+    public Pattern pattern() {
+        return pattern;
     }
 
     public boolean isSkip() {
@@ -106,7 +108,7 @@ public enum TokenType {
 
     public static TokenType of(String text) {
         for (TokenType tt : TokenType.values()) {
-            if (tt.matches(text)) {
+            if (!tt.isNotMatched() && tt.matches(text)) {
                 return tt;
             }
         }
@@ -119,22 +121,20 @@ public enum TokenType {
 
     public static class Matcher {
         private final TokenType[]               tokenTypes = TokenType.values();
-        private final java.util.regex.Matcher[] matchers   = new java.util.regex.Matcher[tokenTypes.length];
+        private final java.util.regex.Matcher[] matchers   = new java.util.regex.Matcher[tokenTypes.length - NR_OF_NON_MATCHED];
         private final String                    input;
-        private       int                       offset;
-        private       String                    matchedText;
-        private       TokenType                 matchedType;
+        private int                             offset;
+        private String                          matchedText;
+        private TokenType                       matchedType;
 
         private Matcher(String input) {
-            this.input  = input;
+            this.input = input;
             this.offset = 0;
             for (int i = 0; i < matchers.length; i++) {
                 TokenType t = tokenTypes[i];
-                if (!t.isNotMatched()) {
-                    java.util.regex.Matcher m = t.pattern.matcher(input);
-                    if (m.find()) {
-                        matchers[i] = m;
-                    }
+                java.util.regex.Matcher m = t.pattern.matcher(input);
+                if (m.find()) {
+                    matchers[i] = m;
                 }
             }
         }
@@ -143,7 +143,7 @@ public enum TokenType {
             if (input.length() <= offset) {
                 return false;
             }
-            String    text = null;
+            String text = null;
             TokenType type = null;
             for (int i = 0; i < matchers.length; i++) {
                 final java.util.regex.Matcher m = matchers[i];

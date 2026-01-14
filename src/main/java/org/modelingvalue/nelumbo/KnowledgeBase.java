@@ -156,11 +156,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Variable var = type.variable();
         Pattern pattern;
         if (var != null) {
-            pattern = t(List.of(type), var);
+            pattern = s(List.of(type), t("<"), t(var), t(">"));
         } else if (type.isCollection()) {
-            pattern = s(List.of(type), t("<" + type.name() + ">"), t("("), n(Type.TYPE, null), t(")"));
+            pattern = s(List.of(type), t("<"), t(type.name()), n(Type.TYPE, null), t(">"));
         } else {
-            pattern = t(List.of(type), type.toString());
+            pattern = s(List.of(type), t("<"), t(type.name()), t(">"));
         }
         return Functor.of(List.of(type), pattern, //
                 Type.TYPE, false, (elements, args, functor) -> {
@@ -180,8 +180,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         for (Pair<Functor, Transform> pair : literalTransforms.get().getOrDefault(literal, Set.of())) {
             pair.b().rewrite(pair.a().pattern(), t(List.of(var), var), this);
         }
-        String string = var.type().equals(Type.TYPE) ? ("<" + var.name() + ">") : var.name();
-        return Functor.of(List.of(var), t(List.of(var), string), //
+        if (Type.TYPE.equals(var.type())) {
+            addType(new Type(var), false);
+        }
+        return Functor.of(List.of(var), t(List.of(var), var), //
                 Type.VARIABLE, true, (elements, args, functor) -> {
                     Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
                     return result.setFunctor(functor);
@@ -242,8 +244,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                     addType(type, true);
                 }
 
-                for (TokenType tokenType : values()) {
-                    if (!tokenType.isSkip()) {
+                for (TokenType tokenType : TokenType.values()) {
+                    if (!tokenType.isNotMatched() && !tokenType.isSkip()) {
                         addType(new Type(tokenType), true);
                     }
                 }
@@ -308,15 +310,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(n(Type.TYPE, Integer.MAX_VALUE), //
                         Type.PATTERN, false, (elements, args, functor) -> {
-                            Type type = args[0] instanceof Variable var ? new Type(var) : (Type) args[0];
+                            Type type = (Type) args[0];
                             TokenType tt = type.tokenType();
                             return tt != null ? t(elements, tt) : n(elements, type, null);
                         }).init(this);
 
                 Functor.of(s(n(Type.TYPE, null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            AstElement node = elements.get(0);
-                            Type type = node instanceof Variable var ? new Type(var) : (Type) node;
+                            Type type = (Type) elements.get(0);
                             NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
@@ -354,7 +355,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         try {
                                             constructor = Class.forName(qname.toString()).getConstructor(Functor.class, List.class, Object[].class);
                                         } catch (NoSuchMethodException | SecurityException | ClassNotFoundException ex) {
-                                            CURRENT.get().addException(new ParseException(ex, "Exception during finding class with Node constructor " + qname, t.next()));
+                                            CURRENT.get().addException(new ParseException(ex, ex + " during finding class with Node constructor " + qname, t.next()));
                                         }
                                     } else {
                                         pttrn = pttrn.add(e);
@@ -363,23 +364,26 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     pttrn = pttrn.add(e);
                                 }
                             }
-                            return roots.setAstElements(roots.astElements().add(node).add(elements.last()));
+                            return roots.setAstElements(roots.astElements().add(type).add(elements.last()));
                         }).init(this);
 
-                Functor.of(s(t(TYPE), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
+                Functor.of(s(t("<"), t(NAME), o(s(t("<"), n(Type.VARIABLE, null), t(">"))), t(">"), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
                             KnowledgeBase kb = CURRENT.get();
                             Set<Type> supers = Set.of();
-                            for (Type sup : (List<Type>) args[1]) {
+                            for (Type sup : (List<Type>) args[2]) {
                                 supers = supers.add(sup);
                             }
-                            String group = ((Optional<String>) args[2]).orElse(Type.DEFAULT_GROUP);
+                            String group = ((Optional<String>) args[3]).orElse(Type.DEFAULT_GROUP);
                             Type type;
-                            if (args[0] instanceof Variable var) {
-                                type = new Type(elements, var, group);
+                            String name = (String) args[0];
+                            Variable arg = ((Optional<Variable>) args[1]).orElse(null);
+                            if (arg != null) {
+                                if (!arg.type().equals(Type.TYPE)) {
+                                    kb.addException(new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
+                                }
+                                type = new Type(elements, name, supers, group, new Type(List.of(), arg, group));
                             } else {
-                                String name = (String) args[0];
-                                name = name.substring(1, name.length() - 1);
                                 type = new Type(elements, name, supers, group);
                             }
                             return kb.addType(type, false);
@@ -412,11 +416,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(n(Type.TYPE, null), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            AstElement e = elements.get(0);
-                            Type type = e instanceof Variable var ? new Type(var) : (Type) e;
+                            Type type = (Type) elements.get(0);
                             NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             for (int i = 1; i < elements.size(); i++) {
-                                e = elements.get(i);
+                                AstElement e = elements.get(i);
                                 Token comma = null;
                                 if (e instanceof Token t && t.text().equals(",")) {
                                     comma = t;
@@ -491,7 +494,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 type = type.function();
                 function = true;
             }
-            if (!Type.ROOT.isAssignableFrom(type) //
+            if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type)//
                     && !args.allMatch(t -> Type.OBJECT.equals(t.element())) //
                     && !args.allMatch(t -> Type.BOOLEAN.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
                     && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
@@ -873,9 +876,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         ParseState state = localPrePatterns.get().get(ctx.group());
         if (state != null) {
             ParseState found = state.transitions().get(token.text());
-            if (found == null && token.type() == TokenType.TYPE) {
-                found = state.transitions().get(token.text().substring(1, token.text().length() - 1));
-            }
             if (found != null && found.functor() != null && found.functor().resultType() == Type.VARIABLE) {
                 return (Variable) found.functor().construct(List.of(token), new Object[0], parser);
             }

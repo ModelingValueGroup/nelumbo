@@ -25,6 +25,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NList extends Node {
@@ -37,6 +38,11 @@ public class NList extends Node {
 
     public NList(Type elementType, List<AstElement> elements, List<Node> args) {
         super(elementType.list(), elements, args);
+    }
+
+    @SuppressWarnings("unused")
+    public NList(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args);
     }
 
     public NList(List<AstElement> elements, NList list, Node last) {
@@ -64,8 +70,8 @@ public class NList extends Node {
 
     @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elementsFlattened() {
-        List<T>            result = List.of();
-        Deque<Iterator<?>> stack  = new ArrayDeque<>();
+        List<T> result = List.of();
+        Deque<Iterator<?>> stack = new ArrayDeque<>();
         stack.push(elements().iterator());
         while (!stack.isEmpty()) {
             Iterator<?> iter = stack.peek();

@@ -241,17 +241,11 @@ public class ParseState implements Mergeable<ParseState> {
                 }
             }
         }
-        if (next == null && (type == TokenType.NAME || type == TokenType.TYPE)) {
+        if (next == null && type == TokenType.NAME) {
             Variable var = result.parser().variable(token, ctx);
             if (var != null) {
                 TokenType tt = var.type().tokenType();
                 next = tt != null ? transitions().get(tt) : null;
-                if (next == null && tt == TokenType.NAME) {
-                    next = transitions().get(TokenType.TYPE);
-                    if (next != null) {
-                        var = var.rename("<" + var.name() + ">");
-                    }
-                }
                 if (next != null) {
                     element = var;
                 } else {
@@ -262,6 +256,12 @@ public class ParseState implements Mergeable<ParseState> {
         if (next == null) {
             next = transitions().get(type);
             if (next != null) {
+                if (Type.PATTERN_GROUP.equals(group()) && //
+                        token.text().equals("<") && //
+                        token.next() != null && token.next().type() == TokenType.NAME && //
+                        token.next().next() != null && (token.next().next().text().startsWith(">") || token.next().next().text().startsWith("<"))) {
+                    return false;
+                }
                 element = token;
             }
         }
@@ -312,7 +312,10 @@ public class ParseState implements Mergeable<ParseState> {
             token = result.addMerge(token, nextToken.prepend("-"));
         }
         Integer inner = innerPrecedence();
-        if (transitions().get(Type.TYPE) != null || transitions().get(Type.VARIABLE) != null) {
+        if (transitions().get(Type.VARIABLE) != null && token.type() == TokenType.NAME) {
+            inner = Integer.MAX_VALUE;
+        }
+        if (transitions().get(Type.TYPE) != null && token.text().equals("<")) {
             inner = Integer.MAX_VALUE;
         }
         Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner, result.context()));
