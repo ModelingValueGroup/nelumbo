@@ -51,11 +51,11 @@ public class SequencePattern extends Pattern {
 
     @Override
     public String name() {
-        String name = "";
+        StringBuilder name = new StringBuilder();
         for (Pattern element : elements()) {
-            name += element.name();
+            name.append(element.name());
         }
-        return name;
+        return name.toString();
     }
 
     @Override
@@ -106,7 +106,6 @@ public class SequencePattern extends Pattern {
         return types;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
         List<Pattern> parts = elements();

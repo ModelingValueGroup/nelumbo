@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
@@ -86,9 +87,7 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern s(List<AstElement> ast, Pattern... elements) {
-        return new SequencePattern(Type.PATTERN, ast, List.of(elements).replaceAllAll(e -> {
-            return e instanceof SequencePattern s ? s.elements() : List.of(e);
-        }));
+        return new SequencePattern(Type.PATTERN, ast, List.of(elements).replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e)));
     }
 
     public static Pattern t(List<AstElement> ast, String tokenText) {
@@ -198,12 +197,7 @@ public abstract class Pattern extends Node {
                         }
                     }
                     if (post == null && node instanceof Variable) {
-                        TokenType tt = type.tokenType();
-                        if (tt != null) {
-                            post = pre.transitions().get(tt);
-                        } else {
-                            post = pre.transitions().get(Type.VARIABLE);
-                        }
+                        post = pre.transitions().get(Objects.requireNonNullElse(type.tokenType(), Type.VARIABLE));
                     }
                 }
                 assert branche != null;
