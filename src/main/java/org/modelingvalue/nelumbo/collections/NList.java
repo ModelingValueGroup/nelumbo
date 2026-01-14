@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NList extends Node {
@@ -37,8 +38,8 @@ public class NList extends Node {
     }
 
     @SuppressWarnings("unused")
-    public NList(List<AstElement> elements, Type elementType, Object[] args) {
-        super(elementType.list(), elements, List.of(args));
+    public NList(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args);
     }
 
     private NList(Object[] array, NList declaration) {

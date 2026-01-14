@@ -23,14 +23,16 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NSet extends Node {
     @Serial
     private static final long serialVersionUID = 840888260991475386L;
 
-    public NSet(List<AstElement> elements, Type elementType, Object[] args) {
-        super(elementType.set(), elements, Set.of(args));
+    @SuppressWarnings("unused")
+    public NSet(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args);
     }
 
     private NSet(Object[] array, NSet declaration) {

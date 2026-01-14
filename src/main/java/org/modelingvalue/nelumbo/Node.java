@@ -342,6 +342,9 @@ public class Node extends StructImpl implements AstElement {
 
     private Map<Variable, Object> getBinding(Object declVal, Object thisIn, Map<Variable, Object> vars, int i) {
         Object thisVal = thisIn instanceof Type || thisIn instanceof Variable ? null : thisIn;
+        if (declVal instanceof Type declType) {
+            declVal = declType.variable();
+        }
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
             varVal = varVal instanceof Type ? null : varVal;
@@ -410,16 +413,6 @@ public class Node extends StructImpl implements AstElement {
     protected final Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i) {
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
-            if (varVal == null) {
-                String name = declVar.name();
-                if (name.startsWith("<")) {
-                    declVar = declVar.rename(name.substring(1, name.length() - 1));
-                    varVal = vars.get(declVar);
-                    if (varVal instanceof Variable valVar) {
-                        varVal = valVar.rename("<" + valVar.name() + ">");
-                    }
-                }
-            }
             if (varVal != null && doSetBinding(varVal, i)) {
                 return varVal;
             }
@@ -446,13 +439,6 @@ public class Node extends StructImpl implements AstElement {
             Variable declVar = declType.variable();
             if (declVar != null) {
                 Object varVal = vars.get(declVar);
-                if (varVal == null) {
-                    String name = declVar.name();
-                    if (name.startsWith("<")) {
-                        declVar = declVar.rename(name.substring(1, name.length() - 1));
-                        varVal = vars.get(declVar);
-                    }
-                }
                 if (varVal instanceof Type type) {
                     return thisType.rewrite(type);
                 } else if (varVal instanceof Variable valVar) {
@@ -565,7 +551,12 @@ public class Node extends StructImpl implements AstElement {
                 if (tt != null) {
                     state = new MatchState<>(tt, state);
                 } else {
-                    state = new MatchState<>(type, state);
+                    Variable var = type.variable();
+                    if (var != null) {
+                        state = new MatchState<>(var.type(), state);
+                    } else {
+                        state = new MatchState<>(type, state);
+                    }
                 }
             }
             case Variable var -> {

@@ -36,7 +36,7 @@ public class Tokenizer {
     public TokenizerResult tokenize() {
         Token[] tokens = new Token[4];
         TokenType[] tokenTypes = TokenType.values();
-        Matcher[] matchers = new Matcher[tokenTypes.length - 4];
+        Matcher[] matchers = new Matcher[tokenTypes.length - TokenType.DUMMIES];
         for (int i = 0; i < matchers.length; i++) {
             matchers[i] = tokenTypes[i].pattern().matcher(input);
             if (!matchers[i].find()) {

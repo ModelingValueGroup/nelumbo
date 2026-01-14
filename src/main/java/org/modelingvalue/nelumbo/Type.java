@@ -138,8 +138,12 @@ public final class Type extends Node {
         super(TYPE, elements, name, supers.asSet(), group);
     }
 
+    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, Type element) {
+        super(TYPE, elements, name, supers.asSet(), group, element);
+    }
+
     private Type(String name, Type sup, Type element, String group) {
-        super(TYPE, List.of(), name, Set.of(sup), group, element);
+        this(List.of(), name, Set.of(sup), group, element);
     }
 
     public Type(Type super1, Type super2) {
@@ -294,8 +298,7 @@ public final class Type extends Node {
         } else if (type instanceof TokenType tt) {
             return tt.name();
         } else if (type instanceof Variable var) {
-            String name = var.name();
-            return name.startsWith("<") ? name.substring(1, name.length() - 1) : name;
+            return var.name();
         } else if (type instanceof Class cls) {
             return "$" + cls.getSimpleName();
         }
@@ -335,11 +338,11 @@ public final class Type extends Node {
 
     @Override
     public String toString(TokenType[] previous) {
-        String string = "<" + name() + ">";
+        String string = name();
         if (isCollection()) {
-            return string + "(" + element() + ")";
+            string += element();
         }
-        return string;
+        return "<" + string + ">";
     }
 
     @SuppressWarnings("unchecked")

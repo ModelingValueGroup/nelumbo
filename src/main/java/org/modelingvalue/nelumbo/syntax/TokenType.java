@@ -28,7 +28,6 @@ public enum TokenType {
     NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", false, null, false), //
     DECIMAL("-?[0-9]+\\.[0-9]+", false, null, false), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, null, false), //
-    TYPE("<[a-zA-Z_][0-9a-zA-Z_]*>", false, null, false), //
     META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", false, null, false), //
     OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", false, null, true), //
     NEWLINE("\\v", false, "", true), //
@@ -36,20 +35,23 @@ public enum TokenType {
     END_LINE_COMMENT("//[^\\v]*", true, null, false), //
     IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", true, null, false), //
     ERROR(".", false, null, false), //
-    BEGINOFFILE("", false, "", false), //
-    ENDOFFILE("", false, "", false), //
-    ENDOFLINE("", false, "", false), //
-    VARIABLE("[a-zA-Z_][0-9a-zA-Z_]*", true, null, false), //
-    KEYWORD("[a-zA-Z_][0-9a-zA-Z_]*", true, null, false), //
+    BEGINOFFILE(null, false, "", false), //
+    ENDOFFILE(null, false, "", false), //
+    ENDOFLINE(null, false, "", false), //
+    TYPE(null, false, null, false), //
+    VARIABLE(null, true, null, false), //
+    KEYWORD(null, true, null, false), //
     ;
 
-    private final Pattern pattern; // the pattern that matches tokens of this token type
-    private final boolean skip;    // indicates a non semantic part that may be ignored by the parser
-    private final String  fixed;   // indicates a token type that has a singular content with the text, otherwise null;
-    private final boolean more;    // indicates that a sequence of NEWLINE tokens after this token is to be ignored when parsing
+    public final static int DUMMIES = 6;
+
+    private final Pattern   pattern;    // the pattern that matches tokens of this token type
+    private final boolean   skip;       // indicates a non semantic part that may be ignored by the parser
+    private final String    fixed;      // indicates a token type that has a singular content with the text, otherwise null;
+    private final boolean   more;       // indicates that a sequence of NEWLINE tokens after this token is to be ignored when parsing
 
     TokenType(String regexp, boolean skip, String fixed, boolean more) {
-        this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
+        this.pattern = regexp != null ? Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL) : null;
         this.skip = skip;
         this.fixed = fixed;
         this.more = more;
@@ -57,6 +59,10 @@ public enum TokenType {
 
     public Pattern pattern() {
         return pattern;
+    }
+
+    public boolean dummy() {
+        return pattern == null;
     }
 
     public boolean skip() {
@@ -77,7 +83,8 @@ public enum TokenType {
 
     public static TokenType of(String text) {
         for (TokenType tt : TokenType.values()) {
-            if (tt.pattern().matcher(text).matches()) {
+            Pattern pattern = tt.pattern();
+            if (pattern != null && pattern.matcher(text).matches()) {
                 return tt;
             }
         }
