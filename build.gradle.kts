@@ -104,3 +104,7 @@ tasks.named<Delete>("clean") {
     delete(file("lsp/plugins/eclipse/build"))
     delete(file("lsp/plugins/intellij/build"))
 }
+
+tasks.test {
+    dependsOn(":lsp:server:test")
+}

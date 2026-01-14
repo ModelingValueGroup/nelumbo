@@ -16,10 +16,35 @@
 
 package org.modelingvalue.nelumbo.lsp;
 
-import static org.eclipse.lsp4j.SemanticTokenModifiers.Definition;
-import static org.eclipse.lsp4j.SemanticTokenModifiers.Static;
-import static org.eclipse.lsp4j.SemanticTokenTypes.*;
-import static org.modelingvalue.nelumbo.syntax.TokenType.*;
+import static org.eclipse.lsp4j.SemanticTokenTypes.Comment;
+import static org.eclipse.lsp4j.SemanticTokenTypes.Keyword;
+import static org.eclipse.lsp4j.SemanticTokenTypes.Number;
+import static org.eclipse.lsp4j.SemanticTokenTypes.Operator;
+import static org.eclipse.lsp4j.SemanticTokenTypes.String;
+import static org.eclipse.lsp4j.SemanticTokenTypes.Type;
+import static org.eclipse.lsp4j.SemanticTokenTypes.Variable;
+import static org.modelingvalue.nelumbo.syntax.TokenType.BEGINOFFILE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.COMMA;
+import static org.modelingvalue.nelumbo.syntax.TokenType.DECIMAL;
+import static org.modelingvalue.nelumbo.syntax.TokenType.ENDOFFILE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.ENDOFLINE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.END_LINE_COMMENT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.ERROR;
+import static org.modelingvalue.nelumbo.syntax.TokenType.HSPACE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.IN_LINE_COMMENT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.KEYWORD;
+import static org.modelingvalue.nelumbo.syntax.TokenType.LEFT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.META_OPERATOR;
+import static org.modelingvalue.nelumbo.syntax.TokenType.NAME;
+import static org.modelingvalue.nelumbo.syntax.TokenType.NEWLINE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.NUMBER;
+import static org.modelingvalue.nelumbo.syntax.TokenType.OPERATOR;
+import static org.modelingvalue.nelumbo.syntax.TokenType.RIGHT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.SEMICOLON;
+import static org.modelingvalue.nelumbo.syntax.TokenType.SINGLEQUOTE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.STRING;
+import static org.modelingvalue.nelumbo.syntax.TokenType.TYPE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.VARIABLE;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,9 +53,6 @@ import java.util.Objects;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class LspTokenMapping {
-    private record Mapping(TokenType tokenType, String lspTokenType, String... lspTokenModifier) {
-    }
-
     private static List<Mapping> makeMappings() {
         return List.of(//
                 new Mapping(SINGLEQUOTE, null), //
@@ -41,7 +63,7 @@ public final class LspTokenMapping {
                 new Mapping(STRING, String), //
                 new Mapping(NUMBER, Number), //
                 new Mapping(DECIMAL, Number), //
-                new Mapping(NAME, Definition), //
+                new Mapping(NAME, Variable), //
                 new Mapping(TYPE, Type), //
                 new Mapping(META_OPERATOR, null), //
                 new Mapping(OPERATOR, Operator), //
@@ -54,8 +76,11 @@ public final class LspTokenMapping {
                 new Mapping(ENDOFFILE, null), //
                 new Mapping(ENDOFLINE, null), //
                 new Mapping(VARIABLE, Variable), //
-                new Mapping(KEYWORD, Static)//
-        );
+                new Mapping(KEYWORD, Keyword)//
+                      );
+    }
+
+    private record Mapping(TokenType tokenType, String lspTokenType, String... lspTokenModifiers) {
     }
 
     private static final List<Mapping> MAPPINGS      = makeMappings();
@@ -80,26 +105,35 @@ public final class LspTokenMapping {
         return MODIFIER_LIST;
     }
 
+    public static List<TokenType> tokenTypes() {
+        return MAPPINGS.stream()//
+                       .map(Mapping::tokenType)//
+                       .distinct()//
+                       .filter(Objects::nonNull)//
+                       .toList();
+    }
+
     //========================================================================================================================
 
     private static List<String> makeTypeList() {
         return MAPPINGS.stream()//
-                .map(Mapping::lspTokenType)//
-                .distinct()//
-                .filter(Objects::nonNull).toList();
+                       .map(Mapping::lspTokenType)//
+                       .distinct()//
+                       .filter(Objects::nonNull)//
+                       .toList();
     }
 
     private static List<String> makeModifierList() {
         return MAPPINGS.stream()//
-                .flatMap(mapping -> Arrays.stream(mapping.lspTokenModifier()))//
-                .distinct()//
-                .toList();
+                       .flatMap(mapping -> Arrays.stream(mapping.lspTokenModifiers()))//
+                       .distinct()//
+                       .toList();
     }
 
     private static int[] makeTypeIndexTable() {
         int[] table = new int[TokenType.values().length];
         for (Mapping mapping : MAPPINGS) {
-            int i = mapping.tokenType().ordinal();
+            int    i = mapping.tokenType().ordinal();
             String t = mapping.lspTokenType();
             table[i] = t == null ? -1 : TYPE_LIST.indexOf(t);
         }
@@ -110,7 +144,7 @@ public final class LspTokenMapping {
         int[] table = new int[TokenType.values().length];
         for (Mapping mapping : MAPPINGS) {
             int i = mapping.tokenType().ordinal();
-            Arrays.stream(mapping.lspTokenModifier()).forEach(m -> table[i] |= 1 << MODIFIER_LIST.indexOf(m));
+            Arrays.stream(mapping.lspTokenModifiers()).forEach(m -> table[i] |= 1 << MODIFIER_LIST.indexOf(m));
         }
         return table;
     }

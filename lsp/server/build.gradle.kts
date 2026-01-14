@@ -48,10 +48,14 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.20.1")
     implementation("org.tomlj:tomlj:1.1.1")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.test {
     useJUnitPlatform()
+    jvmArgs("-ea") // Enable assertions
 }
 
 tasks.register<ShadowJar>("serverJar") {
