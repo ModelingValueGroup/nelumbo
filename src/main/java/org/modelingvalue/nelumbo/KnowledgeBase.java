@@ -416,11 +416,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(n(Type.TYPE, null), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            AstElement e = elements.get(0);
-                            Type type = (Type) e;
+                            Type type = (Type) elements.get(0);
                             NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             for (int i = 1; i < elements.size(); i++) {
-                                e = elements.get(i);
+                                AstElement e = elements.get(i);
                                 Token comma = null;
                                 if (e instanceof Token t && t.text().equals(",")) {
                                     comma = t;
