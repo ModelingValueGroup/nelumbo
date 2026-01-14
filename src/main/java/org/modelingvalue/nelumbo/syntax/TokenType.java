@@ -16,78 +16,163 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.*;
+
+import java.util.EnumSet;
 import java.util.regex.Pattern;
 
 public enum TokenType {
-    SINGLEQUOTE("'", false, "'", false), //
-    SEMICOLON(";", false, ";", false), //
-    COMMA(",", false, ",", true), //
-    LEFT("[\\(\\[\\{]", false, null, true), //
-    RIGHT("[\\)\\]\\}]", false, null, false), //
-    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", false, null, false), //
-    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", false, null, false), //
-    DECIMAL("-?[0-9]+\\.[0-9]+", false, null, false), //
-    NAME("[a-zA-Z_][0-9a-zA-Z_]*", false, null, false), //
-    META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", false, null, false), //
-    OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", false, null, true), //
-    NEWLINE("\\v", false, "", true), //
-    HSPACE("\\h+", true, "", false), //
-    END_LINE_COMMENT("//[^\\v]*", true, null, false), //
-    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", true, null, false), //
-    ERROR(".", false, null, false), //
-    BEGINOFFILE(null, false, "", false), //
-    ENDOFFILE(null, false, "", false), //
-    ENDOFLINE(null, false, "", false), //
-    TYPE(null, false, null, false), //
-    VARIABLE(null, true, null, false), //
-    KEYWORD(null, true, null, false), //
+    SINGLEQUOTE("'"), //
+    SEMICOLON(";"), //
+    COMMA(",", CONTINUES_ON_NEXT_LINE), //
+    LEFT("[\\(\\[\\{]", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
+    RIGHT("[\\)\\]\\}]", VARIABLE_CONTENT), //
+    STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //
+    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", VARIABLE_CONTENT), //
+    DECIMAL("-?[0-9]+\\.[0-9]+", VARIABLE_CONTENT), //
+    NAME("[a-zA-Z_][0-9a-zA-Z_]*", VARIABLE_CONTENT), //
+    META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", VARIABLE_CONTENT), //
+    OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
+    NEWLINE("\\v", CONTINUES_ON_NEXT_LINE, LAYOUT), //
+    HSPACE("\\h+", SKIP, LAYOUT), //
+    END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
+    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
+    ERROR(".", VARIABLE_CONTENT), //
+    //================ rest is not actually matched:
+    BEGINOFFILE, //
+    ENDOFFILE, //
+    ENDOFLINE, //
+    VARIABLE, //
+    KEYWORD, //
+    TYPE, //
     ;
 
-    public final static int DUMMIES = 6;
+    public final static int NR_OF_NON_MATCHED = 6;
 
-    private final Pattern   pattern;    // the pattern that matches tokens of this token type
-    private final boolean   skip;       // indicates a non semantic part that may be ignored by the parser
-    private final String    fixed;      // indicates a token type that has a singular content with the text, otherwise null;
-    private final boolean   more;       // indicates that a sequence of NEWLINE tokens after this token is to be ignored when parsing
+    public enum Flag {
+        SKIP, // indicates a non semantic part that may be ignored by the parser
+        CONTINUES_ON_NEXT_LINE, // indicates that a NEWLINE token after this token is to be ignored when parsing
+        NOT_MATCHED, // indicates that this token type is not actually matched by the lexer
+        VARIABLE_CONTENT, // indicates that this token type has a variable content
+        LAYOUT // indicates that this token type is layout and should be ignored by the parser
+    }
 
-    TokenType(String regexp, boolean skip, String fixed, boolean more) {
-        this.pattern = regexp != null ? Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL) : null;
-        this.skip = skip;
-        this.fixed = fixed;
-        this.more = more;
+    private final Pattern pattern;
+    private final boolean skip;
+    private final boolean continuesOnNextLine;
+    private final boolean layout;
+    private final boolean variableContent;
+    private final boolean notMatched;
+
+    TokenType() {
+        this("", LAYOUT, NOT_MATCHED);
+    }
+
+    TokenType(String regexp, Flag... flags) {
+        this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
+        EnumSet<Flag> flagset = flags.length == 0 ? EnumSet.noneOf(Flag.class) : EnumSet.of(flags[0], flags);
+        this.skip = flagset.contains(SKIP);
+        this.continuesOnNextLine = flagset.contains(CONTINUES_ON_NEXT_LINE);
+        this.layout = flagset.contains(LAYOUT);
+        this.variableContent = flagset.contains(VARIABLE_CONTENT);
+        this.notMatched = flagset.contains(NOT_MATCHED);
     }
 
     public Pattern pattern() {
         return pattern;
     }
 
-    public boolean dummy() {
-        return pattern == null;
-    }
-
-    public boolean skip() {
+    public boolean isSkip() {
         return skip;
     }
 
-    public boolean variable() {
-        return fixed == null;
+    public boolean isContinuesOnNextLine() {
+        return continuesOnNextLine;
     }
 
-    public String fixed() {
-        return fixed;
+    public boolean isLayout() {
+        return layout;
     }
 
-    public boolean more() {
-        return more;
+    public boolean isVariableContent() {
+        return variableContent;
+    }
+
+    public boolean isNotMatched() {
+        return notMatched;
+    }
+
+    public boolean matches(String text) {
+        return pattern.matcher(text).matches();
     }
 
     public static TokenType of(String text) {
         for (TokenType tt : TokenType.values()) {
-            Pattern pattern = tt.pattern();
-            if (pattern != null && pattern.matcher(text).matches()) {
+            if (!tt.isNotMatched() && tt.matches(text)) {
                 return tt;
             }
         }
         return null;
+    }
+
+    public static Matcher getMatcher(String input) {
+        return new Matcher(input);
+    }
+
+    public static class Matcher {
+        private final TokenType[]               tokenTypes = TokenType.values();
+        private final java.util.regex.Matcher[] matchers   = new java.util.regex.Matcher[tokenTypes.length - NR_OF_NON_MATCHED];
+        private final String                    input;
+        private int                             offset;
+        private String                          matchedText;
+        private TokenType                       matchedType;
+
+        private Matcher(String input) {
+            this.input = input;
+            this.offset = 0;
+            for (int i = 0; i < matchers.length; i++) {
+                TokenType t = tokenTypes[i];
+                java.util.regex.Matcher m = t.pattern.matcher(input);
+                if (m.find()) {
+                    matchers[i] = m;
+                }
+            }
+        }
+
+        public boolean hasMore() {
+            if (input.length() <= offset) {
+                return false;
+            }
+            String text = null;
+            TokenType type = null;
+            for (int i = 0; i < matchers.length; i++) {
+                final java.util.regex.Matcher m = matchers[i];
+                if (m != null) {
+                    if (!m.find(offset)) {
+                        matchers[i] = null;
+                    } else if (m.start() == offset) {
+                        String group = m.group();
+                        if (text == null || text.length() < group.length()) {
+                            text = group;
+                            type = tokenTypes[i];
+                        }
+                    }
+                }
+            }
+            assert text != null;
+            assert type != null;
+            offset += text.length();
+            matchedText = text;
+            matchedType = type;
+            return true;
+        }
+
+        public String text() {
+            return matchedText;
+        }
+
+        public TokenType type() {
+            return matchedType;
+        }
     }
 }

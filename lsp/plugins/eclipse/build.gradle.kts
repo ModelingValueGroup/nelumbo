@@ -25,23 +25,51 @@ repositories {
 dependencies {
     compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
+
+val serverProject = project(":lsp:server")
+
+// Generate MANIFEST.MF with proper OSGi formatting (avoid Gradle's 72-char line wrapping)
+val generateManifest = tasks.register("generateManifest") {
+    val manifestFile = layout.buildDirectory.file("osgi/MANIFEST.MF")
+    outputs.file(manifestFile)
+    doLast {
+        manifestFile.get().asFile.parentFile.mkdirs()
+        manifestFile.get().asFile.writeText(
+            """
+            |Manifest-Version: 1.0
+            |Bundle-ManifestVersion: 2
+            |Bundle-Name: Nelumbo LSP Eclipse Plugin
+            |Bundle-SymbolicName: org.modelingvalue.nelumbo.lsp.eclipse;
+            | singleton:=true
+            |Bundle-Version: $version
+            |Bundle-Vendor: Modeling Value Group
+            |Bundle-RequiredExecutionEnvironment: JavaSE-21
+            |Require-Bundle: org.eclipse.ui,
+            | org.eclipse.lsp4e,
+            | org.eclipse.core.contenttype
+            |
+            """.trimMargin()
+        )
+    }
+}
+
 tasks.jar {
     archiveBaseName.set("eclipse-nelumbo-plugin")
-    manifest {
-        attributes(
-            mapOf(
-                "Bundle-ManifestVersion" to "2",
-                "Bundle-Name" to "nelumbo-lsp-eclipse",
-                "Bundle-Version" to version,
-                "Bundle-SymbolicName" to "eclipse;singleton:=true",
-                "Bundle-Vendor" to "Modeling Value Group",
-                "Bundle-RequiredExecutionEnvironment" to "JavaSE-21",
-                "Require-Bundle" to listOf(
-                    "org.eclipse.ui",
-                    "org.eclipse.lsp4e",
-                    "org.eclipse.core.contenttype"
-                ).joinToString(",").trim(),
-            )
-        )
+    dependsOn(generateManifest)
+
+    // Include the LSP server JAR as a resource (uses serverJar task, not jar)
+    val serverJarTask = serverProject.tasks.named("serverJar")
+    dependsOn(serverJarTask)
+    from(serverJarTask.map { (it as org.gradle.jvm.tasks.Jar).archiveFile }) {
+        rename { "server.jar" }
+    }
+
+    // Replace manifest after JAR creation to avoid Gradle's 72-char line wrapping
+    doLast {
+        val jarFile = archiveFile.get().asFile
+        val manifestFile = generateManifest.get().outputs.files.singleFile
+        ant.withGroovyBuilder {
+            "jar"("destfile" to jarFile, "update" to true, "manifest" to manifestFile)
+        }
     }
 }

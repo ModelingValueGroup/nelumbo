@@ -245,35 +245,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
 
                 for (TokenType tokenType : TokenType.values()) {
-                    if (!tokenType.dummy() && !tokenType.skip()) {
+                    if (!tokenType.isNotMatched() && !tokenType.isSkip()) {
                         addType(new Type(tokenType), true);
                     }
                 }
 
-                equalsFunctor = Functor.of(s(n(Type.OBJECT, 30), t("="), n(Type.OBJECT, 30)), // 
+                equalsFunctor = Functor.of(s(n(Type.OBJECT, 30), t("="), n(Type.OBJECT, 30)), //
                         Type.BOOLEAN, false).init(this);
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor) -> {
-                            NList roots = new NList(List.of(), Type.ROOT.list());
-                            for (AstElement e1 : elements) {
-                                if (e1 instanceof Node e1n) {
-                                    if (e1n instanceof NList list) {
-                                        for (AstElement e2 : list.astElements()) {
-                                            if (e2 instanceof Node e2n) {
-                                                roots = new NList(List.of(), roots, e2n);
-                                            } else {
-                                                roots = roots.setAstElements(roots.astElements().add(e2));
-                                            }
-                                        }
-                                    } else {
-                                        roots = new NList(List.of(), roots, e1n);
-                                    }
-                                } else {
-                                    roots = roots.setAstElements(roots.astElements().add(e1));
-                                }
-                            }
-                            return roots;
+                            return new NList(Type.ROOT.list(), elements, elements.filter(Node.class).asList());
                         }).init(this);
 
                 Functor.of(s(t("<(>"), r(SEQUENCE, true, t("<|>")), t("<)>")), //
@@ -483,7 +465,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             List<Node> targets = List.of();
                             for (Node arg : (List<Node>) args[1]) {
                                 if (arg instanceof NList list) {
-                                    targets = targets.addAll(list.elements());
+                                    targets = targets.addAll(list.elementsFlattened());
                                 } else {
                                     targets = targets.add(arg);
                                 }

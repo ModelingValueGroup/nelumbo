@@ -17,6 +17,9 @@
 package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Iterator;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -33,13 +36,17 @@ public class NList extends Node {
         super(elementType.list(), elements, List.of());
     }
 
-    public NList(List<AstElement> elements, NList list, Node last) {
-        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
+    public NList(Type elementType, List<AstElement> elements, List<Node> args) {
+        super(elementType.list(), elements, args);
     }
 
     @SuppressWarnings("unused")
     public NList(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args);
+    }
+
+    public NList(List<AstElement> elements, NList list, Node last) {
+        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
     }
 
     private NList(Object[] array, NList declaration) {
@@ -61,9 +68,25 @@ public class NList extends Node {
         return (List<T>) get(0);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elementsFlattened() {
-        return null;// TODO Tom
+        List<T> result = List.of();
+        Deque<Iterator<?>> stack = new ArrayDeque<>();
+        stack.push(elements().iterator());
+        while (!stack.isEmpty()) {
+            Iterator<?> iter = stack.peek();
+            if (iter.hasNext()) {
+                Object element = iter.next();
+                if (element instanceof NList list) {
+                    stack.push(list.elements().iterator());
+                } else {
+                    result = result.add((T) element);
+                }
+            } else {
+                stack.pop();
+            }
+        }
+        return result;
     }
 
     @Override

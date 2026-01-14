@@ -186,11 +186,10 @@ public class Functor extends Node {
         return (Functor) super.setAstElements(elements);
     }
 
-    @SuppressWarnings("unchecked")
     public Object[] args(List<AstElement> elements) {
         Pattern pattern = pattern();
         List<Object> args = pattern.args(List.of(), new Pattern.ElementIterator(elements, start(), this), List.of(), false);
-        return pattern instanceof SequencePattern && args.size() == 1 && args.get(0) instanceof List seq ? seq.toArray() : args.toArray();
+        return pattern instanceof SequencePattern && args.size() == 1 && args.get(0) instanceof List<?> seq ? seq.toArray() : args.toArray();
     }
 
     public String string(List<Object> args, TokenType[] previous) {

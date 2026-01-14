@@ -252,7 +252,7 @@ public final class Token implements AstElement {
     }
 
     public boolean skip() {
-        return type.skip();
+        return type.isSkip();
     }
 
     @Override
@@ -274,7 +274,7 @@ public final class Token implements AstElement {
     @Override
     public String toString() {
         String textTraced = textTraced();
-        return textTraced.isEmpty() && !type().variable() ? type().name() : "'" + textTraced + "'";
+        return textTraced.isEmpty() && !type().isVariableContent() ? type().name() : "'" + textTraced + "'";
     }
 
     public String debug() {

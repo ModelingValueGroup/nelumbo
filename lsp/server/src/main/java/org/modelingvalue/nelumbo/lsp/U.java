@@ -448,24 +448,24 @@ public class U {
     public static void DEBUG_NODE(AstElement node, String indent) {
         if (Main.debugging()) {
             switch (node) {
-                case Token t -> DEBUG("    %s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
+                case Token t -> DEBUG("    %-20s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
                 case NList l -> {
                     Node   declaration = l.declaration();
                     String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
-                    DEBUG("    %s%sL[%d]:%-16s  '%s'  => %s", renderSpan(l), indent, l.elements().size(), l.type(), l, decl);
+                    DEBUG("    %-20s%sL[%d]:%-16s  '%s'  => %s", renderSpan(l), indent, l.elements().size(), l.type(), l, decl);
                     l.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
                 }
                 case Node n -> {
                     Node   declaration = n.declaration();
                     String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
-                    DEBUG("    %s%sN:%-16s  '%s'  => %s", renderSpan(n), indent, n.type(), n, decl);
+                    DEBUG("    %-20s%sN:%-16s  '%s'  => %s", renderSpan(n), indent, n.type(), n, decl);
                     n.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
                 }
                 case null -> {
-                    DEBUG("                    %s<null>", indent);
+                    DEBUG("                    %-20s%s<null>", "???", indent);
                 }
                 default -> {
-                    DEBUG("                    %s????? %s   %s", indent, node.getClass().getSimpleName(), node);
+                    DEBUG("                    %-20s%s????? %s   %s", "???", indent, node.getClass().getSimpleName(), node);
                 }
             }
         }

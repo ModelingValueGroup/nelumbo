@@ -16,8 +16,6 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.util.regex.Matcher;
-
 import org.modelingvalue.collections.List;
 
 @SuppressWarnings("ClassCanBeRecord")
@@ -35,42 +33,16 @@ public class Tokenizer {
 
     public TokenizerResult tokenize() {
         Token[] tokens = new Token[4];
-        TokenType[] tokenTypes = TokenType.values();
-        Matcher[] matchers = new Matcher[tokenTypes.length - TokenType.DUMMIES];
-        for (int i = 0; i < matchers.length; i++) {
-            matchers[i] = tokenTypes[i].pattern().matcher(input);
-            if (!matchers[i].find()) {
-                matchers[i] = null;
-            }
-        }
-        int offset = 0;
+        TokenType.Matcher matcher = TokenType.getMatcher(input);
         int line = 0;
         int position = 0;
         int index = 0;
-        addToken(tokens, TokenType.BEGINOFFILE, "", line, position, offset);
+        addToken(tokens, TokenType.BEGINOFFILE, "", 0, 0, 0);
         String previousVertical = null;
-        while (offset < input.length()) {
-            String text = null;
-            TokenType type = null;
-            for (int i = 0; i < matchers.length; i++) {
-                final Matcher m = matchers[i];
-                if (m == null) {
-                    continue;
-                }
-                if (!m.find(offset)) {
-                    matchers[i] = null;
-                    continue;
-                }
-                if (m.start() == offset) {
-                    String group = m.group();
-                    if (text == null || text.length() < group.length()) {
-                        text = group;
-                        type = tokenTypes[i];
-                    }
-                }
-            }
+        while (matcher.hasMore()) {
+            String text = matcher.text();
+            TokenType type = matcher.type();
             addToken(tokens, type, text, line, position, index);
-            offset += text.length();
             int lineIncr = text.replaceAll("\\V", "").length();
             if (0 < lineIncr) {
                 if (previousVertical == null || previousVertical.contains(text)) {
@@ -101,7 +73,7 @@ public class Tokenizer {
             return;
         }
         if (token.type() == TokenType.NEWLINE) {
-            if (tokens[LAST] == null || tokens[LAST].type() == TokenType.BEGINOFFILE || tokens[LAST].type().more()) {
+            if (tokens[LAST] == null || tokens[LAST].type() == TokenType.BEGINOFFILE || tokens[LAST].type().isContinuesOnNextLine()) {
                 // ignore newlines after a token that can be continued
                 return;
             }
