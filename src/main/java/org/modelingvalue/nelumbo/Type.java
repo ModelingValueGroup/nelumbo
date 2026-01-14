@@ -293,13 +293,13 @@ public final class Type extends Node {
     @SuppressWarnings("unchecked")
     public String name() {
         Object type = get(0);
-        if (type instanceof Set set) {
-            return ((Set<Type>) set).map(t -> t.name()).sorted().sequential().reduce("", (a, b) -> a + b);
+        if (type instanceof Set<?> s) {
+            return ((Set<Type>) s).map(Type::name).sorted().sequential().reduce("", (a, b) -> a + b);
         } else if (type instanceof TokenType tt) {
             return tt.name();
         } else if (type instanceof Variable var) {
             return var.name();
-        } else if (type instanceof Class cls) {
+        } else if (type instanceof Class<?> cls) {
             return "$" + cls.getSimpleName();
         }
         return (String) type;
@@ -308,15 +308,15 @@ public final class Type extends Node {
     @SuppressWarnings("unchecked")
     public Class<? extends Node> clss() {
         Object type = get(0);
-        return type instanceof Class clss ? clss : null;
+        return type instanceof Class<?> clss ? (Class<? extends Node>) clss : null;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Variable variable() {
         Object type = get(0);
-        if (type instanceof Set set) {
-            for (Type t : (Set<Type>) set) {
+        if (type instanceof Set<?> s) {
+            for (Type t : (Set<Type>) s) {
                 Variable var = t.variable();
                 if (var != null) {
                     return var;

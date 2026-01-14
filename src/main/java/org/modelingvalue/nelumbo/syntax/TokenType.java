@@ -16,9 +16,15 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.*;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.CONTINUES_ON_NEXT_LINE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.LAYOUT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.NOT_MATCHED;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.SKIP;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.VARIABLE_CONTENT;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum TokenType {
@@ -47,14 +53,12 @@ public enum TokenType {
     TYPE, //
     ;
 
-    public final static int NR_OF_NON_MATCHED = 6;
-
     public enum Flag {
-        SKIP, // indicates a non semantic part that may be ignored by the parser
+        SKIP,                   // indicates a non semantic part that may be ignored by the parser
         CONTINUES_ON_NEXT_LINE, // indicates that a NEWLINE token after this token is to be ignored when parsing
-        NOT_MATCHED, // indicates that this token type is not actually matched by the lexer
-        VARIABLE_CONTENT, // indicates that this token type has a variable content
-        LAYOUT // indicates that this token type is layout and should be ignored by the parser
+        NOT_MATCHED,            // indicates that this token type is not actually matched by the lexer
+        VARIABLE_CONTENT,       // indicates that this token type has a variable content
+        LAYOUT                  // indicates that this token type is layout and should be ignored by the parser
     }
 
     private final Pattern pattern;
@@ -71,11 +75,11 @@ public enum TokenType {
     TokenType(String regexp, Flag... flags) {
         this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
         EnumSet<Flag> flagset = flags.length == 0 ? EnumSet.noneOf(Flag.class) : EnumSet.of(flags[0], flags);
-        this.skip = flagset.contains(SKIP);
+        this.skip                = flagset.contains(SKIP);
         this.continuesOnNextLine = flagset.contains(CONTINUES_ON_NEXT_LINE);
-        this.layout = flagset.contains(LAYOUT);
-        this.variableContent = flagset.contains(VARIABLE_CONTENT);
-        this.notMatched = flagset.contains(NOT_MATCHED);
+        this.layout              = flagset.contains(LAYOUT);
+        this.variableContent     = flagset.contains(VARIABLE_CONTENT);
+        this.notMatched          = flagset.contains(NOT_MATCHED);
     }
 
     public Pattern pattern() {
@@ -115,38 +119,50 @@ public enum TokenType {
         return null;
     }
 
-    public static Matcher getMatcher(String input) {
-        return new Matcher(input);
+    public static TokenMatcher getMatcher(String input) {
+        return new TokenMatcher(input);
     }
 
-    public static class Matcher {
-        private final TokenType[]               tokenTypes = TokenType.values();
-        private final java.util.regex.Matcher[] matchers   = new java.util.regex.Matcher[tokenTypes.length - NR_OF_NON_MATCHED];
-        private final String                    input;
-        private int                             offset;
-        private String                          matchedText;
-        private TokenType                       matchedType;
+    public static class TokenMatcher {
+        private final TokenType[] tokenTypes;
+        private final Matcher[]   matchers;
+        private final String      input;
+        private       int         offset;
+        private       String      matchedText;
+        private       TokenType   matchedType;
 
-        private Matcher(String input) {
-            this.input = input;
+        private TokenMatcher(String input) {
+            TokenType[] tta = TokenType.values();
+            Matcher[]   maa = new Matcher[tta.length];
+            this.input  = input;
             this.offset = 0;
-            for (int i = 0; i < matchers.length; i++) {
-                TokenType t = tokenTypes[i];
-                java.util.regex.Matcher m = t.pattern.matcher(input);
-                if (m.find()) {
-                    matchers[i] = m;
+            int firstNotMatched = 0;
+            for (int i = 0; i < tta.length; i++) {
+                TokenType t = tta[i];
+                if (!t.isNotMatched()) {
+                    Matcher m = t.pattern.matcher(input);
+                    if (m.find()) {
+                        firstNotMatched = i + 1;
+                        maa[i]          = m;
+                    }
                 }
             }
+            if (firstNotMatched < tta.length) {
+                tta = Arrays.copyOf(tta, firstNotMatched);
+                maa = Arrays.copyOf(maa, firstNotMatched);
+            }
+            this.tokenTypes = tta;
+            this.matchers   = maa;
         }
 
         public boolean hasMore() {
             if (input.length() <= offset) {
                 return false;
             }
-            String text = null;
+            String    text = null;
             TokenType type = null;
             for (int i = 0; i < matchers.length; i++) {
-                final java.util.regex.Matcher m = matchers[i];
+                final Matcher m = matchers[i];
                 if (m != null) {
                     if (!m.find(offset)) {
                         matchers[i] = null;

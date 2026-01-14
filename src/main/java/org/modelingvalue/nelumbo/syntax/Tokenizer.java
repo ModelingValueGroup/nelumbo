@@ -32,16 +32,16 @@ public class Tokenizer {
     }
 
     public TokenizerResult tokenize() {
-        Token[] tokens = new Token[4];
-        TokenType.Matcher matcher = TokenType.getMatcher(input);
-        int line = 0;
+        Token[]                tokens       = new Token[4];
+        TokenType.TokenMatcher tokenMatcher = TokenType.getMatcher(input);
+        int                    line         = 0;
         int position = 0;
         int index = 0;
         addToken(tokens, TokenType.BEGINOFFILE, "", 0, 0, 0);
         String previousVertical = null;
-        while (matcher.hasMore()) {
-            String text = matcher.text();
-            TokenType type = matcher.type();
+        while (tokenMatcher.hasMore()) {
+            String text = tokenMatcher.text();
+            TokenType type = tokenMatcher.type();
             addToken(tokens, type, text, line, position, index);
             int lineIncr = text.replaceAll("\\V", "").length();
             if (0 < lineIncr) {
