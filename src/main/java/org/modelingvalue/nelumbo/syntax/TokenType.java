@@ -34,15 +34,15 @@ public enum TokenType {
     LEFT("[\\(\\[\\{]", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     RIGHT("[\\)\\]\\}]", VARIABLE_CONTENT), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //
-    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", VARIABLE_CONTENT), //
     DECIMAL("-?[0-9]+\\.[0-9]+", VARIABLE_CONTENT), //
+    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", VARIABLE_CONTENT), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", VARIABLE_CONTENT), //
     META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", VARIABLE_CONTENT), //
+    END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
+    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     NEWLINE("\\v", CONTINUES_ON_NEXT_LINE, LAYOUT), //
     HSPACE("\\h+", SKIP, LAYOUT), //
-    END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
-    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     ERROR(".", VARIABLE_CONTENT), //
     //================ rest is not actually matched:
     BEGINOFFILE, //
@@ -102,6 +102,7 @@ public enum TokenType {
         return variableContent;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isNotMatched() {
         return notMatched;
     }
@@ -124,60 +125,54 @@ public enum TokenType {
     }
 
     public static class TokenMatcher {
-        private final TokenType[] tokenTypes;
-        private final Matcher[]   matchers;
-        private final String      input;
-        private       int         offset;
-        private       String      matchedText;
-        private       TokenType   matchedType;
+        private static final Pattern     COMBINED_PATTERN;
+        private static final TokenType[] COMBINED_PATTERN_LOOKUP;
 
-        private TokenMatcher(String input) {
-            TokenType[] tta = TokenType.values();
-            Matcher[]   maa = new Matcher[tta.length];
-            this.input  = input;
-            this.offset = 0;
-            int firstNotMatched = 0;
-            for (int i = 0; i < tta.length; i++) {
-                TokenType t = tta[i];
-                if (!t.isNotMatched()) {
-                    Matcher m = t.pattern.matcher(input);
-                    if (m.find()) {
-                        firstNotMatched = i + 1;
-                        maa[i]          = m;
-                    }
+        static {
+            StringBuilder sb     = new StringBuilder();
+            String        sep    = "";
+            int           group  = 1;
+            TokenType[]   lookup = new TokenType[TokenType.values().length + 1]; // index 0 is unused because group numbering starts at 1
+            for (TokenType tt : TokenType.values()) {
+                if (!tt.isNotMatched()) {
+                    // Convert internal capturing groups to non-capturing (but not escaped literal parens like \()
+                    String p = tt.pattern.pattern().replaceAll("(?<!\\\\)\\((?!\\?)", "(?:");
+                    sb.append(sep).append("(").append(p).append(")");
+                    sep           = "|";
+                    lookup[group] = tt;
+                    group++;
                 }
             }
-            if (firstNotMatched < tta.length) {
-                tta = Arrays.copyOf(tta, firstNotMatched);
-                maa = Arrays.copyOf(maa, firstNotMatched);
-            }
-            this.tokenTypes = tta;
-            this.matchers   = maa;
+            COMBINED_PATTERN        = Pattern.compile(sb.toString(), Pattern.MULTILINE | Pattern.DOTALL);
+            COMBINED_PATTERN_LOOKUP = Arrays.copyOf(lookup, group);
+        }
+
+        private final Matcher   matcher;
+        private final int       inputLength;
+        private       String    matchedText;
+        private       TokenType matchedType;
+
+        private TokenMatcher(String input) {
+            this.matcher     = COMBINED_PATTERN.matcher(input);
+            this.inputLength = input.length();
         }
 
         public boolean hasMore() {
-            int len = input.length();
-            if (len <= offset) {
+            if (inputLength <= matcher.regionStart()) {
                 return false;
             }
-            int       matchEnd  = -1;
-            TokenType matchType = null;
-            for (int i = 0; i < matchers.length; i++) {
-                final Matcher m = matchers[i];
-                if (m != null) {
-                    m.region(offset, len);
-                    if (m.lookingAt() && m.end() > matchEnd) {
-                        matchEnd  = m.end();
-                        matchType = tokenTypes[i];
+            if (matcher.lookingAt()) {
+                for (int group = 1; group <= COMBINED_PATTERN_LOOKUP.length; group++) {
+                    int start = matcher.start(group);
+                    if (0 <= start) {
+                        matchedText = matcher.group(group);
+                        matchedType = COMBINED_PATTERN_LOOKUP[group];
+                        matcher.region(matcher.end(), inputLength);
+                        return true;
                     }
                 }
             }
-            assert matchEnd >= 0;
-            assert matchType != null;
-            matchedText = input.substring(offset, matchEnd);
-            matchedType = matchType;
-            offset      = matchEnd;
-            return true;
+            throw new IllegalStateException("TokenMatcher does not match input at: " + matcher.regionStart());
         }
 
         public String text() {
