@@ -310,15 +310,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(n(Type.TYPE, Integer.MAX_VALUE), //
                         Type.PATTERN, false, (elements, args, functor) -> {
-                            Type type = args[0] instanceof Variable var ? new Type(var) : (Type) args[0];
+                            Type type = (Type) args[0];
                             TokenType tt = type.tokenType();
                             return tt != null ? t(elements, tt) : n(elements, type, null);
                         }).init(this);
 
                 Functor.of(s(n(Type.TYPE, null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            AstElement node = elements.get(0);
-                            Type type = node instanceof Variable var ? new Type(var) : (Type) node;
+                            Type type = (Type) elements.get(0);
                             NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
@@ -365,7 +364,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                     pttrn = pttrn.add(e);
                                 }
                             }
-                            return roots.setAstElements(roots.astElements().add(node).add(elements.last()));
+                            return roots.setAstElements(roots.astElements().add(type).add(elements.last()));
                         }).init(this);
 
                 Functor.of(s(t("<"), t(NAME), o(s(t("<"), n(Type.VARIABLE, null), t(">"))), t(">"), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
@@ -377,19 +376,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             }
                             String group = ((Optional<String>) args[3]).orElse(Type.DEFAULT_GROUP);
                             Type type;
-                            if (args[0] instanceof Variable var) {
-                                type = new Type(elements, var, group);
-                            } else {
-                                String name = (String) args[0];
-                                Variable arg = ((Optional<Variable>) args[1]).orElse(null);
-                                if (arg != null) {
-                                    if (!arg.type().equals(Type.TYPE)) {
-                                        kb.addException(new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
-                                    }
-                                    type = new Type(elements, name, supers, group, new Type(List.of(), arg, group));
-                                } else {
-                                    type = new Type(elements, name, supers, group);
+                            String name = (String) args[0];
+                            Variable arg = ((Optional<Variable>) args[1]).orElse(null);
+                            if (arg != null) {
+                                if (!arg.type().equals(Type.TYPE)) {
+                                    kb.addException(new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
                                 }
+                                type = new Type(elements, name, supers, group, new Type(List.of(), arg, group));
+                            } else {
+                                type = new Type(elements, name, supers, group);
                             }
                             return kb.addType(type, false);
                         }).init(this);
@@ -422,7 +417,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(n(Type.TYPE, null), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             AstElement e = elements.get(0);
-                            Type type = e instanceof Variable var ? new Type(var) : (Type) e;
+                            Type type = (Type) e;
                             NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             for (int i = 1; i < elements.size(); i++) {
                                 e = elements.get(i);
