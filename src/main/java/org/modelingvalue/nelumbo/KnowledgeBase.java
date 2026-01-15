@@ -336,6 +336,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                             roots = roots.setAstElements(roots.astElements().add(t));
                                         }
                                         ast = pttrn = List.of();
+
                                         constructor = null;
                                         precedence = List.of();
                                     } else if (t.text().equals("#")) {
@@ -395,7 +396,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             KnowledgeBase kb = CURRENT.get();
-                            StringBuffer sb = new StringBuffer();
+                            StringBuilder sb = new StringBuilder();
                             List<AstElement> el = List.of();
                             for (int i = 1; i <= elements.size(); i++) {
                                 Token t = i < elements.size() ? (Token) elements.get(i) : null;
@@ -406,7 +407,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         roots = roots.setAstElements(roots.astElements().add(t));
                                     }
                                     el = List.of();
-                                    sb = new StringBuffer();
+                                    sb = new StringBuilder();
                                     ip.init(kb);
                                 } else {
                                     sb.append(t.text());
@@ -421,6 +422,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             KnowledgeBase kb = CURRENT.get();
                             Type type = (Type) elements.get(0);
                             NList roots = new NList(List.of(type), Type.ROOT);
+
                             for (int i = 1; i < elements.size(); i++) {
                                 AstElement e = elements.get(i);
                                 if (e instanceof Token t && t.text().equals(",")) {
@@ -947,6 +949,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return context;
     }
 
+    @SuppressWarnings("unused")
     public Set<String> imported() {
         return imported.get();
     }
@@ -958,6 +961,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
+    @SuppressWarnings("unused")
     public static Map<String, KnowledgeBase> importMap() {
         return IMPORT_MAP.get();
     }

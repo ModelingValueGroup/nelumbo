@@ -36,13 +36,13 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 @SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long           serialVersionUID = 7315776001191198132L;
-    protected static final int          START            = 2;
+    private static final   long                  serialVersionUID = 7315776001191198132L;
+    protected static final int                   START            = 2;
     //
-    private final Node                  declaration;
-    private Map<Variable, Object>       binding;
-    private boolean                     hashCodeIsCached;
-    private int                         hashCodeCache;
+    private final          Node                  declaration;
+    private                Map<Variable, Object> binding;
+    private                boolean               hashCodeIsCached;
+    private                int                   hashCodeCache;
 
     private Map<Functor, List<Integer>> branches;
     private int                         cycleDepth;
@@ -170,8 +170,8 @@ public class Node extends StructImpl implements AstElement {
                 Object e = get(i);
                 r = 31 * r + (e == null ? 0 : e.hashCode());
             }
-            r = 31 * r + typeForEquals().hashCode();
-            hashCodeCache = r == 0 ? 1 : r;
+            r                = 31 * r + typeForEquals().hashCode();
+            hashCodeCache    = r == 0 ? 1 : r;
             hashCodeIsCached = true;
         }
         return hashCodeCache;
@@ -285,7 +285,7 @@ public class Node extends StructImpl implements AstElement {
 
     private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
-        int i = idx[ii] + START;
+        int      i     = idx[ii] + START;
         if (ii < idx.length - 1) {
             Node s = (Node) array[i];
             array[i] = s.set(ii + 1, idx, val);
@@ -370,11 +370,12 @@ public class Node extends StructImpl implements AstElement {
                     }
                 }
             }
-        } else if (declVal instanceof Node declNode && !(declVal instanceof Type) && //
-                thisVal instanceof Node thisNode) {
+        } else if (declVal instanceof Node declNode && thisVal instanceof Node thisNode) {
+            //noinspection ConstantValue
+            assert !(declVal instanceof Type);
             vars = thisNode.getBinding(declNode, vars);
         } else if (declVal instanceof ContainingCollection<?> declList && thisVal instanceof ContainingCollection<?> thisList && //
-                declList.size() == thisList.size()) {
+                   declList.size() == thisList.size()) {
             for (int ii = 0; ii < declList.size(); ii++) {
                 vars = getBinding(declList.get(ii), thisList.get(ii), vars, i);
             }
@@ -398,7 +399,7 @@ public class Node extends StructImpl implements AstElement {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
-            Object bound = setBinding(declaration.get(i), thisVal, vars, i);
+            Object bound   = setBinding(declaration.get(i), thisVal, vars, i);
             if (!Objects.equals(bound, thisVal)) {
                 if (array == null) {
                     array = toArray();
@@ -417,8 +418,8 @@ public class Node extends StructImpl implements AstElement {
                 return varVal;
             }
             if (thisVal instanceof Variable thisVar) {
-                Type from = thisVar.type();
-                Variable var = from.variable();
+                Type     from = thisVar.type();
+                Variable var  = from.variable();
                 if (var != null) {
                     if (vars.get(var) instanceof Type to) {
                         return thisVar.setType(from.rewrite(to));
@@ -426,10 +427,10 @@ public class Node extends StructImpl implements AstElement {
                 }
             }
         } else if (declVal instanceof Node declNode && !(declNode instanceof Type) && //
-                thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
+                   thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
             return thisNode.setBinding(declNode, vars);
         } else if (declVal instanceof ContainingCollection declList && thisVal instanceof ContainingCollection thisList && //
-                declList.size() == thisList.size()) {
+                   declList.size() == thisList.size()) {
             ContainingCollection list = declList.clear();
             for (int ii = 0; ii < declList.size(); ii++) {
                 list = list.add(setBinding(declList.get(ii), thisList.get(ii), vars, i));
@@ -465,7 +466,7 @@ public class Node extends StructImpl implements AstElement {
             Object[] array = null;
             for (int i = 0; i < length(); i++) {
                 Object fromVal = get(i);
-                Object toVal = replace(fromVal, replacer);
+                Object toVal   = replace(fromVal, replacer);
                 if (toVal != fromVal) {
                     if (array == null) {
                         array = toArray();
@@ -546,34 +547,34 @@ public class Node extends StructImpl implements AstElement {
     public <E> MatchState<E> state(MatchState<E> state) {
         for (Object arg : args().reverse()) {
             switch (arg) {
-            case Type type -> {
-                TokenType tt = type.tokenType();
-                if (tt != null) {
-                    state = new MatchState<>(tt, state);
-                } else {
-                    Variable var = type.variable();
-                    if (var != null) {
-                        state = new MatchState<>(var.type(), state);
+                case Type type -> {
+                    TokenType tt = type.tokenType();
+                    if (tt != null) {
+                        state = new MatchState<>(tt, state);
+                    } else {
+                        Variable var = type.variable();
+                        if (var != null) {
+                            state = new MatchState<>(var.type(), state);
+                        } else {
+                            state = new MatchState<>(type, state);
+                        }
+                    }
+                }
+                case Variable var -> {
+                    Type      type = var.type();
+                    TokenType tt   = type.tokenType();
+                    if (tt != null) {
+                        state = new MatchState<>(tt, state);
                     } else {
                         state = new MatchState<>(type, state);
                     }
                 }
-            }
-            case Variable var -> {
-                Type type = var.type();
-                TokenType tt = type.tokenType();
-                if (tt != null) {
-                    state = new MatchState<>(tt, state);
-                } else {
-                    state = new MatchState<>(type, state);
+                case Node node -> {
+                    state = node.state(state);
                 }
-            }
-            case Node node -> {
-                state = node.state(state);
-            }
-            default -> {
-                state = new MatchState<>(arg.getClass(), state);
-            }
+                default -> {
+                    state = new MatchState<>(arg.getClass(), state);
+                }
             }
         }
         Functor functor = functor();

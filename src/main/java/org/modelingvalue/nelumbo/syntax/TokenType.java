@@ -16,9 +16,15 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.*;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.CONTINUES_ON_NEXT_LINE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.LAYOUT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.NOT_MATCHED;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.SKIP;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.VARIABLE_CONTENT;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum TokenType {
@@ -28,15 +34,15 @@ public enum TokenType {
     LEFT("[\\(\\[\\{]", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     RIGHT("[\\)\\]\\}]", VARIABLE_CONTENT), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //
-    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", VARIABLE_CONTENT), //
     DECIMAL("-?[0-9]+\\.[0-9]+", VARIABLE_CONTENT), //
+    NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", VARIABLE_CONTENT), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", VARIABLE_CONTENT), //
     META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", VARIABLE_CONTENT), //
+    END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
+    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     NEWLINE("\\v", CONTINUES_ON_NEXT_LINE, LAYOUT), //
     HSPACE("\\h+", SKIP, LAYOUT), //
-    END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
-    IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     ERROR(".", VARIABLE_CONTENT), //
     //================ rest is not actually matched:
     BEGINOFFILE, //
@@ -47,14 +53,39 @@ public enum TokenType {
     TYPE, //
     ;
 
-    public final static int NR_OF_NON_MATCHED = 6;
+    // Combined patterns for efficient matching - built once at class load
+    private static final Pattern     COMBINED_FULL_MATCH_PATTERN;
+    private static final Pattern     COMBINED_PATTERN;
+    private static final TokenType[] COMBINED_PATTERN_LOOKUP;
+
+    static {
+        StringBuilder sb     = new StringBuilder();
+        String        sep    = "";
+        int           group  = 1;
+        TokenType[]   lookup = new TokenType[TokenType.values().length + 1]; // index 0 unused (groups start at 1)
+        for (TokenType tt : TokenType.values()) {
+            if (!tt.isNotMatched()) {
+                // Convert internal capturing groups to non-capturing (but not escaped literal parens like \()
+                String p = tt.pattern.pattern().replaceAll("(?<!\\\\)\\((?!\\?)", "(?:");
+                sb.append(sep).append("(").append(p).append(")");
+                sep           = "|";
+                lookup[group] = tt;
+                group++;
+            }
+        }
+        String fullRegexp = sb.toString();
+        //noinspection RegExpUnnecessaryNonCapturingGroup
+        COMBINED_FULL_MATCH_PATTERN = Pattern.compile("^(?:" + fullRegexp + ")$", Pattern.DOTALL);
+        COMBINED_PATTERN            = Pattern.compile(fullRegexp, Pattern.MULTILINE | Pattern.DOTALL);
+        COMBINED_PATTERN_LOOKUP     = Arrays.copyOf(lookup, group);
+    }
 
     public enum Flag {
-        SKIP, // indicates a non semantic part that may be ignored by the parser
+        SKIP,                   // indicates a non semantic part that may be ignored by the parser
         CONTINUES_ON_NEXT_LINE, // indicates that a NEWLINE token after this token is to be ignored when parsing
-        NOT_MATCHED, // indicates that this token type is not actually matched by the lexer
-        VARIABLE_CONTENT, // indicates that this token type has a variable content
-        LAYOUT // indicates that this token type is layout and should be ignored by the parser
+        NOT_MATCHED,            // indicates that this token type is not actually matched by the lexer
+        VARIABLE_CONTENT,       // indicates that this token type has a variable content
+        LAYOUT                  // indicates that this token type is layout and should be ignored by the parser
     }
 
     private final Pattern pattern;
@@ -71,11 +102,11 @@ public enum TokenType {
     TokenType(String regexp, Flag... flags) {
         this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
         EnumSet<Flag> flagset = flags.length == 0 ? EnumSet.noneOf(Flag.class) : EnumSet.of(flags[0], flags);
-        this.skip = flagset.contains(SKIP);
+        this.skip                = flagset.contains(SKIP);
         this.continuesOnNextLine = flagset.contains(CONTINUES_ON_NEXT_LINE);
-        this.layout = flagset.contains(LAYOUT);
-        this.variableContent = flagset.contains(VARIABLE_CONTENT);
-        this.notMatched = flagset.contains(NOT_MATCHED);
+        this.layout              = flagset.contains(LAYOUT);
+        this.variableContent     = flagset.contains(VARIABLE_CONTENT);
+        this.notMatched          = flagset.contains(NOT_MATCHED);
     }
 
     public Pattern pattern() {
@@ -98,6 +129,7 @@ public enum TokenType {
         return variableContent;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isNotMatched() {
         return notMatched;
     }
@@ -107,64 +139,54 @@ public enum TokenType {
     }
 
     public static TokenType of(String text) {
-        for (TokenType tt : TokenType.values()) {
-            if (!tt.isNotMatched() && tt.matches(text)) {
-                return tt;
+        Matcher m = COMBINED_FULL_MATCH_PATTERN.matcher(text);
+        if (m.matches()) {
+            int group = findGroup(m);
+            if (group != 0) {
+                return COMBINED_PATTERN_LOOKUP[group];
             }
         }
         return null;
     }
 
-    public static Matcher getMatcher(String input) {
-        return new Matcher(input);
+    private static int findGroup(Matcher m) {
+        for (int group = 1; group < COMBINED_PATTERN_LOOKUP.length; group++) {
+            if (m.start(group) >= 0) {
+                return group;
+            }
+        }
+        return 0;
     }
 
-    public static class Matcher {
-        private final TokenType[]               tokenTypes = TokenType.values();
-        private final java.util.regex.Matcher[] matchers   = new java.util.regex.Matcher[tokenTypes.length - NR_OF_NON_MATCHED];
-        private final String                    input;
-        private int                             offset;
-        private String                          matchedText;
-        private TokenType                       matchedType;
+    public static TokenMatcher getMatcher(String input) {
+        return new TokenMatcher(input);
+    }
 
-        private Matcher(String input) {
-            this.input = input;
-            this.offset = 0;
-            for (int i = 0; i < matchers.length; i++) {
-                TokenType t = tokenTypes[i];
-                java.util.regex.Matcher m = t.pattern.matcher(input);
-                if (m.find()) {
-                    matchers[i] = m;
-                }
-            }
+    public static class TokenMatcher {
+        private final Matcher   matcher;
+        private final int       inputLength;
+        private       String    matchedText;
+        private       TokenType matchedType;
+
+        private TokenMatcher(String input) {
+            this.matcher     = COMBINED_PATTERN.matcher(input);
+            this.inputLength = input.length();
         }
 
         public boolean hasMore() {
-            if (input.length() <= offset) {
+            if (inputLength <= matcher.regionStart()) {
                 return false;
             }
-            String text = null;
-            TokenType type = null;
-            for (int i = 0; i < matchers.length; i++) {
-                final java.util.regex.Matcher m = matchers[i];
-                if (m != null) {
-                    if (!m.find(offset)) {
-                        matchers[i] = null;
-                    } else if (m.start() == offset) {
-                        String group = m.group();
-                        if (text == null || text.length() < group.length()) {
-                            text = group;
-                            type = tokenTypes[i];
-                        }
-                    }
+            if (matcher.lookingAt()) {
+                int group = findGroup(matcher);
+                if (group != 0) {
+                    matchedText = matcher.group(group);
+                    matchedType = COMBINED_PATTERN_LOOKUP[group];
+                    matcher.region(matcher.end(), inputLength);
+                    return true;
                 }
             }
-            assert text != null;
-            assert type != null;
-            offset += text.length();
-            matchedText = text;
-            matchedType = type;
-            return true;
+            throw new IllegalStateException("TokenMatcher does not match input at: " + matcher.regionStart());
         }
 
         public String text() {

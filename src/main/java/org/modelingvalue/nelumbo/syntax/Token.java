@@ -372,7 +372,7 @@ public final class Token implements AstElement {
     }
 
     public Type nodeType() {
-        return node instanceof Type type ? type : null;
+        return node instanceof Type t ? t : null;
     }
 
     public void setKeyword() {

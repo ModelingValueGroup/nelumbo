@@ -31,25 +31,25 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class LspTokenMappingTest {
     @Test
-    void testAllTokenTypesAreMapped() {
-        List<TokenType> mappedTokenTypes = LspTokenMapping.tokenTypes();
+    void testAllAllDefinedTokenTypesAreMapped() {
+        List<TokenType> mappedTokenTypes = LspTokenMapping.allDefinedTokenTypes();
         for (TokenType t : TokenType.values()) {
             assertTrue(mappedTokenTypes.contains(t), "Token type " + t + " not mapped in LspTokenMapping");
         }
     }
 
     @Test
-    void testLspTypesAreValid() {
+    void testAllLSPTypesAreValid() {
         final Set<String> VALID_TOKEN_TYPES = getStaticStringFields(SemanticTokenTypes.class);
-        for (String type : LspTokenMapping.lspTypes()) {
+        for (String type : LspTokenMapping.allLSPTypes()) {
             assertTrue(VALID_TOKEN_TYPES.contains(type), "Invalid token type: '" + type + "' (not in SemanticTokenTypes)");
         }
     }
 
     @Test
-    void testLspModifiersAreValid() {
+    void testAllLSPModifiersAreValid() {
         final Set<String> VALID_TOKEN_MODIFIERS = getStaticStringFields(SemanticTokenModifiers.class);
-        for (String modifier : LspTokenMapping.lspModifiers()) {
+        for (String modifier : LspTokenMapping.allLSPModifiers()) {
             assertTrue(VALID_TOKEN_MODIFIERS.contains(modifier), "Invalid token modifier: '" + modifier + "' (not in SemanticTokenModifiers)");
         }
     }
