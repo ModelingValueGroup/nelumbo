@@ -32,9 +32,9 @@ public final class NBoolean extends Predicate {
     @Serial
     private static final long serialVersionUID = -8515171118744898263L;
     //
-    public static NBoolean     TRUE;
-    public static NBoolean     FALSE;
-    public static NBoolean     UNKNOWN;
+    public static NBoolean    TRUE;
+    public static NBoolean    FALSE;
+    public static NBoolean    UNKNOWN;
     //
     private InferResult       result;
 
@@ -50,7 +50,7 @@ public final class NBoolean extends Predicate {
     }
 
     public NBoolean(Variable var) {
-        super(UNKNOWN.functor(), List.of(), var);
+        super(UNKNOWN.functor(), List.of(var), var);
     }
 
     @Override

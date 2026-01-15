@@ -17,9 +17,6 @@
 package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Iterator;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -71,19 +68,11 @@ public class NList extends Node {
     @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elementsFlattened() {
         List<T> result = List.of();
-        Deque<Iterator<?>> stack = new ArrayDeque<>();
-        stack.push(elements().iterator());
-        while (!stack.isEmpty()) {
-            Iterator<?> iter = stack.peek();
-            if (iter.hasNext()) {
-                Object element = iter.next();
-                if (element instanceof NList list) {
-                    stack.push(list.elements().iterator());
-                } else {
-                    result = result.add((T) element);
-                }
+        for (T e : this.<T> elements()) {
+            if (e instanceof NList nl) {
+                result = result.addAll(nl.<T> elementsFlattened());
             } else {
-                stack.pop();
+                result = result.add(e);
             }
         }
         return result;
