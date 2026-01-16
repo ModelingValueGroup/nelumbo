@@ -424,12 +424,16 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void execute() {
         prepareForExecute();
-        String          text            = textPane.getText();
+        String text    = textPane.getText();
+        //String textNew = text.replaceAll("\r", "").replaceAll("\n", "\r\n");
+        //if (!text.equals(textNew)) {
+        //    textPane.setText(textNew);
+        //}
         Tokenizer       tokenizer       = new Tokenizer(text, EDITOR_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
         ParserResult    result          = new Parser(tokenizerResult).parseMutipleNonThrowing();
-        showColors(textPane, tokenizerResult);
-        showResults(result);
+        showColors(textPane, tokenizerResult, text);
+        showResults(result, text);
         saveTextContent(text);
     }
 
@@ -437,7 +441,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         String          text            = messagesPane.getText();
         Tokenizer       tokenizer       = new Tokenizer(text, MESSAGES_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
-        showColors(messagesPane, tokenizerResult);
+        showColors(messagesPane, tokenizerResult, text);
     }
 
     private void prepareForExecute() {
@@ -451,20 +455,16 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         messagesPane.setText("");
     }
 
-    private void showColors(JTextPane pane, TokenizerResult tokenizerResult) {
+    private void showColors(JTextPane pane, TokenizerResult tokenizerResult, String text) {
         if (tokenizerResult != null) {
-            int totalNumCR = 0;
             for (Token t = tokenizerResult.firstAll(); t != null; t = t.nextAll()) {
                 ColorScheme colorScheme = TOKEN_COLORS.get(t.colorType());
-                int         numCR       = U.numCarriageReturns(t.text());
                 if (colorScheme != null) {
-                    SimpleAttributeSet attr = colorScheme.attr();
-                    // Adjust index and length to account for \r characters not present in the document
-                    int adjustedIndex  = t.index() - totalNumCR;
-                    int adjustedLength = t.text().length() - numCR;
+                    SimpleAttributeSet attr           = colorScheme.attr();
+                    int                adjustedIndex  = adjustIndexForCRLF(text, t.index());
+                    int                adjustedLength = adjustLengthForCRLF(text, t.index(), t.text().length());
                     pane.getStyledDocument().setCharacterAttributes(adjustedIndex, adjustedLength, attr, false);
                 }
-                totalNumCR += numCR;
             }
         }
     }
@@ -474,7 +474,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                              String error) {
     }
 
-    private void showResults(ParserResult result) {
+    private void showResults(ParserResult result, String text) {
         List<ParseException> exceptions = result.exceptions();
         if (exceptions.isEmpty()) {
             ParserResult          throwing           = new ParserResult(true);
@@ -502,7 +502,9 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                             messagesHighlights.add(new Highlight(index, mess.length(), pe.getShortMessage()));
                         }
                         if (pe != null) {
-                            setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage(), redPainter);
+                            int adjustedIndex  = adjustIndexForCRLF(text, pe.index());
+                            int adjustedLength = adjustLengthForCRLF(text, pe.index(), pe.length());
+                            setHighlight(textPane, adjustedIndex, adjustedLength, pe.getShortMessage(), redPainter);
                         }
                         prevLine = ++nextLine;
                         index += mess.length() + 1;
@@ -520,11 +522,32 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             for (ParseException pe : exceptions) {
                 nextLine = pe.line();
                 messages.append(emptyLines(nextLine - prevLine)).append(pe.getShortMessage()).append("\n");
-                setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage(), redPainter);
+                int adjustedIndex  = adjustIndexForCRLF(text, pe.index());
+                int adjustedLength = adjustLengthForCRLF(text, pe.index(), pe.length());
+                setHighlight(textPane, adjustedIndex, adjustedLength, pe.getShortMessage(), redPainter);
                 prevLine = ++nextLine;
             }
             setMessages(messages.toString());
         }
+    }
+
+    private int adjustIndexForCRLF(String text, int index) {
+        return index;
+        //if (index <= 0 || text == null || text.isEmpty()) {
+        //    return index;
+        //}
+        //int safeIndex = Math.min(index, text.length());
+        //return index - U.numCarriageReturns(text.substring(0, safeIndex));
+    }
+
+    private int adjustLengthForCRLF(String text, int index, int length) {
+        return length;
+        //if (length <= 0 || text == null || text.isEmpty() || index < 0) {
+        //    return length;
+        //}
+        //int safeStart = Math.min(index, text.length());
+        //int safeEnd   = Math.min(index + length, text.length());
+        //return length - U.numCarriageReturns(text.substring(safeStart, safeEnd));
     }
 
     private void setHighlight(JTextPane pane, int index, int length, String message, DefaultHighlightPainter painter) {
@@ -565,7 +588,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void saveTextContent(String text) {
         try {
-            preferences.put(PREF_TEXT_CONTENT, text.replaceAll("\r", ""));
+            preferences.put(PREF_TEXT_CONTENT, text);
 
             // Save caret position and selection
             int caretPosition  = textPane.getCaretPosition();
@@ -585,7 +608,6 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void loadTextContent() {
         String text = preferences.get(PREF_TEXT_CONTENT, "");
         if (!text.isEmpty()) {
-            text = text.replaceAll("\r", "");
             try {
                 StyledDocument doc = textPane.getStyledDocument();
                 doc.insertString(0, text, null);
