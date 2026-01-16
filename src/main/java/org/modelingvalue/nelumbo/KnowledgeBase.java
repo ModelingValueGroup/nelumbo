@@ -255,7 +255,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
                         Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor) -> {
-                            return new NList(Type.ROOT.list(), elements, elements.filter(Node.class).asList());
+                            List<Node> roots = List.of();
+                            for (Object arg : args) {
+                                roots = roots.add((Node) arg);
+                            }
+                            return new NList(Type.ROOT.list(), elements, roots);
                         }).init(this);
 
                 Functor.of(s(t("<(>"), r(SEQUENCE, true, t("<|>")), t("<)>")), //
@@ -458,11 +462,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             Node source = (Node) args[0];
                             List<Node> targets = List.of();
                             for (Node arg : (List<Node>) args[1]) {
-                                if (arg instanceof NList list) {
-                                    targets = targets.addAll(list.elements());
-                                } else {
-                                    targets = targets.add(arg);
-                                }
+                                targets = targets.add(arg);
                             }
                             return new Transform(functor, elements, source, targets);
                         }).init(this);

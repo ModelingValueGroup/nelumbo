@@ -22,6 +22,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
@@ -58,9 +59,21 @@ public final class Transform extends Node {
         return (List<Node>) get(1);
     }
 
+    public List<Node> targetsFlattened() {
+        List<Node> result = List.of();
+        for (Node e : targets()) {
+            if (e instanceof NList nl) {
+                result = result.addAll(nl.elements());
+            } else {
+                result = result.add(e);
+            }
+        }
+        return result;
+    }
+
     public Set<Functor> literals() {
         Set<Functor> literals = Set.of();
-        for (Node target : targets()) {
+        for (Node target : targetsFlattened()) {
             if (target instanceof Functor functor && functor.pattern() instanceof TokenTextPattern) {
                 literals = literals.add(functor);
             }
@@ -80,7 +93,7 @@ public final class Transform extends Node {
             return;
         }
         Map<Functor, Functor> functors = Map.of();
-        for (Node target : targets()) {
+        for (Node target : targetsFlattened()) {
             if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType()) && !functor.pattern().equals(start)) {
                 Functor rewrite = functor.setBinding(binding).resetDeclaration();
                 for (Entry<Functor, Functor> e : functors) {
@@ -97,7 +110,7 @@ public final class Transform extends Node {
             return;
         }
         Map<Functor, Functor> fm = functors;
-        for (Node target : targets()) {
+        for (Node target : targetsFlattened()) {
             if (!(target instanceof Functor)) {
                 Node rewrite = target.replace(n -> {
                     if (n.typeOrFunctor() instanceof Functor f) {

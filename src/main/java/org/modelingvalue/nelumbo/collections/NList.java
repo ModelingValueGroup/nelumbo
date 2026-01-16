@@ -70,7 +70,7 @@ public class NList extends Node {
         List<T> result = List.of();
         for (T e : this.<T> elements()) {
             if (e instanceof NList nl) {
-                result = result.addAll(nl.<T> elementsFlattened());
+                result = result.addAll(nl.<T> elements());
             } else {
                 result = result.add(e);
             }
