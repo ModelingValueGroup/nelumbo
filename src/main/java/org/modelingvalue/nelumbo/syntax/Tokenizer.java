@@ -24,31 +24,31 @@ public class Tokenizer {
 
     private static final int FIRST = 0, FIRST_ALL = 1, LAST = 2, LAST_ALL = 3;
 
-    private final String input;
-    private final String fileName;
+    private final String     input;
+    private final String     fileName;
 
     public Tokenizer(String input, String fileName) {
-        this.input    = input;
+        this.input = input;
         this.fileName = fileName;
     }
 
     public TokenizerResult tokenize() {
-        Token[]                tokens       = new Token[4];
+        Token[] tokens = new Token[4];
         TokenType.TokenMatcher tokenMatcher = TokenType.getMatcher(input);
-        int                    line         = 0;
-        int                    position     = 0;
-        int                    index        = 0;
+        int line = 0;
+        int position = 0;
+        int index = 0;
         addToken(tokens, TokenType.BEGINOFFILE, "", 0, 0, 0);
         String previousVertical = null;
         while (tokenMatcher.hasMore()) {
-            String    text = tokenMatcher.text();
+            String text = tokenMatcher.text();
             TokenType type = tokenMatcher.type();
             addToken(tokens, type, text, line, position, index);
             int lineIncr = U.numNewLines(text);
             if (0 < lineIncr) {
                 if (previousVertical == null || previousVertical.contains(text)) {
                     line += lineIncr;
-                    position         = 0;
+                    position = 0;
                     previousVertical = previousVertical == null ? text : previousVertical + text;
                     index += 1;
                 }
@@ -59,7 +59,9 @@ public class Tokenizer {
             position += U.lastLineLength(text);
         }
         addToken(tokens, TokenType.ENDOFFILE, "", line, position, index);
-        return new TokenizerResult(tokens);
+        TokenizerResult result = new TokenizerResult(tokens);
+        // assert (isResultOk(result));
+        return result;
     }
 
     private void addToken(Token[] tokens, TokenType type, String text, int line, int position, int index) {
@@ -85,6 +87,25 @@ public class Tokenizer {
             tokens[LAST].setNext(token);
         }
         tokens[LAST] = token;
+    }
+
+    private boolean isResultOk(TokenizerResult result) {
+        String[] lines = input.split("\\n");
+        for (int i = 0; i < lines.length; i++) {
+            lines[i] += "\n";
+        }
+        for (Token token : result.listAll()) {
+            if (!isTokenOk(token, lines)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isTokenOk(Token token, String[] lines) {
+        return token.fileName().equals(fileName) && //
+                input.substring(token.index(), token.indexEnd()).equals(token.text()) && //
+                lines[token.line()].substring(token.position(), token.position() + token.text().length()).equals(token.text());
     }
 
     public static final class TokenizerResult {
