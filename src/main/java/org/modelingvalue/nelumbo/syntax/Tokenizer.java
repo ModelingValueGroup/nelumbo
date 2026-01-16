@@ -34,33 +34,36 @@ public class Tokenizer {
 
     public TokenizerResult tokenize() {
         Token[] tokens = new Token[4];
+        addToken(tokens, TokenType.BEGINOFFILE, "", 0, 0, 0);
         TokenType.TokenMatcher tokenMatcher = TokenType.getMatcher(input);
         int line = 0;
         int position = 0;
         int index = 0;
-        addToken(tokens, TokenType.BEGINOFFILE, "", 0, 0, 0);
-        String previousVertical = null;
+        StringBuilder previousVertical = new StringBuilder();
         while (tokenMatcher.hasMore()) {
             String text = tokenMatcher.text();
             TokenType type = tokenMatcher.type();
             addToken(tokens, type, text, line, position, index);
             int lineIncr = U.numNewLines(text);
-            if (0 < lineIncr) {
-                if (previousVertical == null || previousVertical.contains(text)) {
-                    line += lineIncr;
-                    position = 0;
-                    previousVertical = previousVertical == null ? text : previousVertical + text;
-                    index += 1;
-                }
+            if (lineIncr <= 0) {
+                previousVertical.setLength(0);
             } else {
-                previousVertical = null;
-                index += text.length();
+                line += lineIncr;
+                position = 0;
+                if (type.isLayout() && (previousVertical.isEmpty() || previousVertical.toString().contains(text))) {
+                    previousVertical.append(text);
+                } else {
+                    previousVertical.setLength(0);
+                }
             }
+            index += text.length();
             position += U.lastLineLength(text);
         }
         addToken(tokens, TokenType.ENDOFFILE, "", line, position, index);
         TokenizerResult result = new TokenizerResult(tokens);
-        // assert (isResultOk(result));
+        if (U.areAssertsEnabled()) {
+            checkResult(result);
+        }
         return result;
     }
 
@@ -89,23 +92,20 @@ public class Tokenizer {
         tokens[LAST] = token;
     }
 
-    private boolean isResultOk(TokenizerResult result) {
+    private void checkResult(TokenizerResult result) {
         String[] lines = input.split("\\n");
         for (int i = 0; i < lines.length; i++) {
             lines[i] += "\n";
         }
         for (Token token : result.listAll()) {
-            if (!isTokenOk(token, lines)) {
-                return false;
-            }
+            checkToken(token, lines);
         }
-        return true;
     }
 
-    private boolean isTokenOk(Token token, String[] lines) {
-        return token.fileName().equals(fileName) && //
-                input.substring(token.index(), token.indexEnd()).equals(token.text()) && //
-                lines[token.line()].substring(token.position(), token.position() + token.text().length()).equals(token.text());
+    private void checkToken(Token token, String[] lines) {
+        assert (token.fileName().equals(fileName));
+        assert (input.substring(token.index(), token.indexEnd()).equals(token.text()));
+        // assert (lines[token.line()].substring(token.position(), token.position() + token.text().length()).equals(token.text()));
     }
 
     public static final class TokenizerResult {

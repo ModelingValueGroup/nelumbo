@@ -26,6 +26,12 @@ public class U {
     public static final String BLACK_TEXT = COLOR_PRE + "30m";
     public static final String RESET      = COLOR_PRE + "0m";
 
+    public static boolean areAssertsEnabled() {
+        boolean assertsEnabled = false;
+        assert assertsEnabled = true; // Intentional side effect!!!
+        return assertsEnabled;
+    }
+
     public static int numLines(String s) {
         if (s == null || s.isEmpty()) {
             return 0;
