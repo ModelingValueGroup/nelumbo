@@ -81,6 +81,10 @@ public class SyntaxTest extends NelumboTestBase {
 
                     s.size=i   <=> i=10
 
+                    /* comment
+                    multi
+                    line */
+
                     """;
             try {
                 TokenizerResult tr = new Tokenizer(example, "SyntaxTest.exampleTest").tokenize();
