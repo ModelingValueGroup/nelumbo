@@ -26,7 +26,14 @@ public class U {
     public static final String BLACK_TEXT = COLOR_PRE + "30m";
     public static final String RESET      = COLOR_PRE + "0m";
 
+    public static final boolean ARE_ASSERTS_ENABLED = calcAreAssertsEnabled();
+
     public static boolean areAssertsEnabled() {
+        return ARE_ASSERTS_ENABLED;
+    }
+
+    @SuppressWarnings({"AssertWithSideEffects", "ConstantValue"})
+    public static boolean calcAreAssertsEnabled() {
         boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!!!
         return assertsEnabled;
@@ -40,13 +47,23 @@ public class U {
     }
 
     public static int numNewLines(String s) {
-        int len = 0;
+        int count = 0;
         for (int i = 0; i < s.length(); i++) {
             if (s.charAt(i) == '\n') {
-                len++;
+                count++;
             }
         }
-        return len;
+        return count;
+    }
+
+    public static int numCarriageReturns(String s) {
+        int count = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == '\r') {
+                count++;
+            }
+        }
+        return count;
     }
 
     public static int lastLineLength(String s) {
