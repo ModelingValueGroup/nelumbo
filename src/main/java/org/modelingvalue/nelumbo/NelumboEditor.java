@@ -424,7 +424,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void execute() {
         prepareForExecute();
-        String          text            = textPane.getText();
+        String text = textPane.getText();
         Tokenizer       tokenizer       = new Tokenizer(text, EDITOR_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
         ParserResult    result          = new Parser(tokenizerResult).parseMutipleNonThrowing();
@@ -453,18 +453,12 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void showColors(JTextPane pane, TokenizerResult tokenizerResult) {
         if (tokenizerResult != null) {
-            int totalNumCR = 0;
             for (Token t = tokenizerResult.firstAll(); t != null; t = t.nextAll()) {
                 ColorScheme colorScheme = TOKEN_COLORS.get(t.colorType());
-                int         numCR       = U.numCarriageReturns(t.text());
                 if (colorScheme != null) {
                     SimpleAttributeSet attr = colorScheme.attr();
-                    // Adjust index and length to account for \r characters not present in the document
-                    int adjustedIndex  = t.index() - totalNumCR;
-                    int adjustedLength = t.text().length() - numCR;
-                    pane.getStyledDocument().setCharacterAttributes(adjustedIndex, adjustedLength, attr, false);
+                    pane.getStyledDocument().setCharacterAttributes(t.index(), t.text().length(), attr, false);
                 }
-                totalNumCR += numCR;
             }
         }
     }
@@ -565,7 +559,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void saveTextContent(String text) {
         try {
-            preferences.put(PREF_TEXT_CONTENT, text.replaceAll("\r", ""));
+            preferences.put(PREF_TEXT_CONTENT, text);
 
             // Save caret position and selection
             int caretPosition  = textPane.getCaretPosition();
@@ -585,7 +579,6 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void loadTextContent() {
         String text = preferences.get(PREF_TEXT_CONTENT, "");
         if (!text.isEmpty()) {
-            text = text.replaceAll("\r", "");
             try {
                 StyledDocument doc = textPane.getStyledDocument();
                 doc.insertString(0, text, null);
