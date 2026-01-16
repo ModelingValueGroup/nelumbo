@@ -95,7 +95,7 @@ public class Tokenizer {
     private void checkResult(TokenizerResult result) {
         String[] lines = (input + " ").split("\\n");
         for (int i = 0; i < lines.length; i++) {
-            lines[i] = lines[i] + "\n";
+            lines[i] += "\n";
         }
         for (Token token : result.listAll()) {
             checkToken(token, lines);
