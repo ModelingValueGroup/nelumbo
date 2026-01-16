@@ -93,9 +93,9 @@ public class Tokenizer {
     }
 
     private void checkResult(TokenizerResult result) {
-        String[] lines = input.split("\\n");
-        for (int i = 0; i < lines.length; i++) {
-            lines[i] += "\n";
+        String[] lines = input.splitWithDelimiters("\\n", 0);
+        for (int i = 0; i < lines.length; i += 2) {
+            lines[i / 2] = lines[i] + "\n";
         }
         for (Token token : result.listAll()) {
             checkToken(token, lines);
@@ -105,7 +105,7 @@ public class Tokenizer {
     private void checkToken(Token token, String[] lines) {
         assert (token.fileName().equals(fileName));
         assert (input.substring(token.index(), token.indexEnd()).equals(token.text()));
-        // assert (lines[token.line()].substring(token.position(), token.position() + token.text().length()).equals(token.text()));
+        assert (lines[token.line()].substring(token.position(), token.position() + token.text().length()).equals(token.text()));
     }
 
     public static final class TokenizerResult {
