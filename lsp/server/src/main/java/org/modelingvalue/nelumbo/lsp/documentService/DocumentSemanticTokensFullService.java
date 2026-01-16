@@ -64,7 +64,7 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                 int           firstLineNum      = token.line();
                 int           firstCharPosition = token.position();
 
-                String[] tokenLines = token.text().split("\n");
+                String[] tokenLines = token.text().split("\\R");
                 for (int index = 0; index < tokenLines.length; index++) {
                     String tokenLine = tokenLines[index];
 
@@ -78,11 +78,14 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                     if (debugging) {
                         String tokenTypeName = LspTokenMapping.toLspTokenTypeName(colorType);
                         String tokenModName  = LspTokenMapping.toLspTokenModifierName(colorType);
-                        sb.append(String.format("        [%2d:%2d]  incr=[+%2d:+%2d]  #%d  type/mod=%s:%d/%s:%d  '%s'", lineNum, charNum, lineIncr, positionIncr, tokenLine.length(), tokenTypeName, tokenType, tokenModName, tokenMod, tokenLine));
+                        sb.append(String.format("        [%2d:%2d]  incr=[+%2d:+%2d]  #%d  type/mod=%s:%d/%s:%d  '%s'\n", lineNum, charNum, lineIncr, positionIncr, tokenLine.length(), tokenTypeName, tokenType, tokenModName, tokenMod, tokenLine));
                     }
 
                     prevLineNum = lineNum;
                     prevCharNum = charNum;
+                }
+                if (!sb.isEmpty()) {
+                    sb.setLength(sb.length() - 1);
                 }
                 U.DEBUG("%s", sb);
             }

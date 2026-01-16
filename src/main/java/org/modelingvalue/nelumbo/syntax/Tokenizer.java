@@ -33,28 +33,32 @@ public class Tokenizer {
     }
 
     public TokenizerResult tokenize() {
-        Token[]                tokens       = new Token[4];
-        TokenType.TokenMatcher tokenMatcher = TokenType.getMatcher(input);
-        int                    line         = 0;
-        int                    position     = 0;
-        int                    index        = 0;
+        Token[] tokens = new Token[4];
         addToken(tokens, TokenType.BEGINOFFILE, "", 0, 0, 0);
-        String previousVertical = null;
+
+        TokenType.TokenMatcher tokenMatcher     = TokenType.getMatcher(input);
+        int                    line             = 0;
+        int                    position         = 0;
+        int                    index            = 0;
+        StringBuilder          previousVertical = new StringBuilder();
         while (tokenMatcher.hasMore()) {
             String    text = tokenMatcher.text();
             TokenType type = tokenMatcher.type();
             addToken(tokens, type, text, line, position, index);
             int lineIncr = U.numNewLines(text);
-            if (0 < lineIncr) {
-                if (previousVertical == null || previousVertical.contains(text)) {
-                    line += lineIncr;
-                    position         = 0;
-                    previousVertical = previousVertical == null ? text : previousVertical + text;
-                    index += 1;
-                }
-            } else {
-                previousVertical = null;
+            if (lineIncr <= 0) {
+                previousVertical.setLength(0);
                 index += text.length();
+            } else {
+                line += lineIncr;
+                position = 0;
+                if (type.isLayout() && (previousVertical.isEmpty() || previousVertical.toString().contains(text))) {
+                    previousVertical.append(text);
+                    index += 1;
+                } else {
+                    previousVertical.setLength(0);
+                    index += text.length();
+                }
             }
             position += U.lastLineLength(text);
         }

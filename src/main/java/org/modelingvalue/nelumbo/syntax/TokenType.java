@@ -41,7 +41,7 @@ public enum TokenType {
     END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
     IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
-    NEWLINE("\\v", CONTINUES_ON_NEXT_LINE, LAYOUT), //
+    NEWLINE("\\R", CONTINUES_ON_NEXT_LINE, LAYOUT), //
     HSPACE("\\h+", SKIP, LAYOUT), //
     ERROR(".", VARIABLE_CONTENT), //
     //================ rest is not actually matched:
