@@ -152,7 +152,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return POOL.invoke(new LogicTask(runnable, this));
     }
 
-    private Functor addType(Type type, boolean predefined) throws ParseException {
+    private Functor addType(Type type) throws ParseException {
         Variable var = type.variable();
         Pattern pattern;
         if (var != null) {
@@ -168,10 +168,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                     if (result.isCollection() && args[0] instanceof Type elem) {
                         result = result.setElement(elem);
                     }
-                    if (!predefined) {
-                        result = result.setFunctor(functor);
-                    }
-                    return result;
+                    return result.setFunctor(functor);
                 }).init(this);
     }
 
@@ -181,13 +178,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             pair.b().rewrite(pair.a().pattern(), t(List.of(var), var), this);
         }
         if (Type.TYPE.equals(var.type())) {
-            addType(new Type(var), false);
+            return addType(new Type(var));
+        } else {
+            return Functor.of(List.of(var), t(List.of(var), var), //
+                    Type.VARIABLE, true, (elements, args, functor) -> {
+                        Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
+                        return result.setFunctor(functor);
+                    }).init(this);
         }
-        return Functor.of(List.of(var), t(List.of(var), var), //
-                Type.VARIABLE, true, (elements, args, functor) -> {
-                    Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
-                    return result.setFunctor(functor);
-                }).init(this);
     }
 
     private Pattern pattern(List<AstElement> elements) {
@@ -241,12 +239,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             try {
 
                 for (Type type : Type.predefined()) {
-                    addType(type, true);
+                    addType(type);
                 }
 
                 for (TokenType tokenType : TokenType.values()) {
                     if (!tokenType.isNotMatched() && !tokenType.isSkip()) {
-                        addType(new Type(tokenType), true);
+                        addType(new Type(tokenType));
                     }
                 }
 
@@ -374,7 +372,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }).init(this);
 
-                Functor.of(s(t("<"), t(NAME), o(s(t("<"), n(Type.VARIABLE, null), t(">"))), t(">"), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
+                Functor.of(s(t("<"), t(NAME), o(n(Type.TYPE, null)), t(">"), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
                             KnowledgeBase kb = CURRENT.get();
                             Set<Type> supers = Set.of();
@@ -384,16 +382,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             String group = ((Optional<String>) args[3]).orElse(Type.DEFAULT_GROUP);
                             Type type;
                             String name = (String) args[0];
-                            Variable arg = ((Optional<Variable>) args[1]).orElse(null);
+                            Type arg = ((Optional<Type>) args[1]).orElse(null);
                             if (arg != null) {
-                                if (!arg.type().equals(Type.TYPE)) {
+                                Variable var = arg.variable();
+                                if (var == null || !Type.TYPE.equals(var.type())) {
                                     kb.addException(new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
                                 }
-                                type = new Type(elements, name, supers, group, new Type(List.of(), arg, group));
+                                type = new Type(elements, name, supers, group, arg);
                             } else {
                                 type = new Type(elements, name, supers, group);
                             }
-                            return kb.addType(type, false);
+                            return kb.addType(type);
                         }).init(this);
 
                 Functor.of(s(t("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
