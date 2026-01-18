@@ -731,6 +731,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return facts.get();
     }
 
+    public Set<Transform> transforms() {
+        return transforms.get();
+    }
+
     public void memoization(Predicate predicate, InferResult result) {
         boolean known = result.cycles().isEmpty() && result.isComplete();
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {

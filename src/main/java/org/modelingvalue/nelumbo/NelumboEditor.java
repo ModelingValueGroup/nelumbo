@@ -191,9 +191,10 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private       boolean          quit;
     private       boolean          refreshRequested;
     private final Preferences      preferences = Preferences.userNodeForPackage(NelumboEditor.class);
-    private       TreeViewerDialog treeViewerDialog;
-    private       TokenizerResult  lastTokenizerResult;
-    private       ParserResult     lastParserResult;
+    private       TreeViewerDialog          treeViewerDialog;
+    private       KnowledgeBaseViewerDialog knowledgeBaseViewerDialog;
+    private       TokenizerResult           lastTokenizerResult;
+    private       ParserResult              lastParserResult;
 
     public NelumboEditor() {
         loadTokenColors(); // Load saved colors before creating UI
@@ -305,12 +306,18 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         colorsMenu.add(resetColors);
         menuBar.add(colorsMenu);
 
-        // View menu with Tree Viewer
+        // View menu with Tree Viewer and Knowledge Base Viewer
         JMenu     viewMenu       = new JMenu("View");
         JMenuItem treeViewerItem = new JMenuItem("Tree Viewer...");
         treeViewerItem.setAccelerator(KeyStroke.getKeyStroke('T', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         treeViewerItem.addActionListener(e -> showTreeViewer());
         viewMenu.add(treeViewerItem);
+
+        JMenuItem knowledgeBaseViewerItem = new JMenuItem("Knowledge Base Viewer...");
+        knowledgeBaseViewerItem.setAccelerator(KeyStroke.getKeyStroke('K', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        knowledgeBaseViewerItem.addActionListener(e -> showKnowledgeBaseViewer());
+        viewMenu.add(knowledgeBaseViewerItem);
+
         menuBar.add(viewMenu);
 
         frame.setJMenuBar(menuBar);
@@ -451,6 +458,11 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         // Update tree viewer if visible
         if (treeViewerDialog != null && treeViewerDialog.isVisible()) {
             treeViewerDialog.update(tokenizerResult, result);
+        }
+
+        // Update knowledge base viewer if visible
+        if (knowledgeBaseViewerDialog != null && knowledgeBaseViewerDialog.isVisible()) {
+            knowledgeBaseViewerDialog.update(knowledgeBase);
         }
     }
 
@@ -716,6 +728,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             treeViewerDialog.update(lastTokenizerResult, lastParserResult);
         }
         treeViewerDialog.setVisible(true);
+    }
+
+    private void showKnowledgeBaseViewer() {
+        if (knowledgeBaseViewerDialog == null) {
+            knowledgeBaseViewerDialog = new KnowledgeBaseViewerDialog(frame, knowledgeBase);
+        } else {
+            knowledgeBaseViewerDialog.update(knowledgeBase);
+        }
+        knowledgeBaseViewerDialog.setVisible(true);
     }
 
     private String colorToString(Color color) {
