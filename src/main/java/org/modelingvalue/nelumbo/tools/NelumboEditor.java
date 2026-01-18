@@ -14,7 +14,7 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.tools;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -68,6 +68,10 @@ import java.util.prefs.Preferences;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.Evaluatable;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Query;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
@@ -184,8 +188,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     //===========================================================================================================================================
-    private       KnowledgeBase    knowledgeBase;
-    private       JFrame           frame;
+    private KnowledgeBase knowledgeBase;
+    private JFrame        frame;
     private       JTextPane        messagesPane;
     private       JTextPane        textPane;
     private       boolean          quit;

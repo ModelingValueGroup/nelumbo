@@ -14,7 +14,7 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.tools;
 
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
@@ -46,6 +46,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
