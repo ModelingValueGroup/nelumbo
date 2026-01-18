@@ -39,7 +39,9 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
@@ -50,16 +52,19 @@ import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public class TreeViewerDialog extends JDialog {
 
-    private static final String[] TOKEN_COLUMNS      = {"Line", "Col", "Index", "Type", "Text", "ColorType"};
-    private static final String[] NODE_DETAIL_LABELS = {"Class", "Type", "Functor", "Location", "Args", "Tokens"};
+    private static final String[] TOKEN_COLUMNS            = {"Line", "Position", "Index", "Type", "Text", "ColorType"};
+    private static final String[] AST_ELEMENT_NODE_LABELS  = {"class", "type", "functor", "line", "position", "index", "#args", "tokens"};
+    private static final String[] AST_ELEMENT_TOKEN_LABELS = {"class", "type", "color", "line", "position", "index", "text", "variable"};
 
-    private static final Color NODE_BACKGROUND  = new Color(0xE8F5E9);  // Very light green
-    private static final Color TOKEN_BACKGROUND = new Color(0xF3E5F5);  // Very light purple
+    private static final Color NODE_BACKGROUND         = new Color(0xC8E6C9);  // Light green
+    private static final Color TOKEN_BACKGROUND        = new Color(0xE1BEE7);  // Light purple
+    private static final Color LAYOUT_TOKEN_TEXT_COLOR = new Color(0x888888);
 
-    private final JTable                tokenTable;
-    private final DefaultTableModel     tokenTableModel;
+    private final JTable                tokenListView;
+    private final DefaultTableModel     tokenListViewModel;
     private final JTree                 nodeTree;
-    private final JLabel[]              nodeDetailLabels;
+    private final JLabel[]              astElementDetailLabels;
+    private final JLabel[]              astElementDetailText;
     private final java.util.List<Token> tokenList = new ArrayList<>();
     private       boolean               isSyncing = false;
 
@@ -67,38 +72,38 @@ public class TreeViewerDialog extends JDialog {
         super(parent, "Token & Node Tree Viewer", false);
         setLayout(new BorderLayout());
 
-        // Create token table
-        tokenTableModel = new DefaultTableModel(TOKEN_COLUMNS, 0) {
+        // Create token list
+        tokenListViewModel = new DefaultTableModel(TOKEN_COLUMNS, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        tokenTable      = new JTable(tokenTableModel);
-        tokenTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        tokenTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-        tokenTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // Line
-        tokenTable.getColumnModel().getColumn(1).setPreferredWidth(80);  // Col
-        tokenTable.getColumnModel().getColumn(2).setPreferredWidth(80);  // Index
-        tokenTable.getColumnModel().getColumn(3).setPreferredWidth(120); // Type
-        tokenTable.getColumnModel().getColumn(4).setPreferredWidth(150); // Text
-        tokenTable.getColumnModel().getColumn(5).setPreferredWidth(100); // ColorType
-        tokenTable.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        tokenListView      = new JTable(tokenListViewModel);
+        tokenListView.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        tokenListView.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        tokenListView.getColumnModel().getColumn(0).setPreferredWidth(80);  // Line
+        tokenListView.getColumnModel().getColumn(1).setPreferredWidth(80);  // Col
+        tokenListView.getColumnModel().getColumn(2).setPreferredWidth(80);  // Index
+        tokenListView.getColumnModel().getColumn(3).setPreferredWidth(120); // Type
+        tokenListView.getColumnModel().getColumn(4).setPreferredWidth(150); // Text
+        tokenListView.getColumnModel().getColumn(5).setPreferredWidth(100); // ColorType
+        tokenListView.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
         // Custom renderer for skip/layout token grey text
         TokenTableCellRenderer rightRenderer = new TokenTableCellRenderer(SwingConstants.RIGHT);
         TokenTableCellRenderer leftRenderer  = new TokenTableCellRenderer(SwingConstants.LEFT);
-        tokenTable.getColumnModel().getColumn(0).setCellRenderer(rightRenderer); // Line
-        tokenTable.getColumnModel().getColumn(1).setCellRenderer(rightRenderer); // Col
-        tokenTable.getColumnModel().getColumn(2).setCellRenderer(rightRenderer); // Index
-        tokenTable.getColumnModel().getColumn(3).setCellRenderer(leftRenderer);  // Type
-        tokenTable.getColumnModel().getColumn(4).setCellRenderer(leftRenderer);  // Text
-        tokenTable.getColumnModel().getColumn(5).setCellRenderer(leftRenderer);  // ColorType
+        tokenListView.getColumnModel().getColumn(0).setCellRenderer(rightRenderer); // Line
+        tokenListView.getColumnModel().getColumn(1).setCellRenderer(rightRenderer); // Col
+        tokenListView.getColumnModel().getColumn(2).setCellRenderer(rightRenderer); // Index
+        tokenListView.getColumnModel().getColumn(3).setCellRenderer(leftRenderer);  // Type
+        tokenListView.getColumnModel().getColumn(4).setCellRenderer(leftRenderer);  // Text
+        tokenListView.getColumnModel().getColumn(5).setCellRenderer(leftRenderer);  // ColorType
 
         populateTokenTable(tokenizerResult);
 
         // Add table selection listener for synced selection
-        tokenTable.getSelectionModel().addListSelectionListener(this::onTokenTableSelected);
+        tokenListView.getSelectionModel().addListSelectionListener(this::onTokenListSelected);
 
         // Create node tree
         DefaultMutableTreeNode nodeRoot = buildNodeTree(parserResult);
@@ -107,35 +112,57 @@ public class TreeViewerDialog extends JDialog {
         nodeTree.setCellRenderer(new AstElementTreeCellRenderer());
         expandAllNodes(nodeTree);
 
-        // Create node detail panel
-        JPanel nodeDetailPanel = new JPanel(new GridLayout(NODE_DETAIL_LABELS.length, 2, 5, 2));
-        nodeDetailPanel.setBorder(BorderFactory.createTitledBorder("Node Details"));
-        nodeDetailLabels = new JLabel[NODE_DETAIL_LABELS.length];
-        for (int i = 0; i < NODE_DETAIL_LABELS.length; i++) {
-            JLabel nameLabel = new JLabel(NODE_DETAIL_LABELS[i] + ":");
-            nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD));
-            nodeDetailPanel.add(nameLabel);
-            nodeDetailLabels[i] = new JLabel("-");
-            nodeDetailLabels[i].setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-            nodeDetailPanel.add(nodeDetailLabels[i]);
+        // Create ASTElement detail panel
+        JPanel astElementDetailPanel = new JPanel(new GridBagLayout());
+        astElementDetailPanel.setBorder(BorderFactory.createTitledBorder("ASTElement Details"));
+        astElementDetailLabels = new JLabel[AST_ELEMENT_NODE_LABELS.length];
+        astElementDetailText   = new JLabel[AST_ELEMENT_NODE_LABELS.length];
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(1, 5, 1, 5);
+        for (int i = 0; i < AST_ELEMENT_NODE_LABELS.length; i++) {
+            JLabel label = new JLabel(AST_ELEMENT_NODE_LABELS[i] + ":");
+            JLabel text  = new JLabel("-");
+            astElementDetailLabels[i] = label;
+            astElementDetailText[i]   = text;
+
+            label.setFont(label.getFont().deriveFont(Font.BOLD));
+            label.setHorizontalAlignment(SwingConstants.RIGHT);
+            gbc.gridx   = 0;
+            gbc.gridy   = i;
+            gbc.anchor  = GridBagConstraints.EAST;
+            gbc.weightx = 0;
+            gbc.fill    = GridBagConstraints.NONE;
+            astElementDetailPanel.add(label, gbc);
+
+            text.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+            gbc.gridx   = 1;
+            gbc.anchor  = GridBagConstraints.WEST;
+            gbc.weightx = 1.0;
+            gbc.fill    = GridBagConstraints.HORIZONTAL;
+            astElementDetailPanel.add(text, gbc);
         }
 
         // Add tree selection listener
         nodeTree.addTreeSelectionListener(this::onNodeSelected);
 
         // Create scroll panes
-        JScrollPane tokenScrollPane = new JScrollPane(tokenTable);
+        JScrollPane tokenScrollPane = new JScrollPane(tokenListView);
         JScrollPane nodeScrollPane  = new JScrollPane(nodeTree);
 
         // Create panels with titles
         JPanel tokenPanel = new JPanel(new BorderLayout());
-        tokenPanel.add(new JLabel("Token Table", SwingConstants.CENTER), BorderLayout.NORTH);
+        tokenPanel.setBackground(TOKEN_BACKGROUND);
+        JLabel tokenLabel = new JLabel("Token List", SwingConstants.CENTER);
+        tokenLabel.setOpaque(true);
+        tokenLabel.setBackground(TOKEN_BACKGROUND);
+        tokenPanel.add(tokenLabel, BorderLayout.NORTH);
         tokenPanel.add(tokenScrollPane, BorderLayout.CENTER);
+        tokenScrollPane.getViewport().setBackground(TOKEN_BACKGROUND);
 
         JPanel nodePanel = new JPanel(new BorderLayout());
         nodePanel.add(new JLabel("Node Tree", SwingConstants.CENTER), BorderLayout.NORTH);
         nodePanel.add(nodeScrollPane, BorderLayout.CENTER);
-        nodePanel.add(nodeDetailPanel, BorderLayout.SOUTH);
+        nodePanel.add(astElementDetailPanel, BorderLayout.SOUTH);
 
         // Create split pane
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tokenPanel, nodePanel);
@@ -144,27 +171,32 @@ public class TreeViewerDialog extends JDialog {
 
         add(splitPane, BorderLayout.CENTER);
 
+        JLabel coordinateRemark = new JLabel("all coordinates (line, position, index) are 0-based; ranges shown as begin:last:end", SwingConstants.CENTER);
+        coordinateRemark.setFont(coordinateRemark.getFont().deriveFont(Font.ITALIC, 11f));
+        coordinateRemark.setBorder(BorderFactory.createEmptyBorder(3, 0, 3, 0));
+        add(coordinateRemark, BorderLayout.SOUTH);
+
         setPreferredSize(new Dimension(1100, 700));
         pack();
         setLocationRelativeTo(parent);
     }
 
     private void populateTokenTable(TokenizerResult tokenizerResult) {
-        tokenTableModel.setRowCount(0);
+        tokenListViewModel.setRowCount(0);
         tokenList.clear();
         if (tokenizerResult != null) {
             for (Token token = tokenizerResult.firstAll(); token != null; token = token.nextAll()) {
                 tokenList.add(token);
-                tokenTableModel.addRow(new Object[]{formatRange(token.line() + 1, token.lineEnd() + 1), formatRange(token.position() + 1, token.positionEnd() + 1), formatRange(token.index(), token.indexEnd()), token.type().name(), escapeText(token.text()), token.colorType().name()});
+                tokenListViewModel.addRow(new Object[]{formatRange(token.line(), token.lastLine(), token.lineEnd()), formatRange(token.position(), token.lastPosition(), token.positionEnd()), formatRange(token.index(), token.indexEnd() - 1, token.indexEnd()), token.type().name(), escapeText(token.text()), token.colorType().name()});
             }
         }
     }
 
-    private String formatRange(int start, int end) {
+    private String formatRange(int start, int last, int end) {
         if (start == end) {
             return String.valueOf(start);
         }
-        return start + ":" + end;
+        return start + ":" + last + ":" + end;
     }
 
     private DefaultMutableTreeNode buildNodeTree(ParserResult parserResult) {
@@ -286,56 +318,72 @@ public class TreeViewerDialog extends JDialog {
     }
 
     private void onNodeSelected(TreeSelectionEvent e) {
-        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) nodeTree.getLastSelectedPathComponent();
-        if (selectedNode != null && selectedNode.getUserObject() instanceof NodeInfo nodeInfo) {
+        DefaultMutableTreeNode selectedTreeNode = (DefaultMutableTreeNode) nodeTree.getLastSelectedPathComponent();
+        Object                 userObject       = selectedTreeNode == null ? null : selectedTreeNode.getUserObject();
+        if (userObject instanceof NodeInfo nodeInfo) {
+            for (int i = 0; i < AST_ELEMENT_NODE_LABELS.length; i++) {
+                astElementDetailLabels[i].setText(AST_ELEMENT_NODE_LABELS[i]);
+            }
             Node node = nodeInfo.node;
-            nodeDetailLabels[0].setText(node.getClass().getSimpleName());
-            nodeDetailLabels[1].setText(node.type() != null ? node.type().name() : "-");
-            nodeDetailLabels[2].setText(node.functor() != null ? node.functor().name() : "-");
+            astElementDetailText[0].setText(node.getClass().getSimpleName());
+            astElementDetailText[1].setText(node.type() != null ? node.type().name() : "<null>");
+            astElementDetailText[2].setText(node.functor() != null ? node.functor().name() : "<null>");
             Token first = node.firstToken();
             Token last  = node.lastToken();
             if (first != null && last != null) {
-                nodeDetailLabels[3].setText(String.format("[%d:%d] - [%d:%d]", first.line() + 1, first.position() + 1, last.line() + 1, last.positionEnd() + 1));
+                astElementDetailText[3].setText(String.format("[%d:%d:%d]", first.line(), first.lastLine(), first.lineEnd()));
+                astElementDetailText[4].setText(String.format("[%d:%d:%d]", first.position(), first.lastPosition(), first.positionEnd()));
+                astElementDetailText[5].setText(String.format("[%d:%d]", first.index(), first.indexEnd()));
             } else {
-                nodeDetailLabels[3].setText("-");
+                astElementDetailText[3].setText("-");
+                astElementDetailText[4].setText("-");
+                astElementDetailText[5].setText("-");
             }
-            nodeDetailLabels[4].setText(String.valueOf(node.length()));
-            nodeDetailLabels[5].setText(truncate(node.tokens().toString(), 80));
+            astElementDetailText[6].setText(String.valueOf(node.length()));
+            astElementDetailText[7].setText(truncate(node.tokens().toString(), 80));
 
-            // Sync selection: select all tokens under this node in the token table
+            // Sync selection: select all tokens under this node in the token list
             if (!isSyncing) {
                 isSyncing = true;
                 selectTokensInTable(node);
                 isSyncing = false;
             }
-        } else if (selectedNode != null && selectedNode.getUserObject() instanceof TokenInfo tokenInfo) {
+        } else if (userObject instanceof TokenInfo tokenInfo) {
+            for (int i = 0; i < AST_ELEMENT_TOKEN_LABELS.length; i++) {
+                astElementDetailLabels[i].setText(AST_ELEMENT_TOKEN_LABELS[i]);
+            }
             Token token = tokenInfo.token;
-            nodeDetailLabels[0].setText("Token");
-            nodeDetailLabels[1].setText(token.type().name());
-            nodeDetailLabels[2].setText(token.colorType().name());
-            nodeDetailLabels[3].setText(String.format("[%d:%d] - [%d:%d]", token.line() + 1, token.position() + 1, token.lineEnd() + 1, token.positionEnd() + 1));
-            nodeDetailLabels[4].setText(String.format("index: %d - %d", token.index(), token.indexEnd()));
-            nodeDetailLabels[5].setText(escapeText(token.text()));
+            astElementDetailText[0].setText(Token.class.getSimpleName());
+            astElementDetailText[1].setText(token.type().name());
+            astElementDetailText[2].setText(token.colorType().name());
+            astElementDetailText[3].setText(String.format("[%d:%d:%d]", token.line(), token.lastLine(), token.lineEnd()));
+            astElementDetailText[4].setText(String.format("[%d:%d:%d]", token.position(), token.lastPosition(), token.positionEnd()));
+            astElementDetailText[5].setText(String.format("[%d:%d]", token.index(), token.indexEnd()));
+            astElementDetailText[6].setText(escapeText(token.text()));
+            astElementDetailText[7].setText(token.variable() == null ? "<null>" : token.variable().toString());
 
-            // Sync selection: select this token in the token table
+            // Sync selection: select this token in the token list
             if (!isSyncing) {
                 isSyncing = true;
                 selectTokenInTable(token);
                 isSyncing = false;
             }
         } else {
-            for (JLabel label : nodeDetailLabels) {
-                label.setText("-");
+            for (JLabel label : astElementDetailLabels) {
+                label.setText("");
+            }
+            for (JLabel label : astElementDetailText) {
+                label.setText("");
             }
         }
     }
 
-    private void onTokenTableSelected(ListSelectionEvent e) {
+    private void onTokenListSelected(ListSelectionEvent e) {
         if (e.getValueIsAdjusting() || isSyncing) {
             return;
         }
 
-        int selectedRow = tokenTable.getSelectedRow();
+        int selectedRow = tokenListView.getSelectedRow();
         if (selectedRow >= 0 && selectedRow < tokenList.size()) {
             Token token = tokenList.get(selectedRow);
             isSyncing = true;
@@ -347,8 +395,8 @@ public class TreeViewerDialog extends JDialog {
     private void selectTokenInTable(Token token) {
         int index = tokenList.indexOf(token);
         if (index >= 0) {
-            tokenTable.setRowSelectionInterval(index, index);
-            tokenTable.scrollRectToVisible(tokenTable.getCellRect(index, 0, true));
+            tokenListView.setRowSelectionInterval(index, index);
+            tokenListView.scrollRectToVisible(tokenListView.getCellRect(index, 0, true));
         }
     }
 
@@ -356,7 +404,7 @@ public class TreeViewerDialog extends JDialog {
         Token first = node.firstToken();
         Token last  = node.lastToken();
         if (first == null || last == null) {
-            tokenTable.clearSelection();
+            tokenListView.clearSelection();
             return;
         }
 
@@ -375,8 +423,8 @@ public class TreeViewerDialog extends JDialog {
         }
 
         if (firstIndex >= 0 && lastIndex >= 0) {
-            tokenTable.setRowSelectionInterval(firstIndex, lastIndex);
-            tokenTable.scrollRectToVisible(tokenTable.getCellRect(firstIndex, 0, true));
+            tokenListView.setRowSelectionInterval(firstIndex, lastIndex);
+            tokenListView.scrollRectToVisible(tokenListView.getCellRect(firstIndex, 0, true));
         }
     }
 
@@ -431,7 +479,7 @@ public class TreeViewerDialog extends JDialog {
     }
 
     public void update(TokenizerResult tokenizerResult, ParserResult parserResult) {
-        // Update token table
+        // Update token list
         populateTokenTable(tokenizerResult);
 
         // Update node tree
@@ -440,7 +488,7 @@ public class TreeViewerDialog extends JDialog {
         expandAllNodes(nodeTree);
 
         // Clear details
-        for (JLabel label : nodeDetailLabels) {
+        for (JLabel label : astElementDetailText) {
             label.setText("-");
         }
     }
@@ -470,7 +518,7 @@ public class TreeViewerDialog extends JDialog {
             // Add location info
             Token firstToken = node.firstToken();
             if (firstToken != null) {
-                sb.append(" [").append(firstToken.line() + 1).append(":").append(firstToken.position() + 1).append("]");
+                sb.append(" [").append(firstToken.line()).append(":").append(firstToken.position()).append("]");
             } else {
                 sb.append(" [no tokens]");
             }
@@ -495,7 +543,7 @@ public class TreeViewerDialog extends JDialog {
                 sb.append("args[").append(argsIndex).append("] ");
             }
 
-            sb.append(String.format("[%d:%d] %s: %s", token.line() + 1, token.position() + 1, token.type().name(), escapeTokenText(token.text())));
+            sb.append(String.format("[%d:%d] %s: %s", token.line(), token.position(), token.type().name(), escapeTokenText(token.text())));
 
             return sb.toString();
         }
@@ -512,9 +560,7 @@ public class TreeViewerDialog extends JDialog {
         }
     }
 
-    private static final Color SKIP_LAYOUT_TEXT_COLOR = new Color(0xAAAAAA);
-
-    // Custom table cell renderer for Token table - makes SKIP/LAYOUT tokens grey
+    // Custom table cell renderer for Token list - makes SKIP/LAYOUT tokens grey
     private class TokenTableCellRenderer extends DefaultTableCellRenderer {
         public TokenTableCellRenderer(int alignment) {
             setHorizontalAlignment(alignment);
@@ -527,7 +573,7 @@ public class TreeViewerDialog extends JDialog {
             if (!isSelected && row >= 0 && row < tokenList.size()) {
                 Token token = tokenList.get(row);
                 if (token.type().isSkip() || token.type().isLayout()) {
-                    c.setForeground(SKIP_LAYOUT_TEXT_COLOR);
+                    c.setForeground(LAYOUT_TOKEN_TEXT_COLOR);
                 } else {
                     c.setForeground(Color.BLACK);
                 }
@@ -563,7 +609,7 @@ public class TreeViewerDialog extends JDialog {
                 } else if (userObject instanceof TokenInfo tokenInfo) {
                     background = TOKEN_BACKGROUND;
                     if (tokenInfo.isSkipOrLayout()) {
-                        foreground = SKIP_LAYOUT_TEXT_COLOR;
+                        foreground = LAYOUT_TOKEN_TEXT_COLOR;
                     }
                 }
             }
