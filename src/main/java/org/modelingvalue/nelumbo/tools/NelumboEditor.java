@@ -16,11 +16,13 @@
 
 package org.modelingvalue.nelumbo.tools;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -177,11 +179,13 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
      */
     private static final Map<TokenType, ColorScheme> TOKEN_COLORS = new HashMap<>(DEFAULT_TOKEN_COLORS);
 
-    private static final String PREF_TEXT_CONTENT       = "textContent";
-    private static final String PREF_CARET_POSITION     = "caretPosition";
-    private static final String PREF_SELECTION_START    = "selectionStart";
-    private static final String PREF_SELECTION_END      = "selectionEnd";
-    private static final String PREF_TOKEN_COLOR_PREFIX = "tokenColor.";
+    private static final String PREF_TEXT_CONTENT            = "textContent";
+    private static final String PREF_CARET_POSITION          = "caretPosition";
+    private static final String PREF_SELECTION_START         = "selectionStart";
+    private static final String PREF_SELECTION_END           = "selectionEnd";
+    private static final String PREF_TOKEN_COLOR_PREFIX      = "tokenColor.";
+    private static final String PREF_TREE_VIEWER_VISIBLE     = "treeViewerVisible";
+    private static final String PREF_KB_VIEWER_VISIBLE       = "knowledgeBaseViewerVisible";
 
     public static void main(String[] arg) {
         new NelumboEditor();
@@ -205,6 +209,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         initWindow();
         initActions();
         loadTextContent();
+        restoreDialogVisibility(); // Restore dialogs that were open last session
         initKnowledgeBase(); // execution stays here until the user quits the application. This is by design!
         // only reaching this point after the user quits
     }
@@ -262,7 +267,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Unable to set FlatLaf look and feel", "Warning", JOptionPane.WARNING_MESSAGE);
         }
-        URL resource = getClass().getResource("nelumbo.png");
+        URL resource = getClass().getResource("../nelumbo.png");
         assert resource != null;
         ImageIcon icon = new ImageIcon(resource);
         frame = new JFrame("Nelumbo Editor");
@@ -272,9 +277,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Dimension frameSize  = new Dimension(screenSize.width / 2, screenSize.height / 2);
-        int       x          = frameSize.width / 2;
-        int       y          = frameSize.height / 2;
-        frame.setBounds(x, y, frameSize.width, frameSize.height);
+        frame.setPreferredSize(frameSize);
+        frame.setSize(frameSize);
 
         textPane     = new NonWrappingJTextPane(true, 0xffffff);
         messagesPane = new NonWrappingJTextPane(false, 0xF5F5F5);
@@ -314,18 +318,19 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         JMenu     viewMenu       = new JMenu("View");
         JMenuItem treeViewerItem = new JMenuItem("Tree Viewer...");
         treeViewerItem.setAccelerator(KeyStroke.getKeyStroke('T', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        treeViewerItem.addActionListener(e -> showTreeViewer());
+        treeViewerItem.addActionListener(e -> toggleTreeViewer());
         viewMenu.add(treeViewerItem);
 
         JMenuItem knowledgeBaseViewerItem = new JMenuItem("Knowledge Base Viewer...");
         knowledgeBaseViewerItem.setAccelerator(KeyStroke.getKeyStroke('K', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        knowledgeBaseViewerItem.addActionListener(e -> showKnowledgeBaseViewer());
+        knowledgeBaseViewerItem.addActionListener(e -> toggleKnowledgeBaseViewer());
         viewMenu.add(knowledgeBaseViewerItem);
 
         menuBar.add(viewMenu);
 
         frame.setJMenuBar(menuBar);
 
+        new DialogBoundsUtil(frame, NelumboEditor.class, "editor", null);
         frame.setVisible(true);
 
         frame.addWindowListener(this);
@@ -725,22 +730,102 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         refresh();
     }
 
-    private void showTreeViewer() {
-        if (treeViewerDialog == null) {
-            treeViewerDialog = new TreeViewerDialog(frame, lastTokenizerResult, lastParserResult);
+    private void toggleTreeViewer() {
+        if (treeViewerDialog != null && treeViewerDialog.isVisible()) {
+            treeViewerDialog.setVisible(false);
+            saveTreeViewerVisibility(false);
         } else {
-            treeViewerDialog.update(lastTokenizerResult, lastParserResult);
+            if (treeViewerDialog == null) {
+                treeViewerDialog = new TreeViewerDialog(frame, lastTokenizerResult, lastParserResult);
+                registerViewMenuShortcuts(treeViewerDialog);
+                treeViewerDialog.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        saveTreeViewerVisibility(false);
+                    }
+                });
+            } else {
+                treeViewerDialog.update(lastTokenizerResult, lastParserResult);
+            }
+            treeViewerDialog.setVisible(true);
+            saveTreeViewerVisibility(true);
         }
-        treeViewerDialog.setVisible(true);
     }
 
-    private void showKnowledgeBaseViewer() {
-        if (knowledgeBaseViewerDialog == null) {
-            knowledgeBaseViewerDialog = new KnowledgeBaseViewerDialog(frame, knowledgeBase);
+    private void toggleKnowledgeBaseViewer() {
+        if (knowledgeBaseViewerDialog != null && knowledgeBaseViewerDialog.isVisible()) {
+            knowledgeBaseViewerDialog.setVisible(false);
+            saveKnowledgeBaseViewerVisibility(false);
         } else {
-            knowledgeBaseViewerDialog.update(knowledgeBase);
+            if (knowledgeBaseViewerDialog == null) {
+                knowledgeBaseViewerDialog = new KnowledgeBaseViewerDialog(frame, knowledgeBase);
+                registerViewMenuShortcuts(knowledgeBaseViewerDialog);
+                knowledgeBaseViewerDialog.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        saveKnowledgeBaseViewerVisibility(false);
+                    }
+                });
+            } else {
+                knowledgeBaseViewerDialog.update(knowledgeBase);
+            }
+            knowledgeBaseViewerDialog.setVisible(true);
+            saveKnowledgeBaseViewerVisibility(true);
         }
-        knowledgeBaseViewerDialog.setVisible(true);
+    }
+
+    private void saveTreeViewerVisibility(boolean visible) {
+        try {
+            preferences.putBoolean(PREF_TREE_VIEWER_VISIBLE, visible);
+            preferences.flush();
+        } catch (Exception e) {
+            // Ignore save failures
+        }
+    }
+
+    private void saveKnowledgeBaseViewerVisibility(boolean visible) {
+        try {
+            preferences.putBoolean(PREF_KB_VIEWER_VISIBLE, visible);
+            preferences.flush();
+        } catch (Exception e) {
+            // Ignore save failures
+        }
+    }
+
+    private void restoreDialogVisibility() {
+        if (preferences.getBoolean(PREF_TREE_VIEWER_VISIBLE, false)) {
+            toggleTreeViewer();
+        }
+        if (preferences.getBoolean(PREF_KB_VIEWER_VISIBLE, false)) {
+            toggleKnowledgeBaseViewer();
+        }
+    }
+
+    /**
+     * Registers View menu shortcuts (Cmd-T, Cmd-K) on a dialog so they work when the dialog has focus.
+     */
+    private void registerViewMenuShortcuts(JDialog dialog) {
+        int menuShortcutMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+
+        // Cmd-T: Toggle Tree Viewer
+        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke('T', menuShortcutMask), "toggleTreeViewer");
+        dialog.getRootPane().getActionMap().put("toggleTreeViewer", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                toggleTreeViewer();
+            }
+        });
+
+        // Cmd-K: Toggle Knowledge Base Viewer
+        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke('K', menuShortcutMask), "toggleKnowledgeBaseViewer");
+        dialog.getRootPane().getActionMap().put("toggleKnowledgeBaseViewer", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                toggleKnowledgeBaseViewer();
+            }
+        });
     }
 
     private String colorToString(Color color) {
@@ -894,7 +979,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.pack();
-        dialog.setLocationRelativeTo(frame);
+        new DialogBoundsUtil(dialog, NelumboEditor.class, "colorConfig", frame);
         dialog.setVisible(true);
     }
 

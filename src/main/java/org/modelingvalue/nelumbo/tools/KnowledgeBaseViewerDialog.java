@@ -201,7 +201,8 @@ public class KnowledgeBaseViewerDialog extends JDialog {
 
         setPreferredSize(new Dimension(900, 600));
         pack();
-        setLocationRelativeTo(parent);
+
+        new DialogBoundsUtil(this, KnowledgeBaseViewerDialog.class, "knowledgeBaseViewer", parent);
     }
 
     private JTable createTable(DefaultTableModel model, Color bgColor) {

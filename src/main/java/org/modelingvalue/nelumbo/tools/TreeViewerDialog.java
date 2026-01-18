@@ -122,10 +122,8 @@ public class TreeViewerDialog extends JDialog {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(1, 5, 1, 5);
         for (int i = 0; i < AST_ELEMENT_NODE_LABELS.length; i++) {
-            JLabel label = new JLabel(AST_ELEMENT_NODE_LABELS[i] + ":");
-            JLabel text  = new JLabel("-");
-            astElementDetailLabels[i] = label;
-            astElementDetailText[i]   = text;
+            JLabel label = astElementDetailLabels[i] = new JLabel();
+            JLabel text  = astElementDetailText[i] = new JLabel();
 
             label.setFont(label.getFont().deriveFont(Font.BOLD));
             label.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -137,6 +135,7 @@ public class TreeViewerDialog extends JDialog {
             astElementDetailPanel.add(label, gbc);
 
             text.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+            label.setHorizontalAlignment(SwingConstants.LEFT);
             gbc.gridx   = 1;
             gbc.anchor  = GridBagConstraints.WEST;
             gbc.weightx = 1.0;
@@ -174,13 +173,14 @@ public class TreeViewerDialog extends JDialog {
         add(splitPane, BorderLayout.CENTER);
 
         JLabel coordinateRemark = new JLabel("all coordinates (line, position, index) are 0-based; ranges shown as begin:last:end", SwingConstants.CENTER);
-        coordinateRemark.setFont(coordinateRemark.getFont().deriveFont(Font.ITALIC, 11f));
+        coordinateRemark.setFont(coordinateRemark.getFont().deriveFont(Font.ITALIC, 13f));
         coordinateRemark.setBorder(BorderFactory.createEmptyBorder(3, 0, 3, 0));
         add(coordinateRemark, BorderLayout.SOUTH);
 
         setPreferredSize(new Dimension(1100, 700));
         pack();
-        setLocationRelativeTo(parent);
+
+        new DialogBoundsUtil(this, TreeViewerDialog.class, "treeViewer", parent);
     }
 
     private void populateTokenTable(TokenizerResult tokenizerResult) {
@@ -333,23 +333,16 @@ public class TreeViewerDialog extends JDialog {
             Token first = node.firstToken();
             Token last  = node.lastToken();
             if (first != null && last != null) {
-                astElementDetailText[3].setText(String.format("[%d:%d:%d]", first.line(), first.lastLine(), first.lineEnd()));
-                astElementDetailText[4].setText(String.format("[%d:%d:%d]", first.position(), first.lastPosition(), first.positionEnd()));
-                astElementDetailText[5].setText(String.format("[%d:%d]", first.index(), first.indexEnd()));
+                astElementDetailText[3].setText(String.format("[%d:%d:%d]", first.line(), last.lastLine(), last.lineEnd()));
+                astElementDetailText[4].setText(String.format("[%d:%d:%d]", first.position(), last.lastPosition(), last.positionEnd()));
+                astElementDetailText[5].setText(String.format("[%d:%d]", first.index(), last.indexEnd()));
             } else {
-                astElementDetailText[3].setText("-");
-                astElementDetailText[4].setText("-");
-                astElementDetailText[5].setText("-");
+                astElementDetailText[3].setText("<no tokens>");
+                astElementDetailText[4].setText("<no tokens>");
+                astElementDetailText[5].setText("<no tokens>");
             }
             astElementDetailText[6].setText(String.valueOf(node.length()));
-            astElementDetailText[7].setText(truncate(node.tokens().toString(), 80));
-
-            // Sync selection: select all tokens under this node in the token list
-            if (!isSyncing) {
-                isSyncing = true;
-                selectTokensInTable(node);
-                isSyncing = false;
-            }
+            astElementDetailText[7].setText(truncate(node.tokens().toString(), 512));
         } else if (userObject instanceof TokenInfo tokenInfo) {
             for (int i = 0; i < AST_ELEMENT_TOKEN_LABELS.length; i++) {
                 astElementDetailLabels[i].setText(AST_ELEMENT_TOKEN_LABELS[i]);
@@ -363,13 +356,6 @@ public class TreeViewerDialog extends JDialog {
             astElementDetailText[5].setText(String.format("[%d:%d]", token.index(), token.indexEnd()));
             astElementDetailText[6].setText(escapeText(token.text()));
             astElementDetailText[7].setText(token.variable() == null ? "<null>" : token.variable().toString());
-
-            // Sync selection: select this token in the token list
-            if (!isSyncing) {
-                isSyncing = true;
-                selectTokenInTable(token);
-                isSyncing = false;
-            }
         } else {
             for (JLabel label : astElementDetailLabels) {
                 label.setText("");
@@ -377,6 +363,11 @@ public class TreeViewerDialog extends JDialog {
             for (JLabel label : astElementDetailText) {
                 label.setText("");
             }
+        }
+        if (!isSyncing) {
+            isSyncing = true;
+            selectInList(userObject);
+            isSyncing = false;
         }
     }
 
@@ -386,47 +377,53 @@ public class TreeViewerDialog extends JDialog {
         }
 
         int selectedRow = tokenListView.getSelectedRow();
-        if (selectedRow >= 0 && selectedRow < tokenList.size()) {
+        if (0 <= selectedRow && selectedRow < tokenList.size()) {
             Token token = tokenList.get(selectedRow);
             isSyncing = true;
             selectTokenInTree(token);
             isSyncing = false;
+        } else {
+            nodeTree.clearSelection();
         }
     }
 
-    private void selectTokenInTable(Token token) {
-        int index = tokenList.indexOf(token);
-        if (index >= 0) {
-            tokenListView.setRowSelectionInterval(index, index);
-            tokenListView.scrollRectToVisible(tokenListView.getCellRect(index, 0, true));
-        }
-    }
+    private void selectInList(Object userObject) {
+        if (userObject instanceof NodeInfo info) {
+            Token first = info.node.firstToken();
+            Token last  = info.node.lastToken();
+            if (first == null || last == null) {
+                tokenListView.clearSelection();
+                return;
+            }
 
-    private void selectTokensInTable(Node node) {
-        Token first = node.firstToken();
-        Token last  = node.lastToken();
-        if (first == null || last == null) {
+            int firstIndex = -1;
+            int lastIndex  = -1;
+
+            // Find indices of first and last tokens
+            for (int i = 0; i < tokenList.size(); i++) {
+                Token t = tokenList.get(i);
+                if (t.index() >= first.index() && firstIndex < 0) {
+                    firstIndex = i;
+                }
+                if (t.index() <= last.index()) {
+                    lastIndex = i;
+                }
+            }
+
+            if (firstIndex >= 0 && lastIndex >= 0) {
+                tokenListView.setRowSelectionInterval(firstIndex, lastIndex);
+                tokenListView.scrollRectToVisible(tokenListView.getCellRect(firstIndex, 0, true));
+            }
+        } else if (userObject instanceof TokenInfo info) {
+            int index = tokenList.indexOf(info.token);
+            if (0 <= index) {
+                tokenListView.setRowSelectionInterval(index, index);
+                tokenListView.scrollRectToVisible(tokenListView.getCellRect(index, 0, true));
+            } else {
+                tokenListView.clearSelection();
+            }
+        } else {
             tokenListView.clearSelection();
-            return;
-        }
-
-        int firstIndex = -1;
-        int lastIndex  = -1;
-
-        // Find indices of first and last tokens
-        for (int i = 0; i < tokenList.size(); i++) {
-            Token t = tokenList.get(i);
-            if (t.index() >= first.index() && firstIndex < 0) {
-                firstIndex = i;
-            }
-            if (t.index() <= last.index()) {
-                lastIndex = i;
-            }
-        }
-
-        if (firstIndex >= 0 && lastIndex >= 0) {
-            tokenListView.setRowSelectionInterval(firstIndex, lastIndex);
-            tokenListView.scrollRectToVisible(tokenListView.getCellRect(firstIndex, 0, true));
         }
     }
 
@@ -436,6 +433,8 @@ public class TreeViewerDialog extends JDialog {
         if (path != null) {
             nodeTree.setSelectionPath(path);
             nodeTree.scrollPathToVisible(path);
+        } else {
+            nodeTree.clearSelection();
         }
     }
 
