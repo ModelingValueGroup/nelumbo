@@ -184,13 +184,16 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     //===========================================================================================================================================
-    private       KnowledgeBase knowledgeBase;
-    private       JFrame        frame;
-    private       JTextPane     messagesPane;
-    private       JTextPane     textPane;
-    private       boolean       quit;
-    private       boolean       refreshRequested;
-    private final Preferences   preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+    private       KnowledgeBase    knowledgeBase;
+    private       JFrame           frame;
+    private       JTextPane        messagesPane;
+    private       JTextPane        textPane;
+    private       boolean          quit;
+    private       boolean          refreshRequested;
+    private final Preferences      preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+    private       TreeViewerDialog treeViewerDialog;
+    private       TokenizerResult  lastTokenizerResult;
+    private       ParserResult     lastParserResult;
 
     public NelumboEditor() {
         loadTokenColors(); // Load saved colors before creating UI
@@ -301,6 +304,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         colorsMenu.add(configureColors);
         colorsMenu.add(resetColors);
         menuBar.add(colorsMenu);
+
+        // View menu with Tree Viewer
+        JMenu     viewMenu       = new JMenu("View");
+        JMenuItem treeViewerItem = new JMenuItem("Tree Viewer...");
+        treeViewerItem.setAccelerator(KeyStroke.getKeyStroke('T', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        treeViewerItem.addActionListener(e -> showTreeViewer());
+        viewMenu.add(treeViewerItem);
+        menuBar.add(viewMenu);
+
         frame.setJMenuBar(menuBar);
 
         frame.setVisible(true);
@@ -431,6 +443,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         showColors(textPane, tokenizerResult);
         showResults(result);
         saveTextContent(text);
+
+        // Store results for tree viewer
+        lastTokenizerResult = tokenizerResult;
+        lastParserResult    = result;
+
+        // Update tree viewer if visible
+        if (treeViewerDialog != null && treeViewerDialog.isVisible()) {
+            treeViewerDialog.update(tokenizerResult, result);
+        }
     }
 
     private void showMessageColors() {
@@ -686,6 +707,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         TOKEN_COLORS.putAll(DEFAULT_TOKEN_COLORS);
         saveTokenColors();
         refresh();
+    }
+
+    private void showTreeViewer() {
+        if (treeViewerDialog == null) {
+            treeViewerDialog = new TreeViewerDialog(frame, lastTokenizerResult, lastParserResult);
+        } else {
+            treeViewerDialog.update(lastTokenizerResult, lastParserResult);
+        }
+        treeViewerDialog.setVisible(true);
     }
 
     private String colorToString(Color color) {
