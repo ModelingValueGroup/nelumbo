@@ -21,16 +21,20 @@ import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public class ParserResult implements ParseExceptionHandler {
 
+    private final TokenizerResult             tokenizerResult;
     private final boolean                     throwing;
     private final MutableList<ParseException> exceptions;
 
     private Node                              root;
 
-    public ParserResult(boolean throwing) {
+    public ParserResult(TokenizerResult tokenizerResult, boolean throwing) {
+        this.tokenizerResult = tokenizerResult;
         this.throwing = throwing;
         this.exceptions = MutableList.of(List.of());
     }
@@ -83,6 +87,16 @@ public class ParserResult implements ParseExceptionHandler {
         }
         for (Node root : roots()) {
             System.out.println(root);
+        }
+    }
+
+    public void checkAssertions() {
+        if (tokenizerResult != null && root != null && U.areAssertsEnabled()) {
+            StringBuffer sb = new StringBuffer();
+            root.deparse(sb);
+            String result = sb.toString();
+            String input = tokenizerResult.input();
+            assert input.equals(result);
         }
     }
 

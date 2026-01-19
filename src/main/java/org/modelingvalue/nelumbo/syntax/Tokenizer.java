@@ -60,11 +60,7 @@ public class Tokenizer {
             position += U.lastLineLength(text);
         }
         addToken(tokens, TokenType.ENDOFFILE, "", line, position, index);
-        TokenizerResult result = new TokenizerResult(tokens);
-        if (U.areAssertsEnabled()) {
-            checkResult(result);
-        }
-        return result;
+        return new TokenizerResult(fileName, input, tokens);
     }
 
     private void addToken(Token[] tokens, TokenType type, String text, int line, int position, int index) {
@@ -92,29 +88,17 @@ public class Tokenizer {
         tokens[LAST] = token;
     }
 
-    private void checkResult(TokenizerResult result) {
-        String[] lines = (input + " ").split("\\n");
-        for (int i = 0; i < lines.length; i++) {
-            lines[i] += "\n";
-        }
-        for (Token token : result.listAll()) {
-            checkToken(token, lines);
-        }
-    }
-
-    private void checkToken(Token token, String[] lines) {
-        assert (token.fileName().equals(fileName));
-        assert (input.substring(token.index(), token.indexEnd()).equals(token.text()));
-        if (token.type() != TokenType.IN_LINE_COMMENT) {
-            assert (lines[token.line()].substring(token.position(), token.position() + token.text().length()).equals(token.text()));
-        }
-    }
-
     public static final class TokenizerResult {
+
+        private final String  fileName;
+        private final String  input;
         private final Token[] tokens;
 
-        public TokenizerResult(Token[] tokens) {
+        public TokenizerResult(String fileName, String input, Token[] tokens) {
+            this.fileName = fileName;
+            this.input = input;
             this.tokens = tokens;
+            checkAssertions();
         }
 
         public Token firstAll() {
@@ -140,6 +124,34 @@ public class Tokenizer {
 
         public List<Token> listAll() {
             return tokens[FIRST_ALL].listAll(tokens[LAST_ALL]);
+        }
+
+        public String fileName() {
+            return fileName;
+        }
+
+        public String input() {
+            return input;
+        }
+
+        public void checkAssertions() {
+            if (U.areAssertsEnabled()) {
+                String[] lines = (input + " ").split("\\n");
+                for (int i = 0; i < lines.length; i++) {
+                    lines[i] += "\n";
+                }
+                for (Token token : listAll()) {
+                    checkToken(token, lines);
+                }
+            }
+        }
+
+        private void checkToken(Token token, String[] lines) {
+            assert (token.fileName().equals(fileName));
+            assert (input.substring(token.index(), token.indexEnd()).equals(token.text()));
+            if (token.type() != TokenType.IN_LINE_COMMENT) {
+                assert (lines[token.line()].substring(token.position(), token.position() + token.text().length()).equals(token.text()));
+            }
         }
 
     }

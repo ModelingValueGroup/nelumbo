@@ -41,7 +41,7 @@ public final class Parser implements ParseExceptionHandler {
                 throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
             InputStream buffer = new BufferedInputStream(stream);
-            String      base   = new String(buffer.readAllBytes());
+            String base = new String(buffer.readAllBytes());
             return new Parser(new Tokenizer(base, fileName).tokenize()).parseEvaluate().roots();
         } catch (IOException e) {
             throw new ParseException(e, "IOException during parse", fileName);
@@ -63,34 +63,34 @@ public final class Parser implements ParseExceptionHandler {
     private final KnowledgeBase   knowledgeBase;
     private final TokenizerResult tokenizerResult;
 
-    private ParserResult result;
+    private ParserResult          result;
 
     public Parser(TokenizerResult tokenizerResult) {
-        this.knowledgeBase   = KnowledgeBase.CURRENT.get();
+        this.knowledgeBase = KnowledgeBase.CURRENT.get();
         this.tokenizerResult = tokenizerResult;
     }
 
     public ParserResult parseNonThrowing() {
         try {
-            return parse(new ParserResult(false), false);
+            return parse(new ParserResult(tokenizerResult, false), false);
         } catch (ParseException e) {
             throw new IllegalStateException(e);
         }
     }
 
     public ParserResult parseThrowing() throws ParseException {
-        return parse(new ParserResult(true), false);
+        return parse(new ParserResult(tokenizerResult, true), false);
     }
 
     public ParserResult parseEvaluate() throws ParseException {
-        ParserResult parserResult = parse(new ParserResult(true), false);
+        ParserResult parserResult = parse(new ParserResult(tokenizerResult, true), false);
         parserResult.evaluate();
         return parserResult;
     }
 
     public ParserResult parseMutipleNonThrowing() {
         try {
-            return parse(new ParserResult(false), true);
+            return parse(new ParserResult(tokenizerResult, false), true);
         } catch (ParseException e) {
             throw new IllegalStateException(e);
         }
@@ -101,7 +101,7 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            Node  node  = parseNode(token, ParseContext.of(null, null, Type.TOP_GROUP, Integer.MIN_VALUE, null));
+            Node node = parseNode(token, ParseContext.of(null, null, Type.TOP_GROUP, Integer.MIN_VALUE, null));
             if (node != null) {
                 result.setRoot(node);
                 token = node.nextToken();
@@ -109,16 +109,18 @@ public final class Parser implements ParseExceptionHandler {
                     addException(new ParseException("Unexpected token " + token + " after end of input", token));
                 }
             }
+            result.checkAssertions();
             return result;
         } finally {
             knowledgeBase.endParsing(mutiple);
             this.result = null;
+            tokenizerResult.checkAssertions();
         }
     }
 
     public Node parseNode(Token token, ParseContext ctx) throws ParseException {
-        int           nrOfExceptions = exceptions().size();
-        PatternResult result         = preParse(token, ctx, null);
+        int nrOfExceptions = exceptions().size();
+        PatternResult result = preParse(token, ctx, null);
         if (result == null) {
             if (nrOfExceptions == exceptions().size()) {
                 addException(new ParseException("No syntax pattern found for " + token, token));

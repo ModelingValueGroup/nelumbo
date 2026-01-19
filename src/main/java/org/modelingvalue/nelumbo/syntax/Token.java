@@ -74,7 +74,7 @@ public final class Token implements AstElement {
         this.lastLine = numLines == 0 ? lineEnd : lineEnd - 1;
         this.position = position;
         this.positionEnd = numLines == 0 || numLines == 1 ? position + numChars : numChars - text.lastIndexOf('\n');
-        this.lastPosition =  positionEnd - 1;
+        this.lastPosition = positionEnd - 1;
         this.fileName = fileName;
     }
 
@@ -384,6 +384,11 @@ public final class Token implements AstElement {
                 nodeType() != null ? TokenType.TYPE : //
                         type() == TokenType.NAME && isKeyword() ? TokenType.KEYWORD : //
                                 type();
+    }
+
+    @Override
+    public void deparse(StringBuffer sb) {
+        sb.append(text);
     }
 
 }

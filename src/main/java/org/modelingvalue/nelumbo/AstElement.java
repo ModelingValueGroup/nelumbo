@@ -56,4 +56,7 @@ public interface AstElement {
     void setCycleDepth(int depth);
 
     int getCycleDepth();
+
+    void deparse(StringBuffer sb);
+
 }
