@@ -14,64 +14,48 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.strings;
+package org.modelingvalue.nelumbo;
 
-import java.io.Serial;
-import java.math.BigInteger;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.InferResult;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
-public final class ToInteger extends Predicate {
-    @Serial
-    private static final long serialVersionUID = -2874326869672600959L;
+/**
+ * Marks a constructor that is called through introspection (reflection) and therefore
+ * appears unused in static code analysis. This annotation serves as documentation that
+ * the constructor is intentionally present for reflective instantiation of Node subclasses.
+ * <p>
+ * Constructors marked with this annotation have the signature:<br>
+ * {@code (Functor, List<AstElement>, Object[])}
+ */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.CONSTRUCTOR)
+@SuppressWarnings("unused")
+public @interface NelumboConstructor {
+    class Finder {
+        private static final Class<?>[] EXPECTED_PARAMS = {Functor.class, List.class, Object[].class};
 
-    @NelumboConstructor
-    public ToInteger(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
-    }
-
-    private ToInteger(Object[] array, ToInteger declaration) {
-        super(array, declaration);
-    }
-
-    @Override
-    protected ToInteger struct(Object[] array, Node declaration) {
-        return new ToInteger(array, (ToInteger) declaration);
-    }
-
-    @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
-            return unresolvable();
-        }
-
-        BigInteger integer = getVal(0, 0);
-        String string = getVal(1, 0);
-        if (string != null) {
-            try {
-                BigInteger parsed = BigInteger.valueOf(Integer.parseInt(string));
-                if (integer != null) {
-                    boolean eq = integer.equals(parsed);
-                    return eq ? factCC() : falsehoodCC();
-                } else {
-                    return set(0, org.modelingvalue.nelumbo.integers.NInteger.of(parsed)).factCI();
+        @SuppressWarnings("unchecked")
+        static Constructor<? extends Node> find(String className) throws ClassNotFoundException {
+            Class<?> clazz = Class.forName(className);
+            for (Constructor<?> c : clazz.getConstructors()) {
+                if (c.isAnnotationPresent(NelumboConstructor.class)) {
+                    assert Node.class.isAssignableFrom(c.getDeclaringClass()) //
+                            : "@NelumboConstructor on " + c.getDeclaringClass().getName() + " is invalid: class must extend " + Node.class.getSimpleName();
+                    assert Arrays.equals(c.getParameterTypes(), EXPECTED_PARAMS) //
+                            : "@NelumboConstructor on " + c.getDeclaringClass().getName() + " has wrong signature: " + Arrays.toString(c.getParameterTypes()) + ", expected: " + Arrays.toString(EXPECTED_PARAMS);
+                    return (Constructor<? extends Node>) c;
                 }
-            } catch (NumberFormatException e) {
-                return integer != null ? falsehoodCC() : falsehoodCI();
             }
-        } else if (integer != null) {
-            String s = integer.toString();
-            return set(1, org.modelingvalue.nelumbo.strings.NString.of(s)).factCI();
+            return null;
         }
-
-        return unknown();
     }
-
 }

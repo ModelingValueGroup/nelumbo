@@ -21,6 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -30,6 +31,7 @@ public final class Concat extends Predicate {
     @Serial
     private static final long serialVersionUID = -317279750710781401L;
 
+    @NelumboConstructor
     public Concat(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args[0], args[1], args[2]);
     }

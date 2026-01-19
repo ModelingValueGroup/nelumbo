@@ -16,19 +16,23 @@
 
 package org.modelingvalue.nelumbo.integers;
 
+import java.io.Serial;
 import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class Multiply extends Predicate {
+    @Serial
     private static final long serialVersionUID = 2630128775301942610L;
 
+    @NelumboConstructor
     public Multiply(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args[0], args[1], args[2]);
     }

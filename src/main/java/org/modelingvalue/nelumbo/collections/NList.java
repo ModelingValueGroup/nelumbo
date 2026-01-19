@@ -21,6 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -37,7 +38,7 @@ public class NList extends Node {
         super(elementType.list(), elements, args);
     }
 
-    @SuppressWarnings("unused")
+    @NelumboConstructor
     public NList(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args);
     }
@@ -65,7 +66,6 @@ public class NList extends Node {
         return (List<T>) get(0);
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends Node> List<T> elementsFlattened() {
         List<T> result = List.of();
         for (T e : this.<T> elements()) {

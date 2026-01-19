@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -30,7 +31,7 @@ public class NSet extends Node {
     @Serial
     private static final long serialVersionUID = 840888260991475386L;
 
-    @SuppressWarnings("unused")
+    @NelumboConstructor
     public NSet(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args);
     }
