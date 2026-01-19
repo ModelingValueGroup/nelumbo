@@ -23,6 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -41,21 +43,32 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 @SuppressWarnings("unused")
 public @interface NelumboConstructor {
     class Finder {
-        private static final Class<?>[] EXPECTED_PARAMS = {Functor.class, List.class, Object[].class};
+        private static final Class<?>[]                               EXPECTED_PARAMS = {Functor.class, List.class, Object[].class};
+        private static final Map<String, Constructor<? extends Node>> CACHE           = new ConcurrentHashMap<>();
+        private static       int                                      cacheHits;
 
         @SuppressWarnings("unchecked")
-        static Constructor<? extends Node> find(String className) throws ClassNotFoundException {
-            Class<?> clazz = Class.forName(className);
-            for (Constructor<?> c : clazz.getConstructors()) {
-                if (c.isAnnotationPresent(NelumboConstructor.class)) {
-                    assert Node.class.isAssignableFrom(c.getDeclaringClass()) //
-                            : "@NelumboConstructor on " + c.getDeclaringClass().getName() + " is invalid: class must extend " + Node.class.getSimpleName();
-                    assert Arrays.equals(c.getParameterTypes(), EXPECTED_PARAMS) //
-                            : "@NelumboConstructor on " + c.getDeclaringClass().getName() + " has wrong signature: " + Arrays.toString(c.getParameterTypes()) + ", expected: " + Arrays.toString(EXPECTED_PARAMS);
-                    return (Constructor<? extends Node>) c;
+        static Constructor<? extends Node> find(String className) throws ClassNotFoundException, NoSuchMethodException {
+            Constructor<? extends Node> result = CACHE.get(className);
+            if (result == null) {
+                Class<?> clazz = Class.forName(className);
+                for (Constructor<?> c : clazz.getConstructors()) {
+                    if (c.isAnnotationPresent(NelumboConstructor.class)) {
+                        if (!Node.class.isAssignableFrom(c.getDeclaringClass())) {
+                            throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName() + " is invalid: class must extend " + Node.class.getSimpleName());
+                        }
+                        if (!Arrays.equals(c.getParameterTypes(), EXPECTED_PARAMS)) {
+                            throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName() + " has wrong signature: " + Arrays.toString(c.getParameterTypes()) + ", expected: " + Arrays.toString(EXPECTED_PARAMS));
+                        }
+                        result = (Constructor<? extends Node>) c;
+                        CACHE.put(className, result);
+                    }
+                }
+                if (result == null) {
+                    System.err.println("Warning: no @NelumboConstructor annotated constructor found for " + className);
                 }
             }
-            return null;
+            return result;
         }
     }
 }

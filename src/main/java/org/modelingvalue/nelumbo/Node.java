@@ -47,6 +47,7 @@ public class Node extends StructImpl implements AstElement {
     private Map<Functor, List<Integer>> branches;
     private int                         cycleDepth;
 
+    @NelumboConstructor
     public Node(Functor functor, List<AstElement> elements, Object... args) {
         super(array(functor, elements, args));
         this.declaration = this;
@@ -173,7 +174,7 @@ public class Node extends StructImpl implements AstElement {
     private List<Node> children(Object a, List<Node> children) {
         if (a instanceof Node n) {
             children = children.add(n);
-        } else if (a instanceof ContainingCollection coll) {
+        } else if (a instanceof ContainingCollection<?> coll) {
             for (Object e : coll) {
                 children = children(e, children);
             }

@@ -306,7 +306,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(t("<(>"), SEQUENCE, o(s(t("<,>"), SEQUENCE)), a(t("<)*>"), t("<)+>"))), //
                            Type.PATTERN, false, (elements, args, functor) -> {
                             Pattern repeated = null, separator = null;
-                            List<AstElement>         list                       = List.of();
+                            List<AstElement>         list      = List.of();
                             for (AstElement e : elements) {
                                 if (e.isMeta()) {
                                     if (!list.isEmpty()) {
@@ -346,7 +346,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                            Type.ROOT.list(), false, (elements, args, functor) -> {
                             Type                                      type        = (Type) elements.get(0);
                             NList                                     roots       = new NList(elements.sublist(0, 2), Type.ROOT);
-                            List<AstElement> pttrn                                = List.of(), ast               = List.of();
+                            List<AstElement> pttrn                                = List.of(), ast = List.of();
                             Constructor<?>                            constructor = null;
                             List<Integer>                             precedence  = List.of();
                             for (int i = 2; i <= elements.size(); i++) {
@@ -385,7 +385,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         String className = qname.toString();
                                         try {
                                             constructor = NelumboConstructor.Finder.find(className);
-                                        } catch (SecurityException | ClassNotFoundException ex) {
+                                        } catch (SecurityException | ClassNotFoundException | NoSuchMethodException ex) {
                                             CURRENT.get().addException(new ParseException(ex, ex + " during finding class with Node constructor " + className, t.next()));
                                         }
                                     } else {
