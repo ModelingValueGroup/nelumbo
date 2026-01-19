@@ -46,7 +46,7 @@ dependencies {
     implementation("org.glassfish.tyrus:tyrus-server:2.2.1")
     implementation("org.glassfish.tyrus:tyrus-container-grizzly-server:2.2.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.20.1")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.0")
     implementation("org.tomlj:tomlj:1.1.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.2")
