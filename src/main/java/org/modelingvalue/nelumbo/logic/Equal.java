@@ -22,6 +22,7 @@ import java.util.Objects;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -31,6 +32,7 @@ public class Equal extends Predicate {
     @Serial
     private static final long serialVersionUID = -5516286818572134367L;
 
+    @NelumboConstructor
     public Equal(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args[0], args[1]);
     }

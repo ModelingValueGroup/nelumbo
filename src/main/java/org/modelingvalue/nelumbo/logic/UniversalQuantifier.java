@@ -22,6 +22,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
@@ -38,6 +39,7 @@ public final class UniversalQuantifier extends Quantifier {
         KnowledgeBase.registerFunctorSetter(UniversalQuantifier.class, f -> FUNCTOR = f);
     }
 
+    @NelumboConstructor
     public UniversalQuantifier(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args);
     }

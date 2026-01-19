@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -39,6 +40,7 @@ public final class NInteger extends Node {
         KnowledgeBase.registerFunctorSetter(NInteger.class, f -> FUNCTOR = f);
     }
 
+    @NelumboConstructor
     public NInteger(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, parse((String) args[0]));
     }

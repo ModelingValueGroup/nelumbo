@@ -21,6 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
@@ -36,6 +37,7 @@ public final class Not extends CompoundPredicate {
         KnowledgeBase.registerFunctorSetter(Not.class, f -> FUNCTOR = f);
     }
 
+    @NelumboConstructor
     public Not(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args[0]);
     }

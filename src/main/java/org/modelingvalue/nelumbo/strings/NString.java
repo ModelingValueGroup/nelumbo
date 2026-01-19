@@ -21,12 +21,12 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NString extends Node {
-
     @Serial
     private static final long             serialVersionUID = 8360866611309554234L;
 
@@ -38,6 +38,7 @@ public final class NString extends Node {
         KnowledgeBase.registerFunctorSetter(NString.class, f -> FUNCTOR = f);
     }
 
+    @NelumboConstructor
     public NString(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, parse((String) args[0]));
     }

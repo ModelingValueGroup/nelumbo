@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -31,6 +32,7 @@ public final class Length extends Predicate {
     @Serial
     private static final long serialVersionUID = 4405805306602130025L;
 
+    @NelumboConstructor
     public Length(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args[0], args[1]);
     }
