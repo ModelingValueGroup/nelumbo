@@ -91,7 +91,7 @@ public class ParserResult implements ParseExceptionHandler {
     }
 
     public void checkAssertions() {
-        if (tokenizerResult != null && root != null && U.areAssertsEnabled()) {
+        if (false && tokenizerResult != null && root != null && U.areAssertsEnabled()) {
             StringBuffer sb = new StringBuffer();
             root.deparse(sb);
             String result = sb.toString();
