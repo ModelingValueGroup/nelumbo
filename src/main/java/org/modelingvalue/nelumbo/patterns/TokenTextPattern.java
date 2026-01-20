@@ -71,7 +71,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
+    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
         return new ParseState(tokenText(), next.merge(new ParseState(functor, branche)));
     }
 

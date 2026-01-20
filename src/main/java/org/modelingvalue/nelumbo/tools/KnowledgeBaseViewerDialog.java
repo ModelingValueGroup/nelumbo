@@ -16,23 +16,6 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import javax.swing.BorderFactory;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTree;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -40,6 +23,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Comparator;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -54,34 +43,35 @@ import org.modelingvalue.nelumbo.Transform;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
+@SuppressWarnings("serial")
 public class KnowledgeBaseViewerDialog extends JDialog {
 
-    private static final String[] FUNCTOR_COLUMNS   = {"Result Type", "Name", "Pattern", "Arg Types"};
-    private static final String[] RULE_COLUMNS      = {"Consequence", "Condition"};
-    private static final String[] FACT_COLUMNS      = {"Predicate"};
-    private static final String[] TRANSFORM_COLUMNS = {"Source", "Targets"};
+    private static final String[]           FUNCTOR_COLUMNS   = {"Result Type", "Name", "Pattern", "Arg Types"};
+    private static final String[]           RULE_COLUMNS      = {"Consequence", "Condition"};
+    private static final String[]           FACT_COLUMNS      = {"Predicate"};
+    private static final String[]           TRANSFORM_COLUMNS = {"Source", "Targets"};
 
-    private static final Color FUNCTOR_COLOR   = new Color(0xE3F2FD);  // Light blue
-    private static final Color RULE_COLOR      = new Color(0xFFF3E0);  // Light orange
-    private static final Color FACT_COLOR      = new Color(0xE8F5E9);  // Light green
-    private static final Color TRANSFORM_COLOR = new Color(0xF3E5F5);  // Light purple
+    private static final Color              FUNCTOR_COLOR     = new Color(0xE3F2FD);                            // Light blue
+    private static final Color              RULE_COLOR        = new Color(0xFFF3E0);                            // Light orange
+    private static final Color              FACT_COLOR        = new Color(0xE8F5E9);                            // Light green
+    private static final Color              TRANSFORM_COLOR   = new Color(0xF3E5F5);                            // Light purple
 
-    private final JTable            functorTable;
-    private final DefaultTableModel functorTableModel;
-    private final JTable            ruleTable;
-    private final DefaultTableModel ruleTableModel;
-    private final JTable            factTable;
-    private final DefaultTableModel factTableModel;
-    private final JTable            transformTable;
-    private final DefaultTableModel transformTableModel;
-    private final JTree             typeHierarchyTree;
-    private final JTextArea         detailsArea;
-    private final JLabel            statsLabel;
+    private final JTable                    functorTable;
+    private final DefaultTableModel         functorTableModel;
+    private final JTable                    ruleTable;
+    private final DefaultTableModel         ruleTableModel;
+    private final JTable                    factTable;
+    private final DefaultTableModel         factTableModel;
+    private final JTable                    transformTable;
+    private final DefaultTableModel         transformTableModel;
+    private final JTree                     typeHierarchyTree;
+    private final JTextArea                 detailsArea;
+    private final JLabel                    statsLabel;
 
-    private final java.util.List<Functor>   functorList   = new ArrayList<>();
-    private final java.util.List<Rule>      ruleList      = new ArrayList<>();
-    private final java.util.List<Predicate> factList      = new ArrayList<>();
-    private final java.util.List<Transform> transformList = new ArrayList<>();
+    private final java.util.List<Functor>   functorList       = new ArrayList<>();
+    private final java.util.List<Rule>      ruleList          = new ArrayList<>();
+    private final java.util.List<Predicate> factList          = new ArrayList<>();
+    private final java.util.List<Transform> transformList     = new ArrayList<>();
 
     public KnowledgeBaseViewerDialog(JFrame parent, KnowledgeBase knowledgeBase) {
         super(parent, "Knowledge Base Viewer", false);
@@ -97,7 +87,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
                 return false;
             }
         };
-        functorTable      = createTable(functorTableModel, FUNCTOR_COLOR);
+        functorTable = createTable(functorTableModel, FUNCTOR_COLOR);
         functorTable.getColumnModel().getColumn(0).setPreferredWidth(120);
         functorTable.getColumnModel().getColumn(1).setPreferredWidth(150);
         functorTable.getColumnModel().getColumn(2).setPreferredWidth(300);
@@ -113,7 +103,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
                 return false;
             }
         };
-        ruleTable      = createTable(ruleTableModel, RULE_COLOR);
+        ruleTable = createTable(ruleTableModel, RULE_COLOR);
         ruleTable.getColumnModel().getColumn(0).setPreferredWidth(300);
         ruleTable.getColumnModel().getColumn(1).setPreferredWidth(500);
         JScrollPane ruleScroll = new JScrollPane(ruleTable);
@@ -127,7 +117,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
                 return false;
             }
         };
-        factTable      = createTable(factTableModel, FACT_COLOR);
+        factTable = createTable(factTableModel, FACT_COLOR);
         factTable.getColumnModel().getColumn(0).setPreferredWidth(600);
         JScrollPane factScroll = new JScrollPane(factTable);
         factScroll.getViewport().setBackground(FACT_COLOR);
@@ -140,7 +130,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
                 return false;
             }
         };
-        transformTable      = createTable(transformTableModel, TRANSFORM_COLOR);
+        transformTable = createTable(transformTableModel, TRANSFORM_COLOR);
         transformTable.getColumnModel().getColumn(0).setPreferredWidth(300);
         transformTable.getColumnModel().getColumn(1).setPreferredWidth(500);
         JScrollPane transformScroll = new JScrollPane(transformTable);
@@ -215,8 +205,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         // Custom renderer with background color
         DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) {
                     c.setBackground(bgColor);
@@ -255,8 +244,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         populateTypeHierarchy(knowledgeBase);
 
         // Update stats
-        statsLabel.setText(String.format("Functors: %d | Rules: %d | Facts: %d | Transforms: %d",
-                                         functorList.size(), ruleList.size(), factList.size(), transformList.size()));
+        statsLabel.setText(String.format("Functors: %d | Rules: %d | Facts: %d | Transforms: %d", functorList.size(), ruleList.size(), factList.size(), transformList.size()));
 
         detailsArea.setText("");
     }
@@ -289,15 +277,14 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         for (Functor f : functors) {
             sorted.add(f);
         }
-        sorted.sort(Comparator.comparing((Functor f) -> f.resultType() != null ? f.resultType().name() : "")
-                              .thenComparing(Functor::name));
+        sorted.sort(Comparator.comparing((Functor f) -> f.resultType() != null ? f.resultType().name() : "").thenComparing(Functor::name));
 
         for (Functor functor : sorted) {
             functorList.add(functor);
             String resultType = functor.resultType() != null ? functor.resultType().name() : "<null>";
-            String name       = functor.name();
-            String pattern    = formatPattern(functor);
-            String argTypes   = formatArgTypes(functor);
+            String name = functor.name();
+            String pattern = formatPattern(functor);
+            String argTypes = formatArgTypes(functor);
             functorTableModel.addRow(new Object[]{resultType, name, pattern, argTypes});
         }
     }
@@ -314,8 +301,8 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         if (argTypes == null || argTypes.isEmpty()) {
             return "()";
         }
-        StringBuilder sb    = new StringBuilder("(");
-        boolean       first = true;
+        StringBuilder sb = new StringBuilder("(");
+        boolean first = true;
         for (org.modelingvalue.nelumbo.Type t : argTypes) {
             if (!first) {
                 sb.append(", ");
@@ -339,7 +326,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         for (Rule rule : rules) {
             ruleList.add(rule);
             String consequence = formatPredicate(rule.consequence());
-            String condition   = formatCondition(rule);
+            String condition = formatCondition(rule);
             ruleTableModel.addRow(new Object[]{consequence, condition});
         }
     }
@@ -387,7 +374,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
 
         for (Transform transform : transforms) {
             transformList.add(transform);
-            String source  = formatNode(transform.source());
+            String source = formatNode(transform.source());
             String targets = formatTargets(transform.targets());
             transformTableModel.addRow(new Object[]{source, targets});
         }
@@ -412,8 +399,8 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         if (targets == null || targets.isEmpty()) {
             return "<none>";
         }
-        StringBuilder sb    = new StringBuilder();
-        boolean       first = true;
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
         for (Node target : targets) {
             if (!first) {
                 sb.append(", ");
@@ -428,7 +415,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Types");
 
         // Collect all types from functors - using fully qualified names to avoid conflict with java.awt.Window.Type
-        java.util.Set<org.modelingvalue.nelumbo.Type>                                      allTypes  = new java.util.HashSet<>();
+        java.util.Set<org.modelingvalue.nelumbo.Type> allTypes = new java.util.HashSet<>();
         java.util.Map<org.modelingvalue.nelumbo.Type, Set<org.modelingvalue.nelumbo.Type>> supersMap = new java.util.HashMap<>();
 
         for (Functor f : kb.functors()) {
@@ -466,10 +453,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         expandAllNodes(typeHierarchyTree);
     }
 
-    private DefaultMutableTreeNode buildTypeNode(org.modelingvalue.nelumbo.Type theType,
-                                                 java.util.Set<org.modelingvalue.nelumbo.Type> allTypes,
-                                                 java.util.Map<org.modelingvalue.nelumbo.Type, Set<org.modelingvalue.nelumbo.Type>> supersMap,
-                                                 java.util.Set<org.modelingvalue.nelumbo.Type> visited) {
+    private DefaultMutableTreeNode buildTypeNode(org.modelingvalue.nelumbo.Type theType, java.util.Set<org.modelingvalue.nelumbo.Type> allTypes, java.util.Map<org.modelingvalue.nelumbo.Type, Set<org.modelingvalue.nelumbo.Type>> supersMap, java.util.Set<org.modelingvalue.nelumbo.Type> visited) {
         String nodeText = theType.name();
         if (theType.group() != null && !theType.group().equals(org.modelingvalue.nelumbo.Type.DEFAULT_GROUP)) {
             nodeText += " [" + theType.group() + "]";
@@ -507,15 +491,14 @@ public class KnowledgeBaseViewerDialog extends JDialog {
     private void showFunctorDetails() {
         int row = functorTable.getSelectedRow();
         if (row >= 0 && row < functorList.size()) {
-            Functor       functor = functorList.get(row);
-            StringBuilder sb      = new StringBuilder();
+            Functor functor = functorList.get(row);
+            StringBuilder sb = new StringBuilder();
             sb.append("FUNCTOR DETAILS\n");
             sb.append("===============\n\n");
             sb.append("Name:        ").append(functor.name()).append("\n");
             sb.append("Result Type: ").append(functor.resultType() != null ? functor.resultType().name() : "<null>").append("\n");
             sb.append("Pattern:     ").append(functor.pattern() != null ? functor.pattern().toString() : "<null>").append("\n");
             sb.append("Arg Types:   ").append(formatArgTypes(functor)).append("\n");
-            sb.append("Left:        ").append(functor.left() != null ? functor.left().toString() : "<null>").append("\n");
             sb.append("Local:       ").append(functor.local()).append("\n");
             sb.append("\nAST Elements:\n");
             List<AstElement> elements = functor.astElements();
@@ -536,8 +519,8 @@ public class KnowledgeBaseViewerDialog extends JDialog {
     private void showRuleDetails() {
         int row = ruleTable.getSelectedRow();
         if (row >= 0 && row < ruleList.size()) {
-            Rule          rule = ruleList.get(row);
-            StringBuilder sb   = new StringBuilder();
+            Rule rule = ruleList.get(row);
+            StringBuilder sb = new StringBuilder();
             sb.append("RULE DETAILS\n");
             sb.append("============\n\n");
             sb.append("Consequence:\n  ").append(rule.consequence() != null ? rule.consequence().toString() : "<null>").append("\n\n");
@@ -563,8 +546,8 @@ public class KnowledgeBaseViewerDialog extends JDialog {
     private void showFactDetails() {
         int row = factTable.getSelectedRow();
         if (row >= 0 && row < factList.size()) {
-            Predicate     fact = factList.get(row);
-            StringBuilder sb   = new StringBuilder();
+            Predicate fact = factList.get(row);
+            StringBuilder sb = new StringBuilder();
             sb.append("FACT DETAILS\n");
             sb.append("============\n\n");
             sb.append("Predicate: ").append(fact.toString()).append("\n\n");
@@ -591,8 +574,8 @@ public class KnowledgeBaseViewerDialog extends JDialog {
     private void showTransformDetails() {
         int row = transformTable.getSelectedRow();
         if (row >= 0 && row < transformList.size()) {
-            Transform     transform = transformList.get(row);
-            StringBuilder sb        = new StringBuilder();
+            Transform transform = transformList.get(row);
+            StringBuilder sb = new StringBuilder();
             sb.append("TRANSFORM DETAILS\n");
             sb.append("=================\n\n");
             sb.append("Source:\n");

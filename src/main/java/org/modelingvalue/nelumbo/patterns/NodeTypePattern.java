@@ -69,21 +69,13 @@ public class NodeTypePattern extends Pattern {
         return (NodeTypePattern) super.setBinding(declaration, vars);
     }
 
-    public Integer leftPrecedence() {
-        Integer precedence = (Integer) get(1);
-        return precedence != null ? precedence : Integer.MAX_VALUE;
-    }
-
-    public Integer innerPrecedence() {
-        Integer precedence = (Integer) get(1);
-        return precedence != null ? precedence : Integer.MIN_VALUE;
+    public Integer precedence() {
+        return (Integer) get(1);
     }
 
     @Override
-    public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
-        Integer leftPrecedence = left != null && left != this ? left.leftPrecedence() : null;
-        Integer innerPrecedence = left == null || left != this ? innerPrecedence() : null;
-        return new ParseState(nodeType(), next.merge(new ParseState(functor, branche)), leftPrecedence, innerPrecedence);
+    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
+        return new ParseState(nodeType(), next.merge(new ParseState(functor, branche)), precedence());
     }
 
     @Override
@@ -123,13 +115,13 @@ public class NodeTypePattern extends Pattern {
         nodeType().isAssignableFrom(node instanceof Type type ? type : node.type()) || //
                 (node instanceof Variable && nodeType().isAssignableFrom(Type.VARIABLE)))) {
             boolean parenthetical = false;
-            Functor functor = node.functor();
-            if (functor != null) {
-                NodeTypePattern left = functor.left();
-                if (left != null) {
-                    parenthetical = innerPrecedence() > left.leftPrecedence();
-                }
-            }
+            //            Functor functor = node.functor();
+            //            if (functor != null) {
+            //                NodeTypePattern left = functor.left();
+            //                if (left != null) {
+            //                    parenthetical = precedence() > left.leftPrecedence();
+            //                }
+            //            }
             if (parenthetical) {
                 sb.append('(');
             }

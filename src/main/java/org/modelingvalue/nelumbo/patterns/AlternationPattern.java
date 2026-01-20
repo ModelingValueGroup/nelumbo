@@ -50,11 +50,11 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche) {
+    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
         ParseState result = ParseState.EMPTY;
         int i = 0;
         for (Pattern option : options()) {
-            result = result.merge(option.state(next, left, functor, branche.add(i++)));
+            result = result.merge(option.state(next, functor, branche.add(i++)));
         }
         return result;
     }

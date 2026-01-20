@@ -37,6 +37,7 @@ public final class PatternResult implements ParseExceptionHandler {
 
     private Functor                               functor;
     private ParseState                            state;
+    private int                                   leftPrecedence;
     private Set<RepetitionPattern>                endRepetitions;
     private Token                                 nextToken;
     private int                                   depth;
@@ -91,7 +92,7 @@ public final class PatternResult implements ParseExceptionHandler {
     }
 
     public int leftPrecedence() {
-        return state != null ? state.leftPrecedence() : functor.left().leftPrecedence();
+        return leftPrecedence;
     }
 
     public void endPostParse(Functor functor, Token nextToken) {
@@ -99,9 +100,10 @@ public final class PatternResult implements ParseExceptionHandler {
         this.nextToken = nextToken;
     }
 
-    public void endPreParse(ParseState state, Token nextToken) {
+    public void endPreParse(ParseState state, Token nextToken, int lefPrecedence) {
         this.state = state;
         this.nextToken = nextToken;
+        this.leftPrecedence = lefPrecedence;
     }
 
     public void clearDepth() {

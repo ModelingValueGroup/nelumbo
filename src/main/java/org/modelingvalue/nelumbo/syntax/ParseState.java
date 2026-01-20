@@ -30,7 +30,8 @@ import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public class ParseState implements Mergeable<ParseState> {
-    public static final ParseState            EMPTY = new ParseState((Functor) null);
+    public static final ParseState            EMPTY        = new ParseState((Functor) null);
+    private static final List<Integer>        LEFT_BRANCHE = List.of(0);
 
     private final Map<Object, ParseState>     transitions;
     private final Functor                     functor;
@@ -40,37 +41,38 @@ public class ParseState implements Mergeable<ParseState> {
     private final Set<RepetitionPattern>      startRepetitions;
     private final Set<RepetitionPattern>      endRepetitions;
     private final Map<Functor, List<Integer>> branches;
+    private final boolean                     isLeft;
 
     public ParseState(Functor functor) {
-        this(Map.of(), functor, null, null, null, Set.of(), Set.of(), Map.of());
+        this(Map.of(), functor, null, null, null, Set.of(), Set.of(), Map.of(), false);
     }
 
     public ParseState(Functor functor, List<Integer> branche) {
-        this(Map.of(), null, null, null, null, Set.of(), Set.of(), Map.of(Entry.of(functor, branche)));
+        this(Map.of(), null, null, null, null, Set.of(), Set.of(), Map.of(Entry.of(functor, branche)), false);
     }
 
     public ParseState(RepetitionPattern endRepetition) {
-        this(Map.of(), null, null, null, null, Set.of(), Set.of(endRepetition), Map.of());
+        this(Map.of(), null, null, null, null, Set.of(), Set.of(endRepetition), Map.of(), false);
     }
 
     public ParseState(RepetitionPattern startRepetition, Integer leftPrecedence) {
-        this(Map.of(), null, leftPrecedence, null, null, Set.of(startRepetition), Set.of(), Map.of());
+        this(Map.of(), null, leftPrecedence, null, null, Set.of(startRepetition), Set.of(), Map.of(), false);
     }
 
     public ParseState(String text, ParseState next) {
-        this(Map.of(Entry.of(text, next)), null, null, null, null, Set.of(), Set.of(), Map.of());
+        this(Map.of(Entry.of(text, next)), null, null, null, null, Set.of(), Set.of(), Map.of(), false);
     }
 
     public ParseState(TokenType tokenType, ParseState next) {
-        this(Map.of(Entry.of(tokenType, next)), null, null, null, null, Set.of(), Set.of(), Map.of());
+        this(Map.of(Entry.of(tokenType, next)), null, null, null, null, Set.of(), Set.of(), Map.of(), false);
     }
 
     public ParseState(Type nodeType, ParseState next, Integer leftPrecedence, Integer innerPrecedence) {
-        this(Map.of(Entry.of(nodeType, next)), null, leftPrecedence, innerPrecedence, nodeType.group(), Set.of(), Set.of(), Map.of());
+        this(Map.of(Entry.of(nodeType, next)), null, leftPrecedence, innerPrecedence, nodeType.group(), Set.of(), Set.of(), Map.of(), false);
     }
 
     private ParseState(Map<Object, ParseState> transitions, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, //
-            Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, Map<Functor, List<Integer>> branches) {
+            Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, Map<Functor, List<Integer>> branches, boolean isLeft) {
         this.transitions = transitions;
         this.functor = functor;
         this.leftPrecedence = leftPrecedence;
@@ -79,6 +81,7 @@ public class ParseState implements Mergeable<ParseState> {
         this.startRepetitions = startRepetitions;
         this.endRepetitions = endRepetitions;
         this.branches = branches;
+        this.isLeft = isLeft;
     }
 
     public Map<Object, ParseState> transitions() {
@@ -113,13 +116,39 @@ public class ParseState implements Mergeable<ParseState> {
         return branches;
     }
 
+    public boolean isLeft() {
+        return isLeft;
+    }
+
+    public ParseState pre(Functor functor) {
+        Map<Object, ParseState> t = transitions.removeAll(e -> e.getKey() instanceof Type && //
+                !e.getValue().transitions().isEmpty());
+        if (t.isEmpty()) {
+            return null;
+        }
+        boolean hasType = t.anyMatch(e -> e.getKey() instanceof Type);
+        Integer ip = hasType ? innerPrecedence : null;
+        String g = hasType ? group : null;
+        return new ParseState(t, this.functor, leftPrecedence, ip, g, startRepetitions, endRepetitions, branches, false);
+    }
+
+    public ParseState post(Functor functor) {
+        Map<Object, ParseState> t = transitions.retainAll(e -> e.getKey() instanceof Type && //
+                !e.getValue().transitions().isEmpty());
+        if (t.isEmpty()) {
+            return null;
+        }
+        return new ParseState(t, this.functor, null, null, group, startRepetitions, endRepetitions, //
+                Map.of(Entry.of(functor, LEFT_BRANCHE)), true);
+    }
+
     public boolean parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions, boolean pre) throws ParseException {
         ParseContext ctx = result.context();
         if (ctx.state() == this && ctx.token() == token) {
             return false;
         }
         if (pre && !startRepetitions().isEmpty() && !result.isEmpty()) {
-            result.endPreParse(this, token);
+            result.endPreParse(this, token, leftPrecedence);
             return true;
         }
         Map<RepetitionPattern, ParseState> innerRepetitions = outerRepetitions;
@@ -131,7 +160,7 @@ public class ParseState implements Mergeable<ParseState> {
             nrOfExceptions = result.exceptions().size();
             if (!token(token, result, ctx, innerRepetitions, pre)) {
                 if (pre && group() != null) {
-                    result.endPreParse(this, token);
+                    result.endPreParse(this, token, leftPrecedence);
                     return true;
                 } else if (!pre && token != null && outerEnd(token, result, ctx, outerRepetitions)) {
                     result.endPostParse(functor(), token);
@@ -387,7 +416,8 @@ public class ParseState implements Mergeable<ParseState> {
                 elementMerge(group(), state.group()), //
                 startRepetitions().addAll(state.startRepetitions()), //
                 endRepetitions().addAll(state.endRepetitions()), //
-                branches().addAll(state.branches(), ParseState::elementMerge));
+                branches().addAll(state.branches(), ParseState::elementMerge), //
+                elementMerge(isLeft(), state.isLeft()));
     }
 
     private static <T> T elementMerge(T t1, T t2) {

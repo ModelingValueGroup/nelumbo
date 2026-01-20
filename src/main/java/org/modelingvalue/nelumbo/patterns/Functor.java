@@ -58,6 +58,8 @@ public class Functor extends Node {
     private String     name;
     private List<Type> argTypes;
     private ParseState start;
+    private ParseState startPre;
+    private ParseState startPost;
 
     private Functor(List<AstElement> elements, Object... args) {
         super(Type.FUNCTOR, elements, args);
@@ -104,16 +106,6 @@ public class Functor extends Node {
     public ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function() {
         Object val = get(3);
         return val instanceof ThrowingTriFunction ? (ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node>) val : null;
-    }
-
-    public NodeTypePattern left() {
-        Pattern pattern = pattern();
-        if (pattern instanceof SequencePattern sp) {
-            if (sp.elements().first() instanceof NodeTypePattern ntp) {
-                return ntp;
-            }
-        }
-        return null;
     }
 
     @Override
@@ -169,9 +161,22 @@ public class Functor extends Node {
         }
     }
 
+    public ParseState preStart() {
+        start();
+        return startPre;
+    }
+
+    public ParseState postStart() {
+        start();
+        return startPost;
+    }
+
     public ParseState start() {
         if (start == null) {
-            start = pattern().state(new ParseState(this), left(), this, List.of());
+            ParseState s = pattern().state(new ParseState(this), this, List.of());
+            startPre = s.pre(this);
+            startPost = s.post(this);
+            start = s;
         }
         return start;
     }

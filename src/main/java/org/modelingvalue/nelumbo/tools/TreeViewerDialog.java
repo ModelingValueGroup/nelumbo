@@ -16,17 +16,11 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import javax.swing.BorderFactory;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTable;
-import javax.swing.JTree;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+
+import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -34,16 +28,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.util.ArrayList;
-import java.util.Enumeration;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -52,23 +36,24 @@ import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
+@SuppressWarnings("serial")
 public class TreeViewerDialog extends JDialog {
 
-    private static final String[] TOKEN_COLUMNS            = {"Line", "Position", "Index", "Type", "Text", "ColorType"};
-    private static final String[] AST_ELEMENT_NODE_LABELS  = {"class", "type", "functor", "line", "position", "index", "#args", "tokens"};
-    private static final String[] AST_ELEMENT_TOKEN_LABELS = {"class", "type", "color", "line", "position", "index", "text", "variable"};
+    private static final String[]       TOKEN_COLUMNS            = {"Line", "Position", "Index", "Type", "Text", "ColorType"};
+    private static final String[]       AST_ELEMENT_NODE_LABELS  = {"class", "type", "functor", "line", "position", "index", "#args", "tokens"};
+    private static final String[]       AST_ELEMENT_TOKEN_LABELS = {"class", "type", "color", "line", "position", "index", "text", "variable"};
 
-    private static final Color NODE_BACKGROUND         = new Color(0xC8E6C9);  // Light green
-    private static final Color TOKEN_BACKGROUND        = new Color(0xE1BEE7);  // Light purple
-    private static final Color LAYOUT_TOKEN_TEXT_COLOR = new Color(0x888888);
+    private static final Color          NODE_BACKGROUND          = new Color(0xC8E6C9);                                                         // Light green
+    private static final Color          TOKEN_BACKGROUND         = new Color(0xE1BEE7);                                                         // Light purple
+    private static final Color          LAYOUT_TOKEN_TEXT_COLOR  = new Color(0x888888);
 
     private final JTable                tokenListView;
     private final DefaultTableModel     tokenListViewModel;
     private final JTree                 nodeTree;
     private final JLabel[]              astElementDetailLabels;
     private final JLabel[]              astElementDetailText;
-    private final java.util.List<Token> tokenList = new ArrayList<>();
-    private       boolean               isSyncing = false;
+    private final java.util.List<Token> tokenList                = new ArrayList<>();
+    private boolean                     isSyncing                = false;
 
     public TreeViewerDialog(JFrame parent, TokenizerResult tokenizerResult, ParserResult parserResult) {
         super(parent, "Token & Node Tree Viewer", false);
@@ -81,12 +66,12 @@ public class TreeViewerDialog extends JDialog {
                 return false;
             }
         };
-        tokenListView      = new JTable(tokenListViewModel);
+        tokenListView = new JTable(tokenListViewModel);
         tokenListView.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         tokenListView.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-        tokenListView.getColumnModel().getColumn(0).setPreferredWidth(80);  // Line
-        tokenListView.getColumnModel().getColumn(1).setPreferredWidth(80);  // Col
-        tokenListView.getColumnModel().getColumn(2).setPreferredWidth(80);  // Index
+        tokenListView.getColumnModel().getColumn(0).setPreferredWidth(80); // Line
+        tokenListView.getColumnModel().getColumn(1).setPreferredWidth(80); // Col
+        tokenListView.getColumnModel().getColumn(2).setPreferredWidth(80); // Index
         tokenListView.getColumnModel().getColumn(3).setPreferredWidth(120); // Type
         tokenListView.getColumnModel().getColumn(4).setPreferredWidth(150); // Text
         tokenListView.getColumnModel().getColumn(5).setPreferredWidth(100); // ColorType
@@ -94,13 +79,13 @@ public class TreeViewerDialog extends JDialog {
 
         // Custom renderer for skip/layout token grey text
         TokenTableCellRenderer rightRenderer = new TokenTableCellRenderer(SwingConstants.RIGHT);
-        TokenTableCellRenderer leftRenderer  = new TokenTableCellRenderer(SwingConstants.LEFT);
+        TokenTableCellRenderer leftRenderer = new TokenTableCellRenderer(SwingConstants.LEFT);
         tokenListView.getColumnModel().getColumn(0).setCellRenderer(rightRenderer); // Line
         tokenListView.getColumnModel().getColumn(1).setCellRenderer(rightRenderer); // Col
         tokenListView.getColumnModel().getColumn(2).setCellRenderer(rightRenderer); // Index
-        tokenListView.getColumnModel().getColumn(3).setCellRenderer(leftRenderer);  // Type
-        tokenListView.getColumnModel().getColumn(4).setCellRenderer(leftRenderer);  // Text
-        tokenListView.getColumnModel().getColumn(5).setCellRenderer(leftRenderer);  // ColorType
+        tokenListView.getColumnModel().getColumn(3).setCellRenderer(leftRenderer); // Type
+        tokenListView.getColumnModel().getColumn(4).setCellRenderer(leftRenderer); // Text
+        tokenListView.getColumnModel().getColumn(5).setCellRenderer(leftRenderer); // ColorType
 
         populateTokenTable(tokenizerResult);
 
@@ -118,28 +103,28 @@ public class TreeViewerDialog extends JDialog {
         JPanel astElementDetailPanel = new JPanel(new GridBagLayout());
         astElementDetailPanel.setBorder(BorderFactory.createTitledBorder("ASTElement Details"));
         astElementDetailLabels = new JLabel[AST_ELEMENT_NODE_LABELS.length];
-        astElementDetailText   = new JLabel[AST_ELEMENT_NODE_LABELS.length];
+        astElementDetailText = new JLabel[AST_ELEMENT_NODE_LABELS.length];
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(1, 5, 1, 5);
         for (int i = 0; i < AST_ELEMENT_NODE_LABELS.length; i++) {
             JLabel label = astElementDetailLabels[i] = new JLabel();
-            JLabel text  = astElementDetailText[i] = new JLabel();
+            JLabel text = astElementDetailText[i] = new JLabel();
 
             label.setFont(label.getFont().deriveFont(Font.BOLD));
             label.setHorizontalAlignment(SwingConstants.RIGHT);
-            gbc.gridx   = 0;
-            gbc.gridy   = i;
-            gbc.anchor  = GridBagConstraints.EAST;
+            gbc.gridx = 0;
+            gbc.gridy = i;
+            gbc.anchor = GridBagConstraints.EAST;
             gbc.weightx = 0;
-            gbc.fill    = GridBagConstraints.NONE;
+            gbc.fill = GridBagConstraints.NONE;
             astElementDetailPanel.add(label, gbc);
 
             text.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
             label.setHorizontalAlignment(SwingConstants.LEFT);
-            gbc.gridx   = 1;
-            gbc.anchor  = GridBagConstraints.WEST;
+            gbc.gridx = 1;
+            gbc.anchor = GridBagConstraints.WEST;
             gbc.weightx = 1.0;
-            gbc.fill    = GridBagConstraints.HORIZONTAL;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
             astElementDetailPanel.add(text, gbc);
         }
 
@@ -148,7 +133,7 @@ public class TreeViewerDialog extends JDialog {
 
         // Create scroll panes
         JScrollPane tokenScrollPane = new JScrollPane(tokenListView);
-        JScrollPane nodeScrollPane  = new JScrollPane(nodeTree);
+        JScrollPane nodeScrollPane = new JScrollPane(nodeTree);
 
         // Create panels with titles
         JPanel tokenPanel = new JPanel(new BorderLayout());
@@ -217,7 +202,7 @@ public class TreeViewerDialog extends JDialog {
     }
 
     private DefaultMutableTreeNode buildNodeTreeNode(Node node, Integer argsIndex) {
-        NodeInfo               nodeInfo = new NodeInfo(node, argsIndex);
+        NodeInfo nodeInfo = new NodeInfo(node, argsIndex);
         DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(nodeInfo);
 
         // Build a map of element -> args index for marking
@@ -231,7 +216,7 @@ public class TreeViewerDialog extends JDialog {
 
         // Build a map of first token -> child node for child nodes in astElements
         java.util.Map<Token, Node> firstTokenToChildNode = new java.util.HashMap<>();
-        List<AstElement>           astElements           = node.astElements();
+        List<AstElement> astElements = node.astElements();
         if (astElements != null) {
             for (AstElement element : astElements) {
                 if (element instanceof Node childNode) {
@@ -245,7 +230,7 @@ public class TreeViewerDialog extends JDialog {
 
         // Get ALL tokens (including SKIP/LAYOUT) from first to last
         Token firstToken = node.firstToken();
-        Token lastToken  = node.lastToken();
+        Token lastToken = node.lastToken();
         if (firstToken != null && lastToken != null) {
             Token current = firstToken;
             while (current != null) {
@@ -321,7 +306,7 @@ public class TreeViewerDialog extends JDialog {
 
     private void onNodeSelected(TreeSelectionEvent e) {
         DefaultMutableTreeNode selectedTreeNode = (DefaultMutableTreeNode) nodeTree.getLastSelectedPathComponent();
-        Object                 userObject       = selectedTreeNode == null ? null : selectedTreeNode.getUserObject();
+        Object userObject = selectedTreeNode == null ? null : selectedTreeNode.getUserObject();
         if (userObject instanceof NodeInfo nodeInfo) {
             for (int i = 0; i < AST_ELEMENT_NODE_LABELS.length; i++) {
                 astElementDetailLabels[i].setText(AST_ELEMENT_NODE_LABELS[i]);
@@ -331,7 +316,7 @@ public class TreeViewerDialog extends JDialog {
             astElementDetailText[1].setText(node.type() != null ? node.type().name() : "<null>");
             astElementDetailText[2].setText(node.functor() != null ? node.functor().name() : "<null>");
             Token first = node.firstToken();
-            Token last  = node.lastToken();
+            Token last = node.lastToken();
             if (first != null && last != null) {
                 astElementDetailText[3].setText(String.format("[%d:%d:%d]", first.line(), last.lastLine(), last.lineEnd()));
                 astElementDetailText[4].setText(String.format("[%d:%d:%d]", first.position(), last.lastPosition(), last.positionEnd()));
@@ -390,14 +375,14 @@ public class TreeViewerDialog extends JDialog {
     private void selectInList(Object userObject) {
         if (userObject instanceof NodeInfo info) {
             Token first = info.node.firstToken();
-            Token last  = info.node.lastToken();
+            Token last = info.node.lastToken();
             if (first == null || last == null) {
                 tokenListView.clearSelection();
                 return;
             }
 
             int firstIndex = -1;
-            int lastIndex  = -1;
+            int lastIndex = -1;
 
             // Find indices of first and last tokens
             for (int i = 0; i < tokenList.size(); i++) {
@@ -429,7 +414,7 @@ public class TreeViewerDialog extends JDialog {
 
     private void selectTokenInTree(Token token) {
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) nodeTree.getModel().getRoot();
-        TreePath               path = findTokenInTree(root, token);
+        TreePath path = findTokenInTree(root, token);
         if (path != null) {
             nodeTree.setSelectionPath(path);
             nodeTree.scrollPathToVisible(path);
@@ -447,7 +432,7 @@ public class TreeViewerDialog extends JDialog {
         Enumeration<javax.swing.tree.TreeNode> children = node.children();
         while (children.hasMoreElements()) {
             DefaultMutableTreeNode child = (DefaultMutableTreeNode) children.nextElement();
-            TreePath               path  = findTokenInTree(child, token);
+            TreePath path = findTokenInTree(child, token);
             if (path != null) {
                 return path;
             }
@@ -495,8 +480,7 @@ public class TreeViewerDialog extends JDialog {
     }
 
     // Wrapper class to hold Node reference while providing custom toString for tree display
-    private record NodeInfo(Node node,
-                            Integer argsIndex) {
+    private record NodeInfo(Node node, Integer argsIndex) {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
@@ -529,8 +513,7 @@ public class TreeViewerDialog extends JDialog {
     }
 
     // Wrapper class to hold Token reference while providing custom toString for tree display
-    private record TokenInfo(Token token,
-                             Integer argsIndex) {
+    private record TokenInfo(Token token, Integer argsIndex) {
         public boolean isSkipOrLayout() {
             return token.type().isSkip() || token.type().isLayout();
         }
@@ -596,9 +579,9 @@ public class TreeViewerDialog extends JDialog {
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
             // Determine colors and text
-            Color  background = Color.WHITE;
-            Color  foreground = Color.BLACK;
-            String text       = value != null ? value.toString() : "";
+            Color background = Color.WHITE;
+            Color foreground = Color.BLACK;
+            String text = value != null ? value.toString() : "";
 
             if (value instanceof DefaultMutableTreeNode treeNode) {
                 Object userObject = treeNode.getUserObject();

@@ -120,7 +120,7 @@ public abstract class Pattern extends Node {
     @Override
     protected abstract Pattern struct(Object[] array, Node declaration);
 
-    public abstract ParseState state(ParseState next, NodeTypePattern left, Functor functor, List<Integer> branche);
+    public abstract ParseState state(ParseState next, Functor functor, List<Integer> branche);
 
     public String name() {
         return "";
@@ -147,8 +147,6 @@ public abstract class Pattern extends Node {
 
     protected static final class ElementIterator {
 
-        private static final List<Integer> LEFT_BRANCHE = List.of(0);
-
         private final Iterator<AstElement> it;
 
         private List<ParseState>           states;
@@ -162,23 +160,15 @@ public abstract class Pattern extends Node {
             this.it = elements.iterator();
             this.states = List.of(start);
             this.functor = functor;
-            next(true);
+            next();
         }
 
         protected void next() {
-            next(false);
-        }
-
-        private void next(boolean first) {
             if (it.hasNext()) {
                 element = it.next();
                 stateIndex -= element.getCycleDepth();
                 ParseState pre = states.get(stateIndex);
-                if (first && functor.left() != null) {
-                    branche = LEFT_BRANCHE;
-                } else {
-                    branche = element.getBranches(functor);
-                }
+                branche = element.getBranches(functor);
                 ParseState post = null;
                 if (element instanceof Token token) {
                     post = pre.transitions().get(token.text());

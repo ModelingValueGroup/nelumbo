@@ -90,10 +90,10 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState state, NodeTypePattern left, Functor functor, List<Integer> branche) {
+    public ParseState state(ParseState state, Functor functor, List<Integer> branche) {
         int i = elements().size();
         for (Pattern element : elements().reverse()) {
-            state = element.state(state, left, functor, branche.add(--i));
+            state = element.state(state, functor, branche.add(--i));
         }
         return state;
     }
