@@ -16,7 +16,45 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import java.awt.*;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
+import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.TextAction;
+import javax.swing.text.ViewFactory;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Taskbar;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.WindowAdapter;
@@ -28,20 +66,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.prefs.Preferences;
 
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.StyledEditorKit;
-import javax.swing.text.TextAction;
-import javax.swing.text.ViewFactory;
-
+import com.formdev.flatlaf.FlatLightLaf;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -55,23 +83,28 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
-import com.formdev.flatlaf.FlatLightLaf;
-
 public class NelumboEditor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
 
-    private static final String                  EDITOR_FILE_NAME   = "editor.nl";
-    private static final String                  MESSAGES_FILE_NAME = "messages.nl";
-    private final static String                  INCREASE           = "INCREASE";
-    private final static String                  DECREASE           = "DECREASE";
+    private static final String EDITOR_FILE_NAME   = "editor.nl";
+    private static final String MESSAGES_FILE_NAME = "messages.nl";
+    private final static String INCREASE           = "INCREASE";
+    private final static String DECREASE           = "DECREASE";
 
-    private final static DefaultHighlightPainter redPainter         = new DefaultHighlightPainter(new Color(0xffaaaa));
-    private final static DefaultHighlightPainter greenPainter       = new DefaultHighlightPainter(new Color(0xaaffaa));
+    private final static DefaultHighlightPainter redPainter   = new DefaultHighlightPainter(new Color(0xffaaaa));
+    private final static DefaultHighlightPainter greenPainter = new DefaultHighlightPainter(new Color(0xaaffaa));
 
     /**
      * Defines a color scheme for a token type with foreground and background colors,
      * and text style attributes (bold, italic, underline, subscript, superscript).
      */
-    private record ColorScheme(Color foreground, Color background, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript, SimpleAttributeSet attr) {
+    private record ColorScheme(Color foreground,
+                               Color background,
+                               boolean bold,
+                               boolean italic,
+                               boolean underline,
+                               boolean subscript,
+                               boolean superscript,
+                               SimpleAttributeSet attr) {
 
         public ColorScheme(Integer fore, Integer back, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript) {
             this(fore == null ? null : new Color(fore), back == null ? null : new Color(back), bold, italic, underline, subscript, superscript, makeAttSet(fore, back, bold, italic, underline, subscript, superscript));
@@ -82,95 +115,86 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
 
         static SimpleAttributeSet makeAttSet(Integer fore, Integer back, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript) {
-            return makeAttSet(fore == null ? null : new Color(fore), back == null ? null : new Color(back), bold, italic, underline, subscript, superscript);
+            SimpleAttributeSet a = new SimpleAttributeSet();
+            StyleConstants.setForeground(a, new Color(Objects.requireNonNullElse(fore, 0x000000)));
+            StyleConstants.setBackground(a, new Color(Objects.requireNonNullElse(back, 0xffffff)));
+            StyleConstants.setBold(a, bold);
+            StyleConstants.setItalic(a, italic);
+            StyleConstants.setUnderline(a, underline);
+            StyleConstants.setSubscript(a, subscript);
+            StyleConstants.setSuperscript(a, superscript);
+            return a;
         }
 
-        static SimpleAttributeSet makeAttSet(Color fore, Color back, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript) {
-            SimpleAttributeSet attr = new SimpleAttributeSet();
-            StyleConstants.setForeground(attr, new Color(0x000000));
-            StyleConstants.setBackground(attr, new Color(0xffffff));
-            if (fore != null) {
-                StyleConstants.setForeground(attr, fore);
-            }
-            if (back != null) {
-                StyleConstants.setBackground(attr, back);
-            }
-            StyleConstants.setBold(attr, bold);
-            StyleConstants.setItalic(attr, italic);
-            StyleConstants.setUnderline(attr, underline);
-            StyleConstants.setSubscript(attr, subscript);
-            StyleConstants.setSuperscript(attr, superscript);
-            return attr;
-        }
     }
 
-    private static final String[]                    FONT_NAMES               = {                                   //
-            "input mono",                                                                                           //
-            "dejavu sans mono",                                                                                     //
-            "overpass mono",                                                                                        //
-            Font.MONOSPACED                                                                                         //
+    private static final String[] FONT_NAMES = {                                   //
+                                                                                   "input mono",                                                                                           //
+                                                                                   "dejavu sans mono",                                                                                     //
+                                                                                   "overpass mono",                                                                                        //
+                                                                                   Font.MONOSPACED                                                                                         //
     };
 
     /**
      * Default color schemes for token types with style attributes
      */
-    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS     = Map.ofEntries(                      //
+    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.ofEntries(                      //
             Map.entry(TokenType.NUMBER,                                                                             //
-                    new ColorScheme(0x000077, null, true, false, false, false, false)),                             //
+                      new ColorScheme(0x000077, null, true, false, false, false, false)),                             //
             Map.entry(TokenType.DECIMAL,                                                                            //
-                    new ColorScheme(0x000077, null, true, false, false, false, false)),                             //
+                      new ColorScheme(0x000077, null, true, false, false, false, false)),                             //
             Map.entry(TokenType.STRING,                                                                             //
-                    new ColorScheme(0x007700, null, false, false, false, false, false)),                            //
+                      new ColorScheme(0x007700, null, false, false, false, false, false)),                            //
             Map.entry(TokenType.NAME,                                                                               //
-                    new ColorScheme(0x0000ff, null, false, false, false, false, false)),                            //
+                      new ColorScheme(0x0000ff, null, false, false, false, false, false)),                            //
             Map.entry(TokenType.TYPE,                                                                               //
-                    new ColorScheme(0x880088, null, true, false, false, false, false)),                             //
+                      new ColorScheme(0x880088, null, true, false, false, false, false)),                             //
             Map.entry(TokenType.META_OPERATOR,                                                                      //
-                    new ColorScheme(0xffffff, 0x558855, true, false, false, false, false)),                         //
+                      new ColorScheme(0xffffff, 0x558855, true, false, false, false, false)),                         //
             Map.entry(TokenType.OPERATOR,                                                                           //
-                    new ColorScheme(0x666666, null, false, false, false, false, false)),                            //
+                      new ColorScheme(0x666666, null, false, false, false, false, false)),                            //
             Map.entry(TokenType.END_LINE_COMMENT,                                                                   //
-                    new ColorScheme(0xcccccc, null, false, true, false, false, false)),                             //
+                      new ColorScheme(0xcccccc, null, false, true, false, false, false)),                             //
             Map.entry(TokenType.IN_LINE_COMMENT,                                                                    //
-                    new ColorScheme(0xcccccc, null, false, true, false, false, false)),                             //
+                      new ColorScheme(0xcccccc, null, false, true, false, false, false)),                             //
             Map.entry(TokenType.ERROR,                                                                              //
-                    new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)),                          //
+                      new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)),                          //
             Map.entry(TokenType.VARIABLE,                                                                           //
-                    new ColorScheme(0x0000ff, null, true, false, false, false, false)),                             //
+                      new ColorScheme(0x0000ff, null, true, false, false, false, false)),                             //
             Map.entry(TokenType.KEYWORD,                                                                            //
-                    new ColorScheme(0x0000ff, null, true, false, false, false, false))                              //
-    );
+                      new ColorScheme(0x0000ff, null, true, false, false, false, false))                              //
+                                                                                         );
 
     /**
      * Map from TokenType to ColorScheme defining how each token type should be colored.
      * This is mutable so users can customize colors.
      */
-    private static final Map<TokenType, ColorScheme> TOKEN_COLORS             = new HashMap<>(DEFAULT_TOKEN_COLORS);
+    private static final Map<TokenType, ColorScheme> TOKEN_COLORS = new HashMap<>(DEFAULT_TOKEN_COLORS);
 
-    private static final String                      PREF_TEXT_CONTENT        = "textContent";
-    private static final String                      PREF_CARET_POSITION      = "caretPosition";
-    private static final String                      PREF_SELECTION_START     = "selectionStart";
-    private static final String                      PREF_SELECTION_END       = "selectionEnd";
-    private static final String                      PREF_TOKEN_COLOR_PREFIX  = "tokenColor.";
-    private static final String                      PREF_TREE_VIEWER_VISIBLE = "treeViewerVisible";
-    private static final String                      PREF_KB_VIEWER_VISIBLE   = "knowledgeBaseViewerVisible";
+    private static final String PREF_TEXT_CONTENT        = "textContent";
+    private static final String PREF_CARET_POSITION      = "caretPosition";
+    private static final String PREF_SELECTION_START     = "selectionStart";
+    private static final String PREF_SELECTION_END       = "selectionEnd";
+    private static final String PREF_TOKEN_COLOR_PREFIX  = "tokenColor.";
+    private static final String PREF_TREE_VIEWER_VISIBLE = "treeViewerVisible";
+    private static final String PREF_KB_VIEWER_VISIBLE   = "knowledgeBaseViewerVisible";
 
     public static void main(String[] arg) {
         new NelumboEditor();
     }
 
     //===========================================================================================================================================
-    private KnowledgeBase             knowledgeBase;
-    private JFrame                    frame;
-    private JTextPane                 messagesPane;
-    private JTextPane                 textPane;
-    private boolean                   quit;
-    private boolean                   refreshRequested;
-    private final Preferences         preferences = Preferences.userNodeForPackage(NelumboEditor.class);
-    private TreeViewerDialog          treeViewerDialog;
-    private KnowledgeBaseViewerDialog knowledgeBaseViewerDialog;
-    private TokenizerResult           lastTokenizerResult;
-    private ParserResult              lastParserResult;
+    private       KnowledgeBase             knowledgeBase;
+    private       JFrame                    frame;
+    private       JTextPane                 messagesPane;
+    private       JTextPane                 textPane;
+    private       boolean                   quit;
+    private       boolean                   refreshRequested;
+    private final Preferences               preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+    private       TreeViewerDialog          treeViewerDialog;
+    private       KnowledgeBaseViewerDialog knowledgeBaseViewerDialog;
+    private       TokenizerResult           lastTokenizerResult;
+    private       ParserResult              lastParserResult;
 
     public NelumboEditor() {
         loadTokenColors(); // Load saved colors before creating UI
@@ -201,7 +225,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             setEditable(editable);
             setBackground(new Color(backgroundRgb));
             // Set line spacing for better readability
-            StyledDocument doc = getStyledDocument();
+            StyledDocument     doc            = getStyledDocument();
             SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
             StyleConstants.setLineSpacing(paragraphStyle, 0.2f); // 20% extra spacing
             doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
@@ -244,15 +268,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             Taskbar.getTaskbar().setIconImage(icon.getImage());
         }
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension frameSize = new Dimension(screenSize.width / 2, screenSize.height / 2);
+        Dimension frameSize  = new Dimension(screenSize.width / 2, screenSize.height / 2);
         frame.setPreferredSize(frameSize);
         frame.setSize(frameSize);
 
-        textPane = new NonWrappingJTextPane(true, 0xffffff);
+        textPane     = new NonWrappingJTextPane(true, 0xffffff);
         messagesPane = new NonWrappingJTextPane(false, 0xF5F5F5);
 
         // Create scroll panes with borders
-        JScrollPane textScroll = new JScrollPane(textPane);
+        JScrollPane textScroll    = new JScrollPane(textPane);
         JScrollPane messageScroll = new JScrollPane(messagesPane);
         textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
         messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));
@@ -270,8 +294,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         frame.getContentPane().add(split, BorderLayout.CENTER);
 
         // Setup menu bar before making frame visible
-        JMenuBar menuBar = new JMenuBar();
-        JMenu colorsMenu = new JMenu("Colors");
+        JMenuBar  menuBar         = new JMenuBar();
+        JMenu     colorsMenu      = new JMenu("Colors");
         JMenuItem configureColors = new JMenuItem("Configure Token Colors...");
         configureColors.addActionListener(e -> showColorConfigDialog());
 
@@ -283,7 +307,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         menuBar.add(colorsMenu);
 
         // View menu with Tree Viewer and Knowledge Base Viewer
-        JMenu viewMenu = new JMenu("View");
+        JMenu     viewMenu       = new JMenu("View");
         JMenuItem treeViewerItem = new JMenuItem("Tree Viewer...");
         treeViewerItem.setAccelerator(KeyStroke.getKeyStroke('T', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         treeViewerItem.addActionListener(e -> toggleTreeViewer());
@@ -359,7 +383,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void increase() {
-        Font font = textPane.getFont();
+        Font  font    = textPane.getFont();
         float newSize = Math.min(100f, font.getSize() * 1.2f);
         font = font.deriveFont(newSize);
         textPane.setFont(font);
@@ -367,7 +391,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void decrease() {
-        Font font = textPane.getFont();
+        Font  font    = textPane.getFont();
         float newSize = Math.max(7f, font.getSize() / 1.2f);
         font = font.deriveFont(newSize);
         textPane.setFont(font);
@@ -420,17 +444,17 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void execute() {
         prepareForExecute();
-        String text = textPane.getText();
-        Tokenizer tokenizer = new Tokenizer(text, EDITOR_FILE_NAME);
+        String          text            = getDocumentText(textPane);
+        Tokenizer       tokenizer       = new Tokenizer(text, EDITOR_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
-        ParserResult result = new Parser(tokenizerResult).parseMutipleNonThrowing();
+        ParserResult    result          = new Parser(tokenizerResult).parseMutipleNonThrowing();
         showColors(textPane, tokenizerResult);
         showResults(result);
         saveTextContent(text);
 
         // Store results for tree viewer
         lastTokenizerResult = tokenizerResult;
-        lastParserResult = result;
+        lastParserResult    = result;
 
         // Update tree viewer if visible
         if (treeViewerDialog != null && treeViewerDialog.isVisible()) {
@@ -444,8 +468,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     }
 
     private void showMessageColors() {
-        String text = messagesPane.getText();
-        Tokenizer tokenizer = new Tokenizer(text, MESSAGES_FILE_NAME);
+        String          text            = getDocumentText(messagesPane);
+        Tokenizer       tokenizer       = new Tokenizer(text, MESSAGES_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
         showColors(messagesPane, tokenizerResult);
     }
@@ -454,7 +478,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         knowledgeBase.init();
         textPane.getHighlighter().removeAllHighlights();
         messagesPane.getHighlighter().removeAllHighlights();
-        StyledDocument doc = textPane.getStyledDocument();
+        StyledDocument     doc         = textPane.getStyledDocument();
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
         doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
@@ -473,24 +497,26 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
     }
 
-    private record Highlight(int index, int length, String error) {
+    private record Highlight(int index,
+                             int length,
+                             String error) {
     }
 
     private void showResults(ParserResult result) {
         List<ParseException> exceptions = result.exceptions();
         if (exceptions.isEmpty()) {
-            ParserResult throwing = new ParserResult(null, true);
-            StringBuilder messages = new StringBuilder();
-            int index = 0, prevLine = 0, nextLine;
+            ParserResult          throwing           = new ParserResult(null, true);
+            StringBuilder         messages           = new StringBuilder();
+            int                   index              = 0, prevLine = 0, nextLine;
             LinkedList<Highlight> messagesHighlights = new LinkedList<>();
             for (Node root : result.roots()) {
                 if (root instanceof Evaluatable eval) {
-                    ParseException pe = null;
-                    String mess = null;
+                    ParseException pe   = null;
+                    String         mess = null;
                     try {
                         eval.evaluate(knowledgeBase, throwing);
                     } catch (ParseException exc) {
-                        pe = exc;
+                        pe   = exc;
                         mess = pe.getShortMessage();
                     }
                     if (eval instanceof Query query && query.inferResult() != null) {
@@ -518,7 +544,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             }
         } else {
             StringBuilder messages = new StringBuilder();
-            int prevLine = 0, nextLine;
+            int           prevLine = 0, nextLine;
             for (ParseException pe : exceptions) {
                 nextLine = pe.line();
                 messages.append(emptyLines(nextLine - prevLine)).append(pe.getShortMessage()).append("\n");
@@ -541,10 +567,19 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         return "\n".repeat(Math.max(0, nr));
     }
 
+    private static String getDocumentText(JTextPane pane) {
+        try {
+            javax.swing.text.Document doc = pane.getDocument();
+            return doc.getText(0, doc.getLength());
+        } catch (BadLocationException e) {
+            return "";
+        }
+    }
+
     private void setMessages(String msg) {
         messagesPane.setText(msg);
         // Apply line spacing after setting text
-        StyledDocument messageDoc = messagesPane.getStyledDocument();
+        StyledDocument     messageDoc            = messagesPane.getStyledDocument();
         SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
         StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f);
         messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
@@ -570,9 +605,9 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             preferences.put(PREF_TEXT_CONTENT, text);
 
             // Save caret position and selection
-            int caretPosition = textPane.getCaretPosition();
+            int caretPosition  = textPane.getCaretPosition();
             int selectionStart = textPane.getSelectionStart();
-            int selectionEnd = textPane.getSelectionEnd();
+            int selectionEnd   = textPane.getSelectionEnd();
 
             preferences.putInt(PREF_CARET_POSITION, caretPosition);
             preferences.putInt(PREF_SELECTION_START, selectionStart);
@@ -597,15 +632,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
                 doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
 
                 // Restore caret position and selection
-                int caretPosition = preferences.getInt(PREF_CARET_POSITION, 0);
+                int caretPosition  = preferences.getInt(PREF_CARET_POSITION, 0);
                 int selectionStart = preferences.getInt(PREF_SELECTION_START, 0);
-                int selectionEnd = preferences.getInt(PREF_SELECTION_END, 0);
+                int selectionEnd   = preferences.getInt(PREF_SELECTION_END, 0);
 
                 // Ensure positions are within bounds
                 int maxPos = doc.getLength();
-                caretPosition = Math.min(caretPosition, maxPos);
+                caretPosition  = Math.min(caretPosition, maxPos);
                 selectionStart = Math.min(selectionStart, maxPos);
-                selectionEnd = Math.min(selectionEnd, maxPos);
+                selectionEnd   = Math.min(selectionEnd, maxPos);
 
                 // Restore selection or caret position
                 if (selectionStart != selectionEnd) {
@@ -623,12 +658,12 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
     private void loadTokenColors() {
         for (TokenType tokenType : DEFAULT_TOKEN_COLORS.keySet()) {
-            String fgKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".fg";
-            String bgKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bg";
-            String boldKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bold";
-            String italicKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".italic";
-            String underlineKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".underline";
-            String subscriptKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".subscript";
+            String fgKey          = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".fg";
+            String bgKey          = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bg";
+            String boldKey        = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bold";
+            String italicKey      = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".italic";
+            String underlineKey   = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".underline";
+            String subscriptKey   = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".subscript";
             String superscriptKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".superscript";
 
             String fgValue = preferences.get(fgKey, null);
@@ -638,12 +673,12 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
             if (fgValue != null || bgValue != null || preferences.get(boldKey, null) != null || preferences.get(italicKey, null) != null || preferences.get(underlineKey, null) != null || preferences.get(subscriptKey, null) != null || preferences.get(superscriptKey, null) != null) {
 
-                Color fg = fgValue != null ? parseColorString(fgValue) : defaultScheme.foreground();
-                Color bg = bgValue != null ? parseColorString(bgValue) : defaultScheme.background();
-                boolean bold = preferences.getBoolean(boldKey, defaultScheme.bold());
-                boolean italic = preferences.getBoolean(italicKey, defaultScheme.italic());
-                boolean underline = preferences.getBoolean(underlineKey, defaultScheme.underline());
-                boolean subscript = preferences.getBoolean(subscriptKey, defaultScheme.subscript());
+                Color   fg          = fgValue != null ? parseColorString(fgValue) : defaultScheme.foreground();
+                Color   bg          = bgValue != null ? parseColorString(bgValue) : defaultScheme.background();
+                boolean bold        = preferences.getBoolean(boldKey, defaultScheme.bold());
+                boolean italic      = preferences.getBoolean(italicKey, defaultScheme.italic());
+                boolean underline   = preferences.getBoolean(underlineKey, defaultScheme.underline());
+                boolean subscript   = preferences.getBoolean(subscriptKey, defaultScheme.subscript());
                 boolean superscript = preferences.getBoolean(superscriptKey, defaultScheme.superscript());
 
                 TOKEN_COLORS.put(tokenType, new ColorScheme(fg, bg, bold, italic, underline, subscript, superscript));
@@ -654,15 +689,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private void saveTokenColors() {
         try {
             for (Map.Entry<TokenType, ColorScheme> entry : TOKEN_COLORS.entrySet()) {
-                TokenType tokenType = entry.getKey();
-                ColorScheme scheme = entry.getValue();
+                TokenType   tokenType = entry.getKey();
+                ColorScheme scheme    = entry.getValue();
 
-                String fgKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".fg";
-                String bgKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bg";
-                String boldKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bold";
-                String italicKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".italic";
-                String underlineKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".underline";
-                String subscriptKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".subscript";
+                String fgKey          = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".fg";
+                String bgKey          = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bg";
+                String boldKey        = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".bold";
+                String italicKey      = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".italic";
+                String underlineKey   = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".underline";
+                String subscriptKey   = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".subscript";
                 String superscriptKey = PREF_TOKEN_COLOR_PREFIX + tokenType.name() + ".superscript";
 
                 if (scheme.foreground() != null) {
@@ -812,27 +847,27 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill   = GridBagConstraints.HORIZONTAL;
 
         int row = 0;
 
         // Create a row for each token type that has a color
         for (Map.Entry<TokenType, ColorScheme> entry : TOKEN_COLORS.entrySet().stream().sorted(Comparator.comparingInt(e -> e.getKey().ordinal())).toList()) {
-            TokenType tokenType = entry.getKey();
-            ColorScheme scheme = entry.getValue();
+            TokenType   tokenType = entry.getKey();
+            ColorScheme scheme    = entry.getValue();
 
             // Token type name label (column 0)
-            gbc.gridx = 0;
-            gbc.gridy = row;
+            gbc.gridx   = 0;
+            gbc.gridy   = row;
             gbc.weightx = 0.0;
-            gbc.anchor = GridBagConstraints.WEST;
+            gbc.anchor  = GridBagConstraints.WEST;
             JLabel label = new JLabel(tokenType.name());
             mainPanel.add(label, gbc);
 
             // Foreground color button (column 1)
-            gbc.gridx = 1;
+            gbc.gridx   = 1;
             gbc.weightx = 0.0;
-            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.anchor  = GridBagConstraints.CENTER;
             JButton fgButton = new JButton("Foreground");
             fgButton.setPreferredSize(new Dimension(120, 25));
             if (scheme.foreground() != null) {
@@ -841,7 +876,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             }
             fgButton.addActionListener(e -> {
                 Color initialColor = scheme.foreground() != null ? scheme.foreground() : Color.BLACK;
-                Color newColor = JColorChooser.showDialog(dialog, "Choose Foreground Color for " + tokenType.name(), initialColor);
+                Color newColor     = JColorChooser.showDialog(dialog, "Choose Foreground Color for " + tokenType.name(), initialColor);
                 if (newColor != null) {
                     fgButton.setBackground(newColor);
                     fgButton.setForeground(getContrastColor(newColor));
@@ -860,7 +895,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             }
             bgButton.addActionListener(e -> {
                 Color initialColor = scheme.background() != null ? scheme.background() : Color.WHITE;
-                Color newColor = JColorChooser.showDialog(dialog, "Choose Background Color for " + tokenType.name(), initialColor);
+                Color newColor     = JColorChooser.showDialog(dialog, "Choose Background Color for " + tokenType.name(), initialColor);
                 if (newColor != null) {
                     bgButton.setBackground(newColor);
                     bgButton.setForeground(getContrastColor(newColor));
@@ -923,8 +958,8 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         dialog.add(scrollPane, BorderLayout.CENTER);
 
         // Buttons panel
-        JPanel buttonPanel = new JPanel();
-        JButton okButton = new JButton("OK");
+        JPanel  buttonPanel = new JPanel();
+        JButton okButton    = new JButton("OK");
         okButton.addActionListener(e -> {
             saveTokenColors();
             refresh();
@@ -962,18 +997,18 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             String kind = elem.getName();
             if (kind != null) {
                 switch (kind) {
-                case javax.swing.text.AbstractDocument.ContentElementName -> {
-                    return new javax.swing.text.LabelView(elem);
-                }
-                case javax.swing.text.AbstractDocument.ParagraphElementName -> {
-                    return new NoWrapParagraphView(elem);
-                }
-                case StyleConstants.ComponentElementName -> {
-                    return new javax.swing.text.ComponentView(elem);
-                }
-                case StyleConstants.IconElementName -> {
-                    return new javax.swing.text.IconView(elem);
-                }
+                    case javax.swing.text.AbstractDocument.ContentElementName -> {
+                        return new javax.swing.text.LabelView(elem);
+                    }
+                    case javax.swing.text.AbstractDocument.ParagraphElementName -> {
+                        return new NoWrapParagraphView(elem);
+                    }
+                    case StyleConstants.ComponentElementName -> {
+                        return new javax.swing.text.ComponentView(elem);
+                    }
+                    case StyleConstants.IconElementName -> {
+                        return new javax.swing.text.IconView(elem);
+                    }
                 }
             }
             return defaultFactory.create(elem);
