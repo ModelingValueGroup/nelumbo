@@ -315,9 +315,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.PATTERN, false, (elements, args, functor) -> {
                             Type type = (Type) args[0];
                             TokenType tt = type.tokenType();
-                            if (tt != null) {
-                                System.err.println();
-                            }
                             return tt != null ? t(elements, tt) : n(elements, type, null);
                         }).init(this);
 
