@@ -75,8 +75,10 @@ public class Tokenizer {
             return;
         }
         if (token.type() == TokenType.NEWLINE) {
-            if (tokens[LAST] == null || tokens[LAST].type() == TokenType.BEGINOFFILE || tokens[LAST].type().isContinuesOnNextLine()) {
-                // ignore newlines after a token that can be continued
+            // ignore newlines after a token that can be continued
+            if (tokens[LAST] == null || tokens[LAST].type() == TokenType.BEGINOFFILE) {
+                return;
+            } else if (tokens[LAST].type().isContinuesOnNextLine() && !tokens[LAST].text().equals(">")) {
                 return;
             }
         }

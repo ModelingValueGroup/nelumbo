@@ -20,6 +20,8 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -73,20 +75,20 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
-        ParseState start = new ParseState(this, functor.pattern());
-        ParseState end = new ParseState(this);
+    public ParseState state(ParseState next, Functor functor) {
+        ParseState start = new ParseState(Set.of(this), Set.of());
+        ParseState end = new ParseState(Set.of(), Set.of(this));
         Pattern separator = separator();
         if (separator != null) {
-            end = separator.state(end, functor, branche.add(1));
+            end = separator.state(end, functor);
         }
         end = end.merge(next);
         Pattern repeated = repeated();
-        ParseState state = repeated.state(end, functor, branche.add(0)).merge(start);
+        ParseState state = repeated.state(end, functor).merge(start);
         if (!mandatory()) {
             if (separator != null) {
-                state = separator.state(state, functor, branche.add(1)).merge(next);
-                state = repeated.state(state, functor, branche.add(0));
+                state = separator.state(state, functor).merge(next);
+                state = repeated.state(state, functor);
             }
             state = state.merge(next);
         }
@@ -98,24 +100,10 @@ public class RepetitionPattern extends Pattern {
         return types.add(repeated().argTypes(List.of()).first().list());
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        Pattern repeated = repeated();
-        Pattern separator = separator();
-        List<Object> inner = List.of();
-        while (it.match(branche)) {
-            if (separator != null && !inner.isEmpty()) {
-                inner = separator.args(inner, it, branche.add(1), false);
-            }
-            inner = repeated.args(inner, it, branche.add(0), false);
-        }
-        return args.add(inner);
-    }
-
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (args.get(ai) instanceof List<?> list) {
+            Pattern repeated = repeated();
             Pattern separator = separator();
             StringBuffer inner = new StringBuffer();
             for (Object o : list) {
@@ -124,7 +112,7 @@ public class RepetitionPattern extends Pattern {
                         return -1;
                     }
                 }
-                if (repeated().string(List.of(o), 0, inner, previous, false) < 0) {
+                if (repeated.string(List.of(o), 0, inner, previous, false) < 0) {
                     return -1;
                 }
             }
@@ -132,6 +120,40 @@ public class RepetitionPattern extends Pattern {
             return ai + 1;
         }
         return -1;
+    }
+
+    @Override
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+        Pattern repeated = repeated();
+        Pattern separator = separator();
+        boolean mandatory = mandatory();
+        List<Object> result = List.of();
+        while (true) {
+            MutableList<Object> inner = MutableList.of(List.of());
+            int ii = repeated.args(elements, i, inner, false, functor);
+            if (ii >= 0) {
+                result = result.addAll(inner.toImmutable());
+                i = ii;
+                mandatory = false;
+            } else if (mandatory) {
+                return -1;
+            } else {
+                break;
+            }
+            if (separator != null) {
+                inner = MutableList.of(List.of());
+                ii = separator.args(elements, i, inner, false, functor);
+                if (ii >= 0) {
+                    mandatory = true;
+                    i = ii;
+                } else {
+                    break;
+                }
+            }
+        }
+        args.add(result);
+        return i;
+
     }
 
     @Override

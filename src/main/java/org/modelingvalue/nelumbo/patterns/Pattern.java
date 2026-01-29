@@ -17,11 +17,10 @@
 package org.modelingvalue.nelumbo.patterns;
 
 import java.io.Serial;
-import java.util.Iterator;
-import java.util.Objects;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -120,7 +119,7 @@ public abstract class Pattern extends Node {
     @Override
     protected abstract Pattern struct(Object[] array, Node declaration);
 
-    public abstract ParseState state(ParseState next, Functor functor, List<Integer> branche);
+    public abstract ParseState state(ParseState next, Functor functor);
 
     public String name() {
         return "";
@@ -141,78 +140,9 @@ public abstract class Pattern extends Node {
 
     public abstract List<Type> argTypes(List<Type> types);
 
-    protected abstract List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt);
-
     protected abstract int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt);
 
-    protected static final class ElementIterator {
-
-        private final Iterator<AstElement> it;
-
-        private List<ParseState>           states;
-        private int                        stateIndex;
-        private final Functor              functor;
-
-        protected AstElement               element;
-        protected List<Integer>            branche;
-
-        protected ElementIterator(List<AstElement> elements, ParseState start, Functor functor) {
-            this.it = elements.iterator();
-            this.states = List.of(start);
-            this.functor = functor;
-            next();
-        }
-
-        protected void next() {
-            if (it.hasNext()) {
-                element = it.next();
-                stateIndex -= element.getCycleDepth();
-                ParseState pre = states.get(stateIndex);
-                branche = element.getBranches(functor);
-                ParseState post = null;
-                if (element instanceof Token token) {
-                    post = pre.transitions().get(token.text());
-                    if (post == null) {
-                        post = pre.transitions().get(token.type());
-                    }
-                    if (post == null && isEndOfLine(token)) {
-                        post = pre.transitions().get(TokenType.NEWLINE);
-                    }
-                } else if (element instanceof Node node) {
-                    Type type = node.type();
-                    for (Type sup : type.allSupers()) {
-                        post = pre.transitions().get(sup);
-                        if (post != null) {
-                            break;
-                        }
-                    }
-                    if (post == null && node instanceof Variable) {
-                        post = pre.transitions().get(Objects.requireNonNullElse(type.tokenType(), Type.VARIABLE));
-                    }
-                }
-                assert branche != null;
-                assert post != null;
-                states = states.size() > ++stateIndex ? states.replace(stateIndex, post) : states.add(post);
-            } else {
-                element = null;
-                stateIndex = 0;
-                branche = List.of();
-            }
-        }
-
-        protected boolean match(List<Integer> branche) {
-            if (this.branche.size() <= branche.size()) {
-                return false;
-            }
-            for (int i = 0; i < branche.size(); i++) {
-                if (!this.branche.get(i).equals(branche.get(i))) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-    }
+    protected abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor);
 
     public static boolean isEndOfLine(Token token) {
         return token.type() == TokenType.ENDOFFILE || (token.previous() != null && token.line() > token.previous().line());

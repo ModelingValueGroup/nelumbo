@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -50,11 +51,10 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
+    public ParseState state(ParseState next, Functor functor) {
         ParseState result = ParseState.EMPTY;
-        int i = 0;
         for (Pattern option : options()) {
-            result = result.merge(option.state(next, functor, branche.add(i++)));
+            result = result.merge(option.state(next, functor));
         }
         return result;
     }
@@ -96,12 +96,6 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        Integer i = it.branche.get(branche.size());
-        return options().get(i).args(args, it, branche.add(i), true);
-    }
-
-    @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         Object o = args.get(ai);
         StringBuffer inner = new StringBuffer();
@@ -112,6 +106,19 @@ public class AlternationPattern extends Pattern {
             } else {
                 sb.append(inner);
                 return ai + 1;
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+        for (Pattern option : options()) {
+            MutableList<Object> inner = MutableList.of(List.of());
+            int ii = option.args(elements, i, inner, true, functor);
+            if (ii >= 0) {
+                args.addAll(inner);
+                return ii;
             }
         }
         return -1;

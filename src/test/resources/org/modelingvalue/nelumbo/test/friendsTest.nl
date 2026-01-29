@@ -1,18 +1,18 @@
 
 import     nelumbo.logic
 
-<Person>   :: <Object>
+Person   :: Object
 
-<FactType> ::= friends(<Person>,<Person>)
-<Person>   ::= friend(<Person>)
+FactType ::= friends(<Person>,<Person>)
+Person   ::= friend(<Person>)
 
-<Person> A, B, C
+Person A, B, C
 
 friend(A)=C <=> friends(A,C) |
                 friends(C,A)  |
                 friend(friend(A))=C
 
-<Person>   ::= Piet, Jan, Klaas, Kees, Bart
+Person   ::= Piet, Jan, Klaas, Kees, Bart
 
 friends(Piet, Jan)
 friends(Jan,  Klaas)

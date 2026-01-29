@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -74,13 +75,13 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
-        return new ParseState(nodeType(), next.merge(new ParseState(functor, branche)), precedence());
+    public ParseState state(ParseState next, Functor functor) {
+        return new ParseState(nodeType(), next, precedence());
     }
 
     @Override
     public String toString(TokenType[] previous) {
-        return "" + nodeType();
+        return "<" + nodeType() + ">";
     }
 
     @Override
@@ -103,25 +104,16 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        args = args.add((Node) it.element);
-        it.next();
-        return args;
-    }
-
-    @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (args.get(ai) instanceof Node node && (//
         nodeType().isAssignableFrom(node instanceof Type type ? type : node.type()) || //
                 (node instanceof Variable && nodeType().isAssignableFrom(Type.VARIABLE)))) {
             boolean parenthetical = false;
-            //            Functor functor = node.functor();
-            //            if (functor != null) {
-            //                NodeTypePattern left = functor.left();
-            //                if (left != null) {
-            //                    parenthetical = precedence() > left.leftPrecedence();
-            //                }
-            //            }
+            Functor functor = node.functor();
+            ParseState post = functor != null ? functor.postStart() : null;
+            if (post != null) {
+                parenthetical = precedence() > post.leftPrecedence();
+            }
             if (parenthetical) {
                 sb.append('(');
             }
@@ -130,6 +122,22 @@ public class NodeTypePattern extends Pattern {
                 sb.append(')');
             }
             return ai + 1;
+        }
+        return -1;
+    }
+
+    @Override
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+        if (i < elements.size()) {
+            AstElement e = elements.get(i);
+            Type type = nodeType();
+            if (e instanceof Node n && type.isAssignableFrom(n.type())) {
+                args.add(n);
+                return i + 1;
+            } else if (Type.VARIABLE.equals(type) && e instanceof Variable v) {
+                args.add(v);
+                return i + 1;
+            }
         }
         return -1;
     }

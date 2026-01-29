@@ -32,7 +32,7 @@
     !unknown        ? [..][..]
     
     
-    <Boolean> p
+    Boolean p
 
     p               ? [(p=true)][(p=false)]
     !p              ? [(p=false)][(p=true)]
@@ -76,15 +76,15 @@
 
     // Identity
 
-	<Test> :: <Object>
-	<Test> ::= T1, T2
+	Test :: Object
+	Test ::= T1, T2
 
     T1=T1           ? [()][]
     T1=T2           ? [][()]
     T1!=T1          ? [][()]
     T1!=T2          ? [()][]
 
-    <Test> a, b
+    Test a, b
 
     a=b             ? [..][..]
     !(a=b)          ? [..][..]

@@ -17,11 +17,16 @@
 package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 @SuppressWarnings("unused")
 public class NelumboTestBase {
@@ -48,6 +53,28 @@ public class NelumboTestBase {
         InferResult expectedResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
         InferResult queryResult = getResult(query);
         assertEquals(expectedResult, queryResult);
+    }
+
+    public void testResource(String resource) {
+        run(() -> {
+            try {
+                U.printResults(Parser.parse(NelumboTestBase.class, resource));
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
+    }
+
+    public void testString(String text, String name) {
+        run(() -> {
+            try {
+                new Parser(new Tokenizer(text, name).tokenize()).parseEvaluate();
+            } catch (ParseException e) {
+                System.err.println(e.getMessage());
+                fail(e);
+            }
+        });
     }
 
 }

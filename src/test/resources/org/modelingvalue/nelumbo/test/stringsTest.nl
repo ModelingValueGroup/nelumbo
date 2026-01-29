@@ -1,8 +1,8 @@
 
     import    nelumbo.strings
 
-    <String>  a, b, c
-    <Integer> d
+    String  a, b, c
+    Integer d
     
     "a"="a"                 ? [()][]
     "a"!="a"                ? [][()]

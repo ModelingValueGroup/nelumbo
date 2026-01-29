@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
@@ -173,9 +174,9 @@ public class Functor extends Node {
 
     public ParseState start() {
         if (start == null) {
-            ParseState s = pattern().state(new ParseState(this), this, List.of());
-            startPre = s.pre(this);
-            startPost = s.post(this);
+            ParseState s = pattern().state(new ParseState(this), this);
+            startPre = s.pre();
+            startPost = s.post();
             start = s;
         }
         return start;
@@ -193,7 +194,12 @@ public class Functor extends Node {
 
     public Object[] args(List<AstElement> elements) {
         Pattern pattern = pattern();
-        List<Object> args = pattern.args(List.of(), new Pattern.ElementIterator(elements, start(), this), List.of(), false);
+        MutableList<Object> args = MutableList.of(List.of());
+        int i = pattern.args(elements, 0, args, false, this);
+        if (i < 0) {
+            pattern.args(elements, 0, args, false, this);
+        }
+        assert i >= 0;
         return pattern instanceof SequencePattern && args.size() == 1 && args.get(0) instanceof List<?> seq ? seq.toArray() : args.toArray();
     }
 

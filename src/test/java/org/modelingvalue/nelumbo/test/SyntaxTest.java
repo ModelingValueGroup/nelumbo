@@ -48,31 +48,31 @@ public class SyntaxTest extends NelumboTestBase {
 
                     import     nelumbo.logic
 
-                    <ESet>     ::  <Object>
-                    <Int>      ::  <Object>
-                    <EList>    ::  <Object>
-                    <Option>   ::  <Object>
-                    <Altern>   ::  <Object>
-                    <Test>     ::  <Object>                      #TEST
+                    ESet     ::  Object
+                    Int      ::  Object
+                    EList    ::  Object
+                    Option   ::  Object
+                    Altern   ::  Object
+                    Test     ::  Object                        #TEST
 
-                    <Int>      ::= <ESet>.size,
-                                   <NUMBER>
+                    Int      ::= <ESet>.size,
+                                 <NUMBER>
 
-                    <ESet>     ::= <ESet> + <Object>             #40,
-                                   <ESet> - <Object>             #40,
-                                   { <(> <Object> <,> , <)*> }   @org.modelingvalue.nelumbo.Node
+                    ESet     ::= <ESet> + <Object>             #40,
+                                 <ESet> - <Object>             #40,
+                                 { <(> <Object> <,> , <)*> }   @org.modelingvalue.nelumbo.Node
 
-                    <EList>    ::= [ <(> <Object> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
-                    <EList>    ::= [[ <(> <Object> <,> , <)+> ]] @org.modelingvalue.nelumbo.Node
-                    <Option>   ::= ?[ <(> XX <)?> ]?             @org.modelingvalue.nelumbo.Node
-                    <Altern>   ::= +[ <(> XX <|> YY <)> ]+       @org.modelingvalue.nelumbo.Node
+                    EList    ::= [ <(> <Object> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
+                    EList    ::= [[ <(> <Object> <,> , <)+> ]] @org.modelingvalue.nelumbo.Node
+                    Option   ::= ?[ <(> XX <)?> ]?             @org.modelingvalue.nelumbo.Node
+                    Altern   ::= +[ <(> XX <|> YY <)> ]+       @org.modelingvalue.nelumbo.Node
 
 
-                    <Object>   ::= <EList>.get(<Int>)
+                    Object   ::= <EList>.get(<Int>)
 
-                    <ESet>   s, t, u
-                    <Int>    i, j, k
-                    <Object> n
+                    ESet   s, t, u
+                    Int    i, j, k
+                    Object n
 
                     10=10 ? [()][]
 

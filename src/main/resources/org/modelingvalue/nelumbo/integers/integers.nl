@@ -1,25 +1,25 @@
 
   import    nelumbo.logic
     
-  <Integer> :: <Object>
+  Integer :: Object
    
-  <Integer> ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.NInteger
+  Integer ::= <NUMBER>                             @org.modelingvalue.nelumbo.integers.NInteger
   
-  <Boolean> ::= add(<Integer>,<Integer>,<Integer>)   @org.modelingvalue.nelumbo.integers.Add,
-                mult(<Integer>,<Integer>,<Integer>)  @org.modelingvalue.nelumbo.integers.Multiply,
-                <Integer> >  <Integer>   #30         @org.modelingvalue.nelumbo.integers.GreaterThan,
-                <Integer> <  <Integer>   #30,
-                <Integer> <= <Integer>   #30,
-                <Integer> >= <Integer>   #30
+  Boolean ::= add(<Integer>,<Integer>,<Integer>)   @org.modelingvalue.nelumbo.integers.Add,
+              mult(<Integer>,<Integer>,<Integer>)  @org.modelingvalue.nelumbo.integers.Multiply,
+              <Integer>  >   <Integer>   #30       @org.modelingvalue.nelumbo.integers.GreaterThan,
+              <Integer> "<"  <Integer>   #30,
+              <Integer> "<=" <Integer>   #30,
+              <Integer>  >=  <Integer>   #30
 
-  <Integer> ::= <Integer> -  <Integer>   #40,
-                <Integer> +  <Integer>   #40,
-                          -  <Integer>   #80,
-                <Integer> *  <Integer>   #50,
-                <Integer> /  <Integer>   #50,
-                          |  <Integer> | #35
+  Integer ::= <Integer> - <Integer>   #40,
+              <Integer> + <Integer>   #40,
+                        - <Integer>   #80,
+              <Integer> * <Integer>   #50,
+              <Integer> / <Integer>   #50,
+                        | <Integer> | #35
 
-  <Integer> a, b, c
+  Integer a, b, c
     
   a<b    <=>  b>a
   a<=b   <=>  a<b | a=b

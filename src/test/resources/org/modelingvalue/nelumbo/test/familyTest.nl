@@ -1,22 +1,22 @@
 
     import      nelumbo.logic
 
-    <Person>    :: <Object>
-    <Male>      :: <Person>
-    <Female>    :: <Person>
+    Person    :: Object
+    Male      :: Person
+    Female    :: Person
 
-    <FactType>  ::= pc(<Person>,<Person>)   // parent-child
+    FactType  ::= pc(<Person>,<Person>)   // parent-child
 
-    <Person>    ::= p(<Person>),   // parent
-                    c(<Person>),   // child
-                    a(<Person>),   // ancestor
-                    d(<Person>),   // descendant
-                    m(<Person>),   // mother
-                    f(<Person>)    // father
+    Person    ::= p(<Person>),   // parent
+                  c(<Person>),   // child
+                  a(<Person>),   // ancestor
+                  d(<Person>),   // descendant
+                  m(<Person>),   // mother
+                  f(<Person>)    // father
 
-    <Person> a, b, c
-    <Male>   y
-    <Female> x
+    Person a, b, c
+    Male   y
+    Female x
                
     c(a)=b  <=>  pc(a,b)
     p(a)=b  <=>  pc(b,a)
@@ -27,8 +27,8 @@
     d(a)=c  <=>  c(a)=c |
                  E[b](d(a)=b & c(b)=c)
 
-    <Male>   ::= Hendrik, Bernhard, Claus, Willem
-    <Female> ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
+    Male   ::= Hendrik, Bernhard, Claus, Willem
+    Female ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
 
     pc(Hendrik, Juliana)
     pc(Wilhelmina, Juliana)

@@ -20,6 +20,7 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -71,8 +72,8 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
-        return new ParseState(tokenText(), next.merge(new ParseState(functor, branche)));
+    public ParseState state(ParseState next, Functor functor) {
+        return new ParseState(tokenText(), next);
     }
 
     @Override
@@ -91,15 +92,6 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        if (alt) {
-            args = args.add(((Token) it.element).text());
-        }
-        it.next();
-        return args;
-    }
-
-    @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (alt) {
             if (args.get(ai) instanceof String text && text.equals(tokenText())) {
@@ -110,6 +102,20 @@ public class TokenTextPattern extends Pattern {
         }
         addText(sb, previous, tokenText());
         return ai;
+    }
+
+    @Override
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+        if (i < elements.size()) {
+            AstElement e = elements.get(i);
+            if (e instanceof Token t && t.text().equals(tokenText())) {
+                if (alt) {
+                    args.add(t.text());
+                }
+                return i + 1;
+            }
+        }
+        return -1;
     }
 
     @Override

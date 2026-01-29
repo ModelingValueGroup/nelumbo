@@ -1,7 +1,7 @@
 
 import    nelumbo.integers
 
-<Integer> a,b
+Integer a,b
 
 22+11=a  ? 
 22+11!=a ? 
