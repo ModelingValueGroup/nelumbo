@@ -16,11 +16,7 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.CONTINUES_ON_NEXT_LINE;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.LAYOUT;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.NOT_MATCHED;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.SKIP;
-import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.VARIABLE_CONTENT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.Flag.*;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -37,7 +33,6 @@ public enum TokenType {
     DECIMAL("-?[0-9]+\\.[0-9]+", VARIABLE_CONTENT), //
     NUMBER("-?[0-9]+(#[0-9a-zA-Z]+)?", VARIABLE_CONTENT), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", VARIABLE_CONTENT), //
-    META_OPERATOR("<(\\(|\\)|\\)\\?|\\)\\*|\\)\\+|\\,|\\|)>", VARIABLE_CONTENT), //
     END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
     IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
@@ -50,7 +45,8 @@ public enum TokenType {
     ENDOFLINE, //
     VARIABLE, //
     KEYWORD, //
-    TYPE, //
+    TYPE,
+    META_OPERATOR,//
     ;
 
     // Combined patterns for efficient matching - built once at class load
@@ -59,16 +55,16 @@ public enum TokenType {
     private static final TokenType[] COMBINED_PATTERN_LOOKUP;
 
     static {
-        StringBuilder sb     = new StringBuilder();
-        String        sep    = "";
-        int           group  = 1;
-        TokenType[]   lookup = new TokenType[TokenType.values().length + 1]; // index 0 unused (groups start at 1)
+        StringBuilder sb = new StringBuilder();
+        String sep = "";
+        int group = 1;
+        TokenType[] lookup = new TokenType[TokenType.values().length + 1]; // index 0 unused (groups start at 1)
         for (TokenType tt : TokenType.values()) {
             if (!tt.isNotMatched()) {
                 // Convert internal capturing groups to non-capturing (but not escaped literal parens like \()
                 String p = tt.pattern.pattern().replaceAll("(?<!\\\\)\\((?!\\?)", "(?:");
                 sb.append(sep).append("(").append(p).append(")");
-                sep           = "|";
+                sep = "|";
                 lookup[group] = tt;
                 group++;
             }
@@ -76,16 +72,16 @@ public enum TokenType {
         String fullRegexp = sb.toString();
         //noinspection RegExpUnnecessaryNonCapturingGroup
         COMBINED_FULL_MATCH_PATTERN = Pattern.compile("^(?:" + fullRegexp + ")$", Pattern.DOTALL);
-        COMBINED_PATTERN            = Pattern.compile(fullRegexp, Pattern.MULTILINE | Pattern.DOTALL);
-        COMBINED_PATTERN_LOOKUP     = Arrays.copyOf(lookup, group);
+        COMBINED_PATTERN = Pattern.compile(fullRegexp, Pattern.MULTILINE | Pattern.DOTALL);
+        COMBINED_PATTERN_LOOKUP = Arrays.copyOf(lookup, group);
     }
 
     public enum Flag {
-        SKIP,                   // indicates a non semantic part that may be ignored by the parser
+        SKIP, // indicates a non semantic part that may be ignored by the parser
         CONTINUES_ON_NEXT_LINE, // indicates that a NEWLINE token after this token is to be ignored when parsing
-        NOT_MATCHED,            // indicates that this token type is not actually matched by the lexer
-        VARIABLE_CONTENT,       // indicates that this token type has a variable content
-        LAYOUT                  // indicates that this token type is layout and should be ignored by the parser
+        NOT_MATCHED, // indicates that this token type is not actually matched by the lexer
+        VARIABLE_CONTENT, // indicates that this token type has a variable content
+        LAYOUT // indicates that this token type is layout and should be ignored by the parser
     }
 
     private final Pattern pattern;
@@ -102,11 +98,11 @@ public enum TokenType {
     TokenType(String regexp, Flag... flags) {
         this.pattern = Pattern.compile(regexp, Pattern.MULTILINE | Pattern.DOTALL);
         EnumSet<Flag> flagset = flags.length == 0 ? EnumSet.noneOf(Flag.class) : EnumSet.of(flags[0], flags);
-        this.skip                = flagset.contains(SKIP);
+        this.skip = flagset.contains(SKIP);
         this.continuesOnNextLine = flagset.contains(CONTINUES_ON_NEXT_LINE);
-        this.layout              = flagset.contains(LAYOUT);
-        this.variableContent     = flagset.contains(VARIABLE_CONTENT);
-        this.notMatched          = flagset.contains(NOT_MATCHED);
+        this.layout = flagset.contains(LAYOUT);
+        this.variableContent = flagset.contains(VARIABLE_CONTENT);
+        this.notMatched = flagset.contains(NOT_MATCHED);
     }
 
     public Pattern pattern() {
@@ -163,13 +159,13 @@ public enum TokenType {
     }
 
     public static class TokenMatcher {
-        private final Matcher   matcher;
-        private final int       inputLength;
-        private       String    matchedText;
-        private       TokenType matchedType;
+        private final Matcher matcher;
+        private final int     inputLength;
+        private String        matchedText;
+        private TokenType     matchedType;
 
         private TokenMatcher(String input) {
-            this.matcher     = COMBINED_PATTERN.matcher(input);
+            this.matcher = COMBINED_PATTERN.matcher(input);
             this.inputLength = input.length();
         }
 

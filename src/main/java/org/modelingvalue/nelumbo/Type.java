@@ -36,7 +36,7 @@ public final class Type extends Node {
     private static final Object EQUALS_TYPE      = new Object() {
                                                      @Override
                                                      public String toString() {
-                                                         return "<Type>";
+                                                         return "Type";
                                                      }
 
                                                      @Override
@@ -342,7 +342,7 @@ public final class Type extends Node {
         if (isCollection()) {
             string += element();
         }
-        return "<" + string + ">";
+        return string;
     }
 
     @SuppressWarnings("unchecked")

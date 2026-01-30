@@ -3,17 +3,17 @@ import nelumbo.strings
 
 // Language
 
-<Root> ::= attr <Type> <NAME> <Type>
+Root ::= attr <Type> <NAME> <Type>
 
-<Type> OT, AT 
-<NAME> AN
+Type OT, AT 
+NAME AN
 
-attr <OT> AN <AT>  ::> { 
-    <AT>       ::= <OT>.AN
-    <FactType> ::= AN(<OT>,<AT>)
-    <Root>     ::= <OT>.AN := <AT> 
-    <OT> o
-    <AT> a
+attr OT AN AT  ::> { 
+    AT       ::= <OT>.AN
+    FactType ::= AN(<OT>,<AT>)
+    Root     ::= <OT>.AN := <AT> 
+    OT o
+    AT a
     o.AN=a  <=>  AN(o,a)
     o.AN := a ::> {
        AN(o,a)
@@ -22,15 +22,15 @@ attr <OT> AN <AT>  ::> {
 
 // Model
 
-<Person> :: <Object>
+Person :: Object
 
-attr <Person> name <String>
-attr <Person> address <String>
-attr <Person> friend <Person>
+attr Person name String
+attr Person address String
+attr Person friend Person
 
 // Example
 
-<Person> ::= Piet, Jan 
+Person ::= Piet, Jan 
 
 Piet.name    := "Piet"
 Piet.address := "Kalverstraat"
@@ -40,8 +40,8 @@ Jan.friend   := Piet
 
 // Queries
 
-<String> s
-<Person> p
+String s
+Person p
 
 p.name="Piet"            ? [(p=Piet)][..]
 Piet.address=s           ? [(s="Kalverstraat")][..]

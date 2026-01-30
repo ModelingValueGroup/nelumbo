@@ -151,8 +151,12 @@ public final class Parser implements ParseExceptionHandler {
         return left;
     }
 
+    public ParseState groupState(String group) {
+        return knowledgeBase.groupState(group);
+    }
+
     public Variable variable(Token token, ParseContext ctx) throws ParseException {
-        return knowledgeBase.variable(token, ctx, this);
+        return knowledgeBase.variable(token, ctx.group(), this);
     }
 
     public PatternResult preParse(Token token, ParseContext ctx, Node left) throws ParseException {

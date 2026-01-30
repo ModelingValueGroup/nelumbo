@@ -36,16 +36,13 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 @SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long           serialVersionUID = 7315776001191198132L;
-    protected static final int          START            = 2;
+    private static final long     serialVersionUID = 7315776001191198132L;
+    protected static final int    START            = 2;
     //
-    private final Node                  declaration;
-    private Map<Variable, Object>       binding;
-    private boolean                     hashCodeIsCached;
-    private int                         hashCodeCache;
-
-    private Map<Functor, List<Integer>> branches;
-    private int                         cycleDepth;
+    private final Node            declaration;
+    private Map<Variable, Object> binding;
+    private boolean               hashCodeIsCached;
+    private int                   hashCodeCache;
 
     @NelumboConstructor
     public Node(Functor functor, List<AstElement> elements, Object... args) {
@@ -537,31 +534,6 @@ public class Node extends StructImpl implements AstElement {
     public List<Token> tokens() {
         Token first = firstToken();
         return first != null ? first.list(lastToken()) : List.of();
-    }
-
-    @Override
-    public boolean isMeta() {
-        return false;
-    }
-
-    @Override
-    public int getCycleDepth() {
-        return cycleDepth;
-    }
-
-    @Override
-    public void setCycleDepth(int cycleDepth) {
-        this.cycleDepth = cycleDepth;
-    }
-
-    @Override
-    public List<Integer> getBranches(Functor functor) {
-        return branches.get(functor);
-    }
-
-    @Override
-    public void setBranches(Map<Functor, List<Integer>> branches) {
-        this.branches = branches;
     }
 
     public <E> MatchState<E> state(MatchState<E> state) {

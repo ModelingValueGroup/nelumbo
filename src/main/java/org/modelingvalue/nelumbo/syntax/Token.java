@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.Objects;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -31,30 +30,28 @@ import org.modelingvalue.nelumbo.patterns.Pattern;
 @SuppressWarnings({"unused"})
 public final class Token implements AstElement {
 
-    private final TokenType             type;
-    private final String                text;
-    private final int                   numLines;     // number of lines of this token (1...n)
-    private final int                   numChars;     // number of characters in this token (0...n)
-    private final int                   index;        // position in the input stream (0-based)
-    private final int                   indexEnd;     // position in the input stream (0-based) after the token
-    private final int                   line;         // line number in the input file (0-based)
-    private final int                   lineEnd;      // line number in the input file (0-based) after the token
-    private final int                   lastLine;     // last line number in the input file (0-based)
-    private final int                   position;     // position (column) in the line (0-based)
-    private final int                   positionEnd;  // position (column) in the line (0-based) after the token
-    private final int                   lastPosition; // last position (column) in the line (0-based)
-    private final String                fileName;
+    private final TokenType type;
+    private final String    text;
+    private final int       numLines;     // number of lines of this token (1...n)
+    private final int       numChars;     // number of characters in this token (0...n)
+    private final int       index;        // position in the input stream (0-based)
+    private final int       indexEnd;     // position in the input stream (0-based) after the token
+    private final int       line;         // line number in the input file (0-based)
+    private final int       lineEnd;      // line number in the input file (0-based) after the token
+    private final int       lastLine;     // last line number in the input file (0-based)
+    private final int       position;     // position (column) in the line (0-based)
+    private final int       positionEnd;  // position (column) in the line (0-based) after the token
+    private final int       lastPosition; // last position (column) in the line (0-based)
+    private final String    fileName;
 
-    private Token                       next;
-    private Token                       previous;
+    private Token           next;
+    private Token           previous;
 
-    private Token                       nextAll;
-    private Token                       previousAll;
+    private Token           nextAll;
+    private Token           previousAll;
 
-    private Map<Functor, List<Integer>> branches;
-    private int                         cycleDepth;
-    private Node                        node;
-    private boolean                     isKeyword;
+    private Node            node;
+    private boolean         isKeyword;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -316,32 +313,6 @@ public final class Token implements AstElement {
         return list;
     }
 
-    @Override
-    public boolean isMeta() {
-        return type == TokenType.META_OPERATOR;
-    }
-
-    @Override
-    public List<Integer> getBranches(Functor functor) {
-        return branches.get(functor);
-    }
-
-    @Override
-    public void setBranches(Map<Functor, List<Integer>> branches) {
-        assert branches != null;
-        this.branches = branches;
-    }
-
-    @Override
-    public int getCycleDepth() {
-        return cycleDepth;
-    }
-
-    @Override
-    public void setCycleDepth(int cycleDepth) {
-        this.cycleDepth = cycleDepth;
-    }
-
     public Node getNode() {
         return node;
     }
@@ -371,8 +342,20 @@ public final class Token implements AstElement {
         return pattern != null ? pattern.variable() : null;
     }
 
-    public Type nodeType() {
-        return node instanceof Type t ? t : null;
+    public boolean isVariableNode() {
+        return variable() != null;
+    }
+
+    public boolean isTypeNode() {
+        return node instanceof Type;
+    }
+
+    public boolean isPatternNode() {
+        return node instanceof Pattern;
+    }
+
+    public boolean isLitteralNode() {
+        return node != null && Type.LITERAL.isAssignableFrom(node.type());
     }
 
     public void setKeyword() {
@@ -380,10 +363,11 @@ public final class Token implements AstElement {
     }
 
     public TokenType colorType() {
-        return variable() != null ? TokenType.VARIABLE : //
-                nodeType() != null ? TokenType.TYPE : //
-                        type() == TokenType.NAME && isKeyword() ? TokenType.KEYWORD : //
-                                type();
+        return isVariableNode() ? TokenType.VARIABLE : //
+                isTypeNode() ? TokenType.TYPE : //
+                        type() == TokenType.NAME && isLitteralNode() ? TokenType.KEYWORD : //
+                                (text().equals("<") || text().equals(">")) && isPatternNode() ? TokenType.META_OPERATOR : //
+                                        type();
     }
 
     @Override

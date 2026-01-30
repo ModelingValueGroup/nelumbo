@@ -156,11 +156,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Variable var = type.variable();
         Pattern pattern;
         if (var != null) {
-            pattern = s(List.of(type), t("<"), t(var), t(">"));
+            pattern = t(List.of(type), var);
         } else if (type.isCollection()) {
-            pattern = s(List.of(type), t("<"), t(type.name()), n(Type.TYPE, null), t(">"));
+            pattern = s(List.of(type), t(type.name()), t("<"), n(Type.TYPE, null), t(">"));
         } else {
-            pattern = s(List.of(type), t("<"), t(type.name()), t(">"));
+            pattern = t(List.of(type), type.name());
         }
         return Functor.of(List.of(type), pattern, //
                 Type.TYPE, false, (elements, args, functor) -> {
@@ -192,29 +192,27 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         List<Pattern> patterns = List.of();
         for (int i = 0; i < elements.size(); i++) {
             AstElement e = elements.get(i);
-            if (!e.isMeta()) {
-                if (e instanceof Token t) {
-                    String text = t.text();
-                    if (t.type() == STRING) {
-                        text = text.substring(1, text.length() - 1);
-                    }
-                    Pattern tokenPattern = t(List.of(t), text);
-                    patterns = patterns.add(tokenPattern);
-                    elements = elements.replace(i, tokenPattern);
-                } else if (e instanceof Variable v) {
-                    Pattern variablePattern = v(List.of(v), v);
-                    patterns = patterns.add(variablePattern);
-                    elements = elements.replace(i, variablePattern);
+            if (e instanceof Token t) {
+                String text = t.text();
+                if (t.type() == STRING) {
+                    text = text.substring(1, text.length() - 1);
+                }
+                Pattern tokenPattern = t(List.of(t), text);
+                patterns = patterns.add(tokenPattern);
+                elements = elements.replace(i, tokenPattern);
+            } else if (e instanceof Variable v) {
+                Pattern variablePattern = v(List.of(v), v);
+                patterns = patterns.add(variablePattern);
+                elements = elements.replace(i, variablePattern);
+            } else {
+                Pattern pattern = (Pattern) e;
+                if (pattern instanceof SequencePattern sp) {
+                    patterns = patterns.addAll(sp.elements());
+                    elements = elements.removeIndex(i);
+                    elements = elements.insertList(i, sp.astElements());
+                    i = i - 1 + sp.astElements().size();
                 } else {
-                    Pattern pattern = (Pattern) e;
-                    if (pattern instanceof SequencePattern sp) {
-                        patterns = patterns.addAll(sp.elements());
-                        elements = elements.removeIndex(i);
-                        elements = elements.insertList(i, sp.astElements());
-                        i = i - 1 + sp.astElements().size();
-                    } else {
-                        patterns = patterns.add(pattern);
-                    }
+                    patterns = patterns.add(pattern);
                 }
             }
         }
@@ -260,30 +258,32 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return new NList(Type.ROOT.list(), elements, roots);
                         }).init(this);
 
-                Functor.of(s(t("<(>"), r(SEQUENCE, true, t("<|>")), t("<)>")), //
+                Functor.of(s(t("<"), t("("), t(">"), r(SEQUENCE, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
                         Type.PATTERN, false, (elements, args, functor) -> {
-                            List<Pattern> options = List.of();
-                            List<AstElement> option = null;
-                            for (AstElement e : elements) {
-                                if (e.isMeta()) {
-                                    if (option != null) {
-                                        options = options.add(pattern(option));
+                            List<AstElement> options = List.of();
+                            List<AstElement> list = List.of();
+                            for (int i = 3; i < elements.size() - 2; i++) {
+                                AstElement e = elements.get(i);
+                                if (e instanceof Token t && t.text().startsWith("<")) {
+                                    if (!list.isEmpty()) {
+                                        options = options.add(pattern(list));
+                                        list = List.of();
                                     }
-                                    option = List.of();
+                                    i += 2;
                                 } else {
-                                    assert option != null;
-                                    option = option.add(e);
+                                    list = list.add(e);
                                 }
                             }
                             return a(elements, options.toArray(Pattern[]::new));
                         }).init(this);
 
-                Functor.of(s(t("<(>"), SEQUENCE, o(s(t("<,>"), SEQUENCE)), a(t("<)*>"), t("<)+>"))), //
+                Functor.of(s(t("<"), t("("), t(">"), SEQUENCE, o(s(t("<"), t(","), t(">"), SEQUENCE)), t("<"), t(")"), a(t("*"), t("+")), t(">")), //
                         Type.PATTERN, false, (elements, args, functor) -> {
                             Pattern repeated = null, separator = null;
                             List<AstElement> list = List.of();
-                            for (AstElement e : elements) {
-                                if (e.isMeta()) {
+                            for (int i = 3; i < elements.size() - 3; i++) {
+                                AstElement e = elements.get(i);
+                                if (e instanceof Token t && t.text().startsWith("<")) {
                                     if (!list.isEmpty()) {
                                         if (repeated == null) {
                                             repeated = pattern(list);
@@ -292,15 +292,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                             separator = pattern(list);
                                         }
                                     }
+                                    i += 2;
                                 } else {
                                     list = list.add(e);
                                 }
                             }
-                            boolean mandatory = args[2].equals("<)+>");
+                            boolean mandatory = args[2].equals("+");
                             return r(elements, repeated, mandatory, separator);
                         }).init(this);
 
-                Functor.of(s(t("<(>"), SEQUENCE, t("<)?>")), //
+                Functor.of(s(t("<"), t("("), t(">"), SEQUENCE, t("<"), t(")"), t("?"), t(">")), //
                         Type.PATTERN, false, (elements, args, functor) -> {
                             return o(elements, pattern(elements));
                         }).init(this);
@@ -310,7 +311,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return s(elements, pattern(elements));
                         }).init(this);
 
-                Functor.of(n(Type.TYPE, Integer.MAX_VALUE), //
+                Functor.of(s(t("<"), n(Type.TYPE, Integer.MAX_VALUE), t(">")), //
                         Type.PATTERN, false, (elements, args, functor) -> {
                             Type type = (Type) args[0];
                             TokenType tt = type.tokenType();
@@ -373,7 +374,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }).init(this);
 
-                Functor.of(s(t("<"), t(NAME), o(n(Type.TYPE, null)), t(">"), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
+                Functor.of(s(t(NAME), o(s(t("<"), n(Type.TYPE, null), t(">"))), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, false, (elements, args, functor) -> {
                             KnowledgeBase kb = CURRENT.get();
                             Set<Type> supers = Set.of();
@@ -452,7 +453,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return new Query(functor, elements, args);
                         }).init(this);
 
-                Functor.of(s(n(Type.BOOLEAN, 0)), //
+                Functor.of(n(Type.BOOLEAN, 0), //
                         Type.FACT, false, (elements, args, functor) -> {
                             return new Fact(functor, elements, args);
                         }).init(this);
@@ -895,13 +896,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return functor;
     }
 
-    public Variable variable(Token token, ParseContext ctx, Parser parser) throws ParseException {
-        ParseState state = localPrePatterns.get().get(ctx.group());
-        if (state != null) {
-            ParseState found = state.transitions().get(token.text());
-            if (found != null && found.functor() != null && found.functor().resultType() == Type.VARIABLE) {
-                return (Variable) found.functor().construct(List.of(token), new Object[0], parser);
-            }
+    public ParseState groupState(String group) {
+        return localPrePatterns.get().get(group);
+    }
+
+    public Variable variable(Token token, String group, Parser parser) throws ParseException {
+        ParseState state = groupState(group);
+        ParseState found = state != null ? state.transitions().get(token.text()) : null;
+        if (found != null && found.functor() != null && found.functor().resultType() == Type.VARIABLE) {
+            return (Variable) found.functor().construct(List.of(token), new Object[0], parser);
         }
         return null;
     }

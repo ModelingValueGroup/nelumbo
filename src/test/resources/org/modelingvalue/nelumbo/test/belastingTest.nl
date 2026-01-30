@@ -1,18 +1,18 @@
 
 import      nelumbo.integers
 
-<Person> :: <Object>
+Person :: Object
  
-<FactType> ::= het inkomen van <Person> is <Integer> euro
-<FactType> ::= <Person> mag <Integer> euro aftrekken
-<Boolean>  ::= <Person> moet <Integer> euro belasting betalen
+FactType ::= het inkomen van <Person> is <Integer> euro
+FactType ::= <Person> mag <Integer> euro aftrekken
+Boolean  ::= <Person> moet <Integer> euro belasting betalen
  
-<Integer> x,i,a
-<Person>  p
+Integer x,i,a
+Person  p
  
 p moet x euro belasting betalen   <=> E[i,a]((het inkomen van p is i euro) & (p mag a euro aftrekken) & x=(i-a)/2)
  
-<Person> ::= Piet
+Person ::= Piet
  
 het inkomen van Piet is 50000 euro 
 Piet mag 1000 euro aftrekken

@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -90,10 +91,9 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState state, Functor functor, List<Integer> branche) {
-        int i = elements().size();
+    public ParseState state(ParseState state, Functor functor) {
         for (Pattern element : elements().reverse()) {
-            state = element.state(state, functor, branche.add(--i));
+            state = element.state(state, functor);
         }
         return state;
     }
@@ -104,16 +104,6 @@ public class SequencePattern extends Pattern {
             types = element.argTypes(types);
         }
         return types;
-    }
-
-    @Override
-    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        List<Pattern> parts = elements();
-        List<Object> inner = List.of();
-        for (int i = 0; i < parts.size(); i++) {
-            inner = parts.get(i).args(inner, it, branche.add(i), false);
-        }
-        return args.add(inner.size() > 1 ? inner : inner.first());
     }
 
     @SuppressWarnings("unchecked")
@@ -135,6 +125,23 @@ public class SequencePattern extends Pattern {
             return ai + 1;
         }
         return -1;
+    }
+
+    @Override
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+        List<Object> result = List.of();
+        for (Pattern element : elements()) {
+            MutableList<Object> inner = MutableList.of(List.of());
+            int ii = element.args(elements, i, inner, false, functor);
+            if (ii >= 0) {
+                result = result.addAll(inner.toImmutable());
+                i = ii;
+            } else {
+                return -1;
+            }
+        }
+        args.add(result.size() > 1 ? result : result.first());
+        return i;
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.patterns;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -54,28 +55,14 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
-        return new ParseState(tokenType(), next.merge(new ParseState(functor, branche)));
+    public ParseState state(ParseState next, Functor functor) {
+        return new ParseState(tokenType(), next);
     }
 
     @Override
     public List<Type> argTypes(List<Type> types) {
         TokenType type = tokenType();
         return !isEmpty(type) ? types.add(Type.$STRING) : types;
-    }
-
-    @Override
-    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        TokenType type = tokenType();
-        if (!isEmpty(type)) {
-            if (it.element instanceof Variable var) {
-                args = args.add(var);
-            } else {
-                args = args.add(((Token) it.element).text());
-            }
-        }
-        it.next();
-        return args;
     }
 
     @Override
@@ -99,8 +86,32 @@ public class TokenTypePattern extends Pattern {
         return ai;
     }
 
+    @Override
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+        if (i < elements.size()) {
+            AstElement e = elements.get(i);
+            TokenType type = tokenType();
+            if (e instanceof Token t) {
+                if (t.isKeyword() && type.isVariableContent()) {
+                    return -1;
+                } else if (t.type().equals(type)) {
+                    if (!isEmpty(type)) {
+                        args.add(t.text());
+                    }
+                    return i + 1;
+                } else if (TokenType.NEWLINE.equals(type) && Pattern.isEndOfLine(t)) {
+                    return i;
+                }
+            } else if (e instanceof Variable v && type.equals(v.type().tokenType())) {
+                args.add(v);
+                return i + 1;
+            }
+        }
+        return -1;
+    }
+
     private static boolean isEmpty(TokenType type) {
-        return type == TokenType.NEWLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE;
+        return type == TokenType.NEWLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE || type == TokenType.ENDOFLINE;
     }
 
     @Override

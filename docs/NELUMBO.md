@@ -31,26 +31,26 @@
 ### Types
 
 ```text
-  <Smart>   :: <Object>
-  <Living>  :: <Object>
-  <LLM>     :: <Smart>
-  <Person>  :: <Smart>, <Living>
-  <Male>    :: <Person>
-  <Female>  :: <Person>
+  Smart   :: Object
+  Living  :: Object
+  LLM     :: Smart
+  Person  :: Smart, Living
+  Male    :: Person
+  Female  :: Person
 ```
 
 ### Patterns
 
 ```text
-  <Integer> ::= <NUMBER>                         // 10
-  <Integer> ::= <Integer> - <Integer>  #40,      // 5-7
-                <Integer> + <Integer>  #40,      // 5+7
-                          - <Integer>  #80,      // -7
-                fib(<Integer>)                   // fib(100)
+  Integer ::= <NUMBER>                         // 10
+  Integer ::= <Integer> - <Integer>  #40,      // 5-7
+              <Integer> + <Integer>  #40,      // 5+7
+                        - <Integer>  #80,      // -7
+              fib(<Integer>)                   // fib(100)
                               
-  <Repetion>    ::= { <(> <Integer> <,> , <)*> }  // {3,5,7}
-  <Option>      ::= <(> super <)?> fast           // fast, super fast
-  <Alternation> ::= <(> A <|> B <|> C <)>         // A, B, C
+  Repetion    ::= { <(> <Integer> <,> , <)*> }  // {3,5,7}
+  Option      ::= <(> super <)?> fast           // fast, super fast
+  Alternation ::= <(> A <|> B <|> C <)>         // A, B, C
 ```
 
 ---
@@ -60,8 +60,8 @@
 ### Variables
 
 ```text
-  <Integer> a, b, c
-  <Person>  x, y, z 
+  Integer a, b, c
+  Person  x, y, z 
 ```
 
 ### Rules
@@ -110,8 +110,8 @@
 ### Declaration
 
 ```text
-  <Boolean> ::= add(<Integer>,<Integer>,<Integer>)
-                @org.modelingvalue.nelumbo.integers.Add
+  Boolean ::= add(<Integer>,<Integer>,<Integer>)
+              @org.modelingvalue.nelumbo.integers.Add
 ```
 
 ### Java Code
@@ -147,9 +147,9 @@
 ## Fibonacci Example
 
 ```text
-  <Integer> ::= fib(<Integer>)
+  Integer ::= fib(<Integer>)
 
-  <Integer> n, f
+  Integer n, f
 
   fib(n)=f <=> f=n                 if n<=1,
                f=fib(n-1)+fib(n-2) if n>1  
@@ -167,17 +167,17 @@
 ### Literals
 
 ```text
-  <Male>    ::= Hendrik, Bernhard, Claus, Willem
-  <Female>  ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
+  Male    ::= Hendrik, Bernhard, Claus, Willem
+  Female  ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
   
-  <Integer> ::= <NUMBER>    @org.modelingvalue.nelumbo.integers.Integer
+  Integer ::= <NUMBER>    @org.modelingvalue.nelumbo.integers.Integer
 ```
 
 ### Functions
 
 ```text
-  <Integer> ::= <Integer> -  <Integer>  #40,
-                <Integer> +  <Integer>  #40
+  Integer ::= <Integer> -  <Integer>  #40,
+              <Integer> +  <Integer>  #40
 
   a+b=c  <=>  add(a,b,c)
   a-b=c  <=>  add(c,b,a)
@@ -188,7 +188,7 @@
 ### FactTypes and Facts
 
 ```text
-  <FactType>  ::= pc(<Person>,<Person>)   // parent-child
+  FactType  ::= pc(<Person>,<Person>)   // parent-child
 
   // Facts
   pc(Beatrix, Willem)
@@ -200,7 +200,7 @@
 ### Predicates
 
 ```text
-  <Boolean> ::= <Integer> <= <Integer>  #30
+  Boolean ::= <Integer> "<=" <Integer>  #30
                     
   a<=b    <=>  a<b | a=b
 ```

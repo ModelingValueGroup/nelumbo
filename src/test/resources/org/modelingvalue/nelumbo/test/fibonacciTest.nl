@@ -1,9 +1,9 @@
 
-    import      nelumbo.integers
+    import  nelumbo.integers
 
-    <Integer> ::= fib(<Integer>)
+    Integer ::= fib(<Integer>)
 
-    <Integer> n, f
+    Integer n, f
 
     fib(n)=f <=> f=n                 if n<=1,
                  f=fib(n-1)+fib(n-2) if n>1

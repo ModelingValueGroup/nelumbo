@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -50,8 +51,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor, List<Integer> branche) {
-        return optional().state(next, functor, branche.add(0)).merge(next);
+    public ParseState state(ParseState next, Functor functor) {
+        return optional().state(next, functor).merge(next);
     }
 
     @Override
@@ -75,19 +76,6 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    protected List<Object> args(List<Object> args, ElementIterator it, List<Integer> branche, boolean alt) {
-        if (it.match(branche)) {
-            List<Object> inner = List.of();
-            inner = optional().args(inner, it, branche.add(0), false);
-            Object first = inner.first();
-            args = args.add(first != null ? Optional.of(first) : Optional.empty());
-        } else {
-            args = args.add(Optional.empty());
-        }
-        return args;
-    }
-
-    @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (args.get(ai) instanceof Optional<?> opt) {
             StringBuffer inner = new StringBuffer();
@@ -101,6 +89,20 @@ public class OptionalPattern extends Pattern {
             return ai + 1;
         }
         return -1;
+    }
+
+    @Override
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+        MutableList<Object> inner = MutableList.of(List.of());
+        int ii = optional().args(elements, i, inner, false, functor);
+        if (ii >= 0) {
+            Object first = inner.toImmutable().first();
+            args.add(first != null ? Optional.of(first) : Optional.empty());
+            return ii;
+        } else {
+            args.add(Optional.empty());
+            return i;
+        }
     }
 
     @Override

@@ -37,10 +37,9 @@ public final class PatternResult implements ParseExceptionHandler {
 
     private Functor                               functor;
     private ParseState                            state;
-    private int                                   leftPrecedence;
+    private Integer                               leftPrecedence;
     private Set<RepetitionPattern>                endRepetitions;
     private Token                                 nextToken;
-    private int                                   depth;
     private boolean                               hasLeft;
     private boolean                               hasException;
 
@@ -87,39 +86,27 @@ public final class PatternResult implements ParseExceptionHandler {
         return nextToken;
     }
 
-    public int depth() {
-        return depth;
-    }
-
     public int leftPrecedence() {
         return leftPrecedence;
     }
 
-    public void endPostParse(Functor functor, Token nextToken) {
+    public void endPostParse(Functor functor, Token nextToken, Integer leftPrecedence) {
         this.functor = functor;
         this.nextToken = nextToken;
+        this.leftPrecedence = leftPrecedence;
+        assert (!hasLeft || leftPrecedence != null);
     }
 
-    public void endPreParse(ParseState state, Token nextToken, int lefPrecedence) {
+    public void endPreParse(ParseState state, Token nextToken, Integer lefPrecedence) {
         this.state = state;
         this.nextToken = nextToken;
         this.leftPrecedence = lefPrecedence;
-    }
-
-    public void clearDepth() {
-        depth = 0;
-    }
-
-    public void countDepth() {
-        if (depth > 0) {
-            depth++;
-        }
+        assert (!hasLeft || leftPrecedence != null);
     }
 
     public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken, int i) {
         this.endRepetitions = endRepetitions;
         this.nextToken = nextToken;
-        this.depth += i;
     }
 
     public List<AstElement> elements() {
@@ -142,28 +129,23 @@ public final class PatternResult implements ParseExceptionHandler {
 
     public void add(AstElement element) {
         elements.add(element);
-        if (depth > 0) {
-            element.setCycleDepth(depth);
-            depth = 0;
-            endRepetitions = Set.of();
-        }
+        endRepetitions = Set.of();
     }
 
     public Node postParse(ParseContext ctx) throws ParseException {
-        for (Pair<Token, Token> split : splitted) {
-            split.a().connect(split.b());
-        }
-        for (Pair<Token, Token> merge : merged) {
-            merge.a().merge(merge.b());
-        }
-        splitted.clear();
-        merged.clear();
         if (state != null) {
             state.parse(nextToken, this, Map.of(), false);
         }
         if (functor != null) {
+            for (Pair<Token, Token> split : splitted) {
+                split.a().connect(split.b());
+            }
+            for (Pair<Token, Token> merge : merged) {
+                merge.a().merge(merge.b());
+            }
             List<AstElement> elements = elements();
-            Node node = functor.construct(elements, functor.args(elements), this);
+            Object[] args = functor.args(elements);
+            Node node = functor.construct(elements, args, this);
             if (Type.ROOT.isAssignableFrom(node.type())) {
                 node.init(parser.knowledgeBase());
             }

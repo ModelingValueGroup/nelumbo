@@ -1,8 +1,8 @@
 
   import    nelumbo.integers
   
-  <Type> E
+  Type E
   
-  <Set<E>>  ::= { <(> <E> <,> , <)*> }  @org.modelingvalue.nelumbo.collections.NSet 
-  <List<E>> ::= [ <(> <E> <,> , <)*> ]  @org.modelingvalue.nelumbo.collections.NList 
+  Set<E>  ::= { <(> <E> <,> , <)*> }  @org.modelingvalue.nelumbo.collections.NSet 
+  List<E> ::= [ <(> <E> <,> , <)*> ]  @org.modelingvalue.nelumbo.collections.NList 
   

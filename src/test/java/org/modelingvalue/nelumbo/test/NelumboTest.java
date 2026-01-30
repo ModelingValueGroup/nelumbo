@@ -16,13 +16,7 @@
 
 package org.modelingvalue.nelumbo.test;
 
-import static org.junit.jupiter.api.Assertions.fail;
-
 import org.junit.jupiter.api.RepeatedTest;
-import org.modelingvalue.nelumbo.U;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 public class NelumboTest extends NelumboTestBase {
 
@@ -37,149 +31,65 @@ public class NelumboTest extends NelumboTestBase {
 
     @RepeatedTest(10)
     public void initTest() {
-        run(() -> {
-            String example = """
-                    // Init only
-                    """;
-            try {
-                new Parser(new Tokenizer(example, "NelumboTest.initTest").tokenize()).parseEvaluate();
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        String example = """
+                // Init only
+                """;
+        testString(example, "NelumboTest.initTest");
     }
 
     @RepeatedTest(10)
     public void logicTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "logicTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("logicTest.nl");
     }
 
     @RepeatedTest(10)
     public void friendsTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "friendsTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("friendsTest.nl");
     }
 
     @RepeatedTest(10)
     public void whoIsTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "whoIsTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("whoIsTest.nl");
     }
 
     @RepeatedTest(10)
     public void familyTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "familyTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("familyTest.nl");
     }
 
     @RepeatedTest(10)
     public void integersTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "integersTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("integersTest.nl");
     }
 
     @RepeatedTest(10)
     public void collectionsTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "collectionsTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("collectionsTest.nl");
     }
 
     @RepeatedTest(10)
     public void queryOnlyTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "queryOnly.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("queryOnly.nl");
     }
 
     @RepeatedTest(10)
     public void stringsTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "stringsTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("stringsTest.nl");
     }
 
     @RepeatedTest(10)
     public void belastingTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "belastingTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("belastingTest.nl");
     }
 
     @RepeatedTest(10)
     public void fibonacciTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "fibonacciTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("fibonacciTest.nl");
     }
 
     @RepeatedTest(10)
     public void transformationTest() {
-        run(() -> {
-            try {
-                U.printResults(Parser.parse(NelumboTest.class, "transformationTest.nl"));
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                fail(e);
-            }
-        });
+        testResource("transformationTest.nl");
     }
 
 }
