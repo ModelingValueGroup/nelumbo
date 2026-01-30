@@ -143,8 +143,6 @@ public final class PatternResult implements ParseExceptionHandler {
             for (Pair<Token, Token> merge : merged) {
                 merge.a().merge(merge.b());
             }
-            splitted.clear();
-            merged.clear();
             List<AstElement> elements = elements();
             Object[] args = functor.args(elements);
             Node node = functor.construct(elements, args, this);
