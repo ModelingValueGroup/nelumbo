@@ -142,7 +142,7 @@ public class ParseState implements Mergeable<ParseState> {
         int nrOfExceptions;
         do {
             nrOfExceptions = result.exceptions().size();
-            if (!token(token, result, ctx, innerRepetitions, pre)) {
+            if (!token(token, result, ctx, innerRepetitions, pre, true)) {
                 if (pre && group() != null) {
                     result.endPreParse(this, token, leftPrecedence());
                     return true;
@@ -206,7 +206,7 @@ public class ParseState implements Mergeable<ParseState> {
         return result;
     }
 
-    private boolean token(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
+    private boolean token(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, boolean pre, boolean matchType) throws ParseException {
         if (transitions().isEmpty()) {
             return false;
         }
@@ -265,11 +265,14 @@ public class ParseState implements Mergeable<ParseState> {
                 }
             }
         }
-        if (next == null) {
+        if (next == null && matchType) {
             next = transitions().get(type);
             if (next != null) {
-                if (Type.PATTERN_GROUP.equals(group()) && token.text().startsWith("<")) {
-                    return false;
+                if (group() != null) {
+                    ParseState groupState = result.parser().groupState(group());
+                    if (groupState != null && groupState.token(token, result, ctx.outer(), null, true, false)) {
+                        return false;
+                    }
                 }
                 element = token;
             }
@@ -290,7 +293,7 @@ public class ParseState implements Mergeable<ParseState> {
     private boolean outerEnd(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions) throws ParseException {
         if (functor() != null) {
             for (Entry<RepetitionPattern, ParseState> r : repetitions) {
-                if (endRepetitions().contains(r.getKey()) && r.getValue().token(token, result, ctx, null, true)) {
+                if (endRepetitions().contains(r.getKey()) && r.getValue().token(token, result, ctx, null, true, true)) {
                     return false;
                 }
             }
@@ -298,7 +301,7 @@ public class ParseState implements Mergeable<ParseState> {
             for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
                 for (Type sup : type.allSupers()) {
                     ParseState next = pc.state().transitions().get(sup);
-                    if (next != null && next.token(token, result, ctx.outer(), null, true)) {
+                    if (next != null && next.token(token, result, ctx.outer(), null, true, true)) {
                         return true;
                     }
                 }

@@ -896,13 +896,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return functor;
     }
 
-    public Variable variable(Token token, ParseContext ctx, Parser parser) throws ParseException {
-        ParseState state = localPrePatterns.get().get(ctx.group());
-        if (state != null) {
-            ParseState found = state.transitions().get(token.text());
-            if (found != null && found.functor() != null && found.functor().resultType() == Type.VARIABLE) {
-                return (Variable) found.functor().construct(List.of(token), new Object[0], parser);
-            }
+    public ParseState groupState(String group) {
+        return localPrePatterns.get().get(group);
+    }
+
+    public Variable variable(Token token, String group, Parser parser) throws ParseException {
+        ParseState state = groupState(group);
+        ParseState found = state != null ? state.transitions().get(token.text()) : null;
+        if (found != null && found.functor() != null && found.functor().resultType() == Type.VARIABLE) {
+            return (Variable) found.functor().construct(List.of(token), new Object[0], parser);
         }
         return null;
     }

@@ -93,7 +93,7 @@ public class TokenTypePattern extends Pattern {
             TokenType type = tokenType();
             if (e instanceof Token t) {
                 if (t.type().equals(type)) {
-                    if (t.text().startsWith("<") && functor.resultType().group().equals(Type.PATTERN_GROUP)) {
+                    if (t.isKeyword() && type.isVariableContent()) {
                         return -1;
                     }
                     if (!isEmpty(type)) {
