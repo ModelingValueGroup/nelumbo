@@ -133,18 +133,18 @@ public final class PatternResult implements ParseExceptionHandler {
     }
 
     public Node postParse(ParseContext ctx) throws ParseException {
-        for (Pair<Token, Token> split : splitted) {
-            split.a().connect(split.b());
-        }
-        for (Pair<Token, Token> merge : merged) {
-            merge.a().merge(merge.b());
-        }
-        splitted.clear();
-        merged.clear();
         if (state != null) {
             state.parse(nextToken, this, Map.of(), false);
         }
         if (functor != null) {
+            for (Pair<Token, Token> split : splitted) {
+                split.a().connect(split.b());
+            }
+            for (Pair<Token, Token> merge : merged) {
+                merge.a().merge(merge.b());
+            }
+            splitted.clear();
+            merged.clear();
             List<AstElement> elements = elements();
             Object[] args = functor.args(elements);
             Node node = functor.construct(elements, args, this);

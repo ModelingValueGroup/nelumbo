@@ -342,12 +342,20 @@ public final class Token implements AstElement {
         return pattern != null ? pattern.variable() : null;
     }
 
-    public Type nodeType() {
-        return node instanceof Type t ? t : null;
+    public boolean isVariableNode() {
+        return variable() != null;
     }
 
-    public Pattern nodePattern() {
-        return node instanceof Pattern p ? p : null;
+    public boolean isTypeNode() {
+        return node instanceof Type;
+    }
+
+    public boolean isPatternNode() {
+        return node instanceof Pattern;
+    }
+
+    public boolean isLitteralNode() {
+        return node != null && Type.LITERAL.isAssignableFrom(node.type());
     }
 
     public void setKeyword() {
@@ -355,10 +363,10 @@ public final class Token implements AstElement {
     }
 
     public TokenType colorType() {
-        return variable() != null ? TokenType.VARIABLE : //
-                nodeType() != null ? TokenType.TYPE : //
-                        type() == TokenType.NAME && isKeyword() ? TokenType.KEYWORD : //
-                                (text().equals("<") || text().equals(">")) && nodePattern() != null ? TokenType.META_OPERATOR : //
+        return isVariableNode() ? TokenType.VARIABLE : //
+                isTypeNode() ? TokenType.TYPE : //
+                        type() == TokenType.NAME && isLitteralNode() ? TokenType.KEYWORD : //
+                                (text().equals("<") || text().equals(">")) && isPatternNode() ? TokenType.META_OPERATOR : //
                                         type();
     }
 
