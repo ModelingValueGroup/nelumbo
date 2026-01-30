@@ -268,7 +268,7 @@ public class ParseState implements Mergeable<ParseState> {
         if (next == null && matchType) {
             next = transitions().get(type);
             if (next != null) {
-                if (group() != null) {
+                if (group() != null && type.isVariableContent()) {
                     ParseState groupState = result.parser().groupState(group());
                     if (groupState != null && groupState.token(token, result, ctx.outer(), null, true, false)) {
                         return false;
