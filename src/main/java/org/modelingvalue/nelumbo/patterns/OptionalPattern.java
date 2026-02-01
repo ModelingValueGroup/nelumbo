@@ -21,10 +21,12 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -92,9 +94,9 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
         MutableList<Object> inner = MutableList.of(List.of());
-        int ii = optional().args(elements, i, inner, false, functor);
+        int ii = optional().args(elements, i, inner, false, functor, typeArgs);
         if (ii >= 0) {
             Object first = inner.toImmutable().first();
             args.add(first != null ? Optional.of(first) : Optional.empty());

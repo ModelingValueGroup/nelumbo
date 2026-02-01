@@ -347,6 +347,24 @@ public class ParseState implements Mergeable<ParseState> {
                     }
                 }
             }
+            Entry<Object, ParseState> ts = transitions().findAny(e -> e.getKey() instanceof Type t && t.variable() != null).orElse(null);
+            if (ts != null) {
+                Variable var = ((Type) ts.getKey()).variable();
+                Type type = result.getTypeArg(var);
+                if (type != null) {
+                    if (type.isAssignableFrom(node.type()) && ts.getValue().parse(node.nextToken(), result, repetitions, pre)) {
+                        return true;
+                    } else {
+                        result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + type, node));
+                        return true;
+                    }
+                } else {
+                    result.putTypeArg(var, node.type());
+                    if (ts.getValue().parse(node.nextToken(), result, repetitions, pre)) {
+                        return true;
+                    }
+                }
+            }
             result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
             return true;
         }

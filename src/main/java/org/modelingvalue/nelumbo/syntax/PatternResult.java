@@ -20,10 +20,12 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
@@ -34,6 +36,7 @@ public final class PatternResult implements ParseExceptionHandler {
     private final ParseContext                    context;
     private final MutableList<Pair<Token, Token>> splitted;
     private final MutableList<Pair<Token, Token>> merged;
+    private final MutableMap<Variable, Type>      typeArgs;
 
     private Functor                               functor;
     private ParseState                            state;
@@ -49,6 +52,7 @@ public final class PatternResult implements ParseExceptionHandler {
         elements = MutableList.of(List.of());
         splitted = MutableList.of(List.of());
         merged = MutableList.of(List.of());
+        typeArgs = MutableMap.of(Map.of());
         endRepetitions = Set.of();
     }
 
@@ -132,6 +136,7 @@ public final class PatternResult implements ParseExceptionHandler {
         endRepetitions = Set.of();
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public Node postParse(ParseContext ctx) throws ParseException {
         if (state != null) {
             state.parse(nextToken, this, Map.of(), false);
@@ -144,7 +149,11 @@ public final class PatternResult implements ParseExceptionHandler {
                 merge.a().merge(merge.b());
             }
             List<AstElement> elements = elements();
-            Object[] args = functor.args(elements);
+            Map<Variable, Type> ta = typeArgs.toImmutable();
+            Object[] args = functor.args(elements, ta);
+            if (!ta.isEmpty()) {
+                functor = functor.setBinding((Map) ta);
+            }
             Node node = functor.construct(elements, args, this);
             if (Type.ROOT.isAssignableFrom(node.type())) {
                 node.init(parser.knowledgeBase());
@@ -172,6 +181,14 @@ public final class PatternResult implements ParseExceptionHandler {
 
     public boolean hasException() {
         return hasException;
+    }
+
+    public void putTypeArg(Variable arg, Type val) {
+        typeArgs.put(arg, val);
+    }
+
+    public Type getTypeArg(Variable arg) {
+        return typeArgs.get(arg);
     }
 
 }

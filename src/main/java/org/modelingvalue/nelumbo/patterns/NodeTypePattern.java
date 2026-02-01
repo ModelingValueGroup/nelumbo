@@ -127,16 +127,25 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
-            Type type = nodeType();
-            if (e instanceof Node n && type.isAssignableFrom(n.type())) {
-                args.add(n);
-                return i + 1;
-            } else if (Type.VARIABLE.equals(type) && e instanceof Variable v) {
-                args.add(v);
-                return i + 1;
+            if (e instanceof Node n) {
+                Type type = nodeType();
+                if (type.isAssignableFrom(n.type())) {
+                    args.add(n);
+                    return i + 1;
+                } else if (Type.VARIABLE.equals(type) && n instanceof Variable) {
+                    args.add(n);
+                    return i + 1;
+                } else {
+                    Variable var = type.variable();
+                    type = var != null ? typeArgs.get(var) : null;
+                    if (type != null && type.isAssignableFrom(n.type())) {
+                        args.add(n);
+                        return i + 1;
+                    }
+                }
             }
         }
         return -1;

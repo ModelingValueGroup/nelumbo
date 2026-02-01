@@ -462,6 +462,8 @@ public class Node extends StructImpl implements AstElement {
                 } else if (varVal instanceof Variable valVar) {
                     return new Type(valVar);
                 }
+            } else {
+                return thisType.setBinding(declType, vars);
             }
         }
         return thisVal;

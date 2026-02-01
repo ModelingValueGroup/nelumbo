@@ -20,8 +20,8 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -40,7 +40,7 @@ public class NList extends Node {
 
     @NelumboConstructor
     public NList(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+        super(functor, elements, List.of(args));
     }
 
     public NList(List<AstElement> elements, NList list, Node last) {
@@ -49,6 +49,11 @@ public class NList extends Node {
 
     private NList(Object[] array, NList declaration) {
         super(array, declaration);
+    }
+
+    @Override
+    public List<Object> args() {
+        return elements();
     }
 
     @Override

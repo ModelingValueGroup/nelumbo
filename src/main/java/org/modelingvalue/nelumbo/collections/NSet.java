@@ -21,8 +21,8 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -33,7 +33,7 @@ public class NSet extends Node {
 
     @NelumboConstructor
     public NSet(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+        super(functor, elements, Set.of(args));
     }
 
     private NSet(Object[] array, NSet declaration) {
@@ -53,6 +53,11 @@ public class NSet extends Node {
     @SuppressWarnings("unchecked")
     public <T> Set<T> elements() {
         return (Set<T>) get(0);
+    }
+
+    @Override
+    public List<Object> args() {
+        return elements().asList();
     }
 
     @Override

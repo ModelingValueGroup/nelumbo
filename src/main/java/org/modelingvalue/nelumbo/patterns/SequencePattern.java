@@ -20,10 +20,12 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -128,11 +130,11 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
         List<Object> result = List.of();
         for (Pattern element : elements()) {
             MutableList<Object> inner = MutableList.of(List.of());
-            int ii = element.args(elements, i, inner, false, functor);
+            int ii = element.args(elements, i, inner, false, functor, typeArgs);
             if (ii >= 0) {
                 result = result.addAll(inner.toImmutable());
                 i = ii;

@@ -20,11 +20,13 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -97,7 +99,8 @@ public class RepetitionPattern extends Pattern {
 
     @Override
     public List<Type> argTypes(List<Type> types) {
-        return types.add(repeated().argTypes(List.of()).first().list());
+        return repeated().argTypes(types);
+        // return types.add(repeated().argTypes(List.of()).first().list());
     }
 
     @Override
@@ -123,14 +126,14 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
         Pattern repeated = repeated();
         Pattern separator = separator();
         boolean mandatory = mandatory();
         List<Object> result = List.of();
         while (true) {
             MutableList<Object> inner = MutableList.of(List.of());
-            int ii = repeated.args(elements, i, inner, false, functor);
+            int ii = repeated.args(elements, i, inner, false, functor, typeArgs);
             if (ii >= 0) {
                 result = result.addAll(inner.toImmutable());
                 i = ii;
@@ -142,7 +145,7 @@ public class RepetitionPattern extends Pattern {
             }
             if (separator != null) {
                 inner = MutableList.of(List.of());
-                ii = separator.args(elements, i, inner, false, functor);
+                ii = separator.args(elements, i, inner, false, functor, typeArgs);
                 if (ii >= 0) {
                     mandatory = true;
                     i = ii;

@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -178,8 +179,23 @@ public final class Type extends Node {
         }
     }
 
+    @Override
+    protected Type setBinding(Node declaration, Map<Variable, Object> vars) {
+        if (isCollection()) {
+            Variable var = element().variable();
+            if (var != null && vars.get(var) instanceof Type elt) {
+                return setElement(elt).setBinding(declaration, vars);
+            }
+        }
+        return (Type) super.setBinding(declaration, vars);
+    }
+
     public Type setElement(Type element) {
-        return set(3, element);
+        Set<Type> supers = supers().replaceAll(s -> s.isCollection() ? s.setElement(element) : s);
+        for (Type s : element.supers()) {
+            supers = supers.add(setElement(s));
+        }
+        return set(3, element).set(1, supers);
     }
 
     public String group() {
@@ -290,11 +306,19 @@ public final class Type extends Node {
         return type instanceof TokenType ? ((TokenType) type) : null;
     }
 
-    @SuppressWarnings("unchecked")
     public String name() {
+        String name = rawName();
+        if (isCollection()) {
+            return name + "<" + element().name() + ">";
+        }
+        return name;
+    }
+
+    @SuppressWarnings("unchecked")
+    public String rawName() {
         Object type = get(0);
         if (type instanceof Set<?> s) {
-            return ((Set<Type>) s).map(Type::name).sorted().sequential().reduce("", (a, b) -> a + b);
+            return "(" + ((Set<Type>) s).map(Type::name).sorted().sequential().reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + ")";
         } else if (type instanceof TokenType tt) {
             return tt.name();
         } else if (type instanceof Variable var) {
@@ -338,11 +362,11 @@ public final class Type extends Node {
 
     @Override
     public String toString(TokenType[] previous) {
-        String string = name();
-        if (isCollection()) {
-            string += element();
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
+            previous[0] = TokenType.NAME;
+            return " " + name();
         }
-        return string;
+        return name();
     }
 
     @SuppressWarnings("unchecked")
@@ -379,7 +403,12 @@ public final class Type extends Node {
         if (isMany()) {
             return many().allMatch(s -> s.isAssignableFrom(type));
         }
-        return equals(type) || type.supers().anyMatch(this::isAssignableFrom);
+        for (Type s : type.allSupers()) {
+            if (equals(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isAssignableFrom(Class<?> type) {

@@ -105,7 +105,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor) {
+    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Token t && t.text().equals(tokenText())) {

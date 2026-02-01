@@ -158,9 +158,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         if (var != null) {
             pattern = t(List.of(type), var);
         } else if (type.isCollection()) {
-            pattern = s(List.of(type), t(type.name()), t("<"), n(Type.TYPE, null), t(">"));
+            pattern = s(List.of(type), t(type.rawName()), t("<"), n(Type.TYPE, null), t(">"));
         } else {
-            pattern = t(List.of(type), type.name());
+            pattern = t(List.of(type), type.rawName());
         }
         return Functor.of(List.of(type), pattern, //
                 Type.TYPE, false, (elements, args, functor) -> {
@@ -486,16 +486,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
-        if (args.noneMatch(Type.OBJECT::isAssignableFrom)) {
-            if (!Type.BOOLEAN.isAssignableFrom(type)) {
-                type = type.literal();
-            }
+        Type e = type.isCollection() ? type.element() : null;
+        if (args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
+            type = type.literal();
         } else {
             if (!Type.BOOLEAN.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {
                 type = type.function();
                 function = true;
             }
-            if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type)//
+            if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type) //
                     && !args.allMatch(t -> Type.OBJECT.equals(t.element())) //
                     && !args.allMatch(t -> Type.BOOLEAN.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
                     && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
