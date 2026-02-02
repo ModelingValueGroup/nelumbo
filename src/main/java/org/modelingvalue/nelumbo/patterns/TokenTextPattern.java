@@ -57,6 +57,11 @@ public class TokenTextPattern extends Pattern {
         return val instanceof Variable var ? var : null;
     }
 
+    public boolean isKeyword() {
+        Boolean isKeyword = length() > 1 ? (Boolean) get(1) : false;
+        return isKeyword != null && isKeyword;
+    }
+
     @Override
     public TokenTextPattern set(int i, Object... a) {
         return (TokenTextPattern) super.set(i, a);
@@ -73,7 +78,7 @@ public class TokenTextPattern extends Pattern {
 
     @Override
     public ParseState state(ParseState next, Functor functor) {
-        return new ParseState(tokenText(), next);
+        return new ParseState(tokenText(), isKeyword(), next);
     }
 
     @Override

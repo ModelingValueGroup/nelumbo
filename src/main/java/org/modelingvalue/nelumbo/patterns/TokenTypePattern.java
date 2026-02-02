@@ -93,7 +93,7 @@ public class TokenTypePattern extends Pattern {
             AstElement e = elements.get(i);
             TokenType type = tokenType();
             if (e instanceof Token t) {
-                if (t.isKeyword() && type.isVariableContent()) {
+                if (t.isTextMatch() && type.isVariableContent()) {
                     return -1;
                 } else if (t.type().equals(type)) {
                     if (!isEmpty(type)) {

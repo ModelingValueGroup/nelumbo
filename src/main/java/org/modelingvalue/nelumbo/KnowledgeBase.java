@@ -397,7 +397,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return kb.addType(type);
                         }).init(this);
 
-                Functor.of(s(t("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
+                Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
                             NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             KnowledgeBase kb = CURRENT.get();

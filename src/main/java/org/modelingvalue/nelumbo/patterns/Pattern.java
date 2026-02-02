@@ -58,6 +58,10 @@ public abstract class Pattern extends Node {
         return t(List.of(), tokenText);
     }
 
+    public static Pattern k(String tokenText) {
+        return k(List.of(), tokenText);
+    }
+
     public static Pattern t(Variable var) {
         return t(List.of(), var);
     }
@@ -91,7 +95,11 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern t(List<AstElement> ast, String tokenText) {
-        return new TokenTextPattern(Type.PATTERN, ast, tokenText);
+        return new TokenTextPattern(Type.PATTERN, ast, tokenText, false);
+    }
+
+    public static Pattern k(List<AstElement> ast, String tokenText) {
+        return new TokenTextPattern(Type.PATTERN, ast, tokenText, true);
     }
 
     public static Pattern t(List<AstElement> ast, Variable var) {
