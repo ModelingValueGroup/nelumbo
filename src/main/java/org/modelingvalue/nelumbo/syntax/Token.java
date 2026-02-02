@@ -318,9 +318,7 @@ public final class Token implements AstElement {
     }
 
     public void setNode(Node node) {
-        if (this.node == null) {
-            this.node = node;
-        }
+        this.node = node;
     }
 
     public Pattern declaration() {
