@@ -197,7 +197,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 if (t.type() == STRING) {
                     text = text.substring(1, text.length() - 1);
                 }
-                Pattern tokenPattern = t(List.of(t), text);
+                Pattern tokenPattern = t.type() == STRING && TokenType.of(text) == TokenType.NAME ? //
+                        k(List.of(t), text) : t(List.of(t), text);
                 patterns = patterns.add(tokenPattern);
                 elements = elements.replace(i, tokenPattern);
             } else if (e instanceof Variable v) {
