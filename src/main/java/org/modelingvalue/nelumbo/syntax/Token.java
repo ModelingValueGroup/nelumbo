@@ -362,8 +362,8 @@ public final class Token implements AstElement {
 
     public TokenType colorType() {
         return isVariableNode() ? TokenType.VARIABLE : //
-                isTypeNode() ? TokenType.TYPE : //
-                        type() == TokenType.NAME && isLitteralNode() ? TokenType.KEYWORD : //
+                isTypeNode() && !text().equals("::") ? TokenType.TYPE : //
+                        type() == TokenType.NAME && isKeyword() && (isLitteralNode() || next().type() != TokenType.LEFT) ? TokenType.KEYWORD : //
                                 (text().equals("<") || text().equals(">")) && isPatternNode() ? TokenType.META_OPERATOR : //
                                         type();
     }
