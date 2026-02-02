@@ -30,7 +30,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdea("2025.3.1")
+        intellijIdea("2025.3.2")
         plugin("com.redhat.devtools.lsp4ij:0.19.1")
     }
 }
