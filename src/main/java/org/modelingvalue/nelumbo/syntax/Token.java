@@ -336,6 +336,11 @@ public final class Token implements AstElement {
         return null;
     }
 
+    public Token referenced() {
+        Pattern decl = declaration();
+        return decl != null ? decl.firstToken() : null;
+    }
+
     public Variable variable() {
         Variable var = node != null ? node.variable() : null;
         if (var != null) {
