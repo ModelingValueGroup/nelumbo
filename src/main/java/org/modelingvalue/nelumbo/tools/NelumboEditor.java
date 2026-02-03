@@ -51,6 +51,7 @@ import java.util.Objects;
 import java.util.prefs.Preferences;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -60,9 +61,6 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
  * multiple editor windows through the WindowManager.
  */
 public class NelumboEditor {
-
-    private static NelumboEditor instance;
-
     /**
      * Defines a color scheme for a token type with foreground and background colors,
      * and text style attributes (bold, italic, underline, subscript, superscript).
@@ -145,25 +143,31 @@ public class NelumboEditor {
             {"Examples", "queryOnly.nl", "Query Only"},
     };
 
-    private final Preferences    preferences = Preferences.userNodeForPackage(NelumboEditor.class);
-    private final WindowManager  windowManager;
+    private final Preferences          preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+    private final WindowManager        windowManager;
+    private final EditorImportResolver editorImportResolver;
 
     public WindowManager getWindowManager() {
         return windowManager;
     }
 
-    public static void main(String[] args) {
-        instance = new NelumboEditor();
+    public EditorImportResolver getEditorImportResolver() {
+        return editorImportResolver;
     }
 
-    public static NelumboEditor getInstance() {
-        return instance;
+    public static void main(String[] args) {
+        new NelumboEditor();
     }
 
     public NelumboEditor() {
         initLookAndFeel();
         loadTokenColors();
         windowManager = new WindowManager(this);
+
+        // Create and register the editor import resolver
+        editorImportResolver = new EditorImportResolver(windowManager);
+        KnowledgeBase.registerResolver(editorImportResolver);
+
         windowManager.restoreWindows();
 
         if (!windowManager.hasOpenWindows()) {
@@ -206,14 +210,6 @@ public class NelumboEditor {
      */
     public void windowClosed(EditorWindow window) {
         windowManager.windowClosed(window);
-    }
-
-    /**
-     * Requests application quit.
-     */
-    public void requestQuit() {
-        windowManager.saveAllWindows();
-        System.exit(0);
     }
 
     // ==================== Token Colors ====================

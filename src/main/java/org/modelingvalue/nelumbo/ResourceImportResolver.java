@@ -16,41 +16,58 @@
 
 package org.modelingvalue.nelumbo;
 
-import java.io.Serial;
-
-import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Parser;
 
-public final class Import extends Node {
-    @Serial
-    private static final long serialVersionUID = 4184295220819695199L;
+/**
+ * Import resolver that loads .nl files from the classpath.
+ * Handles the "nelumbo.X" naming convention by expanding to "org.modelingvalue.nelumbo.X.X".
+ */
+public class ResourceImportResolver implements ImportResolver {
 
-    public Import(List<AstElement> elements, String path) {
-        super(Type.IMPORT, elements, path);
-    }
+    public static final String NELUMBO_PREFIX           = "nelumbo.";
+    public static final String ORG_MODELINGVALUE_PREFIX = "org.modelingvalue.";
 
-    private Import(Object[] array, Import declaration) {
-        super(array, declaration);
+    @Override
+    public ImportResult resolve(String name, Import imp) throws ParseException {
+        String path = getResourcePath(name);
+        if (path == null) {
+            return null;  // Let another resolver try
+        }
+        ParseException[] exc = new ParseException[1];
+        KnowledgeBase kb = KnowledgeBase.BASE.run(() -> {
+            try {
+                Parser.parse(KnowledgeBase.class, path);
+            } catch (ParseException e) {
+                exc[0] = e;
+            }
+        });
+
+        if (exc[0] != null) {
+            throw exc[0];
+        }
+        return new ImportResult(kb, true);  // Classpath resources are cacheable
     }
 
     @Override
-    protected Import struct(Object[] array, Node declaration) {
-        return new Import(array, (Import) declaration);
+    public boolean canHandle(String name) {
+        // Don't handle editor imports
+        return name.startsWith(NELUMBO_PREFIX) || getResourcePath(name) != null;
     }
 
-    @Override
-    public Import set(int i, Object... a) {
-        return (Import) super.set(i, a);
-    }
+    private static String getResourcePath(String name) {
+        String resolvedName = name;
 
-    public String name() {
-        return (String) get(0);
-    }
+        // Handle "nelumbo.X" -> "org.modelingvalue.nelumbo.X.X" expansion
+        if (name.startsWith(NELUMBO_PREFIX)) {
+            int i = name.lastIndexOf('.');
+            resolvedName = name + "." + name.substring(i + 1);
+            resolvedName = ORG_MODELINGVALUE_PREFIX + resolvedName;
+        }
 
-    @Override
-    public Node init(KnowledgeBase knowledgeBase) throws ParseException {
-        knowledgeBase.doImport(name(), this);
-        return this;
-    }
+        String path = "/" + resolvedName.replace('.', '/') + ".nl";
 
+        // Check if resource exists
+        return KnowledgeBase.class.getResource(path) == null ? null : path;
+    }
 }

@@ -23,7 +23,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 
 /**
  * Manages multiple editor windows, handling window lifecycle, persistence,
@@ -73,13 +72,6 @@ public class WindowManager {
     }
 
     /**
-     * Assigns a window number to a window.
-     */
-    public synchronized void assignWindowNumber(String windowId, int number) {
-        windowNumbers.put(windowId, number);
-    }
-
-    /**
      * Atomically assigns the next available window number to a window.
      * Returns the assigned number.
      */
@@ -90,17 +82,15 @@ public class WindowManager {
     }
 
     /**
-     * Returns the window number for a window, or -1 if not assigned.
+     * Returns the editor window with the given window number, or null if not found.
      */
-    public int getWindowNumber(String windowId) {
-        return windowNumbers.getOrDefault(windowId, -1);
-    }
-
-    /**
-     * Removes the window number assignment for a window.
-     */
-    public void removeWindowNumber(String windowId) {
-        windowNumbers.remove(windowId);
+    public EditorWindow getWindowByNumber(int number) {
+        for (EditorWindow window : windows.values()) {
+            if (window.getWindowNumber() == number) {
+                return window;
+            }
+        }
+        return null;
     }
 
     /**
@@ -347,18 +337,10 @@ public class WindowManager {
     }
 
     /**
-     * Returns the number of open windows.
-     */
-    public int getWindowCount() {
-        return windows.size();
-    }
-
-    /**
      * Saves the list of window IDs to preferences, preserving order.
      */
     private void saveWindowList() {
-        String windowList = windowOrder.stream()
-                .collect(Collectors.joining(","));
+        String windowList = String.join(",", windowOrder);
         try {
             preferences.put(PREF_WINDOW_LIST, windowList);
             preferences.flush();

@@ -16,41 +16,44 @@
 
 package org.modelingvalue.nelumbo;
 
-import java.io.Serial;
-
-import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
-public final class Import extends Node {
-    @Serial
-    private static final long serialVersionUID = 4184295220819695199L;
+/**
+ * Functional interface for resolving import names to KnowledgeBases.
+ * Implementations can handle different types of imports (classpath resources, editor windows, etc.).
+ */
+@FunctionalInterface
+public interface ImportResolver {
 
-    public Import(List<AstElement> elements, String path) {
-        super(Type.IMPORT, elements, path);
+    /**
+     * Result of an import resolution attempt.
+     *
+     * @param knowledgeBase the resolved KnowledgeBase, or null if not found
+     * @param cacheable     whether the result can be cached (false for dynamic sources like editor windows)
+     */
+    record ImportResult(KnowledgeBase knowledgeBase, boolean cacheable) {}
+
+    /**
+     * Attempts to resolve the given import name to a KnowledgeBase.
+     *
+     * @param name the import name to resolve
+     *
+     * @return the import result, or null if this resolver cannot handle the name
+     *
+     * @throws ParseException if resolution fails
+     */
+    ImportResult resolve(String name, Import imp) throws ParseException;
+
+    /**
+     * Returns true if this resolver can potentially handle the given import name.
+     * This is a quick check that can be used to skip resolvers that won't match.
+     * The default implementation returns true, meaning the resolver will always be tried.
+     *
+     * @param name the import name to check
+     * @return true if this resolver might be able to resolve the name
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    default boolean canHandle(String name) {
+        return true;
     }
-
-    private Import(Object[] array, Import declaration) {
-        super(array, declaration);
-    }
-
-    @Override
-    protected Import struct(Object[] array, Node declaration) {
-        return new Import(array, (Import) declaration);
-    }
-
-    @Override
-    public Import set(int i, Object... a) {
-        return (Import) super.set(i, a);
-    }
-
-    public String name() {
-        return (String) get(0);
-    }
-
-    @Override
-    public Node init(KnowledgeBase knowledgeBase) throws ParseException {
-        knowledgeBase.doImport(name(), this);
-        return this;
-    }
-
 }
