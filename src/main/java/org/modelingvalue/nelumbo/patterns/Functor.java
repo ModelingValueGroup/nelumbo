@@ -40,20 +40,20 @@ public class Functor extends Node {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, Constructor<?> constructor) {
-        return new Functor(elements, pattern, result, local, constructor);
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, Constructor<?> constructor, Integer leftPrecedence) {
+        return new Functor(elements, pattern, result, local, constructor, leftPrecedence);
     }
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function) {
-        return new Functor(elements, pattern, result, local, function);
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function, Integer leftPrecedence) {
+        return new Functor(elements, pattern, result, local, function, leftPrecedence);
     }
 
-    public static Functor of(Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function) {
-        return new Functor(List.of(), pattern, result, local, function);
+    public static Functor of(Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function, Integer leftPrecedence) {
+        return new Functor(List.of(), pattern, result, local, function, leftPrecedence);
     }
 
-    public static Functor of(Pattern pattern, Type result, boolean local) {
-        return new Functor(List.of(), pattern, result, local, null);
+    public static Functor of(Pattern pattern, Type result, boolean local, Integer leftPrecedence) {
+        return new Functor(List.of(), pattern, result, local, null, leftPrecedence);
     }
 
     private String     name;
@@ -107,6 +107,10 @@ public class Functor extends Node {
     public ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function() {
         Object val = get(3);
         return val instanceof ThrowingTriFunction ? (ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node>) val : null;
+    }
+
+    public Integer leftPrecedence() {
+        return (Integer) get(4);
     }
 
     @Override
@@ -176,7 +180,12 @@ public class Functor extends Node {
         if (start == null) {
             ParseState s = pattern().state(new ParseState(this), this);
             startPre = s.pre();
-            startPost = s.post();
+            ParseState post = s.post();
+            if (post != null) {
+                Integer left = leftPrecedence();
+                Integer inner = post.leftPrecedence();
+                startPost = post.setLeftPrecedence(left != null ? left : inner != null ? inner : Integer.MAX_VALUE);
+            }
             start = s;
         }
         return start;

@@ -67,11 +67,11 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+    public Pattern setPresedence(int precedence) {
         List<Pattern> elements = elements();
         for (int i = 0; i < elements.size(); i++) {
             Pattern pa = elements.get(i);
-            Pattern pb = pa.setPresedence(precedence, p);
+            Pattern pb = pa.setPresedence(precedence);
             if (!pb.equals(pa)) {
                 elements = elements.replace(i, pb);
             }

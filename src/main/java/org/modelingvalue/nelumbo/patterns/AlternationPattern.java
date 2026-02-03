@@ -67,11 +67,11 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+    public Pattern setPresedence(int precedence) {
         List<Pattern> options = options();
         for (int i = 0; i < options.size(); i++) {
             Pattern pa = options.get(i);
-            Pattern pb = pa.setPresedence(precedence, p);
+            Pattern pb = pa.setPresedence(precedence);
             if (!pb.equals(pa)) {
                 options = options.replace(i, pb);
             }

@@ -10,8 +10,8 @@
               <Boolean> | <Boolean>                   #20     @org.modelingvalue.nelumbo.logic.Or,
               <Boolean> -> <Boolean>                  #18,
               <Boolean> "<->" <Boolean>               #16,
-              E[<(> <Variable> <,> , <)+>](<Boolean>) #100 #0 @org.modelingvalue.nelumbo.logic.ExistentialQuantifier,
-              A[<(> <Variable> <,> , <)+>](<Boolean>) #100 #0 @org.modelingvalue.nelumbo.logic.UniversalQuantifier,
+              E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @org.modelingvalue.nelumbo.logic.ExistentialQuantifier,
+              A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @org.modelingvalue.nelumbo.logic.UniversalQuantifier,
               <Object> != <Object>                    #30
 
   Boolean p1, p2
