@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstants;
 import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -58,7 +59,7 @@ public class NelumboTestBase {
     public void testResource(String resource) {
         run(() -> {
             try {
-                U.printResults(Parser.parse(NelumboTestBase.class, resource));
+                U.printResults(Parser.parse(NelumboTestBase.class, NelumboConstants.NELUMBO_EXAMPLES + resource));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);

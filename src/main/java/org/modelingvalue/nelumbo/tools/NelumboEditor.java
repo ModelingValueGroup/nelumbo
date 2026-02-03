@@ -61,8 +61,14 @@ import java.awt.event.InputEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serial;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -74,6 +80,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstants;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Query;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -299,6 +306,10 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         viewMenu.add(knowledgeBaseViewerItem);
 
         menuBar.add(viewMenu);
+
+        // Examples menu
+        JMenu examplesMenu = createExamplesMenu();
+        menuBar.add(examplesMenu);
 
         frame.setJMenuBar(menuBar);
 
@@ -990,6 +1001,75 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
         sb.append("\n    );");
         return sb.toString();
+    }
+
+    /**
+     * Example .nl files bundled with the application: {category, filename, displayName}.
+     * Library files use NelumboConstants.NELUMBO_LIBRARY path, Examples use NelumboConstants.NELUMBO_EXAMPLES path.
+     */
+    private static final String[][] EXAMPLE_RESOURCES = {
+            // Library files (filename relative to NELUMBO_LIBRARY)
+            {"Library", "logic/logic.nl", "Logic"},
+            {"Library", "integers/integers.nl", "Integers"},
+            {"Library", "strings/strings.nl", "Strings"},
+            {"Library", "collections/collections.nl", "Collections"},
+            // Examples (filename only, prefixed with Parser.NELUMBO_EXAMPLES)
+            {"Examples", "familyTest.nl", "Family"},
+            {"Examples", "friendsTest.nl", "Friends"},
+            {"Examples", "fibonacciTest.nl", "Fibonacci"},
+            {"Examples", "belastingTest.nl", "Belasting"},
+            {"Examples", "whoIsTest.nl", "Who Is"},
+            {"Examples", "logicTest.nl", "Logic Test"},
+            {"Examples", "integersTest.nl", "Integers Test"},
+            {"Examples", "stringsTest.nl", "Strings Test"},
+            {"Examples", "collectionsTest.nl", "Collections Test"},
+            {"Examples", "transformationTest.nl", "Transformation"},
+            {"Examples", "queryOnly.nl", "Query Only"},
+    };
+
+    private JMenu createExamplesMenu() {
+        JMenu examplesMenu = new JMenu("Examples");
+        Map<String, JMenu> submenus = new HashMap<>();
+
+        for (String[] entry : EXAMPLE_RESOURCES) {
+            String category = entry[0];
+            String fileName = entry[1];
+            String displayName = entry[2];
+
+            // Construct full resource path based on category
+            String resourcePath = category.equals("Library") ? NelumboConstants.NELUMBO_LIBRARY + fileName : NelumboConstants.NELUMBO_EXAMPLES + fileName;
+
+            // Get or create submenu for this category
+            JMenu submenu = submenus.computeIfAbsent(category, k -> {
+                JMenu m = new JMenu(k);
+                examplesMenu.add(m);
+                return m;
+            });
+
+            JMenuItem item = new JMenuItem(displayName);
+            item.addActionListener(e -> loadExample(resourcePath, displayName));
+            submenu.add(item);
+        }
+
+        return examplesMenu;
+    }
+
+    private void loadExample(String resourcePath, String displayName) {
+        try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
+            if (is == null) {
+                JOptionPane.showMessageDialog(frame, "Could not find resource: " + resourcePath, "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            String content;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                content = reader.lines().collect(Collectors.joining("\n"));
+            }
+            textPane.setText(content);
+            textPane.setCaretPosition(0);
+            frame.setTitle("Nelumbo Editor - " + displayName);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(frame, "Error loading example: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // ViewFactory that prevents line wrapping in JTextPane
