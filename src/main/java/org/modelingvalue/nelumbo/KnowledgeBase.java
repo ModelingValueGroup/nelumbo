@@ -319,14 +319,19 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return tt != null ? t(elements, tt) : n(elements, type, null);
                         }).init(this);
 
-                Functor.of(s(n(Type.TYPE, null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
+                Functor.of(s(o(k("private")), n(Type.TYPE, null), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            Type type = (Type) elements.get(0);
-                            NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
+                            if (elements.first() instanceof Token) {
+                                functor.args(elements, Map.of());
+                            }
+                            boolean priv = ((Optional<String>) args[0]).isPresent();
+                            Type type = (Type) elements.get(priv ? 1 : 0);
+                            int start = priv ? 3 : 2;
+                            NList roots = new NList(elements.sublist(0, start), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
                             List<Integer> precedence = List.of();
-                            for (int i = 2; i <= elements.size(); i++) {
+                            for (int i = start; i <= elements.size(); i++) {
                                 AstElement e = i < elements.size() ? elements.get(i) : null;
                                 if (e == null || e instanceof Token) {
                                     Token t = (Token) e;
@@ -335,7 +340,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (!precedence.isEmpty()) {
                                             pattern = pattern.setPresedence(precedence, new int[1]);
                                         }
-                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern);
+                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern, priv);
                                         if (t != null) {
                                             roots = roots.setAstElements(roots.astElements().add(t));
                                         }
@@ -484,7 +489,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     @SuppressWarnings("ConstantValue")
-    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern) throws ParseException {
+    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern, boolean local) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.isCollection() ? type.element() : null;
@@ -503,7 +508,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
-        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, false, toLiteral ? null : constructor).init(this);
+        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : constructor).init(this);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && constructor != null) {
             nodFunctor.construct(List.of(), new Object[0], this);
