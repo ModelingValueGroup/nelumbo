@@ -139,31 +139,19 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     /**
      * Default color schemes for token types with style attributes
      */
-    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.ofEntries(                      //
-            Map.entry(TokenType.NUMBER,                                                                             //
-                      new ColorScheme(0x000077, null, true, false, false, false, false)),                             //
-            Map.entry(TokenType.DECIMAL,                                                                            //
-                      new ColorScheme(0x000077, null, true, false, false, false, false)),                             //
-            Map.entry(TokenType.STRING,                                                                             //
-                      new ColorScheme(0x007700, null, false, false, false, false, false)),                            //
-            Map.entry(TokenType.NAME,                                                                               //
-                      new ColorScheme(0x0000ff, null, false, false, false, false, false)),                            //
-            Map.entry(TokenType.TYPE,                                                                               //
-                      new ColorScheme(0x880088, null, true, false, false, false, false)),                             //
-            Map.entry(TokenType.META_OPERATOR,                                                                      //
-                      new ColorScheme(0xffffff, 0x558855, true, false, false, false, false)),                         //
-            Map.entry(TokenType.OPERATOR,                                                                           //
-                      new ColorScheme(0x666666, null, false, false, false, false, false)),                            //
-            Map.entry(TokenType.END_LINE_COMMENT,                                                                   //
-                      new ColorScheme(0xcccccc, null, false, true, false, false, false)),                             //
-            Map.entry(TokenType.IN_LINE_COMMENT,                                                                    //
-                      new ColorScheme(0xcccccc, null, false, true, false, false, false)),                             //
-            Map.entry(TokenType.ERROR,                                                                              //
-                      new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)),                          //
-            Map.entry(TokenType.VARIABLE,                                                                           //
-                      new ColorScheme(0x0000ff, null, true, false, false, false, false)),                             //
-            Map.entry(TokenType.KEYWORD,                                                                            //
-                      new ColorScheme(0x0000ff, null, true, false, false, false, false))                              //
+    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.ofEntries(
+            Map.entry(TokenType.STRING, new ColorScheme(0x007700, null, false, false, false, false, false)),
+            Map.entry(TokenType.DECIMAL, new ColorScheme(0x000077, null, true, false, false, false, false)),
+            Map.entry(TokenType.NUMBER, new ColorScheme(0x000077, null, true, false, false, false, false)),
+            Map.entry(TokenType.NAME, new ColorScheme(0x0000ff, null, false, false, false, false, false)),
+            Map.entry(TokenType.END_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, true, false, false, false)),
+            Map.entry(TokenType.IN_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, true, false, false, false)),
+            Map.entry(TokenType.OPERATOR, new ColorScheme(0x666666, null, false, false, false, false, false)),
+            Map.entry(TokenType.ERROR, new ColorScheme(0xff0000, 0xffdddd, true, true, false, false, false)),
+            Map.entry(TokenType.VARIABLE, new ColorScheme(0x0000ff, null, true, false, false, false, false)),
+            Map.entry(TokenType.KEYWORD, new ColorScheme(0x0000ff, null, true, false, false, false, false)),
+            Map.entry(TokenType.TYPE, new ColorScheme(0x880088, null, true, false, false, false, false)),
+            Map.entry(TokenType.META_OPERATOR, new ColorScheme(0xffffff, 0x558855, true, false, false, false, false))
                                                                                          );
 
     /**
@@ -976,7 +964,7 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
         JButton copySourceButton = new JButton("Copy as Java Source");
         copySourceButton.addActionListener(e -> {
-            String source = generateColorSchemeSource();
+            String          source    = generateColorSchemeSource();
             StringSelection selection = new StringSelection(source);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
             JOptionPane.showMessageDialog(dialog, "Color scheme copied to clipboard as Java source code.", "Copied", JOptionPane.INFORMATION_MESSAGE);
@@ -1001,21 +989,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
     private String generateColorSchemeSource() {
         StringBuilder sb = new StringBuilder();
         sb.append("    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.ofEntries(");
-        var entries = TOKEN_COLORS.entrySet().stream()
-                .sorted(Comparator.comparingInt(e -> e.getKey().ordinal()))
-                .toList();
+        var entries = TOKEN_COLORS.entrySet().stream().sorted(Comparator.comparingInt(e -> e.getKey().ordinal())).toList();
         for (int i = 0; i < entries.size(); i++) {
-            var entry = entries.get(i);
-            TokenType tokenType = entry.getKey();
-            ColorScheme scheme = entry.getValue();
-            String fg = scheme.foreground() != null ? String.format("0x%06x", scheme.foreground().getRGB() & 0xFFFFFF) : "null";
-            String bg = scheme.background() != null ? String.format("0x%06x", scheme.background().getRGB() & 0xFFFFFF) : "null";
-            String suffix = i < entries.size() - 1 ? ")," : ")";
-            sb.append(String.format("%n            Map.entry(TokenType.%-16s new ColorScheme(%s, %s, %s, %s, %s, %s, %s)%s",
-                    tokenType.name() + ",",
-                    fg, bg,
-                    scheme.bold(), scheme.italic(), scheme.underline(), scheme.subscript(), scheme.superscript(),
-                    suffix));
+            var         entry     = entries.get(i);
+            TokenType   tokenType = entry.getKey();
+            ColorScheme scheme    = entry.getValue();
+            String      fg        = scheme.foreground() != null ? String.format("0x%06x", scheme.foreground().getRGB() & 0xFFFFFF) : "null";
+            String      bg        = scheme.background() != null ? String.format("0x%06x", scheme.background().getRGB() & 0xFFFFFF) : "null";
+            String      suffix    = i < entries.size() - 1 ? ")," : ")";
+            sb.append(String.format("%n            Map.entry(TokenType.%-16s new ColorScheme(%s, %s, %s, %s, %s, %s, %s)%s", tokenType.name() + ",", fg, bg, scheme.bold(), scheme.italic(), scheme.underline(), scheme.subscript(), scheme.superscript(), suffix));
         }
         sb.append("\n    );");
         return sb.toString();
