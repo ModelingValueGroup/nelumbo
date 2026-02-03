@@ -29,14 +29,18 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.TextAction;
+import javax.swing.undo.CompoundEdit;
+import javax.swing.undo.UndoManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -105,6 +109,11 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     private JTextPane                        messagesPane;
     private JTextPane                        textPane;
     private JMenu                            windowsMenu;
+    private JMenuItem                        undoMenuItem;
+    private JMenuItem                        redoMenuItem;
+    private UndoManager                      undoManager;
+    private CompoundEdit                     currentCompoundEdit;
+    private Timer                            compoundEditTimer;
     private WindowManager.WindowListListener windowListListener;
     private boolean                          quit;
     private boolean                          refreshRequested;
@@ -168,6 +177,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
             loadTextContent();
         }
         restoreDialogVisibility();
+        // Clear undo history after loading so users can't undo the initial content
+        resetUndoManager();
     }
 
     /**
@@ -263,6 +274,29 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         frame.addWindowListener(this);
         textPane.getDocument().addDocumentListener(this);
 
+        // Setup undo manager with compound edit grouping
+        undoManager = new UndoManager();
+
+        // Timer to end compound edits after a pause in typing (500ms)
+        compoundEditTimer = new Timer(500, e -> endCompoundEdit());
+        compoundEditTimer.setRepeats(false);
+
+        textPane.getDocument().addUndoableEditListener(e -> {
+            // Only capture INSERT and REMOVE events, not CHANGE (style) events
+            if (e.getEdit() instanceof DefaultDocumentEvent docEvent) {
+                if (docEvent.getType() != DocumentEvent.EventType.CHANGE) {
+                    // Start a new compound edit if needed
+                    if (currentCompoundEdit == null) {
+                        currentCompoundEdit = new CompoundEdit();
+                    }
+                    currentCompoundEdit.addEdit(e.getEdit());
+
+                    // Restart the timer - compound edit ends after a pause
+                    compoundEditTimer.restart();
+                }
+            }
+        });
+
         // Set focus on text area
         textPane.requestFocusInWindow();
     }
@@ -290,6 +324,23 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         fileMenu.add(quitItem);
 
         menuBar.add(fileMenu);
+
+        // Edit menu
+        JMenu editMenu = new JMenu("Edit");
+
+        undoMenuItem = new JMenuItem("Undo");
+        undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        undoMenuItem.addActionListener(e -> performUndo());
+        undoMenuItem.setEnabled(false);
+        editMenu.add(undoMenuItem);
+
+        redoMenuItem = new JMenuItem("Redo");
+        redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK));
+        redoMenuItem.addActionListener(e -> performRedo());
+        redoMenuItem.setEnabled(false);
+        editMenu.add(redoMenuItem);
+
+        menuBar.add(editMenu);
 
         // Colors menu
         JMenu     colorsMenu      = new JMenu("Colors");
@@ -436,6 +487,53 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         font = font.deriveFont(newSize);
         textPane.setFont(font);
         messagesPane.setFont(font);
+    }
+
+    private void endCompoundEdit() {
+        if (currentCompoundEdit != null) {
+            currentCompoundEdit.end();
+            undoManager.addEdit(currentCompoundEdit);
+            currentCompoundEdit = null;
+            updateUndoRedoMenuItems();
+        }
+    }
+
+    private void resetUndoManager() {
+        if (compoundEditTimer != null) {
+            compoundEditTimer.stop();
+        }
+        currentCompoundEdit = null;
+        if (undoManager != null) {
+            undoManager.discardAllEdits();
+        }
+        updateUndoRedoMenuItems();
+    }
+
+    private void performUndo() {
+        // End any pending compound edit before undoing
+        endCompoundEdit();
+        if (undoManager != null && undoManager.canUndo()) {
+            undoManager.undo();
+            updateUndoRedoMenuItems();
+        }
+    }
+
+    private void performRedo() {
+        // End any pending compound edit before redoing
+        endCompoundEdit();
+        if (undoManager != null && undoManager.canRedo()) {
+            undoManager.redo();
+            updateUndoRedoMenuItems();
+        }
+    }
+
+    private void updateUndoRedoMenuItems() {
+        if (undoMenuItem != null) {
+            undoMenuItem.setEnabled(undoManager != null && undoManager.canUndo());
+        }
+        if (redoMenuItem != null) {
+            redoMenuItem.setEnabled(undoManager != null && undoManager.canRedo());
+        }
     }
 
     private void closeWindow() {
@@ -779,11 +877,13 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     @Override
     public synchronized void insertUpdate(DocumentEvent e) {
         refresh();
+        javax.swing.SwingUtilities.invokeLater(this::updateUndoRedoMenuItems);
     }
 
     @Override
     public synchronized void removeUpdate(DocumentEvent e) {
         refresh();
+        javax.swing.SwingUtilities.invokeLater(this::updateUndoRedoMenuItems);
     }
 
     @Override
