@@ -282,6 +282,13 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         closeWindowItem.addActionListener(e -> closeWindow());
         fileMenu.add(closeWindowItem);
 
+        fileMenu.addSeparator();
+
+        JMenuItem quitItem = new JMenuItem("Quit");
+        quitItem.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        quitItem.addActionListener(e -> application.quit());
+        fileMenu.add(quitItem);
+
         menuBar.add(fileMenu);
 
         // Colors menu

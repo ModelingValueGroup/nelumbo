@@ -199,6 +199,14 @@ public class NelumboEditor {
     }
 
     /**
+     * Quits the application, saving all windows first.
+     */
+    public void quit() {
+        windowManager.saveAllWindows();
+        System.exit(0);
+    }
+
+    /**
      * Opens an example in a new window.
      */
     public void openExample(String resourcePath, String displayName) {

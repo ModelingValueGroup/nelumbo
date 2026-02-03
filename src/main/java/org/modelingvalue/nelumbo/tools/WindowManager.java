@@ -178,9 +178,9 @@ public class WindowManager {
         saveWindowList();
         notifyWindowListChanged();
 
-        // If this was the last window, create a new empty window
+        // If this was the last window, exit the application
         if (windows.isEmpty()) {
-            createNewWindow();
+            System.exit(0);
         }
     }
 

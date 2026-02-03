@@ -106,29 +106,83 @@ public class DialogBoundsUtil {
     }
 
     private Rectangle ensureVisibleOnScreen(Rectangle bounds) {
-        // Get the combined bounds of all screens
-        Rectangle            virtualBounds = new Rectangle();
-        GraphicsEnvironment  ge            = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        for (GraphicsDevice gd : ge.getScreenDevices()) {
+        GraphicsEnvironment ge      = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice[]    screens = ge.getScreenDevices();
+
+        // Find the screen that has the most overlap with the window bounds
+        Rectangle bestScreen  = null;
+        int       maxOverlap  = 0;
+
+        for (GraphicsDevice gd : screens) {
             for (GraphicsConfiguration gc : gd.getConfigurations()) {
-                virtualBounds = virtualBounds.union(gc.getBounds());
+                Rectangle screenBounds = gc.getBounds();
+                Rectangle intersection = screenBounds.intersection(bounds);
+                int       overlap      = intersection.isEmpty() ? 0 : intersection.width * intersection.height;
+                if (overlap > maxOverlap) {
+                    maxOverlap = overlap;
+                    bestScreen = screenBounds;
+                }
             }
         }
 
-        // Ensure at least MIN_VISIBLE_SIZE pixels are visible horizontally
-        if (bounds.x + bounds.width < virtualBounds.x + MIN_VISIBLE_SIZE) {
-            bounds.x = virtualBounds.x + MIN_VISIBLE_SIZE - bounds.width;
-        }
-        if (bounds.x > virtualBounds.x + virtualBounds.width - MIN_VISIBLE_SIZE) {
-            bounds.x = virtualBounds.x + virtualBounds.width - MIN_VISIBLE_SIZE;
+        // If window doesn't overlap with any screen, find the closest screen
+        if (bestScreen == null) {
+            int centerX = bounds.x + bounds.width / 2;
+            int centerY = bounds.y + bounds.height / 2;
+
+            double minDistance = Double.MAX_VALUE;
+            for (GraphicsDevice gd : screens) {
+                for (GraphicsConfiguration gc : gd.getConfigurations()) {
+                    Rectangle screenBounds  = gc.getBounds();
+                    int       screenCenterX = screenBounds.x + screenBounds.width / 2;
+                    int       screenCenterY = screenBounds.y + screenBounds.height / 2;
+                    double    distance      = Math.hypot(centerX - screenCenterX, centerY - screenCenterY);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        bestScreen  = screenBounds;
+                    }
+                }
+            }
         }
 
-        // Ensure at least MIN_VISIBLE_SIZE pixels are visible vertically
-        if (bounds.y + bounds.height < virtualBounds.y + MIN_VISIBLE_SIZE) {
-            bounds.y = virtualBounds.y + MIN_VISIBLE_SIZE - bounds.height;
+        // Fallback to primary screen if still no screen found
+        if (bestScreen == null) {
+            bestScreen = ge.getDefaultScreenDevice().getDefaultConfiguration().getBounds();
         }
-        if (bounds.y > virtualBounds.y + virtualBounds.height - MIN_VISIBLE_SIZE) {
-            bounds.y = virtualBounds.y + virtualBounds.height - MIN_VISIBLE_SIZE;
+
+        // Constrain window to be within the chosen screen bounds
+        // Ensure at least MIN_VISIBLE_SIZE pixels are visible
+
+        // Adjust horizontal position
+        if (bounds.x + bounds.width < bestScreen.x + MIN_VISIBLE_SIZE) {
+            bounds.x = bestScreen.x + MIN_VISIBLE_SIZE - bounds.width;
+        }
+        if (bounds.x > bestScreen.x + bestScreen.width - MIN_VISIBLE_SIZE) {
+            bounds.x = bestScreen.x + bestScreen.width - MIN_VISIBLE_SIZE;
+        }
+
+        // Adjust vertical position
+        if (bounds.y + bounds.height < bestScreen.y + MIN_VISIBLE_SIZE) {
+            bounds.y = bestScreen.y + MIN_VISIBLE_SIZE - bounds.height;
+        }
+        if (bounds.y > bestScreen.y + bestScreen.height - MIN_VISIBLE_SIZE) {
+            bounds.y = bestScreen.y + bestScreen.height - MIN_VISIBLE_SIZE;
+        }
+
+        // Also ensure the window is not larger than the screen
+        if (bounds.width > bestScreen.width) {
+            bounds.width = bestScreen.width;
+        }
+        if (bounds.height > bestScreen.height) {
+            bounds.height = bestScreen.height;
+        }
+
+        // Final adjustment: if window was pushed too far, ensure it stays on screen
+        if (bounds.x < bestScreen.x) {
+            bounds.x = bestScreen.x;
+        }
+        if (bounds.y < bestScreen.y) {
+            bounds.y = bestScreen.y;
         }
 
         return bounds;
