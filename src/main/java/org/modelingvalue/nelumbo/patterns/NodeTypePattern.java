@@ -85,12 +85,11 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public Pattern setPresedence(List<Integer> precedence, int[] p) {
-        int i = p[0];
-        if (i < precedence.size() - 1) {
-            p[0]++;
+    public Pattern setPresedence(int precedence) {
+        if (precedence() != null) {
+            return this;
         }
-        return set(1, precedence.get(i));
+        return set(1, precedence);
     }
 
     @Override

@@ -67,8 +67,8 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public Pattern setPresedence(List<Integer> precedence, int[] p) {
-        return set(0, repeated().setPresedence(precedence, p));
+    public Pattern setPresedence(int precedence) {
+        return set(0, repeated().setPresedence(precedence));
     }
 
     @Override

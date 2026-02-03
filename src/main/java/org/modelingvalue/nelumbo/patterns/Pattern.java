@@ -134,7 +134,7 @@ public abstract class Pattern extends Node {
         return "";
     }
 
-    public Pattern setPresedence(List<Integer> precedence, int[] p) {
+    public Pattern setPresedence(int precedence) {
         return this;
     }
 

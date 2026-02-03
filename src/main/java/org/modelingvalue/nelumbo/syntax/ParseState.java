@@ -111,7 +111,7 @@ public class ParseState implements Mergeable<ParseState> {
         if (t.isEmpty()) {
             return null;
         }
-        return new ParseState(t, this.functor, leftPrecedence, null, null, startRepetitions, endRepetitions, isKeyword);
+        return new ParseState(t, functor, null, null, group, startRepetitions, endRepetitions, isKeyword);
     }
 
     public ParseState post() {
@@ -119,15 +119,14 @@ public class ParseState implements Mergeable<ParseState> {
         if (t.isEmpty()) {
             return null;
         }
-        return new ParseState(t, this.functor, null, null, null, startRepetitions, endRepetitions, isKeyword).//
-                setLeftPrecedence(innerPrecedence == null ? Integer.MAX_VALUE : innerPrecedence);
+        return new ParseState(t, functor, innerPrecedence, null, group, startRepetitions, endRepetitions, isKeyword);
     }
 
     private static boolean isKeyType(Entry<Object, ParseState> e) {
         return e.getKey() instanceof Type;
     }
 
-    private ParseState setLeftPrecedence(Integer leftPrecedence) {
+    public ParseState setLeftPrecedence(Integer leftPrecedence) {
         Map<Object, ParseState> t = transitions.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
         return new ParseState(t, functor, leftPrecedence, innerPrecedence, group, startRepetitions, endRepetitions, isKeyword);
     }
@@ -333,9 +332,6 @@ public class ParseState implements Mergeable<ParseState> {
             token = result.addMerge(token, nextToken.prepend("-"));
         }
         Integer inner = innerPrecedence();
-        if (token.type() == TokenType.NAME && (transitions().get(Type.VARIABLE) != null || transitions().get(Type.TYPE) != null)) {
-            inner = Integer.MAX_VALUE;
-        }
         Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner == null ? Integer.MIN_VALUE : inner, result.context()));
         if (node != null) {
             result.add(node);

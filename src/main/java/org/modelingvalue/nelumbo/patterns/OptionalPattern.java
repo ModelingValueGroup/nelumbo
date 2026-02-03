@@ -63,8 +63,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public Pattern setPresedence(List<Integer> precedence, int[] p) {
-        return set(0, optional().setPresedence(precedence, p));
+    public Pattern setPresedence(int precedence) {
+        return set(0, optional().setPresedence(precedence));
     }
 
     @Override
