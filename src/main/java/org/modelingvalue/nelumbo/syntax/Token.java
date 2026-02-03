@@ -345,7 +345,7 @@ public final class Token implements AstElement {
         return null;
     }
 
-    public Token referenced() {
+    public Token definition() {
         Pattern decl = declaration();
         return decl != null ? decl.firstToken() : null;
     }

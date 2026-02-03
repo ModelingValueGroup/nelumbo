@@ -124,11 +124,11 @@ public class NelumboEditor {
      * Example .nl files bundled with the application: {category, filename, displayName}.
      */
     private static final String[][] EXAMPLE_RESOURCES = {
-            // Library files
-            {"Library", "logic/logic.nl", "Logic"},
-            {"Library", "integers/integers.nl", "Integers"},
-            {"Library", "strings/strings.nl", "Strings"},
-            {"Library", "collections/collections.nl", "Collections"},
+            // Library files - display names match import names (e.g., "nelumbo.logic")
+            {"Library", "logic/logic.nl", "nelumbo.logic"},
+            {"Library", "integers/integers.nl", "nelumbo.integers"},
+            {"Library", "strings/strings.nl", "nelumbo.strings"},
+            {"Library", "collections/collections.nl", "nelumbo.collections"},
             // Examples
             {"Examples", "familyTest.nl", "Family"},
             {"Examples", "friendsTest.nl", "Friends"},
@@ -211,6 +211,41 @@ public class NelumboEditor {
      */
     public void openExample(String resourcePath, String displayName) {
         windowManager.createExampleWindow(resourcePath, displayName);
+    }
+
+    /**
+     * Finds the resource path for an example by its display name.
+     * Returns null if no example with that name exists.
+     */
+    public String findExamplePath(String displayName) {
+        for (String[] entry : EXAMPLE_RESOURCES) {
+            if (entry[2].equals(displayName)) {
+                String category = entry[0];
+                String fileName = entry[1];
+                return category.equals("Library")
+                        ? NelumboConstants.NELUMBO_LIBRARY + fileName
+                        : NelumboConstants.NELUMBO_EXAMPLES + fileName;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolves an import name to its display name and resource path.
+     * Returns a String array [displayName, resourcePath], or null if not found.
+     */
+    public String[] resolveImportName(String importName) {
+        // Search in EXAMPLE_RESOURCES for a matching entry by display name
+        for (String[] entry : EXAMPLE_RESOURCES) {
+            if (entry[2].equals(importName)) {
+                String category     = entry[0];
+                String resourcePath = category.equals("Library")
+                        ? NelumboConstants.NELUMBO_LIBRARY + entry[1]
+                        : NelumboConstants.NELUMBO_EXAMPLES + entry[1];
+                return new String[]{importName, resourcePath};
+            }
+        }
+        return null;
     }
 
     /**

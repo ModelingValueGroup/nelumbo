@@ -51,6 +51,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -88,7 +91,6 @@ import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
  */
 public class EditorWindow extends WindowAdapter implements WindowListener, Runnable, DocumentListener, EditorImportResolver.ImportChangeListener {
 
-    private static final String EDITOR_FILE_NAME   = "editor.nl";
     private static final String MESSAGES_FILE_NAME = "messages.nl";
     private final static String INCREASE           = "INCREASE";
     private final static String DECREASE           = "DECREASE";
@@ -122,6 +124,9 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     private TokenizerResult                  lastTokenizerResult;
     private ParserResult                     lastParserResult;
     private Set<String>                      currentImports = new HashSet<>();  // Tracks current editor imports
+    private int                              currentUnderlineStart = -1;        // Start index of current underline (-1 if none)
+    private int                              currentUnderlineEnd   = -1;        // End index of current underline (-1 if none)
+    private java.awt.Point                   lastMousePosition;                 // Last mouse position for key-press underline update
 
     /**
      * Creates a new regular editor window with a pre-assigned window number.
@@ -163,6 +168,17 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
     public KnowledgeBase getKnowledgeBase() {
         return knowledgeBase;
+    }
+
+    /**
+     * Returns the file name used for tokenizing this window's content.
+     * Each window uses a unique file name to enable cross-window go-to-definition.
+     */
+    public String getEditorFileName() {
+        if (isExample && exampleDisplayName != null) {
+            return exampleDisplayName + ".nl";
+        }
+        return "editor.nelumbo_" + windowNumber + ".nl";
     }
 
     /**
@@ -271,6 +287,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         new DialogBoundsUtil(frame, NelumboEditor.class, "window." + windowId, null);
         frame.setVisible(true);
 
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(this);
         textPane.getDocument().addDocumentListener(this);
 
@@ -299,6 +316,357 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
         // Set focus on text area
         textPane.requestFocusInWindow();
+
+        // Add mouse listener for go-to-definition (command-click on Mac, control-click on Windows)
+        textPane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                boolean isMac        = System.getProperty("os.name").toLowerCase().contains("mac");
+                boolean modifierHeld = isMac ? (e.getModifiersEx() & InputEvent.META_DOWN_MASK) != 0 : (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0;
+                if (modifierHeld) {
+                    goToDefinition(e);
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                clearUnderline();
+            }
+        });
+
+        // Add mouse motion listener for underline hint when hovering with modifier key
+        textPane.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                updateUnderlineHint(e);
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                clearUnderline();
+            }
+        });
+
+        // Add key listener to update underline when modifier key state changes
+        textPane.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (isGoToDefinitionModifier(e)) {
+                    updateUnderlineHintFromLastPosition();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (isGoToDefinitionModifier(e)) {
+                    clearUnderline();
+                }
+            }
+
+            private boolean isGoToDefinitionModifier(KeyEvent e) {
+                boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
+                return isMac ? e.getKeyCode() == KeyEvent.VK_META : e.getKeyCode() == KeyEvent.VK_CONTROL;
+            }
+        });
+    }
+
+    /**
+     * Handles go-to-definition when the user command-clicks (Mac) or control-clicks (Windows) on a token.
+     * Navigates to the definition of the token if one exists, including in other editor windows.
+     * Also handles import statements by navigating to the imported file.
+     */
+    private void goToDefinition(MouseEvent e) {
+        if (lastTokenizerResult == null) {
+            return;
+        }
+
+        // Get the character position at the click location
+        int clickPosition = textPane.viewToModel2D(e.getPoint());
+        if (clickPosition < 0) {
+            return;
+        }
+
+        // Check if click is within an Import statement - if so, navigate to the import source
+        Import imp = findImportAtPosition(clickPosition);
+        if (imp != null) {
+            navigateToImport(imp);
+            return;
+        }
+
+        // Find the token at this position
+        Token clickedToken = null;
+        for (Token t = lastTokenizerResult.firstAll(); t != null; t = t.nextAll()) {
+            if (t.index() <= clickPosition && clickPosition < t.indexEnd()) {
+                clickedToken = t;
+                break;
+            }
+        }
+
+        if (clickedToken == null) {
+            return;
+        }
+
+        // Get the referenced (definition) token
+        Token referenced = clickedToken.definition();
+        if (referenced == null) {
+            return;
+        }
+
+        // Check if the definition is in a different file
+        String referencedFileName = referenced.fileName();
+        String currentFileName    = getEditorFileName();
+
+        if (referencedFileName != null && !referencedFileName.equals(currentFileName)) {
+            // Definition is in another window - find and navigate to it
+            EditorWindow targetWindow = findWindowByFileName(referencedFileName);
+            if (targetWindow != null) {
+                navigateToTokenInWindow(targetWindow, referenced);
+            }
+        } else {
+            // Definition is in this window - navigate locally
+            navigateToTokenInWindow(this, referenced);
+        }
+    }
+
+    /**
+     * Finds the Import node at the given character position by searching through parser results.
+     * Returns null if no Import is found at that position.
+     */
+    private Import findImportAtPosition(int position) {
+        if (lastParserResult == null) {
+            return null;
+        }
+        for (Node root : lastParserResult.roots()) {
+            Import found = findImportInNode(root, position);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Recursively searches for an Import node containing the given position.
+     */
+    private Import findImportInNode(Node node, int position) {
+        if (node instanceof Import imp) {
+            Token first = imp.firstToken();
+            Token last  = imp.lastToken();
+            if (first != null && last != null && first.index() <= position && position < last.indexEnd()) {
+                return imp;
+            }
+        }
+        // Search children
+        for (int i = 0; i < node.length(); i++) {
+            Object child = node.get(i);
+            if (child instanceof Node childNode) {
+                Import found = findImportInNode(childNode, position);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Navigates to the source of an import statement.
+     * For editor imports (editor.nelumbo_N), brings that editor window to front.
+     * For library/example imports, opens the corresponding window.
+     */
+    private void navigateToImport(Import imp) {
+        String importName = imp.name();
+        if (importName == null) {
+            return;
+        }
+
+        // Handle editor imports (editor.nelumbo_N)
+        if (importName.startsWith("editor.nelumbo_")) {
+            try {
+                String numberStr    = importName.substring("editor.nelumbo_".length());
+                int    windowNumber = Integer.parseInt(numberStr);
+                EditorWindow targetWindow = application.getWindowManager().getWindowByNumber(windowNumber);
+                if (targetWindow != null) {
+                    bringWindowToFront(targetWindow);
+                }
+            } catch (NumberFormatException ignored) {
+                // Not a valid editor window number
+            }
+            return;
+        }
+
+        // Resolve the import name to display name and resource path
+        String[] resolved = application.resolveImportName(importName);
+        if (resolved == null) {
+            return;
+        }
+        String displayName  = resolved[0];
+        String resourcePath = resolved[1];
+
+        // Check if a window with this display name is already open
+        String expectedFileName = displayName + ".nl";
+        for (EditorWindow window : application.getWindowManager().getWindowsInOrder()) {
+            if (expectedFileName.equals(window.getEditorFileName())) {
+                bringWindowToFront(window);
+                return;
+            }
+        }
+
+        // Open the library/example
+        application.openExample(resourcePath, displayName);
+    }
+
+    /**
+     * Finds the editor window that uses the given file name.
+     */
+    private EditorWindow findWindowByFileName(String fileName) {
+        // Try to extract window number from file name (format: "editor.nelumbo_N.nl")
+        if (fileName.startsWith("editor.nelumbo_") && fileName.endsWith(".nl")) {
+            try {
+                String numberStr    = fileName.substring("editor.nelumbo_".length(), fileName.length() - ".nl".length());
+                int    windowNumber = Integer.parseInt(numberStr);
+                return application.getWindowManager().getWindowByNumber(windowNumber);
+            } catch (NumberFormatException ignored) {
+                // Not a regular window file name
+            }
+        }
+
+        // Search all windows by their file name (for example windows)
+        for (EditorWindow window : application.getWindowManager().getWindowsInOrder()) {
+            if (fileName.equals(window.getEditorFileName())) {
+                return window;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Navigates to and selects the given token in the specified window.
+     */
+    private void navigateToTokenInWindow(EditorWindow targetWindow, Token token) {
+        JTextPane targetPane = targetWindow.textPane;
+        JFrame    targetFrame = targetWindow.frame;
+
+        int startPosition = token.index();
+        int endPosition   = token.indexEnd();
+        int docLength     = targetPane.getDocument().getLength();
+
+        if (startPosition >= 0 && endPosition <= docLength) {
+            // Bring the target window to front if it's a different window
+            if (targetWindow != this && targetFrame != null) {
+                targetFrame.toFront();
+                targetFrame.requestFocus();
+                if (targetFrame.getExtendedState() == JFrame.ICONIFIED) {
+                    targetFrame.setExtendedState(JFrame.NORMAL);
+                }
+            }
+
+            // Select the token
+            targetPane.setSelectionStart(startPosition);
+            targetPane.setSelectionEnd(endPosition);
+            targetPane.requestFocusInWindow();
+        }
+    }
+
+    /**
+     * Updates the underline hint based on mouse position and modifier key state.
+     */
+    private void updateUnderlineHint(MouseEvent e) {
+        lastMousePosition = e.getPoint();
+        boolean isMac        = System.getProperty("os.name").toLowerCase().contains("mac");
+        boolean modifierHeld = isMac ? (e.getModifiersEx() & InputEvent.META_DOWN_MASK) != 0 : (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0;
+
+        if (!modifierHeld) {
+            clearUnderline();
+            return;
+        }
+
+        updateUnderlineAtPosition(textPane.viewToModel2D(e.getPoint()));
+    }
+
+    /**
+     * Updates underline hint when modifier key is pressed, using the last known mouse position.
+     */
+    private void updateUnderlineHintFromLastPosition() {
+        if (lastMousePosition == null) {
+            return;
+        }
+        updateUnderlineAtPosition(textPane.viewToModel2D(lastMousePosition));
+    }
+
+    /**
+     * Updates the underline at the given character position.
+     * Underlines the full import statement if position is within an import,
+     * or a single token if it has a definition.
+     */
+    private void updateUnderlineAtPosition(int position) {
+        if (position < 0) {
+            clearUnderline();
+            return;
+        }
+
+        // First check if we're in an import statement - if so, underline the whole import
+        Import imp = findImportAtPosition(position);
+        if (imp != null) {
+            Token first = imp.firstToken();
+            Token last  = imp.lastToken();
+            if (first != null && last != null) {
+                int start = first.index();
+                int end   = last.indexEnd();
+                if (start != currentUnderlineStart || end != currentUnderlineEnd) {
+                    clearUnderline();
+                    setUnderline(start, end);
+                }
+                return;
+            }
+        }
+
+        // Check if there's a token with a definition at this position
+        if (lastTokenizerResult != null) {
+            for (Token t = lastTokenizerResult.firstAll(); t != null; t = t.nextAll()) {
+                if (t.index() <= position && position < t.indexEnd()) {
+                    if (t.definition() != null) {
+                        int start = t.index();
+                        int end   = t.indexEnd();
+                        if (start != currentUnderlineStart || end != currentUnderlineEnd) {
+                            clearUnderline();
+                            setUnderline(start, end);
+                        }
+                        return;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Nothing to underline
+        clearUnderline();
+    }
+
+    /**
+     * Clears the current underline, if any.
+     */
+    private void clearUnderline() {
+        if (currentUnderlineStart >= 0 && currentUnderlineEnd >= 0) {
+            StyledDocument     doc  = textPane.getStyledDocument();
+            SimpleAttributeSet attr = new SimpleAttributeSet();
+            StyleConstants.setUnderline(attr, false);
+            doc.setCharacterAttributes(currentUnderlineStart, currentUnderlineEnd - currentUnderlineStart, attr, false);
+            currentUnderlineStart = -1;
+            currentUnderlineEnd   = -1;
+        }
+    }
+
+    /**
+     * Underlines the given range.
+     */
+    private void setUnderline(int start, int end) {
+        StyledDocument     doc  = textPane.getStyledDocument();
+        SimpleAttributeSet attr = new SimpleAttributeSet();
+        StyleConstants.setUnderline(attr, true);
+        doc.setCharacterAttributes(start, end - start, attr, false);
+        currentUnderlineStart = start;
+        currentUnderlineEnd   = end;
     }
 
     private JMenuBar createMenuBar() {
@@ -335,7 +703,10 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         editMenu.add(undoMenuItem);
 
         redoMenuItem = new JMenuItem("Redo");
-        redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK));
+        boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
+        redoMenuItem.setAccelerator(isMac
+                ? KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK)
+                : KeyStroke.getKeyStroke('Y', InputEvent.CTRL_DOWN_MASK));
         redoMenuItem.addActionListener(e -> performRedo());
         redoMenuItem.setEnabled(false);
         editMenu.add(redoMenuItem);
@@ -537,8 +908,30 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     private void closeWindow() {
-        frame.setVisible(false);
-        frame.dispose();
+        if (confirmCloseIfEditable()) {
+            saveTextContent(getDocumentText(textPane));
+            saveDialogVisibility();
+            frame.setVisible(false);
+            frame.dispose();
+        }
+    }
+
+    /**
+     * Shows a confirmation dialog if this is an editable window.
+     * Returns true if the window should be closed, false to cancel.
+     */
+    private boolean confirmCloseIfEditable() {
+        if (textPane.isEditable()) {
+            int result = JOptionPane.showConfirmDialog(
+                    frame,
+                    "The contents of this window will be lost. Are you sure you want to close it?",
+                    "Close Window",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return result == JOptionPane.YES_OPTION;
+        }
+        return true;  // Read-only windows can be closed without confirmation
     }
 
     /**
@@ -599,11 +992,13 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
     @Override
     public synchronized void windowClosing(WindowEvent evt) {
-        // Save state before closing (content is only saved for non-example windows)
-        saveTextContent(getDocumentText(textPane));
-        saveDialogVisibility();
-        frame.setVisible(false);
-        frame.dispose();
+        if (confirmCloseIfEditable()) {
+            // Save state before closing (content is only saved for non-example windows)
+            saveTextContent(getDocumentText(textPane));
+            saveDialogVisibility();
+            frame.setVisible(false);
+            frame.dispose();
+        }
     }
 
     @Override
@@ -725,7 +1120,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     private void execute() {
         prepareForExecute();
         String          text            = getDocumentText(textPane);
-        Tokenizer       tokenizer       = new Tokenizer(text, EDITOR_FILE_NAME);
+        Tokenizer       tokenizer       = new Tokenizer(text, getEditorFileName());
         TokenizerResult tokenizerResult = tokenizer.tokenize();
         ParserResult    result          = new Parser(tokenizerResult).parseMutipleNonThrowing();
         showColors(textPane, tokenizerResult);
@@ -766,6 +1161,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         knowledgeBase.init();
         textPane.getHighlighter().removeAllHighlights();
         messagesPane.getHighlighter().removeAllHighlights();
+        currentUnderlineStart = -1;  // Clear underline tracking since styles will be reset
+        currentUnderlineEnd   = -1;
         StyledDocument     doc         = textPane.getStyledDocument();
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
