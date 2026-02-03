@@ -41,7 +41,7 @@ tasks {
     register<ShadowJar>("editorJar") {
         archiveClassifier.set("editor")
         manifest {
-            attributes["Main-Class"] = "org.modelingvalue.nelumbo.NelumboEditor"
+            attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboEditor"
         }
         from(sourceSets.main.get().output)
         configurations = listOf(project.configurations.runtimeClasspath.get())
