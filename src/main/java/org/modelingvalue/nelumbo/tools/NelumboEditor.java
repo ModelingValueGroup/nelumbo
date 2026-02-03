@@ -55,6 +55,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Taskbar;
 import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.WindowAdapter;
@@ -973,6 +974,15 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             dialog.dispose();
         });
 
+        JButton copySourceButton = new JButton("Copy as Java Source");
+        copySourceButton.addActionListener(e -> {
+            String source = generateColorSchemeSource();
+            StringSelection selection = new StringSelection(source);
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
+            JOptionPane.showMessageDialog(dialog, "Color scheme copied to clipboard as Java source code.", "Copied", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        buttonPanel.add(copySourceButton);
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
@@ -986,6 +996,29 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         // Calculate luminance to determine if we should use black or white text
         double luminance = (0.299 * color.getRed() + 0.587 * color.getGreen() + 0.114 * color.getBlue()) / 255;
         return luminance > 0.5 ? Color.BLACK : Color.WHITE;
+    }
+
+    private String generateColorSchemeSource() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.ofEntries(");
+        var entries = TOKEN_COLORS.entrySet().stream()
+                .sorted(Comparator.comparingInt(e -> e.getKey().ordinal()))
+                .toList();
+        for (int i = 0; i < entries.size(); i++) {
+            var entry = entries.get(i);
+            TokenType tokenType = entry.getKey();
+            ColorScheme scheme = entry.getValue();
+            String fg = scheme.foreground() != null ? String.format("0x%06x", scheme.foreground().getRGB() & 0xFFFFFF) : "null";
+            String bg = scheme.background() != null ? String.format("0x%06x", scheme.background().getRGB() & 0xFFFFFF) : "null";
+            String suffix = i < entries.size() - 1 ? ")," : ")";
+            sb.append(String.format("%n            Map.entry(TokenType.%-16s new ColorScheme(%s, %s, %s, %s, %s, %s, %s)%s",
+                    tokenType.name() + ",",
+                    fg, bg,
+                    scheme.bold(), scheme.italic(), scheme.underline(), scheme.subscript(), scheme.superscript(),
+                    suffix));
+        }
+        sb.append("\n    );");
+        return sb.toString();
     }
 
     // ViewFactory that prevents line wrapping in JTextPane
