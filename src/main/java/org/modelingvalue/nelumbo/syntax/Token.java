@@ -50,6 +50,7 @@ public final class Token implements AstElement {
     private Token           nextAll;
     private Token           previousAll;
 
+    private ParseState      state;
     private Node            node;
     private boolean         isTextMatch;
     private boolean         isKeyword;
@@ -326,6 +327,14 @@ public final class Token implements AstElement {
         this.node = node;
     }
 
+    public ParseState getState() {
+        return state;
+    }
+
+    public void setState(ParseState state) {
+        this.state = state;
+    }
+
     public Pattern declaration() {
         if (node != null) {
             Functor functor = node.functor();
@@ -382,6 +391,10 @@ public final class Token implements AstElement {
     @Override
     public void deparse(StringBuffer sb) {
         sb.append(text);
+    }
+
+    public List<String> completions() {
+        return state != null ? state.transitions().toKeys().filter(String.class).sorted().asList() : List.of();
     }
 
 }

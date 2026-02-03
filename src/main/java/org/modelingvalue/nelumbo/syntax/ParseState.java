@@ -293,7 +293,10 @@ public class ParseState implements Mergeable<ParseState> {
             if (element != null) {
                 result.add(element);
             }
-            return next.parse(token.next(), result, repetitions, pre);
+            token.setState(next);
+            if (next.parse(token.next(), result, repetitions, pre)) {
+                return true;
+            }
         }
         return false;
 
@@ -338,6 +341,7 @@ public class ParseState implements Mergeable<ParseState> {
             if (node instanceof Variable) {
                 ParseState next = transitions().get(Type.VARIABLE);
                 if (next != null) {
+                    token.setState(next);
                     if (next.parse(node.nextToken(), result, repetitions, pre)) {
                         return true;
                     }
@@ -346,6 +350,7 @@ public class ParseState implements Mergeable<ParseState> {
             for (Type sup : node.type().allSupers()) {
                 ParseState next = transitions().get(sup);
                 if (next != null) {
+                    token.setState(next);
                     if (next.parse(node.nextToken(), result, repetitions, pre)) {
                         return true;
                     } else {
@@ -358,6 +363,7 @@ public class ParseState implements Mergeable<ParseState> {
                 Variable var = ((Type) ts.getKey()).variable();
                 Type type = result.getTypeArg(var);
                 if (type != null) {
+                    token.setState(ts.getValue());
                     if (type.isAssignableFrom(node.type()) && ts.getValue().parse(node.nextToken(), result, repetitions, pre)) {
                         return true;
                     } else {
@@ -366,6 +372,7 @@ public class ParseState implements Mergeable<ParseState> {
                     }
                 } else {
                     result.putTypeArg(var, node.type());
+                    token.setState(ts.getValue());
                     if (ts.getValue().parse(node.nextToken(), result, repetitions, pre)) {
                         return true;
                     }
