@@ -76,8 +76,8 @@
 
     // Identity
 
-	Test :: Object
-	Test ::= T1, T2
+    Test :: Object
+    Test ::= T1, T2
 
     T1=T1           ? [()][]
     T1=T2           ? [][()]
@@ -96,15 +96,15 @@
     a!=T1           ? [..][(a=T1)]
     T1!=a           ? [..][(a=T1)]   
    
-	a=T1|a=T2       ? [(a=T1),(a=T2)][..]
-	a=T1&a=T2       ? [][(a=T1),(a=T2),..]
+    a=T1|a=T2       ? [(a=T1),(a=T2)][..]
+    a=T1&a=T2       ? [][(a=T1),(a=T2),..]
 
-	!(a!=T1&a!=T2)  ? [(a=T1),(a=T2)][..]
-	!(a!=T1|a!=T2)  ? [][(a=T1),(a=T2),..]
+    !(a!=T1&a!=T2)  ? [(a=T1),(a=T2)][..]
+    !(a!=T1|a!=T2)  ? [][(a=T1),(a=T2),..]
 	
-	// Predicate Logic
+    // Predicate Logic
 	
-	E[a](a=T1|a=T2) ? [()][]
+    E[a](a=T1|a=T2) ? [()][]
     A[a](a=T1&a=T2) ? [][()]
     
     !A[a](a!=T1&a!=T2) ? [()][]

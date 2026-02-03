@@ -111,7 +111,8 @@ public class NodeTypePattern extends Pattern {
             Functor functor = node.functor();
             ParseState post = functor != null ? functor.postStart() : null;
             if (post != null) {
-                parenthetical = precedence() > post.leftPrecedence();
+                Integer inner = precedence();
+                parenthetical = inner != null && inner > post.leftPrecedence();
             }
             if (parenthetical) {
                 sb.append('(');
