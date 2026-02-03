@@ -16,96 +16,58 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTextPane;
-import javax.swing.KeyStroke;
 import javax.swing.UIManager;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.StyledEditorKit;
-import javax.swing.text.TextAction;
 import javax.swing.text.ViewFactory;
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Taskbar;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Serial;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.prefs.Preferences;
 
 import com.formdev.flatlaf.FlatLightLaf;
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Evaluatable;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Query;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
-import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
-import org.modelingvalue.nelumbo.syntax.Tokenizer;
-import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
-public class NelumboEditor extends WindowAdapter implements WindowListener, Runnable, DocumentListener {
+/**
+ * Main application controller for the Nelumbo Editor.
+ * Manages global settings (look and feel, token colors) and coordinates
+ * multiple editor windows through the WindowManager.
+ */
+public class NelumboEditor {
 
-    private static final String                  EDITOR_FILE_NAME   = "editor.nl";
-    private static final String                  MESSAGES_FILE_NAME = "messages.nl";
-    private final static String                  INCREASE           = "INCREASE";
-    private final static String                  DECREASE           = "DECREASE";
-
-    private final static DefaultHighlightPainter redPainter         = new DefaultHighlightPainter(new Color(0xffaaaa));
-    private final static DefaultHighlightPainter greenPainter       = new DefaultHighlightPainter(new Color(0xaaffaa));
+    private static NelumboEditor instance;
 
     /**
      * Defines a color scheme for a token type with foreground and background colors,
      * and text style attributes (bold, italic, underline, subscript, superscript).
      */
-    private record ColorScheme(Color foreground, Color background, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript, SimpleAttributeSet attr) {
+    public record ColorScheme(Color foreground, Color background, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript, SimpleAttributeSet attr) {
 
         public ColorScheme(Integer fore, Integer back, boolean bold, boolean italic, boolean underline, boolean subscript, boolean superscript) {
             this(fore == null ? null : new Color(fore), back == null ? null : new Color(back), bold, italic, underline, subscript, superscript, makeAttSet(fore, back, bold, italic, underline, subscript, superscript));
@@ -126,114 +88,90 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             StyleConstants.setSuperscript(a, superscript);
             return a;
         }
-
     }
 
-    private static final String[]                    FONT_NAMES               = {                                        //
-            "input mono",                                                                                                //
-            "dejavu sans mono",                                                                                          //
-            "overpass mono",                                                                                             //
-            Font.MONOSPACED                                                                                              //
+    private static final String[] FONT_NAMES = {
+            "input mono",
+            "dejavu sans mono",
+            "overpass mono",
+            Font.MONOSPACED
     };
 
     /**
      * Default color schemes for token types with style attributes
      */
-    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS     = Map.ofEntries(                           //
-            Map.entry(TokenType.STRING, new ColorScheme(0x006633, null, false, false, false, false, false)),             //
-            Map.entry(TokenType.DECIMAL, new ColorScheme(0x000077, null, false, false, false, false, false)),            //
-            Map.entry(TokenType.NUMBER, new ColorScheme(0x000077, null, false, false, false, false, false)),             //
-            Map.entry(TokenType.NAME, new ColorScheme(0x0000ff, null, false, false, false, false, false)),               //
-            Map.entry(TokenType.END_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)),   //
-            Map.entry(TokenType.IN_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)),    //
-            Map.entry(TokenType.OPERATOR, new ColorScheme(0x333333, null, true, false, false, false, false)),            //
-            Map.entry(TokenType.ERROR, new ColorScheme(0xff0000, 0xffdddd, false, false, false, false, false)),          //
-            Map.entry(TokenType.VARIABLE, new ColorScheme(0x339900, null, false, false, false, false, false)),           //
-            Map.entry(TokenType.KEYWORD, new ColorScheme(0x0000ff, null, true, false, false, false, false)),             //
-            Map.entry(TokenType.TYPE, new ColorScheme(0x880088, null, false, false, false, false, false)),               //
+    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.ofEntries(
+            Map.entry(TokenType.STRING, new ColorScheme(0x006633, null, false, false, false, false, false)),
+            Map.entry(TokenType.DECIMAL, new ColorScheme(0x000077, null, false, false, false, false, false)),
+            Map.entry(TokenType.NUMBER, new ColorScheme(0x000077, null, false, false, false, false, false)),
+            Map.entry(TokenType.NAME, new ColorScheme(0x0000ff, null, false, false, false, false, false)),
+            Map.entry(TokenType.END_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)),
+            Map.entry(TokenType.IN_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)),
+            Map.entry(TokenType.OPERATOR, new ColorScheme(0x333333, null, true, false, false, false, false)),
+            Map.entry(TokenType.ERROR, new ColorScheme(0xff0000, 0xffdddd, false, false, false, false, false)),
+            Map.entry(TokenType.VARIABLE, new ColorScheme(0x339900, null, false, false, false, false, false)),
+            Map.entry(TokenType.KEYWORD, new ColorScheme(0x0000ff, null, true, false, false, false, false)),
+            Map.entry(TokenType.TYPE, new ColorScheme(0x880088, null, false, false, false, false, false)),
             Map.entry(TokenType.META_OPERATOR, new ColorScheme(0x00cccc, 0xffffff, false, false, false, false, false)));
 
     /**
      * Map from TokenType to ColorScheme defining how each token type should be colored.
      * This is mutable so users can customize colors.
      */
-    private static final Map<TokenType, ColorScheme> TOKEN_COLORS             = new HashMap<>(DEFAULT_TOKEN_COLORS);
+    private static final Map<TokenType, ColorScheme> TOKEN_COLORS = new HashMap<>(DEFAULT_TOKEN_COLORS);
 
-    private static final String                      PREF_TEXT_CONTENT        = "textContent";
-    private static final String                      PREF_CARET_POSITION      = "caretPosition";
-    private static final String                      PREF_SELECTION_START     = "selectionStart";
-    private static final String                      PREF_SELECTION_END       = "selectionEnd";
-    private static final String                      PREF_TOKEN_COLOR_PREFIX  = "tokenColor.";
-    private static final String                      PREF_TREE_VIEWER_VISIBLE = "treeViewerVisible";
-    private static final String                      PREF_KB_VIEWER_VISIBLE   = "knowledgeBaseViewerVisible";
+    private static final String PREF_TOKEN_COLOR_PREFIX = "tokenColor.";
 
-    public static void main(String[] arg) {
-        new NelumboEditor();
+    /**
+     * Example .nl files bundled with the application: {category, filename, displayName}.
+     */
+    private static final String[][] EXAMPLE_RESOURCES = {
+            // Library files
+            {"Library", "logic/logic.nl", "Logic"},
+            {"Library", "integers/integers.nl", "Integers"},
+            {"Library", "strings/strings.nl", "Strings"},
+            {"Library", "collections/collections.nl", "Collections"},
+            // Examples
+            {"Examples", "familyTest.nl", "Family"},
+            {"Examples", "friendsTest.nl", "Friends"},
+            {"Examples", "fibonacciTest.nl", "Fibonacci"},
+            {"Examples", "belastingTest.nl", "Belasting"},
+            {"Examples", "whoIsTest.nl", "Who Is"},
+            {"Examples", "logicTest.nl", "Logic Test"},
+            {"Examples", "integersTest.nl", "Integers Test"},
+            {"Examples", "stringsTest.nl", "Strings Test"},
+            {"Examples", "collectionsTest.nl", "Collections Test"},
+            {"Examples", "transformationTest.nl", "Transformation"},
+            {"Examples", "queryOnly.nl", "Query Only"},
+    };
+
+    private final Preferences    preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+    private final WindowManager  windowManager;
+
+    public WindowManager getWindowManager() {
+        return windowManager;
     }
 
-    //===========================================================================================================================================
-    private KnowledgeBase             knowledgeBase;
-    private JFrame                    frame;
-    private JTextPane                 messagesPane;
-    private JTextPane                 textPane;
-    private boolean                   quit;
-    private boolean                   refreshRequested;
-    private final Preferences         preferences = Preferences.userNodeForPackage(NelumboEditor.class);
-    private TreeViewerDialog          treeViewerDialog;
-    private KnowledgeBaseViewerDialog knowledgeBaseViewerDialog;
-    private TokenizerResult           lastTokenizerResult;
-    private ParserResult              lastParserResult;
+    public static void main(String[] args) {
+        instance = new NelumboEditor();
+    }
+
+    public static NelumboEditor getInstance() {
+        return instance;
+    }
 
     public NelumboEditor() {
-        loadTokenColors(); // Load saved colors before creating UI
-        initWindow();
-        initActions();
-        loadTextContent();
-        restoreDialogVisibility(); // Restore dialogs that were open last session
-        initKnowledgeBase(); // execution stays here until the user quits the application. This is by design!
-        // only reaching this point after the user quits
-    }
+        initLookAndFeel();
+        loadTokenColors();
+        windowManager = new WindowManager(this);
+        windowManager.restoreWindows();
 
-    private static class NonWrappingJTextPane extends JTextPane {
-        @Serial
-        private static final long serialVersionUID = 1L;
-
-        public NonWrappingJTextPane(boolean editable, int backgroundRgb) {
-            setEditorKit(new StyledEditorKit() {
-                @Serial
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public ViewFactory getViewFactory() {
-                    return new NoWrapViewFactory();
-                }
-            });
-            setFont(findFont());
-            setMargin(new Insets(15, 15, 15, 15));
-            setEditable(editable);
-            setBackground(new Color(backgroundRgb));
-            // Set line spacing for better readability
-            StyledDocument doc = getStyledDocument();
-            SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
-            StyleConstants.setLineSpacing(paragraphStyle, 0.2f); // 20% extra spacing
-            doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportWidth() {
-            return false; // Disable line wrapping
-        }
-
-        @Override
-        public void setSize(Dimension d) {
-            if (d.width < getParent().getSize().width) {
-                d.width = getParent().getSize().width;
-            }
-            super.setSize(d);
+        if (!windowManager.hasOpenWindows()) {
+            windowManager.createNewWindow();
         }
     }
 
-    private void initWindow() {
+    private void initLookAndFeel() {
         // Use native macOS menu bar
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("apple.awt.application.name", "Nelumbo");
@@ -247,402 +185,41 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Unable to set FlatLaf look and feel", "Warning", JOptionPane.WARNING_MESSAGE);
         }
-        URL resource = getClass().getResource("/org/modelingvalue/nelumbo/nelumbo.png");
-        ImageIcon icon = resource != null ? new ImageIcon(resource) : new ImageIcon();
-        frame = new JFrame("Nelumbo Editor");
-        frame.setIconImage(icon.getImage());
-        if (Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE)) {
-            Taskbar.getTaskbar().setIconImage(icon.getImage());
-        }
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension frameSize = new Dimension(screenSize.width / 2, screenSize.height / 2);
-        frame.setPreferredSize(frameSize);
-        frame.setSize(frameSize);
-
-        textPane = new NonWrappingJTextPane(true, 0xffffff);
-        messagesPane = new NonWrappingJTextPane(false, 0xF5F5F5);
-
-        // Create scroll panes with borders
-        JScrollPane textScroll = new JScrollPane(textPane);
-        JScrollPane messageScroll = new JScrollPane(messagesPane);
-        textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
-        messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));
-        messageScroll.getVerticalScrollBar().setModel(textScroll.getVerticalScrollBar().getModel());
-
-        // Create split pane with modern styling
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, textScroll, messageScroll);
-        split.setDividerLocation(frameSize.width / 4 * 3);
-        split.setDividerSize(8);
-        split.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        split.setContinuousLayout(true);
-
-        // Layout
-        frame.getContentPane().setLayout(new BorderLayout());
-        frame.getContentPane().add(split, BorderLayout.CENTER);
-
-        // Setup menu bar before making frame visible
-        JMenuBar menuBar = new JMenuBar();
-        JMenu colorsMenu = new JMenu("Colors");
-        JMenuItem configureColors = new JMenuItem("Configure Token Colors...");
-        configureColors.addActionListener(e -> showColorConfigDialog());
-
-        JMenuItem resetColors = new JMenuItem("Reset to Defaults");
-        resetColors.addActionListener(e -> resetTokenColors());
-
-        colorsMenu.add(configureColors);
-        colorsMenu.add(resetColors);
-        menuBar.add(colorsMenu);
-
-        // View menu with Tree Viewer and Knowledge Base Viewer
-        JMenu viewMenu = new JMenu("View");
-        JMenuItem treeViewerItem = new JMenuItem("Tree Viewer...");
-        treeViewerItem.setAccelerator(KeyStroke.getKeyStroke('T', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        treeViewerItem.addActionListener(e -> toggleTreeViewer());
-        viewMenu.add(treeViewerItem);
-
-        JMenuItem knowledgeBaseViewerItem = new JMenuItem("Knowledge Base Viewer...");
-        knowledgeBaseViewerItem.setAccelerator(KeyStroke.getKeyStroke('K', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        knowledgeBaseViewerItem.addActionListener(e -> toggleKnowledgeBaseViewer());
-        viewMenu.add(knowledgeBaseViewerItem);
-
-        menuBar.add(viewMenu);
-
-        // Examples menu
-        JMenu examplesMenu = createExamplesMenu();
-        menuBar.add(examplesMenu);
-
-        frame.setJMenuBar(menuBar);
-
-        new DialogBoundsUtil(frame, NelumboEditor.class, "editor", null);
-        frame.setVisible(true);
-
-        frame.addWindowListener(this);
-        textPane.getDocument().addDocumentListener(this);
-
-        // Set focus on text area
-        textPane.requestFocusInWindow();
     }
 
-    private static Font findFont() {
-        Font font;
-        for (String fontName : FONT_NAMES) {
-            font = new Font(fontName, Font.BOLD, 14);
-            if (font.getFamily().toLowerCase().contains(fontName)) {
-                return font;
-            }
-        }
-        return new Font(Font.MONOSPACED, Font.PLAIN, 14);
+    /**
+     * Creates a new editor window.
+     */
+    public void createNewWindow() {
+        windowManager.createNewWindow();
     }
 
-    private void initActions() {
-        textPane.getInputMap().put(KeyStroke.getKeyStroke('+', InputEvent.CTRL_DOWN_MASK), INCREASE);
-        textPane.getInputMap().put(KeyStroke.getKeyStroke('=', InputEvent.CTRL_DOWN_MASK), INCREASE);
-        textPane.getInputMap().put(KeyStroke.getKeyStroke('-', InputEvent.CTRL_DOWN_MASK), DECREASE);
-        textPane.getInputMap().put(KeyStroke.getKeyStroke('_', InputEvent.CTRL_DOWN_MASK), DECREASE);
-
-        textPane.getInputMap().put(KeyStroke.getKeyStroke('+', InputEvent.META_DOWN_MASK), INCREASE);
-        textPane.getInputMap().put(KeyStroke.getKeyStroke('=', InputEvent.META_DOWN_MASK), INCREASE);
-        textPane.getInputMap().put(KeyStroke.getKeyStroke('-', InputEvent.META_DOWN_MASK), DECREASE);
-        textPane.getInputMap().put(KeyStroke.getKeyStroke('_', InputEvent.META_DOWN_MASK), DECREASE);
-
-        textPane.getActionMap().put(INCREASE, new TextAction(INCREASE) {
-            @Serial
-            private static final long serialVersionUID = -425923171136898022L;
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (textPane == getTextComponent(e)) {
-                    increase();
-                }
-            }
-        });
-        textPane.getActionMap().put(DECREASE, new TextAction(DECREASE) {
-            @Serial
-            private static final long serialVersionUID = 3357017446274657221L;
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (textPane == getTextComponent(e)) {
-                    decrease();
-                }
-            }
-        });
+    /**
+     * Opens an example in a new window.
+     */
+    public void openExample(String resourcePath, String displayName) {
+        windowManager.createExampleWindow(resourcePath, displayName);
     }
 
-    private void initKnowledgeBase() {
-        KnowledgeBase.BASE.run(this);
+    /**
+     * Called when a window is closed.
+     */
+    public void windowClosed(EditorWindow window) {
+        windowManager.windowClosed(window);
     }
 
-    private void increase() {
-        Font font = textPane.getFont();
-        float newSize = Math.min(100f, font.getSize() * 1.2f);
-        font = font.deriveFont(newSize);
-        textPane.setFont(font);
-        messagesPane.setFont(font);
-    }
-
-    private void decrease() {
-        Font font = textPane.getFont();
-        float newSize = Math.max(7f, font.getSize() / 1.2f);
-        font = font.deriveFont(newSize);
-        textPane.setFont(font);
-        messagesPane.setFont(font);
-    }
-
-    @Override
-    public synchronized void windowClosed(WindowEvent evt) {
-        quit = true;
-        refresh();
+    /**
+     * Requests application quit.
+     */
+    public void requestQuit() {
+        windowManager.saveAllWindows();
         System.exit(0);
     }
 
-    @Override
-    public synchronized void windowClosing(WindowEvent evt) {
-        frame.setVisible(false);
-        frame.dispose();
-    }
+    // ==================== Token Colors ====================
 
-    @Override
-    public void run() {
-        knowledgeBase = KnowledgeBase.CURRENT.get();
-        while (!quit) {
-            execute();
-            waitForRefreshRequest();
-        }
-    }
-
-    private void waitForRefreshRequest() {
-        if (!quit) {
-            synchronized (this) {
-                if (!refreshRequested) {
-                    try {
-                        wait(1_000_000);
-                    } catch (InterruptedException ie) {
-                        // ignore
-                    }
-                }
-                refreshRequested = false;
-            }
-        }
-    }
-
-    private void refresh() {
-        synchronized (this) {
-            refreshRequested = true;
-            notifyAll();
-        }
-    }
-
-    private void execute() {
-        prepareForExecute();
-        String text = getDocumentText(textPane);
-        Tokenizer tokenizer = new Tokenizer(text, EDITOR_FILE_NAME);
-        TokenizerResult tokenizerResult = tokenizer.tokenize();
-        ParserResult result = new Parser(tokenizerResult).parseMutipleNonThrowing();
-        showColors(textPane, tokenizerResult);
-        showResults(result);
-        saveTextContent(text);
-
-        // Store results for tree viewer
-        lastTokenizerResult = tokenizerResult;
-        lastParserResult = result;
-
-        // Update tree viewer if visible
-        if (treeViewerDialog != null && treeViewerDialog.isVisible()) {
-            treeViewerDialog.update(tokenizerResult, result);
-        }
-
-        // Update knowledge base viewer if visible
-        if (knowledgeBaseViewerDialog != null && knowledgeBaseViewerDialog.isVisible()) {
-            knowledgeBaseViewerDialog.update(knowledgeBase);
-        }
-    }
-
-    private void showMessageColors() {
-        String text = getDocumentText(messagesPane);
-        Tokenizer tokenizer = new Tokenizer(text, MESSAGES_FILE_NAME);
-        TokenizerResult tokenizerResult = tokenizer.tokenize();
-        showColors(messagesPane, tokenizerResult);
-    }
-
-    private void prepareForExecute() {
-        knowledgeBase.init();
-        textPane.getHighlighter().removeAllHighlights();
-        messagesPane.getHighlighter().removeAllHighlights();
-        StyledDocument doc = textPane.getStyledDocument();
-        SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
-        StyleConstants.setForeground(defaultAttr, Color.BLACK);
-        doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
-        messagesPane.setText("");
-    }
-
-    private void showColors(JTextPane pane, TokenizerResult tokenizerResult) {
-        if (tokenizerResult != null) {
-            for (Token t = tokenizerResult.firstAll(); t != null; t = t.nextAll()) {
-                ColorScheme colorScheme = TOKEN_COLORS.get(t.colorType());
-                if (colorScheme != null) {
-                    SimpleAttributeSet attr = colorScheme.attr();
-                    pane.getStyledDocument().setCharacterAttributes(t.index(), t.text().length(), attr, false);
-                }
-            }
-        }
-    }
-
-    private record Highlight(int index, int length, String error) {
-    }
-
-    private void showResults(ParserResult result) {
-        List<ParseException> exceptions = result.exceptions();
-        if (exceptions.isEmpty()) {
-            ParserResult throwing = new ParserResult(null, true);
-            StringBuilder messages = new StringBuilder();
-            int index = 0, prevLine = 0, nextLine;
-            LinkedList<Highlight> messagesHighlights = new LinkedList<>();
-            for (Node root : result.roots()) {
-                if (root instanceof Evaluatable eval) {
-                    ParseException pe = null;
-                    String mess = null;
-                    try {
-                        eval.evaluate(knowledgeBase, throwing);
-                    } catch (ParseException exc) {
-                        pe = exc;
-                        mess = pe.getShortMessage();
-                    }
-                    if (eval instanceof Query query && query.inferResult() != null) {
-                        mess = query.inferResult().toString();
-                    }
-                    if (mess != null) {
-                        nextLine = eval.lastToken().line();
-                        messages.append(emptyLines(nextLine - prevLine)).append(mess).append("\n");
-                        index += nextLine - prevLine;
-                        if (pe != null && eval instanceof Query query && query.inferResult() != null) {
-                            messagesHighlights.add(new Highlight(index, mess.length(), pe.getShortMessage()));
-                        }
-                        if (pe != null) {
-                            setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage(), redPainter);
-                        }
-                        prevLine = ++nextLine;
-                        index += mess.length() + 1;
-                        setMessages(messages.toString());
-                        showMessageColors();
-                        for (Highlight h : messagesHighlights) {
-                            setHighlight(messagesPane, h.index, h.length, h.error, greenPainter);
-                        }
-                    }
-                }
-            }
-        } else {
-            StringBuilder messages = new StringBuilder();
-            int prevLine = 0, nextLine;
-            for (ParseException pe : exceptions) {
-                nextLine = pe.line();
-                messages.append(emptyLines(nextLine - prevLine)).append(pe.getShortMessage()).append("\n");
-                setHighlight(textPane, pe.index(), pe.length(), pe.getShortMessage(), redPainter);
-                prevLine = ++nextLine;
-            }
-            setMessages(messages.toString());
-        }
-    }
-
-    private void setHighlight(JTextPane pane, int index, int length, String message, DefaultHighlightPainter painter) {
-        try {
-            pane.getHighlighter().addHighlight(index, index + length, painter);
-        } catch (BadLocationException ble) {
-            setMessages(message);
-        }
-    }
-
-    private String emptyLines(int nr) {
-        return "\n".repeat(Math.max(0, nr));
-    }
-
-    private static String getDocumentText(JTextPane pane) {
-        try {
-            javax.swing.text.Document doc = pane.getDocument();
-            return doc.getText(0, doc.getLength());
-        } catch (BadLocationException e) {
-            return "";
-        }
-    }
-
-    private void setMessages(String msg) {
-        messagesPane.setText(msg);
-        // Apply line spacing after setting text
-        StyledDocument messageDoc = messagesPane.getStyledDocument();
-        SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
-        StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f);
-        messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
-        messagesPane.repaint();
-    }
-
-    @Override
-    public synchronized void insertUpdate(DocumentEvent e) {
-        refresh();
-    }
-
-    @Override
-    public synchronized void removeUpdate(DocumentEvent e) {
-        refresh();
-    }
-
-    @Override
-    public synchronized void changedUpdate(DocumentEvent e) {
-    }
-
-    private void saveTextContent(String text) {
-        try {
-            preferences.put(PREF_TEXT_CONTENT, text);
-
-            // Save caret position and selection
-            int caretPosition = textPane.getCaretPosition();
-            int selectionStart = textPane.getSelectionStart();
-            int selectionEnd = textPane.getSelectionEnd();
-
-            preferences.putInt(PREF_CARET_POSITION, caretPosition);
-            preferences.putInt(PREF_SELECTION_START, selectionStart);
-            preferences.putInt(PREF_SELECTION_END, selectionEnd);
-
-            preferences.flush(); // Ensure preferences are written to disk
-        } catch (Exception e) {
-            System.err.println("Failed to save text content: " + e.getMessage());
-        }
-    }
-
-    private void loadTextContent() {
-        String text = preferences.get(PREF_TEXT_CONTENT, "");
-        if (!text.isEmpty()) {
-            try {
-                StyledDocument doc = textPane.getStyledDocument();
-                doc.insertString(0, text, null);
-
-                // Apply line spacing
-                SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
-                StyleConstants.setLineSpacing(paragraphStyle, 0.2f);
-                doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
-
-                // Restore caret position and selection
-                int caretPosition = preferences.getInt(PREF_CARET_POSITION, 0);
-                int selectionStart = preferences.getInt(PREF_SELECTION_START, 0);
-                int selectionEnd = preferences.getInt(PREF_SELECTION_END, 0);
-
-                // Ensure positions are within bounds
-                int maxPos = doc.getLength();
-                caretPosition = Math.min(caretPosition, maxPos);
-                selectionStart = Math.min(selectionStart, maxPos);
-                selectionEnd = Math.min(selectionEnd, maxPos);
-
-                // Restore selection or caret position
-                if (selectionStart != selectionEnd) {
-                    textPane.setSelectionStart(selectionStart);
-                    textPane.setSelectionEnd(selectionEnd);
-                } else {
-                    textPane.setCaretPosition(caretPosition);
-                }
-            } catch (BadLocationException e) {
-                // Fallback to setText if insertString fails
-                textPane.setText(text);
-            }
-        }
+    public static ColorScheme getTokenColor(TokenType tokenType) {
+        return TOKEN_COLORS.get(tokenType);
     }
 
     private void loadTokenColors() {
@@ -713,107 +290,10 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         }
     }
 
-    private void resetTokenColors() {
+    public void resetTokenColors() {
         TOKEN_COLORS.clear();
         TOKEN_COLORS.putAll(DEFAULT_TOKEN_COLORS);
         saveTokenColors();
-        refresh();
-    }
-
-    private void toggleTreeViewer() {
-        if (treeViewerDialog != null && treeViewerDialog.isVisible()) {
-            treeViewerDialog.setVisible(false);
-            saveTreeViewerVisibility(false);
-        } else {
-            if (treeViewerDialog == null) {
-                treeViewerDialog = new TreeViewerDialog(frame, lastTokenizerResult, lastParserResult);
-                registerViewMenuShortcuts(treeViewerDialog);
-                treeViewerDialog.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosing(WindowEvent e) {
-                        saveTreeViewerVisibility(false);
-                    }
-                });
-            } else {
-                treeViewerDialog.update(lastTokenizerResult, lastParserResult);
-            }
-            treeViewerDialog.setVisible(true);
-            saveTreeViewerVisibility(true);
-        }
-    }
-
-    private void toggleKnowledgeBaseViewer() {
-        if (knowledgeBaseViewerDialog != null && knowledgeBaseViewerDialog.isVisible()) {
-            knowledgeBaseViewerDialog.setVisible(false);
-            saveKnowledgeBaseViewerVisibility(false);
-        } else {
-            if (knowledgeBaseViewerDialog == null) {
-                knowledgeBaseViewerDialog = new KnowledgeBaseViewerDialog(frame, knowledgeBase);
-                registerViewMenuShortcuts(knowledgeBaseViewerDialog);
-                knowledgeBaseViewerDialog.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosing(WindowEvent e) {
-                        saveKnowledgeBaseViewerVisibility(false);
-                    }
-                });
-            } else {
-                knowledgeBaseViewerDialog.update(knowledgeBase);
-            }
-            knowledgeBaseViewerDialog.setVisible(true);
-            saveKnowledgeBaseViewerVisibility(true);
-        }
-    }
-
-    private void saveTreeViewerVisibility(boolean visible) {
-        try {
-            preferences.putBoolean(PREF_TREE_VIEWER_VISIBLE, visible);
-            preferences.flush();
-        } catch (Exception e) {
-            // Ignore save failures
-        }
-    }
-
-    private void saveKnowledgeBaseViewerVisibility(boolean visible) {
-        try {
-            preferences.putBoolean(PREF_KB_VIEWER_VISIBLE, visible);
-            preferences.flush();
-        } catch (Exception e) {
-            // Ignore save failures
-        }
-    }
-
-    private void restoreDialogVisibility() {
-        if (preferences.getBoolean(PREF_TREE_VIEWER_VISIBLE, false)) {
-            toggleTreeViewer();
-        }
-        if (preferences.getBoolean(PREF_KB_VIEWER_VISIBLE, false)) {
-            toggleKnowledgeBaseViewer();
-        }
-    }
-
-    /**
-     * Registers View menu shortcuts (Cmd-T, Cmd-K) on a dialog so they work when the dialog has focus.
-     */
-    private void registerViewMenuShortcuts(JDialog dialog) {
-        int menuShortcutMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
-
-        // Cmd-T: Toggle Tree Viewer
-        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('T', menuShortcutMask), "toggleTreeViewer");
-        dialog.getRootPane().getActionMap().put("toggleTreeViewer", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                toggleTreeViewer();
-            }
-        });
-
-        // Cmd-K: Toggle Knowledge Base Viewer
-        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('K', menuShortcutMask), "toggleKnowledgeBaseViewer");
-        dialog.getRootPane().getActionMap().put("toggleKnowledgeBaseViewer", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                toggleKnowledgeBaseViewer();
-            }
-        });
     }
 
     private String colorToString(Color color) {
@@ -827,9 +307,9 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         return Color.BLACK;
     }
 
-    private void showColorConfigDialog() {
-        JDialog dialog = new JDialog(frame, "Configure Token Colors and Styles", true);
-        dialog.setLayout(new BorderLayout());
+    public void showColorConfigDialog(JFrame parent) {
+        JDialog dialog = new JDialog(parent, "Configure Token Colors and Styles", true);
+        dialog.setLayout(new java.awt.BorderLayout());
 
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -944,21 +424,19 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
 
         JScrollPane scrollPane = new JScrollPane(mainPanel);
         scrollPane.setPreferredSize(new Dimension(800, 400));
-        dialog.add(scrollPane, BorderLayout.CENTER);
+        dialog.add(scrollPane, java.awt.BorderLayout.CENTER);
 
         // Buttons panel
         JPanel buttonPanel = new JPanel();
         JButton okButton = new JButton("OK");
         okButton.addActionListener(e -> {
             saveTokenColors();
-            refresh();
             dialog.dispose();
         });
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
             loadTokenColors(); // Reload original colors
-            refresh(); // Refresh to show original colors
             dialog.dispose();
         });
 
@@ -973,10 +451,10 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         buttonPanel.add(copySourceButton);
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.add(buttonPanel, java.awt.BorderLayout.SOUTH);
 
         dialog.pack();
-        new DialogBoundsUtil(dialog, NelumboEditor.class, "colorConfig", frame);
+        new DialogBoundsUtil(dialog, NelumboEditor.class, "colorConfig", parent);
         dialog.setVisible(true);
     }
 
@@ -1003,31 +481,12 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
         return sb.toString();
     }
 
-    /**
-     * Example .nl files bundled with the application: {category, filename, displayName}.
-     * Library files use NelumboConstants.NELUMBO_LIBRARY path, Examples use NelumboConstants.NELUMBO_EXAMPLES path.
-     */
-    private static final String[][] EXAMPLE_RESOURCES = {
-            // Library files (filename relative to NELUMBO_LIBRARY)
-            {"Library", "logic/logic.nl", "Logic"},
-            {"Library", "integers/integers.nl", "Integers"},
-            {"Library", "strings/strings.nl", "Strings"},
-            {"Library", "collections/collections.nl", "Collections"},
-            // Examples (filename only, prefixed with Parser.NELUMBO_EXAMPLES)
-            {"Examples", "familyTest.nl", "Family"},
-            {"Examples", "friendsTest.nl", "Friends"},
-            {"Examples", "fibonacciTest.nl", "Fibonacci"},
-            {"Examples", "belastingTest.nl", "Belasting"},
-            {"Examples", "whoIsTest.nl", "Who Is"},
-            {"Examples", "logicTest.nl", "Logic Test"},
-            {"Examples", "integersTest.nl", "Integers Test"},
-            {"Examples", "stringsTest.nl", "Strings Test"},
-            {"Examples", "collectionsTest.nl", "Collections Test"},
-            {"Examples", "transformationTest.nl", "Transformation"},
-            {"Examples", "queryOnly.nl", "Query Only"},
-    };
+    // ==================== Examples Menu ====================
 
-    private JMenu createExamplesMenu() {
+    /**
+     * Creates the Examples menu for use in editor windows.
+     */
+    public JMenu createExamplesMenu() {
         JMenu examplesMenu = new JMenu("Examples");
         Map<String, JMenu> submenus = new HashMap<>();
 
@@ -1037,7 +496,9 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             String displayName = entry[2];
 
             // Construct full resource path based on category
-            String resourcePath = category.equals("Library") ? NelumboConstants.NELUMBO_LIBRARY + fileName : NelumboConstants.NELUMBO_EXAMPLES + fileName;
+            String resourcePath = category.equals("Library")
+                    ? NelumboConstants.NELUMBO_LIBRARY + fileName
+                    : NelumboConstants.NELUMBO_EXAMPLES + fileName;
 
             // Get or create submenu for this category
             JMenu submenu = submenus.computeIfAbsent(category, k -> {
@@ -1047,28 +508,65 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             });
 
             JMenuItem item = new JMenuItem(displayName);
-            item.addActionListener(e -> loadExample(resourcePath, displayName));
+            item.addActionListener(e -> openExample(resourcePath, displayName));
             submenu.add(item);
         }
 
         return examplesMenu;
     }
 
-    private void loadExample(String resourcePath, String displayName) {
-        try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
-            if (is == null) {
-                JOptionPane.showMessageDialog(frame, "Could not find resource: " + resourcePath, "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+    // ==================== Static Utility Classes ====================
+
+    public static Font findFont() {
+        Font font;
+        for (String fontName : FONT_NAMES) {
+            font = new Font(fontName, Font.BOLD, 14);
+            if (font.getFamily().toLowerCase().contains(fontName)) {
+                return font;
             }
-            String content;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-                content = reader.lines().collect(Collectors.joining("\n"));
+        }
+        return new Font(Font.MONOSPACED, Font.PLAIN, 14);
+    }
+
+    /**
+     * JTextPane subclass that disables line wrapping.
+     */
+    public static class NonWrappingJTextPane extends JTextPane {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        public NonWrappingJTextPane(boolean editable, int backgroundRgb) {
+            setEditorKit(new StyledEditorKit() {
+                @Serial
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public ViewFactory getViewFactory() {
+                    return new NoWrapViewFactory();
+                }
+            });
+            setFont(findFont());
+            setMargin(new Insets(15, 15, 15, 15));
+            setEditable(editable);
+            setBackground(new Color(backgroundRgb));
+            // Set line spacing for better readability
+            StyledDocument doc = getStyledDocument();
+            SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
+            StyleConstants.setLineSpacing(paragraphStyle, 0.2f);
+            doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return false; // Disable line wrapping
+        }
+
+        @Override
+        public void setSize(Dimension d) {
+            if (d.width < getParent().getSize().width) {
+                d.width = getParent().getSize().width;
             }
-            textPane.setText(content);
-            textPane.setCaretPosition(0);
-            frame.setTitle("Nelumbo Editor - " + displayName);
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(frame, "Error loading example: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            super.setSize(d);
         }
     }
 
@@ -1115,5 +613,4 @@ public class NelumboEditor extends WindowAdapter implements WindowListener, Runn
             return super.getPreferredSpan(axis);
         }
     }
-
 }
