@@ -16,7 +16,13 @@
       "WebFetch(domain:central.sonatype.com)",
       "Bash(find:*)",
       "WebFetch(domain:github.com)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(for f in src/patterns/Functor.ts src/patterns/TokenTextPattern.ts src/patterns/SequencePattern.ts src/patterns/NodeTypePattern.ts src/patterns/AlternationPattern.ts src/patterns/RepetitionPattern.ts src/patterns/OptionalPattern.ts src/patterns/TokenTypePattern.ts)",
+      "Bash(do sed -i '' 's/declaration\\(token/tokenDeclaration\\(token/g' \"$f\")",
+      "Bash(done)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
