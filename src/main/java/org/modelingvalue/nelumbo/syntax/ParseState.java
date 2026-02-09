@@ -175,7 +175,7 @@ public class ParseState implements Mergeable<ParseState> {
             }
             if (direction == Direction.token) {
                 next = tokenTextNext(token, result);
-                if (next == null && token != null && !token.type().isVariableContent()) {
+                if (next == null) {
                     next = tokenTypeNext(token, parser, ctx, result);
                 }
             }
@@ -247,7 +247,7 @@ public class ParseState implements Mergeable<ParseState> {
                 Set<TokenState> nexts = Set.of();
                 for (TokenState ts : e.getValue()) {
                     TokenState next = ts.state.tokenTextNext(ts.token, null);
-                    if (next == null && ts.token != null && !ts.token.type().isVariableContent()) {
+                    if (next == null) {
                         next = ts.state.tokenTypeNext(ts.token, parser, ctx, null);
                     }
                     if (next != null) {
@@ -390,14 +390,6 @@ public class ParseState implements Mergeable<ParseState> {
             }
             return next.tokenState(token);
         }
-        next = tokenTypes().get(type);
-        if (next != null) {
-            if (result != null) {
-                result.add(token);
-                token.setState(next);
-            }
-            return next.tokenState(token.next());
-        }
         if (type == TokenType.NAME) {
             Variable var = parser.variable(token, ctx);
             if (var != null) {
@@ -410,6 +402,16 @@ public class ParseState implements Mergeable<ParseState> {
                     }
                     return next.tokenState(token.next());
                 }
+            }
+        }
+        if (result != null || !type.isVariableContent()) {
+            next = tokenTypes().get(type);
+            if (next != null) {
+                if (result != null) {
+                    result.add(token);
+                    token.setState(next);
+                }
+                return next.tokenState(token.next());
             }
         }
         return null;
