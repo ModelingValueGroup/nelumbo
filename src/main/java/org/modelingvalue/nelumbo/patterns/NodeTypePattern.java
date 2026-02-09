@@ -75,7 +75,7 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor) {
+    public ParseState state(ParseState next) {
         return new ParseState(nodeType(), next, precedence());
     }
 

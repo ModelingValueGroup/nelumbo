@@ -53,8 +53,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor) {
-        return optional().state(next, functor).merge(next);
+    public ParseState state(ParseState next) {
+        return optional().state(next).merge(next);
     }
 
     @Override

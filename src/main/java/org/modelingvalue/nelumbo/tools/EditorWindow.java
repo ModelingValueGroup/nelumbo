@@ -16,47 +16,13 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextPane;
-import javax.swing.KeyStroke;
-import javax.swing.Timer;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.TextAction;
-import javax.swing.undo.CompoundEdit;
-import javax.swing.undo.UndoManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Taskbar;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,6 +36,20 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.TextAction;
+import javax.swing.undo.CompoundEdit;
+import javax.swing.undo.UndoManager;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.Evaluatable;
@@ -91,67 +71,67 @@ import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
  */
 public class EditorWindow extends WindowAdapter implements WindowListener, Runnable, DocumentListener, EditorImportResolver.ImportChangeListener {
 
-    private static final String MESSAGES_FILE_NAME = "messages.nl";
-    private final static String INCREASE           = "INCREASE";
-    private final static String DECREASE           = "DECREASE";
+    private static final String                  MESSAGES_FILE_NAME    = "messages.nl";
+    private final static String                  INCREASE              = "INCREASE";
+    private final static String                  DECREASE              = "DECREASE";
 
-    private final static DefaultHighlightPainter redPainter   = new DefaultHighlightPainter(new Color(0xffaaaa));
-    private final static DefaultHighlightPainter greenPainter = new DefaultHighlightPainter(new Color(0xaaffaa));
+    private final static DefaultHighlightPainter redPainter            = new DefaultHighlightPainter(new Color(0xffaaaa));
+    private final static DefaultHighlightPainter greenPainter          = new DefaultHighlightPainter(new Color(0xaaffaa));
 
-    private final String        windowId;
-    private final NelumboEditor application;
-    private       boolean       isExample;
-    private final String        examplePath;
-    private final String        exampleDisplayName;
-    private final Preferences   preferences;
-    private       int           windowNumber;  // Window number for regular windows
+    private final String                         windowId;
+    private final NelumboEditor                  application;
+    private boolean                              isExample;
+    private final String                         examplePath;
+    private final String                         exampleDisplayName;
+    private final Preferences                    preferences;
+    private int                                  windowNumber;                                                            // Window number for regular windows
 
-    private KnowledgeBase                    knowledgeBase;
-    private JFrame                           frame;
-    private JTextPane                        messagesPane;
-    private JTextPane                        textPane;
-    private JMenu                            windowsMenu;
-    private JMenuItem                        undoMenuItem;
-    private JMenuItem                        redoMenuItem;
-    private UndoManager                      undoManager;
-    private CompoundEdit                     currentCompoundEdit;
-    private Timer                            compoundEditTimer;
-    private WindowManager.WindowListListener windowListListener;
-    private boolean                          quit;
-    private boolean                          refreshRequested;
-    private TreeViewerDialog                 treeViewerDialog;
-    private KnowledgeBaseViewerDialog        knowledgeBaseViewerDialog;
-    private TokenizerResult                  lastTokenizerResult;
-    private ParserResult                     lastParserResult;
-    private Set<String>                      currentImports = new HashSet<>();  // Tracks current editor imports
-    private int                              currentUnderlineStart = -1;        // Start index of current underline (-1 if none)
-    private int                              currentUnderlineEnd   = -1;        // End index of current underline (-1 if none)
-    private java.awt.Point                   lastMousePosition;                 // Last mouse position for key-press underline update
+    private KnowledgeBase                        knowledgeBase;
+    private JFrame                               frame;
+    private JTextPane                            messagesPane;
+    private JTextPane                            textPane;
+    private JMenu                                windowsMenu;
+    private JMenuItem                            undoMenuItem;
+    private JMenuItem                            redoMenuItem;
+    private UndoManager                          undoManager;
+    private CompoundEdit                         currentCompoundEdit;
+    private Timer                                compoundEditTimer;
+    private WindowManager.WindowListListener     windowListListener;
+    private boolean                              quit;
+    private boolean                              refreshRequested;
+    private TreeViewerDialog                     treeViewerDialog;
+    private KnowledgeBaseViewerDialog            knowledgeBaseViewerDialog;
+    private TokenizerResult                      lastTokenizerResult;
+    private ParserResult                         lastParserResult;
+    private Set<String>                          currentImports        = new HashSet<>();                                 // Tracks current editor imports
+    private int                                  currentUnderlineStart = -1;                                              // Start index of current underline (-1 if none)
+    private int                                  currentUnderlineEnd   = -1;                                              // End index of current underline (-1 if none)
+    private java.awt.Point                       lastMousePosition;                                                       // Last mouse position for key-press underline update
 
     /**
      * Creates a new regular editor window with a pre-assigned window number.
      */
     public EditorWindow(NelumboEditor application, String windowId, int windowNumber) {
-        this.application        = application;
-        this.windowId           = windowId != null ? windowId : UUID.randomUUID().toString();
-        this.isExample          = false;
-        this.examplePath        = null;
+        this.application = application;
+        this.windowId = windowId != null ? windowId : UUID.randomUUID().toString();
+        this.isExample = false;
+        this.examplePath = null;
         this.exampleDisplayName = null;
-        this.windowNumber       = windowNumber;
-        this.preferences        = Preferences.userNodeForPackage(NelumboEditor.class);
+        this.windowNumber = windowNumber;
+        this.preferences = Preferences.userNodeForPackage(NelumboEditor.class);
     }
 
     /**
      * Creates a new editor window for an example.
      */
     public EditorWindow(NelumboEditor application, String windowId, boolean isExample, String examplePath, String exampleDisplayName) {
-        this.application        = application;
-        this.windowId           = windowId != null ? windowId : UUID.randomUUID().toString();
-        this.isExample          = isExample;
-        this.examplePath        = examplePath;
+        this.application = application;
+        this.windowId = windowId != null ? windowId : UUID.randomUUID().toString();
+        this.isExample = isExample;
+        this.examplePath = examplePath;
         this.exampleDisplayName = exampleDisplayName;
-        this.windowNumber       = -1;  // Examples don't have window numbers
-        this.preferences        = Preferences.userNodeForPackage(NelumboEditor.class);
+        this.windowNumber = -1; // Examples don't have window numbers
+        this.preferences = Preferences.userNodeForPackage(NelumboEditor.class);
     }
 
     public String getWindowId() {
@@ -206,8 +186,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     private void initWindow() {
-        URL       resource = getClass().getResource("/org/modelingvalue/nelumbo/nelumbo.png");
-        ImageIcon icon     = resource != null ? new ImageIcon(resource) : new ImageIcon();
+        URL resource = getClass().getResource("/org/modelingvalue/nelumbo/nelumbo.png");
+        ImageIcon icon = resource != null ? new ImageIcon(resource) : new ImageIcon();
 
         // Determine window title
         String title;
@@ -225,12 +205,12 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
             Taskbar.getTaskbar().setIconImage(icon.getImage());
         }
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension frameSize  = new Dimension(screenSize.width / 2, screenSize.height / 2);
+        Dimension frameSize = new Dimension(screenSize.width / 2, screenSize.height / 2);
         frame.setPreferredSize(frameSize);
         frame.setSize(frameSize);
 
         // Example windows start as read-only (non-editable)
-        textPane     = new NelumboEditor.NonWrappingJTextPane(!isExample, 0xffffff);
+        textPane = new NelumboEditor.NonWrappingJTextPane(!isExample, 0xffffff);
         messagesPane = new NelumboEditor.NonWrappingJTextPane(false, 0xF5F5F5);
 
         // Add key listener to detect edit attempts on read-only windows
@@ -252,8 +232,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
                     if (!textPane.isEditable()) {
                         int keyCode = e.getKeyCode();
                         // Detect delete, backspace, or paste shortcuts
-                        if (keyCode == KeyEvent.VK_DELETE || keyCode == KeyEvent.VK_BACK_SPACE ||
-                            ((e.isControlDown() || e.isMetaDown()) && (keyCode == KeyEvent.VK_V || keyCode == KeyEvent.VK_X))) {
+                        if (keyCode == KeyEvent.VK_DELETE || keyCode == KeyEvent.VK_BACK_SPACE || ((e.isControlDown() || e.isMetaDown()) && (keyCode == KeyEvent.VK_V || keyCode == KeyEvent.VK_X))) {
                             promptToConvertToEditable();
                         }
                     }
@@ -262,7 +241,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         }
 
         // Create scroll panes with borders
-        JScrollPane textScroll    = new JScrollPane(textPane);
+        JScrollPane textScroll = new JScrollPane(textPane);
         JScrollPane messageScroll = new JScrollPane(messagesPane);
         textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
         messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));
@@ -321,7 +300,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         textPane.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                boolean isMac        = System.getProperty("os.name").toLowerCase().contains("mac");
+                boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
                 boolean modifierHeld = isMac ? (e.getModifiersEx() & InputEvent.META_DOWN_MASK) != 0 : (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0;
                 if (modifierHeld) {
                     goToDefinition(e);
@@ -414,7 +393,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
         // Check if the definition is in a different file
         String referencedFileName = referenced.fileName();
-        String currentFileName    = getEditorFileName();
+        String currentFileName = getEditorFileName();
 
         if (referencedFileName != null && !referencedFileName.equals(currentFileName)) {
             // Definition is in another window - find and navigate to it
@@ -451,7 +430,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     private Import findImportInNode(Node node, int position) {
         if (node instanceof Import imp) {
             Token first = imp.firstToken();
-            Token last  = imp.lastToken();
+            Token last = imp.lastToken();
             if (first != null && last != null && first.index() <= position && position < last.indexEnd()) {
                 return imp;
             }
@@ -483,8 +462,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         // Handle editor imports (editor.nelumbo_N)
         if (importName.startsWith("editor.nelumbo_")) {
             try {
-                String numberStr    = importName.substring("editor.nelumbo_".length());
-                int    windowNumber = Integer.parseInt(numberStr);
+                String numberStr = importName.substring("editor.nelumbo_".length());
+                int windowNumber = Integer.parseInt(numberStr);
                 EditorWindow targetWindow = application.getWindowManager().getWindowByNumber(windowNumber);
                 if (targetWindow != null) {
                     bringWindowToFront(targetWindow);
@@ -500,7 +479,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         if (resolved == null) {
             return;
         }
-        String displayName  = resolved[0];
+        String displayName = resolved[0];
         String resourcePath = resolved[1];
 
         // Check if a window with this display name is already open
@@ -523,8 +502,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         // Try to extract window number from file name (format: "editor.nelumbo_N.nl")
         if (fileName.startsWith("editor.nelumbo_") && fileName.endsWith(".nl")) {
             try {
-                String numberStr    = fileName.substring("editor.nelumbo_".length(), fileName.length() - ".nl".length());
-                int    windowNumber = Integer.parseInt(numberStr);
+                String numberStr = fileName.substring("editor.nelumbo_".length(), fileName.length() - ".nl".length());
+                int windowNumber = Integer.parseInt(numberStr);
                 return application.getWindowManager().getWindowByNumber(windowNumber);
             } catch (NumberFormatException ignored) {
                 // Not a regular window file name
@@ -545,11 +524,11 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
      */
     private void navigateToTokenInWindow(EditorWindow targetWindow, Token token) {
         JTextPane targetPane = targetWindow.textPane;
-        JFrame    targetFrame = targetWindow.frame;
+        JFrame targetFrame = targetWindow.frame;
 
         int startPosition = token.index();
-        int endPosition   = token.indexEnd();
-        int docLength     = targetPane.getDocument().getLength();
+        int endPosition = token.indexEnd();
+        int docLength = targetPane.getDocument().getLength();
 
         if (startPosition >= 0 && endPosition <= docLength) {
             // Bring the target window to front if it's a different window
@@ -573,7 +552,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
      */
     private void updateUnderlineHint(MouseEvent e) {
         lastMousePosition = e.getPoint();
-        boolean isMac        = System.getProperty("os.name").toLowerCase().contains("mac");
+        boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
         boolean modifierHeld = isMac ? (e.getModifiersEx() & InputEvent.META_DOWN_MASK) != 0 : (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0;
 
         if (!modifierHeld) {
@@ -609,10 +588,10 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         Import imp = findImportAtPosition(position);
         if (imp != null) {
             Token first = imp.firstToken();
-            Token last  = imp.lastToken();
+            Token last = imp.lastToken();
             if (first != null && last != null) {
                 int start = first.index();
-                int end   = last.indexEnd();
+                int end = last.indexEnd();
                 if (start != currentUnderlineStart || end != currentUnderlineEnd) {
                     clearUnderline();
                     setUnderline(start, end);
@@ -627,7 +606,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
                 if (t.index() <= position && position < t.indexEnd()) {
                     if (t.definition() != null) {
                         int start = t.index();
-                        int end   = t.indexEnd();
+                        int end = t.indexEnd();
                         if (start != currentUnderlineStart || end != currentUnderlineEnd) {
                             clearUnderline();
                             setUnderline(start, end);
@@ -648,12 +627,12 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
      */
     private void clearUnderline() {
         if (currentUnderlineStart >= 0 && currentUnderlineEnd >= 0) {
-            StyledDocument     doc  = textPane.getStyledDocument();
+            StyledDocument doc = textPane.getStyledDocument();
             SimpleAttributeSet attr = new SimpleAttributeSet();
             StyleConstants.setUnderline(attr, false);
             doc.setCharacterAttributes(currentUnderlineStart, currentUnderlineEnd - currentUnderlineStart, attr, false);
             currentUnderlineStart = -1;
-            currentUnderlineEnd   = -1;
+            currentUnderlineEnd = -1;
         }
     }
 
@@ -661,19 +640,19 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
      * Underlines the given range.
      */
     private void setUnderline(int start, int end) {
-        StyledDocument     doc  = textPane.getStyledDocument();
+        StyledDocument doc = textPane.getStyledDocument();
         SimpleAttributeSet attr = new SimpleAttributeSet();
         StyleConstants.setUnderline(attr, true);
         doc.setCharacterAttributes(start, end - start, attr, false);
         currentUnderlineStart = start;
-        currentUnderlineEnd   = end;
+        currentUnderlineEnd = end;
     }
 
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
         // File menu
-        JMenu     fileMenu      = new JMenu("File");
+        JMenu fileMenu = new JMenu("File");
         JMenuItem newWindowItem = new JMenuItem("New Window");
         newWindowItem.setAccelerator(KeyStroke.getKeyStroke('N', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         newWindowItem.addActionListener(e -> application.createNewWindow());
@@ -704,9 +683,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
         redoMenuItem = new JMenuItem("Redo");
         boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
-        redoMenuItem.setAccelerator(isMac
-                ? KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK)
-                : KeyStroke.getKeyStroke('Y', InputEvent.CTRL_DOWN_MASK));
+        redoMenuItem.setAccelerator(isMac ? KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK) : KeyStroke.getKeyStroke('Y', InputEvent.CTRL_DOWN_MASK));
         redoMenuItem.addActionListener(e -> performRedo());
         redoMenuItem.setEnabled(false);
         editMenu.add(redoMenuItem);
@@ -714,7 +691,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         menuBar.add(editMenu);
 
         // Colors menu
-        JMenu     colorsMenu      = new JMenu("Colors");
+        JMenu colorsMenu = new JMenu("Colors");
         JMenuItem configureColors = new JMenuItem("Configure Token Colors...");
         configureColors.addActionListener(e -> application.showColorConfigDialog(frame));
 
@@ -729,7 +706,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         menuBar.add(colorsMenu);
 
         // View menu
-        JMenu     viewMenu       = new JMenu("View");
+        JMenu viewMenu = new JMenu("View");
         JMenuItem treeViewerItem = new JMenuItem("Tree Viewer...");
         treeViewerItem.setAccelerator(KeyStroke.getKeyStroke('T', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         treeViewerItem.addActionListener(e -> toggleTreeViewer());
@@ -770,21 +747,19 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
             windowsMenu.removeAll();
 
             java.util.List<EditorWindow> windows = application.getWindowManager().getWindowsInOrder();
-            int                          index   = 1;
+            int index = 1;
             for (EditorWindow window : windows) {
-                String    title = window.getFrame() != null ? window.getFrame().getTitle() : "Nelumbo Editor";
-                JMenuItem item  = new JMenuItem(index + " " + title);
+                String title = window.getFrame() != null ? window.getFrame().getTitle() : "Nelumbo Editor";
+                JMenuItem item = new JMenuItem(index + " " + title);
 
                 // Add keyboard shortcut for first 9 windows (Cmd-1 through Cmd-9)
                 if (index <= 9) {
-                    item.setAccelerator(KeyStroke.getKeyStroke(
-                            Character.forDigit(index, 10),
-                            Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+                    item.setAccelerator(KeyStroke.getKeyStroke(Character.forDigit(index, 10), Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
                 }
 
                 // Mark current window
                 if (window == this) {
-                    item.setEnabled(false);  // Can't switch to self
+                    item.setEnabled(false); // Can't switch to self
                 }
 
                 item.addActionListener(e -> bringWindowToFront(window));
@@ -845,7 +820,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     private void increase() {
-        Font  font    = textPane.getFont();
+        Font font = textPane.getFont();
         float newSize = Math.min(100f, font.getSize() * 1.2f);
         font = font.deriveFont(newSize);
         textPane.setFont(font);
@@ -853,7 +828,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     private void decrease() {
-        Font  font    = textPane.getFont();
+        Font font = textPane.getFont();
         float newSize = Math.max(7f, font.getSize() / 1.2f);
         font = font.deriveFont(newSize);
         textPane.setFont(font);
@@ -922,29 +897,17 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
      */
     private boolean confirmCloseIfEditable() {
         if (textPane.isEditable()) {
-            int result = JOptionPane.showConfirmDialog(
-                    frame,
-                    "The contents of this window will be lost. Are you sure you want to close it?",
-                    "Close Window",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE
-            );
+            int result = JOptionPane.showConfirmDialog(frame, "The contents of this window will be lost. Are you sure you want to close it?", "Close Window", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             return result == JOptionPane.YES_OPTION;
         }
-        return true;  // Read-only windows can be closed without confirmation
+        return true; // Read-only windows can be closed without confirmation
     }
 
     /**
      * Prompts the user to convert this read-only example window to an editable window.
      */
     private void promptToConvertToEditable() {
-        int result = JOptionPane.showConfirmDialog(
-                frame,
-                "This is a read-only example. Would you like to create an editable copy?",
-                "Convert to Editable",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-                                                  );
+        int result = JOptionPane.showConfirmDialog(frame, "This is a read-only example. Would you like to create an editable copy?", "Convert to Editable", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
             convertToEditableWindow();
@@ -1119,10 +1082,10 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
     private void execute() {
         prepareForExecute();
-        String          text            = getDocumentText(textPane);
-        Tokenizer       tokenizer       = new Tokenizer(text, getEditorFileName());
+        String text = getDocumentText(textPane);
+        Tokenizer tokenizer = new Tokenizer(text, getEditorFileName());
         TokenizerResult tokenizerResult = tokenizer.tokenize();
-        ParserResult    result          = new Parser(tokenizerResult).parseMutipleNonThrowing();
+        ParserResult result = new Parser(tokenizerResult).parseMutipleNonThrowing();
         showColors(textPane, tokenizerResult);
         showResults(result);
 
@@ -1137,7 +1100,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
         // Store results for tree viewer
         lastTokenizerResult = tokenizerResult;
-        lastParserResult    = result;
+        lastParserResult = result;
 
         // Update tree viewer if visible
         if (treeViewerDialog != null && treeViewerDialog.isVisible()) {
@@ -1151,19 +1114,20 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     private void showMessageColors() {
-        String          text            = getDocumentText(messagesPane);
-        Tokenizer       tokenizer       = new Tokenizer(text, MESSAGES_FILE_NAME);
+        String text = getDocumentText(messagesPane);
+        Tokenizer tokenizer = new Tokenizer(text, MESSAGES_FILE_NAME);
         TokenizerResult tokenizerResult = tokenizer.tokenize();
         showColors(messagesPane, tokenizerResult);
     }
 
     private void prepareForExecute() {
         knowledgeBase.init();
-        textPane.getHighlighter().removeAllHighlights();
-        messagesPane.getHighlighter().removeAllHighlights();
-        currentUnderlineStart = -1;  // Clear underline tracking since styles will be reset
-        currentUnderlineEnd   = -1;
-        StyledDocument     doc         = textPane.getStyledDocument();
+        // Create a new Highlighter instead of clearing it because of ArrayIndexOutOfBoundsException when repainting
+        textPane.setHighlighter(new DefaultHighlighter());
+        messagesPane.setHighlighter(new DefaultHighlighter());
+        currentUnderlineStart = -1; // Clear underline tracking since styles will be reset
+        currentUnderlineEnd = -1;
+        StyledDocument doc = textPane.getStyledDocument();
         SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
         StyleConstants.setForeground(defaultAttr, Color.BLACK);
         doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
@@ -1182,26 +1146,24 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         }
     }
 
-    private record Highlight(int index,
-                             int length,
-                             String error) {
+    private record Highlight(int index, int length, String error) {
     }
 
     private void showResults(ParserResult result) {
         List<ParseException> exceptions = result.exceptions();
         if (exceptions.isEmpty()) {
-            ParserResult          throwing           = new ParserResult(null, true);
-            StringBuilder         messages           = new StringBuilder();
-            int                   index              = 0, prevLine = 0, nextLine;
+            ParserResult throwing = new ParserResult(null, true);
+            StringBuilder messages = new StringBuilder();
+            int index = 0, prevLine = 0, nextLine;
             LinkedList<Highlight> messagesHighlights = new LinkedList<>();
             for (Node root : result.roots()) {
                 if (root instanceof Evaluatable eval) {
-                    ParseException pe   = null;
-                    String         mess = null;
+                    ParseException pe = null;
+                    String mess = null;
                     try {
                         eval.evaluate(knowledgeBase, throwing);
                     } catch (ParseException exc) {
-                        pe   = exc;
+                        pe = exc;
                         mess = pe.getShortMessage();
                     }
                     if (eval instanceof Query query && query.inferResult() != null) {
@@ -1229,7 +1191,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
             }
         } else {
             StringBuilder messages = new StringBuilder();
-            int           prevLine = 0, nextLine;
+            int prevLine = 0, nextLine;
             for (ParseException pe : exceptions) {
                 nextLine = pe.line();
                 messages.append(emptyLines(nextLine - prevLine)).append(pe.getShortMessage()).append("\n");
@@ -1264,7 +1226,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     private void setMessages(String msg) {
         messagesPane.setText(msg);
         // Apply line spacing after setting text
-        StyledDocument     messageDoc            = messagesPane.getStyledDocument();
+        StyledDocument messageDoc = messagesPane.getStyledDocument();
         SimpleAttributeSet messageParagraphStyle = new SimpleAttributeSet();
         StyleConstants.setLineSpacing(messageParagraphStyle, 0.2f);
         messageDoc.setParagraphAttributes(0, messageDoc.getLength(), messageParagraphStyle, false);
@@ -1316,9 +1278,9 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
                 }
 
                 // Save caret position and selection
-                int caretPosition  = textPane.getCaretPosition();
+                int caretPosition = textPane.getCaretPosition();
                 int selectionStart = textPane.getSelectionStart();
-                int selectionEnd   = textPane.getSelectionEnd();
+                int selectionEnd = textPane.getSelectionEnd();
 
                 preferences.putInt(prefKey("caretPosition"), caretPosition);
                 preferences.putInt(prefKey("selectionStart"), selectionStart);
@@ -1345,15 +1307,15 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
                 doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
 
                 // Restore caret position and selection
-                int caretPosition  = preferences.getInt(prefKey("caretPosition"), 0);
+                int caretPosition = preferences.getInt(prefKey("caretPosition"), 0);
                 int selectionStart = preferences.getInt(prefKey("selectionStart"), 0);
-                int selectionEnd   = preferences.getInt(prefKey("selectionEnd"), 0);
+                int selectionEnd = preferences.getInt(prefKey("selectionEnd"), 0);
 
                 // Ensure positions are within bounds
                 int maxPos = doc.getLength();
-                caretPosition  = Math.min(caretPosition, maxPos);
+                caretPosition = Math.min(caretPosition, maxPos);
                 selectionStart = Math.min(selectionStart, maxPos);
-                selectionEnd   = Math.min(selectionEnd, maxPos);
+                selectionEnd = Math.min(selectionEnd, maxPos);
 
                 // Restore selection or caret position
                 if (selectionStart != selectionEnd) {
@@ -1382,7 +1344,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
             textPane.setCaretPosition(0);
 
             // Apply line spacing
-            StyledDocument     doc            = textPane.getStyledDocument();
+            StyledDocument doc = textPane.getStyledDocument();
             SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
             StyleConstants.setLineSpacing(paragraphStyle, 0.2f);
             doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);

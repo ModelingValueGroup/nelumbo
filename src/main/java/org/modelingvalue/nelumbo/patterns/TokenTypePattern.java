@@ -56,7 +56,7 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor) {
+    public ParseState state(ParseState next) {
         return new ParseState(tokenType(), next);
     }
 

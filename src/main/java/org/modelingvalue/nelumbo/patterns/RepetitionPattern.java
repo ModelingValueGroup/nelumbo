@@ -77,22 +77,24 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState next, Functor functor) {
-        ParseState start = new ParseState(Set.of(this), Set.of());
-        ParseState end = new ParseState(Set.of(), Set.of(this));
-        Pattern separator = separator();
-        if (separator != null) {
-            end = separator.state(end, functor);
-        }
-        end = end.merge(next);
+    public ParseState state(ParseState next) {
         Pattern repeated = repeated();
-        ParseState state = repeated.state(end, functor).merge(start);
-        if (!mandatory()) {
-            if (separator != null) {
-                state = separator.state(state, functor).merge(next);
-                state = repeated.state(state, functor);
+        boolean mandatory = mandatory();
+        Pattern separator = separator();
+        ParseState startOrNext = new ParseState(Set.of(this), Set.of()).merge(next);
+        ParseState repeatedEnd = repeated.state(new ParseState(Set.of(), Set.of(this)));
+        ParseState state;
+        if (separator == null) {
+            state = repeatedEnd.merge(startOrNext);
+            if (mandatory) {
+                state = repeated.state(state);
             }
-            state = state.merge(next);
+        } else {
+            state = separator.state(repeatedEnd).merge(startOrNext);
+            state = repeated.state(state);
+            if (!mandatory) {
+                state = state.merge(next);
+            }
         }
         return state;
     }

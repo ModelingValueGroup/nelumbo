@@ -44,7 +44,6 @@ public final class PatternResult implements ParseExceptionHandler {
     private Set<RepetitionPattern>                endRepetitions;
     private Token                                 nextToken;
     private boolean                               hasLeft;
-    private boolean                               hasException;
 
     public PatternResult(Parser parser, ParseContext context) {
         this.parser = parser;
@@ -95,22 +94,28 @@ public final class PatternResult implements ParseExceptionHandler {
     }
 
     public void endPostParse(Functor functor, Token nextToken, Integer leftPrecedence) {
+        this.endRepetitions = Set.of();
         this.functor = functor;
+        this.nextToken = nextToken;
+        this.leftPrecedence = leftPrecedence;
+        assert (functor != null);
+        assert (!hasLeft || leftPrecedence != null);
+    }
+
+    public void endPreParse(ParseState state, Token nextToken, Integer leftPrecedence) {
+        this.state = state;
         this.nextToken = nextToken;
         this.leftPrecedence = leftPrecedence;
         assert (!hasLeft || leftPrecedence != null);
     }
 
-    public void endPreParse(ParseState state, Token nextToken, Integer lefPrecedence) {
-        this.state = state;
-        this.nextToken = nextToken;
-        this.leftPrecedence = lefPrecedence;
-        assert (!hasLeft || leftPrecedence != null);
-    }
-
-    public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken, int i) {
+    public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken) {
         this.endRepetitions = endRepetitions;
         this.nextToken = nextToken;
+    }
+
+    public void startRepetition() {
+        this.endRepetitions = Set.of();
     }
 
     public List<AstElement> elements() {
@@ -133,13 +138,14 @@ public final class PatternResult implements ParseExceptionHandler {
 
     public void add(AstElement element) {
         elements.add(element);
-        endRepetitions = Set.of();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public Node postParse(ParseContext ctx) throws ParseException {
-        if (state != null) {
-            state.parse(nextToken, this, Map.of(), false);
+        ParseState next = state;
+        if (next != null) {
+            state = null;
+            next.parse(nextToken, this, Map.of(), false);
         }
         if (functor != null) {
             for (Pair<Token, Token> split : splitted) {
@@ -170,17 +176,12 @@ public final class PatternResult implements ParseExceptionHandler {
 
     @Override
     public void addException(ParseException exception) throws ParseException {
-        hasException = true;
         parser.addException(exception);
     }
 
     @Override
     public List<ParseException> exceptions() {
         return parser.exceptions();
-    }
-
-    public boolean hasException() {
-        return hasException;
     }
 
     public void putTypeArg(Variable arg, Type val) {

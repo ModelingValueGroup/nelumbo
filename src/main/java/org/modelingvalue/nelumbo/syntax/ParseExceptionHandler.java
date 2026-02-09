@@ -24,4 +24,7 @@ public interface ParseExceptionHandler {
 
     List<ParseException> exceptions();
 
+    default int nrOfExceptions() {
+        return exceptions().size();
+    }
 }
