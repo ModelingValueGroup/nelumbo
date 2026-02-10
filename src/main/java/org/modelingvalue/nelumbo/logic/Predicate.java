@@ -312,7 +312,7 @@ public class Predicate extends Node {
             return unresolvable();
         }
         KnowledgeBase knowledgebase = context.knowledgebase();
-        if (isRelation()) {
+        if (isFact()) {
             return knowledgebase.getFacts(this, context);
         } else {
             InferResult result = knowledgebase.getMemoiz(this);
@@ -410,7 +410,7 @@ public class Predicate extends Node {
         return result;
     }
 
-    public boolean isRelation() {
+    public boolean isFact() {
         return Type.FACT_TYPE.isAssignableFrom(type());
     }
 

@@ -176,17 +176,17 @@ public class ParseState implements Mergeable<ParseState> {
             if (direction == Direction.token) {
                 next = tokenNext(token, parser, ctx, result);
             }
-            if (next == null) {
+            if (next == null && result.nrOfExceptions() == nrOfExceptions) {
                 next = tokenNext(token, parser, ctx, result);
             }
-            if (next == null) {
+            if (next == null && result.nrOfExceptions() == nrOfExceptions) {
                 next = nodeNext(token, result);
             }
-            if (next == null && endRepetitions().anyMatch(outerRepetitions::containsKey)) {
+            if (next == null && result.nrOfExceptions() == nrOfExceptions && endRepetitions().anyMatch(outerRepetitions::containsKey)) {
                 result.endRepetition(endRepetitions(), token);
                 return true;
             }
-            if (next != null && result.nrOfExceptions() == nrOfExceptions && next.state.parse(next.token, result, innerRepetitions, pre)) {
+            if (next != null && next.state.parse(next.token, result, innerRepetitions, pre)) {
                 if (result.endRepetitions().isEmpty()) {
                     break;
                 } else if (startRepetitions().anyMatch(result.endRepetitions()::contains)) {
@@ -453,6 +453,7 @@ public class ParseState implements Mergeable<ParseState> {
                     return ts.getValue().tokenState(node.nextToken());
                 }
             }
+            result.removeLast();
             result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
         }
         return null;

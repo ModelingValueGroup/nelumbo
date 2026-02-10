@@ -140,6 +140,10 @@ public final class PatternResult implements ParseExceptionHandler {
         elements.add(element);
     }
 
+    public void removeLast() {
+        elements.removeLast();
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     public Node postParse(ParseContext ctx) throws ParseException {
         ParseState next = state;
