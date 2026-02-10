@@ -108,6 +108,10 @@ public final class NBoolean extends Predicate {
 
     @Override
     protected NBoolean struct(Object[] array, Node declaration) {
+        if (array[2] instanceof NBoolean b) {
+            array[2] = b.getBoolean();
+            declaration = b;
+        }
         return new NBoolean(array, (NBoolean) declaration);
     }
 
