@@ -171,22 +171,16 @@ public class ParseState implements Mergeable<ParseState> {
                 return true;
             }
             if (direction == Direction.node) {
-                next = nodeTypeNext(token, result);
+                next = nodeNext(token, result);
             }
             if (direction == Direction.token) {
-                next = tokenTextNext(token, result);
-                if (next == null) {
-                    next = tokenTypeNext(token, parser, ctx, result);
-                }
+                next = tokenNext(token, parser, ctx, result);
             }
             if (next == null) {
-                next = tokenTextNext(token, result);
+                next = tokenNext(token, parser, ctx, result);
             }
             if (next == null) {
-                next = tokenTypeNext(token, parser, ctx, result);
-            }
-            if (next == null) {
-                next = nodeTypeNext(token, result);
+                next = nodeNext(token, result);
             }
             if (next == null && endRepetitions().anyMatch(outerRepetitions::containsKey)) {
                 result.endRepetition(endRepetitions(), token);
@@ -246,10 +240,7 @@ public class ParseState implements Mergeable<ParseState> {
             for (Entry<Direction, Set<TokenState>> e : dirStates) {
                 Set<TokenState> nexts = Set.of();
                 for (TokenState ts : e.getValue()) {
-                    TokenState next = ts.state.tokenTextNext(ts.token, null);
-                    if (next == null) {
-                        next = ts.state.tokenTypeNext(ts.token, parser, ctx, null);
-                    }
+                    TokenState next = ts.state.tokenNext(ts.token, parser, ctx, null);
                     if (next != null) {
                         nexts = nexts.add(next);
                         Token t = next.token;
@@ -322,6 +313,14 @@ public class ParseState implements Mergeable<ParseState> {
             }
         }
         return result;
+    }
+
+    private TokenState tokenNext(Token token, Parser parser, ParseContext ctx, PatternResult result) throws ParseException {
+        TokenState next = tokenTextNext(token, result);
+        if (next == null) {
+            next = tokenTypeNext(token, parser, ctx, result);
+        }
+        return next;
     }
 
     private TokenState tokenTextNext(Token token, PatternResult result) {
@@ -417,7 +416,7 @@ public class ParseState implements Mergeable<ParseState> {
         return null;
     }
 
-    private TokenState nodeTypeNext(Token token, PatternResult result) throws ParseException {
+    private TokenState nodeNext(Token token, PatternResult result) throws ParseException {
         if (token == null || nodeTypes().isEmpty()) {
             return null;
         }
