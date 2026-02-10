@@ -46,8 +46,8 @@ export class Tokenizer {
     let position = 0;
     let index = 0;
 
-    // Track the last token that can continue on next line
-    let lastContinuingToken: Token | null = null;
+    // Track the last non-skip token (like Java's tokens[LAST])
+    let lastToken: Token | null = null;
 
     // Add BEGINOFFILE synthetic token
     const bofToken = new Token(
@@ -59,6 +59,8 @@ export class Tokenizer {
       this.fileName
     );
     allTokens.push(bofToken);
+    tokens.push(bofToken);  // Include in main token list for parsing
+    lastToken = bofToken;
 
     // Main tokenization loop
     while (index < this.input.length) {
@@ -86,23 +88,26 @@ export class Tokenizer {
       }
       index += text.length;
 
-      // Handle skip tokens and newlines
+      // Handle skip tokens and newlines - matching Java Tokenizer.addToken() logic
+      if (type.isSkip()) {
+        // Skip tokens (comments, whitespace) are not added to the non-skip list
+        continue;
+      }
+
       if (type === TokenType.NEWLINE) {
-        // Check if previous significant token continues on next line
-        if (lastContinuingToken !== null) {
-          // Skip this newline (treat as layout)
+        // Ignore newlines after BEGINOFFILE (no real content yet)
+        if (lastToken === null || lastToken.type === TokenType.BEGINOFFILE) {
+          continue;
+        }
+        // Ignore newlines after tokens that continue on next line (except ">")
+        if (lastToken.type.isContinuesOnNextLine() && lastToken.text !== '>') {
           continue;
         }
       }
 
-      if (!type.isSkip() && type !== TokenType.NEWLINE) {
-        tokens.push(token);
-        if (type.isContinuesOnNextLine()) {
-          lastContinuingToken = token;
-        } else {
-          lastContinuingToken = null;
-        }
-      }
+      // Add to non-skip token list and link
+      tokens.push(token);
+      lastToken = token;
     }
 
     // Add ENDOFFILE synthetic token

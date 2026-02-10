@@ -4,12 +4,12 @@
  */
 
 import { List, Map } from 'immutable';
-import { TokenType } from '../TokenType';
-import type { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
+import { TokenType } from '../syntax/TokenType';
+import type { Token } from '../syntax/Token';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
+import { Node } from '../Node';
 import { Pattern } from './Pattern';
 import type { ParseState } from '../syntax/ParseState';
 import type { Functor } from './Functor';
@@ -97,10 +97,10 @@ export class OptionalPattern extends Pattern {
     const ii = this.optional().extractArgs(elements, i, inner, true, functor, typeArgs);
     if (ii >= 0) {
       const first = inner[0];
-      args.push(first !== undefined ? { isPresent: true, value: first } : { isPresent: false });
+      args.push(first !== undefined ? Optional.of(first) : Optional.empty());
       return ii;
     } else {
-      args.push({ isPresent: false });
+      args.push(Optional.empty());
       return i;
     }
   }

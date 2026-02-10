@@ -4,7 +4,7 @@
  */
 
 import type { KnowledgeBase } from './KnowledgeBase';
-import type { ParserResult } from '../syntax/ParserResult';
+import type { ParserResult } from './syntax/ParserResult';
 
 /**
  * Interface for evaluatable nodes.

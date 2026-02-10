@@ -4,12 +4,12 @@
  */
 
 import { List, Set } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
 import type { Functor } from '../patterns/Functor';
 import { Predicate } from './Predicate';
-import { InferResult } from './InferResult';
-import type { InferContext } from './InferContext';
+import { InferResult } from '../InferResult';
+import type { InferContext } from '../InferContext';
 
 /**
  * NBoolean - represents boolean constants TRUE, FALSE, and UNKNOWN.

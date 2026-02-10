@@ -3,7 +3,7 @@
  * Defines colors and styles for different token types.
  */
 
-import { TokenType } from '../TokenType';
+import { TokenType } from '../syntax/TokenType';
 
 /**
  * Style definition for a token type.

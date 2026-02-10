@@ -3,18 +3,18 @@
  */
 
 // Tokenizer layer
-export { Token } from './Token';
-export { TokenType, TokenTypeFlag } from './TokenType';
-export { Tokenizer } from './Tokenizer';
-export type { TokenizerResult } from './Tokenizer';
+export { Token } from './syntax/Token';
+export { TokenType, TokenTypeFlag } from './syntax/TokenType';
+export { Tokenizer } from './syntax/Tokenizer';
+export type { TokenizerResult } from './syntax/Tokenizer';
 
 // Core layer
-export type { AstElement } from './core/AstElement';
-export { AstElementUtil } from './core/AstElement';
-export { Type, DEFAULT_GROUP, TOP_GROUP, PATTERN_GROUP } from './core/Type';
-export { Variable } from './core/Variable';
-export { Node } from './core/Node';
-export type { ReplaceFunction } from './core/Node';
+export type { AstElement } from './AstElement';
+export { AstElementUtil } from './AstElement';
+export { Type, DEFAULT_GROUP, TOP_GROUP, PATTERN_GROUP } from './Type';
+export { Variable } from './Variable';
+export { Node } from './Node';
+export type { ReplaceFunction } from './Node';
 
 // Pattern layer
 export { Pattern } from './patterns/Pattern';
@@ -38,8 +38,8 @@ export { ParserResult } from './syntax/ParserResult';
 export { Parser, parseString, parseTokenizerResult } from './syntax/Parser';
 
 // Logic layer
-export { InferResult } from './logic/InferResult';
-export { InferContext } from './logic/InferContext';
+export { InferResult } from './InferResult';
+export { InferContext } from './InferContext';
 export { Predicate } from './logic/Predicate';
 export { NBoolean } from './logic/NBoolean';
 export { Equal } from './logic/Equal';
@@ -54,17 +54,17 @@ export { UniversalQuantifier } from './logic/UniversalQuantifier';
 export { When } from './logic/When';
 
 // Knowledge base layer
-export { MatchState } from './kb/MatchState';
-export { isEvaluatable } from './kb/Evaluatable';
-export type { Evaluatable } from './kb/Evaluatable';
-export { KnowledgeBase } from './kb/KnowledgeBase';
-export type { ParseExceptionHandler } from './kb/KnowledgeBase';
-export { Rule, InconsistencyException } from './kb/Rule';
-export { Fact } from './kb/Fact';
-export { Query } from './kb/Query';
-export { Transform } from './kb/Transform';
-export type { NList } from './kb/Transform';
-export { Import } from './kb/Import';
+export { MatchState } from './MatchState';
+export { isEvaluatable } from './Evaluatable';
+export type { Evaluatable } from './Evaluatable';
+export { KnowledgeBase } from './KnowledgeBase';
+export type { ParseExceptionHandler } from './KnowledgeBase';
+export { Rule, InconsistencyException } from './Rule';
+export { Fact } from './Fact';
+export { Query } from './Query';
+export { Transform } from './Transform';
+export type { NList } from './Transform';
+export { Import } from './Import';
 
 // Editor layer
 export {

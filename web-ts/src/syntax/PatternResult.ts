@@ -4,18 +4,18 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import type { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
+import type { Token } from './Token';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
+import { Node } from '../Node';
 import { Functor } from '../patterns/Functor';
 import { RepetitionPattern } from '../patterns/RepetitionPattern';
 import type { ParseContext } from './ParseContext';
 import { ParseState } from './ParseState';
 import { ParseException } from './ParseException';
 import type { Parser } from './Parser';
-import type { ParseExceptionHandler } from '../kb/KnowledgeBase';
+import type { ParseExceptionHandler } from '../KnowledgeBase';
 
 /**
  * PatternResult - holds the intermediate result of pattern matching.

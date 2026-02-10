@@ -3,9 +3,14 @@
  * Handles a single editor instance with syntax highlighting and parsing.
  */
 
-import type { TokenizerResult } from '../Tokenizer';
-import type { ParserResult } from '../syntax/ParserResult';
-import { Tokenizer } from '../Tokenizer';
+import type { TokenizerResult } from '../syntax/Tokenizer';
+import { ParserResult } from '../syntax/ParserResult';
+import { Tokenizer } from '../syntax/Tokenizer';
+import { Parser } from '../syntax/Parser';
+import { KnowledgeBase } from '../KnowledgeBase';
+import { Query } from '../Query';
+import { isEvaluatable } from '../Evaluatable';
+import { ParseException } from '../syntax/ParseException';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { MessagePane } from './MessagePane';
 import { EditorTheme } from './EditorTheme';
@@ -148,8 +153,10 @@ export class EditorWindow {
   private setupEventHandlers(): void {
     const textarea = this.editorElement as HTMLTextAreaElement;
 
-    // Text input handler with debouncing
+    // Text input handler - update overlay immediately, debounce parsing
     textarea.addEventListener('input', () => {
+      // Show text immediately (without highlighting) for responsive feel
+      this.updateOverlayText(textarea.value);
       this.scheduleRefresh();
     });
 
@@ -195,7 +202,7 @@ export class EditorWindow {
   }
 
   /**
-   * Refresh the editor (re-tokenize).
+   * Refresh the editor (re-tokenize and parse).
    */
   refresh(): void {
     const code = this.getContent();
@@ -205,16 +212,17 @@ export class EditorWindow {
     const tokenizer = new Tokenizer(code, fileName);
     this.lastTokenizerResult = tokenizer.tokenize();
 
-    // Note: Full parsing requires KnowledgeBase which is not yet fully integrated
-    // For now, we just do tokenization and syntax highlighting
-    this.lastParserResult = null;
+    // Parse with a fresh knowledge base (derived from BASE)
+    const kb = new KnowledgeBase(KnowledgeBase.BASE);
+    const parser = new Parser(kb, this.lastTokenizerResult);
+    this.lastParserResult = parser.parseMultipleNonThrowing();
 
-    // Update syntax highlighting
+    // Update syntax highlighting (after parsing, so tokens have node references)
     this.syntaxHighlighter.setTokenizerResult(this.lastTokenizerResult);
     this.updateHighlighting(code);
 
-    // Update messages pane (just clear for now)
-    this.messagesPane.clear();
+    // Show results/errors in message pane
+    this.showResults(this.lastParserResult, kb);
 
     // Notify change handlers
     this.changeHandlers.forEach(handler => handler(this));
@@ -223,6 +231,60 @@ export class EditorWindow {
   private updateHighlighting(code: string): void {
     const highlighted = this.syntaxHighlighter.highlightCode(code);
     this.highlightOverlay.innerHTML = highlighted + '<br>'; // Extra br for scrolling
+  }
+
+  /**
+   * Update overlay with plain text (for immediate feedback while typing).
+   */
+  private updateOverlayText(text: string): void {
+    // Escape HTML and preserve whitespace
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    this.highlightOverlay.innerHTML = escaped + '<br>';
+  }
+
+  /**
+   * Show parser results and errors in the message pane.
+   */
+  private showResults(result: ParserResult, kb: KnowledgeBase): void {
+    this.messagesPane.clear();
+
+    const exceptions = result.exceptions();
+    if (!exceptions.isEmpty()) {
+      // Show parse errors
+      exceptions.forEach(exc => {
+        this.messagesPane.addError(exc.line, exc.position, exc.shortMessage, exc.fullMessage);
+      });
+    } else {
+      // Evaluate and show results
+      const throwing = new ParserResult(result.tokenizerResult(), true);
+
+      for (const root of result.roots()) {
+        if (isEvaluatable(root)) {
+          try {
+            root.evaluate(kb, throwing);
+          } catch (e) {
+            if (e instanceof ParseException) {
+              // Highlight error in editor
+              this.messagesPane.addError(e.line, e.position, e.shortMessage, e.fullMessage);
+            }
+          }
+
+          // If it's a Query, show the result
+          if (root instanceof Query && root.inferResult() !== null) {
+            const resultStr = root.inferResult()!.toString();
+            const lastToken = root.lastToken();
+            if (lastToken) {
+              this.messagesPane.addResult(lastToken.line, lastToken.position, resultStr);
+            }
+          }
+        }
+      }
+    }
+
+    this.messagesPane.render();
   }
 
   private increaseFontSize(): void {

@@ -4,9 +4,9 @@
  */
 
 import { List } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Node } from '../core/Node';
+import type { AstElement } from './AstElement';
+import { Type } from './Type';
+import { Node } from './Node';
 import type { KnowledgeBase } from './KnowledgeBase';
 
 /**

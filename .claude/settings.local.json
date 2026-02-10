@@ -22,7 +22,13 @@
       "Bash(for f in src/patterns/Functor.ts src/patterns/TokenTextPattern.ts src/patterns/SequencePattern.ts src/patterns/NodeTypePattern.ts src/patterns/AlternationPattern.ts src/patterns/RepetitionPattern.ts src/patterns/OptionalPattern.ts src/patterns/TokenTypePattern.ts)",
       "Bash(do sed -i '' 's/declaration\\(token/tokenDeclaration\\(token/g' \"$f\")",
       "Bash(done)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(pgrep:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []

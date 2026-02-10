@@ -107,6 +107,8 @@ export class Editor {
         background: ${isDark ? '#16161d' : '#f5f5f5'};
         border-bottom: 1px solid ${borderColor};
         gap: 16px;
+        position: relative;
+        z-index: 100;
       }
 
       .nelumbo-header h1 {
@@ -142,6 +144,8 @@ export class Editor {
         border-bottom: 1px solid ${borderColor};
         overflow-x: auto;
         padding: 0 8px;
+        position: relative;
+        z-index: 100;
       }
 
       .editor-tab {
@@ -202,6 +206,8 @@ export class Editor {
         flex: 1;
         display: flex;
         overflow: hidden;
+        position: relative;
+        z-index: 1;
       }
 
       .nelumbo-editor-pane {
@@ -214,6 +220,7 @@ export class Editor {
       .nelumbo-messages-pane {
         flex: 1;
         min-width: 300px;
+        position: relative;
         overflow: auto;
         background: ${isDark ? '#1a1a24' : '#fafafa'};
       }
@@ -288,32 +295,34 @@ export class Editor {
       examplesSelect.appendChild(optgroup);
     });
 
-    examplesSelect.onchange = () => {
+    examplesSelect.addEventListener('change', () => {
+      console.log('Example select changed');
       const option = examplesSelect.selectedOptions[0];
       if (option && option.value) {
         const displayName = option.dataset.displayName ?? option.textContent ?? 'Example';
         this.windowManager.createExampleWindow(option.value, displayName);
         examplesSelect.selectedIndex = 0;
       }
-    };
+    });
 
     actions.appendChild(examplesSelect);
 
     // Theme toggle
     const themeBtn = document.createElement('button');
-    themeBtn.textContent = EditorTheme.isDarkTheme() ? '☀️ Light' : '🌙 Dark';
-    themeBtn.onclick = () => {
+    themeBtn.textContent = EditorTheme.isDarkTheme() ? 'Light' : 'Dark';
+    themeBtn.addEventListener('click', () => {
+      console.log('Theme button clicked');
       if (EditorTheme.isDarkTheme()) {
         EditorTheme.useLightTheme();
-        themeBtn.textContent = '🌙 Dark';
+        themeBtn.textContent = 'Dark';
       } else {
         EditorTheme.useDarkTheme();
-        themeBtn.textContent = '☀️ Light';
+        themeBtn.textContent = 'Light';
       }
       this.applyBaseStyles();
       // Refresh all windows to apply new theme
       this.windowManager.getWindowsInOrder().forEach(w => w.refresh());
-    };
+    });
     actions.appendChild(themeBtn);
 
     header.appendChild(actions);
@@ -372,29 +381,5 @@ export class Editor {
 /**
  * Default content for new editors.
  */
-const DEFAULT_CONTENT = `// Welcome to Nelumbo Editor (TypeScript Version)
-//
-// This editor runs entirely in your browser!
-// No server required - pure client-side execution.
-
-// Example: Family relations
-parent(tom, mary).
-parent(tom, john).
-parent(mary, ann).
-parent(mary, bob).
-
-// Rules
-grandparent(X, Z) :- parent(X, Y), parent(Y, Z).
-sibling(X, Y) :- parent(P, X), parent(P, Y), X \\= Y.
-
-// Queries
-?- grandparent(tom, Who).
-?- sibling(ann, Who).
-
-// String example
-message("Hello, World!").
-
-// Number examples
-answer(42).
-pi(3.14159).
+const DEFAULT_CONTENT = `// hello world
 `;

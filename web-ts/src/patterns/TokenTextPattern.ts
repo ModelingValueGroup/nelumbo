@@ -4,14 +4,14 @@
  */
 
 import { List, Map } from 'immutable';
-import { TokenType } from '../TokenType';
-import { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
+import { TokenType } from '../syntax/TokenType';
+import { Token } from '../syntax/Token';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
+import { Node } from '../Node';
 import { Pattern } from './Pattern';
-import type { ParseState } from '../syntax/ParseState';
+import { ParseState } from '../syntax/ParseState';
 import type { Functor } from './Functor';
 
 export class TokenTextPattern extends Pattern {
@@ -63,8 +63,7 @@ export class TokenTextPattern extends Pattern {
   }
 
   parseState(next: ParseState, _functor: Functor): ParseState {
-    const { ParseState: PS } = require('../syntax/ParseState');
-    return new PS(this.tokenText(), this.isKeyword(), next);
+    return new ParseState(this.tokenText(), this.isKeyword(), next);
   }
 
   name(): string {

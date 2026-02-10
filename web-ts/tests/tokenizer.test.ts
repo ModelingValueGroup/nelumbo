@@ -9,9 +9,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { List } from 'immutable';
-import { Token } from '../src/Token';
-import { TokenType } from '../src/TokenType';
-import { Tokenizer } from '../src/Tokenizer';
+import { Token } from '../src/syntax/Token';
+import { TokenType } from '../src/syntax/TokenType';
+import { Tokenizer } from '../src/syntax/Tokenizer';
 
 /**
  * Tokenize and return all tokens including whitespace.
@@ -58,8 +58,11 @@ describe('Tokenizer', () => {
     const expectedTypes = 'BEGINOFFILE END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE ENDOFFILE';
     expect(types).toBe(expectedTypes);
 
-    // Verify counts (14 non-skip tokens: operators, names, decimal, number, endoffile)
-    expect(tokens.size).toBe(14);
+    // Verify counts - matching Java TokenizerTest expectations
+    // 17 non-skip tokens: BEGINOFFILE + operators + names + decimal + number + 2 NEWLINEs + ENDOFFILE
+    // First NEWLINE (after comment) is skipped because lastToken is BEGINOFFILE
+    // Second NEWLINE (after line 1) is skipped because * continues on next line
+    expect(tokens.size).toBe(17);
     expect(all.size).toBe(34);
 
     // Verify specific tokens in all
@@ -69,12 +72,13 @@ describe('Tokenizer', () => {
     assertEqualsToken(1, 4, all, 4, TokenType.OPERATOR);
     assertEqualsToken(1, 5, all, 5, TokenType.NAME);
 
-    // Verify specific tokens in non-skip list
-    assertEqualsToken(1, 4, tokens, 0, TokenType.OPERATOR); // -
-    assertEqualsToken(1, 5, tokens, 1, TokenType.NAME);     // abb
-    assertEqualsToken(1, 9, tokens, 2, TokenType.OPERATOR); // +
-    assertEqualsToken(1, 11, tokens, 3, TokenType.NAME);    // bcc
-    assertEqualsToken(1, 15, tokens, 4, TokenType.OPERATOR); // *
+    // Verify specific tokens in non-skip list (index 0 is BEGINOFFILE)
+    // Matches Java test assertions
+    assertEqualsToken(1, 4, tokens, 1, TokenType.OPERATOR);  // -
+    assertEqualsToken(1, 5, tokens, 2, TokenType.NAME);      // abb
+    assertEqualsToken(1, 9, tokens, 3, TokenType.OPERATOR);  // +
+    assertEqualsToken(1, 11, tokens, 4, TokenType.NAME);     // bcc
+    assertEqualsToken(1, 15, tokens, 5, TokenType.OPERATOR); // *
   });
 
   it('tokenizerComment1Test - unterminated inline comment', () => {
@@ -84,8 +88,8 @@ describe('Tokenizer', () => {
     const tokens = result.list;
     const all = result.listAll;
 
-    // Only ENDOFFILE in non-skip list (IN_LINE_COMMENT is skipped)
-    expect(tokens.size).toBe(1);
+    // BEGINOFFILE and ENDOFFILE in non-skip list (IN_LINE_COMMENT is skipped)
+    expect(tokens.size).toBe(2);
     // BEGINOFFILE, IN_LINE_COMMENT, ENDOFFILE in all
     expect(all.size).toBe(3);
 
@@ -103,8 +107,8 @@ describe('Tokenizer', () => {
     const types = all.map(t => t.type.name).join(' ');
     const expectedTypes = 'BEGINOFFILE OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME ENDOFFILE';
 
-    // 6 non-skip tokens (IN_LINE_COMMENT is skipped)
-    expect(tokens.size).toBe(6);
+    // 7 non-skip tokens (BEGINOFFILE + 5 actual + ENDOFFILE, IN_LINE_COMMENT is skipped)
+    expect(tokens.size).toBe(7);
     expect(all.size).toBe(8);
     expect(reassembled).toBe(example);
     expect(types).toBe(expectedTypes);
@@ -115,10 +119,10 @@ describe('Tokenizer', () => {
     assertEqualsToken(0, 7, all, 4, TokenType.OPERATOR);         // >
     assertEqualsToken(0, 8, all, 5, TokenType.ERROR);            // •
 
-    assertEqualsToken(0, 0, tokens, 0, TokenType.OPERATOR);  // <
-    assertEqualsToken(0, 1, tokens, 1, TokenType.NAME);      // a
-    assertEqualsToken(0, 7, tokens, 2, TokenType.OPERATOR);  // >
-    assertEqualsToken(0, 8, tokens, 3, TokenType.ERROR);     // •
+    assertEqualsToken(0, 0, tokens, 1, TokenType.OPERATOR);  // <
+    assertEqualsToken(0, 1, tokens, 2, TokenType.NAME);      // a
+    assertEqualsToken(0, 7, tokens, 3, TokenType.OPERATOR);  // >
+    assertEqualsToken(0, 8, tokens, 4, TokenType.ERROR);     // •
   });
 
   it('tokenizerEmptyCommentTest - empty end-line comment', () => {

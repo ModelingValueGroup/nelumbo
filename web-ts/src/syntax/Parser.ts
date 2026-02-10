@@ -4,12 +4,12 @@
  */
 
 import { List } from 'immutable';
-import type { Token } from '../Token';
-import type { Node } from '../core/Node';
-import { TOP_GROUP } from '../core/Type';
-import { Variable } from '../core/Variable';
-import type { TokenizerResult } from '../Tokenizer';
-import type { KnowledgeBase } from '../kb/KnowledgeBase';
+import type { Token } from './Token';
+import type { Node } from '../Node';
+import { TOP_GROUP } from '../Type';
+import { Variable } from '../Variable';
+import { Tokenizer, type TokenizerResult } from './Tokenizer';
+import type { KnowledgeBase } from '../KnowledgeBase';
 import { ParseContext, createParseContext } from './ParseContext';
 import type { ParseState } from './ParseState';
 import { PatternResult } from './PatternResult';
@@ -75,79 +75,105 @@ export class Parser {
   }
 
   private parse(result: ParserResult, multiple: boolean): ParserResult {
-    this._result = result;
-    this._knowledgeBase.setExceptionHandler(this);
+    return this._knowledgeBase.run(() => {
+      this._result = result;
+      this._knowledgeBase.setExceptionHandler(this);
 
-    try {
-      let token = this._tokenizerResult.first;
-      const node = this.parseNode(
-        token,
-        createParseContext(null, null, TOP_GROUP, Number.MIN_SAFE_INTEGER, null)
-      );
+      try {
+        let token = this._tokenizerResult.first;
+        const node = this.parseNode(
+          token,
+          createParseContext(null, null, TOP_GROUP, Number.MIN_SAFE_INTEGER, null)
+        );
 
-      if (node !== null) {
-        result.setRoot(node);
-        token = node.nextToken();
-        if (token !== null) {
-          this.addException(
-            ParseException.fromToken('Unexpected token ' + token + ' after end of input', token)
-          );
+        if (node !== null) {
+          result.setRoot(node);
+          token = node.nextToken();
+          if (token !== null) {
+            this.addException(
+              ParseException.fromToken('Unexpected token ' + token + ' after end of input', token)
+            );
+          }
         }
-      }
 
-      result.checkAssertions();
-      return result;
-    } finally {
-      this._knowledgeBase.endParsing(multiple);
-      this._result = null;
-    }
+        result.checkAssertions();
+        return result;
+      } finally {
+        this._knowledgeBase.endParsing(multiple);
+        this._result = null;
+      }
+    });
   }
 
   /**
    * Parse a single node.
    */
+  private static _parseNodeDepth = 0;
+  private static _parseNodeCount = 0;
   parseNode(token: Token | null, ctx: ParseContext): Node | null {
-    const nrOfExceptions = this.exceptions().size;
+    Parser._parseNodeDepth++;
+    Parser._parseNodeCount++;
 
-    // Pre-parse phase
-    let result = this.preParse(token, ctx, null);
-    if (result === null) {
-      if (nrOfExceptions === this.exceptions().size && token !== null) {
-        this.addException(
-          ParseException.fromToken('No syntax pattern found for ' + token, token)
-        );
-      }
-      return null;
+    // Safety limits to prevent browser hangs
+    if (Parser._parseNodeDepth > 1000) {
+      Parser._parseNodeDepth--;
+      throw new Error('Parser.parseNode: Maximum recursion depth exceeded');
+    }
+    if (Parser._parseNodeCount > 50000) {
+      throw new Error('Parser.parseNode: Maximum call count exceeded');
     }
 
-    // Post-parse phase
-    let left = result.postParse(ctx);
-    if (left !== null && ctx.precedence() < Number.MAX_SAFE_INTEGER) {
-      token = left.nextToken();
-      if (token !== null) {
-        result = this.preParse(token, ctx, left);
+    try {
+      const nrOfExceptions = this.exceptions().size;
 
-        while (result !== null) {
-          if (ctx.precedence() >= (result.leftPrecedence() ?? Number.MAX_SAFE_INTEGER)) {
-            return left;
-          }
+      // Pre-parse phase
+      let result = this.preParse(token, ctx, null);
+      if (result === null) {
+        if (nrOfExceptions === this.exceptions().size && token !== null) {
+          this.addException(
+            ParseException.fromToken('No syntax pattern found for ' + token, token)
+          );
+        }
+        return null;
+      }
 
-          left = result.postParse(ctx);
-          if (left === null) {
-            break;
-          }
-
-          token = left.nextToken();
-          if (token === null) {
-            return left;
-          }
-
+      // Post-parse phase
+      let left = result.postParse(ctx);
+      if (left !== null && ctx.precedence() < Number.MAX_SAFE_INTEGER) {
+        token = left.nextToken();
+        if (token !== null) {
           result = this.preParse(token, ctx, left);
+
+          let loopCount = 0;
+          while (result !== null) {
+            loopCount++;
+            if (loopCount > 10000) {
+              throw new Error('Parser.parseNode: Maximum loop iterations exceeded');
+            }
+
+            if (ctx.precedence() >= (result.leftPrecedence() ?? Number.MAX_SAFE_INTEGER)) {
+              return left;
+            }
+
+            left = result.postParse(ctx);
+            if (left === null) {
+              break;
+            }
+
+            token = left.nextToken();
+            if (token === null) {
+              return left;
+            }
+
+            result = this.preParse(token, ctx, left);
+          }
         }
       }
-    }
 
-    return left;
+      return left;
+    } finally {
+      Parser._parseNodeDepth--;
+    }
   }
 
   /**
@@ -199,7 +225,6 @@ export class Parser {
  * Static parse methods.
  */
 export function parseString(knowledgeBase: KnowledgeBase, input: string): List<Node> {
-  const { Tokenizer } = require('../Tokenizer');
   const tokenizer = new Tokenizer(input + '\n', input);
   const parser = new Parser(knowledgeBase, tokenizer.tokenize());
   return parser.parseEvaluate().roots();

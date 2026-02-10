@@ -4,15 +4,15 @@
  */
 
 import { Map, Set } from 'immutable';
-import { TokenType } from '../TokenType';
-import type { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
+import { TokenType } from './TokenType';
+import type { Token } from './Token';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
 import { Pattern } from '../patterns/Pattern';
 import type { Functor } from '../patterns/Functor';
 import type { RepetitionPattern } from '../patterns/RepetitionPattern';
-import type { ParseContext } from './ParseContext';
+import { createParseContext, type ParseContext } from './ParseContext';
 import type { PatternResult } from './PatternResult';
 import { ParseException } from './ParseException';
 
@@ -287,8 +287,17 @@ export class ParseState {
       this.elementMerge(this._group, state._group),
       this._startRepetitions.union(state._startRepetitions),
       this._endRepetitions.union(state._endRepetitions),
-      this._isKeyword || state._isKeyword
+      this.booleanMerge(this._isKeyword, state._isKeyword)
     );
+  }
+
+  private booleanMerge(b1: boolean, b2: boolean): boolean {
+    // In Java, elementMerge with Booleans throws if both are non-null and different
+    // For primitive booleans (always "non-null"), this means throw if they differ
+    if (b1 !== b2) {
+      throw new Error('Non deterministic pattern merge: ' + b1 + ' <> ' + b2);
+    }
+    return b1;
   }
 
   private functorMerge(state: ParseState): Functor | null {
@@ -353,26 +362,39 @@ export class ParseState {
     }
 
     let nrOfExceptions: number;
+    let iterationCount = 0;
+    const MAX_ITERATIONS = 10000;
     do {
+      iterationCount++;
+      if (iterationCount > MAX_ITERATIONS) {
+        console.error('ParseState.parse: Maximum iterations exceeded, breaking to prevent infinite loop');
+        break;
+      }
       nrOfExceptions = result.exceptions().size;
 
-      if (!this.token(token!, result, ctx, innerRepetitions, pre, true)) {
+      // Check if token matching succeeds
+      const tokenMatched = token !== null && this.token(token, result, ctx, innerRepetitions, pre, true);
+      if (!tokenMatched) {
         if (pre && this._group !== null) {
           result.endPreParse(this, token, this._leftPrecedence);
           return true;
         } else if (!pre && token !== null && this.outerEnd(token, result, ctx, outerRepetitions)) {
           result.endPostParse(this._functor!, token, this._leftPrecedence);
-        } else if (!this.node(token!, result, innerRepetitions, pre)) {
+        } else if (token === null || !this.node(token, result, innerRepetitions, pre)) {
           // Error recovery: skip to end of line
           if (result.exceptions().size > nrOfExceptions &&
               token !== null &&
-              token.type !== TokenType.ENDOFFILE &&
-              Pattern.isEndOfLine(token)) {
+              token.type !== TokenType.ENDOFFILE) {
+            // Skip tokens until we reach end of line
             while (token !== null && !Pattern.isEndOfLine(token)) {
               token = token.next;
             }
+            // Advance past the end-of-line marker to prevent infinite loop
             if (token !== null && token.type !== TokenType.ENDOFFILE) {
-              continue;
+              token = token.next;
+              if (token !== null && token.type !== TokenType.ENDOFFILE) {
+                continue;
+              }
             }
           }
           break;
@@ -397,12 +419,12 @@ export class ParseState {
     if (result.functor() === null) {
       if (this._functor === null || result.hasException()) {
         if ((!pre || !result.isEmpty()) && nrOfExceptions === result.exceptions().size) {
-          result.addException(
-            ParseException.fromToken(
-              'Unexpected token ' + token + ', expected ' + this.expectedTokens(ctx),
-              token!
-            )
-          );
+          const message = 'Unexpected token ' + token + ', expected ' + this.expectedTokens(ctx);
+          if (token !== null) {
+            result.addException(ParseException.fromToken(message, token));
+          } else {
+            result.addException(new ParseException(message, 0, 0, 0, 0, ''));
+          }
         }
         return false;
       }
@@ -605,7 +627,6 @@ export class ParseState {
     }
 
     const inner = this._innerPrecedence;
-    const { createParseContext } = require('./ParseContext');
     const node = result.parser().parseNode(
       currentToken,
       createParseContext(

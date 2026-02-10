@@ -2,8 +2,8 @@
  * SyntaxHighlighter - Token-based syntax coloring for the Nelumbo editor.
  */
 
-import type { Token } from '../Token';
-import type { TokenizerResult } from '../Tokenizer';
+import type { Token } from '../syntax/Token';
+import type { TokenizerResult } from '../syntax/Tokenizer';
 import { EditorTheme } from './EditorTheme';
 
 /**

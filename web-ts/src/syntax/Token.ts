@@ -4,8 +4,10 @@
  */
 
 import { TokenType } from './TokenType';
-import type { AstElement } from './core/AstElement';
-import type { Node } from './core/Node';
+import type { AstElement } from '../AstElement';
+import type { Node } from '../Node';
+import type { Variable } from '../Variable';
+import { Type } from '../Type';
 
 export class Token implements AstElement {
   // Type and content
@@ -124,8 +126,26 @@ export class Token implements AstElement {
 
   /**
    * Returns the token type to use for syntax highlighting.
+   * This considers semantic information from the parsed AST.
    */
   get colorType(): TokenType {
+    // Check if this token represents a variable (from the AST)
+    if (this.isVariableNode()) {
+      return TokenType.VARIABLE;
+    }
+    // Check if this is a NAME token representing a type
+    if (this.type === TokenType.NAME && this.isTypeNode()) {
+      return TokenType.TYPE;
+    }
+    // Check if this is a keyword or literal
+    if (this.type === TokenType.NAME && this._isTextMatch && (this._isKeyword || this.isLiteralNode())) {
+      return TokenType.KEYWORD;
+    }
+    // Check if < or > are part of a pattern (meta operators)
+    if ((this.text === '<' || this.text === '>') && this.isPatternNode()) {
+      return TokenType.META_OPERATOR;
+    }
+    // Fallback to text match logic
     if (this._isTextMatch) {
       return this._isKeyword ? TokenType.KEYWORD : this.type;
     }
@@ -241,6 +261,41 @@ export class Token implements AstElement {
 
   setNode(node: Node): void {
     this._node = node;
+  }
+
+  /**
+   * Get the variable associated with this token's node.
+   */
+  variable(): Variable | null {
+    return this._node?.variable() ?? null;
+  }
+
+  /**
+   * Check if this token represents a variable node.
+   */
+  isVariableNode(): boolean {
+    return this.variable() !== null;
+  }
+
+  /**
+   * Check if this token represents a type node.
+   */
+  isTypeNode(): boolean {
+    return this._node instanceof Type;
+  }
+
+  /**
+   * Check if this token represents a pattern node.
+   */
+  isPatternNode(): boolean {
+    return this._node !== null && Type.PATTERN.isAssignableFrom(this._node.type());
+  }
+
+  /**
+   * Check if this token represents a literal node.
+   */
+  isLiteralNode(): boolean {
+    return this._node !== null && Type.LITERAL.isAssignableFrom(this._node.type());
   }
 
   // Parse state (for parser)

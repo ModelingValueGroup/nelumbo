@@ -4,8 +4,8 @@
  */
 
 import { List } from 'immutable';
-import type { Node } from '../core/Node';
-import type { TokenizerResult } from '../Tokenizer';
+import type { Node } from '../Node';
+import type { TokenizerResult } from './Tokenizer';
 import { ParseException } from './ParseException';
 
 /**

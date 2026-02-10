@@ -4,14 +4,14 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import { TokenType } from '../TokenType';
-import type { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
+import { TokenType } from '../syntax/TokenType';
+import type { Token } from '../syntax/Token';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
+import { Node } from '../Node';
 import { Pattern } from './Pattern';
-import type { ParseState } from '../syntax/ParseState';
+import { ParseState } from '../syntax/ParseState';
 import type { Functor } from './Functor';
 
 export class RepetitionPattern extends Pattern {
@@ -57,10 +57,8 @@ export class RepetitionPattern extends Pattern {
   }
 
   parseState(next: ParseState, functor: Functor): ParseState {
-    const { ParseState: PS } = require('../syntax/ParseState');
-
-    const start = new PS(Set<RepetitionPattern>([this]), Set<RepetitionPattern>());
-    let end = new PS(Set<RepetitionPattern>(), Set<RepetitionPattern>([this]));
+    const start = new ParseState(Set<RepetitionPattern>([this]), Set<RepetitionPattern>());
+    let end = new ParseState(Set<RepetitionPattern>(), Set<RepetitionPattern>([this]));
 
     const separator = this.separator();
     if (separator !== null) {

@@ -3,10 +3,10 @@
  * Displays the token and parse tree in an expandable tree view.
  */
 
-import type { Token } from '../Token';
-import type { TokenizerResult } from '../Tokenizer';
+import type { Token } from '../syntax/Token';
+import type { TokenizerResult } from '../syntax/Tokenizer';
 import type { ParserResult } from '../syntax/ParserResult';
-import { Node } from '../core/Node';
+import { Node } from '../Node';
 import { List } from 'immutable';
 
 /**

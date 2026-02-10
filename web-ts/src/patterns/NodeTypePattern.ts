@@ -4,14 +4,14 @@
  */
 
 import { List, Map } from 'immutable';
-import { TokenType } from '../TokenType';
-import type { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
+import { TokenType } from '../syntax/TokenType';
+import type { Token } from '../syntax/Token';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
+import { Node } from '../Node';
 import { Pattern } from './Pattern';
-import type { ParseState } from '../syntax/ParseState';
+import { ParseState } from '../syntax/ParseState';
 import type { Functor } from './Functor';
 
 export class NodeTypePattern extends Pattern {
@@ -54,8 +54,7 @@ export class NodeTypePattern extends Pattern {
   }
 
   parseState(next: ParseState, _functor: Functor): ParseState {
-    const { ParseState: PS } = require('../syntax/ParseState');
-    return new PS(this.nodeType(), next, this.precedence());
+    return new ParseState(this.nodeType(), next, this.precedence());
   }
 
   toString(_previous?: TokenType[]): string {
@@ -81,7 +80,7 @@ export class NodeTypePattern extends Pattern {
     const arg = args.get(ai);
     if (arg instanceof Node) {
       const node = arg;
-      const nodeT = node instanceof Type ? node : node.type();
+      const nodeT = node.type();
 
       // Check if type is assignable or if it's a Variable matching VARIABLE type
       if (this.nodeType().isAssignableFrom(nodeT) ||
@@ -123,9 +122,10 @@ export class NodeTypePattern extends Pattern {
       const e = elements.get(i);
       if (e instanceof Node) {
         const n = e;
+        const nType = (e as Node).type();
         const nodeType = this.nodeType();
 
-        if (nodeType.isAssignableFrom(n.type())) {
+        if (nodeType.isAssignableFrom(nType)) {
           args.push(n);
           return i + 1;
         } else if (Type.VARIABLE.equals(nodeType) && n instanceof Variable) {
@@ -135,7 +135,7 @@ export class NodeTypePattern extends Pattern {
           const v = nodeType.variable();
           if (v !== null) {
             const resolvedType = typeArgs.get(v);
-            if (resolvedType !== undefined && resolvedType.isAssignableFrom(n.type())) {
+            if (resolvedType !== undefined && resolvedType.isAssignableFrom(nType)) {
               args.push(n);
               return i + 1;
             }

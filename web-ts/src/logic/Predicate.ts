@@ -4,13 +4,13 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
+import { Node } from '../Node';
 import type { Functor } from '../patterns/Functor';
-import { InferResult } from './InferResult';
-import type { InferContext } from './InferContext';
+import { InferResult } from '../InferResult';
+import type { InferContext } from '../InferContext';
 
 const MAX_LOGIC_DEPTH = 32;
 
@@ -121,6 +121,20 @@ export class Predicate extends Node {
    */
   unresolvable(): InferResult {
     return InferResult.unresolvable(this);
+  }
+
+  /**
+   * Create a falsehood result with incomplete facts.
+   */
+  falsehoodCI(): InferResult {
+    return InferResult.falsehoodsIC(this.singleton());
+  }
+
+  /**
+   * Create a falsehoods result with incomplete inference.
+   */
+  falsehoodsII(): InferResult {
+    return InferResult.falsehoodsII(this.singleton());
   }
 
   /**
@@ -302,12 +316,12 @@ export class Predicate extends Node {
 }
 
 // Add methods to KnowledgeBase interface
-declare module '../kb/KnowledgeBase' {
+declare module '../KnowledgeBase' {
   interface KnowledgeBase {
     getFacts(predicate: Predicate, context: InferContext): InferResult;
     getMemoiz(predicate: Predicate): InferResult | null;
     memoization(predicate: Predicate, result: InferResult): void;
-    getRules(predicate: Predicate): Set<import('../kb/Rule').Rule>;
+    getRules(predicate: Predicate): Set<import('../Rule').Rule>;
     createInferContext(): InferContext;
   }
 }

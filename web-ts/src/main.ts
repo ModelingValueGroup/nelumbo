@@ -24,6 +24,12 @@ if (typeof document !== 'undefined') {
 }
 
 function initUI(): void {
+  // Hide loading indicator first
+  const loading = document.getElementById('loading');
+  if (loading) {
+    loading.style.display = 'none';
+  }
+
   const container = document.getElementById('app');
 
   if (!container) {
@@ -31,23 +37,26 @@ function initUI(): void {
     return;
   }
 
-  // Hide loading indicator
-  const loading = document.getElementById('loading');
-  if (loading) {
-    loading.style.display = 'none';
+  try {
+    // Check for dark mode preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    // Create editor
+    const editor = new Editor({
+      container,
+      theme: prefersDark ? 'dark' : 'light',
+    });
+
+    // Store reference
+    window.nelumboEditor = editor;
+  } catch (error) {
+    console.error('Error initializing editor:', error);
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = 'padding: 20px; color: red; font-family: monospace;';
+    errorDiv.innerHTML = `
+      <h2>Error initializing editor</h2>
+      <pre>${error instanceof Error ? error.stack : String(error)}</pre>
+    `;
+    container.appendChild(errorDiv);
   }
-
-  // Check for dark mode preference
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  // Create editor
-  const editor = new Editor({
-    container,
-    theme: prefersDark ? 'dark' : 'light',
-  });
-
-  // Store reference
-  window.nelumboEditor = editor;
-
-  console.log('Nelumbo Editor initialized');
 }

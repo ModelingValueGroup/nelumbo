@@ -4,14 +4,14 @@
  */
 
 import { List, Set } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
+import { Node } from '../Node';
 import type { Functor } from '../patterns/Functor';
 import { Predicate } from './Predicate';
-import { InferResult } from './InferResult';
-import type { InferContext } from './InferContext';
+import { InferResult } from '../InferResult';
+import type { InferContext } from '../InferContext';
 
 /**
  * Quantifier - base for existential and universal quantification.

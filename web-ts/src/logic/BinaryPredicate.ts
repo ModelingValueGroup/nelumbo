@@ -4,13 +4,13 @@
  */
 
 import { List } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Node } from '../core/Node';
+import type { AstElement } from '../AstElement';
+import { Node } from '../Node';
 import type { Functor } from '../patterns/Functor';
 import { Predicate } from './Predicate';
 import { CompoundPredicate } from './CompoundPredicate';
-import { InferResult } from './InferResult';
-import type { InferContext } from './InferContext';
+import { InferResult } from '../InferResult';
+import type { InferContext } from '../InferContext';
 
 /**
  * BinaryPredicate - a predicate with two operands.

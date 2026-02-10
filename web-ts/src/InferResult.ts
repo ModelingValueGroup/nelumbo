@@ -4,8 +4,8 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import type { Variable } from '../core/Variable';
-import type { Predicate } from './Predicate';
+import type { Variable } from './Variable';
+import type { Predicate } from './logic/Predicate';
 
 /**
  * InferResult - represents the result of logical inference.

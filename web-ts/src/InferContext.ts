@@ -4,8 +4,8 @@
  */
 
 import { List, Map } from 'immutable';
-import type { KnowledgeBase } from '../kb/KnowledgeBase';
-import type { Predicate } from './Predicate';
+import type { KnowledgeBase } from './KnowledgeBase';
+import type { Predicate } from './logic/Predicate';
 import type { InferResult } from './InferResult';
 
 /**

@@ -3,7 +3,7 @@
  * Displays facts, rules, and other KB contents.
  */
 
-import type { KnowledgeBase } from '../kb/KnowledgeBase';
+import type { KnowledgeBase } from '../KnowledgeBase';
 import type { Functor } from '../patterns/Functor';
 
 /**

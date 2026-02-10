@@ -4,10 +4,10 @@
  */
 
 import { Map, Set } from 'immutable';
-import { TokenType } from '../TokenType';
-import { Type } from '../core/Type';
-import { Node } from '../core/Node';
-import type { Functor } from '../patterns/Functor';
+import { TokenType } from './syntax/TokenType';
+import { Type } from './Type';
+import { Node } from './Node';
+import type { Functor } from './patterns/Functor';
 
 /**
  * MatchState - trie for matching rules and transforms.

@@ -3,7 +3,7 @@
  * Ported from Java: org.modelingvalue.nelumbo.syntax.ParseContext
  */
 
-import type { Token } from '../Token';
+import type { Token } from './Token';
 import type { ParseState } from './ParseState';
 
 /**

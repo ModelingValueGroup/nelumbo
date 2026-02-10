@@ -4,7 +4,7 @@
  */
 
 import { List } from 'immutable';
-import { Token } from '../Token';
+import { Token } from './syntax/Token';
 
 /**
  * Interface for AST elements (Token and Node).

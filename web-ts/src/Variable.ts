@@ -4,11 +4,11 @@
  */
 
 import { List } from 'immutable';
-import { TokenType } from '../TokenType';
-import type { Token } from '../Token';
+import { TokenType } from './syntax/TokenType';
+import type { Token } from './syntax/Token';
 import type { AstElement } from './AstElement';
 import { Type } from './Type';
-import type { Functor } from '../patterns/Functor';
+import type { Functor } from './patterns/Functor';
 
 /**
  * Variable class - represents logic variables with type constraints.

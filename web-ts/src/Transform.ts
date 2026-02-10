@@ -4,33 +4,17 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Node } from '../core/Node';
-import { Pattern } from '../patterns/Pattern';
-import { Functor } from '../patterns/Functor';
-import { TokenTextPattern } from '../patterns/TokenTextPattern';
+import type { AstElement } from './AstElement';
+import { Type } from './Type';
+import { Node } from './Node';
+import { Pattern } from './patterns/Pattern';
+import { Functor } from './patterns/Functor';
+import { TokenTextPattern } from './patterns/TokenTextPattern';
 import type { KnowledgeBase } from './KnowledgeBase';
+import { NList } from './collections/NList';
 
-/**
- * NList - a list node for transform targets.
- */
-export class NList extends Node {
-  constructor(functor: Functor | null, elements: List<AstElement>, ...args: unknown[]) {
-    super(functor!, elements, ...args);
-  }
-
-  elements(): List<Node> {
-    const result: Node[] = [];
-    for (let i = 0; i < this.length(); i++) {
-      const elem = this.get(i);
-      if (elem instanceof Node) {
-        result.push(elem);
-      }
-    }
-    return List(result);
-  }
-}
+// Re-export NList for backwards compatibility
+export { NList } from './collections/NList';
 
 /**
  * Transform - a rewrite/transformation rule.

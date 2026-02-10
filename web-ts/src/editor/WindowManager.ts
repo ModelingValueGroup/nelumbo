@@ -331,18 +331,24 @@ export class WindowManager {
       const title = document.createElement('span');
       title.className = 'tab-title';
       title.textContent = window.getTitle();
-      title.onclick = () => this.setActiveWindow(id);
       tab.appendChild(title);
+
+      // Click on tab to activate
+      tab.addEventListener('click', () => {
+        console.log('Tab clicked:', id);
+        this.setActiveWindow(id);
+      });
 
       // Close button (not for the last window)
       if (this.windowOrder.length > 1 || window.getIsExample()) {
         const closeBtn = document.createElement('span');
         closeBtn.className = 'tab-close';
         closeBtn.textContent = '×';
-        closeBtn.onclick = (e) => {
+        closeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          console.log('Close button clicked:', id);
           this.closeWindow(id);
-        };
+        });
         tab.appendChild(closeBtn);
       }
 
@@ -353,7 +359,10 @@ export class WindowManager {
     const newTabBtn = document.createElement('div');
     newTabBtn.className = 'editor-tab new-tab';
     newTabBtn.textContent = '+';
-    newTabBtn.onclick = () => this.createNewWindow();
+    newTabBtn.addEventListener('click', () => {
+      console.log('New tab button clicked');
+      this.createNewWindow();
+    });
     this.tabContainer.appendChild(newTabBtn);
   }
 

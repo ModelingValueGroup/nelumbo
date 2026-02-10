@@ -4,9 +4,9 @@
  */
 
 import { List } from 'immutable';
-import type { Token } from '../src/Token';
-import { Tokenizer } from '../src/Tokenizer';
-import type { TokenizerResult } from '../src/Tokenizer';
+import type { Token } from '../src/syntax/Token';
+import { Tokenizer } from '../src/syntax/Tokenizer';
+import type { TokenizerResult } from '../src/syntax/Tokenizer';
 
 /**
  * Tokenize a string and return all tokens (including whitespace).

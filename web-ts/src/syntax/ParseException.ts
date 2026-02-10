@@ -4,8 +4,8 @@
  */
 
 import { List } from 'immutable';
-import type { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
+import type { Token } from './Token';
+import type { AstElement } from '../AstElement';
 
 export class ParseException extends Error {
   readonly line: number;

@@ -4,26 +4,28 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import { TokenType } from '../TokenType';
-import type { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
-import { Pattern } from '../patterns/Pattern';
-import { Functor } from '../patterns/Functor';
-import type { NodeConstructor } from '../patterns/Functor';
-import type { ParseContext } from '../syntax/ParseContext';
-import { ParseState } from '../syntax/ParseState';
-import { PatternResult } from '../syntax/PatternResult';
-import { ParseException } from '../syntax/ParseException';
-import type { Parser } from '../syntax/Parser';
+import { TokenType } from './syntax/TokenType';
+import type { Token } from './syntax/Token';
+import type { AstElement } from './AstElement';
+import { Type } from './Type';
+import { Variable } from './Variable';
+import { Node } from './Node';
+import { Pattern } from './patterns/Pattern';
+import './patterns/patternRegistry'; // Must be imported before Pattern factory methods are used
+import { Functor } from './patterns/Functor';
+import type { NodeConstructor } from './patterns/Functor';
+import type { ParseContext } from './syntax/ParseContext';
+import { ParseState } from './syntax/ParseState';
+import { PatternResult } from './syntax/PatternResult';
+import { ParseException } from './syntax/ParseException';
+import type { Parser } from './syntax/Parser';
 import { MatchState } from './MatchState';
 import type { Rule } from './Rule';
 import type { Transform } from './Transform';
-import type { Predicate } from '../logic/Predicate';
-import { InferResult } from '../logic/InferResult';
-import { InferContext } from '../logic/InferContext';
+import type { Predicate } from './logic/Predicate';
+import { InferResult } from './InferResult';
+import { InferContext } from './InferContext';
+import { registerBaseSyntax } from './BaseSyntax';
 
 /**
  * Exception handler interface.
@@ -546,9 +548,10 @@ export class KnowledgeBase implements ParseExceptionHandler {
           kb.addType(Type.fromTokenType(tt));
         }
       }
-
-      // TODO: Add more base patterns and functors
     });
+
+    // Register base syntax patterns (after types are added)
+    registerBaseSyntax(kb);
 
     return kb;
   }

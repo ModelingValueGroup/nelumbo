@@ -4,13 +4,13 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import { TokenType } from '../TokenType';
-import type { Token } from '../Token';
+import { TokenType } from './syntax/TokenType';
+import type { Token } from './syntax/Token';
 import type { AstElement } from './AstElement';
-import { Type } from './Type';
+import type { Type } from './Type';
 import { Variable } from './Variable';
-import type { Functor } from '../patterns/Functor';
-import type { MatchState } from '../kb/MatchState';
+import type { Functor } from './patterns/Functor';
+import type { MatchState } from './MatchState';
 
 // Type for the replace function
 export type ReplaceFunction = (node: Node) => Node;
@@ -30,6 +30,9 @@ export class Node implements AstElement {
   private _binding: Map<Variable, unknown> | null = null;
   private _hashCodeCached = false;
   private _hashCode = 0;
+
+  // Factory hook for Type.fromVariable (avoids circular runtime dependency)
+  static _typeFromVariable: ((v: Variable) => Node) | null = null;
 
   /**
    * Constructor for parsed nodes.
@@ -53,7 +56,7 @@ export class Node implements AstElement {
   /**
    * Initialize token-node links.
    */
-  private init(elements: List<AstElement>): void {
+  protected init(elements: List<AstElement>): void {
     for (const e of elements) {
       if (this.isToken(e)) {
         (e as Token).setNode(this);
@@ -222,7 +225,6 @@ export class Node implements AstElement {
   private valueEquals(a: unknown, b: unknown): boolean {
     if (a === b) return true;
     if (a instanceof Node && b instanceof Node) return a.equals(b);
-    if (a instanceof Type && b instanceof Type) return a.equals(b);
     if (a instanceof Variable && b instanceof Variable) return a.equals(b);
     if (List.isList(a) && List.isList(b)) return (a as List<unknown>).equals(b as List<unknown>);
     if (Set.isSet(a) && Set.isSet(b)) return (a as Set<unknown>).equals(b as Set<unknown>);
@@ -256,7 +258,7 @@ export class Node implements AstElement {
     let val: unknown = this;
     for (const i of indices) {
       val = (val as Node).get(i);
-      if (val instanceof Type || val instanceof Variable) {
+      if ((val instanceof Node && val.isType()) || val instanceof Variable) {
         return null;
       }
     }
@@ -326,11 +328,11 @@ export class Node implements AstElement {
     vars: Map<Variable, unknown>,
     _i: number
   ): Map<Variable, unknown> | null {
-    let thisVal: unknown = thisIn instanceof Type || thisIn instanceof Variable ? null : thisIn;
+    let thisVal: unknown = (thisIn instanceof Node && thisIn.isType()) || thisIn instanceof Variable ? null : thisIn;
 
     // Handle type with variable
-    if (declVal instanceof Type) {
-      const v = (declVal as Type).variable();
+    if (declVal instanceof Node && declVal.isType()) {
+      const v = declVal.variable();
       if (v !== null) {
         declVal = v;
       }
@@ -339,7 +341,7 @@ export class Node implements AstElement {
     if (declVal instanceof Variable) {
       const declVar = declVal;
       let varVal = vars.get(declVar);
-      if (varVal instanceof Type) varVal = null;
+      if (varVal instanceof Node && varVal.isType()) varVal = null;
 
       if (varVal !== null && varVal !== undefined) {
         if (thisVal !== null && !this.valueEquals(thisVal, varVal)) {
@@ -384,8 +386,9 @@ export class Node implements AstElement {
    * Get the type of a value.
    */
   static typeOf(v: unknown): Type | null {
-    if (v instanceof Type) return v;
-    if (v instanceof Node) return v.type();
+    if (v instanceof Node) {
+      return v.isType() ? v as unknown as Type : v.type();
+    }
     return null;
   }
 
@@ -433,13 +436,13 @@ export class Node implements AstElement {
         const v = from.variable();
         if (v !== null) {
           const to = vars.get(v);
-          if (to instanceof Type) {
-            return thisVal.setType(from.rewrite(to));
+          if (to instanceof Node && to.isType()) {
+            return thisVal.setType(from.rewrite(to as unknown as Type));
           }
         }
       }
-    } else if (declVal instanceof Node && !(declVal instanceof Type) &&
-               thisVal instanceof Node && !(thisVal instanceof Type)) {
+    } else if (declVal instanceof Node && !declVal.isType() &&
+               thisVal instanceof Node && !thisVal.isType()) {
       return thisVal.setBinding(vars, declVal);
     } else if (List.isList(declVal) && List.isList(thisVal)) {
       const declList = declVal as List<unknown>;
@@ -454,17 +457,17 @@ export class Node implements AstElement {
         }
         return newList;
       }
-    } else if (declVal instanceof Type && thisVal instanceof Type) {
+    } else if (declVal instanceof Node && declVal.isType() && thisVal instanceof Node && thisVal.isType()) {
       const declVar = declVal.variable();
       if (declVar !== null) {
         const varVal = vars.get(declVar);
-        if (varVal instanceof Type) {
-          return thisVal.rewrite(varVal);
+        if (varVal instanceof Node && varVal.isType()) {
+          return (thisVal as unknown as { rewrite(t: Node): Node }).rewrite(varVal);
         } else if (varVal instanceof Variable) {
-          return Type.fromVariable(varVal);
+          return Node._typeFromVariable!(varVal);
         }
       } else {
-        return thisVal.setBinding(declVal, vars);
+        return thisVal.setBinding(vars, declVal);
       }
     }
 
@@ -534,6 +537,13 @@ export class Node implements AstElement {
     return null;
   }
 
+  /**
+   * Check if this node is a Type.
+   */
+  isType(): boolean {
+    return false;
+  }
+
   // Token access
   firstToken(): Token | null {
     const elements = this.astElements();
@@ -576,16 +586,17 @@ export class Node implements AstElement {
     let state = matchState;
 
     for (const arg of args) {
-      if (arg instanceof Type) {
-        const tt = arg.tokenType();
+      if (arg instanceof Node && arg.isType()) {
+        const typeArg = arg as unknown as { tokenType(): TokenType | null; variable(): Variable | null };
+        const tt = typeArg.tokenType();
         if (tt !== null) {
           state = state.withTokenType(tt);
         } else {
-          const v = arg.variable();
+          const v = typeArg.variable();
           if (v !== null) {
             state = state.withType(v.type());
           } else {
-            state = state.withType(arg);
+            state = state.withType(arg as unknown as Type);
           }
         }
       } else if (arg instanceof Variable) {
@@ -619,7 +630,7 @@ export class Node implements AstElement {
     if (obj.constructor !== this.constructor) return false;
     if (obj.hashCode() !== this.hashCode()) return false;
 
-    if (!this.typeForEquals().equals(obj.typeForEquals())) {
+    if (!this.valueEquals(this.typeForEquals(), obj.typeForEquals())) {
       return false;
     }
     if (this.length() !== obj.length()) {
@@ -633,7 +644,7 @@ export class Node implements AstElement {
     return true;
   }
 
-  protected typeForEquals(): Type | Functor {
+  protected typeForEquals(): unknown {
     return this.typeOrFunctor();
   }
 
@@ -654,7 +665,6 @@ export class Node implements AstElement {
   private hashValue(e: unknown): number {
     if (e === null || e === undefined) return 0;
     if (e instanceof Node) return e.hashCode();
-    if (e instanceof Type) return e.hashCode();
     if (e instanceof Variable) return e.hashCode();
     if (typeof e === 'string') return e.length;
     if (typeof e === 'number') return e;
@@ -699,7 +709,6 @@ export class Node implements AstElement {
     const val = this.get(i);
     if (val === null || val === undefined) return 'null';
     if (val instanceof Node) return val.toString();
-    if (val instanceof Type) return val.name();
     if (val instanceof Variable) return val.name();
     if (typeof val === 'string') return '"' + val + '"';
     return String(val);

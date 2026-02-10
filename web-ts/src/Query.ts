@@ -4,16 +4,16 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Node } from '../core/Node';
-import { Variable } from '../core/Variable';
-import type { Functor } from '../patterns/Functor';
-import { Predicate } from '../logic/Predicate';
-import { InferResult } from '../logic/InferResult';
-import { ParseException } from '../syntax/ParseException';
+import type { AstElement } from './AstElement';
+import { Node } from './Node';
+import { Variable } from './Variable';
+import type { Functor } from './patterns/Functor';
+import { Predicate } from './logic/Predicate';
+import { InferResult } from './InferResult';
+import { ParseException } from './syntax/ParseException';
 import type { KnowledgeBase, ParseExceptionHandler } from './KnowledgeBase';
 import type { Evaluatable } from './Evaluatable';
-import { Optional, some, none } from '../patterns/OptionalPattern';
+import { Optional, some, none } from './patterns/OptionalPattern';
 
 /**
  * Query - a query against the knowledge base with optional expected results.

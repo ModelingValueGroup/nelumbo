@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Tokenizer } from '../src/Tokenizer';
-import { TokenType } from '../src/TokenType';
+import { Tokenizer } from '../src/syntax/Tokenizer';
+import { TokenType } from '../src/syntax/TokenType';
 
 describe('Syntax', () => {
   it('exampleTest - complex syntax with imports, types, patterns, rules', () => {

@@ -4,12 +4,12 @@
  */
 
 import { List, Set } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Node } from '../core/Node';
-import type { Functor } from '../patterns/Functor';
-import { Predicate } from '../logic/Predicate';
-import { InferResult } from '../logic/InferResult';
-import type { InferContext } from '../logic/InferContext';
+import type { AstElement } from './AstElement';
+import { Node } from './Node';
+import type { Functor } from './patterns/Functor';
+import { Predicate } from './logic/Predicate';
+import { InferResult } from './InferResult';
+import type { InferContext } from './InferContext';
 import type { KnowledgeBase, ParseExceptionHandler } from './KnowledgeBase';
 import type { Evaluatable } from './Evaluatable';
 

@@ -81,6 +81,11 @@ tasks {
         dependsOn(prepareServerResource)
     }
 
+    // Ensure sourcesJar runs after prepareServerResource since it copies into src/main/resources
+    withType<Jar>().matching { it.name == "sourcesJar" }.configureEach {
+        dependsOn(prepareServerResource)
+    }
+
     signPlugin {
         certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
         privateKey.set(System.getenv("PRIVATE_KEY"))

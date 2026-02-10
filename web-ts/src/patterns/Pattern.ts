@@ -4,12 +4,12 @@
  */
 
 import { List, Map } from 'immutable';
-import { TokenType } from '../TokenType';
-import type { Token } from '../Token';
-import type { AstElement } from '../core/AstElement';
-import { Type } from '../core/Type';
-import { Variable } from '../core/Variable';
-import { Node } from '../core/Node';
+import { TokenType } from '../syntax/TokenType';
+import type { Token } from '../syntax/Token';
+import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
+import { Variable } from '../Variable';
+import { Node } from '../Node';
 import type { ParseState } from '../syntax/ParseState';
 import type { Functor } from './Functor';
 
@@ -168,71 +168,93 @@ export abstract class Pattern extends Node {
   }
 
   // Factory methods with AST elements
+  // These are implemented using a registry pattern to avoid circular imports
+
+  private static _registry: {
+    AlternationPattern?: new (type: Type, ast: List<AstElement>, options: List<Pattern>) => Pattern;
+    NodeTypePattern?: new (type: Type, ast: List<AstElement>, nodeType: Type, precedence: number | null) => Pattern;
+    OptionalPattern?: new (type: Type, ast: List<AstElement>, optional: Pattern) => Pattern;
+    RepetitionPattern?: new (type: Type, ast: List<AstElement>, repeated: Pattern, mandatory: boolean, separator: Pattern | null) => Pattern;
+    SequencePattern?: new (type: Type, ast: List<AstElement>, elements: List<Pattern>) => Pattern;
+    TokenTextPattern?: new (type: Type, ast: List<AstElement>, text: string | Variable, isKeyword?: boolean) => Pattern;
+    TokenTypePattern?: new (type: Type, ast: List<AstElement>, tokenType: TokenType) => Pattern;
+  } = {};
+
+  static registerPatternClass(name: string, clazz: unknown): void {
+    (Pattern._registry as Record<string, unknown>)[name] = clazz;
+  }
 
   static aWithElements(ast: List<AstElement>, ...options: Pattern[]): Pattern {
-    // Import dynamically to avoid circular deps
-    const { AlternationPattern } = require('./AlternationPattern');
-    return new AlternationPattern(Type.PATTERN, ast, List(options));
+    const Clazz = Pattern._registry.AlternationPattern;
+    if (!Clazz) throw new Error('AlternationPattern not registered');
+    return new Clazz(Type.PATTERN, ast, List(options));
   }
 
   static nWithElements(ast: List<AstElement>, nodeType: Type, precedence: number | null): Pattern {
-    const { NodeTypePattern } = require('./NodeTypePattern');
-    return new NodeTypePattern(Type.PATTERN, ast, nodeType, precedence);
+    const Clazz = Pattern._registry.NodeTypePattern;
+    if (!Clazz) throw new Error('NodeTypePattern not registered');
+    return new Clazz(Type.PATTERN, ast, nodeType, precedence);
   }
 
   static oWithElements(ast: List<AstElement>, optional: Pattern): Pattern {
-    const { OptionalPattern } = require('./OptionalPattern');
-    return new OptionalPattern(Type.PATTERN, ast, optional);
+    const Clazz = Pattern._registry.OptionalPattern;
+    if (!Clazz) throw new Error('OptionalPattern not registered');
+    return new Clazz(Type.PATTERN, ast, optional);
   }
 
   static rWithElements(ast: List<AstElement>, repeated: Pattern, mandatory: boolean, separator: Pattern | null): Pattern {
-    const { RepetitionPattern } = require('./RepetitionPattern');
-    return new RepetitionPattern(Type.PATTERN, ast, repeated, mandatory, separator);
+    const Clazz = Pattern._registry.RepetitionPattern;
+    if (!Clazz) throw new Error('RepetitionPattern not registered');
+    return new Clazz(Type.PATTERN, ast, repeated, mandatory, separator);
   }
 
   static sWithElements(ast: List<AstElement>, ...elements: Pattern[]): Pattern {
-    const { SequencePattern } = require('./SequencePattern');
+    const Clazz = Pattern._registry.SequencePattern;
+    if (!Clazz) throw new Error('SequencePattern not registered');
     // Flatten nested sequence patterns
     const flattened = List(elements).flatMap(e => {
-      if (e instanceof SequencePattern) {
+      if ('patternElements' in e && typeof (e as { patternElements: unknown }).patternElements === 'function') {
         return (e as unknown as { patternElements(): List<Pattern> }).patternElements();
       }
       return List([e]);
     });
-    return new SequencePattern(Type.PATTERN, ast, flattened);
+    return new Clazz(Type.PATTERN, ast, flattened);
   }
 
   static tTextWithElements(ast: List<AstElement>, tokenText: string, isKeyword: boolean): Pattern {
-    const { TokenTextPattern } = require('./TokenTextPattern');
-    return new TokenTextPattern(Type.PATTERN, ast, tokenText, isKeyword);
+    const Clazz = Pattern._registry.TokenTextPattern;
+    if (!Clazz) throw new Error('TokenTextPattern not registered');
+    return new Clazz(Type.PATTERN, ast, tokenText, isKeyword);
   }
 
   static kWithElements(ast: List<AstElement>, tokenText: string): Pattern {
-    const { TokenTextPattern } = require('./TokenTextPattern');
-    return new TokenTextPattern(Type.PATTERN, ast, tokenText, true);
+    const Clazz = Pattern._registry.TokenTextPattern;
+    if (!Clazz) throw new Error('TokenTextPattern not registered');
+    return new Clazz(Type.PATTERN, ast, tokenText, true);
   }
 
   static tVarWithElements(ast: List<AstElement>, variable: Variable): Pattern {
-    const { TokenTextPattern } = require('./TokenTextPattern');
-    return new TokenTextPattern(Type.PATTERN, ast, variable);
+    const Clazz = Pattern._registry.TokenTextPattern;
+    if (!Clazz) throw new Error('TokenTextPattern not registered');
+    return new Clazz(Type.PATTERN, ast, variable);
   }
 
   static tTypeWithElements(ast: List<AstElement>, tokenType: TokenType): Pattern {
-    const { TokenTypePattern } = require('./TokenTypePattern');
-    return new TokenTypePattern(Type.PATTERN, ast, tokenType);
+    const Clazz = Pattern._registry.TokenTypePattern;
+    if (!Clazz) throw new Error('TokenTypePattern not registered');
+    return new Clazz(Type.PATTERN, ast, tokenType);
   }
 
   static vWithElements(ast: List<AstElement>, variable: Variable): Pattern {
     const type = variable.type();
     const tt = type.tokenType();
     if (tt !== null) {
-      const { TokenTextPattern } = require('./TokenTextPattern');
-      return new TokenTextPattern(Type.PATTERN, ast, variable);
+      const Clazz = Pattern._registry.TokenTextPattern;
+      if (!Clazz) throw new Error('TokenTextPattern not registered');
+      return new Clazz(Type.PATTERN, ast, variable);
     }
-    const { NodeTypePattern } = require('./NodeTypePattern');
-    return new NodeTypePattern(Type.PATTERN, ast, Type.fromVariable(variable), null);
+    const Clazz = Pattern._registry.NodeTypePattern;
+    if (!Clazz) throw new Error('NodeTypePattern not registered');
+    return new Clazz(Type.PATTERN, ast, Type.fromVariable(variable), null);
   }
 }
-
-// Re-export SequencePattern for type checking
-export { SequencePattern } from './SequencePattern';

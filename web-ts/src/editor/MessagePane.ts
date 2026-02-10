@@ -4,7 +4,7 @@
 
 import type { ParserResult } from '../syntax/ParserResult';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
-import { Tokenizer } from '../Tokenizer';
+import { Tokenizer } from '../syntax/Tokenizer';
 
 /**
  * Message types for display.
@@ -50,7 +50,7 @@ export class MessagePane {
 
   private setupStyles(): void {
     this.container.style.fontFamily = "'JetBrains Mono', 'Fira Code', 'Consolas', monospace";
-    this.container.style.fontSize = '13px';
+    this.container.style.fontSize = '14px'; // Match editor font size
     this.container.style.lineHeight = '1.5';
     this.container.style.padding = '16px';
     this.container.style.overflow = 'auto';
@@ -120,42 +120,50 @@ export class MessagePane {
       return;
     }
 
-    // Sort messages by line
+    // Sort messages by line (0-based line numbers from ParseException)
     const sorted = [...this.messages].sort((a, b) => a.line - b.line);
 
-    // Group messages and add empty lines to align with editor
+    // Build lines aligned with editor lines (0-based)
+    const entries: { text: string; msg: Message | null }[] = [];
     let lastLine = 0;
-    const lines: string[] = [];
+    const MAX_LINES = 10000;
 
     for (const msg of sorted) {
-      // Add empty lines to align
-      while (lastLine < msg.line - 1) {
-        lines.push('');
+      if (msg.line < 0 || msg.line > MAX_LINES) {
+        continue;
+      }
+
+      // Add empty lines to align with editor
+      while (lastLine < msg.line) {
+        entries.push({ text: '', msg: null });
         lastLine++;
       }
 
       // Add message line
       const prefix = this.getMessagePrefix(msg.type);
-      const line = `${prefix}${msg.text}`;
-      lines.push(line);
-      lastLine = msg.line;
+      const text = `${prefix}${msg.text}`;
+      entries.push({ text, msg });
+      lastLine = msg.line + 1;
     }
 
     // Create HTML
-    const html = lines.map((line, i) => {
-      if (!line) return '<br>';
+    const html = entries.map((entry) => {
+      if (!entry.text) return '<br>';
 
-      // Find corresponding message
-      const msg = sorted.find(m => m.line === i + 1);
-      const className = msg ? `message-${msg.type}` : '';
+      const className = entry.msg ? `message-${entry.msg.type}` : '';
 
-      // Tokenize and highlight the line content
-      const tokenizer = new Tokenizer(line, 'messages.nl');
-      const result = tokenizer.tokenize();
-      this.syntaxHighlighter.setTokenizerResult(result);
-      const highlighted = this.syntaxHighlighter.highlightCode(line);
-
-      return `<div class="${className}">${highlighted}</div>`;
+      if (entry.msg && entry.msg.type === 'result') {
+        // Syntax-highlight result text (Nelumbo expressions)
+        const tokenizer = new Tokenizer(entry.text, 'messages.nl');
+        const result = tokenizer.tokenize();
+        this.syntaxHighlighter.setTokenizerResult(result);
+        const highlighted = this.syntaxHighlighter.highlightCode(entry.text);
+        return `<div class="${className}">${highlighted}</div>`;
+      } else {
+        // Plain text for error and other messages
+        const escaped = escapeHtml(entry.text);
+        return `<div class="${className}">${escaped}</div>`;
+      }
     }).join('');
 
     this.container.innerHTML = html;
@@ -220,4 +228,13 @@ export class MessagePane {
       this.container.scrollTop = editorElement.scrollTop;
     });
   }
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

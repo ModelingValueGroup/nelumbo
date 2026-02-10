@@ -4,11 +4,11 @@
  */
 
 import { List } from 'immutable';
-import type { AstElement } from '../core/AstElement';
-import { Node } from '../core/Node';
-import type { Functor } from '../patterns/Functor';
-import { Predicate } from '../logic/Predicate';
-import { ParseException } from '../syntax/ParseException';
+import type { AstElement } from './AstElement';
+import { Node } from './Node';
+import type { Functor } from './patterns/Functor';
+import { Predicate } from './logic/Predicate';
+import { ParseException } from './syntax/ParseException';
 import type { KnowledgeBase, ParseExceptionHandler } from './KnowledgeBase';
 import type { Evaluatable } from './Evaluatable';
 
