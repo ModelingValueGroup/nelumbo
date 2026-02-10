@@ -73,7 +73,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                                  //
             o(s(t("#"), t(NUMBER))),                                                                                                                                                           //
             o(s(t("@"), r(t(NAME), true, t(".")))));
-    private static final Pattern                                                        CONDITION            = s(n(Type.BOOLEAN, 0), o(s(t("if"), n(Type.BOOLEAN, 0))));
+    private static final Pattern                                                        CONDITION            = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
     private static final Pattern                                                        SINGLE               = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
     private static final Pattern                                                        BINDING              = s(t("("), r(SINGLE, false, t(",")), t(")"));
     private static final Pattern                                                        ALTERNATIVE          = a(t(".."), BINDING);
