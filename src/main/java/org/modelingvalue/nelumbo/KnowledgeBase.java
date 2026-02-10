@@ -326,9 +326,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(o(k("private")), n(Type.TYPE, Integer.MAX_VALUE), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), false, (elements, args, functor) -> {
-                            if (elements.first() instanceof Token) {
-                                functor.args(elements, Map.of());
-                            }
                             boolean local = ((Optional<String>) args[0]).isPresent();
                             Type type = (Type) elements.get(local ? 1 : 0);
                             int start = local ? 3 : 2;

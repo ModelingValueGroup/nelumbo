@@ -205,9 +205,6 @@ public class Functor extends Node {
         Pattern pattern = pattern();
         MutableList<Object> args = MutableList.of(List.of());
         int i = pattern.args(elements, 0, args, false, this, typeArgs);
-        if (i < 0) {
-            pattern.args(elements, 0, args, false, this, typeArgs);
-        }
         assert i >= 0;
         return pattern instanceof SequencePattern && args.size() == 1 && args.get(0) instanceof List<?> seq ? seq.toArray() : args.toArray();
     }
