@@ -149,7 +149,7 @@ public class ParseState implements Mergeable<ParseState> {
         if (ctx.state() == this && ctx.token() == token) {
             return false;
         }
-        if (pre && !result.isEmpty() && leftPrecedence() != null && (!startRepetitions().isEmpty() || !nodeTypes().isEmpty())) {
+        if (pre && !startRepetitions().isEmpty()) {
             result.endPreParse(this, token, leftPrecedence());
             return true;
         }
@@ -160,7 +160,6 @@ public class ParseState implements Mergeable<ParseState> {
         }
         do {
             int nrOfExceptions = result.nrOfExceptions();
-            TokenState next = null;
             Direction direction = direction(token, parser, outerRepetitions, ctx);
             if (direction == Direction.outer) {
                 result.endPostParse(functor(), token, leftPrecedence());
@@ -170,21 +169,30 @@ public class ParseState implements Mergeable<ParseState> {
                 result.endRepetition(endRepetitions(), token);
                 return true;
             }
+            TokenState next = null;
             if (direction == Direction.node) {
+                if (pre && !nodeTypes().isEmpty()) {
+                    result.endPreParse(this, token, leftPrecedence());
+                    return true;
+                }
                 next = nodeNext(token, result);
             }
             if (direction == Direction.token) {
                 next = tokenNext(token, parser, ctx, result);
             }
-            if (next == null && result.nrOfExceptions() == nrOfExceptions) {
+            if (direction == null) {
                 next = tokenNext(token, parser, ctx, result);
-            }
-            if (next == null && result.nrOfExceptions() == nrOfExceptions) {
-                next = nodeNext(token, result);
-            }
-            if (next == null && result.nrOfExceptions() == nrOfExceptions && endRepetitions().anyMatch(outerRepetitions::containsKey)) {
-                result.endRepetition(endRepetitions(), token);
-                return true;
+                if (next == null) {
+                    if (pre && !nodeTypes().isEmpty()) {
+                        result.endPreParse(this, token, leftPrecedence());
+                        return true;
+                    }
+                    next = nodeNext(token, result);
+                }
+                if (next == null && endRepetitions().anyMatch(outerRepetitions::containsKey)) {
+                    result.endRepetition(endRepetitions(), token);
+                    return true;
+                }
             }
             if (next != null && next.state.parse(next.token, result, innerRepetitions, pre)) {
                 if (result.endRepetitions().isEmpty()) {
