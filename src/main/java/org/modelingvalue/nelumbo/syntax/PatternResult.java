@@ -122,11 +122,6 @@ public final class PatternResult implements ParseExceptionHandler {
         return elements.toImmutable();
     }
 
-    public boolean isEmpty() {
-        int size = elements.size();
-        return (hasLeft ? size - 1 : size) == 0;
-    }
-
     public boolean hasLeft() {
         return hasLeft;
     }
