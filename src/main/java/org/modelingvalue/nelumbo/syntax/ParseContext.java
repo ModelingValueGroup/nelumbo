@@ -28,7 +28,7 @@ public interface ParseContext {
 
     ParseContext outer();
 
-    static ParseContext of(ParseState state, Token token, String group, int precedence, ParseContext outer) {
+    static ParseContext of(ParseState state, Token token, ParseContext outer) {
         return new ParseContext() {
 
             @Override
@@ -43,6 +43,43 @@ public interface ParseContext {
 
             @Override
             public int precedence() {
+                Integer inner = state().innerPrecedence();
+                return inner == null ? Integer.MIN_VALUE : inner;
+            }
+
+            @Override
+            public String group() {
+                return state().group();
+            }
+
+            @Override
+            public ParseContext outer() {
+                return outer;
+            }
+
+            @Override
+            public String toString() {
+                return "(" + state() + " " + precedence() + " " + group() + " " + outer() + ")";
+            }
+
+        };
+    }
+
+    static ParseContext of(String group, int precedence) {
+        return new ParseContext() {
+
+            @Override
+            public ParseState state() {
+                return null;
+            }
+
+            @Override
+            public Token token() {
+                return null;
+            }
+
+            @Override
+            public int precedence() {
                 return precedence;
             }
 
@@ -53,12 +90,12 @@ public interface ParseContext {
 
             @Override
             public ParseContext outer() {
-                return outer;
+                return null;
             }
 
             @Override
             public String toString() {
-                return (state == null ? "" : state + " ") + precedence + " " + group + (outer == null ? "" : " " + outer);
+                return "(" + precedence + " " + group + ")";
             }
 
         };

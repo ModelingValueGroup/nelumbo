@@ -394,7 +394,7 @@ public final class Token implements AstElement {
     }
 
     public List<String> completions() {
-        return state != null ? state.transitions().toKeys().filter(String.class).sorted().asList() : List.of();
+        return state != null ? state.tokenTexts().toKeys().sorted().asList() : List.of();
     }
 
 }

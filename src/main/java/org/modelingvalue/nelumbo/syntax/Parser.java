@@ -101,13 +101,16 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            Node node = parseNode(token, ParseContext.of(null, null, Type.TOP_GROUP, Integer.MIN_VALUE, null));
+            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE);
+            Node node = parseNode(token, ctx);
             if (node != null) {
                 result.setRoot(node);
                 token = node.nextToken();
                 if (token != null) {
                     addException(new ParseException("Unexpected token " + token + " after end of input", token));
                 }
+            } else if (exceptions().isEmpty()) {
+                addException(new ParseException("No syntax pattern found for " + token, token));
             }
             result.checkAssertions();
             return result;
@@ -119,12 +122,8 @@ public final class Parser implements ParseExceptionHandler {
     }
 
     public Node parseNode(Token token, ParseContext ctx) throws ParseException {
-        int nrOfExceptions = exceptions().size();
         PatternResult result = preParse(token, ctx, null);
         if (result == null) {
-            if (nrOfExceptions == exceptions().size()) {
-                addException(new ParseException("No syntax pattern found for " + token, token));
-            }
             return null;
         }
         Node left = result.postParse(ctx);

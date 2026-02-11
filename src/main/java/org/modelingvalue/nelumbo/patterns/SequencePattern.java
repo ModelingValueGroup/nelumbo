@@ -93,9 +93,9 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public ParseState state(ParseState state, Functor functor) {
+    public ParseState state(ParseState state) {
         for (Pattern element : elements().reverse()) {
-            state = element.state(state, functor);
+            state = element.state(state);
         }
         return state;
     }

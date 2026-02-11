@@ -128,7 +128,7 @@ public abstract class Pattern extends Node {
     @Override
     protected abstract Pattern struct(Object[] array, Node declaration);
 
-    public abstract ParseState state(ParseState next, Functor functor);
+    public abstract ParseState state(ParseState next);
 
     public String name() {
         return "";

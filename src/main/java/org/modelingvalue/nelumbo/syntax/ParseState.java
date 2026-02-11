@@ -18,11 +18,11 @@ package org.modelingvalue.nelumbo.syntax;
 
 import java.util.Objects;
 
+import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.util.Mergeable;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
@@ -31,40 +31,45 @@ import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public class ParseState implements Mergeable<ParseState> {
-    public static final ParseState        EMPTY = new ParseState(Map.of(), null, null, null, null, Set.of(), Set.of(), false);
+    public static final ParseState           EMPTY = new ParseState(Map.of(), Map.of(), Map.of(), null, null, null, null, Set.of(), Set.of(), false);
 
-    private final Map<Object, ParseState> transitions;
-    private final Functor                 functor;
-    private final Integer                 leftPrecedence;
-    private final Integer                 innerPrecedence;
-    private final String                  group;
-    private final Set<RepetitionPattern>  startRepetitions;
-    private final Set<RepetitionPattern>  endRepetitions;
-    private final boolean                 isKeyword;
+    private final Map<String, ParseState>    tokenTexts;
+    private final Map<TokenType, ParseState> tokenTypes;
+    private final Map<Type, ParseState>      nodeTypes;
+    private final Functor                    functor;
+    private final Integer                    leftPrecedence;
+    private final Integer                    innerPrecedence;
+    private final String                     group;
+    private final Set<RepetitionPattern>     startRepetitions;
+    private final Set<RepetitionPattern>     endRepetitions;
+    private final boolean                    isKeyword;
 
     public ParseState(Functor functor) {
-        this(Map.of(), functor, null, null, null, Set.of(), Set.of(), false);
+        this(Map.of(), Map.of(), Map.of(), functor, null, null, null, Set.of(), Set.of(), false);
     }
 
     public ParseState(Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions) {
-        this(Map.of(), null, null, null, null, startRepetitions, endRepetitions, false);
+        this(Map.of(), Map.of(), Map.of(), null, null, null, null, startRepetitions, endRepetitions, false);
     }
 
     public ParseState(String text, boolean isKeyword, ParseState next) {
-        this(Map.of(Entry.of(text, isKeyword ? next.setIsKeyword() : next)), null, null, null, null, Set.of(), Set.of(), false);
+        this(Map.of(Entry.of(text, isKeyword ? next.setIsKeyword() : next)), Map.of(), Map.of(), null, null, null, null, Set.of(), Set.of(), false);
     }
 
     public ParseState(TokenType tokenType, ParseState next) {
-        this(Map.of(Entry.of(tokenType, next)), null, null, null, null, Set.of(), Set.of(), false);
+        this(Map.of(), Map.of(Entry.of(tokenType, next)), Map.of(), null, null, null, null, Set.of(), Set.of(), false);
     }
 
     public ParseState(Type nodeType, ParseState next, Integer innerPrecedence) {
-        this(Map.of(Entry.of(nodeType, next)), null, null, innerPrecedence, nodeType.group(), Set.of(), Set.of(), false);
+        this(Map.of(), Map.of(), Map.of(Entry.of(nodeType, next)), null, null, innerPrecedence, nodeType.group(), Set.of(), Set.of(), false);
     }
 
-    private ParseState(Map<Object, ParseState> transitions, Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, //
+    private ParseState(Map<String, ParseState> tokenTexts, Map<TokenType, ParseState> tokenTypes, Map<Type, ParseState> nodeTypes, //
+            Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, //
             Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, boolean isKeyword) {
-        this.transitions = transitions;
+        this.tokenTexts = tokenTexts;
+        this.tokenTypes = tokenTypes;
+        this.nodeTypes = nodeTypes;
         this.functor = functor;
         this.leftPrecedence = leftPrecedence;
         this.innerPrecedence = innerPrecedence;
@@ -74,8 +79,16 @@ public class ParseState implements Mergeable<ParseState> {
         this.isKeyword = isKeyword;
     }
 
-    public Map<Object, ParseState> transitions() {
-        return transitions;
+    public Map<String, ParseState> tokenTexts() {
+        return tokenTexts;
+    }
+
+    public Map<TokenType, ParseState> tokenTypes() {
+        return tokenTypes;
+    }
+
+    public Map<Type, ParseState> nodeTypes() {
+        return nodeTypes;
     }
 
     public Functor functor() {
@@ -107,32 +120,28 @@ public class ParseState implements Mergeable<ParseState> {
     }
 
     public ParseState pre() {
-        Map<Object, ParseState> t = transitions.removeAll(ParseState::isKeyType);
-        if (t.isEmpty()) {
+        if (tokenTexts.isEmpty() && tokenTypes.isEmpty()) {
             return null;
         }
-        return new ParseState(t, functor, null, null, group, startRepetitions, endRepetitions, isKeyword);
+        return new ParseState(tokenTexts, tokenTypes, Map.of(), functor, null, null, group, startRepetitions, endRepetitions, isKeyword);
     }
 
     public ParseState post() {
-        Map<Object, ParseState> t = transitions.retainAll(ParseState::isKeyType);
-        if (t.isEmpty()) {
+        if (nodeTypes.isEmpty()) {
             return null;
         }
-        return new ParseState(t, functor, innerPrecedence, null, group, startRepetitions, endRepetitions, isKeyword);
-    }
-
-    private static boolean isKeyType(Entry<Object, ParseState> e) {
-        return e.getKey() instanceof Type;
+        return new ParseState(Map.of(), Map.of(), nodeTypes, functor, innerPrecedence, null, group, startRepetitions, endRepetitions, isKeyword);
     }
 
     public ParseState setLeftPrecedence(Integer leftPrecedence) {
-        Map<Object, ParseState> t = transitions.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
-        return new ParseState(t, functor, leftPrecedence, innerPrecedence, group, startRepetitions, endRepetitions, isKeyword);
+        Map<String, ParseState> a = tokenTexts.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
+        Map<TokenType, ParseState> b = tokenTypes.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
+        Map<Type, ParseState> c = nodeTypes.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
+        return new ParseState(a, b, c, functor, leftPrecedence, innerPrecedence, group, startRepetitions, endRepetitions, isKeyword);
     }
 
     private ParseState setIsKeyword() {
-        return new ParseState(transitions, functor, leftPrecedence, innerPrecedence, group, startRepetitions, endRepetitions, true);
+        return new ParseState(tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence, innerPrecedence, group, startRepetitions, endRepetitions, true);
     }
 
     public boolean parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions, boolean pre) throws ParseException {
@@ -140,48 +149,81 @@ public class ParseState implements Mergeable<ParseState> {
         if (ctx.state() == this && ctx.token() == token) {
             return false;
         }
-        if (pre && !result.isEmpty() && !startRepetitions().isEmpty()) {
+        if (pre && !startRepetitions().isEmpty()) {
             result.endPreParse(this, token, leftPrecedence());
             return true;
         }
+        Parser parser = result.parser();
         Map<RepetitionPattern, ParseState> innerRepetitions = outerRepetitions;
         for (RepetitionPattern start : startRepetitions()) {
             innerRepetitions = innerRepetitions.put(start, this);
         }
-        int nrOfExceptions;
         do {
-            nrOfExceptions = result.exceptions().size();
-            if (!token(token, result, ctx, innerRepetitions, pre, true)) {
-                if (pre && group() != null) {
-                    result.endPreParse(this, token, leftPrecedence());
-                    return true;
-                } else if (!pre && token != null && outerEnd(token, result, ctx, outerRepetitions)) {
-                    result.endPostParse(functor(), token, leftPrecedence());
-                } else if (!node(token, result, innerRepetitions, pre)) {
-                    if (result.exceptions().size() > nrOfExceptions && token.type() != TokenType.ENDOFFILE && Pattern.isEndOfLine(token)) {
-                        do {
-                            token = token.next();
-                        } while (!Pattern.isEndOfLine(token));
-                        if (token.type() != TokenType.ENDOFFILE) {
-                            continue;
-                        }
-                    }
-                    break;
-                }
-            }
-            if (startRepetitions().noneMatch(result.endRepetitions()::contains)) {
+            int nrOfExceptions = result.nrOfExceptions();
+            Direction direction = direction(token, parser, outerRepetitions, ctx);
+            if (direction == Direction.outer) {
+                result.endPostParse(functor(), token, leftPrecedence());
                 return true;
             }
-            token = result.nextToken();
+            if (direction == Direction.repeat) {
+                result.endRepetition(endRepetitions(), token);
+                return true;
+            }
+            TokenState next = null;
+            if (direction == Direction.node) {
+                if (pre && !nodeTypes().isEmpty()) {
+                    result.endPreParse(this, token, leftPrecedence());
+                    return true;
+                }
+                next = nodeNext(token, result);
+            }
+            if (direction == Direction.token) {
+                next = tokenNext(token, parser, ctx, result);
+            }
+            if (direction == null) {
+                next = tokenNext(token, parser, ctx, result);
+                if (next == null) {
+                    if (pre && !nodeTypes().isEmpty()) {
+                        result.endPreParse(this, token, leftPrecedence());
+                        return true;
+                    }
+                    next = nodeNext(token, result);
+                }
+                if (next == null && endRepetitions().anyMatch(outerRepetitions::containsKey)) {
+                    result.endRepetition(endRepetitions(), token);
+                    return true;
+                }
+            }
+            if (next != null && next.state.parse(next.token, result, innerRepetitions, pre)) {
+                if (result.endRepetitions().isEmpty()) {
+                    break;
+                } else if (startRepetitions().anyMatch(result.endRepetitions()::contains)) {
+                    token = result.nextToken();
+                    result.startRepetition();
+                    continue;
+                } else {
+                    return true;
+                }
+            }
+            if (result.nrOfExceptions() > nrOfExceptions) {
+                if (!startRepetitions().isEmpty() && token.type() != TokenType.ENDOFFILE && Pattern.isEndOfLine(token)) {
+                    do {
+                        token = token.next();
+                    } while (!Pattern.isEndOfLine(token));
+                    if (token.type() != TokenType.ENDOFFILE) {
+                        result.startRepetition();
+                        continue;
+                    }
+                }
+                return false;
+            }
+            break;
         } while (true);
-        if (endRepetitions().anyMatch(outerRepetitions::containsKey)) {
-            result.endRepetition(endRepetitions(), token, 1);
-            return true;
-        }
-        if (result.functor() == null) {
-            if (functor() == null || result.hasException()) {
-                if ((!pre || !result.isEmpty()) && nrOfExceptions == result.exceptions().size()) {
-                    result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens(ctx), token));
+        if (result.functor() == null && result.state() == null) {
+            if (functor() == null) {
+                if (!pre) {
+                    String expectedTokens = expectedTokens(parser, outerRepetitions, ctx);
+                    result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens, token));
                 }
                 return false;
             }
@@ -190,13 +232,76 @@ public class ParseState implements Mergeable<ParseState> {
         return true;
     }
 
-    private String expectedTokens(ParseContext ctx) {
-        return outerStates(ctx) //
-                .add(this) //
-                .flatMap(s -> s.transitions().toKeys()) //
-                .filter(k -> k instanceof String || k instanceof TokenType) //
+    private String expectedTokens(Parser parser, Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx) {
+        return states(parser, outerRepetitions, ctx) //
+                .flatMap(s -> Collection.concat(s.tokenTexts().toKeys(), s.tokenTypes().toKeys())) //
                 .map(o -> o instanceof String ? ("'" + o + "'") : o.toString()) //
                 .reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b);
+    }
+
+    private Direction direction(Token token, Parser parser, Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx) throws ParseException {
+        if (token == null) {
+            return null;
+        }
+        Map<Direction, Set<TokenState>> dirStates = dirStates(token, parser, outerRepetitions, ctx);
+        do {
+            for (Entry<Direction, Set<TokenState>> e : dirStates) {
+                Set<TokenState> nexts = Set.of();
+                for (TokenState ts : e.getValue()) {
+                    TokenState next = ts.state.tokenNext(ts.token, parser, ctx, null);
+                    if (next != null) {
+                        nexts = nexts.add(next);
+                        Token t = next.token;
+                        nexts = nexts.addAll(next.state().nodeStates(parser).replaceAll(s -> new TokenState(t, s)));
+                    }
+                }
+                dirStates = nexts.isEmpty() ? dirStates.removeKey(e.getKey()) : dirStates.put(e.getKey(), nexts);
+            }
+        } while (dirStates.size() > 1);
+        return dirStates.size() == 1 ? dirStates.get(0).getKey() : null;
+    }
+
+    private Map<Direction, Set<TokenState>> dirStates(Token token, Parser parser, Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx) {
+        Map<Direction, Set<TokenState>> dirStates = Map.of();
+        Set<TokenState> states = Set.of(tokenState(token));
+        dirStates = dirStates.put(Direction.token, states);
+        states = nodeStates(parser).replaceAll(s -> new TokenState(token, s));
+        if (!states.isEmpty()) {
+            dirStates = dirStates.put(Direction.node, states);
+        }
+        states = repetitionStates(outerRepetitions).replaceAll(s -> new TokenState(token, s));
+        if (!states.isEmpty()) {
+            dirStates = dirStates.put(Direction.repeat, states);
+        }
+        states = outerStates(ctx).replaceAll(s -> new TokenState(token, s));
+        if (!states.isEmpty()) {
+            dirStates = dirStates.put(Direction.outer, states);
+        }
+        return dirStates;
+    }
+
+    private Set<ParseState> states(Parser parser, Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx) {
+        Set<ParseState> states = Set.of(this);
+        states = states.addAll(nodeStates(parser));
+        states = states.addAll(repetitionStates(outerRepetitions));
+        states = states.addAll(outerStates(ctx));
+        return states;
+    }
+
+    private Set<ParseState> nodeStates(Parser parser) {
+        return !nodeTypes().isEmpty() ? Set.of(parser.groupState(group())) : Set.of();
+    }
+
+    private Set<ParseState> repetitionStates(Map<RepetitionPattern, ParseState> repetitions) {
+        Set<ParseState> result = Set.of();
+        if (!endRepetitions().isEmpty()) {
+            for (Entry<RepetitionPattern, ParseState> r : repetitions) {
+                if (endRepetitions().contains(r.getKey())) {
+                    result = result.add(r.getValue());
+                }
+            }
+        }
+        return result;
     }
 
     private Set<ParseState> outerStates(ParseContext ctx) {
@@ -204,10 +309,13 @@ public class ParseState implements Mergeable<ParseState> {
         if (functor() != null) {
             Type type = functor().resultType();
             for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
-                for (Type sup : type.allSupers()) {
-                    ParseState next = pc.state().transitions().get(sup);
-                    if (next != null) {
-                        result = result.add(next);
+                if (!pc.state().nodeTypes().isEmpty()) {
+                    for (Type sup : type.allSupers()) {
+                        ParseState next = pc.state().nodeTypes().get(sup);
+                        if (next != null) {
+                            result = result.add(next);
+                            break;
+                        }
                     }
                 }
             }
@@ -215,199 +323,181 @@ public class ParseState implements Mergeable<ParseState> {
         return result;
     }
 
-    private boolean token(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, boolean pre, boolean matchType) throws ParseException {
-        if (transitions().isEmpty()) {
-            return false;
-        }
-        AstElement element = null;
-        TokenType type = token.type();
-        String text = token.text();
-        ParseState next = transitions().get(text);
-        if (next != null) {
-            element = token;
-            token.setTextMatch(next.isKeyword());
-        } else if (isNumeric(type) && token.text().startsWith("-") && transitions().get(type) == null) {
-            String key = "-";
-            next = transitions().get(key);
-            if (next != null) {
-                token = result.addSplit(token, token.split(1));
-                element = token;
-                token.setTextMatch(next.isKeyword());
-            }
-        } else if (type == TokenType.OPERATOR) {
-            for (int i = text.length() - 1; i > 0; i--) {
-                String key = text.substring(0, i);
-                next = transitions().get(key);
-                if (next != null) {
-                    token = result.addSplit(token, token.split(i));
-                    element = token;
-                    token.setTextMatch(next.isKeyword());
-                    break;
-                }
-            }
-        }
+    private TokenState tokenNext(Token token, Parser parser, ParseContext ctx, PatternResult result) throws ParseException {
+        TokenState next = tokenTextNext(token, result);
         if (next == null) {
-            next = transitions().get(TokenType.NEWLINE);
-            if (next != null) {
-                if (Pattern.isEndOfLine(token)) {
-                    for (Token prev = token.previousAll(); prev != token.previous(); prev = prev.previousAll()) {
-                        if (prev.type() == TokenType.NEWLINE) {
-                            element = prev;
-                            break;
-                        }
-                    }
-                    token = token.previous();
-                } else {
-                    next = null;
-                }
-            }
+            next = tokenTypeNext(token, parser, ctx, result);
         }
-        if (next == null && type == TokenType.NAME) {
-            Variable var = result.parser().variable(token, ctx);
-            if (var != null) {
-                TokenType tt = var.type().tokenType();
-                next = tt != null ? transitions().get(tt) : null;
-                if (next != null) {
-                    element = var;
-                } else {
-                    return false;
-                }
-            }
-        }
-        if (next == null && matchType) {
-            next = transitions().get(type);
-            if (next != null) {
-                if (group() != null && type.isVariableContent()) {
-                    ParseState groupState = result.parser().groupState(group());
-                    if (groupState != null && groupState.token(token, result, ctx.outer(), null, true, false)) {
-                        return false;
-                    }
-                }
-                element = token;
-            }
-        }
-        if (next != null) {
-            if (repetitions == null) {
-                return true;
-            }
-            if (element != null) {
-                result.add(element);
-            }
-            token.setState(next);
-            if (next.parse(token.next(), result, repetitions, pre)) {
-                return true;
-            }
-        }
-        return false;
-
+        return next;
     }
 
-    private boolean outerEnd(Token token, PatternResult result, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions) throws ParseException {
-        if (functor() != null) {
-            for (Entry<RepetitionPattern, ParseState> r : repetitions) {
-                if (endRepetitions().contains(r.getKey()) && r.getValue().token(token, result, ctx, null, true, true)) {
-                    return false;
-                }
+    private TokenState tokenTextNext(Token token, PatternResult result) {
+        if (token == null || tokenTexts().isEmpty()) {
+            return null;
+        }
+        TokenType type = token.type();
+        String text = token.text();
+        ParseState next = tokenTexts().get(text);
+        if (next != null) {
+            if (result != null) {
+                result.add(token);
+                token.setTextMatch(next.isKeyword());
+                token.setState(next);
             }
-            Type type = functor().resultType();
-            for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
-                for (Type sup : type.allSupers()) {
-                    ParseState next = pc.state().transitions().get(sup);
-                    if (next != null && next.token(token, result, ctx.outer(), null, true, true)) {
-                        return true;
+            return next.tokenState(token.next());
+        }
+        if (isNumeric(type) && text.startsWith("-") && tokenTypes().get(type) == null) {
+            String key = "-";
+            next = tokenTexts().get(key);
+            if (next != null) {
+                Token min = token.split(1);
+                if (result != null) {
+                    result.addSplit(token, min);
+                    result.add(min);
+                    min.setTextMatch(next.isKeyword());
+                    min.setState(next);
+                }
+                return next.tokenState(min.next());
+            }
+        }
+        if (type == TokenType.OPERATOR) {
+            for (int i = text.length() - 1; i > 0; i--) {
+                String key = text.substring(0, i);
+                next = tokenTexts().get(key);
+                if (next != null) {
+                    Token pre = token.split(1);
+                    if (result != null) {
+                        result.addSplit(token, pre);
+                        result.add(pre);
+                        pre.setTextMatch(next.isKeyword());
+                        pre.setState(next);
                     }
+                    return next.tokenState(pre.next());
                 }
             }
         }
-        return false;
+        return null;
+    }
+
+    private TokenState tokenTypeNext(Token token, Parser parser, ParseContext ctx, PatternResult result) throws ParseException {
+        if (token == null || tokenTypes().isEmpty()) {
+            return null;
+        }
+        TokenType type = token.type();
+        ParseState next = tokenTypes().get(TokenType.NEWLINE);
+        if (next != null && Pattern.isEndOfLine(token)) {
+            if (result != null) {
+                for (Token prev = token.previousAll(); prev != token.previous(); prev = prev.previousAll()) {
+                    if (prev.type() == TokenType.NEWLINE) {
+                        result.add(prev);
+                        prev.setState(next);
+                        break;
+                    }
+                }
+            }
+            return next.tokenState(token);
+        }
+        if (type == TokenType.NAME) {
+            Variable var = parser.variable(token, ctx);
+            if (var != null) {
+                TokenType tt = var.type().tokenType();
+                next = tt != null ? tokenTypes().get(tt) : null;
+                if (next != null) {
+                    if (result != null) {
+                        result.add(var);
+                        token.setState(next);
+                    }
+                    return next.tokenState(token.next());
+                }
+            }
+        }
+        if (result != null || !type.isVariableContent()) {
+            next = tokenTypes().get(type);
+            if (next != null) {
+                if (result != null) {
+                    result.add(token);
+                    token.setState(next);
+                }
+                return next.tokenState(token.next());
+            }
+        }
+        return null;
+    }
+
+    private TokenState nodeNext(Token token, PatternResult result) throws ParseException {
+        if (token == null || nodeTypes().isEmpty()) {
+            return null;
+        }
+        Token nextToken = token.next();
+        if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
+            token = result.addMerge(token, nextToken.prepend("-"));
+        }
+        ParseContext ctx = ParseContext.of(this, token, result.context());
+        Node node = result.parser().parseNode(token, ctx);
+        if (node != null) {
+            result.add(node);
+            if (node instanceof Variable) {
+                ParseState next = nodeTypes().get(Type.VARIABLE);
+                if (next != null) {
+                    return next.tokenState(node.nextToken());
+                }
+            }
+            for (Type sup : node.type().allSupers()) {
+                ParseState next = nodeTypes().get(sup);
+                if (next != null) {
+                    return next.tokenState(node.nextToken());
+                }
+            }
+            Entry<Type, ParseState> ts = nodeTypes().findAny(e -> e.getKey().variable() != null).orElse(null);
+            if (ts != null) {
+                Variable var = ts.getKey().variable();
+                Type type = result.getTypeArg(var);
+                if (type != null) {
+                    if (type.isAssignableFrom(node.type())) {
+                        return ts.getValue().tokenState(node.nextToken());
+                    }
+                } else {
+                    result.putTypeArg(var, node.type());
+                    return ts.getValue().tokenState(node.nextToken());
+                }
+            }
+            result.removeLast();
+            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
+        }
+        return null;
+    }
+
+    private String expectedTypes() { //
+        return nodeTypes() //
+                .toKeys() //
+                .map(Object::toString) //
+                .reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
     }
 
     private static boolean isNumeric(TokenType type) {
         return type == TokenType.NUMBER || type == TokenType.DECIMAL;
     }
 
-    private boolean node(Token token, PatternResult result, Map<RepetitionPattern, ParseState> repetitions, boolean pre) throws ParseException {
-        if (group() == null) {
-            return false;
-        }
-        Token nextToken = token.next();
-        if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
-            token = result.addMerge(token, nextToken.prepend("-"));
-        }
-        Integer inner = innerPrecedence();
-        Node node = result.parser().parseNode(token, ParseContext.of(this, token, group(), inner == null ? Integer.MIN_VALUE : inner, result.context()));
-        if (node != null) {
-            result.add(node);
-            if (node instanceof Variable) {
-                ParseState next = transitions().get(Type.VARIABLE);
-                if (next != null) {
-                    if (next.parse(node.nextToken(), result, repetitions, pre)) {
-                        return true;
-                    }
-                }
-            }
-            for (Type sup : node.type().allSupers()) {
-                ParseState next = transitions().get(sup);
-                if (next != null) {
-                    if (next.parse(node.nextToken(), result, repetitions, pre)) {
-                        return true;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            Entry<Object, ParseState> ts = transitions().findAny(e -> e.getKey() instanceof Type t && t.variable() != null).orElse(null);
-            if (ts != null) {
-                Variable var = ((Type) ts.getKey()).variable();
-                Type type = result.getTypeArg(var);
-                if (type != null) {
-                    if (type.isAssignableFrom(node.type()) && ts.getValue().parse(node.nextToken(), result, repetitions, pre)) {
-                        return true;
-                    } else {
-                        result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + type, node));
-                        return true;
-                    }
-                } else {
-                    result.putTypeArg(var, node.type());
-                    if (ts.getValue().parse(node.nextToken(), result, repetitions, pre)) {
-                        return true;
-                    }
-                }
-            }
-            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
-            return true;
-        }
-        return false;
-    }
-
-    private String expectedTypes() { //
-        return transitions() //
-                .toKeys() //
-                .filter(Type.class) //
-                .map(Object::toString) //
-                .reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
-    }
-
     public ParseState merge(ParseState state) {
         if (state == null) {
             return this;
         }
-        Map<Object, ParseState> transitions = transitions().addAll(state.transitions(), ParseState::merge);
-        for (Object key : transitions.toKeys()) {
-            if (key instanceof Type subType) {
-                for (Type superType : subType.allSupers()) {
-                    if (!superType.equals(subType)) {
-                        ParseState superState = transitions.get(superType);
-                        if (superState != null) {
-                            ParseState subState = transitions.get(subType);
-                            ParseState mergedState = subState.merge(superState);
-                            transitions = transitions.put(subType, mergedState);
-                        }
+        Map<String, ParseState> tokenTexts = tokenTexts().addAll(state.tokenTexts(), ParseState::merge);
+        Map<TokenType, ParseState> tokenTypes = tokenTypes().addAll(state.tokenTypes(), ParseState::merge);
+        Map<Type, ParseState> nodeTypes = nodeTypes().addAll(state.nodeTypes(), ParseState::merge);
+        for (Type subType : nodeTypes.toKeys()) {
+            for (Type superType : subType.allSupers()) {
+                if (!superType.equals(subType)) {
+                    ParseState superState = nodeTypes.get(superType);
+                    if (superState != null) {
+                        ParseState subState = nodeTypes.get(subType);
+                        ParseState mergedState = subState.merge(superState);
+                        nodeTypes = nodeTypes.put(subType, mergedState);
                     }
                 }
             }
         }
-        return new ParseState(transitions, //
+        return new ParseState(tokenTexts, tokenTypes, nodeTypes, //
                 funtorMerge(state), //
                 leftPrecedenceMerge(state), //
                 elementMerge(innerPrecedence(), state.innerPrecedence()), //
@@ -439,7 +529,9 @@ public class ParseState implements Mergeable<ParseState> {
 
     @Override
     public String toString() {
-        return transitions().toKeys().asSet().toString().substring(3);
+        return tokenTexts().toKeys().asSet().toString().substring(3) + //
+                tokenTypes().toKeys().asSet().toString().substring(3) + //
+                nodeTypes().toKeys().asSet().toString().substring(3);
     }
 
     @Override
@@ -459,6 +551,20 @@ public class ParseState implements Mergeable<ParseState> {
     @Override
     public Class<?> getMeetClass() {
         return ParseState.class;
+    }
+
+    private static enum Direction {
+        outer,
+        repeat,
+        node,
+        token;
+    }
+
+    public TokenState tokenState(Token token) {
+        return new TokenState(token, this);
+    }
+
+    public static record TokenState(Token token, ParseState state) {
     }
 
 }

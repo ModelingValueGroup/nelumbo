@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.lsp.documentService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -37,13 +38,18 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
 
     @Override
     public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
-        NlDocument document = documentManager.getDocument(params.getTextDocument().getUri());
-        if (document == null) {
-            return CompletableFuture.completedFuture(null);
+        try {
+            NlDocument document = documentManager.getDocument(params.getTextDocument().getUri());
+            if (document == null) {
+                return CompletableFuture.completedFuture(null);
+            }
+            SemanticTokenMaker maker = new SemanticTokenMaker();
+            document.tokens().forEach(maker::add);
+            return CompletableFuture.supplyAsync(() -> new SemanticTokens(maker.data()));
+        } catch (Exception e) {
+            Main.LOGGER.log(Level.SEVERE, "semanticTokensFull failed", e);
+            return CompletableFuture.completedFuture(new SemanticTokens(List.of()));
         }
-        SemanticTokenMaker maker = new SemanticTokenMaker();
-        document.tokens().forEach(maker::add);
-        return CompletableFuture.supplyAsync(() -> new SemanticTokens(maker.data()));
     }
 
     private static class SemanticTokenMaker {
@@ -84,10 +90,10 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                     prevLineNum = lineNum;
                     prevCharNum = charNum;
                 }
-                if (!sb.isEmpty()) {
+                if (sb != null && !sb.isEmpty()) {
                     sb.setLength(sb.length() - 1);
+                    U.DEBUG("%s", sb);
                 }
-                U.DEBUG("%s", sb);
             }
         }
 

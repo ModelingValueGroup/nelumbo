@@ -178,7 +178,7 @@ public class Functor extends Node {
 
     public ParseState start() {
         if (start == null) {
-            ParseState s = pattern().state(new ParseState(this), this);
+            ParseState s = pattern().state(new ParseState(this));
             startPre = s.pre();
             ParseState post = s.post();
             if (post != null) {

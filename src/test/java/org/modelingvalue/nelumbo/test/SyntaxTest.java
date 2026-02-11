@@ -60,13 +60,13 @@ public class SyntaxTest extends NelumboTestBase {
 
                     ESet     ::= <ESet> + <Object>             #40,
                                  <ESet> - <Object>             #40,
-                                 { <(> <Object> <,> , <)*> }   @org.modelingvalue.nelumbo.Node
+                                 { <(> <Object> <,> , <)*> }            @org.modelingvalue.nelumbo.Node
 
-                    EList    ::= [ <(> <Object> <,> , <)*> ]   @org.modelingvalue.nelumbo.Node
-                    EList    ::= [[ <(> <Object> <,> , <)+> ]] @org.modelingvalue.nelumbo.Node
-                    Option   ::= ?[ <(> XX <)?> ]?             @org.modelingvalue.nelumbo.Node
-                    Altern   ::= +[ <(> XX <|> YY <)> ]+       @org.modelingvalue.nelumbo.Node
-
+                    EList    ::= [ <(> <Object> <,> , <)*> ]            @org.modelingvalue.nelumbo.Node
+                    EList    ::= [[ <(> <Object> <,> , <)+> ]]          @org.modelingvalue.nelumbo.Node
+                    Option   ::= ?[ <(> XX <)?> ]?                      @org.modelingvalue.nelumbo.Node
+                    Altern   ::= +[ <(> XX <|> YY <)> ]+                @org.modelingvalue.nelumbo.Node
+                    Test     ::= +[ <(> AA <Test> <|> BB <Test> <)> ]+  @org.modelingvalue.nelumbo.Node
 
                     Object   ::= <EList>.get(<Int>)
 
