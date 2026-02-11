@@ -1,13 +1,1 @@
-
-import    org.modelingvalue.nelumbo.examples.friendsTest
-
-Boolean ::= <Person> is <Person>   #30
-Person  ::= a friend of <Person>   #35
-
-Person X, Y, Who
-
-X is Y             <=> X=Y
-a friend of X = Y  <=> friend(X)=Y
-
-Who is a friend of Piet   ?   [(Who=Jan),(Who=Klaas),(Who=Piet)][..]
-
+../../../src/main/resources/org/modelingvalue/nelumbo/examples/whoIsTest.nl

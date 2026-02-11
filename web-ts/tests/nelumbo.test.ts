@@ -18,11 +18,14 @@ import { setExternalResolver } from '../src/ModuleContent';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+/** Java resources base path */
+const JAVA_RESOURCES = join(__dirname, '../../src/main/resources/org/modelingvalue/nelumbo');
+
 /**
- * Load a test resource file.
+ * Load a test resource file from the Java resource tree.
  */
 function loadResource(resource: string): string {
-  const path = join(__dirname, 'resources', resource);
+  const path = join(JAVA_RESOURCES, 'examples', resource);
   return readFileSync(path, 'utf-8');
 }
 
