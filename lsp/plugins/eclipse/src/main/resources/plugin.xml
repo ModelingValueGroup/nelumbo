@@ -10,16 +10,28 @@
             priority="normal">
       </content-type>
    </extension>
+   <extension point="org.eclipse.ui.editors">
+      <editorContentTypeBinding
+            contentTypeId="org.modelingvalue.nelumbo.lsp.eclipse.nelumbo"
+            editorId="org.eclipse.ui.genericeditor.GenericEditor"/>
+   </extension>
    <extension point="org.eclipse.lsp4e.languageServer">
       <server
             class="org.modelingvalue.nelumbo.lsp.eclipse.NelumboStreamConnectionProvider"
             id="org.modelingvalue.nelumbo.lsp.eclipse.server"
-            label="Nelumbo Language Server">
+            label="Nelumbo Language Server"
+            singleton="true">
       </server>
       <contentTypeMapping
             contentType="org.modelingvalue.nelumbo.lsp.eclipse.nelumbo"
-            id="org.modelingvalue.nelumbo.lsp.eclipse.mapping"
+            id="org.modelingvalue.nelumbo.lsp.eclipse.server"
             languageId="nelumbo">
       </contentTypeMapping>
+   </extension>
+   <extension point="org.eclipse.tm4e.registry.grammars">
+      <grammar scopeName="source.nelumbo" path="syntaxes/nelumbo.tmLanguage.json"/>
+      <scopeNameContentTypeBinding
+            contentTypeId="org.modelingvalue.nelumbo.lsp.eclipse.nelumbo"
+            scopeName="source.nelumbo"/>
    </extension>
 </plugin>
