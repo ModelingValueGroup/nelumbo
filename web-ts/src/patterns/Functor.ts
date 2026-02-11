@@ -187,7 +187,7 @@ export class Functor extends Node {
    */
   start(): ParseState {
     if (this._start === null) {
-      const s = this.pattern().parseState(new ParseState(this), this);
+      const s = this.pattern().parseState(new ParseState(this));
       this._startPre = s.pre();
 
       const post = s.post();

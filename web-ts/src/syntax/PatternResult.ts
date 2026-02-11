@@ -20,6 +20,7 @@ import { Transform } from '../Transform';
 
 /**
  * PatternResult - holds the intermediate result of pattern matching.
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.PatternResult
  */
 export class PatternResult implements ParseExceptionHandler {
   private _elements: AstElement[] = [];
@@ -35,94 +36,125 @@ export class PatternResult implements ParseExceptionHandler {
   private _endRepetitions: Set<RepetitionPattern> = Set();
   private _nextToken: Token | null = null;
   private _hasLeft: boolean = false;
-  private _hasException: boolean = false;
 
   constructor(parser: Parser, context: ParseContext) {
     this._parser = parser;
     this._context = context;
   }
 
+  // @JAVA_REF PatternResult.addSplit(Token, Token)
   addSplit(original: Token, split: Token): Token {
     this._splitted.push([original, split]);
     return split;
   }
 
+  // @JAVA_REF PatternResult.addMerge(Token, Token)
   addMerge(original: Token, merge: Token): Token {
     this._merged.push([original, merge]);
     return merge;
   }
 
+  // @JAVA_REF PatternResult.parser()
   parser(): Parser {
     return this._parser;
   }
 
+  // @JAVA_REF PatternResult.context()
   context(): ParseContext {
     return this._context;
   }
 
+  // @JAVA_REF PatternResult.functor()
   functor(): Functor | null {
     return this._functor;
   }
 
+  // @JAVA_REF PatternResult.state()
   state(): ParseState | null {
     return this._state;
   }
 
+  // @JAVA_REF PatternResult.endRepetitions()
   endRepetitions(): Set<RepetitionPattern> {
     return this._endRepetitions;
   }
 
+  // @JAVA_REF PatternResult.nextToken()
   nextToken(): Token | null {
     return this._nextToken;
   }
 
+  // @JAVA_REF PatternResult.leftPrecedence()
   leftPrecedence(): number | null {
     return this._leftPrecedence;
   }
 
+  // @JAVA_REF PatternResult.endPostParse(Functor, Token, Integer)
   endPostParse(functor: Functor, nextToken: Token | null, leftPrecedence: number | null): void {
+    this._endRepetitions = Set();
     this._functor = functor;
     this._nextToken = nextToken;
     this._leftPrecedence = leftPrecedence;
+    // assert (functor != null)
+    // assert (!hasLeft || leftPrecedence != null)
   }
 
+  // @JAVA_REF PatternResult.endPreParse(ParseState, Token, Integer)
   endPreParse(state: ParseState, nextToken: Token | null, leftPrecedence: number | null): void {
     this._state = state;
     this._nextToken = nextToken;
     this._leftPrecedence = leftPrecedence;
+    // assert (!hasLeft || leftPrecedence != null)
   }
 
-  endRepetition(endRepetitions: Set<RepetitionPattern>, nextToken: Token | null, _i: number): void {
+  // @JAVA_REF PatternResult.endRepetition(Set, Token)
+  endRepetition(endRepetitions: Set<RepetitionPattern>, nextToken: Token | null): void {
     this._endRepetitions = endRepetitions;
     this._nextToken = nextToken;
   }
 
+  // @JAVA_REF PatternResult.startRepetition()
+  startRepetition(): void {
+    this._endRepetitions = Set();
+  }
+
+  // @JAVA_REF PatternResult.elements()
   elements(): List<AstElement> {
     return List(this._elements);
   }
 
-  isEmpty(): boolean {
-    const size = this._elements.length;
-    return (this._hasLeft ? size - 1 : size) === 0;
-  }
-
+  // @JAVA_REF PatternResult.hasLeft()
   hasLeft(): boolean {
     return this._hasLeft;
   }
 
+  // @JAVA_REF PatternResult.left(AstElement)
   left(element: AstElement): void {
     this._elements.push(element);
     this._hasLeft = true;
   }
 
+  // @JAVA_REF PatternResult.add(AstElement)
   add(element: AstElement): void {
     this._elements.push(element);
-    this._endRepetitions = Set();
   }
 
+  // @JAVA_REF PatternResult.removeLast()
+  removeLast(): void {
+    this._elements.pop();
+  }
+
+  // @JAVA_REF PatternResult.nrOfExceptions() (from ParseExceptionHandler)
+  nrOfExceptions(): number {
+    return this.exceptions().size;
+  }
+
+  // @JAVA_REF PatternResult.postParse(ParseContext)
   postParse(_ctx: ParseContext): Node | null {
-    if (this._state !== null) {
-      this._state.parse(this._nextToken, this, Map(), false);
+    const next = this._state;
+    if (next !== null) {
+      this._state = null;
+      next.parse(this._nextToken, this, Map(), false);
     }
     if (this._functor !== null) {
       for (const [original, split] of this._splitted) {
@@ -139,6 +171,14 @@ export class PatternResult implements ParseExceptionHandler {
         functor = functor.setBinding(ta as Map<Variable, unknown>) as Functor;
       }
       const node = functor.construct(elements, args);
+      // Circular reference check
+      if (this._hasLeft && args.length === 1 && args[0] instanceof Node) {
+        const arg = args[0] as Node;
+        if (node.functor() !== null && node.functor()!.equals(arg.functor())) {
+          this.addException(ParseException.fromElements('Circular object construction, caused by ' + functor, node));
+          return null;
+        }
+      }
       if (Type.ROOT.isAssignableFrom(node.type())) {
         const kb = this._parser.knowledgeBase();
         // Java virtual dispatch: node.init(kb)
@@ -163,27 +203,27 @@ export class PatternResult implements ParseExceptionHandler {
     return null;
   }
 
+  // @JAVA_REF PatternResult.toString()
   toString(): string {
     return this.elements().toArray().toString();
   }
 
+  // @JAVA_REF PatternResult.addException(ParseException)
   addException(exception: ParseException): void {
-    this._hasException = true;
     this._parser.addException(exception);
   }
 
+  // @JAVA_REF PatternResult.exceptions()
   exceptions(): List<ParseException> {
     return this._parser.exceptions();
   }
 
-  hasException(): boolean {
-    return this._hasException;
-  }
-
+  // @JAVA_REF PatternResult.putTypeArg(Variable, Type)
   putTypeArg(arg: Variable, val: Type): void {
     this._typeArgs = this._typeArgs.set(arg, val);
   }
 
+  // @JAVA_REF PatternResult.getTypeArg(Variable)
   getTypeArg(arg: Variable): Type | undefined {
     return this._typeArgs.get(arg);
   }

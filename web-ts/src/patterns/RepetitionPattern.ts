@@ -56,27 +56,26 @@ export class RepetitionPattern extends Pattern {
     return this.set(0, this.repeated().setTypes(typeFunction)) as RepetitionPattern;
   }
 
-  parseState(next: ParseState, functor: Functor): ParseState {
-    const start = new ParseState(Set<RepetitionPattern>([this]), Set<RepetitionPattern>());
-    let end = new ParseState(Set<RepetitionPattern>(), Set<RepetitionPattern>([this]));
-
-    const separator = this.separator();
-    if (separator !== null) {
-      end = separator.parseState(end, functor);
-    }
-    end = end.merge(next);
-
+  // @JAVA_REF RepetitionPattern.state(ParseState next)
+  parseState(next: ParseState): ParseState {
     const repeated = this.repeated();
-    let state = repeated.parseState(end, functor).merge(start);
-
-    if (!this.mandatory()) {
-      if (separator !== null) {
-        state = separator.parseState(state, functor).merge(next);
-        state = repeated.parseState(state, functor);
+    const mandatory = this.mandatory();
+    const separator = this.separator();
+    const startOrNext = new ParseState(Set<RepetitionPattern>([this]), Set<RepetitionPattern>()).merge(next);
+    const repeatedEnd = repeated.parseState(new ParseState(Set<RepetitionPattern>(), Set<RepetitionPattern>([this])));
+    let state: ParseState;
+    if (separator === null) {
+      state = repeatedEnd.merge(startOrNext);
+      if (mandatory) {
+        state = repeated.parseState(state);
       }
-      state = state.merge(next);
+    } else {
+      state = separator.parseState(repeatedEnd).merge(startOrNext);
+      state = repeated.parseState(state);
+      if (!mandatory) {
+        state = state.merge(next);
+      }
     }
-
     return state;
   }
 

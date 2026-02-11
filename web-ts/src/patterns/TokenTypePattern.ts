@@ -38,7 +38,8 @@ export class TokenTypePattern extends Pattern {
     return '<' + this.tokenType().name + '>';
   }
 
-  parseState(next: ParseState, _functor: Functor): ParseState {
+  // @JAVA_REF TokenTypePattern.state(ParseState next)
+  parseState(next: ParseState): ParseState {
     return new ParseState(this.tokenType(), next);
   }
 

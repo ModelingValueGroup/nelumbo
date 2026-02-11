@@ -62,7 +62,8 @@ export class TokenTextPattern extends Pattern {
     return super.setBinding(vars, declaration) as TokenTextPattern;
   }
 
-  parseState(next: ParseState, _functor: Functor): ParseState {
+  // @JAVA_REF TokenTextPattern.state(ParseState next)
+  parseState(next: ParseState): ParseState {
     return new ParseState(this.tokenText(), this.isKeyword(), next);
   }
 

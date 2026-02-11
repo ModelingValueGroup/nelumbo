@@ -70,10 +70,10 @@ export class SequencePattern extends Pattern {
     return this.set(0, elems) as SequencePattern;
   }
 
-  parseState(next: ParseState, functor: Functor): ParseState {
-    let state = next;
+  // @JAVA_REF SequencePattern.state(ParseState state)
+  parseState(state: ParseState): ParseState {
     for (const element of this.patternElements().reverse()) {
-      state = element.parseState(state, functor);
+      state = element.parseState(state);
     }
     return state;
   }

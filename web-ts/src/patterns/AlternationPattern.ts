@@ -34,10 +34,11 @@ export class AlternationPattern extends Pattern {
     return this.get(0) as List<Pattern>;
   }
 
-  parseState(next: ParseState, functor: Functor): ParseState {
+  // @JAVA_REF AlternationPattern.state(ParseState next)
+  parseState(next: ParseState): ParseState {
     let result: ParseState = ParseState.EMPTY;
     for (const option of this.options()) {
-      result = result.merge(option.parseState(next, functor));
+      result = result.merge(option.parseState(next));
     }
     return result;
   }

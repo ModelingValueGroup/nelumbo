@@ -47,7 +47,7 @@ export class Fact extends Node implements Evaluatable {
    */
   evaluate(knowledgeBase: KnowledgeBase, handler: ParseExceptionHandler): void {
     const predicate = this.predicate();
-    if (!predicate.isRelation()) {
+    if (!predicate.isFact()) {
       handler.addException(ParseException.fromElements('The type of ' + predicate + ' is not FactType.', predicate));
       return;
     }
@@ -61,20 +61,15 @@ export class Fact extends Node implements Evaluatable {
   /**
    * Initialize this fact in a knowledge base.
    */
+  // @JAVA_REF Fact.init(KnowledgeBase)
   initInKb(knowledgeBase: KnowledgeBase): Fact {
-    const predicate = this.predicate();
+    let predicate = this.predicate();
     const nodeFunctor = predicate.functor();
-    if (nodeFunctor !== null) {
-      const literalFunctor = knowledgeBase.literal(nodeFunctor);
-      if (literalFunctor !== null) {
-        const literalPredicate = predicate.setFunctor(literalFunctor);
-        if (literalPredicate.isRelation() && literalPredicate.isFullyBound()) {
-          knowledgeBase.addFact(literalPredicate);
-        }
-        return this;
-      }
+    const literalFunctor = knowledgeBase.literal(nodeFunctor!);
+    if (literalFunctor !== null) {
+      predicate = predicate.setFunctor(literalFunctor);
     }
-    if (predicate.isRelation() && predicate.isFullyBound()) {
+    if (predicate.isFact() && predicate.isFullyBound()) {
       knowledgeBase.addFact(predicate);
     }
     return this;

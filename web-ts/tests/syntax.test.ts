@@ -34,6 +34,8 @@ Option   ::= ?[ <(> XX <)?> ]?             @org.modelingvalue.nelumbo.Node
 Altern   ::= +[ <(> XX <|> YY <)> ]+       @org.modelingvalue.nelumbo.Node
 
 
+Test     ::= +[ <(> AA <Test> <|> BB <Test> <)> ]+  @org.modelingvalue.nelumbo.Node
+
 Object   ::= <EList>.get(<Int>)
 
 ESet   s, t, u

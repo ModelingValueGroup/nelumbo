@@ -10,7 +10,8 @@ import { TOP_GROUP } from '../Type';
 import { Variable } from '../Variable';
 import { Tokenizer, type TokenizerResult } from './Tokenizer';
 import type { KnowledgeBase } from '../KnowledgeBase';
-import { ParseContext, createParseContext } from './ParseContext';
+import type { ParseContext } from './ParseContext';
+import { createParseContext } from './ParseContext';
 import type { ParseState } from './ParseState';
 import { PatternResult } from './PatternResult';
 import { ParserResult } from './ParserResult';
@@ -82,10 +83,9 @@ export class Parser {
 
       try {
         let token = this._tokenizerResult.first;
-        const node = this.parseNode(
-          token,
-          createParseContext(null, null, TOP_GROUP, Number.MIN_SAFE_INTEGER, null)
-        );
+        // @JAVA_REF Parser.parse() — use two-arg ParseContext.of(group, precedence)
+        const ctx = createParseContext(TOP_GROUP, Number.MIN_SAFE_INTEGER);
+        const node = this.parseNode(token, ctx);
 
         if (node !== null) {
           result.setRoot(node);
@@ -95,6 +95,10 @@ export class Parser {
               ParseException.fromToken('Unexpected token ' + token + ' after end of input', token)
             );
           }
+        } else if (this.exceptions().isEmpty()) {
+          this.addException(
+            ParseException.fromToken('No syntax pattern found for ' + token, token!)
+          );
         }
 
         result.checkAssertions();
@@ -111,6 +115,7 @@ export class Parser {
    */
   private static _parseNodeDepth = 0;
   private static _parseNodeCount = 0;
+  // @JAVA_REF Parser.parseNode(Token, ParseContext)
   parseNode(token: Token | null, ctx: ParseContext): Node | null {
     Parser._parseNodeDepth++;
     Parser._parseNodeCount++;
@@ -125,16 +130,9 @@ export class Parser {
     }
 
     try {
-      const nrOfExceptions = this.exceptions().size;
-
       // Pre-parse phase
       let result = this.preParse(token, ctx, null);
       if (result === null) {
-        if (nrOfExceptions === this.exceptions().size && token !== null) {
-          this.addException(
-            ParseException.fromToken('No syntax pattern found for ' + token, token)
-          );
-        }
         return null;
       }
 
@@ -150,8 +148,6 @@ export class Parser {
               return left;
             }
 
-            const prevLeft = left;
-            const prevToken: Token | null = token;
             left = result.postParse(ctx);
             if (left === null) {
               break;
@@ -160,12 +156,6 @@ export class Parser {
             token = left.nextToken();
             if (token === null) {
               return left;
-            }
-
-            // If token didn't advance, the post-fix match consumed no tokens - break
-            // (don't revert: zero-token postfix patterns like FACT legitimately wrap the node)
-            if (token === prevToken) {
-              break;
             }
 
             result = this.preParse(token, ctx, left);

@@ -53,7 +53,8 @@ export class NodeTypePattern extends Pattern {
     return super.setBinding(vars, declaration) as NodeTypePattern;
   }
 
-  parseState(next: ParseState, _functor: Functor): ParseState {
+  // @JAVA_REF NodeTypePattern.state(ParseState next)
+  parseState(next: ParseState): ParseState {
     return new ParseState(this.nodeType(), next, this.precedence());
   }
 

@@ -161,7 +161,7 @@ export class Predicate extends Node {
   /**
    * Check if this is a relation (fact type).
    */
-  isRelation(): boolean {
+  isFact(): boolean {
     return Type.FACT_TYPE.isAssignableFrom(this.type());
   }
 
@@ -238,7 +238,7 @@ export class Predicate extends Node {
       return this.unresolvable();
     }
     const knowledgeBase = context.knowledgeBase();
-    if (this.isRelation()) {
+    if (this.isFact()) {
       return knowledgeBase.getFacts(this, context);
     } else {
       const memoiz = knowledgeBase.getMemoiz(this);

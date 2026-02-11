@@ -178,16 +178,12 @@ export class KnowledgeBase implements ParseExceptionHandler {
   /**
    * Look up a variable.
    */
+  // @JAVA_REF KnowledgeBase.variable(Token, String, Parser)
   variable(token: Token, group: string, _parser: Parser): Variable | null {
     const state = this.groupState(group);
-    if (state === null) return null;
-
-    const found = state.transitions().get(token.text);
-    if (found !== undefined && found.functor() !== null) {
-      const functor = found.functor()!;
-      if (functor.resultType().equals(Type.VARIABLE)) {
-        return functor.construct(List([token as AstElement]), []) as unknown as Variable;
-      }
+    const found = state !== null ? state.tokenTexts().get(token.text) : undefined;
+    if (found !== undefined && found.functor() !== null && found.functor()!.resultType() === Type.VARIABLE) {
+      return found.functor()!.construct(List([token as AstElement]), []) as unknown as Variable;
     }
     return null;
   }
@@ -211,6 +207,7 @@ export class KnowledgeBase implements ParseExceptionHandler {
     return this.doPreParse(token, left, parser, state, ctx);
   }
 
+  // @JAVA_REF KnowledgeBase.preParse(Token, Node, Parser, ParseState, ParseContext)
   private doPreParse(
     token: Token | null,
     left: Node | null,
@@ -220,24 +217,18 @@ export class KnowledgeBase implements ParseExceptionHandler {
   ): PatternResult | null {
     if (left !== null) {
       for (const sup of left.type().allSupers()) {
-        const found = state.transitions().get(sup);
+        const found = state.nodeTypes().get(sup);
         if (found !== undefined) {
           const result = new PatternResult(parser, ctx);
           result.left(left);
-          if (found.parse(token, result, Map(), true)) {
-            return result;
-          }
-          return null;
+          return found.parse(token, result, Map(), true) ? result : null;
         }
       }
       return null;
     }
 
     const result = new PatternResult(parser, ctx);
-    if (state.parse(token, result, Map(), true)) {
-      return result;
-    }
-    return null;
+    return state.parse(token, result, Map(), true) ? result : null;
   }
 
   /**

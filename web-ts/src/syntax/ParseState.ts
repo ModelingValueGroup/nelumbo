@@ -16,12 +16,29 @@ import { createParseContext, type ParseContext } from './ParseContext';
 import type { PatternResult } from './PatternResult';
 import { ParseException } from './ParseException';
 
+// @JAVA_REF ParseState.Direction
+enum Direction {
+  outer = 'outer',
+  repeat = 'repeat',
+  node = 'node',
+  token = 'token',
+}
+
+// @JAVA_REF ParseState.TokenState
+interface TokenState {
+  token: Token | null;
+  state: ParseState;
+}
+
 /**
  * ParseState - state machine state for parsing.
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.ParseState
  */
 export class ParseState {
   static readonly EMPTY: ParseState = new ParseState(
-    Map<unknown, ParseState>(),
+    Map<string, ParseState>(),
+    Map<TokenType, ParseState>(),
+    Map<Type, ParseState>(),
     null,
     null,
     null,
@@ -31,7 +48,10 @@ export class ParseState {
     false
   );
 
-  private readonly _transitions: Map<unknown, ParseState>;
+  // @JAVA_REF ParseState fields
+  private readonly _tokenTexts: Map<string, ParseState>;
+  private readonly _tokenTypes: Map<TokenType, ParseState>;
+  private readonly _nodeTypes: Map<Type, ParseState>;
   private readonly _functor: Functor | null;
   private readonly _leftPrecedence: number | null;
   private readonly _innerPrecedence: number | null;
@@ -52,7 +72,9 @@ export class ParseState {
   constructor(nodeType: Type, next: ParseState, innerPrecedence: number | null);
   // Internal constructor
   constructor(
-    transitions: Map<unknown, ParseState>,
+    tokenTexts: Map<string, ParseState>,
+    tokenTypes: Map<TokenType, ParseState>,
+    nodeTypes: Map<Type, ParseState>,
     functor: Functor | null,
     leftPrecedence: number | null,
     innerPrecedence: number | null,
@@ -63,31 +85,37 @@ export class ParseState {
   );
 
   constructor(
-    arg1: Functor | Set<RepetitionPattern> | string | TokenType | Type | Map<unknown, ParseState>,
-    arg2?: Set<RepetitionPattern> | boolean | ParseState | Functor | null,
-    arg3?: ParseState | number | null,
-    arg4?: number | null,
-    arg5?: string | null,
-    arg6?: Set<RepetitionPattern>,
-    arg7?: Set<RepetitionPattern>,
-    arg8?: boolean
+    arg1: Functor | Set<RepetitionPattern> | string | TokenType | Type | Map<string, ParseState>,
+    arg2?: Set<RepetitionPattern> | boolean | ParseState | Map<TokenType, ParseState> | null,
+    arg3?: ParseState | number | Map<Type, ParseState> | null,
+    arg4?: Functor | number | null,
+    arg5?: number | string | null,
+    arg6?: number | Set<RepetitionPattern> | null,
+    arg7?: string | Set<RepetitionPattern> | null,
+    arg8?: Set<RepetitionPattern>,
+    arg9?: Set<RepetitionPattern>,
+    arg10?: boolean
   ) {
-    if (Map.isMap(arg1)) {
-      // Internal constructor
-      this._transitions = arg1;
-      this._functor = arg2 as Functor | null;
-      this._leftPrecedence = arg3 as number | null;
-      this._innerPrecedence = arg4 as number | null;
-      this._group = arg5 as string | null;
-      this._startRepetitions = arg6 as Set<RepetitionPattern>;
-      this._endRepetitions = arg7 as Set<RepetitionPattern>;
-      this._isKeyword = arg8 as boolean;
+    if (Map.isMap(arg1) && Map.isMap(arg2)) {
+      // Internal constructor (10 args)
+      this._tokenTexts = arg1 as Map<string, ParseState>;
+      this._tokenTypes = arg2 as Map<TokenType, ParseState>;
+      this._nodeTypes = arg3 as Map<Type, ParseState>;
+      this._functor = arg4 as Functor | null;
+      this._leftPrecedence = arg5 as number | null;
+      this._innerPrecedence = arg6 as number | null;
+      this._group = arg7 as string | null;
+      this._startRepetitions = arg8 as Set<RepetitionPattern>;
+      this._endRepetitions = arg9 as Set<RepetitionPattern>;
+      this._isKeyword = arg10 as boolean;
     } else if (typeof arg1 === 'string') {
-      // Token text transition
+      // Token text transition: (text, isKeyword, next)
       const text = arg1;
       const isKeyword = arg2 as boolean;
       const next = arg3 as ParseState;
-      this._transitions = Map<unknown, ParseState>([[text, isKeyword ? next.setIsKeyword() : next]]);
+      this._tokenTexts = Map<string, ParseState>([[text, isKeyword ? next.setIsKeyword() : next]]);
+      this._tokenTypes = Map<TokenType, ParseState>();
+      this._nodeTypes = Map<Type, ParseState>();
       this._functor = null;
       this._leftPrecedence = null;
       this._innerPrecedence = null;
@@ -96,10 +124,12 @@ export class ParseState {
       this._endRepetitions = Set<RepetitionPattern>();
       this._isKeyword = false;
     } else if (arg1 instanceof TokenType) {
-      // Token type transition
+      // Token type transition: (tokenType, next)
       const tokenType = arg1;
       const next = arg2 as ParseState;
-      this._transitions = Map<unknown, ParseState>([[tokenType, next]]);
+      this._tokenTexts = Map<string, ParseState>();
+      this._tokenTypes = Map<TokenType, ParseState>([[tokenType, next]]);
+      this._nodeTypes = Map<Type, ParseState>();
       this._functor = null;
       this._leftPrecedence = null;
       this._innerPrecedence = null;
@@ -108,11 +138,13 @@ export class ParseState {
       this._endRepetitions = Set<RepetitionPattern>();
       this._isKeyword = false;
     } else if (arg1 instanceof Type) {
-      // Node type transition
+      // Node type transition: (nodeType, next, innerPrecedence)
       const nodeType = arg1;
       const next = arg2 as ParseState;
       const innerPrecedence = arg3 as number | null;
-      this._transitions = Map<unknown, ParseState>([[nodeType, next]]);
+      this._tokenTexts = Map<string, ParseState>();
+      this._tokenTypes = Map<TokenType, ParseState>();
+      this._nodeTypes = Map<Type, ParseState>([[nodeType, next]]);
       this._functor = null;
       this._leftPrecedence = null;
       this._innerPrecedence = innerPrecedence;
@@ -121,8 +153,10 @@ export class ParseState {
       this._endRepetitions = Set<RepetitionPattern>();
       this._isKeyword = false;
     } else if (Set.isSet(arg1)) {
-      // Repetition markers
-      this._transitions = Map<unknown, ParseState>();
+      // Repetition markers: (startReps, endReps)
+      this._tokenTexts = Map<string, ParseState>();
+      this._tokenTypes = Map<TokenType, ParseState>();
+      this._nodeTypes = Map<Type, ParseState>();
       this._functor = null;
       this._leftPrecedence = null;
       this._innerPrecedence = null;
@@ -131,9 +165,11 @@ export class ParseState {
       this._endRepetitions = arg2 as Set<RepetitionPattern>;
       this._isKeyword = false;
     } else {
-      // Functor terminal
+      // Functor terminal: (functor)
       const functor = arg1 as Functor;
-      this._transitions = Map<unknown, ParseState>();
+      this._tokenTexts = Map<string, ParseState>();
+      this._tokenTypes = Map<TokenType, ParseState>();
+      this._nodeTypes = Map<Type, ParseState>();
       this._functor = functor;
       this._leftPrecedence = null;
       this._innerPrecedence = null;
@@ -144,8 +180,19 @@ export class ParseState {
     }
   }
 
-  transitions(): Map<unknown, ParseState> {
-    return this._transitions;
+  // @JAVA_REF ParseState.tokenTexts()
+  tokenTexts(): Map<string, ParseState> {
+    return this._tokenTexts;
+  }
+
+  // @JAVA_REF ParseState.tokenTypes()
+  tokenTypes(): Map<TokenType, ParseState> {
+    return this._tokenTypes;
+  }
+
+  // @JAVA_REF ParseState.nodeTypes()
+  nodeTypes(): Map<Type, ParseState> {
+    return this._nodeTypes;
   }
 
   functor(): Functor | null {
@@ -176,16 +223,15 @@ export class ParseState {
     return this._isKeyword;
   }
 
-  /**
-   * Get the pre-parse state (non-type transitions).
-   */
+  // @JAVA_REF ParseState.pre()
   pre(): ParseState | null {
-    const t = this._transitions.filter((_, key) => !(key instanceof Type));
-    if (t.isEmpty()) {
+    if (this._tokenTexts.isEmpty() && this._tokenTypes.isEmpty()) {
       return null;
     }
     return new ParseState(
-      t,
+      this._tokenTexts,
+      this._tokenTypes,
+      Map<Type, ParseState>(),
       this._functor,
       null,
       null,
@@ -196,16 +242,15 @@ export class ParseState {
     );
   }
 
-  /**
-   * Get the post-parse state (type transitions only).
-   */
+  // @JAVA_REF ParseState.post()
   post(): ParseState | null {
-    const t = this._transitions.filter((_, key) => key instanceof Type);
-    if (t.isEmpty()) {
+    if (this._nodeTypes.isEmpty()) {
       return null;
     }
     return new ParseState(
-      t,
+      Map<string, ParseState>(),
+      Map<TokenType, ParseState>(),
+      this._nodeTypes,
       this._functor,
       this._innerPrecedence,
       null,
@@ -216,13 +261,15 @@ export class ParseState {
     );
   }
 
-  /**
-   * Set the left precedence on this state and all transitions.
-   */
+  // @JAVA_REF ParseState.setLeftPrecedence(Integer)
   setLeftPrecedence(leftPrecedence: number): ParseState {
-    const t = this._transitions.map(v => v.setLeftPrecedence(leftPrecedence));
+    const a = this._tokenTexts.map(v => v.setLeftPrecedence(leftPrecedence));
+    const b = this._tokenTypes.map(v => v.setLeftPrecedence(leftPrecedence));
+    const c = this._nodeTypes.map(v => v.setLeftPrecedence(leftPrecedence));
     return new ParseState(
-      t,
+      a,
+      b,
+      c,
       this._functor,
       leftPrecedence,
       this._innerPrecedence,
@@ -235,7 +282,9 @@ export class ParseState {
 
   private setIsKeyword(): ParseState {
     return new ParseState(
-      this._transitions,
+      this._tokenTexts,
+      this._tokenTypes,
+      this._nodeTypes,
       this._functor,
       this._leftPrecedence,
       this._innerPrecedence,
@@ -246,33 +295,501 @@ export class ParseState {
     );
   }
 
-  /**
-   * Merge two parse states.
-   */
+  // @JAVA_REF ParseState.tokenState(Token)
+  tokenState(token: Token | null): TokenState {
+    return { token, state: this };
+  }
+
+  // @JAVA_REF ParseState.parse(Token, PatternResult, Map, boolean)
+  parse(
+    token: Token | null,
+    result: PatternResult,
+    outerRepetitions: Map<RepetitionPattern, ParseState>,
+    pre: boolean
+  ): boolean {
+    const ctx = result.context();
+
+    // Avoid infinite loops
+    if (ctx.state() === this && ctx.token() === token) {
+      return false;
+    }
+
+    // Handle repetition start in pre-parse
+    if (pre && !this._startRepetitions.isEmpty()) {
+      result.endPreParse(this, token, this._leftPrecedence);
+      return true;
+    }
+
+    const parser = result.parser();
+
+    // Track inner repetitions
+    let innerRepetitions = outerRepetitions;
+    for (const start of this._startRepetitions) {
+      innerRepetitions = innerRepetitions.set(start, this);
+    }
+
+    do {
+      const nrOfExceptions = result.nrOfExceptions();
+
+      const direction = this.direction(token, parser, outerRepetitions, ctx);
+
+      if (direction === Direction.outer) {
+        result.endPostParse(this._functor!, token, this._leftPrecedence);
+        return true;
+      }
+
+      if (direction === Direction.repeat) {
+        result.endRepetition(this._endRepetitions, token);
+        return true;
+      }
+
+      let next: TokenState | null = null;
+
+      if (direction === Direction.node) {
+        if (pre && !this._nodeTypes.isEmpty()) {
+          result.endPreParse(this, token, this._leftPrecedence);
+          return true;
+        }
+        next = this.nodeNext(token, result);
+      }
+
+      if (direction === Direction.token) {
+        next = this.tokenNext(token, parser, ctx, result);
+      }
+
+      if (direction === null) {
+        next = this.tokenNext(token, parser, ctx, result);
+        if (next === null) {
+          if (pre && !this._nodeTypes.isEmpty()) {
+            result.endPreParse(this, token, this._leftPrecedence);
+            return true;
+          }
+          next = this.nodeNext(token, result);
+        }
+        if (next === null && this._endRepetitions.some(r => outerRepetitions.has(r))) {
+          result.endRepetition(this._endRepetitions, token);
+          return true;
+        }
+      }
+
+      if (next !== null && next.state.parse(next.token, result, innerRepetitions, pre)) {
+        if (result.endRepetitions().isEmpty()) {
+          break;
+        } else if (this._startRepetitions.some(r => result.endRepetitions().has(r))) {
+          token = result.nextToken();
+          result.startRepetition();
+          continue;
+        } else {
+          return true;
+        }
+      }
+
+      if (result.nrOfExceptions() > nrOfExceptions) {
+        if (!this._startRepetitions.isEmpty() && token !== null && token.type !== TokenType.ENDOFFILE && Pattern.isEndOfLine(token)) {
+          do {
+            token = token!.next;
+          } while (token !== null && !Pattern.isEndOfLine(token));
+          if (token !== null && token.type !== TokenType.ENDOFFILE) {
+            result.startRepetition();
+            continue;
+          }
+        }
+        return false;
+      }
+
+      break;
+    } while (true);
+
+    if (result.functor() === null && result.state() === null) {
+      if (this._functor === null) {
+        if (!pre) {
+          const expectedTokens = this.expectedTokens(parser, outerRepetitions, ctx);
+          if (token !== null) {
+            result.addException(ParseException.fromToken('Unexpected token ' + token + ', expected ' + expectedTokens, token));
+          } else {
+            result.addException(new ParseException('Unexpected token, expected ' + expectedTokens, 0, 0, 0, 0, ''));
+          }
+        }
+        return false;
+      }
+      result.endPostParse(this._functor, token, this._leftPrecedence);
+    }
+
+    return true;
+  }
+
+  // @JAVA_REF ParseState.expectedTokens(Parser, Map, ParseContext)
+  private expectedTokens(parser: { groupState(group: string): ParseState | null; variable(token: Token, ctx: ParseContext): Variable | null }, outerRepetitions: Map<RepetitionPattern, ParseState>, ctx: ParseContext): string {
+    const allStates = this.states(parser, outerRepetitions, ctx);
+    const tokens: string[] = [];
+    for (const s of allStates) {
+      for (const k of s.tokenTexts().keys()) {
+        tokens.push("'" + k + "'");
+      }
+      for (const k of s.tokenTypes().keys()) {
+        tokens.push(k.name);
+      }
+    }
+    return tokens.join(',');
+  }
+
+  // @JAVA_REF ParseState.direction(Token, Parser, Map, ParseContext)
+  private direction(token: Token | null, parser: { groupState(group: string): ParseState | null; variable(token: Token, ctx: ParseContext): Variable | null }, outerRepetitions: Map<RepetitionPattern, ParseState>, ctx: ParseContext): Direction | null {
+    if (token === null) {
+      return null;
+    }
+    let dirStates = this.dirStates(token, parser, outerRepetitions, ctx);
+    do {
+      let newDirStates = dirStates;
+      for (const [dir, tokenStates] of dirStates.entries()) {
+        let nexts = Set<TokenState>();
+        for (const ts of tokenStates) {
+          const next = ts.state.tokenNext(ts.token, parser, ctx, null);
+          if (next !== null) {
+            nexts = nexts.add(next);
+            const t = next.token;
+            for (const ns of next.state.nodeStates(parser)) {
+              nexts = nexts.add({ token: t, state: ns });
+            }
+          }
+        }
+        newDirStates = nexts.isEmpty() ? newDirStates.remove(dir) : newDirStates.set(dir, nexts);
+      }
+      dirStates = newDirStates;
+    } while (dirStates.size > 1);
+    if (dirStates.size === 1) {
+      return dirStates.keySeq().first() as Direction;
+    }
+    return null;
+  }
+
+  // @JAVA_REF ParseState.dirStates(Token, Parser, Map, ParseContext)
+  private dirStates(token: Token, parser: { groupState(group: string): ParseState | null; variable(token: Token, ctx: ParseContext): Variable | null }, outerRepetitions: Map<RepetitionPattern, ParseState>, ctx: ParseContext): Map<Direction, Set<TokenState>> {
+    let dirStates = Map<Direction, Set<TokenState>>();
+
+    const tokenStates: Set<TokenState> = Set([this.tokenState(token)]);
+    dirStates = dirStates.set(Direction.token, tokenStates);
+
+    let nodeTokenStates = Set<TokenState>();
+    for (const ns of this.nodeStates(parser)) {
+      nodeTokenStates = nodeTokenStates.add({ token, state: ns });
+    }
+    if (!nodeTokenStates.isEmpty()) {
+      dirStates = dirStates.set(Direction.node, nodeTokenStates);
+    }
+
+    let repTokenStates = Set<TokenState>();
+    for (const rs of this.repetitionStates(outerRepetitions)) {
+      repTokenStates = repTokenStates.add({ token, state: rs });
+    }
+    if (!repTokenStates.isEmpty()) {
+      dirStates = dirStates.set(Direction.repeat, repTokenStates);
+    }
+
+    let outerTokenStates = Set<TokenState>();
+    for (const os of this.outerStates(ctx)) {
+      outerTokenStates = outerTokenStates.add({ token, state: os });
+    }
+    if (!outerTokenStates.isEmpty()) {
+      dirStates = dirStates.set(Direction.outer, outerTokenStates);
+    }
+
+    return dirStates;
+  }
+
+  // @JAVA_REF ParseState.states(Parser, Map, ParseContext)
+  private states(parser: { groupState(group: string): ParseState | null; variable(token: Token, ctx: ParseContext): Variable | null }, outerRepetitions: Map<RepetitionPattern, ParseState>, ctx: ParseContext): Set<ParseState> {
+    let states = Set<ParseState>([this]);
+    for (const ns of this.nodeStates(parser)) {
+      states = states.add(ns);
+    }
+    for (const rs of this.repetitionStates(outerRepetitions)) {
+      states = states.add(rs);
+    }
+    for (const os of this.outerStates(ctx)) {
+      states = states.add(os);
+    }
+    return states;
+  }
+
+  // @JAVA_REF ParseState.nodeStates(Parser)
+  private nodeStates(parser: { groupState(group: string): ParseState | null }): Set<ParseState> {
+    if (!this._nodeTypes.isEmpty()) {
+      const gs = parser.groupState(this._group!);
+      if (gs !== null) {
+        return Set<ParseState>([gs]);
+      }
+    }
+    return Set<ParseState>();
+  }
+
+  // @JAVA_REF ParseState.repetitionStates(Map)
+  private repetitionStates(repetitions: Map<RepetitionPattern, ParseState>): Set<ParseState> {
+    let result = Set<ParseState>();
+    if (!this._endRepetitions.isEmpty()) {
+      for (const [key, value] of repetitions.entries()) {
+        if (this._endRepetitions.has(key)) {
+          result = result.add(value);
+        }
+      }
+    }
+    return result;
+  }
+
+  // @JAVA_REF ParseState.outerStates(ParseContext)
+  private outerStates(ctx: ParseContext): Set<ParseState> {
+    let result = Set<ParseState>();
+    if (this._functor !== null) {
+      const type = this._functor.resultType();
+      for (let pc: ParseContext | null = ctx; pc !== null && pc.state() !== null; pc = pc.outer()) {
+        if (!pc.state()!.nodeTypes().isEmpty()) {
+          for (const sup of type.allSupers()) {
+            const next = pc.state()!.nodeTypes().get(sup);
+            if (next !== undefined) {
+              result = result.add(next);
+              break;
+            }
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  // @JAVA_REF ParseState.tokenNext(Token, Parser, ParseContext, PatternResult)
+  private tokenNext(token: Token | null, parser: { groupState(group: string): ParseState | null; variable(token: Token, ctx: ParseContext): Variable | null }, ctx: ParseContext, result: PatternResult | null): TokenState | null {
+    let next = this.tokenTextNext(token, result);
+    if (next === null) {
+      next = this.tokenTypeNext(token, parser, ctx, result);
+    }
+    return next;
+  }
+
+  // @JAVA_REF ParseState.tokenTextNext(Token, PatternResult)
+  private tokenTextNext(token: Token | null, result: PatternResult | null): TokenState | null {
+    if (token === null || this._tokenTexts.isEmpty()) {
+      return null;
+    }
+    const type = token.type;
+    const text = token.text;
+    let next = this._tokenTexts.get(text);
+
+    if (next !== undefined) {
+      if (result !== null) {
+        result.add(token);
+        token.setTextMatch(next.isKeyword());
+        token.setState(next);
+      }
+      return next.tokenState(token.next);
+    }
+
+    // Handle negative numbers
+    if (this.isNumeric(type) && text.startsWith('-') && this._tokenTypes.get(type) === undefined) {
+      const key = '-';
+      next = this._tokenTexts.get(key);
+      if (next !== undefined) {
+        const min = token.split(1);
+        if (result !== null) {
+          result.addSplit(token, min);
+          result.add(min);
+          min.setTextMatch(next.isKeyword());
+          min.setState(next);
+        }
+        return next.tokenState(min.next);
+      }
+    }
+
+    // Handle operator splitting
+    if (type === TokenType.OPERATOR) {
+      for (let i = text.length - 1; i > 0; i--) {
+        const key = text.substring(0, i);
+        next = this._tokenTexts.get(key);
+        if (next !== undefined) {
+          const pre = token.split(1);
+          if (result !== null) {
+            result.addSplit(token, pre);
+            result.add(pre);
+            pre.setTextMatch(next.isKeyword());
+            pre.setState(next);
+          }
+          return next.tokenState(pre.next);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  // @JAVA_REF ParseState.tokenTypeNext(Token, Parser, ParseContext, PatternResult)
+  private tokenTypeNext(token: Token | null, parser: { groupState(group: string): ParseState | null; variable(token: Token, ctx: ParseContext): Variable | null }, ctx: ParseContext, result: PatternResult | null): TokenState | null {
+    if (token === null || this._tokenTypes.isEmpty()) {
+      return null;
+    }
+    const type = token.type;
+
+    // Handle NEWLINE
+    let next = this._tokenTypes.get(TokenType.NEWLINE);
+    if (next !== undefined && Pattern.isEndOfLine(token)) {
+      if (result !== null) {
+        for (let prev = token.previousAll; prev !== null && prev !== token.previous; prev = prev!.previousAll) {
+          if (prev!.type === TokenType.NEWLINE) {
+            result.add(prev! as unknown as AstElement);
+            prev!.setState(next);
+            break;
+          }
+        }
+      }
+      return next.tokenState(token);
+    }
+
+    // Handle variable lookup
+    if (type === TokenType.NAME) {
+      const variable = parser.variable(token, ctx);
+      if (variable !== null) {
+        const tt = variable.type().tokenType();
+        next = tt !== null ? this._tokenTypes.get(tt) : undefined;
+        if (next !== undefined) {
+          if (result !== null) {
+            result.add(variable as unknown as AstElement);
+            token.setState(next);
+          }
+          return next.tokenState(token.next);
+        }
+      }
+    }
+
+    // Handle token type match
+    if (result !== null || !type.isVariableContent()) {
+      next = this._tokenTypes.get(type);
+      if (next !== undefined) {
+        if (result !== null) {
+          result.add(token as unknown as AstElement);
+          token.setState(next);
+        }
+        return next.tokenState(token.next);
+      }
+    }
+
+    return null;
+  }
+
+  // @JAVA_REF ParseState.nodeNext(Token, PatternResult)
+  private nodeNext(token: Token | null, result: PatternResult): TokenState | null {
+    if (token === null || this._nodeTypes.isEmpty()) {
+      return null;
+    }
+
+    let currentToken = token;
+    const nextToken = token.next;
+
+    // Handle negative number merging
+    if (nextToken !== null &&
+        token.text === '-' &&
+        this.isNumeric(nextToken.type) &&
+        !nextToken.text.startsWith('-')) {
+      currentToken = result.addMerge(token, nextToken.prepend('-'));
+    }
+
+    const ctx = createParseContext(this, currentToken, result.context());
+    const node = result.parser().parseNode(currentToken, ctx);
+
+    if (node !== null) {
+      result.add(node as unknown as AstElement);
+
+      // Handle Variable type
+      if ((node as unknown) instanceof Variable) {
+        const next = this._nodeTypes.get(Type.VARIABLE);
+        if (next !== undefined) {
+          return next.tokenState(node.nextToken());
+        }
+      }
+
+      // Handle normal type matching
+      for (const sup of node.type().allSupers()) {
+        const next = this._nodeTypes.get(sup);
+        if (next !== undefined) {
+          return next.tokenState(node.nextToken());
+        }
+      }
+
+      // Handle type variable matching
+      let foundEntry: [Type, ParseState] | undefined;
+      for (const [entryKey, entryState] of this._nodeTypes.entries()) {
+        if (entryKey.variable() !== null) {
+          foundEntry = [entryKey, entryState];
+          break;
+        }
+      }
+
+      if (foundEntry !== undefined) {
+        const [keyType, nextState] = foundEntry;
+        const variable = keyType.variable()!;
+        const resolvedType = result.getTypeArg(variable);
+        if (resolvedType !== undefined) {
+          if (resolvedType.isAssignableFrom(node.type())) {
+            return nextState.tokenState(node.nextToken());
+          }
+        } else {
+          result.putTypeArg(variable, node.type());
+          return nextState.tokenState(node.nextToken());
+        }
+      }
+
+      result.removeLast();
+      result.addException(
+        ParseException.fromElements(
+          'Node ' + node + ' of unexpected type ' + node.type() + ', expected ' + this.expectedTypes(),
+          node
+        )
+      );
+    }
+
+    return null;
+  }
+
+  // @JAVA_REF ParseState.expectedTypes()
+  private expectedTypes(): string {
+    const types: string[] = [];
+    for (const key of this._nodeTypes.keys()) {
+      types.push(String(key));
+    }
+    return types.join(' or ');
+  }
+
+  private isNumeric(type: TokenType): boolean {
+    return type === TokenType.NUMBER || type === TokenType.DECIMAL;
+  }
+
+  // @JAVA_REF ParseState.merge(ParseState)
   merge(state: ParseState | null): ParseState {
     if (state === null) {
       return this;
     }
 
-    // Merge transitions with special handling for Type keys
-    let transitions = this._transitions.mergeWith(
+    // Merge three maps separately
+    const tokenTexts = this._tokenTexts.mergeWith(
       (a, b) => a.merge(b),
-      state._transitions
+      state._tokenTexts
+    );
+    const tokenTypes = this._tokenTypes.mergeWith(
+      (a, b) => a.merge(b),
+      state._tokenTypes
     );
 
-    // Merge type hierarchy transitions
-    for (const key of transitions.keys()) {
-      if (key instanceof Type) {
-        const subType = key;
-        for (const superType of subType.allSupers()) {
-          if (!superType.equals(subType)) {
-            const superState = transitions.get(superType);
-            if (superState !== undefined) {
-              const subState = transitions.get(subType);
-              if (subState !== undefined) {
-                const mergedState = subState.merge(superState);
-                transitions = transitions.set(subType, mergedState);
-              }
+    // Merge nodeTypes with type hierarchy handling
+    let nodeTypes = this._nodeTypes.mergeWith(
+      (a, b) => a.merge(b),
+      state._nodeTypes
+    );
+    for (const subType of nodeTypes.keys()) {
+      for (const superType of subType.allSupers()) {
+        if (!superType.equals(subType)) {
+          const superState = nodeTypes.get(superType);
+          if (superState !== undefined) {
+            const subState = nodeTypes.get(subType);
+            if (subState !== undefined) {
+              const mergedState = subState.merge(superState);
+              nodeTypes = nodeTypes.set(subType, mergedState);
             }
           }
         }
@@ -280,7 +797,9 @@ export class ParseState {
     }
 
     return new ParseState(
-      transitions,
+      tokenTexts,
+      tokenTypes,
+      nodeTypes,
       this.functorMerge(state),
       this.leftPrecedenceMerge(state),
       this.elementMerge(this._innerPrecedence, state._innerPrecedence),
@@ -292,8 +811,6 @@ export class ParseState {
   }
 
   private booleanMerge(b1: boolean, b2: boolean): boolean {
-    // In Java, elementMerge with Booleans throws if both are non-null and different
-    // For primitive booleans (always "non-null"), this means throw if they differ
     if (b1 !== b2) {
       throw new Error('Non deterministic pattern merge: ' + b1 + ' <> ' + b2);
     }
@@ -333,399 +850,14 @@ export class ParseState {
     return t1 === null ? t2 : t1;
   }
 
-  /**
-   * Parse from this state.
-   */
-  parse(
-    token: Token | null,
-    result: PatternResult,
-    outerRepetitions: Map<RepetitionPattern, ParseState>,
-    pre: boolean
-  ): boolean {
-    const ctx = result.context();
-
-    // Avoid infinite loops
-    if (ctx.state() === this && ctx.token() === token) {
-      return false;
-    }
-
-    // Handle repetition start in pre-parse
-    if (pre && !result.isEmpty() && !this._startRepetitions.isEmpty()) {
-      result.endPreParse(this, token, this._leftPrecedence);
-      return true;
-    }
-
-    // Track inner repetitions
-    let innerRepetitions = outerRepetitions;
-    for (const start of this._startRepetitions) {
-      innerRepetitions = innerRepetitions.set(start, this);
-    }
-
-    let nrOfExceptions: number = 0;
-    let iterationCount = 0;
-    const MAX_ITERATIONS = 10000;
-    do {
-      iterationCount++;
-      if (iterationCount > MAX_ITERATIONS) {
-        console.error('ParseState.parse: Maximum iterations exceeded, breaking to prevent infinite loop');
-        break;
-      }
-      nrOfExceptions = result.exceptions().size;
-
-      // Check if token matching succeeds
-      const tokenMatched = token !== null && this.token(token, result, ctx, innerRepetitions, pre, true);
-      if (!tokenMatched) {
-        if (pre && this._group !== null) {
-          result.endPreParse(this, token, this._leftPrecedence);
-          return true;
-        } else if (!pre && token !== null && this.outerEnd(token, result, ctx, outerRepetitions)) {
-          result.endPostParse(this._functor!, token, this._leftPrecedence);
-        } else if (token === null || !this.node(token, result, innerRepetitions, pre)) {
-          // Error recovery: skip to end of line
-          if (result.exceptions().size > nrOfExceptions &&
-              token !== null &&
-              token.type !== TokenType.ENDOFFILE) {
-            // Skip tokens until we reach end of line
-            while (token !== null && !Pattern.isEndOfLine(token)) {
-              token = token.next;
-            }
-            // Advance past the end-of-line marker to prevent infinite loop
-            if (token !== null && token.type !== TokenType.ENDOFFILE) {
-              token = token.next;
-              if (token !== null && token.type !== TokenType.ENDOFFILE) {
-                continue;
-              }
-            }
-          }
-          break;
-        }
-      }
-
-      // Check if we should continue repetition
-      if (!this._startRepetitions.some(r => result.endRepetitions().has(r))) {
-        return true;
-      }
-
-      token = result.nextToken();
-    } while (true);
-
-    // Check for end of repetition
-    if (this._endRepetitions.some(r => outerRepetitions.has(r))) {
-      result.endRepetition(this._endRepetitions, token, 1);
-      return true;
-    }
-
-    // Handle final state
-    if (result.functor() === null) {
-      if (this._functor === null || result.hasException()) {
-        if ((!pre || !result.isEmpty()) && nrOfExceptions === result.exceptions().size) {
-          const message = 'Unexpected token ' + token + ', expected ' + this.expectedTokens(ctx);
-          if (token !== null) {
-            result.addException(ParseException.fromToken(message, token));
-          } else {
-            result.addException(new ParseException(message, 0, 0, 0, 0, ''));
-          }
-        }
-        return false;
-      }
-      result.endPostParse(this._functor, token, this._leftPrecedence);
-    }
-
-    return true;
-  }
-
-  private expectedTokens(ctx: ParseContext): string {
-    const states = this.outerStates(ctx).add(this);
-    const tokens: string[] = [];
-
-    for (const s of states) {
-      for (const k of s.transitions().keys()) {
-        if (typeof k === 'string') {
-          tokens.push("'" + k + "'");
-        } else if (k instanceof TokenType) {
-          tokens.push(k.name);
-        }
-      }
-    }
-
-    return tokens.join(',');
-  }
-
-  private outerStates(ctx: ParseContext): Set<ParseState> {
-    let result = Set<ParseState>();
-    if (this._functor !== null) {
-      const type = this._functor.resultType();
-      for (let pc: ParseContext | null = ctx; pc !== null && pc.state() !== null; pc = pc.outer()) {
-        for (const sup of type.allSupers()) {
-          const next = pc.state()!.transitions().get(sup);
-          if (next !== undefined) {
-            result = result.add(next);
-          }
-        }
-      }
-    }
-    return result;
-  }
-
-  private token(
-    token: Token,
-    result: PatternResult,
-    ctx: ParseContext,
-    repetitions: Map<RepetitionPattern, ParseState> | null,
-    pre: boolean,
-    matchType: boolean
-  ): boolean {
-    if (this._transitions.isEmpty()) {
-      return false;
-    }
-
-    let element: AstElement | null = null;
-    const type = token.type;
-    const text = token.text;
-
-    // Try exact text match
-    let next = this._transitions.get(text);
-    if (next !== undefined) {
-      element = token;
-      token.setTextMatch(next.isKeyword());
-    }
-
-    // Handle negative numbers
-    if (next === undefined && this.isNumeric(type) && text.startsWith('-') && !this._transitions.has(type)) {
-      next = this._transitions.get('-');
-      if (next !== undefined) {
-        token = result.addSplit(token, token.split(1));
-        element = token;
-        token.setTextMatch(next.isKeyword());
-      }
-    }
-
-    // Handle operator splitting
-    if (next === undefined && type === TokenType.OPERATOR) {
-      for (let i = text.length - 1; i > 0; i--) {
-        const key = text.substring(0, i);
-        next = this._transitions.get(key);
-        if (next !== undefined) {
-          token = result.addSplit(token, token.split(i));
-          element = token;
-          token.setTextMatch(next.isKeyword());
-          break;
-        }
-      }
-    }
-
-    // Handle newline
-    if (next === undefined) {
-      next = this._transitions.get(TokenType.NEWLINE);
-      if (next !== undefined) {
-        if (Pattern.isEndOfLine(token)) {
-          for (let prev = token.previousAll; prev !== null && prev !== token.previous; prev = prev!.previousAll) {
-            if (prev!.type === TokenType.NEWLINE) {
-              element = prev;
-              break;
-            }
-          }
-          token = token.previous!;
-        } else {
-          next = undefined;
-        }
-      }
-    }
-
-    // Handle variable lookup
-    if (next === undefined && type === TokenType.NAME) {
-      const variable = result.parser().variable(token, ctx);
-      if (variable !== null) {
-        const tt = variable.type().tokenType();
-        next = tt !== null ? this._transitions.get(tt) as ParseState | undefined : undefined;
-        if (next !== undefined) {
-          element = variable;
-        } else {
-          return false;
-        }
-      }
-    }
-
-    // Handle token type match
-    if (next === undefined && matchType) {
-      next = this._transitions.get(type);
-      if (next !== undefined) {
-        if (this._group !== null && type.isVariableContent()) {
-          const groupState = result.parser().groupState(this._group);
-          if (groupState !== null && groupState.token(token, result, ctx.outer()!, null, true, false)) {
-            return false;
-          }
-        }
-        element = token;
-      }
-    }
-
-    if (next !== undefined) {
-      if (repetitions === null) {
-        return true;
-      }
-      if (element !== null) {
-        result.add(element);
-      }
-      token.setState(next);
-      if (next.parse(token.next, result, repetitions, pre)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private outerEnd(
-    token: Token,
-    result: PatternResult,
-    ctx: ParseContext,
-    repetitions: Map<RepetitionPattern, ParseState>
-  ): boolean {
-    if (this._functor !== null) {
-      for (const [r, state] of repetitions) {
-        if (this._endRepetitions.has(r) && state.token(token, result, ctx, null, true, true)) {
-          return false;
-        }
-      }
-      const type = this._functor.resultType();
-      for (let pc: ParseContext | null = ctx; pc !== null && pc.state() !== null; pc = pc.outer()) {
-        for (const sup of type.allSupers()) {
-          const next = pc.state()!.transitions().get(sup);
-          if (next !== undefined && next.token(token, result, ctx.outer()!, null, true, true)) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  private isNumeric(type: TokenType): boolean {
-    return type === TokenType.NUMBER || type === TokenType.DECIMAL;
-  }
-
-  private node(
-    token: Token,
-    result: PatternResult,
-    repetitions: Map<RepetitionPattern, ParseState>,
-    pre: boolean
-  ): boolean {
-    if (this._group === null) {
-      return false;
-    }
-
-    let currentToken = token;
-    const nextToken = token.next;
-
-    // Handle negative number merging
-    if (nextToken !== null &&
-        token.text === '-' &&
-        this.isNumeric(nextToken.type) &&
-        !nextToken.text.startsWith('-')) {
-      currentToken = result.addMerge(token, nextToken.prepend('-'));
-    }
-
-    const inner = this._innerPrecedence;
-    const node = result.parser().parseNode(
-      currentToken,
-      createParseContext(
-        this,
-        currentToken,
-        this._group,
-        inner ?? Number.MIN_SAFE_INTEGER,
-        result.context()
-      )
-    );
-
-    if (node !== null) {
-      result.add(node);
-
-      // Handle Variable type
-      const isVariable = node instanceof Variable;
-      if (isVariable) {
-        const next = this._transitions.get(Type.VARIABLE);
-        if (next !== undefined) {
-          if (next.parse((node as unknown as Variable).nextToken(), result, repetitions, pre)) {
-            return true;
-          }
-        }
-      }
-
-      // Handle normal type matching
-      for (const sup of node.type().allSupers()) {
-        const next = this._transitions.get(sup);
-        if (next !== undefined) {
-          const nextToken = node.nextToken();
-          if (next.parse(nextToken, result, repetitions, pre)) {
-            return true;
-          } else {
-            break;
-          }
-        }
-      }
-
-      // Handle type variable matching
-      let foundTypeEntry: [ParseState, unknown] | undefined;
-      for (const entry of this._transitions.entries()) {
-        const [entryKey, entryState] = entry;
-        if (entryKey instanceof Type && entryKey.variable() !== null) {
-          foundTypeEntry = [entryState, entryKey];
-          break;
-        }
-      }
-      if (foundTypeEntry !== undefined) {
-        const [next, keyType] = foundTypeEntry;
-        const variable = (keyType as Type).variable()!;
-        const resolvedType = result.getTypeArg(variable);
-
-        if (resolvedType !== undefined) {
-          if (resolvedType.isAssignableFrom(node.type()) && next.parse(node.nextToken(), result, repetitions, pre)) {
-            return true;
-          } else {
-            result.addException(
-              ParseException.fromElements(
-                'Node ' + node + ' of unexpected type ' + node.type() + ', expected ' + resolvedType,
-                node
-              )
-            );
-            return true;
-          }
-        } else {
-          result.putTypeArg(variable, node.type());
-          if (next.parse(node.nextToken(), result, repetitions, pre)) {
-            return true;
-          }
-        }
-      }
-
-      result.addException(
-        ParseException.fromElements(
-          'Node ' + node + ' of unexpected type ' + node.type() + ', expected ' + this.expectedTypes(),
-          node
-        )
-      );
-      return true;
-    }
-
-    return false;
-  }
-
-  private expectedTypes(): string {
-    const types: string[] = [];
-    for (const key of this._transitions.keys()) {
-      if (key instanceof Type) {
-        types.push(String(key));
-      }
-    }
-    return types.join(' or ');
-  }
-
+  // @JAVA_REF ParseState.toString()
   toString(): string {
-    const keys: string[] = [];
-    for (const key of this._transitions.keys()) {
-      keys.push(String(key));
-    }
-    return '{' + keys.join(', ') + '}';
+    const textKeys: string[] = [];
+    for (const k of this._tokenTexts.keys()) textKeys.push(String(k));
+    const typeKeys: string[] = [];
+    for (const k of this._tokenTypes.keys()) typeKeys.push(k.name);
+    const nodeKeys: string[] = [];
+    for (const k of this._nodeTypes.keys()) nodeKeys.push(String(k));
+    return '{' + textKeys.join(', ') + '}{' + typeKeys.join(', ') + '}{' + nodeKeys.join(', ') + '}';
   }
 }

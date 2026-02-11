@@ -24,7 +24,8 @@ export abstract class Pattern extends Node {
   /**
    * Build a parse state for this pattern.
    */
-  abstract parseState(next: ParseState, functor: Functor): ParseState;
+  // @JAVA_REF Pattern.state(ParseState next)
+  abstract parseState(next: ParseState): ParseState;
 
   /**
    * Get the name of this pattern (for functor naming).

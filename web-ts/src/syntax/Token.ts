@@ -299,12 +299,26 @@ export class Token implements AstElement {
   }
 
   // Parse state (for parser)
+  // @JAVA_REF Token.getState()
   get state(): unknown {
     return this._state;
   }
 
+  // @JAVA_REF Token.setState(ParseState)
   setState(state: unknown): void {
     this._state = state;
+  }
+
+  /**
+   * Get completions available at this token's parse state.
+   * @JAVA_REF Token.completions()
+   */
+  completions(): string[] {
+    if (this._state !== null && typeof this._state === 'object' && 'tokenTexts' in this._state) {
+      const state = this._state as { tokenTexts(): { keys(): Iterable<string> } };
+      return [...state.tokenTexts().keys()].sort();
+    }
+    return [];
   }
 
   /**

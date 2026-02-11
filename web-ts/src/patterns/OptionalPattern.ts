@@ -34,8 +34,9 @@ export class OptionalPattern extends Pattern {
     return this.get(0) as Pattern;
   }
 
-  parseState(next: ParseState, functor: Functor): ParseState {
-    return this.optional().parseState(next, functor).merge(next);
+  // @JAVA_REF OptionalPattern.state(ParseState next)
+  parseState(next: ParseState): ParseState {
+    return this.optional().parseState(next).merge(next);
   }
 
   toString(_previous?: TokenType[]): string {
