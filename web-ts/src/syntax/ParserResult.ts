@@ -7,6 +7,8 @@ import { List } from 'immutable';
 import type { Node } from '../Node';
 import type { TokenizerResult } from './Tokenizer';
 import { ParseException } from './ParseException';
+import { KnowledgeBase } from '../KnowledgeBase';
+import { isEvaluatable } from '../Evaluatable';
 
 /**
  * ParserResult - result of parsing.
@@ -90,16 +92,13 @@ export class ParserResult {
    */
   evaluate(): void {
     if (this._exceptions.length === 0) {
+      const knowledgeBase = KnowledgeBase.CURRENT;
       for (const root of this.roots()) {
-        if (this.isEvaluatable(root)) {
-          // root.evaluate(knowledgeBase, this);
+        if (isEvaluatable(root)) {
+          root.evaluate(knowledgeBase, this);
         }
       }
     }
-  }
-
-  private isEvaluatable(node: Node): boolean {
-    return 'evaluate' in node && typeof (node as unknown as { evaluate: unknown }).evaluate === 'function';
   }
 
   /**
