@@ -1,6 +1,6 @@
 /**
  * NodeTypePattern - matches a node of a specific type.
- * Ported from Java: org.modelingvalue.nelumbo.patterns.NodeTypePattern
+ * @JAVA_REF org.modelingvalue.nelumbo.patterns.NodeTypePattern
  */
 
 import { List, Map } from 'immutable';
@@ -120,15 +120,17 @@ export class NodeTypePattern extends Pattern {
   ): number {
     if (i < elements.size) {
       const e = elements.get(i);
-      if (e instanceof Node) {
+      // In Java, Variable extends Node so instanceof Node covers both.
+      // In TS, Variable is separate, so we handle both explicitly.
+      if (e instanceof Node || e instanceof Variable) {
         const n = e;
-        const nType = (e as Node).type();
+        const nType = e instanceof Node ? (e as Node).type() : (e as Variable).type();
         const nodeType = this.nodeType();
 
         if (nodeType.isAssignableFrom(nType)) {
           args.push(n);
           return i + 1;
-        } else if (Type.VARIABLE.equals(nodeType) && n instanceof Variable) {
+        } else if (Type.VARIABLE.equals(nodeType) && e instanceof Variable) {
           args.push(n);
           return i + 1;
         } else {

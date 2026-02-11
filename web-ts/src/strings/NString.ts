@@ -1,6 +1,6 @@
 /**
  * NString - String node type.
- * Ported from Java: org.modelingvalue.nelumbo.strings.NString
+ * @JAVA_REF org.modelingvalue.nelumbo.strings.NString
  */
 
 import { List } from 'immutable';

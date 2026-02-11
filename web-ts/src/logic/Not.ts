@@ -1,6 +1,6 @@
 /**
  * Not - logical NOT predicate.
- * Ported from Java: org.modelingvalue.nelumbo.logic.Not
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.Not
  */
 
 import { List, Set } from 'immutable';

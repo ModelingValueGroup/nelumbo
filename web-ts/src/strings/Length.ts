@@ -1,6 +1,6 @@
 /**
  * Length - String length predicate.
- * Ported from Java: org.modelingvalue.nelumbo.strings.Length
+ * @JAVA_REF org.modelingvalue.nelumbo.strings.Length
  */
 
 import { List } from 'immutable';

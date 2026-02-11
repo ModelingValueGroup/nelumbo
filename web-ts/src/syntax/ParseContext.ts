@@ -1,6 +1,6 @@
 /**
  * ParseContext - immutable parsing context with precedence and group.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.ParseContext
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.ParseContext
  */
 
 import type { Token } from './Token';

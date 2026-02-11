@@ -1,6 +1,6 @@
 /**
  * Parser - precedence climbing parser.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.Parser
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.Parser
  */
 
 import { List } from 'immutable';
@@ -78,6 +78,7 @@ export class Parser {
     return this._knowledgeBase.run(() => {
       this._result = result;
       this._knowledgeBase.setExceptionHandler(this);
+      Parser._parseNodeCount = 0;
 
       try {
         let token = this._tokenizerResult.first;
@@ -144,17 +145,13 @@ export class Parser {
         if (token !== null) {
           result = this.preParse(token, ctx, left);
 
-          let loopCount = 0;
           while (result !== null) {
-            loopCount++;
-            if (loopCount > 10000) {
-              throw new Error('Parser.parseNode: Maximum loop iterations exceeded');
-            }
-
             if (ctx.precedence() >= (result.leftPrecedence() ?? Number.MAX_SAFE_INTEGER)) {
               return left;
             }
 
+            const prevLeft = left;
+            const prevToken: Token | null = token;
             left = result.postParse(ctx);
             if (left === null) {
               break;
@@ -163,6 +160,12 @@ export class Parser {
             token = left.nextToken();
             if (token === null) {
               return left;
+            }
+
+            // If token didn't advance, the post-fix match consumed no tokens - break
+            // (don't revert: zero-token postfix patterns like FACT legitimately wrap the node)
+            if (token === prevToken) {
+              break;
             }
 
             result = this.preParse(token, ctx, left);

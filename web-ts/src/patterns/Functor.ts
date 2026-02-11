@@ -1,6 +1,6 @@
 /**
  * Functor class - connects patterns to AST construction.
- * Ported from Java: org.modelingvalue.nelumbo.patterns.Functor
+ * @JAVA_REF org.modelingvalue.nelumbo.patterns.Functor
  */
 
 import { List, Map } from 'immutable';
@@ -51,6 +51,15 @@ export class Functor extends Node {
     const functor = Object.create(Functor.prototype) as Functor;
     (functor as unknown as { _data: unknown[] })._data = data;
     (functor as unknown as { _declaration: Node })._declaration = declaration ?? functor;
+    // Object.create doesn't run class field initializers, so initialize manually
+    (functor as any)._binding = null;
+    (functor as any)._hashCodeCached = false;
+    (functor as any)._hashCode = 0;
+    (functor as any)._name = null;
+    (functor as any)._argTypes = null;
+    (functor as any)._start = null;
+    (functor as any)._startPre = null;
+    (functor as any)._startPost = null;
     return functor;
   }
 

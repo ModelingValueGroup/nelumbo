@@ -1,6 +1,6 @@
 /**
  * Type class representing types in the Nelumbo type system.
- * Ported from Java: org.modelingvalue.nelumbo.Type
+ * @JAVA_REF org.modelingvalue.nelumbo.Type
  */
 
 import { List, Set, Map } from 'immutable';
@@ -476,7 +476,7 @@ export class Type extends Node {
    * Create a type from a Variable.
    */
   static fromVariable(variable: Variable): Type {
-    return Type.createType(variable, Set<Type>([Type.OBJECT]), DEFAULT_GROUP);
+    return Type.createType(variable, Set<Type>([Type.OBJECT]), DEFAULT_GROUP, List<AstElement>([variable as AstElement]));
   }
 
   /**

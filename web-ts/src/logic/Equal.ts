@@ -1,6 +1,6 @@
 /**
  * Equal - unification/equality predicate.
- * Ported from Java: org.modelingvalue.nelumbo.logic.Equal
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.Equal
  */
 
 import { List, Map } from 'immutable';

@@ -1,6 +1,6 @@
 /**
  * ParserResult - full parse result with error collection.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.ParserResult
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.ParserResult
  */
 
 import { List } from 'immutable';

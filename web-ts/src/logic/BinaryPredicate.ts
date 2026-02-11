@@ -1,6 +1,6 @@
 /**
  * BinaryPredicate - abstract base for binary logical operators.
- * Ported from Java: org.modelingvalue.nelumbo.logic.BinaryPredicate
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.BinaryPredicate
  */
 
 import { List } from 'immutable';

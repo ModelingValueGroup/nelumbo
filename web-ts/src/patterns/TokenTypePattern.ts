@@ -1,6 +1,6 @@
 /**
  * TokenTypePattern - matches a specific token type.
- * Ported from Java: org.modelingvalue.nelumbo.patterns.TokenTypePattern
+ * @JAVA_REF org.modelingvalue.nelumbo.patterns.TokenTypePattern
  */
 
 import { List, Map } from 'immutable';

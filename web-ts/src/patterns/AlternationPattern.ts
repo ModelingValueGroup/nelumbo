@@ -1,6 +1,6 @@
 /**
  * AlternationPattern - matches one of several pattern alternatives.
- * Ported from Java: org.modelingvalue.nelumbo.patterns.AlternationPattern
+ * @JAVA_REF org.modelingvalue.nelumbo.patterns.AlternationPattern
  */
 
 import { List, Map } from 'immutable';

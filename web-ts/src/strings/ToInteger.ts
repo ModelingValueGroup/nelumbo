@@ -1,6 +1,6 @@
 /**
  * ToInteger - String to integer conversion predicate.
- * Ported from Java: org.modelingvalue.nelumbo.strings.ToInteger
+ * @JAVA_REF org.modelingvalue.nelumbo.strings.ToInteger
  */
 
 import { List } from 'immutable';

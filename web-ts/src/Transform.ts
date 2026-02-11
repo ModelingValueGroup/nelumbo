@@ -1,6 +1,6 @@
 /**
  * Transform - metaprogramming/rewriting.
- * Ported from Java: org.modelingvalue.nelumbo.Transform
+ * @JAVA_REF org.modelingvalue.nelumbo.Transform
  */
 
 import { List, Map, Set } from 'immutable';

@@ -1,6 +1,6 @@
 /**
  * KnowledgeBase - central hub with facts, rules, functors, memoization.
- * Ported from Java: org.modelingvalue.nelumbo.KnowledgeBase
+ * @JAVA_REF org.modelingvalue.nelumbo.KnowledgeBase
  */
 
 import { List, Map, Set } from 'immutable';
@@ -20,12 +20,19 @@ import { PatternResult } from './syntax/PatternResult';
 import { ParseException } from './syntax/ParseException';
 import type { Parser } from './syntax/Parser';
 import { MatchState } from './MatchState';
-import type { Rule } from './Rule';
+import { Rule } from './Rule';
 import type { Transform } from './Transform';
-import type { Predicate } from './logic/Predicate';
+import { Predicate } from './logic/Predicate';
+import { And } from './logic/And';
+import { ExistentialQuantifier } from './logic/ExistentialQuantifier';
+import { TokenTextPattern } from './patterns/TokenTextPattern';
+import { NList } from './collections/NList';
 import { InferResult } from './InferResult';
 import { InferContext } from './InferContext';
 import { registerBaseSyntax } from './BaseSyntax';
+import { resolveModuleContent } from './ModuleContent';
+import { Tokenizer } from './syntax/Tokenizer';
+import { Parser as ParserClass } from './syntax/Parser';
 
 /**
  * Exception handler interface.
@@ -55,6 +62,10 @@ export class KnowledgeBase implements ParseExceptionHandler {
 
   // Static base instance
   static BASE: KnowledgeBase;
+
+  // Static functor references (set during initBase)
+  static equalsFunctor: Functor;
+  static ruleFunctor: Functor;
 
   // Instance state
   private _functors: Set<Functor> = Set();
@@ -372,11 +383,88 @@ export class KnowledgeBase implements ParseExceptionHandler {
   }
 
   /**
+   * Create a functor from a pattern declaration (::=).
+   * @JAVA_REF org.modelingvalue.nelumbo.KnowledgeBase#createFunctor()
+   */
+  createFunctor(type: Type, roots: NList, ast: List<AstElement>, constructor: NodeConstructor | null, pattern: Pattern, local: boolean, prec: number | null): NList {
+    let toLiteral = false;
+    let isFunction = false;
+    const args = pattern.argTypes(List());
+    const e = type.isCollection() ? type.element() : null;
+    if (args.every(t => !(Type.OBJECT.isAssignableFrom(t) && !t.equals(e)))) {
+      type = type.literal();
+    } else {
+      if (!Type.BOOLEAN.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {
+        type = type.function();
+        isFunction = true;
+      }
+      if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type)
+        && !args.every(t => Type.OBJECT.equals(t.element()))
+        && !args.every(t => Type.BOOLEAN.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element()))
+        && !args.some(t => Type.LITERAL.isAssignableFrom(t.element()))) {
+        toLiteral = true;
+      }
+    }
+    const nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
+    const nodFunctor = Functor.ofWithElements(
+      ast.unshift(pattern as unknown as AstElement),
+      pattern,
+      nodType,
+      local,
+      toLiteral ? null : constructor,
+      prec
+    ).initInKb(this);
+    roots = new NList(List<AstElement>(), roots, nodFunctor);
+    if (pattern instanceof TokenTextPattern) {
+      nodFunctor.construct(List<AstElement>(), []);
+    }
+    if (toLiteral) {
+      const litPattern = pattern.setTypes((t: Type) => t.literal());
+      const litFunctor = Functor.ofWithElements(
+        List<AstElement>(),
+        litPattern,
+        type,
+        local,
+        constructor,
+        prec
+      ).initInKb(this);
+      roots = new NList(List<AstElement>(), roots, litFunctor);
+      this.addLiteral(nodFunctor, litFunctor);
+      // Implied Rule
+      const nodVars: Variable[] = new Array(args.size);
+      const litVars: Variable[] = new Array(args.size);
+      const litArgs = args.map((t: Type) => t.literal());
+      for (let v = 0; v < args.size; v++) {
+        nodVars[v] = new Variable(List<AstElement>(), args.get(v)!, 'n' + (v + 1));
+        litVars[v] = new Variable(List<AstElement>(), litArgs.get(v)!, 'l' + (v + 1));
+      }
+      const nodNode = nodFunctor.construct(List<AstElement>(), nodVars);
+      const litNode = litFunctor.construct(List<AstElement>(), litVars);
+      const rightVar = isFunction ? new Variable(List<AstElement>(), type.nonFunction(), 'r') : null;
+      let nodCons: Predicate = isFunction
+        ? new Predicate(KnowledgeBase.equalsFunctor, List<AstElement>(), nodNode, rightVar)
+        : nodNode as Predicate;
+      let litCond: Predicate = isFunction
+        ? new Predicate(KnowledgeBase.equalsFunctor, List<AstElement>(), litNode, rightVar)
+        : litNode as Predicate;
+      for (let c = args.size - 1; c >= 0; c--) {
+        const eq = new Predicate(KnowledgeBase.equalsFunctor, List<AstElement>(), nodVars[c], litVars[c]);
+        litCond = new And(KnowledgeBase.equalsFunctor, List<AstElement>(), eq, litCond);
+      }
+      const exists = new ExistentialQuantifier(KnowledgeBase.equalsFunctor as unknown as Functor, List<AstElement>(), List(litVars), litCond);
+      const rule = new Rule(KnowledgeBase.ruleFunctor, List<AstElement>(), nodCons, exists);
+      this.addRule(rule);
+      roots = new NList(List<AstElement>(), roots, rule);
+    }
+    return roots;
+  }
+
+  /**
    * Add a rule to the knowledge base.
    */
   addRule(rule: Rule): Rule {
     this._rules = this._rules.add(rule);
-    const state = rule.consequence().state(new MatchState<Rule>(rule));
+    const state = rule.consequence().state(MatchState.of<Rule>(rule));
     this._ruleSignatures = state.merge(this._ruleSignatures);
     this.resetMemoization();
     return rule;
@@ -402,7 +490,7 @@ export class KnowledgeBase implements ParseExceptionHandler {
   addTransform(transform: Transform): Transform {
     this._transforms = this._transforms.add(transform);
     const source = transform.source();
-    const state = source.state(new MatchState<Transform>(transform));
+    const state = source.state(MatchState.of<Transform>(transform));
     this._transformSignatures = state.merge(this._transformSignatures);
     return transform;
   }
@@ -494,13 +582,25 @@ export class KnowledgeBase implements ParseExceptionHandler {
     return this._context!;
   }
 
+  static _importCache: globalThis.Map<string, KnowledgeBase> = new globalThis.Map();
+
   /**
    * Do an import.
    */
-  doImport(name: string, _imp: Node): void {
+  doImport(name: string, imp: Node): void {
     if (!this._imported.contains(name)) {
-      // Import handling would be done here
       this._imported = this._imported.add(name);
+      let cached = KnowledgeBase._importCache.get(name);
+      if (!cached) {
+        const content = resolveModuleContent(name);
+        if (content === null) return;
+        cached = new KnowledgeBase(KnowledgeBase.BASE);
+        cached.run(() => {
+          new ParserClass(cached!, new Tokenizer(content, name).tokenize()).parseEvaluate();
+        });
+        KnowledgeBase._importCache.set(name, cached);
+      }
+      this.merge(cached, imp as AstElement);
     }
   }
 
@@ -512,10 +612,11 @@ export class KnowledgeBase implements ParseExceptionHandler {
     this._facts = this._facts.merge(kb._facts);
     this._rules = this._rules.union(kb._rules);
     this._transforms = this._transforms.union(kb._transforms);
-    this._prePatterns = this._prePatterns.merge(kb._prePatterns);
-    this._postPatterns = this._postPatterns.merge(kb._postPatterns);
-    this._localPrePatterns = this._localPrePatterns.merge(kb._prePatterns);
-    this._localPostPatterns = this._localPostPatterns.merge(kb._postPatterns);
+    const mergeStates = (existing: ParseState, incoming: ParseState) => incoming.merge(existing);
+    this._prePatterns = this._prePatterns.mergeWith(mergeStates, kb._prePatterns);
+    this._postPatterns = this._postPatterns.mergeWith(mergeStates, kb._postPatterns);
+    this._localPrePatterns = this._localPrePatterns.mergeWith(mergeStates, kb._prePatterns);
+    this._localPostPatterns = this._localPostPatterns.mergeWith(mergeStates, kb._postPatterns);
     this._literalFunctors = this._literalFunctors.merge(kb._literalFunctors);
     this._ruleSignatures = kb._ruleSignatures.merge(this._ruleSignatures);
     this._transformSignatures = kb._transformSignatures.merge(this._transformSignatures);

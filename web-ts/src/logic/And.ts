@@ -1,6 +1,6 @@
 /**
  * And - logical AND predicate.
- * Ported from Java: org.modelingvalue.nelumbo.logic.And
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.And
  */
 
 import { List, Set } from 'immutable';

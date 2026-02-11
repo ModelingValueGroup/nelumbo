@@ -1,6 +1,6 @@
 /**
  * Predicate - base predicate with resolve, infer, fixpoint.
- * Ported from Java: org.modelingvalue.nelumbo.logic.Predicate
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate
  */
 
 import { List, Map, Set } from 'immutable';

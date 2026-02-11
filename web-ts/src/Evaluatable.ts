@@ -1,6 +1,6 @@
 /**
  * Evaluatable interface - for nodes that can be evaluated.
- * Ported from Java: org.modelingvalue.nelumbo.Evaluatable
+ * @JAVA_REF org.modelingvalue.nelumbo.Evaluatable
  */
 
 import type { KnowledgeBase } from './KnowledgeBase';

@@ -1,6 +1,6 @@
 /**
  * RepetitionPattern - matches a pattern zero or more times (with optional separator).
- * Ported from Java: org.modelingvalue.nelumbo.patterns.RepetitionPattern
+ * @JAVA_REF org.modelingvalue.nelumbo.patterns.RepetitionPattern
  */
 
 import { List, Map, Set } from 'immutable';

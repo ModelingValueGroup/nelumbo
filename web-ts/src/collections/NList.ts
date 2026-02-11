@@ -1,6 +1,6 @@
 /**
  * NList - List node type.
- * Ported from Java: org.modelingvalue.nelumbo.collections.NList
+ * @JAVA_REF org.modelingvalue.nelumbo.collections.NList
  */
 
 import { List } from 'immutable';

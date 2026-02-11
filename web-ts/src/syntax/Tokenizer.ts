@@ -1,6 +1,6 @@
 /**
  * Tokenizer (Lexer) for Nelumbo.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.Tokenizer
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.Tokenizer
  */
 
 import { List } from 'immutable';

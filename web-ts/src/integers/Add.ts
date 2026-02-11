@@ -1,6 +1,6 @@
 /**
  * Add - Integer addition predicate.
- * Ported from Java: org.modelingvalue.nelumbo.integers.Add
+ * @JAVA_REF org.modelingvalue.nelumbo.integers.Add
  */
 
 import { List } from 'immutable';

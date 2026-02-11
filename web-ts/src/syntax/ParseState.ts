@@ -1,6 +1,6 @@
 /**
  * ParseState - state machine for parsing with transitions and merge logic.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.ParseState
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.ParseState
  */
 
 import { Map, Set } from 'immutable';
@@ -361,7 +361,7 @@ export class ParseState {
       innerRepetitions = innerRepetitions.set(start, this);
     }
 
-    let nrOfExceptions: number;
+    let nrOfExceptions: number = 0;
     let iterationCount = 0;
     const MAX_ITERATIONS = 10000;
     do {
@@ -656,7 +656,8 @@ export class ParseState {
       for (const sup of node.type().allSupers()) {
         const next = this._transitions.get(sup);
         if (next !== undefined) {
-          if (next.parse(node.nextToken(), result, repetitions, pre)) {
+          const nextToken = node.nextToken();
+          if (next.parse(nextToken, result, repetitions, pre)) {
             return true;
           } else {
             break;

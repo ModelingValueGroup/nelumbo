@@ -1,6 +1,6 @@
 /**
  * Import - KB merging.
- * Ported from Java: org.modelingvalue.nelumbo.Import
+ * @JAVA_REF org.modelingvalue.nelumbo.Import
  */
 
 import { List } from 'immutable';

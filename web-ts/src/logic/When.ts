@@ -1,6 +1,6 @@
 /**
  * When - conditional predicate (if-then).
- * Ported from Java: org.modelingvalue.nelumbo.logic.When
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.When
  */
 
 import { List, Set } from 'immutable';

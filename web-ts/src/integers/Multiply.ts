@@ -1,6 +1,6 @@
 /**
  * Multiply - Integer multiplication predicate.
- * Ported from Java: org.modelingvalue.nelumbo.integers.Multiply
+ * @JAVA_REF org.modelingvalue.nelumbo.integers.Multiply
  */
 
 import { List } from 'immutable';

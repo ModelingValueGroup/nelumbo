@@ -1,11 +1,12 @@
 /**
  * MatchState - trie for rule/transform signature matching.
- * Ported from Java: org.modelingvalue.nelumbo.MatchState
+ * @JAVA_REF org.modelingvalue.nelumbo.MatchState
  */
 
 import { Map, Set } from 'immutable';
 import { TokenType } from './syntax/TokenType';
 import { Type } from './Type';
+import { Variable } from './Variable';
 import { Node } from './Node';
 import type { Functor } from './patterns/Functor';
 
@@ -14,7 +15,6 @@ import type { Functor } from './patterns/Functor';
  */
 export class MatchState<E> {
   static readonly EMPTY: MatchState<never> = new MatchState<never>(
-    null,
     Map(),
     Set()
   );
@@ -23,16 +23,13 @@ export class MatchState<E> {
     return MatchState.EMPTY as MatchState<E>;
   }
 
-  private readonly _element: E | null;
   private readonly _transitions: Map<unknown, MatchState<E>>;
   private readonly _elements: Set<E>;
 
-  constructor(
-    element: E | null,
-    transitions: Map<unknown, MatchState<E>> = Map(),
-    elements: Set<E> = Set()
+  private constructor(
+    transitions: Map<unknown, MatchState<E>>,
+    elements: Set<E>
   ) {
-    this._element = element;
     this._transitions = transitions;
     this._elements = elements;
   }
@@ -41,7 +38,10 @@ export class MatchState<E> {
    * Create a terminal state for an element.
    */
   static of<E>(element: E): MatchState<E> {
-    return new MatchState(element, Map(), Set([element]));
+    return new MatchState(
+      Map(),
+      element !== null && element !== undefined ? Set([element]) : Set()
+    );
   }
 
   /**
@@ -49,9 +49,8 @@ export class MatchState<E> {
    */
   withType(type: Type): MatchState<E> {
     return new MatchState(
-      this._element,
-      this._transitions.set(type, this),
-      this._elements
+      Map<unknown, MatchState<E>>([[type, this]]),
+      Set()
     );
   }
 
@@ -60,9 +59,8 @@ export class MatchState<E> {
    */
   withTokenType(tokenType: TokenType): MatchState<E> {
     return new MatchState(
-      this._element,
-      this._transitions.set(tokenType, this),
-      this._elements
+      Map<unknown, MatchState<E>>([[tokenType, this]]),
+      Set()
     );
   }
 
@@ -71,9 +69,8 @@ export class MatchState<E> {
    */
   withClass(clss: unknown): MatchState<E> {
     return new MatchState(
-      this._element,
-      this._transitions.set(clss, this),
-      this._elements
+      Map<unknown, MatchState<E>>([[clss, this]]),
+      Set()
     );
   }
 
@@ -82,16 +79,27 @@ export class MatchState<E> {
    */
   withFunctor(functor: Functor): MatchState<E> {
     return new MatchState(
-      this._element,
-      this._transitions.set(functor, this),
-      this._elements
+      Map<unknown, MatchState<E>>([[functor, this]]),
+      Set()
     );
+  }
+
+  transitions(): Map<unknown, MatchState<E>> {
+    return this._transitions;
+  }
+
+  elements(): Set<E> {
+    return this._elements;
   }
 
   /**
    * Merge with another match state.
    */
-  merge(other: MatchState<E>): MatchState<E> {
+  merge(other: MatchState<E> | null): MatchState<E> {
+    if (other === null) {
+      return this;
+    }
+
     let transitions = this._transitions;
     for (const [key, state] of other._transitions) {
       const existing = transitions.get(key);
@@ -102,36 +110,82 @@ export class MatchState<E> {
       }
     }
 
+    // Handle type hierarchy: subtypes inherit supertype patterns
+    for (const key of transitions.keys()) {
+      if (key instanceof Type) {
+        const subType = key;
+        for (const superType of subType.allSupers()) {
+          if (!superType.equals(subType)) {
+            const superState = transitions.get(superType);
+            if (superState !== undefined) {
+              const subState = transitions.get(subType)!;
+              transitions = transitions.set(subType, subState.merge(superState));
+            }
+          }
+        }
+      }
+    }
+
     return new MatchState(
-      this._element ?? other._element,
       transitions,
       this._elements.union(other._elements)
     );
   }
 
   /**
-   * Match a node against this state.
+   * Match an object against this state, returning matching elements.
    */
-  match(node: Node): Set<E> {
-    let result = this._elements;
+  match(obj: unknown): Set<E> {
+    const state = this.doMatch(obj);
+    return state !== null ? state._elements : Set();
+  }
 
-    // Match by type
-    for (const sup of node.type().allSupers()) {
+  /**
+   * Internal recursive match traversal.
+   */
+  private doMatch(obj: unknown): MatchState<E> | null {
+    if (obj instanceof Type) {
+      return this.matchType(obj);
+    }
+    if (obj instanceof Variable) {
+      return this.matchType(obj.type());
+    }
+    if (obj instanceof Node) {
+      const node = obj;
+      const functor = node.functor();
+      let state: MatchState<E> | null = functor !== null ? (this._transitions.get(functor) ?? null) : null;
+      if (state !== null) {
+        for (const arg of node.args()) {
+          state = state!.doMatch(arg);
+          if (state === null) {
+            break;
+          }
+        }
+      }
+      if (state === null) {
+        state = this.matchType(node.type());
+      }
+      return state;
+    }
+    if (typeof obj === 'string') {
+      return this._transitions.get(TokenType.of(obj)) ?? null;
+    }
+    if (obj !== null && obj !== undefined) {
+      return this._transitions.get((obj as object).constructor) ?? null;
+    }
+    return null;
+  }
+
+  /**
+   * Match a type by walking its supertype hierarchy.
+   */
+  private matchType(type: Type): MatchState<E> | null {
+    for (const sup of type.allSupers()) {
       const state = this._transitions.get(sup);
       if (state !== undefined) {
-        result = result.union(state._elements);
+        return state;
       }
     }
-
-    // Match by functor
-    const functor = node.functor();
-    if (functor !== null) {
-      const state = this._transitions.get(functor);
-      if (state !== undefined) {
-        result = result.union(state._elements);
-      }
-    }
-
-    return result;
+    return this._transitions.get(Type.TYPE) ?? null;
   }
 }

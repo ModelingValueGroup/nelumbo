@@ -1,6 +1,6 @@
 /**
  * GreaterThan - Integer comparison predicate.
- * Ported from Java: org.modelingvalue.nelumbo.integers.GreaterThan
+ * @JAVA_REF org.modelingvalue.nelumbo.integers.GreaterThan
  */
 
 import { List } from 'immutable';

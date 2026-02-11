@@ -1,6 +1,6 @@
 /**
  * NSet - Set node type.
- * Ported from Java: org.modelingvalue.nelumbo.collections.NSet
+ * @JAVA_REF org.modelingvalue.nelumbo.collections.NSet
  */
 
 import { List, Set } from 'immutable';

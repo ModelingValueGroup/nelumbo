@@ -1,6 +1,6 @@
 /**
  * InferContext - execution context for logical inference.
- * Ported from Java: org.modelingvalue.nelumbo.InferContext
+ * @JAVA_REF org.modelingvalue.nelumbo.InferContext
  */
 
 import { List, Map } from 'immutable';

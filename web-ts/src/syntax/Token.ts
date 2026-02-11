@@ -1,6 +1,6 @@
 /**
  * Token class representing a single lexical token.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.Token
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.Token
  */
 
 import { TokenType } from './TokenType';
@@ -316,7 +316,7 @@ export class Token implements AstElement {
     const secondText = this.text.substring(position);
 
     // Create new token for first part
-    const firstToken = new Token(
+    const t1 = new Token(
       TokenType.of(firstText),
       firstText,
       this.line,
@@ -325,24 +325,30 @@ export class Token implements AstElement {
       this.fileName
     );
 
-    // Update this token's links
-    firstToken.setNext(new Token(
+    // Create new token for second part
+    const t2 = new Token(
       TokenType.of(secondText),
       secondText,
       this.line,
       this.position + position,
       this.index + position,
       this.fileName
-    ));
+    );
 
-    return firstToken;
+    // Link: t1 → t2 → original.next (preserving the chain)
+    t1._next = t2;
+    t1._nextAll = t2;
+    t2._next = this._next;
+    t2._nextAll = this._nextAll;
+
+    return t1;
   }
 
   /**
    * Prepend text to this token.
    */
   prepend(text: string): Token {
-    return new Token(
+    const merge = new Token(
       TokenType.of(text + this.text),
       text + this.text,
       this.line,
@@ -350,19 +356,33 @@ export class Token implements AstElement {
       this.index - text.length,
       this.fileName
     );
+    // Preserve the token chain links (matching Java: merge.next = next; merge.nextAll = nextAll;)
+    merge.setNext(this._next);
+    merge.setNextAll(this._nextAll);
+    return merge;
   }
 
   /**
    * Connect a split token.
    */
-  connect(split: Token): void {
-    // Link the split token into the chain
-    if (this._next !== null) {
-      split.setNext(this._next);
-      this._next.setPrevious(split);
+  connect(t1: Token): void {
+    // Insert t1 → t2 in place of this token in the chain
+    // t1 is the first part, t2 = t1.next is the second part (set during split)
+    const t2 = t1._next!;
+    t2._previous = t1;
+    t2._previousAll = t1;
+    if (this._previous !== null) {
+      this._previous.setNext(t1);
     }
-    this.setNext(split);
-    split.setPrevious(this);
+    if (this._previousAll !== null) {
+      this._previousAll.setNextAll(t1);
+    }
+    if (this._next !== null) {
+      this._next.setPrevious(t2);
+    }
+    if (this._nextAll !== null) {
+      this._nextAll.setPreviousAll(t2);
+    }
   }
 
   /**

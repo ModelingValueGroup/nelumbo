@@ -1,6 +1,6 @@
 /**
  * Variable class representing logic variables in Nelumbo.
- * Ported from Java: org.modelingvalue.nelumbo.Variable
+ * @JAVA_REF org.modelingvalue.nelumbo.Variable
  */
 
 import { List } from 'immutable';

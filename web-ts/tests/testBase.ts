@@ -1,6 +1,6 @@
 /**
  * Test utilities for Nelumbo TypeScript tests.
- * Ported from Java: org.modelingvalue.nelumbo.test.NelumboTestBase
+ * @JAVA_REF org.modelingvalue.nelumbo.test.NelumboTestBase
  */
 
 import { List } from 'immutable';

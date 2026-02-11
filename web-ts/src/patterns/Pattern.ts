@@ -1,6 +1,6 @@
 /**
  * Pattern abstract base class for syntax pattern matching.
- * Ported from Java: org.modelingvalue.nelumbo.patterns.Pattern
+ * @JAVA_REF org.modelingvalue.nelumbo.patterns.Pattern
  */
 
 import { List, Map } from 'immutable';

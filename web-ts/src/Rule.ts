@@ -1,6 +1,6 @@
 /**
  * Rule - bidirectional implication with biimply.
- * Ported from Java: org.modelingvalue.nelumbo.Rule
+ * @JAVA_REF org.modelingvalue.nelumbo.Rule
  */
 
 import { List, Set } from 'immutable';

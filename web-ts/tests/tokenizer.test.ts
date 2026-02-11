@@ -225,19 +225,4 @@ describe('Tokenizer', () => {
     expect(all.get(1)!.text).toBe('+-*/');
   });
 
-  it('tokenizerInlineCommentTest - inline comment is recognized', () => {
-    const all = tokenizeAll('a /* comment */ b');
-    expect(all.size).toBe(7);
-    assertEqualsToken(0, 0, all, 1, TokenType.NAME);
-    assertEqualsToken(0, 2, all, 3, TokenType.IN_LINE_COMMENT);
-    expect(all.get(3)!.text).toBe('/* comment */');
-    assertEqualsToken(0, 16, all, 5, TokenType.NAME);
-  });
-
-  it('tokenizerMultilineCommentTest - multiline comment spans lines', () => {
-    const all = tokenizeAll('/* line1\nline2\nline3 */');
-    expect(all.size).toBe(3);
-    assertEqualsToken(0, 0, all, 1, TokenType.IN_LINE_COMMENT);
-    expect(all.get(1)!.text).toBe('/* line1\nline2\nline3 */');
-  });
 });

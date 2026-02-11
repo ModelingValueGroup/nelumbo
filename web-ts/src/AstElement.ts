@@ -1,6 +1,6 @@
 /**
  * AstElement interface - common interface for Token and Node.
- * Ported from Java: org.modelingvalue.nelumbo.AstElement
+ * @JAVA_REF org.modelingvalue.nelumbo.AstElement
  */
 
 import { List } from 'immutable';

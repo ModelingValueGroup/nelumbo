@@ -1,6 +1,6 @@
 /**
  * Node class - base immutable AST node with binding/substitution.
- * Ported from Java: org.modelingvalue.nelumbo.Node
+ * @JAVA_REF org.modelingvalue.nelumbo.Node
  */
 
 import { List, Map, Set } from 'immutable';
@@ -50,6 +50,10 @@ export class Node implements AstElement {
     const node = Object.create(Node.prototype) as Node;
     (node as unknown as { _data: unknown[] })._data = data;
     (node as unknown as { _declaration: Node })._declaration = declaration ?? node;
+    // Object.create doesn't run class field initializers, so initialize manually
+    (node as any)._binding = null;
+    (node as any)._hashCodeCached = false;
+    (node as any)._hashCode = 0;
     return node;
   }
 
@@ -306,7 +310,8 @@ export class Node implements AstElement {
    */
   getBinding(declaration?: Node): Map<Variable, unknown> | null {
     if (declaration === undefined) {
-      if (this._binding === null) {
+      // Use == to handle both null (from constructor) and undefined (from Object.create in fromData)
+      if (this._binding == null) {
         this._binding = this.computeBinding(this._declaration);
       }
       return this._binding;
@@ -359,7 +364,7 @@ export class Node implements AstElement {
           vars = vars.set(declVar, thisVal);
           if (thisVal instanceof Node) {
             const nodeBinding = thisVal.getBinding();
-            if (nodeBinding !== null) {
+            if (nodeBinding != null) {
               vars = vars.merge(nodeBinding.mapKeys(key => key.rename('$' + key.name())));
             }
           }

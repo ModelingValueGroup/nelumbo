@@ -1,6 +1,6 @@
 /**
  * PatternResult - intermediate pattern match results.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.PatternResult
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.PatternResult
  */
 
 import { List, Map, Set } from 'immutable';
@@ -16,6 +16,7 @@ import { ParseState } from './ParseState';
 import { ParseException } from './ParseException';
 import type { Parser } from './Parser';
 import type { ParseExceptionHandler } from '../KnowledgeBase';
+import { Transform } from '../Transform';
 
 /**
  * PatternResult - holds the intermediate result of pattern matching.
@@ -139,7 +140,23 @@ export class PatternResult implements ParseExceptionHandler {
       }
       const node = functor.construct(elements, args);
       if (Type.ROOT.isAssignableFrom(node.type())) {
-        // Root nodes would be initialized here in a full implementation
+        const kb = this._parser.knowledgeBase();
+        // Java virtual dispatch: node.init(kb)
+        // Transform.init → addTransform only (no transform application)
+        // Functor.init → register only (already done via createFunctor)
+        // Other subclasses have their own init overrides
+        // Only base Node.init applies transforms
+        if (node instanceof Transform) {
+          node.initInKb(kb);
+        } else if (node instanceof Functor) {
+          // Functor.init in Java calls register() — already done via createFunctor
+          // Don't apply transforms to Functor nodes
+        } else {
+          // Base Node.init(kb) - apply transforms
+          for (const transform of kb.getTransforms(node)) {
+            transform.rewrite(transform.source(), node, kb);
+          }
+        }
       }
       return node;
     }

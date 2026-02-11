@@ -1,6 +1,6 @@
 /**
  * ParseException - represents a parsing error.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.ParseException
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.ParseException
  */
 
 import { List } from 'immutable';

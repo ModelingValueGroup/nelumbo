@@ -1,6 +1,6 @@
 /**
  * InferResult - three-state logic result.
- * Ported from Java: org.modelingvalue.nelumbo.InferResult
+ * @JAVA_REF org.modelingvalue.nelumbo.InferResult
  */
 
 import { List, Map, Set } from 'immutable';

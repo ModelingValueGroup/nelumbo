@@ -1,6 +1,6 @@
 /**
  * Or - logical OR predicate.
- * Ported from Java: org.modelingvalue.nelumbo.logic.Or
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.Or
  */
 
 import { List, Set } from 'immutable';

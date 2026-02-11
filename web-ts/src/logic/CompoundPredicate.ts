@@ -1,6 +1,6 @@
 /**
  * CompoundPredicate - base for compound predicates with iterative constraint solving.
- * Ported from Java: org.modelingvalue.nelumbo.logic.CompoundPredicate
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.CompoundPredicate
  */
 
 import { List, Map, Set } from 'immutable';

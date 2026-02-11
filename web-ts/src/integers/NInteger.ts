@@ -1,6 +1,6 @@
 /**
  * NInteger - Integer node type.
- * Ported from Java: org.modelingvalue.nelumbo.integers.NInteger
+ * @JAVA_REF org.modelingvalue.nelumbo.integers.NInteger
  */
 
 import { List } from 'immutable';

@@ -1,6 +1,6 @@
 /**
  * ExistentialQuantifier - exists quantifier.
- * Ported from Java: org.modelingvalue.nelumbo.logic.ExistentialQuantifier
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.ExistentialQuantifier
  */
 
 import { List, Set } from 'immutable';

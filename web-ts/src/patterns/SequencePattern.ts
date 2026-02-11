@@ -1,6 +1,6 @@
 /**
  * SequencePattern - matches a sequence of patterns.
- * Ported from Java: org.modelingvalue.nelumbo.patterns.SequencePattern
+ * @JAVA_REF org.modelingvalue.nelumbo.patterns.SequencePattern
  */
 
 import { List, Map } from 'immutable';

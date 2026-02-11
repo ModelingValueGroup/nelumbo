@@ -1,6 +1,6 @@
 /**
  * Fact - asserted facts.
- * Ported from Java: org.modelingvalue.nelumbo.Fact
+ * @JAVA_REF org.modelingvalue.nelumbo.Fact
  */
 
 import { List } from 'immutable';

@@ -1,6 +1,6 @@
 /**
  * UniversalQuantifier - forall quantifier.
- * Ported from Java: org.modelingvalue.nelumbo.logic.UniversalQuantifier
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.UniversalQuantifier
  */
 
 import { List, Set } from 'immutable';

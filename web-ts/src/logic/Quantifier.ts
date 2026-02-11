@@ -1,6 +1,6 @@
 /**
  * Quantifier - base class for quantified predicates.
- * Ported from Java: org.modelingvalue.nelumbo.logic.Quantifier
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier
  */
 
 import { List, Set } from 'immutable';

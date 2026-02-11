@@ -1,6 +1,6 @@
 /**
  * NBoolean - static TRUE, FALSE, UNKNOWN boolean instances.
- * Ported from Java: org.modelingvalue.nelumbo.logic.NBoolean
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.NBoolean
  */
 
 import { List, Set } from 'immutable';
@@ -118,6 +118,17 @@ export class NBoolean extends Predicate {
   static of(value: boolean | null): NBoolean {
     if (value === true) return NBoolean.TRUE;
     if (value === false) return NBoolean.FALSE;
+    return NBoolean.UNKNOWN;
+  }
+
+  /**
+   * Get NBoolean singleton from functor name.
+   * Maps "true"→TRUE, "false"→FALSE, "unknown"→UNKNOWN.
+   */
+  static fromFunctor(functor: Functor, _elements: List<AstElement>): NBoolean {
+    const name = functor.name();
+    if (name === 'true') return NBoolean.TRUE;
+    if (name === 'false') return NBoolean.FALSE;
     return NBoolean.UNKNOWN;
   }
 }

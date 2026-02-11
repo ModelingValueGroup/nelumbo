@@ -1,6 +1,6 @@
 /**
  * Concat - String concatenation predicate.
- * Ported from Java: org.modelingvalue.nelumbo.strings.Concat
+ * @JAVA_REF org.modelingvalue.nelumbo.strings.Concat
  */
 
 import { List } from 'immutable';

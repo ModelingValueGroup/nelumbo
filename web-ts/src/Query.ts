@@ -1,6 +1,6 @@
 /**
  * Query - logic queries with expected results.
- * Ported from Java: org.modelingvalue.nelumbo.Query
+ * @JAVA_REF org.modelingvalue.nelumbo.Query
  */
 
 import { List, Map, Set } from 'immutable';

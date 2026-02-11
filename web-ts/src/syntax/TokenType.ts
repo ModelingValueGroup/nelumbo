@@ -1,6 +1,6 @@
 /**
  * Token types for Nelumbo lexer.
- * Ported from Java: org.modelingvalue.nelumbo.syntax.TokenType
+ * @JAVA_REF org.modelingvalue.nelumbo.syntax.TokenType
  */
 
 export enum TokenTypeFlag {

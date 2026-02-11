@@ -1,6 +1,6 @@
 /**
  * OptionalPattern - matches a pattern zero or one time.
- * Ported from Java: org.modelingvalue.nelumbo.patterns.OptionalPattern
+ * @JAVA_REF org.modelingvalue.nelumbo.patterns.OptionalPattern
  */
 
 import { List, Map } from 'immutable';
