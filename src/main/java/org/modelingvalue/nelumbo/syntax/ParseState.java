@@ -435,13 +435,15 @@ public class ParseState implements Mergeable<ParseState> {
         ParseContext ctx = ParseContext.of(this, token, result.context());
         Node node = result.parser().parseNode(token, ctx);
         if (node != null) {
-            result.add(node);
-            if (node instanceof Variable) {
+            Variable var = node.variable();
+            if (var != null) {
                 ParseState next = nodeTypes().get(Type.VARIABLE);
                 if (next != null) {
+                    result.add(var);
                     return next.tokenState(node.nextToken());
                 }
             }
+            result.add(node);
             for (Type sup : node.type().allSupers()) {
                 ParseState next = nodeTypes().get(sup);
                 if (next != null) {
@@ -450,7 +452,7 @@ public class ParseState implements Mergeable<ParseState> {
             }
             Entry<Type, ParseState> ts = nodeTypes().findAny(e -> e.getKey().variable() != null).orElse(null);
             if (ts != null) {
-                Variable var = ts.getKey().variable();
+                var = ts.getKey().variable();
                 Type type = result.getTypeArg(var);
                 if (type != null) {
                     if (type.isAssignableFrom(node.type())) {

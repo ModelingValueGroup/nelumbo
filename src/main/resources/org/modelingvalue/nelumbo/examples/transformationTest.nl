@@ -16,7 +16,7 @@ attr OT AN AT  ::> {
     AT a
     o.AN=a  <=>  AN(o,a)
     o.AN := a ::> {
-       AN(o,a)
+       fact AN(o,a)
     }
 } 
 

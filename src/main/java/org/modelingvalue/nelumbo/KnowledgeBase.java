@@ -40,6 +40,7 @@ import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.And;
 import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
+import org.modelingvalue.nelumbo.logic.LogicVariable;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.When;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -179,6 +180,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
         if (Type.TYPE.equals(var.type())) {
             return addType(new Type(var));
+        } else if (Type.BOOLEAN.isAssignableFrom(var.type())) {
+            return Functor.of(List.of(var), t(List.of(var), var), //
+                    var.type(), true, (elements, args, functor) -> {
+                        LogicVariable result = new LogicVariable(var).setAstElements(elements);
+                        return result.setFunctor(functor);
+                    }, null).init(this);
         } else {
             return Functor.of(List.of(var), t(List.of(var), var), //
                     Type.VARIABLE, true, (elements, args, functor) -> {
@@ -434,7 +441,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             KnowledgeBase kb = CURRENT.get();
                             Type type = (Type) elements.get(0);
                             NList roots = new NList(List.of(type), Type.ROOT);
-
                             for (int i = 1; i < elements.size(); i++) {
                                 AstElement e = elements.get(i);
                                 if (e instanceof Token t && t.text().equals(",")) {
@@ -460,9 +466,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return new Query(functor, elements, args);
                         }, null).init(this);
 
-                Functor.of(n(Type.BOOLEAN, 0), //
-                        Type.FACT, false, (elements, args, functor) -> {
-                            return new Fact(functor, elements, args);
+                Functor.of(s(k("fact"), r(n(Type.BOOLEAN, 0), true, t(","))), //
+                        Type.ROOT.list(), false, (elements, args, functor) -> {
+                            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
+                            for (Object arg : args) {
+                                Predicate pred = (Predicate) arg;
+                                Fact fact = new Fact(functor, List.of(pred), pred);
+                                roots = new NList(List.of(), roots, fact);
+                            }
+                            return roots;
                         }, null).init(this);
 
                 Functor.of(s(n(Type.ROOT, null), t("::>"), t("{"), ROOTS, t("}")), //
@@ -550,7 +562,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     @SuppressWarnings("unchecked")
     private NList createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
         NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
-        Predicate cons = Predicate.predicate((Node) args[0]);
+        Predicate cons = (Predicate) args[0];
         Functor consFunctor = cons.functor();
         Functor litFunctor = literalFunctors.get().get(consFunctor);
         if (Type.FACT_TYPE.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
@@ -563,8 +575,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Functor literalFunctor = literalFunctors.get().get(nodeFunctor);
         int i = 0;
         for (List<Object> condIf : (List<List<Object>>) args[1]) {
-            Predicate cond = Predicate.predicate((Node) condIf.get(0));
-            Predicate when = Predicate.predicate((Node) ((Optional<Object>) condIf.get(1)).orElse(null));
+            Predicate cond = (Predicate) condIf.get(0);
+            Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
             Map<Variable, Object> condVars = cond.getBinding();
             Map<Variable, Object> whenVars = when != null ? when.getBinding() : null;
             Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);

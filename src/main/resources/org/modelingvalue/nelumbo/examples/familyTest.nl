@@ -30,14 +30,14 @@
     Male   ::= Hendrik, Bernhard, Claus, Willem
     Female ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
 
-    pc(Hendrik, Juliana)
-    pc(Wilhelmina, Juliana)
-    pc(Juliana, Beatrix)
-    pc(Bernhard, Beatrix)
-    pc(Beatrix, Willem)
-    pc(Claus, Willem)
-    pc(Willem, Amalia)
-    pc(Maxima, Amalia)
+    fact pc(Hendrik, Juliana),
+         pc(Wilhelmina, Juliana),
+         pc(Juliana, Beatrix),
+         pc(Bernhard, Beatrix),
+         pc(Beatrix, Willem),
+         pc(Claus, Willem),
+         pc(Willem, Amalia),
+         pc(Maxima, Amalia)
     
     a(Amalia)=a         ? [(a=Beatrix),(a=Maxima),(a=Hendrik),(a=Bernhard),(a=Juliana),(a=Claus),(a=Willem),(a=Wilhelmina)][..]
     

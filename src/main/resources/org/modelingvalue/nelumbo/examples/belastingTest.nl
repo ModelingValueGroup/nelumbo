@@ -14,8 +14,8 @@ p moet x euro belasting betalen   <=> E[i,a]((het inkomen van p is i euro) & (p 
  
 Person ::= Piet
  
-het inkomen van Piet is 50000 euro 
-Piet mag 1000 euro aftrekken
+fact het inkomen van Piet is 50000 euro, 
+     Piet mag 1000 euro aftrekken
  
 het inkomen van Piet is x euro ?                                                       [(x=50000)][..]
 Piet mag x euro aftrekken ?                                                            [(x=1000)][..]

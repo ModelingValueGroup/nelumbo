@@ -414,15 +414,4 @@ public class Predicate extends Node {
         return Type.FACT_TYPE.isAssignableFrom(type());
     }
 
-    public static Predicate predicate(Node node) {
-        if (node instanceof Predicate pred) {
-            return pred;
-        } else if (node == null) {
-            return null;
-        } else if (node instanceof Variable var) {
-            return new NBoolean(var);
-        }
-        throw new IllegalArgumentException("Must be Variable or Precdicate, is: " + node);
-    }
-
 }

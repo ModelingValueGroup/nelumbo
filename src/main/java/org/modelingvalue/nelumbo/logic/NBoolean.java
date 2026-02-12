@@ -19,13 +19,11 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -51,10 +49,6 @@ public final class NBoolean extends Predicate {
         }
     }
 
-    public NBoolean(Variable var) {
-        super(UNKNOWN.functor(), List.of(var), var);
-    }
-
     @Override
     public List<Object> args() {
         return List.of();
@@ -72,19 +66,6 @@ public final class NBoolean extends Predicate {
     private Boolean getBoolean() {
         Object object = get(0);
         return object instanceof Boolean b ? b : null;
-    }
-
-    @Override
-    public Variable variable() {
-        Object object = get(0);
-        if (object instanceof Variable v) {
-            return v;
-        }
-        object = declaration().get(0);
-        if (object instanceof Variable v) {
-            return v;
-        }
-        return null;
     }
 
     public boolean isTrue() {
@@ -108,10 +89,6 @@ public final class NBoolean extends Predicate {
 
     @Override
     protected NBoolean struct(Object[] array, Node declaration) {
-        if (array[2] instanceof NBoolean b) {
-            array[2] = b.getBoolean();
-            declaration = b;
-        }
         return new NBoolean(array, (NBoolean) declaration);
     }
 
@@ -126,13 +103,7 @@ public final class NBoolean extends Predicate {
             return unresolvable();
         }
         if (result == null) {
-            Variable var = variable();
-            if (var != null) {
-                result = InferResult.of(this, Set.of(set(0, Boolean.TRUE)), true, //
-                        Set.of(set(0, Boolean.FALSE)), true, Set.of());
-            } else {
-                result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
-            }
+            result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();
         }
         return result;
     }
@@ -144,8 +115,7 @@ public final class NBoolean extends Predicate {
 
     @Override
     public String toString(TokenType[] previous) {
-        Variable var = variable();
-        String string = var != null ? var.name() : isUnknown() ? "unknown" : toString(0);
+        String string = isUnknown() ? "unknown" : toString(0);
         if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
             previous[0] = TokenType.NAME;
             return " " + string;

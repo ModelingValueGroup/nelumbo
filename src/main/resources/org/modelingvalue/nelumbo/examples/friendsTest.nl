@@ -14,8 +14,8 @@ friend(A)=C <=> friends(A,C) |
 
 Person   ::= Piet, Jan, Klaas, Kees, Bart
 
-friends(Piet, Jan)
-friends(Jan,  Klaas)
+fact friends(Piet, Jan),
+     friends(Jan,  Klaas)
 
 friend(Piet)=B    ? [(B=Jan),(B=Klaas),(B=Piet)][..]
 friend(Jan)=B     ? [(B=Jan),(B=Klaas),(B=Piet)][..]

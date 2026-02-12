@@ -40,7 +40,7 @@ public final class Query extends Node implements Evaluatable {
 
     @SuppressWarnings("unchecked")
     private static Object[] args(Object[] args) throws ParseException {
-        Predicate nodePred = Predicate.predicate((Node) args[0]);
+        Predicate nodePred = (Predicate) args[0];
         Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()));
         Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
         if (expected.isEmpty()) {
@@ -118,7 +118,7 @@ public final class Query extends Node implements Evaluatable {
     }
 
     public Predicate predicate() {
-        return Predicate.predicate((Node) get(0));
+        return (Predicate) get(0);
     }
 
     @SuppressWarnings("unchecked")
