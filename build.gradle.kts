@@ -73,7 +73,7 @@ publishing {
     }
 }
 
-tasks.register<Exec>("generate-slides") {
+tasks.register<Exec>("build-slides") {
     val docsDir = file("${project.projectDir}/docs").absolutePath
     val projectRoot = project.projectDir.absolutePath
 
