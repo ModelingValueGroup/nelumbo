@@ -39,8 +39,8 @@ import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.And;
+import org.modelingvalue.nelumbo.logic.BooleanVariable;
 import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
-import org.modelingvalue.nelumbo.logic.LogicVariable;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.When;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -183,8 +183,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else if (Type.BOOLEAN.isAssignableFrom(var.type())) {
             return Functor.of(List.of(var), t(List.of(var), var), //
                     var.type(), true, (elements, args, functor) -> {
-                        LogicVariable result = new LogicVariable(var).setAstElements(elements);
-                        return result.setFunctor(functor);
+                        Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
+                        return new BooleanVariable(functor, elements, result);
                     }, null).init(this);
         } else {
             return Functor.of(List.of(var), t(List.of(var), var), //
@@ -515,7 +515,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
             if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type) //
                     && !args.allMatch(t -> Type.OBJECT.equals(t.element())) //
-                    && !args.allMatch(t -> Type.BOOLEAN.isAssignableFrom(t.element()) || Type.VARIABLE.isAssignableFrom(t.element())) //
+                    && !(constructor != null && args.allMatch(t -> Type.BOOLEAN.isAssignableFrom(t.element()) //
+                            || Type.VARIABLE.isAssignableFrom(t.element()))) //
                     && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;
             }
@@ -562,7 +563,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     @SuppressWarnings("unchecked")
     private NList createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
         NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
-        Predicate cons = (Predicate) args[0];
+        Predicate p = (Predicate) args[0];
+        Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e).resetDeclaration();
         Functor consFunctor = cons.functor();
         Functor litFunctor = literalFunctors.get().get(consFunctor);
         if (Type.FACT_TYPE.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {

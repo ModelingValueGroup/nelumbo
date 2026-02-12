@@ -26,7 +26,6 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Predicate extends Node {
@@ -115,7 +114,7 @@ public class Predicate extends Node {
             return this;
         }
         KnowledgeBase kb = KnowledgeBase.CURRENT.get();
-        predicate = predicate.replace(n -> {
+        predicate = (Predicate) predicate.replace(n -> {
             Functor functor = n.functor();
             if (functor != null) {
                 Functor lit = kb.literal(functor);
@@ -196,7 +195,7 @@ public class Predicate extends Node {
                 if (thisVal instanceof Predicate fromDecl) {
                     Predicate toDecl = fromDecl.replace(from, to);
                     if (toDecl != fromDecl) {
-                        decl = decl.set(i, toDecl.declaration());
+                        decl = decl.setPredicates(i, toDecl.declaration());
                         if (array == null) {
                             array = toArray();
                         }
@@ -217,12 +216,7 @@ public class Predicate extends Node {
         return (Predicate) super.set(to, get(from));
     }
 
-    @Override
-    protected Predicate replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
-        return (Predicate) super.replace(replacer);
-    }
-
-    protected final Predicate set(int from, Predicate... a) {
+    protected final Predicate setPredicates(int from, Predicate... a) {
         Object[] declArray = declaration().toArray();
         int i = from + START;
         for (int x = 0; x < a.length; x++) {

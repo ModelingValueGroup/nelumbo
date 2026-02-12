@@ -21,9 +21,9 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
@@ -81,7 +81,7 @@ public final class Not extends CompoundPredicate {
             } else if (predResult.isTrueCC()) {
                 return NBoolean.FALSE.result();
             } else {
-                return set(0, predResult.predicate()).unknown();
+                return setPredicates(0, predResult.predicate()).unknown();
             }
         } else if (!predResult.unresolvable()) {
             return predResult.flipComplete();

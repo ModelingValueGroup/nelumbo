@@ -85,7 +85,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
             } else if (isRight(predResult)) {
                 return predResult[1];
             } else {
-                return set(0, predResult[0].predicate(), predResult[1].predicate()).unknown();
+                return setPredicates(0, predResult[0].predicate(), predResult[1].predicate()).unknown();
             }
         } else {
             return resolvedOnly(predResult);

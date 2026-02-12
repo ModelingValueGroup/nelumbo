@@ -103,7 +103,7 @@ public class Node extends StructImpl implements AstElement {
     public Node setFunctor(Functor functor) {
         Object[] array = toArray();
         array[0] = functor;
-        return struct(array, null);
+        return struct(array, declaration);
     }
 
     public Node setAstElements(List<AstElement> elements) {
@@ -477,7 +477,7 @@ public class Node extends StructImpl implements AstElement {
         return true;
     }
 
-    protected Node replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
+    public final Node replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
         Node to = replacer.apply(this);
         if (to != this) {
             return to;

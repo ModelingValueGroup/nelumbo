@@ -201,6 +201,10 @@ public class Functor extends Node {
         return (Functor) super.setAstElements(elements);
     }
 
+    public Functor setResultType(Type type) {
+        return set(1, type);
+    }
+
     public Object[] args(List<AstElement> elements, Map<Variable, Type> typeArgs) {
         Pattern pattern = pattern();
         MutableList<Object> args = MutableList.of(List.of());
