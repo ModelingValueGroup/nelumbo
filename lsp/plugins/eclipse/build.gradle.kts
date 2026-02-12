@@ -18,6 +18,12 @@ plugins {
     id("java")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -44,8 +50,11 @@ val generateManifest = tasks.register("generateManifest") {
             |Bundle-Version: $version
             |Bundle-Vendor: Modeling Value Group
             |Bundle-RequiredExecutionEnvironment: JavaSE-21
+            |Bundle-ActivationPolicy: lazy
             |Require-Bundle: org.eclipse.ui,
+            | org.eclipse.ui.genericeditor,
             | org.eclipse.lsp4e,
+            | org.eclipse.tm4e.registry,
             | org.eclipse.core.contenttype
             |
             """.trimMargin()
@@ -70,6 +79,11 @@ tasks.jar {
         val manifestFile = generateManifest.get().outputs.files.singleFile
         ant.withGroovyBuilder {
             "jar"("destfile" to jarFile, "update" to true, "manifest" to manifestFile)
+        }
+        val downloads = File(System.getProperty("user.home"), "Downloads")
+        if (downloads.isDirectory) {
+            jarFile.copyTo(File(downloads, jarFile.name), overwrite = true)
+            logger.lifecycle("Copied ${jarFile.name} to ${downloads}")
         }
     }
 }

@@ -33,20 +33,14 @@ public class NelumboStreamConnectionProvider extends ProcessStreamConnectionProv
 
         var localJarFile = dir.resolve("server.jar");
 
-        try {
+        try (var inputStream = getClass().getClassLoader().getResourceAsStream("server.jar")) {
+            if (inputStream == null) {
+                throw new IOException("server.jar not found in plugin bundle");
+            }
             if (Files.exists(localJarFile)) {
                 Files.delete(localJarFile);
             }
-            try (var inputStream = getClass().getClassLoader().getResourceAsStream("server.jar")) {
-                assert inputStream != null;
-                Files.copy(inputStream, localJarFile);
-            }
-        } catch (Exception ignored) {
-            // ignored
-        }
-
-        if (!Files.exists(localJarFile)) {
-            throw new IOException("Local server jar not found");
+            Files.copy(inputStream, localJarFile);
         }
         setCommands(List.of("java", "-cp", localJarFile.toFile().getAbsolutePath(), "org.modelingvalue.nelumbo.lsp.Main"));
     }
