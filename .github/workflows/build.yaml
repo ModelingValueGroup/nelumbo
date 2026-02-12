@@ -62,3 +62,19 @@ jobs:
                     path: build/libs/nelumbo*editor.jar
                     if-no-files-found: error
                     retention-days: 30
+                    
+            -   name: "upload-eclipse-plugin"
+                uses: actions/upload-artifact@v6
+                with:
+                    name: eclipse-plugin
+                    path: lsp/plugins/eclipse/build/libs/eclipse-nelumbo-plugin-*.jar
+                    if-no-files-found: error
+                    retention-days: 30
+
+            -   name: "upload-intellij-plugin"
+                uses: actions/upload-artifact@v6
+                with:
+                    name: intellij-plugin
+                    path: lsp/plugins/intellij/build/distributions/intellij-nelumbo-plugin-*.zip
+                    if-no-files-found: error
+                    retention-days: 30
