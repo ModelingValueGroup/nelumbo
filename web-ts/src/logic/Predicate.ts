@@ -16,6 +16,7 @@ const MAX_LOGIC_DEPTH = 32;
 
 /**
  * Predicate - a logical predicate that can be inferred.
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate
  */
 export class Predicate extends Node {
   private _nrOfUnbound: number = -1;
@@ -28,6 +29,10 @@ export class Predicate extends Node {
     const pred = Object.create(Predicate.prototype) as Predicate;
     (pred as unknown as { _data: unknown[] })._data = data;
     (pred as unknown as { _declaration: Node })._declaration = declaration ?? pred;
+    (pred as any)._binding = null;
+    (pred as any)._hashCodeCached = false;
+    (pred as any)._hashCode = 0;
+    (pred as any)._nrOfUnbound = -1;
     return pred;
   }
 
@@ -41,6 +46,7 @@ export class Predicate extends Node {
 
   /**
    * Count number of unbound variables.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#nrOfUnbound()
    */
   protected nrOfUnbound(): number {
     if (this._nrOfUnbound < 0) {
@@ -49,6 +55,7 @@ export class Predicate extends Node {
     return this._nrOfUnbound;
   }
 
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#countNrOfUnbound()
   protected countNrOfUnbound(): number {
     let count = 0;
     const binding = this.getBinding();
@@ -62,18 +69,35 @@ export class Predicate extends Node {
     return count;
   }
 
+  // Factory hook for creating NBoolean from Variable (avoids circular import)
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#predicate(Node)
+  static _booleanFromVariable: ((v: Variable) => Predicate) | null = null;
+
+  // Late-bound reference to equalsFunctor (avoids circular import with KnowledgeBase)
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#isShallow uses KnowledgeBase.equalsFunctor()
+  static _equalsFunctor: Functor | null = null;
+
+  // Late-bound reference to KnowledgeBase.literal() for setVariables (avoids circular import)
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#setVariables uses KnowledgeBase.CURRENT.literal()
+  static _literalFn: ((functor: Functor) => Functor | null) | null = null;
+
   /**
    * Convert a node to a predicate.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#predicate(Node)
    */
   static predicate(node: Node | null): Predicate {
-    if (node === null) {
-      return null as unknown as Predicate;
-    }
     if (node instanceof Predicate) {
       return node;
     }
+    if (node === null) {
+      return null as unknown as Predicate;
+    }
     if (node instanceof Variable) {
-      // Create a boolean predicate from variable
+      // Java: return new NBoolean(var)
+      if (Predicate._booleanFromVariable !== null) {
+        return Predicate._booleanFromVariable(node);
+      }
+      // Fallback before NBoolean is loaded
       return new Predicate(null as unknown as Functor, List([node as AstElement]), node);
     }
     throw new Error('Must be Variable or Predicate, is: ' + node);
@@ -81,6 +105,7 @@ export class Predicate extends Node {
 
   /**
    * Cast from another predicate.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#castFrom(Predicate)
    */
   castFrom(from: Predicate): Predicate {
     const data = [...(from as unknown as { _data: unknown[] })._data];
@@ -88,65 +113,47 @@ export class Predicate extends Node {
     return from.struct(data, this.declaration());
   }
 
-  /**
-   * Create a fact result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#factCC()
   factCC(): InferResult {
     return InferResult.factsCC(this.singleton());
   }
 
-  /**
-   * Create a falsehood result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#falsehoodCC()
   falsehoodCC(): InferResult {
     return InferResult.falsehoodsCC(this.singleton());
   }
 
-  /**
-   * Create a fact with incomplete falsehoods.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#factCI()
   factCI(): InferResult {
     return InferResult.factsCI(this.singleton());
   }
 
-  /**
-   * Create an unknown result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#unknown()
   unknown(): InferResult {
     return InferResult.unknown(this);
   }
 
-  /**
-   * Create an unresolvable result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#unresolvable()
   unresolvable(): InferResult {
     return InferResult.unresolvable(this);
   }
 
-  /**
-   * Create a falsehood result with incomplete facts.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#falsehoodIC()
   falsehoodCI(): InferResult {
     return InferResult.falsehoodsIC(this.singleton());
   }
 
-  /**
-   * Create a falsehoods result with incomplete inference.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#falsehoodsII()
   falsehoodsII(): InferResult {
     return InferResult.falsehoodsII(this.singleton());
   }
 
-  /**
-   * Create a singleton set of this predicate.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#singleton()
   singleton(): Set<Predicate> {
     return Set([this]);
   }
 
-  /**
-   * Check if fully bound (no variables).
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#isFullyBound()
   isFullyBound(): boolean {
     return this.nrOfUnbound() === 0;
   }
@@ -158,16 +165,12 @@ export class Predicate extends Node {
     return false;
   }
 
-  /**
-   * Check if this is a relation (fact type).
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#isFact()
   isFact(): boolean {
     return Type.FACT_TYPE.isAssignableFrom(this.type());
   }
 
-  /**
-   * Get the type at an index.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#getType(int)
   getType(i: number): Type {
     const val = this.get(i);
     if (val instanceof Type) {
@@ -182,30 +185,49 @@ export class Predicate extends Node {
     return Type.OBJECT;
   }
 
-  /**
-   * Set the type at an index.
-   */
   override setType(i: number, type: Type): Predicate {
     return super.setType(i, type) as Predicate;
   }
 
   /**
-   * Set variables from a map.
+   * Set variables from a map, then reset declaration.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#setVariables(Map)
    */
   setVariables(vars: Map<Variable, unknown>): Predicate {
-    return this.setBinding(vars) as Predicate;
+    const predicate = this.setBinding(vars) as Predicate;
+    if (predicate === this) {
+      return this;
+    }
+    // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#setVariables(Map)
+    // Replace non-literal functors with literal functors when all args are literal
+    const literalFn = Predicate._literalFn;
+    if (literalFn !== null) {
+      const replaced = predicate.replace((n: Node) => {
+        const functor = n.functor();
+        if (functor !== null) {
+          const lit = literalFn(functor);
+          if (lit !== null) {
+            const args = n.args();
+            // Note: Java Variable extends Node, but TS Variable does not extend Node
+            if (args.every((a: unknown) => (a instanceof Node || a instanceof Variable) && (a as Node | Variable).type().isLiteral())) {
+              return lit.construct(n.astElements(), args.toArray());
+            }
+          }
+        }
+        return n;
+      }) as Predicate;
+      return replaced.resetDeclaration();
+    }
+    return predicate.resetDeclaration();
   }
 
   /**
    * Create literal variables from a map.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#literals(Map)
    */
   static literals(vars: Map<Variable, unknown>): Map<Variable, unknown> {
-    return vars.map((val, key) => {
-      if (val instanceof Type) {
-        return key.literal();
-      }
-      return val;
-    });
+    // Java: vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal()))
+    return vars.map((_val, key) => key.literal());
   }
 
   override setBinding(vars: Map<Variable, unknown>): Predicate {
@@ -225,19 +247,43 @@ export class Predicate extends Node {
   }
 
   /**
-   * Infer this predicate.
+   * Resolve this predicate - entry point for inference.
+   * Override point for CompoundPredicate and Quantifier.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#resolve(InferContext)
+   */
+  resolve(context: InferContext): InferResult {
+    return this.inferInternal(this.nrOfUnbound(), context);
+  }
+
+  /**
+   * Infer with context - called from CompoundPredicate.resolve() loop.
+   * Override point for BinaryPredicate, Not, NBoolean.
+   * Adds reduce/shallow guard checks before calling inferInternal.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#infer(InferContext)
    */
   infer(context: InferContext): InferResult {
     const nrOfUnbound = this.nrOfUnbound();
+    if (nrOfUnbound > 0 && context.reduce()) {
+      return this.unresolvable();
+    } else if (nrOfUnbound === 0 && context.shallow()) {
+      return this.unresolvable();
+    }
     return this.inferInternal(nrOfUnbound, context);
   }
 
+  /**
+   * Main inference logic.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#infer(int, InferContext)
+   */
   protected inferInternal(nrOfUnbound: number, context: InferContext): InferResult {
     const functor = this.functor();
-    if (nrOfUnbound > 1 || (nrOfUnbound === 1 && functor !== null && functor.argTypes().size === 1)) {
+    if (nrOfUnbound > 1 || (context.shallow() && !this.isShallow(nrOfUnbound, functor)) || (nrOfUnbound === 1 && functor !== null && functor.argTypes().size === 1)) {
       return this.unresolvable();
     }
     const knowledgeBase = context.knowledgeBase();
+    if ((globalThis as any).__DEBUG_RULES__ && this.toString().includes('friends')) {
+      console.log(`DEBUG inferInternal: ${this} isFact=${this.isFact()} type=${this.type()} FACT_TYPE=${Type.FACT_TYPE}`);
+    }
     if (this.isFact()) {
       return knowledgeBase.getFacts(this, context);
     } else {
@@ -247,7 +293,8 @@ export class Predicate extends Node {
       }
       const cycleResult = context.getCycleResult(this);
       if (cycleResult !== null) {
-        return cycleResult;
+        // @JAVA_REF: return context.reduce() ? unknown() : result;
+        return context.reduce() ? this.unknown() : cycleResult;
       }
       const stack = context.stack();
       if (stack.size >= MAX_LOGIC_DEPTH) {
@@ -259,12 +306,32 @@ export class Predicate extends Node {
     }
   }
 
+  /**
+   * Check if shallow inference applies (for Equal with one bound literal).
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#isShallow(int, Functor)
+   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#isShallow(int, Functor)
+  private isShallow(nrOfUnbound: number, functor: Functor | null): boolean {
+    if (nrOfUnbound === 1 && Predicate._equalsFunctor !== null && Predicate._equalsFunctor.equals(functor)) {
+      const a = this.getVal(0);
+      const b = this.getVal(1);
+      return (b === null && a !== null && a instanceof Node && Type.LITERAL.isAssignableFrom(a.type())) ||
+             (a === null && b !== null && b instanceof Node && Type.LITERAL.isAssignableFrom(b.type()));
+    }
+    return false;
+  }
+
   private fixpoint(context: InferContext): InferResult {
     let previousResult: InferResult | null = null;
     let cycleResult = InferResult.cycle(Set(), Set(), this);
     let nextResult: InferResult;
+    let _debugFixIter = 0;
 
     do {
+      _debugFixIter++;
+      if (_debugFixIter > 100) {
+        throw new Error(`Fixpoint loop exceeded 100 iterations for: ${this}`);
+      }
       nextResult = this.inferRules(context.putCycleResult(this, cycleResult));
       if (nextResult.hasStackOverflow()) {
         return nextResult;
@@ -298,8 +365,17 @@ export class Predicate extends Node {
   private inferRules(context: InferContext): InferResult {
     let result = this.unknown();
     const rules = context.knowledgeBase().getRules(this);
+    if ((globalThis as any).__DEBUG_RULES__) {
+      console.log(`DEBUG inferRules: ${this} functor=${this.functor()} rules.size=${rules.size}`);
+    }
     for (const rule of rules) {
+      if ((globalThis as any).__DEBUG_RULES__) {
+        console.log(`DEBUG inferRules: applying rule ${rule} to ${this}`);
+      }
       result = rule.biimply(this, context, result);
+      if ((globalThis as any).__DEBUG_RULES__) {
+        console.log(`DEBUG inferRules: result after rule = ${result}`);
+      }
       if (result.hasStackOverflow()) {
         return result;
       }
@@ -308,10 +384,49 @@ export class Predicate extends Node {
   }
 
   /**
-   * Resolve this predicate.
+   * Replace a sub-predicate with another.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#replace(Predicate, Predicate)
    */
-  resolve(context: InferContext): InferResult {
-    return this.infer(context);
+  replacePredicate(from: Predicate, to: Predicate): Predicate {
+    if (this.equals(from)) {
+      return to;
+    }
+    let decl = this.declaration();
+    let array: unknown[] | null = null;
+    for (let i = 0; i < this.length(); i++) {
+      const thisVal = this.get(i);
+      if (thisVal instanceof Predicate) {
+        const fromDecl = thisVal as Predicate;
+        const toDecl = fromDecl.replacePredicate(from, to);
+        if (toDecl !== fromDecl) {
+          decl = decl.set(i, toDecl.declaration());
+          if (array === null) {
+            array = [...this._data];
+          }
+          array[i + Node.START] = toDecl;
+        }
+      }
+    }
+    return array !== null ? this.struct(array, decl) : this;
+  }
+
+  /**
+   * Get the sub-predicate at index i, handling Type indirection through declaration.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.CompoundPredicate#predicate(int)
+   */
+  predicateAt(i: number): Predicate {
+    let node = this.get(i) as Node;
+    if ((globalThis as any).__DEBUG_RULES__ && String(this).includes('friends')) {
+      console.log(`DEBUG predicateAt(${i}): this=${this} this.type()=${this.type()} node=${node} nodeIsType=${node instanceof Type} nodeType=${node instanceof Node ? node.type() : 'N/A'}`);
+      if (node instanceof Type) {
+        const declNode = this.declaration().get(i) as Node;
+        console.log(`DEBUG predicateAt(${i}): using declaration: declNode=${declNode} declNodeType=${declNode instanceof Node ? declNode.type() : 'N/A'}`);
+      }
+    }
+    if (node instanceof Type) {
+      node = this.declaration().get(i) as Node;
+    }
+    return Predicate.predicate(node);
   }
 }
 

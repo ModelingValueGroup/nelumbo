@@ -5,7 +5,6 @@
 
 import { List, Map, Set } from 'immutable';
 import type { AstElement } from '../AstElement';
-import { Type } from '../Type';
 import { Variable } from '../Variable';
 import { Node } from '../Node';
 import type { Functor } from '../patterns/Functor';
@@ -13,8 +12,18 @@ import { Predicate } from './Predicate';
 import { InferResult } from '../InferResult';
 import type { InferContext } from '../InferContext';
 
+// Late-bound reference to NBoolean (set from NBoolean.ts to avoid circular import)
+let _NBooleanTRUE: (() => Predicate) | null = null;
+let _NBooleanFALSE: (() => Predicate) | null = null;
+
+export function _setNBooleanRefs(getTRUE: () => Predicate, getFALSE: () => Predicate): void {
+  _NBooleanTRUE = getTRUE;
+  _NBooleanFALSE = getFALSE;
+}
+
 /**
  * CompoundPredicate - a predicate containing sub-predicates.
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.CompoundPredicate
  */
 export class CompoundPredicate extends Predicate {
   constructor(functor: Functor, elements: List<AstElement>, ...args: unknown[]) {
@@ -25,6 +34,10 @@ export class CompoundPredicate extends Predicate {
     const pred = Object.create(CompoundPredicate.prototype) as CompoundPredicate;
     (pred as unknown as { _data: unknown[] })._data = data;
     (pred as unknown as { _declaration: Node })._declaration = declaration ?? pred;
+    (pred as any)._binding = null;
+    (pred as any)._hashCodeCached = false;
+    (pred as any)._hashCode = 0;
+    (pred as any)._nrOfUnbound = -1;
     return pred;
   }
 
@@ -33,192 +46,99 @@ export class CompoundPredicate extends Predicate {
   }
 
   /**
-   * Get sub-predicates from this compound predicate.
-   */
-  predicates(): List<Predicate> {
-    const result: Predicate[] = [];
-    for (let i = 0; i < this.length(); i++) {
-      const val = this.get(i);
-      if (val instanceof Predicate) {
-        result.push(val);
-      } else if (val instanceof Node) {
-        const pred = Predicate.predicate(val);
-        if (pred !== null) {
-          result.push(pred);
-        }
-      }
-    }
-    return List(result);
-  }
-
-  /**
    * Resolve this compound predicate.
+   * Uses iterative shallow → reduce → deep inference with NBoolean.TRUE/FALSE replacement.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.CompoundPredicate#resolve(InferContext)
    */
   override resolve(context: InferContext): InferResult {
-    // Get all predicates and local variables
-    const allPreds = this.allPredicates();
-    const localVars = this.allLocalVars();
+    type BindingKey = Map<Variable, unknown>;
+    let now: Map<BindingKey, Predicate>;
+    let next: Map<BindingKey, Predicate> = Map<BindingKey, Predicate>().set(this.getBinding() ?? Map(), this as Predicate);
+    let facts = Set<Predicate>();
+    let falsehoods = Set<Predicate>();
+    let cycles = Set<Predicate>();
+    let completeFacts = true;
+    let completeFalsehoods = true;
+    const deep = context;
+    const shallow = deep.toShallow();
+    const reduce = deep.toReduce();
 
-    // Shallow context for initial resolution
-    const shallowContext = context.withShallow(true);
-    const reduceContext = context.withReduce(true);
+    do {
+      now = next;
+      next = Map<BindingKey, Predicate>();
 
-    // Try to resolve iteratively
-    let result = this.resolveIteration(allPreds, localVars, shallowContext, context, reduceContext);
-
-    return result;
-  }
-
-  /**
-   * Get all predicates including nested ones.
-   */
-  protected allPredicates(): List<Predicate> {
-    let preds = List<Predicate>();
-    for (let i = 0; i < this.length(); i++) {
-      preds = this.collectPredicates(this.get(i), preds);
-    }
-    return preds;
-  }
-
-  private collectPredicates(val: unknown, preds: List<Predicate>): List<Predicate> {
-    if (val instanceof Predicate) {
-      return preds.push(val);
-    }
-    if (val instanceof Node) {
-      const pred = Predicate.predicate(val);
-      if (pred !== null) {
-        return preds.push(pred);
-      }
-    }
-    if (List.isList(val)) {
-      for (const e of val as List<unknown>) {
-        preds = this.collectPredicates(e, preds);
-      }
-    }
-    return preds;
-  }
-
-  /**
-   * Iteratively resolve predicates with constraint propagation.
-   */
-  protected resolveIteration(
-    predicates: List<Predicate>,
-    localVars: Set<Variable>,
-    shallowContext: InferContext,
-    deepContext: InferContext,
-    reduceContext: InferContext
-  ): InferResult {
-    let result = InferResult.unknown(this);
-    let bindings = Map<Variable, unknown>();
-    let changed = true;
-    let iterations = 0;
-    const maxIterations = 100;
-
-    while (changed && iterations < maxIterations) {
-      changed = false;
-      iterations++;
-
-      for (const pred of predicates) {
-        // Apply current bindings
-        const boundPred = pred.setVariables(bindings);
-
-        // Try shallow resolution first
-        let predResult = boundPred.resolve(shallowContext);
-
-        // If shallow didn't help, try reduce mode
-        if (predResult.isUnresolvable()) {
-          predResult = boundPred.resolve(reduceContext);
+      for (const [binding, predicate] of now.entries()) {
+        // Phase 1: Shallow inference
+        let result = predicate.infer(shallow);
+        if (result.hasStackOverflow()) {
+          return result;
+        }
+        if (!result.unresolvable()) {
+          for (const pred of result.allFacts()) {
+            let b = pred.getBinding();
+            if (b !== null && !b.isEmpty()) {
+              b = binding.merge(b);
+              next = next.set(b, predicate.setBinding(b).replacePredicate(pred, _NBooleanTRUE!() as Predicate));
+            }
+          }
+          for (const pred of result.allFalsehoods()) {
+            let b = pred.getBinding();
+            if (b !== null && !b.isEmpty()) {
+              b = binding.merge(b);
+              next = next.set(b, predicate.setBinding(b).replacePredicate(pred, _NBooleanFALSE!() as Predicate));
+            }
+          }
+          completeFacts = completeFacts && result.completeFacts();
+          completeFalsehoods = completeFalsehoods && result.completeFalsehoods();
+          cycles = cycles.union(result.cycles());
         }
 
-        // If still unresolvable, try deep
-        if (predResult.isUnresolvable()) {
-          predResult = boundPred.resolve(deepContext);
-        }
-
-        if (predResult.hasStackOverflow()) {
-          return predResult;
-        }
-
-        // Update bindings from facts
-        for (const fact of predResult.facts()) {
-          const factBinding = fact.getBinding();
-          if (factBinding !== null) {
-            const newBindings = factBinding.filter((val, key) =>
-              !localVars.contains(key) && !(val instanceof Type)
-            );
-            if (!newBindings.equals(bindings.filter((_, k) => newBindings.has(k)))) {
-              bindings = bindings.merge(newBindings);
-              changed = true;
+        // Phase 2: Reduce inference
+        result = predicate.infer(reduce);
+        if (result.hasStackOverflow()) {
+          return result;
+        } else if (result.isFalseCC()) {
+          falsehoods = falsehoods.add(this.setBinding(binding));
+        } else if (result.isTrueCC()) {
+          facts = facts.add(this.setBinding(binding));
+        } else {
+          // Phase 3: Deep inference
+          const resultPredicate = result.predicateOf();
+          if (resultPredicate !== null) {
+            result = resultPredicate.infer(deep);
+            if (result.hasStackOverflow()) {
+              return result;
+            }
+            if (!result.unresolvable()) {
+              for (const pred of result.allFacts()) {
+                let b = pred.getBinding();
+                if (b !== null && !b.isEmpty()) {
+                  b = binding.merge(b);
+                  next = next.set(b, resultPredicate.setBinding(b).replacePredicate(pred, _NBooleanTRUE!() as Predicate));
+                }
+              }
+              for (const pred of result.allFalsehoods()) {
+                let b = pred.getBinding();
+                if (b !== null && !b.isEmpty()) {
+                  b = binding.merge(b);
+                  next = next.set(b, resultPredicate.setBinding(b).replacePredicate(pred, _NBooleanFALSE!() as Predicate));
+                }
+              }
+              completeFacts = completeFacts && result.completeFacts();
+              completeFalsehoods = completeFalsehoods && result.completeFalsehoods();
+              cycles = cycles.union(result.cycles());
             }
           }
         }
-
-        // Combine results
-        result = this.combineResult(result, predResult);
-
-        // Short-circuit on failure
-        if (this.shouldShortCircuit(predResult)) {
-          return this.shortCircuitResult(result, predResult);
-        }
       }
+    } while (!next.isEmpty());
+
+    // @JAVA_REF: if no results found and both complete, set both to incomplete
+    if (facts.isEmpty() && completeFacts && falsehoods.isEmpty() && completeFalsehoods) {
+      completeFacts = false;
+      completeFalsehoods = false;
     }
 
-    // Remove local variables from result
-    return this.removeLocalVars(result, localVars);
-  }
-
-  /**
-   * Combine this predicate's result with a sub-predicate's result.
-   * Override in And/Or to provide specific combination logic.
-   */
-  protected combineResult(current: InferResult, subResult: InferResult): InferResult {
-    return current.add(subResult);
-  }
-
-  /**
-   * Check if we should short-circuit based on a result.
-   * Override in And/Or for specific behavior.
-   */
-  protected shouldShortCircuit(_result: InferResult): boolean {
-    return false;
-  }
-
-  /**
-   * Create the short-circuit result.
-   * Override in And/Or for specific behavior.
-   */
-  protected shortCircuitResult(current: InferResult, _trigger: InferResult): InferResult {
-    return current;
-  }
-
-  /**
-   * Remove local variables from result bindings.
-   */
-  protected removeLocalVars(result: InferResult, localVars: Set<Variable>): InferResult {
-    if (localVars.isEmpty()) {
-      return result;
-    }
-
-    const newFacts = result.facts().map(fact => {
-      const binding = fact.getBinding();
-      if (binding === null) return fact;
-      const filtered = binding.filter((_, key) => !localVars.contains(key));
-      return fact.setVariables(filtered);
-    }).toSet();
-
-    const newFalsehoods = result.falsehoods().map(falsehood => {
-      const binding = falsehood.getBinding();
-      if (binding === null) return falsehood;
-      const filtered = binding.filter((_, key) => !localVars.contains(key));
-      return falsehood.setVariables(filtered);
-    }).toSet();
-
-    return InferResult.of(
-      newFacts,
-      result.completeFacts(),
-      newFalsehoods,
-      result.completeFalsehoods(),
-      result.cycles()
-    );
+    return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
   }
 }

@@ -3,27 +3,39 @@
  * @JAVA_REF org.modelingvalue.nelumbo.logic.And
  */
 
-import { List, Set } from 'immutable';
+import { List } from 'immutable';
 import type { AstElement } from '../AstElement';
 import { Node } from '../Node';
 import type { Functor } from '../patterns/Functor';
-import { Predicate } from './Predicate';
 import { BinaryPredicate } from './BinaryPredicate';
+import { Predicate } from './Predicate';
 import { InferResult } from '../InferResult';
-import type { InferContext } from '../InferContext';
 
 /**
  * And - logical conjunction.
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.And
  */
 export class And extends BinaryPredicate {
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#FUNCTOR
+  static FUNCTOR: Functor | null = null;
+
   constructor(functor: Functor, elements: List<AstElement>, left: Node, right: Node) {
     super(functor, elements, left, right);
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#of(Predicate, Predicate)
+  static of(predicate1: Predicate, predicate2: Predicate): And {
+    return new And(And.FUNCTOR!, List<AstElement>(), predicate1, predicate2);
   }
 
   protected static fromDataAnd(data: unknown[], declaration?: Node): And {
     const and = Object.create(And.prototype) as And;
     (and as unknown as { _data: unknown[] })._data = data;
     (and as unknown as { _declaration: Node })._declaration = declaration ?? and;
+    (and as any)._binding = null;
+    (and as any)._hashCodeCached = false;
+    (and as any)._hashCode = 0;
+    (and as any)._nrOfUnbound = -1;
     return and;
   }
 
@@ -31,73 +43,46 @@ export class And extends BinaryPredicate {
     return And.fromDataAnd(data, declaration ?? this.declaration());
   }
 
-  protected override resultIsTrue(predResult: InferResult): boolean {
-    return predResult.isTrueCC();
+  override declaration(): And {
+    return super.declaration() as And;
   }
 
-  protected override resultIsFalse(predResult: InferResult): boolean {
+  override set(i: number, ...a: unknown[]): And {
+    return super.set(i, ...a) as And;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#isTrue(InferResult, int)
+  protected isTrueSingle(_predResult: InferResult, _i: number): boolean {
+    return false;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#isFalse(InferResult, int)
+  protected isFalseSingle(predResult: InferResult, _i: number): boolean {
     return predResult.isFalseCC();
   }
 
-  protected override resultIsUnknown(predResult: InferResult): boolean {
-    return !predResult.isTrueCC() && !predResult.isFalseCC();
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#isUnknown(InferResult, int)
+  protected isUnknownSingle(_predResult: InferResult, _i: number): boolean {
+    return false;
   }
 
-  protected override canShortCircuit(result: InferResult): boolean {
-    // Short-circuit if first is definitely false
-    return result.isFalseCC();
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#isTrue(InferResult[])
+  protected isTrueBoth(predResult: InferResult[]): boolean {
+    return predResult[0].isTrueCC() && predResult[1].isTrueCC();
   }
 
-  protected override shortCircuitValue(pred: Predicate, _result: InferResult): InferResult {
-    // AND is false if either operand is false
-    return InferResult.falsehoodsCC(Set([pred]));
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#isFalse(InferResult[])
+  protected isFalseBoth(_predResult: InferResult[]): boolean {
+    return false;
   }
 
-  protected override combineResults(
-    pred: Predicate,
-    firstResult: InferResult,
-    secondResult: InferResult,
-    _context: InferContext
-  ): InferResult {
-    // If either is false, result is false
-    if (firstResult.isFalseCC() || secondResult.isFalseCC()) {
-      return InferResult.falsehoodsCC(Set([pred]));
-    }
-
-    // If both are true, result is true
-    if (firstResult.isTrueCC() && secondResult.isTrueCC()) {
-      return InferResult.factsCC(Set([pred]));
-    }
-
-    // Otherwise combine with AND semantics
-    const combinedFacts = firstResult.facts().intersect(secondResult.facts());
-    const combinedFalsehoods = firstResult.falsehoods().union(secondResult.falsehoods());
-    const completeFacts = firstResult.completeFacts() && secondResult.completeFacts();
-    const completeFalsehoods = firstResult.completeFalsehoods() || secondResult.completeFalsehoods();
-    const cycles = firstResult.cycles().union(secondResult.cycles());
-
-    // If we have facts from intersection, return those
-    if (!combinedFacts.isEmpty()) {
-      return InferResult.of(
-        Set([pred]),
-        completeFacts,
-        combinedFalsehoods,
-        completeFalsehoods,
-        cycles
-      );
-    }
-
-    // Return combined result
-    return InferResult.of(
-      combinedFacts,
-      completeFacts,
-      combinedFalsehoods,
-      completeFalsehoods,
-      cycles
-    );
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#isLeft(InferResult[])
+  protected isLeft(predResult: InferResult[]): boolean {
+    return predResult[1].isTrueCC();
   }
 
-  override toString(): string {
-    return `(${this.left()} & ${this.right()})`;
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.And#isRight(InferResult[])
+  protected isRight(predResult: InferResult[]): boolean {
+    return predResult[0].isTrueCC();
   }
 }

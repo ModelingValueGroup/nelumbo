@@ -20,6 +20,10 @@ export class Multiply extends Predicate {
     const node = Object.create(Multiply.prototype) as Multiply;
     (node as unknown as { _data: unknown[] })._data = data;
     (node as unknown as { _declaration: Predicate | undefined })._declaration = declaration ?? node;
+    (node as any)._binding = null;
+    (node as any)._hashCodeCached = false;
+    (node as any)._hashCode = 0;
+    (node as any)._nrOfUnbound = -1;
     return node;
   }
 
@@ -27,7 +31,8 @@ export class Multiply extends Predicate {
     return Multiply.fromDataMultiply(data, declaration ?? this.declaration());
   }
 
-  override infer(_context: InferContext): InferResult {
+  // @JAVA_REF org.modelingvalue.nelumbo.integers.Multiply#infer(int, InferContext)
+  protected override inferInternal(_nrOfUnbound: number, _context: InferContext): InferResult {
     const nrOfUnbound = this.nrOfUnbound();
     if (nrOfUnbound > 1) {
       return this.unresolvable();

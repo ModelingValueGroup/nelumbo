@@ -3,132 +3,102 @@
  * @JAVA_REF org.modelingvalue.nelumbo.logic.When
  */
 
-import { List, Set } from 'immutable';
+import { List } from 'immutable';
 import type { AstElement } from '../AstElement';
+import { Type } from '../Type';
 import { Node } from '../Node';
-import type { Functor } from '../patterns/Functor';
 import { Predicate } from './Predicate';
 import { BinaryPredicate } from './BinaryPredicate';
 import { InferResult } from '../InferResult';
-import type { InferContext } from '../InferContext';
+import { TokenType } from '../syntax/TokenType';
 
 /**
- * When - conditional logic (condition => consequence).
- * True if condition is false, or if condition and consequence are both true.
+ * When - conditional logic (predicate2 if predicate1).
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.When
  */
 export class When extends BinaryPredicate {
-  constructor(functor: Functor, elements: List<AstElement>, condition: Node, consequence: Node) {
-    super(functor, elements, condition, consequence);
+  constructor(when: Node, predicate: Node) {
+    // Java: super(Type.BOOLEAN, List.of(), when, predicate)
+    super(Type.BOOLEAN as any, List<AstElement>(), when, predicate);
   }
 
   protected static fromDataWhen(data: unknown[], declaration?: Node): When {
     const when = Object.create(When.prototype) as When;
     (when as unknown as { _data: unknown[] })._data = data;
     (when as unknown as { _declaration: Node })._declaration = declaration ?? when;
+    (when as any)._binding = null;
+    (when as any)._hashCodeCached = false;
+    (when as any)._hashCode = 0;
+    (when as any)._nrOfUnbound = -1;
     return when;
+  }
+
+  static of(when: Node, predicate: Node): When {
+    return new When(when, predicate);
   }
 
   protected override struct(data: unknown[], declaration?: Node): When {
     return When.fromDataWhen(data, declaration ?? this.declaration());
   }
 
-  /**
-   * Get the condition.
-   */
-  condition(): Predicate {
-    return this.left();
+  override declaration(): When {
+    return super.declaration() as When;
   }
 
-  /**
-   * Get the consequence.
-   */
-  consequence(): Predicate {
-    return this.right();
+  override set(i: number, ...a: unknown[]): When {
+    return super.set(i, ...a) as When;
   }
 
-  protected override resultIsTrue(_predResult: InferResult): boolean {
-    // When is true if condition is false
-    return _predResult.isFalseCC();
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#isTrue(InferResult, int)
+  protected isTrueSingle(_predResult: InferResult, _i: number): boolean {
+    return false;
   }
 
-  protected override resultIsFalse(_predResult: InferResult): boolean {
-    // When is false if condition is true and consequence is false
-    return false; // Determined by both condition and consequence
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#isFalse(InferResult, int)
+  protected isFalseSingle(_predResult: InferResult, _i: number): boolean {
+    return false;
   }
 
-  protected override resultIsUnknown(predResult: InferResult): boolean {
-    return !predResult.isTrueCC() && !predResult.isFalseCC();
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#isUnknown(InferResult, int)
+  protected isUnknownSingle(predResult: InferResult, i: number): boolean {
+    return i === 0 && predResult.isFalseCC();
   }
 
-  protected override canShortCircuit(result: InferResult): boolean {
-    // Short-circuit if condition is false (implication is vacuously true)
-    return result.isFalseCC();
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#isTrue(InferResult[])
+  protected isTrueBoth(predResult: InferResult[]): boolean {
+    return predResult[0].isTrueCC() && predResult[1].isTrueCC();
   }
 
-  protected override shortCircuitValue(pred: Predicate, _result: InferResult): InferResult {
-    // If condition is false, when is true (vacuous truth)
-    return InferResult.factsCC(Set([pred]));
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#isFalse(InferResult[])
+  protected isFalseBoth(predResult: InferResult[]): boolean {
+    return predResult[0].isTrueCC() && predResult[1].isFalseCC();
   }
 
-  protected override combineResults(
-    pred: Predicate,
-    conditionResult: InferResult,
-    consequenceResult: InferResult,
-    _context: InferContext
-  ): InferResult {
-    // If condition is false, when is true (vacuous truth)
-    if (conditionResult.isFalseCC()) {
-      return InferResult.factsCC(Set([pred]));
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#isLeft(InferResult[])
+  protected isLeft(predResult: InferResult[]): boolean {
+    return predResult[1].isTrueCC();
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#isRight(InferResult[])
+  protected isRight(predResult: InferResult[]): boolean {
+    return predResult[0].isTrueCC();
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#resolvedOnly(InferResult[])
+  protected override resolvedOnly(predResult: InferResult[]): InferResult {
+    if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
+      return predResult[0].complete().add(predResult[1]);
+    } else if (!predResult[0].unresolvable()) {
+      return predResult[0].complete();
+    } else if (!predResult[1].unresolvable()) {
+      return predResult[1];
+    } else {
+      return InferResult.UNRESOLVABLE;
     }
-
-    // If condition is true and consequence is true, when is true
-    if (conditionResult.isTrueCC() && consequenceResult.isTrueCC()) {
-      return InferResult.factsCC(Set([pred]));
-    }
-
-    // If condition is true and consequence is false, when is false
-    if (conditionResult.isTrueCC() && consequenceResult.isFalseCC()) {
-      return InferResult.falsehoodsCC(Set([pred]));
-    }
-
-    // Otherwise, result depends on consequence
-    const completeFacts = conditionResult.completeFacts() && consequenceResult.completeFacts();
-    const completeFalsehoods = conditionResult.completeFalsehoods() && consequenceResult.completeFalsehoods();
-    const cycles = conditionResult.cycles().union(consequenceResult.cycles());
-
-    // If we have consequence facts, when might be true
-    if (!consequenceResult.facts().isEmpty()) {
-      return InferResult.of(
-        Set([pred]),
-        completeFacts,
-        Set(),
-        completeFalsehoods,
-        cycles
-      );
-    }
-
-    // If we have consequence falsehoods, when might be false
-    if (!consequenceResult.falsehoods().isEmpty() && !conditionResult.facts().isEmpty()) {
-      return InferResult.of(
-        Set(),
-        completeFacts,
-        Set([pred]),
-        completeFalsehoods,
-        cycles
-      );
-    }
-
-    // Unknown
-    return InferResult.of(
-      Set(),
-      completeFacts,
-      Set(),
-      completeFalsehoods,
-      cycles
-    );
   }
 
-  override toString(): string {
-    return `(${this.condition()} => ${this.consequence()})`;
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.When#toString(TokenType[])
+  override toString(previous?: TokenType[]): string {
+    return this.predicate2() + ' if ' + this.predicate1();
   }
 }

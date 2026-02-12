@@ -15,17 +15,24 @@ import type { InferContext } from '../InferContext';
 
 /**
  * ExistentialQuantifier - "there exists" quantification.
- * True if the body is true for at least one binding of the quantified variables.
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.ExistentialQuantifier
  */
 export class ExistentialQuantifier extends Quantifier {
-  constructor(functor: Functor, elements: List<AstElement>, variables: List<Variable>, body: Node) {
-    super(functor, elements, variables, body);
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.ExistentialQuantifier#FUNCTOR
+  static FUNCTOR: Functor | null = null;
+
+  constructor(functor: Functor, elements: List<AstElement>, ...args: unknown[]) {
+    super(functor, elements, ...args);
   }
 
   protected static fromDataExistential(data: unknown[], declaration?: Node): ExistentialQuantifier {
     const eq = Object.create(ExistentialQuantifier.prototype) as ExistentialQuantifier;
     (eq as unknown as { _data: unknown[] })._data = data;
     (eq as unknown as { _declaration: Node })._declaration = declaration ?? eq;
+    (eq as any)._binding = null;
+    (eq as any)._hashCodeCached = false;
+    (eq as any)._hashCode = 0;
+    (eq as any)._nrOfUnbound = -1;
     return eq;
   }
 
@@ -33,49 +40,49 @@ export class ExistentialQuantifier extends Quantifier {
     return ExistentialQuantifier.fromDataExistential(data, declaration ?? this.declaration());
   }
 
-  protected override processResult(
-    bodyResult: InferResult,
-    localVars: Set<Variable>,
-    _context: InferContext
-  ): InferResult {
-    // For existential: true if any binding makes body true
-    const facts = bodyResult.facts();
-    const falsehoods = bodyResult.falsehoods();
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.ExistentialQuantifier#resolve(InferContext, InferResult)
+  protected override resolveWithResult(_context: InferContext, predResult: InferResult): InferResult {
+    const localVars = this.localVars();
+    let facts = Set<Predicate>();
+    let falsehoods = Set<Predicate>();
+    let completeFacts = true;
+    let completeFalsehoods = true;
 
-    // Remove local variables from facts
-    const cleanFacts = this.removeLocalVars(facts, localVars);
-
-    // If we have any facts (after removing locals), existential is true
-    if (!cleanFacts.isEmpty() || !facts.isEmpty()) {
-      return InferResult.of(
-        Set([this as Predicate]),
-        bodyResult.completeFacts(),
-        Set(),
-        bodyResult.completeFalsehoods(),
-        bodyResult.cycles()
-      );
+    for (const predFact of predResult.facts()) {
+      const binding = predFact.getBinding();
+      const cleanBinding = binding !== null ? binding.deleteAll(localVars) : binding;
+      const fact = this.setBinding(cleanBinding!);
+      if (fact.isFullyBound()) {
+        facts = facts.add(fact);
+      } else {
+        completeFacts = false;
+      }
     }
 
-    // If body is completely false, existential is false
-    if (bodyResult.isFalseCC()) {
-      return InferResult.falsehoodsCC(Set([this as Predicate]));
+    for (const predFalsehood of predResult.falsehoods()) {
+      const binding = predFalsehood.getBinding();
+      const cleanBinding = binding !== null ? binding.deleteAll(localVars) : binding;
+      const falsehood = this.setBinding(cleanBinding!);
+      if (!facts.contains(falsehood)) {
+        if (falsehood.isFullyBound()) {
+          falsehoods = falsehoods.add(falsehood);
+        } else {
+          completeFalsehoods = false;
+        }
+      }
     }
 
-    // Remove local variables from falsehoods
-    const cleanFalsehoods = this.removeLocalVars(falsehoods, localVars);
+    if (!this.isFullyBound()) {
+      if (!predResult.completeFacts()) {
+        completeFacts = false;
+      }
+      if (!predResult.completeFalsehoods()) {
+        completeFalsehoods = false;
+      }
+    } else if (falsehoods.isEmpty() && facts.isEmpty()) {
+      falsehoods = falsehoods.add(this as Predicate);
+    }
 
-    // Otherwise unknown
-    return InferResult.of(
-      Set(),
-      bodyResult.completeFacts(),
-      cleanFalsehoods.isEmpty() ? Set() : Set([this as Predicate]),
-      bodyResult.completeFalsehoods(),
-      bodyResult.cycles()
-    );
-  }
-
-  override toString(): string {
-    const vars = this.localVars().map(v => v.name()).join(', ');
-    return `∃(${vars}): ${this.body()}`;
+    return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
   }
 }

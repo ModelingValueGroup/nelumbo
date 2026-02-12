@@ -1,9 +1,13 @@
 /**
  * MatchState - trie for rule/transform signature matching.
  * @JAVA_REF org.modelingvalue.nelumbo.MatchState
+ *
+ * Note: Java uses HashMap which uses equals/hashCode for key comparison.
+ * immutable.js Map uses === for non-Immutable keys. Since Functor and Type
+ * are plain JS classes, we need custom lookup that uses structural equality.
  */
 
-import { Map, Set } from 'immutable';
+import { Set } from 'immutable';
 import { TokenType } from './syntax/TokenType';
 import { Type } from './Type';
 import { Variable } from './Variable';
@@ -12,10 +16,12 @@ import type { Functor } from './patterns/Functor';
 
 /**
  * MatchState - trie for matching rules and transforms.
+ * Uses a plain array of [key, value] entries instead of immutable.js Map
+ * to support structural equality for Node-based keys (like Functor, Type).
  */
 export class MatchState<E> {
   static readonly EMPTY: MatchState<never> = new MatchState<never>(
-    Map(),
+    [],
     Set()
   );
 
@@ -23,15 +29,52 @@ export class MatchState<E> {
     return MatchState.EMPTY as MatchState<E>;
   }
 
-  private readonly _transitions: Map<unknown, MatchState<E>>;
+  // @JAVA_REF org.modelingvalue.nelumbo.MatchState uses HashMap with equals/hashCode.
+  // We use an array of entries with custom equality to match Java behavior.
+  private readonly _entries: [unknown, MatchState<E>][];
   private readonly _elements: Set<E>;
 
   private constructor(
-    transitions: Map<unknown, MatchState<E>>,
+    entries: [unknown, MatchState<E>][],
     elements: Set<E>
   ) {
-    this._transitions = transitions;
+    this._entries = entries;
     this._elements = elements;
+  }
+
+  /**
+   * Compare two keys for equality (matching Java's equals/hashCode behavior).
+   */
+  private static keysEqual(a: unknown, b: unknown): boolean {
+    if (a === b) return true;
+    if (a instanceof Node && b instanceof Node) return a.equals(b);
+    if (a instanceof Type && b instanceof Type) return a.equals(b);
+    return false;
+  }
+
+  /**
+   * Look up a key in the entries array using structural equality.
+   */
+  private getEntry(key: unknown): MatchState<E> | undefined {
+    for (const [k, v] of this._entries) {
+      if (MatchState.keysEqual(k, key)) return v;
+    }
+    return undefined;
+  }
+
+  /**
+   * Set a key/value in the entries array using structural equality.
+   */
+  private setEntry(entries: [unknown, MatchState<E>][], key: unknown, value: MatchState<E>): [unknown, MatchState<E>][] {
+    const result = [...entries];
+    for (let i = 0; i < result.length; i++) {
+      if (MatchState.keysEqual(result[i][0], key)) {
+        result[i] = [key, value];
+        return result;
+      }
+    }
+    result.push([key, value]);
+    return result;
   }
 
   /**
@@ -39,7 +82,7 @@ export class MatchState<E> {
    */
   static of<E>(element: E): MatchState<E> {
     return new MatchState(
-      Map(),
+      [],
       element !== null && element !== undefined ? Set([element]) : Set()
     );
   }
@@ -49,7 +92,7 @@ export class MatchState<E> {
    */
   withType(type: Type): MatchState<E> {
     return new MatchState(
-      Map<unknown, MatchState<E>>([[type, this]]),
+      [[type, this]],
       Set()
     );
   }
@@ -59,7 +102,7 @@ export class MatchState<E> {
    */
   withTokenType(tokenType: TokenType): MatchState<E> {
     return new MatchState(
-      Map<unknown, MatchState<E>>([[tokenType, this]]),
+      [[tokenType, this]],
       Set()
     );
   }
@@ -69,7 +112,7 @@ export class MatchState<E> {
    */
   withClass(clss: unknown): MatchState<E> {
     return new MatchState(
-      Map<unknown, MatchState<E>>([[clss, this]]),
+      [[clss, this]],
       Set()
     );
   }
@@ -79,13 +122,13 @@ export class MatchState<E> {
    */
   withFunctor(functor: Functor): MatchState<E> {
     return new MatchState(
-      Map<unknown, MatchState<E>>([[functor, this]]),
+      [[functor, this]],
       Set()
     );
   }
 
-  transitions(): Map<unknown, MatchState<E>> {
-    return this._transitions;
+  transitions(): [unknown, MatchState<E>][] {
+    return this._entries;
   }
 
   elements(): Set<E> {
@@ -100,26 +143,26 @@ export class MatchState<E> {
       return this;
     }
 
-    let transitions = this._transitions;
-    for (const [key, state] of other._transitions) {
-      const existing = transitions.get(key);
-      if (existing !== undefined) {
-        transitions = transitions.set(key, existing.merge(state));
+    let entries = [...this._entries] as [unknown, MatchState<E>][];
+    for (const [key, state] of other._entries) {
+      const existingIdx = entries.findIndex(([k]) => MatchState.keysEqual(k, key));
+      if (existingIdx >= 0) {
+        entries[existingIdx] = [key, entries[existingIdx][1].merge(state)];
       } else {
-        transitions = transitions.set(key, state);
+        entries.push([key, state]);
       }
     }
 
     // Handle type hierarchy: subtypes inherit supertype patterns
-    for (const key of transitions.keys()) {
+    for (let i = 0; i < entries.length; i++) {
+      const key = entries[i][0];
       if (key instanceof Type) {
         const subType = key;
         for (const superType of subType.allSupers()) {
           if (!superType.equals(subType)) {
-            const superState = transitions.get(superType);
-            if (superState !== undefined) {
-              const subState = transitions.get(subType)!;
-              transitions = transitions.set(subType, subState.merge(superState));
+            const superIdx = entries.findIndex(([k]) => MatchState.keysEqual(k, superType));
+            if (superIdx >= 0) {
+              entries[i] = [key, entries[i][1].merge(entries[superIdx][1])];
             }
           }
         }
@@ -127,7 +170,7 @@ export class MatchState<E> {
     }
 
     return new MatchState(
-      transitions,
+      entries,
       this._elements.union(other._elements)
     );
   }
@@ -142,6 +185,7 @@ export class MatchState<E> {
 
   /**
    * Internal recursive match traversal.
+   * @JAVA_REF org.modelingvalue.nelumbo.MatchState#doMatch(Object)
    */
   private doMatch(obj: unknown): MatchState<E> | null {
     if (obj instanceof Type) {
@@ -153,7 +197,7 @@ export class MatchState<E> {
     if (obj instanceof Node) {
       const node = obj;
       const functor = node.functor();
-      let state: MatchState<E> | null = functor !== null ? (this._transitions.get(functor) ?? null) : null;
+      let state: MatchState<E> | null = functor !== null ? (this.getEntry(functor) ?? null) : null;
       if (state !== null) {
         for (const arg of node.args()) {
           state = state!.doMatch(arg);
@@ -168,10 +212,10 @@ export class MatchState<E> {
       return state;
     }
     if (typeof obj === 'string') {
-      return this._transitions.get(TokenType.of(obj)) ?? null;
+      return this.getEntry(TokenType.of(obj)) ?? null;
     }
     if (obj !== null && obj !== undefined) {
-      return this._transitions.get((obj as object).constructor) ?? null;
+      return this.getEntry((obj as object).constructor) ?? null;
     }
     return null;
   }
@@ -181,11 +225,11 @@ export class MatchState<E> {
    */
   private matchType(type: Type): MatchState<E> | null {
     for (const sup of type.allSupers()) {
-      const state = this._transitions.get(sup);
+      const state = this.getEntry(sup);
       if (state !== undefined) {
         return state;
       }
     }
-    return this._transitions.get(Type.TYPE) ?? null;
+    return this.getEntry(Type.TYPE) ?? null;
   }
 }

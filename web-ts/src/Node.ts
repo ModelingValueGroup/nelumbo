@@ -82,12 +82,18 @@ export class Node implements AstElement {
   /**
    * Reset the declaration (for pattern templates).
    */
+  // @JAVA_REF org.modelingvalue.nelumbo.Node#resetDeclaration()
+  // Java calls struct(array, null) where null means "use self as declaration"
   resetDeclaration(): Node {
     const newData = [...this._data];
     for (let i = Node.START; i < newData.length; i++) {
       newData[i] = this.resetDeclarationValue(newData[i]);
     }
-    return this.struct(newData, undefined);
+    const result = this.struct(newData);
+    // Force self-declaration (equivalent to Java's struct(data, null))
+    (result as any)._declaration = result;
+    (result as any)._binding = null;
+    return result;
   }
 
   private resetDeclarationValue(from: unknown): unknown {
@@ -360,7 +366,7 @@ export class Node implements AstElement {
             thisVal = Node.typeOf(thisIn);
           }
         }
-        if (thisVal !== null) {
+        if (thisVal !== null && this.doGetBinding(thisVal, _i)) {
           vars = vars.set(declVar, thisVal);
           if (thisVal instanceof Node) {
             const nodeBinding = thisVal.getBinding();
@@ -390,9 +396,15 @@ export class Node implements AstElement {
   /**
    * Get the type of a value.
    */
+  // @JAVA_REF org.modelingvalue.nelumbo.Node#typeOf(Object)
+  // In Java, Variable extends Node so instanceof Node covers it.
+  // In TS, Variable does not extend Node, so we handle it separately.
   static typeOf(v: unknown): Type | null {
     if (v instanceof Node) {
       return v.isType() ? v as unknown as Type : v.type();
+    }
+    if (v instanceof Variable) {
+      return v.type();
     }
     return null;
   }
@@ -433,7 +445,15 @@ export class Node implements AstElement {
   ): unknown {
     if (declVal instanceof Variable) {
       const varVal = vars.get(declVal);
-      if (varVal !== null && varVal !== undefined) {
+      if (varVal !== null && varVal !== undefined && this.doSetBinding(varVal, _i)) {
+        // When thisVal is a non-Type Node (e.g. NBoolean wrapping a Variable) and varVal
+        // is a primitive (not a Node/Variable), recurse into thisVal's setBinding to
+        // preserve the Node wrapper. In Java, StructImpl interning implicitly preserves
+        // the wrapper by returning cached nodes whose declarations track the Node structure.
+        // Without interning in TS, we must handle this explicitly.
+        if (thisVal instanceof Node && !thisVal.isType() && !(varVal instanceof Node) && !(varVal instanceof Variable)) {
+          return thisVal.setBinding(vars);
+        }
         return varVal;
       }
       if (thisVal instanceof Variable) {
@@ -477,6 +497,16 @@ export class Node implements AstElement {
     }
 
     return thisVal;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.Node#doGetBinding(Object, int)
+  protected doGetBinding(_varVal: unknown, _i: number): boolean {
+    return true;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.Node#doSetBinding(Object, int)
+  protected doSetBinding(_varVal: unknown, _i: number): boolean {
+    return true;
   }
 
   /**

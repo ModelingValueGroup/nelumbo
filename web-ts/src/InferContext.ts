@@ -10,56 +10,50 @@ import type { InferResult } from './InferResult';
 
 /**
  * InferContext - context for logical inference.
+ * @JAVA_REF org.modelingvalue.nelumbo.InferContext
  */
 export class InferContext {
   private readonly _knowledgeBase: KnowledgeBase;
   private readonly _stack: List<Predicate>;
-  private readonly _bindings: Map<unknown, unknown>;
-  private readonly _negated: boolean;
-  private readonly _cycleCheck: boolean;
-  private readonly _trace: boolean;
   private readonly _cycleResults: Map<Predicate, InferResult>;
-  private readonly _reduce: boolean;
   private readonly _shallow: boolean;
+  private readonly _reduce: boolean;
+  private readonly _trace: boolean;
 
   private constructor(
     knowledgeBase: KnowledgeBase,
     stack: List<Predicate>,
-    bindings: Map<unknown, unknown>,
-    negated: boolean,
-    cycleCheck: boolean,
-    trace: boolean,
-    cycleResults: Map<Predicate, InferResult> = Map(),
-    reduce: boolean = false,
-    shallow: boolean = false
+    cycleResults: Map<Predicate, InferResult>,
+    shallow: boolean,
+    reduce: boolean,
+    trace: boolean
   ) {
     this._knowledgeBase = knowledgeBase;
     this._stack = stack;
-    this._bindings = bindings;
-    this._negated = negated;
-    this._cycleCheck = cycleCheck;
-    this._trace = trace;
     this._cycleResults = cycleResults;
-    this._reduce = reduce;
     this._shallow = shallow;
+    this._reduce = reduce;
+    this._trace = trace;
   }
 
   /**
    * Create a new context.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#of
    */
   static of(
     knowledgeBase: KnowledgeBase,
     stack: List<Predicate>,
-    bindings: Map<unknown, unknown>,
-    negated: boolean,
-    cycleCheck: boolean,
+    cyclic: Map<Predicate, InferResult>,
+    shallow: boolean,
+    reduce: boolean,
     trace: boolean
   ): InferContext {
-    return new InferContext(knowledgeBase, stack, bindings, negated, cycleCheck, trace);
+    return new InferContext(knowledgeBase, stack, cyclic, shallow, reduce, trace);
   }
 
   /**
    * Get the knowledge base.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#knowledgebase()
    */
   knowledgeBase(): KnowledgeBase {
     return this._knowledgeBase;
@@ -67,156 +61,133 @@ export class InferContext {
 
   /**
    * Get the inference stack.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#stack()
    */
   stack(): List<Predicate> {
     return this._stack;
   }
 
   /**
-   * Get the bindings.
-   */
-  bindings(): Map<unknown, unknown> {
-    return this._bindings;
-  }
-
-  /**
-   * Check if negated.
-   */
-  negated(): boolean {
-    return this._negated;
-  }
-
-  /**
-   * Check if cycle checking is enabled.
-   */
-  cycleCheck(): boolean {
-    return this._cycleCheck;
-  }
-
-  /**
-   * Check if tracing is enabled.
-   */
-  trace(): boolean {
-    return this._trace;
-  }
-
-  /**
-   * Check if reducing.
-   */
-  reduce(): boolean {
-    return this._reduce;
-  }
-
-  /**
    * Check if shallow.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#shallow()
    */
   shallow(): boolean {
     return this._shallow;
   }
 
   /**
+   * Check if reducing.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#reduce()
+   */
+  reduce(): boolean {
+    return this._reduce;
+  }
+
+  /**
+   * Check if deep (neither shallow nor reduce).
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#deep()
+   */
+  deep(): boolean {
+    return !this._shallow && !this._reduce;
+  }
+
+  /**
+   * Check if tracing is enabled.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#trace()
+   */
+  trace(): boolean {
+    return this._trace;
+  }
+
+  /**
    * Get prefix for trace output.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#prefix()
    */
   prefix(): string {
     return '  '.repeat(this._stack.size);
   }
 
   /**
-   * Push a predicate onto the stack.
+   * Push a predicate onto the stack. Resets shallow and reduce to false.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#pushOnStack(Predicate)
    */
-  push(predicate: Predicate): InferContext {
-    return new InferContext(
+  pushOnStack(predicate: Predicate): InferContext {
+    return InferContext.of(
       this._knowledgeBase,
       this._stack.push(predicate),
-      this._bindings,
-      this._negated,
-      this._cycleCheck,
-      this._trace,
       this._cycleResults,
-      this._reduce,
-      this._shallow
+      false,
+      false,
+      this._trace
     );
   }
 
   /**
-   * Push a predicate onto the stack (alias for push).
+   * Put a cycle result for a predicate. Resets shallow and reduce to false.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#putCycleResult(Predicate, InferResult)
    */
-  pushOnStack(predicate: Predicate): InferContext {
-    return this.push(predicate);
+  putCycleResult(predicate: Predicate, result: InferResult): InferContext {
+    return InferContext.of(
+      this._knowledgeBase,
+      this._stack,
+      this._cycleResults.set(predicate, result),
+      false,
+      false,
+      this._trace
+    );
   }
 
   /**
-   * Enter negation.
+   * Switch to shallow mode.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#toShallow()
    */
-  negate(): InferContext {
-    return new InferContext(
+  toShallow(): InferContext {
+    return InferContext.of(
       this._knowledgeBase,
       this._stack,
-      this._bindings,
-      !this._negated,
-      this._cycleCheck,
-      this._trace,
       this._cycleResults,
-      this._reduce,
-      this._shallow
+      true,
+      false,
+      this._trace
+    );
+  }
+
+  /**
+   * Switch to reduce mode.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#toReduce()
+   */
+  toReduce(): InferContext {
+    return InferContext.of(
+      this._knowledgeBase,
+      this._stack,
+      this._cycleResults,
+      false,
+      true,
+      this._trace
+    );
+  }
+
+  /**
+   * Switch to deep mode (neither shallow nor reduce).
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#toDeep()
+   */
+  toDeep(): InferContext {
+    return InferContext.of(
+      this._knowledgeBase,
+      this._stack,
+      this._cycleResults,
+      false,
+      false,
+      this._trace
     );
   }
 
   /**
    * Get cycle result for a predicate.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferContext#getCycleResult(Predicate)
    */
   getCycleResult(predicate: Predicate): InferResult | null {
-    return this._cycleResults.get(predicate) ?? null;
-  }
-
-  /**
-   * Put a cycle result for a predicate.
-   */
-  putCycleResult(predicate: Predicate, result: InferResult): InferContext {
-    return new InferContext(
-      this._knowledgeBase,
-      this._stack,
-      this._bindings,
-      this._negated,
-      this._cycleCheck,
-      this._trace,
-      this._cycleResults.set(predicate, result),
-      this._reduce,
-      this._shallow
-    );
-  }
-
-  /**
-   * Create a shallow context.
-   */
-  withShallow(shallow: boolean): InferContext {
-    return new InferContext(
-      this._knowledgeBase,
-      this._stack,
-      this._bindings,
-      this._negated,
-      this._cycleCheck,
-      this._trace,
-      this._cycleResults,
-      this._reduce,
-      shallow
-    );
-  }
-
-  /**
-   * Create a reduce context.
-   */
-  withReduce(reduce: boolean): InferContext {
-    return new InferContext(
-      this._knowledgeBase,
-      this._stack,
-      this._bindings,
-      this._negated,
-      this._cycleCheck,
-      this._trace,
-      this._cycleResults,
-      reduce,
-      this._shallow
-    );
+    const result = this._cycleResults.get(predicate) ?? null;
+    return result !== null ? result.cast(predicate) : null;
   }
 }

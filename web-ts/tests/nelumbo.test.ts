@@ -84,7 +84,8 @@ describe('Nelumbo', () => {
   });
 
   it('friendsTest', () => {
-    testResource('friendsTest.nl');
+    (globalThis as any).__DEBUG_RULES__ = true;
+    try { testResource('friendsTest.nl'); } finally { (globalThis as any).__DEBUG_RULES__ = false; }
   });
 
   it('whoIsTest', () => {

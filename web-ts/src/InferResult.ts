@@ -4,15 +4,19 @@
  */
 
 import { List, Map, Set } from 'immutable';
-import type { Variable } from './Variable';
+import { Variable } from './Variable';
+import { Type } from './Type';
 import type { Predicate } from './logic/Predicate';
 
 /**
  * InferResult - represents the result of logical inference.
+ * @JAVA_REF org.modelingvalue.nelumbo.InferResult
  */
 export class InferResult {
   private readonly _facts: Set<Predicate>;
   private readonly _falsehoods: Set<Predicate>;
+  private readonly _allFacts: List<Predicate> | null;
+  private readonly _allFalsehoods: List<Predicate> | null;
   private readonly _cycles: Set<Predicate>;
   private readonly _completeFacts: boolean;
   private readonly _completeFalsehoods: boolean;
@@ -28,7 +32,9 @@ export class InferResult {
     completeFalsehoods: boolean,
     predicate: Predicate | null = null,
     stackOverflow: List<Predicate> | null = null,
-    unresolvable: boolean = false
+    unresolvable: boolean = false,
+    allFacts: List<Predicate> | null = null,
+    allFalsehoods: List<Predicate> | null = null
   ) {
     this._facts = facts;
     this._falsehoods = falsehoods;
@@ -38,11 +44,11 @@ export class InferResult {
     this._predicate = predicate;
     this._stackOverflow = stackOverflow;
     this._unresolvable = unresolvable;
+    this._allFacts = allFacts;
+    this._allFalsehoods = allFalsehoods;
   }
 
-  /**
-   * Create a result with specified facts and completion flags.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#of(Set, boolean, Set, boolean, Set)
   static of(
     facts: Set<Predicate>,
     completeFacts: boolean,
@@ -53,9 +59,7 @@ export class InferResult {
     return new InferResult(facts, falsehoods, cycles, completeFacts, completeFalsehoods);
   }
 
-  /**
-   * Create a result with a predicate.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#of(Predicate, Set, boolean, Set, boolean, Set)
   static ofWithPredicate(
     predicate: Predicate,
     facts: Set<Predicate>,
@@ -67,139 +71,134 @@ export class InferResult {
     return new InferResult(facts, falsehoods, cycles, completeFacts, completeFalsehoods, predicate);
   }
 
-  /**
-   * Create a true result with complete certainty.
-   */
-  static trueCC(predicate: Predicate): InferResult {
-    return new InferResult(Set([predicate]), Set(), Set(), true, true);
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#of(Collection, boolean, Collection, boolean, Set)
+  static ofFromCollections(
+    facts: List<Predicate>,
+    completeFacts: boolean,
+    falsehoods: List<Predicate>,
+    completeFalsehoods: boolean,
+    cycles: Set<Predicate>
+  ): InferResult {
+    return new InferResult(
+      Set<Predicate>(), Set<Predicate>(), cycles,
+      completeFacts, completeFalsehoods,
+      null, null, false,
+      facts, falsehoods
+    );
   }
 
-  /**
-   * Create a false result with complete certainty.
-   */
-  static falseCC(predicate: Predicate): InferResult {
-    return new InferResult(Set(), Set([predicate]), Set(), true, true);
-  }
-
-  /**
-   * Create a facts result with facts complete, falsehoods incomplete.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#factsCI(Set)
   static factsCI(facts: Set<Predicate>): InferResult {
     return new InferResult(facts, Set(), Set(), true, false);
   }
 
-  /**
-   * Create a facts result with facts incomplete, falsehoods complete.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#factsIC(Set)
   static factsIC(facts: Set<Predicate>): InferResult {
     return new InferResult(facts, Set(), Set(), false, true);
   }
 
-  /**
-   * Create a facts result with complete certainty.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#factsCC(Set)
   static factsCC(facts: Set<Predicate>): InferResult {
     return new InferResult(facts, Set(), Set(), true, true);
   }
 
-  /**
-   * Create a falsehoods result with complete certainty.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#falsehoodsCC(Set)
   static falsehoodsCC(falsehoods: Set<Predicate>): InferResult {
     return new InferResult(Set(), falsehoods, Set(), true, true);
   }
 
-  /**
-   * Create a falsehoods result with facts incomplete.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#falsehoodsIC(Set)
   static falsehoodsIC(falsehoods: Set<Predicate>): InferResult {
     return new InferResult(Set(), falsehoods, Set(), false, true);
   }
 
-  /**
-   * Create a falsehoods result with both incomplete.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#falsehoodCI(Predicate)
+  static falsehoodCI(falsehood: Predicate): InferResult {
+    return new InferResult(Set(), Set(), Set(), true, false, falsehood);
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#falsehoodsII(Set)
   static falsehoodsII(falsehoods: Set<Predicate>): InferResult {
     return new InferResult(Set(), falsehoods, Set(), false, false);
   }
 
-  /**
-   * Create an unknown result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#unknown(Predicate)
   static unknown(predicate: Predicate): InferResult {
     return new InferResult(Set(), Set(), Set(), false, false, predicate);
   }
 
-  /**
-   * Create an unresolvable result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#unresolvable(Predicate)
   static unresolvable(predicate: Predicate): InferResult {
     return new InferResult(Set(), Set(), Set(), false, false, predicate, null, true);
   }
 
-  /**
-   * Create a cycle result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#cycle(Set, Set, Predicate)
   static cycle(facts: Set<Predicate>, falsehoods: Set<Predicate>, predicate: Predicate): InferResult {
     return new InferResult(facts, falsehoods, predicate.singleton(), false, false);
   }
 
-  /**
-   * Create an overflow result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#overflow(List)
   static overflow(overflow: List<Predicate>): InferResult {
     return new InferResult(Set(), Set(), Set(), false, false, null, overflow);
   }
 
-  /**
-   * Unresolvable singleton.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult.UNRESOLVABLE
   static readonly UNRESOLVABLE = new InferResult(Set(), Set(), Set(), true, true, null, null, true);
 
-  /**
-   * Get the facts.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#facts()
   facts(): Set<Predicate> {
     return this._facts;
   }
 
-  /**
-   * Get the falsehoods.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#falsehoods()
   falsehoods(): Set<Predicate> {
     return this._falsehoods;
   }
 
-  /**
-   * Get the cycles.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#allFacts()
+  allFacts(): Iterable<Predicate> & { isEmpty(): boolean; equals(other: unknown): boolean; map<T>(fn: (v: Predicate) => T): { toArray(): T[] } } {
+    if (this._allFacts !== null) {
+      return this._allFacts as any;
+    }
+    return this._facts as any;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#allFalsehoods()
+  allFalsehoods(): Iterable<Predicate> & { isEmpty(): boolean; equals(other: unknown): boolean; map<T>(fn: (v: Predicate) => T): { toArray(): T[] } } {
+    if (this._allFalsehoods !== null) {
+      return this._allFalsehoods as any;
+    }
+    return this._falsehoods as any;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#cycles()
   cycles(): Set<Predicate> {
     return this._cycles;
   }
 
-  /**
-   * Check if facts are complete.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#completeFacts()
   completeFacts(): boolean {
     return this._completeFacts;
   }
 
-  /**
-   * Check if falsehoods are complete.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#completeFalsehoods()
   completeFalsehoods(): boolean {
     return this._completeFalsehoods;
   }
 
-  /**
-   * Check if result is complete.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#isComplete()
   isComplete(): boolean {
     return this._completeFacts || this._completeFalsehoods;
   }
 
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#predicate()
+  predicateOf(): Predicate | null {
+    return this._predicate;
+  }
+
   /**
-   * Get the predicate.
+   * Get or set the predicate.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferResult#predicate() and InferResult#predicate(Predicate)
    */
   predicate(pred?: Predicate): InferResult | Predicate | null {
     if (pred !== undefined) {
@@ -208,174 +207,143 @@ export class InferResult {
     return this._predicate;
   }
 
-  /**
-   * Check if unresolvable.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#unresolvable()
   isUnresolvable(): boolean {
     return this._unresolvable;
   }
 
   /**
-   * Check if has cycle with a predicate.
+   * Java-compatible unresolvable() default method.
+   * @JAVA_REF org.modelingvalue.nelumbo.InferResult#unresolvable()
    */
+  unresolvable(): boolean {
+    return this._unresolvable;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#hasCycleWith(Predicate)
   hasCycleWith(predicate: Predicate): boolean {
     return this._cycles.contains(predicate);
   }
 
-  /**
-   * Get stack overflow.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#stackOverflow()
   stackOverflow(): List<Predicate> | null {
     return this._stackOverflow;
   }
 
-  /**
-   * Check if has stack overflow.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#hasStackOverflow()
   hasStackOverflow(): boolean {
     return this._stackOverflow !== null;
   }
 
-  /**
-   * Check if true with complete certainty.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#isTrueCC()
   isTrueCC(): boolean {
-    return this._falsehoods.isEmpty() && !this._facts.isEmpty() && this._completeFalsehoods && this._completeFacts;
+    return this.allFalsehoods().isEmpty() && !this.allFacts().isEmpty() && this._completeFalsehoods && this._completeFacts;
   }
 
-  /**
-   * Check if false with complete certainty.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#isFalseCC()
   isFalseCC(): boolean {
-    return this._facts.isEmpty() && !this._falsehoods.isEmpty() && this._completeFacts && this._completeFalsehoods;
+    return this.allFacts().isEmpty() && !this.allFalsehoods().isEmpty() && this._completeFacts && this._completeFalsehoods;
   }
 
-  /**
-   * Get true bindings.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#trueBindings()
   trueBindings(): Set<Map<Variable, unknown>> {
     const pred = this._predicate;
     if (pred === null) return Set();
-    return this._facts.map(p => {
+    const allF = this.allFacts();
+    let result = Set<Map<Variable, unknown>>();
+    for (const p of allF) {
       const binding = p.getBinding(pred);
-      if (binding === null) return Map<Variable, unknown>();
-      return binding.filter((val) => !(val instanceof Object && 'type' in val));
-    }).toSet();
+      if (binding === null) {
+        result = result.add(Map<Variable, unknown>());
+      } else {
+        const filtered = binding.filter((val) => !(val instanceof Variable) && !(val instanceof Type));
+        result = result.add(filtered);
+      }
+    }
+    return result;
   }
 
-  /**
-   * Get false bindings.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#falseBindings()
   falseBindings(): Set<Map<Variable, unknown>> {
     const pred = this._predicate;
     if (pred === null) return Set();
-    return this._falsehoods.map(p => {
+    const allFH = this.allFalsehoods();
+    let result = Set<Map<Variable, unknown>>();
+    for (const p of allFH) {
       const binding = p.getBinding(pred);
-      if (binding === null) return Map<Variable, unknown>();
-      return binding.filter((val) => !(val instanceof Object && 'type' in val));
-    }).toSet();
+      if (binding === null) {
+        result = result.add(Map<Variable, unknown>());
+      } else {
+        const filtered = binding.filter((val) => !(val instanceof Variable) && !(val instanceof Type));
+        result = result.add(filtered);
+      }
+    }
+    return result;
   }
 
-  /**
-   * Cast this result to a specific predicate.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#cast(Predicate)
   cast(to: Predicate): InferResult {
     const castFacts = this._facts.map(p => p.equals(to) ? to : to.castFrom(p)).toSet();
     const castFalsehoods = this._falsehoods.map(p => p.equals(to) ? to : to.castFrom(p)).toSet();
     return InferResult.of(castFacts, this._completeFacts, castFalsehoods, this._completeFalsehoods, this._cycles);
   }
 
-  /**
-   * Add another result.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#add(InferResult)
   add(other: InferResult): InferResult {
-    return InferResult.of(
-      this._facts.union(other._facts),
-      this._completeFacts && other._completeFacts,
-      this._falsehoods.union(other._falsehoods),
-      this._completeFalsehoods && other._completeFalsehoods,
-      this._cycles.union(other._cycles)
-    );
+    const facts = List<Predicate>([...this.allFacts(), ...other.allFacts()]);
+    const falsehoods = List<Predicate>([...this.allFalsehoods(), ...other.allFalsehoods()]);
+    const completeFacts = this._completeFacts && other._completeFacts;
+    const completeFalsehoods = this._completeFalsehoods && other._completeFalsehoods;
+    const cycles = this._cycles.union(other._cycles);
+    return InferResult.ofFromCollections(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
   }
 
-  /**
-   * Flip completion flags.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#flipComplete()
   flipComplete(): InferResult {
+    const allF = this.allFacts();
+    const allFH = this.allFalsehoods();
+    if (this._allFacts !== null || this._allFalsehoods !== null) {
+      return InferResult.ofFromCollections(
+        List<Predicate>([...allF]),
+        this._completeFalsehoods,
+        List<Predicate>([...allFH]),
+        this._completeFacts,
+        this._cycles
+      );
+    }
     return InferResult.of(this._facts, this._completeFalsehoods, this._falsehoods, this._completeFacts, this._cycles);
   }
 
-  /**
-   * Make complete.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult#complete()
   complete(): InferResult {
+    if (this._allFacts !== null || this._allFalsehoods !== null) {
+      return InferResult.ofFromCollections(
+        List<Predicate>([...this.allFacts()]),
+        true,
+        List<Predicate>([...this.allFalsehoods()]),
+        true,
+        this._cycles
+      );
+    }
     return InferResult.of(this._facts, true, this._falsehoods, true, this._cycles);
   }
 
-  /**
-   * Combine with another result using AND logic.
-   */
-  and(other: InferResult): InferResult {
-    if (this.isFalseCC() || other.isFalseCC()) {
-      return InferResult.of(Set(), true, this._falsehoods.union(other._falsehoods), true, Set());
-    }
-    return InferResult.of(
-      this._facts.union(other._facts),
-      this._completeFacts && other._completeFacts,
-      this._falsehoods.union(other._falsehoods),
-      this._completeFalsehoods && other._completeFalsehoods,
-      this._cycles.union(other._cycles)
-    );
-  }
-
-  /**
-   * Combine with another result using OR logic.
-   */
-  or(other: InferResult): InferResult {
-    if (this.isTrueCC()) {
-      return this;
-    }
-    if (other.isTrueCC()) {
-      return other;
-    }
-    return InferResult.of(
-      this._facts.union(other._facts),
-      this._completeFacts && other._completeFacts,
-      this._falsehoods.intersect(other._falsehoods),
-      this._completeFalsehoods && other._completeFalsehoods,
-      this._cycles.union(other._cycles)
-    );
-  }
-
-  /**
-   * Negate this result.
-   */
-  not(): InferResult {
-    return InferResult.of(
-      this._falsehoods,
-      this._completeFalsehoods,
-      this._facts,
-      this._completeFacts,
-      this._cycles
-    );
-  }
-
-  /**
-   * Check equality.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult.InferResultImpl#equals(Object)
   equals(other: InferResult): boolean {
     if (this === other) return true;
-    if (other === null) return false;
-    return this._facts.equals(other._facts) &&
+    if (other === null || other === undefined) return false;
+    const thisAllFacts = this.allFacts();
+    const otherAllFacts = other.allFacts();
+    const thisAllFalsehoods = this.allFalsehoods();
+    const otherAllFalsehoods = other.allFalsehoods();
+    return thisAllFacts.equals(otherAllFacts) &&
            this._completeFacts === other._completeFacts &&
-           this._falsehoods.equals(other._falsehoods) &&
+           thisAllFalsehoods.equals(otherAllFalsehoods) &&
            this._completeFalsehoods === other._completeFalsehoods &&
            this._cycles.equals(other._cycles);
   }
 
-  /**
-   * String representation.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.InferResult.InferResultImpl#toString()
   toString(): string {
     if (this._stackOverflow !== null) {
       return this._stackOverflow.toArray().toString();

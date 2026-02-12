@@ -31,6 +31,7 @@ import { InferResult } from './InferResult';
 import { InferContext } from './InferContext';
 import { registerBaseSyntax } from './BaseSyntax';
 import { resolveModuleContent } from './ModuleContent';
+import { checkFunctorSetter } from './ConstructorRegistry';
 import { Tokenizer } from './syntax/Tokenizer';
 import { Parser as ParserClass } from './syntax/Parser';
 
@@ -287,6 +288,12 @@ export class KnowledgeBase implements ParseExceptionHandler {
       this._functors = this._functors.add(functor);
     }
 
+    // @JAVA_REF org.modelingvalue.nelumbo.KnowledgeBase#init (FUNCTOR_REGISTRATION check)
+    const ctor = functor.constructorFn();
+    if (ctor !== null) {
+      checkFunctorSetter(ctor, functor);
+    }
+
     return functor;
   }
 
@@ -440,9 +447,11 @@ export class KnowledgeBase implements ParseExceptionHandler {
         : litNode as Predicate;
       for (let c = args.size - 1; c >= 0; c--) {
         const eq = new Predicate(KnowledgeBase.equalsFunctor, List<AstElement>(), nodVars[c], litVars[c]);
-        litCond = new And(KnowledgeBase.equalsFunctor, List<AstElement>(), eq, litCond);
+        // @JAVA_REF: litCond = And.of(eq, litCond);
+        litCond = And.of(eq, litCond);
       }
-      const exists = new ExistentialQuantifier(KnowledgeBase.equalsFunctor as unknown as Functor, List<AstElement>(), List(litVars), litCond);
+      // @JAVA_REF: new ExistentialQuantifier(List.of(), List.of(litVars), litCond)
+      const exists = new ExistentialQuantifier(ExistentialQuantifier.FUNCTOR!, List<AstElement>(), List(litVars), litCond);
       const rule = new Rule(KnowledgeBase.ruleFunctor, List<AstElement>(), nodCons, exists);
       this.addRule(rule);
       roots = new NList(List<AstElement>(), roots, rule);
@@ -532,8 +541,13 @@ export class KnowledgeBase implements ParseExceptionHandler {
   /**
    * Get memoized result.
    */
+  // @JAVA_REF org.modelingvalue.nelumbo.KnowledgeBase#getMemoiz(Predicate)
   getMemoiz(predicate: Predicate): InferResult | null {
-    return this._memoization.get(predicate) ?? null;
+    const result = this._memoization.get(predicate);
+    if (result !== undefined) {
+      return result.cast(predicate);
+    }
+    return null;
   }
 
   /**

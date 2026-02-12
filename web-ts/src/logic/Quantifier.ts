@@ -3,98 +3,81 @@
  * @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier
  */
 
-import { List, Set } from 'immutable';
+import { List } from 'immutable';
 import type { AstElement } from '../AstElement';
 import { Type } from '../Type';
 import { Variable } from '../Variable';
 import { Node } from '../Node';
 import type { Functor } from '../patterns/Functor';
 import { Predicate } from './Predicate';
+import { CompoundPredicate } from './CompoundPredicate';
 import { InferResult } from '../InferResult';
 import type { InferContext } from '../InferContext';
 
 /**
  * Quantifier - base for existential and universal quantification.
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier
  */
-export abstract class Quantifier extends Predicate {
-  constructor(functor: Functor, elements: List<AstElement>, variables: List<Variable>, body: Node) {
-    super(functor, elements, variables, body);
+export abstract class Quantifier extends CompoundPredicate {
+  constructor(functor: Functor, elements: List<AstElement>, ...args: unknown[]) {
+    super(functor, elements, ...args);
   }
 
-  /**
-   * Get the quantified variables.
-   */
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier#doGetBinding(Object, int)
+  protected override doGetBinding(_varVal: unknown, i: number): boolean {
+    return i > 0;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier#doSetBinding(Object, int)
+  protected override doSetBinding(varVal: unknown, i: number): boolean {
+    return i > 0 || varVal instanceof Variable;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier#localVars()
   override localVars(): List<Variable> {
     return this.get(0) as List<Variable>;
   }
 
-  /**
-   * Get the body predicate.
-   */
-  body(): Predicate {
-    return Predicate.predicate(this.get(1) as Node);
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier#predicate()
+  predicateBody(): Predicate {
+    return this.predicateAt(1);
   }
 
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier#countNrOfUnbound()
   protected override countNrOfUnbound(): number {
-    // Don't count local variables
-    const localVars = this.localVars().toSet();
-    let count = 0;
     const binding = this.getBinding();
-    if (binding !== null) {
-      binding.forEach((val, key) => {
-        if (val instanceof Type && !localVars.contains(key)) {
-          count++;
-        }
-      });
-    }
+    if (binding === null) return 0;
+    const localVarsList = this.localVars();
+    let count = 0;
+    binding.forEach((val, key) => {
+      if (val instanceof Type && !localVarsList.contains(key)) {
+        count++;
+      }
+    });
     return count;
   }
 
   /**
-   * Resolve the quantifier.
+   * Override inferInternal matching Java's Quantifier.infer(int, InferContext).
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier#infer(int, InferContext)
+   */
+  protected override inferInternal(_nrOfUnbound: number, context: InferContext): InferResult {
+    return context.shallow() ? this.unresolvable() : this.resolve(context.toDeep());
+  }
+
+  /**
+   * Override resolve matching Java's Quantifier.resolve(InferContext).
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier#resolve(InferContext)
    */
   override resolve(context: InferContext): InferResult {
-    const body = this.body();
-    const localVars = this.localVars().toSet();
-
-    // Resolve the body
-    const bodyResult = body.resolve(context);
-
-    if (bodyResult.hasStackOverflow()) {
-      return bodyResult;
+    const predicate = this.predicateBody();
+    const predResult = predicate.resolve(context);
+    if (predResult.hasStackOverflow()) {
+      return predResult;
     }
-
-    return this.processResult(bodyResult, localVars, context);
+    return this.resolveWithResult(context, predResult);
   }
 
-  /**
-   * Process the body result for this quantifier type.
-   * Override in ExistentialQuantifier and UniversalQuantifier.
-   */
-  protected abstract processResult(
-    bodyResult: InferResult,
-    localVars: Set<Variable>,
-    context: InferContext
-  ): InferResult;
-
-  /**
-   * Remove local variables from facts/falsehoods.
-   */
-  protected removeLocalVars(preds: Set<Predicate>, localVars: Set<Variable>): Set<Predicate> {
-    return preds.map(pred => {
-      const binding = pred.getBinding();
-      if (binding === null) return pred;
-      const filtered = binding.filter((_, key) => !localVars.contains(key));
-      return pred.setVariables(filtered);
-    }).filter(pred => pred.isFullyBound()).toSet();
-  }
-
-  /**
-   * Check if a predicate still has unbound local variables.
-   */
-  protected hasUnboundLocals(pred: Predicate, localVars: Set<Variable>): boolean {
-    const binding = pred.getBinding();
-    if (binding === null) return false;
-    return binding.some((val, key) => localVars.contains(key) && val instanceof Type);
-  }
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Quantifier#resolve(InferContext, InferResult)
+  protected abstract resolveWithResult(context: InferContext, predResult: InferResult): InferResult;
 }

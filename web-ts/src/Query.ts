@@ -158,7 +158,11 @@ export class Query extends Node implements Evaluatable {
     const predicate = this.predicate();
     let found: InferResult;
     try {
-      const result = predicate.infer(knowledgeBase.createInferContext());
+      // @JAVA_REF org.modelingvalue.nelumbo.logic.Predicate#infer() no-arg:
+      // Java does: Predicate p = setBinding(getBinding()); return p.resolve(context);
+      const binding = predicate.getBinding();
+      const bound = binding !== null ? predicate.setBinding(binding) as Predicate : predicate;
+      const result = bound.resolve(knowledgeBase.createInferContext());
       const predicateResult = result.predicate(predicate);
       found = predicateResult as InferResult;
     } catch (e) {
@@ -177,7 +181,7 @@ export class Query extends Node implements Evaluatable {
       const falsePredicates = falseBindings.map(b => predicate.setBinding(b)).toSet();
       const completeFalsehoods = this.completeFalsehoods();
 
-      const expected = InferResult.of(truePredicates, completeFacts, falsePredicates, completeFalsehoods, Set());
+      const expected = InferResult.ofWithPredicate(predicate, truePredicates, completeFacts, falsePredicates, completeFalsehoods, Set());
 
       if (!found.equals(expected) && found.toString() !== expected.toString()) {
         const astElements = this.astElements();

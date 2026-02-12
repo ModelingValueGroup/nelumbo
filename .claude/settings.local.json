@@ -30,7 +30,10 @@
       "Bash(jar tf:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(javap:*)",
-      "Bash(wc -l:*)"
+      "Bash(wc -l:*)",
+      "Bash(echo:*)",
+      "Bash(/tmp/test-hang.ts << 'EOF'\nimport { KnowledgeBase } from '../src/KnowledgeBase';\nimport { Tokenizer } from '../src/syntax/Tokenizer';\nimport { Parser } from '../src/syntax/Parser';\n\nconst text = `\n    import      nelumbo.integers\n    \n    Integer a\n \n    a=0            ? [\\(a=0\\)][..]\n`;\n\nconsole.log\\(\"Starting...\"\\);\nconst kb = new KnowledgeBase\\(KnowledgeBase.BASE\\);\nconsole.log\\(\"KB created\"\\);\nkb.run\\(\\(\\) => {\n  console.log\\(\"In KB.run\"\\);\n  const tokens = new Tokenizer\\(text, \"test\"\\).tokenize\\(\\);\n  console.log\\(\"Tokenized\"\\);\n  const parser = new Parser\\(KnowledgeBase.CURRENT, tokens\\);\n  console.log\\(\"Parser created, about to parseEvaluate\"\\);\n  parser.parseEvaluate\\(\\);\n  console.log\\(\"parseEvaluate done\"\\);\n}\\);\nconsole.log\\(\"Done!\"\\);\nEOF)",
+      "Bash(__NEW_LINE_2226eef58e1f2bb5__ timeout 15 npx tsx /tmp/test-hang.ts)"
     ],
     "deny": [],
     "ask": []

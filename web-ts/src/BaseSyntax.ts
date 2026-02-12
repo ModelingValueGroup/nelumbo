@@ -21,6 +21,9 @@ import { Token } from './syntax/Token';
 import { Import } from './Import';
 import { Optional } from './patterns/OptionalPattern';
 import { findConstructor } from './ConstructorRegistry';
+import { Predicate } from './logic/Predicate';
+import { When } from './logic/When';
+import { ParseException } from './syntax/ParseException';
 
 // Helper to create patterns more easily
 const s = Pattern.s.bind(Pattern);
@@ -133,6 +136,9 @@ export function registerBaseSyntax(kb: KnowledgeBase): void {
         null,
         null
       ).initInKb(kb);
+      Predicate._equalsFunctor = KnowledgeBase.equalsFunctor;
+      // @JAVA_REF: KnowledgeBase.CURRENT.get().literal(functor) in Predicate.setVariables
+      Predicate._literalFn = (functor) => KnowledgeBase.CURRENT.literal(functor);
 
       // 2. Document structure: BEGINOFFILE roots ENDOFFILE
       const docConstructor: NodeConstructor = (elements, args, _functor) => {
@@ -453,21 +459,90 @@ export function registerBaseSyntax(kb: KnowledgeBase): void {
       ).initInKb(kb);
 
       // 12. Rule: predicate <=> condition, condition, ...
+      // @JAVA_REF org.modelingvalue.nelumbo.KnowledgeBase#createRules(Functor, List, Object[])
       const ruleConstructor: NodeConstructor = (elements, args, functor) => {
         const currentKb = KnowledgeBase.CURRENT;
-        const consequence = args[0] as Node;
-        let condition = args[1] as Node;
+        let roots = new NList(elements.slice(0, 2).toList(), Type.ROOT);
+        const cons = Predicate.predicate(args[0] as Node);
+        const consFunctor = cons.functor();
+        const litFunctor = consFunctor !== null ? currentKb.literal(consFunctor) : null;
+        if (Type.FACT_TYPE.isAssignableFrom((litFunctor !== null ? litFunctor : consFunctor)!.resultType())) {
+          currentKb.addException(ParseException.fromElements('Rule consequence ' + cons + ' must be a Predicate, not a FactType', cons));
+        }
+        const consVars = cons.getBinding() ?? Map<Variable, unknown>();
+        // @JAVA_REF: for equals patterns, extract the inner node
+        const node: unknown = consFunctor !== null && consFunctor.equals(KnowledgeBase.equalsFunctor)
+          ? cons.get(0) : cons;
+        const nodeVars: Map<Variable, unknown> = node === cons
+          ? consVars
+          : (node instanceof Node ? (node.getBinding() ?? Map<Variable, unknown>()) : Map<Variable, unknown>());
+        const nodeFunctor = node instanceof Node ? node.functor() : null;
+        const literalFunctor = nodeFunctor !== null ? currentKb.literal(nodeFunctor) : null;
 
-        if (List.isList(args[1])) {
-          const condList = args[1] as List<Node>;
-          if (condList.size > 0) {
-            condition = condList.first()!;
+        const condIfList = args[1] as List<List<unknown>>;
+        let elemIdx = 0;
+        for (const condIf of condIfList) {
+          let cond = Predicate.predicate(condIf.get(0) as Node);
+          const guardValue = (condIf.get(1) as Optional<unknown>).orElse(null as any);
+          let when: Predicate | null = guardValue !== null && guardValue !== undefined
+            ? Predicate.predicate(guardValue as Node)
+            : null;
+
+          const condVars = cond.getBinding() ?? Map<Variable, unknown>();
+          const whenVars = when !== null ? (when.getBinding() ?? Map<Variable, unknown>()) : Map<Variable, unknown>();
+          const allCondVars: Map<Variable, unknown> = when !== null ? condVars.merge(whenVars) : condVars;
+          const nonConsVars = allCondVars.deleteAll(consVars.keys());
+
+          if (!nonConsVars.isEmpty()) {
+            let localVars = nonConsVars.deleteAll(cond.allLocalVars());
+            if (when !== null) {
+              localVars = localVars.deleteAll(when.allLocalVars());
+            }
+            if (!localVars.isEmpty()) {
+              const varNames = localVars.keySeq().map(v => v.toString()).join(',');
+              const message = 'Rule has local variables ' + varNames + ' in condition';
+              if (when !== null) {
+                currentKb.addException(ParseException.fromElements(message, cond, when));
+              } else {
+                currentKb.addException(ParseException.fromElements(message, cond));
+              }
+            }
+          }
+
+          // @JAVA_REF: literal variable substitution
+          let currentCons = cons;
+          if (literalFunctor !== null) {
+            const litVars = Predicate.literals(nodeVars.merge(nonConsVars));
+            currentCons = cons.setVariables(litVars);
+            cond = cond.setVariables(litVars);
+            if (when !== null) {
+              when = when.setVariables(litVars);
+            }
+          } else if (!nonConsVars.isEmpty()) {
+            const litVars = Predicate.literals(nonConsVars);
+            cond = cond.setVariables(litVars);
+            if (when !== null) {
+              when = when.setVariables(litVars);
+            }
+          }
+
+          const ruleElements = when !== null
+            ? List([cond as unknown as AstElement, when as unknown as AstElement])
+            : List([cond as unknown as AstElement]);
+          const condition = when !== null ? When.of(when, cond) : cond;
+          const rule = new Rule(functor, ruleElements, currentCons as any, condition as any);
+          currentKb.addRule(rule);
+          roots = new NList(List<AstElement>(), roots, rule);
+
+          for (elemIdx++; elemIdx < elements.size; elemIdx++) {
+            const e = elements.get(elemIdx);
+            if (e instanceof Token && (e as Token).text === ',') {
+              roots = roots.setAstElements(roots.astElements().push(e)) as NList;
+              break;
+            }
           }
         }
-
-        const rule = new Rule(functor, elements, consequence as any, condition as any);
-        currentKb.addRule(rule);
-        return new NList(elements, Type.ROOT, rule);
+        return roots;
       };
       KnowledgeBase.ruleFunctor = Functor.of(
         s(n(Type.BOOLEAN, 0), t('<=>'), r(CONDITION, true, t(','))),

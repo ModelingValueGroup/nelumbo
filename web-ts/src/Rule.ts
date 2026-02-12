@@ -6,6 +6,7 @@
 import { List, Set } from 'immutable';
 import type { AstElement } from './AstElement';
 import { Node } from './Node';
+import { Variable } from './Variable';
 import type { Functor } from './patterns/Functor';
 import { Predicate } from './logic/Predicate';
 import { InferResult } from './InferResult';
@@ -78,6 +79,23 @@ export class Rule extends Node implements Evaluatable {
   biimply(predicate: Predicate, context: InferContext, result: InferResult): InferResult {
     const consequence = this.consequence();
     const bindingOrNull = predicate.getBinding(consequence);
+    if ((globalThis as any).__DEBUG_RULES__ && String(predicate).includes('friend')) {
+      const cond = this.condition();
+      const condType = cond.type();
+      // Explore the Or structure to find friends nodes
+      const findFriendsTypes = (node: any, depth: number = 0): string => {
+        const prefix = '  '.repeat(depth);
+        let result = `${prefix}${node.constructor.name}: type=${node.type()}, str=${String(node).substring(0, 60)}\n`;
+        for (let i = 0; i < node.length(); i++) {
+          const child = node.get(i);
+          if (child instanceof Node && !(child instanceof Variable)) {
+            result += findFriendsTypes(child, depth + 1);
+          }
+        }
+        return result;
+      };
+      console.log(`DEBUG biimply UNBOUND RULE TYPES:\ncondition type=${condType}\n${findFriendsTypes(cond)}`);
+    }
     if (bindingOrNull === null) {
       return result;
     }
@@ -86,45 +104,54 @@ export class Rule extends Node implements Evaluatable {
     const binding = this.getBinding()!.merge(bindingOrNull);
     const boundConsequence = consequence.setBinding(binding) as Predicate;
     const boundCondition = condition.setBinding(binding) as Predicate;
+    if ((globalThis as any).__DEBUG_RULES__) {
+      console.log(`DEBUG biimply: binding=${binding} boundCond=${boundCondition} boundCons=${boundConsequence}`);
+    }
 
     if (context.trace()) {
       console.log(context.prefix() + boundConsequence + ' <=> ' + boundCondition);
     }
 
     const condResult = boundCondition.resolve(context);
+    if ((globalThis as any).__DEBUG_RULES__) {
+      console.log(`DEBUG biimply: condResult=${condResult} facts=${condResult.facts()} falsehoods=${condResult.falsehoods()}`);
+    }
+
+    // @JAVA_REF org.modelingvalue.nelumbo.Rule#biimply - stack overflow check
+    if (condResult.hasStackOverflow()) {
+      return condResult;
+    }
 
     let facts = Set<Predicate>();
     let falsehoods = Set<Predicate>();
     let completeFacts = true;
     let completeFalsehoods = true;
 
+    // @JAVA_REF org.modelingvalue.nelumbo.Rule#biimply - process facts/falsehoods
+    // Java: condFact.getBinding() always returns non-null Map for inference results
     for (const condFact of condResult.facts()) {
-      const factBinding = condFact.getBinding();
-      if (factBinding !== null) {
-        const fact = predicate.castFrom(boundConsequence.setBinding(factBinding) as Predicate);
-        if (fact.isFullyBound()) {
-          facts = facts.add(fact);
-        } else {
-          completeFacts = false;
-        }
+      const fact = predicate.castFrom(boundConsequence.setBinding(condFact.getBinding()!) as Predicate);
+      if (fact.isFullyBound()) {
+        facts = facts.add(fact);
+      } else {
+        completeFacts = false;
       }
     }
 
     for (const condFalsehood of condResult.falsehoods()) {
-      const falsehoodBinding = condFalsehood.getBinding();
-      if (falsehoodBinding !== null) {
-        const falsehood = predicate.castFrom(boundConsequence.setBinding(falsehoodBinding) as Predicate);
-        if (falsehood.isFullyBound()) {
-          falsehoods = falsehoods.add(falsehood);
-        } else {
-          completeFalsehoods = false;
-        }
+      const falsehood = predicate.castFrom(boundConsequence.setBinding(condFalsehood.getBinding()!) as Predicate);
+      if (falsehood.isFullyBound()) {
+        falsehoods = falsehoods.add(falsehood);
+      } else {
+        completeFalsehoods = false;
       }
     }
 
     if ((facts.isEmpty() && falsehoods.isEmpty()) || !predicate.isFullyBound()) {
-      if (!condResult.isComplete()) {
+      if (!condResult.completeFacts()) {
         completeFacts = false;
+      }
+      if (!condResult.completeFalsehoods()) {
         completeFalsehoods = false;
       }
     }
@@ -150,8 +177,8 @@ export class Rule extends Node implements Evaluatable {
       falsehoods = falsehoods.add(falsehood);
     }
 
-    const finalCompleteFacts = completeFacts || result.isComplete();
-    const finalCompleteFalsehoods = completeFalsehoods || result.isComplete();
+    const finalCompleteFacts = completeFacts || result.completeFacts();
+    const finalCompleteFalsehoods = completeFalsehoods || result.completeFalsehoods();
 
     return InferResult.of(facts, finalCompleteFacts, falsehoods, finalCompleteFalsehoods, result.cycles().union(ruleResult.cycles()));
   }

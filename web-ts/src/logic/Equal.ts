@@ -3,10 +3,9 @@
  * @JAVA_REF org.modelingvalue.nelumbo.logic.Equal
  */
 
-import { List, Map } from 'immutable';
+import { List } from 'immutable';
 import type { AstElement } from '../AstElement';
 import { Type } from '../Type';
-import { Variable } from '../Variable';
 import { Node } from '../Node';
 import type { Functor } from '../patterns/Functor';
 import { Predicate } from './Predicate';
@@ -15,6 +14,7 @@ import type { InferContext } from '../InferContext';
 
 /**
  * Equal - represents equality/unification between two terms.
+ * @JAVA_REF org.modelingvalue.nelumbo.logic.Equal
  */
 export class Equal extends Predicate {
   constructor(functor: Functor, elements: List<AstElement>, left: unknown, right: unknown) {
@@ -25,6 +25,10 @@ export class Equal extends Predicate {
     const eq = Object.create(Equal.prototype) as Equal;
     (eq as unknown as { _data: unknown[] })._data = data;
     (eq as unknown as { _declaration: Node })._declaration = declaration ?? eq;
+    (eq as any)._binding = null;
+    (eq as any)._hashCodeCached = false;
+    (eq as any)._hashCode = 0;
+    (eq as any)._nrOfUnbound = -1;
     return eq;
   }
 
@@ -32,227 +36,116 @@ export class Equal extends Predicate {
     return Equal.fromDataEqual(data, declaration ?? this.declaration());
   }
 
-  /**
-   * Get the left-hand side.
-   */
-  left(): unknown {
-    return this.get(0);
+  left(): Node {
+    return this.get(0) as Node;
+  }
+
+  right(): Node {
+    return this.get(1) as Node;
+  }
+
+  override set(i: number, ...a: unknown[]): Equal {
+    return super.set(i, ...a) as Equal;
+  }
+
+  // @JAVA_REF org.modelingvalue.nelumbo.logic.Equal#infer(int, InferContext)
+  protected override inferInternal(_nrOfUnbound: number, _context: InferContext): InferResult {
+    const complete = [true];
+    const eq = Equal.eqNode(this.left(), this.right(), complete);
+    if (eq === null) {
+      return complete[0] ? this.falsehoodCC() : this.falsehoodCI();
+    } else {
+      const r = this.set(0, eq).set(1, eq);
+      return complete[0] ? r.factCC() : r.factCI();
+    }
   }
 
   /**
-   * Get the right-hand side.
+   * Unify two Nodes.
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Equal#eq(Node, Node, boolean[])
    */
-  right(): unknown {
-    return this.get(1);
-  }
-
-  override infer(context: InferContext): InferResult {
-    const result = this.eq(this.left(), this.right(), true);
-    if (result === null) {
-      return context.reduce() ? this.falsehoodCC() : this.falsehoodCI();
-    }
-    const equal = result[0];
-    const complete = result[1];
-    if (complete) {
-      return equal.factCC();
-    }
-    return equal.factCI();
-  }
-
-  /**
-   * Unify two values.
-   * Returns [equal, complete] or null if not unifiable.
-   */
-  eq(left: unknown, right: unknown, complete: boolean): [Equal, boolean] | null {
-    const result = this.eqInternal(left, right, complete);
-    if (result === null) {
-      return null;
-    }
-    const newEqual = this.set(0, result[0], result[1]) as Equal;
-    return [newEqual, result[2]];
-  }
-
-  private eqInternal(left: unknown, right: unknown, complete: boolean): [unknown, unknown, boolean] | null {
-    // Handle null/undefined
-    if (left === null || left === undefined) {
-      return right === null || right === undefined ? [left, right, complete] : null;
-    }
-    if (right === null || right === undefined) {
-      return null;
-    }
-
-    // Handle Types
-    if (left instanceof Type && right instanceof Type) {
-      return this.eqTypes(left, right, complete);
-    }
-
-    // Handle Variables
-    if (left instanceof Variable && right instanceof Variable) {
-      return this.eqVariables(left, right, complete);
-    }
-    if (left instanceof Variable) {
-      return this.eqVariableValue(left, right, complete);
-    }
-    if (right instanceof Variable) {
-      return this.eqVariableValue(right, left, complete);
-    }
-
-    // Handle Type with value
-    if (left instanceof Type) {
-      return this.eqTypeValue(left, right, complete);
-    }
-    if (right instanceof Type) {
-      return this.eqTypeValue(right, left, complete);
-    }
-
-    // Handle Nodes
-    if (left instanceof Node && right instanceof Node) {
-      return this.eqNodes(left, right, complete);
-    }
-
-    // Handle Lists
-    if (List.isList(left) && List.isList(right)) {
-      return this.eqLists(left as List<unknown>, right as List<unknown>, complete);
-    }
-
-    // Handle primitives
-    if (this.valuesEqual(left, right)) {
-      return [left, right, complete];
-    }
-
-    return null;
-  }
-
-  private eqTypes(left: Type, right: Type, complete: boolean): [Type, Type, boolean] | null {
-    // Check assignability
-    if (left.isAssignableFrom(right)) {
-      return [right, right, complete];
-    }
-    if (right.isAssignableFrom(left)) {
-      return [left, left, complete];
-    }
-    return null;
-  }
-
-  private eqVariables(left: Variable, right: Variable, _complete: boolean): [Variable, Variable, boolean] | null {
-    // Same variable
+  private static eqNode(left: Node, right: Node, complete: boolean[]): Node | null {
     if (left.equals(right)) {
-      return [left, right, true];
-    }
-    // Compatible types
-    const leftType = left.type();
-    const rightType = right.type();
-    if (leftType.isAssignableFrom(rightType)) {
-      return [right, right, false];
-    }
-    if (rightType.isAssignableFrom(leftType)) {
-      return [left, left, false];
-    }
-    return null;
-  }
-
-  private eqVariableValue(variable: Variable, value: unknown, _complete: boolean): [unknown, unknown, boolean] | null {
-    const varType = variable.type();
-    const valType = this.typeOfValue(value);
-    if (valType !== null && varType.isAssignableFrom(valType)) {
-      return [value, value, false];
-    }
-    if (valType !== null && valType.isAssignableFrom(varType)) {
-      return [variable, variable, false];
-    }
-    return null;
-  }
-
-  private eqTypeValue(type: Type, value: unknown, _complete: boolean): [unknown, unknown, boolean] | null {
-    const valType = this.typeOfValue(value);
-    if (valType !== null && type.isAssignableFrom(valType)) {
-      return [value, value, false];
-    }
-    return null;
-  }
-
-  private eqNodes(left: Node, right: Node, complete: boolean): [Node, Node, boolean] | null {
-    // Must have same functor
-    const leftFunctor = left.functor();
-    const rightFunctor = right.functor();
-    if (leftFunctor !== rightFunctor) {
-      if (leftFunctor === null || rightFunctor === null) return null;
-      if (!leftFunctor.equals(rightFunctor)) return null;
-    }
-
-    // Must have same length
-    if (left.length() !== right.length()) {
+      return left;
+    } else if (!(left instanceof Type) && right instanceof Type) {
+      complete[0] = false;
+      return (right as Type).isAssignableFrom(left.type()) ? left : null;
+    } else if (left instanceof Type && !(right instanceof Type)) {
+      complete[0] = false;
+      return (left as Type).isAssignableFrom(right.type()) ? right : null;
+    } else if (left instanceof Type && right instanceof Type) {
+      complete[0] = false;
+      return left.equals(right) ? left : null;
+    } else if (!left.typeOrFunctor().equals(right.typeOrFunctor())) {
+      return null;
+    } else if (left.length() !== right.length()) {
       return null;
     }
-
-    // Unify each argument
-    let newLeft = left;
-    let newRight = right;
-    let newComplete = complete;
-
+    let array: unknown[] | null = null;
     for (let i = 0; i < left.length(); i++) {
-      const result = this.eqInternal(left.get(i), right.get(i), newComplete);
-      if (result === null) {
+      const leftVal = left.get(i);
+      const eq = Equal.eqValue(leftVal, right.get(i), complete);
+      if (eq === null) {
+        return null;
+      } else if (!Equal.objEquals(eq, leftVal)) {
+        if (array === null) {
+          array = [...(left as any)._data];
+        }
+        array[i + 2] = eq; // 2 = Node.START offset
+      }
+    }
+    return array !== null ? (left as any).struct(array) : left;
+  }
+
+  /**
+   * Unify two values (may be Nodes, Types, or primitives).
+   * @JAVA_REF org.modelingvalue.nelumbo.logic.Equal#eq(Object, Object, boolean[])
+   */
+  private static eqValue(left: unknown, right: unknown, complete: boolean[]): unknown | null {
+    if (left !== right) {
+      if (left instanceof Node && right instanceof Node) {
+        return Equal.eqNode(left, right, complete);
+      } else if (right instanceof Type) {
+        complete[0] = false;
+        return Equal.isAssignableFromValue(right, left) ? left : null;
+      } else if (left instanceof Type) {
+        complete[0] = false;
+        return Equal.isAssignableFromValue(left, right) ? right : null;
+      } else if (!Equal.objEquals(left, right)) {
         return null;
       }
-      if (result[0] !== left.get(i)) {
-        newLeft = newLeft.set(i, result[0]);
-      }
-      if (result[1] !== right.get(i)) {
-        newRight = newRight.set(i, result[1]);
-      }
-      newComplete = result[2];
     }
-
-    return [newLeft, newRight, newComplete];
+    return left;
   }
 
-  private eqLists(left: List<unknown>, right: List<unknown>, complete: boolean): [List<unknown>, List<unknown>, boolean] | null {
-    if (left.size !== right.size) {
-      return null;
+  /**
+   * Check if a Type is assignable from a raw value's "class".
+   * @JAVA_REF Java: ((Type) right).isAssignableFrom(left.getClass())
+   */
+  private static isAssignableFromValue(type: Type, value: unknown): boolean {
+    if (value instanceof Node) {
+      return type.isAssignableFrom(value.type());
     }
-
-    let newLeft = left;
-    let newRight = right;
-    let newComplete = complete;
-
-    for (let i = 0; i < left.size; i++) {
-      const result = this.eqInternal(left.get(i), right.get(i), newComplete);
-      if (result === null) {
-        return null;
-      }
-      if (result[0] !== left.get(i)) {
-        newLeft = newLeft.set(i, result[0]);
-      }
-      if (result[1] !== right.get(i)) {
-        newRight = newRight.set(i, result[1]);
-      }
-      newComplete = result[2];
+    if (typeof value === 'bigint') {
+      return type.isAssignableFrom(Type.INTEGER);
     }
-
-    return [newLeft, newRight, newComplete];
-  }
-
-  private typeOfValue(value: unknown): Type | null {
-    if (value instanceof Type) return value;
-    if (value instanceof Variable) return value.type();
-    if (value instanceof Node) return value.type();
-    if (typeof value === 'string') return Type.STRING;
-    if (typeof value === 'number') {
-      return Number.isInteger(value) ? Type.INTEGER : Type.DECIMAL;
+    if (typeof value === 'string') {
+      return type.isAssignableFrom(Type.STRING);
     }
-    if (typeof value === 'boolean') return Type.BOOLEAN;
-    if (List.isList(value)) return Type.LIST;
-    return Type.OBJECT;
-  }
-
-  private valuesEqual(a: unknown, b: unknown): boolean {
-    if (a === b) return true;
-    if (a instanceof Node && b instanceof Node) return a.equals(b);
-    if (a instanceof Type && b instanceof Type) return a.equals(b);
-    if (a instanceof Variable && b instanceof Variable) return a.equals(b);
-    if (List.isList(a) && List.isList(b)) return (a as List<unknown>).equals(b as List<unknown>);
-    if (Map.isMap(a) && Map.isMap(b)) return (a as Map<unknown, unknown>).equals(b as Map<unknown, unknown>);
+    if (typeof value === 'boolean') {
+      return type.isAssignableFrom(Type.BOOLEAN);
+    }
     return false;
+  }
+
+  /**
+   * Object equality check matching Java's Objects.equals()
+   */
+  private static objEquals(a: unknown, b: unknown): boolean {
+    if (a === b) return true;
+    if (a === null || a === undefined || b === null || b === undefined) return false;
+    if (a instanceof Node && b instanceof Node) return a.equals(b);
+    if (typeof a === 'bigint' && typeof b === 'bigint') return a === b;
+    return a === b;
   }
 }
