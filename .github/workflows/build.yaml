@@ -44,6 +44,12 @@ jobs:
             -   name: "build"
                 run : ./gradlew --info --scan
             
+            -   name: "build-plugins"
+                run : ./gradlew --info --scan :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin
+        
+            -   name: "build-slides"
+                run : ./gradlew --info build-slides
+                
             -   name: "upload-editor-jar"
                 uses: actions/upload-artifact@v6
                 with:
@@ -51,9 +57,6 @@ jobs:
                     path: build/libs/nelumbo*editor.jar
                     if-no-files-found: error
                     retention-days: 30
-                    
-            -   name: "build-slides"
-                run : ./gradlew --info build-slides
 
             -   name: "upload-slides"
                 uses: actions/upload-artifact@v6
@@ -63,9 +66,6 @@ jobs:
                     if-no-files-found: error
                     retention-days: 30
                     
-            -   name: "build-plugins"
-                run : ./gradlew --info :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin
-        
             -   name: "upload-eclipse-plugin"
                 uses: actions/upload-artifact@v6
                 with:
