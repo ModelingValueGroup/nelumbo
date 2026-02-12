@@ -44,17 +44,6 @@ jobs:
             -   name: "build"
                 run : ./gradlew --info --scan
             
-            -   name: "generate-slides"
-                run : ./gradlew --info generate-slides
-        
-            -   name: "upload-slides"
-                uses: actions/upload-artifact@v6
-                with:
-                    name: slides
-                    path: docs/site
-                    if-no-files-found: error
-                    retention-days: 30
-                    
             -   name: "upload-editor-jar"
                 uses: actions/upload-artifact@v6
                 with:
@@ -63,6 +52,20 @@ jobs:
                     if-no-files-found: error
                     retention-days: 30
                     
+            -   name: "build-slides"
+                run : ./gradlew --info build-slides
+
+            -   name: "upload-slides"
+                uses: actions/upload-artifact@v6
+                with:
+                    name: slides
+                    path: docs/site
+                    if-no-files-found: error
+                    retention-days: 30
+                    
+            -   name: "build-plugins"
+                run : ./gradlew --info :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin
+        
             -   name: "upload-eclipse-plugin"
                 uses: actions/upload-artifact@v6
                 with:
