@@ -514,10 +514,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 function = true;
             }
             if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type) //
-                    && !args.allMatch(t -> Type.OBJECT.equals(t.element())) //
-                    && !(constructor != null && args.allMatch(t -> Type.BOOLEAN.isAssignableFrom(t.element()) //
-                            || Type.VARIABLE.isAssignableFrom(t.element()))) //
-                    && args.noneMatch(t -> Type.LITERAL.isAssignableFrom(t.element()))) {
+                    && args.noneMatch(t -> Type.OBJECT.equals(t.element()) // 
+                            || Type.BOOLEAN.isAssignableFrom(t.element()) //
+                            || Type.VARIABLE.isAssignableFrom(t.element()) //
+                            || Type.LITERAL.isAssignableFrom(t.element()))) {
                 toLiteral = true;
             }
         }
@@ -562,19 +562,19 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     @SuppressWarnings("unchecked")
     private NList createRules(Functor functor, List<AstElement> elements, Object[] args) throws ParseException {
-        NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
         Predicate p = (Predicate) args[0];
-        Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e).resetDeclaration();
-        Functor consFunctor = cons.functor();
+        Functor consFunctor = p.functor();
         Functor litFunctor = literalFunctors.get().get(consFunctor);
         if (Type.FACT_TYPE.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
-            addException(new ParseException("Rule consequence " + cons + " must be a Predicate, not a FactType", cons));
+            addException(new ParseException("Rule consequence " + p + " must be a Predicate, not a FactType", p));
         }
+        NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
+        Node l = consFunctor.equals(equalsFunctor) ? (Node) p.get(0) : p;
+        Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e).resetDeclaration();
         Map<Variable, Object> consVars = cons.getBinding();
-        Node node = consFunctor.equals(equalsFunctor) ? (Node) cons.get(0) : cons;
-        Map<Variable, Object> nodeVars = node == cons ? consVars : node.getBinding();
-        Functor nodeFunctor = node.functor();
-        Functor literalFunctor = literalFunctors.get().get(nodeFunctor);
+        Map<Variable, Object> nodeVars = l == cons ? consVars : l.getBinding();
+        Functor nodeFunctor = l.functor();
+        Functor literalFunctor = nodeFunctor != null ? literalFunctors.get().get(nodeFunctor) : null;
         int i = 0;
         for (List<Object> condIf : (List<List<Object>>) args[1]) {
             Predicate cond = (Predicate) condIf.get(0);
