@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -102,28 +103,31 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
     }
 
     public Set<E> match(Object obj) {
-        MatchState<E> state = doMatch(obj);
+        MatchState<E> state = doMatch(obj, MutableMap.of(Map.of()));
         return state != null ? state.elements() : Set.of();
     }
 
-    private MatchState<E> doMatch(Object obj) {
+    private MatchState<E> doMatch(Object obj, MutableMap<Variable, Type> typeArgs) {
         MatchState<E> state;
         switch (obj) {
-        case Type type -> state = matchType(type);
-        case Variable var -> state = matchType(var.type());
+        case Type type -> state = matchType(type, typeArgs);
+        case Variable var -> state = matchType(var.type(), typeArgs);
         case Node node -> {
             Functor functor = node.functor();
             state = functor != null ? transitions().get(functor) : null;
+            if (state == null && functor != null) {
+                state = transitions().get(functor.declaration());
+            }
             if (state != null) {
                 for (Object arg : node.args()) {
-                    state = state.doMatch(arg);
+                    state = state.doMatch(arg, typeArgs);
                     if (state == null) {
                         break;
                     }
                 }
             }
             if (state == null) {
-                state = matchType(node.type());
+                state = matchType(node.type(), typeArgs);
             }
         }
         case String text -> state = transitions().get(TokenType.of(text));
@@ -132,12 +136,29 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
         return state;
     }
 
-    private MatchState<E> matchType(Type type) {
+    private MatchState<E> matchType(Type type, MutableMap<Variable, Type> typeArgs) {
         MatchState<E> state;
         for (Type sup : type.allSupers()) {
             state = transitions().get(sup);
             if (state != null) {
                 return state;
+            }
+        }
+        Entry<Object, MatchState<E>> ts = transitions().findAny(e -> e.getKey() instanceof Type t && t.variable() != null).orElse(null);
+        if (ts != null) {
+            Variable var = ((Type) ts.getKey()).variable();
+            Type sup = typeArgs.get(var);
+            if (sup != null) {
+                if (sup.isAssignableFrom(type)) {
+                    return ts.getValue();
+                }
+                if (type.isAssignableFrom(sup)) {
+                    typeArgs.put(var, type);
+                    return ts.getValue();
+                }
+            } else {
+                typeArgs.put(var, type);
+                return ts.getValue();
             }
         }
         state = transitions().get(Type.TYPE);

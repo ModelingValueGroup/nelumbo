@@ -92,4 +92,9 @@ public class NelumboTest extends NelumboTestBase {
         testResource("transformationTest.nl");
     }
 
+    @RepeatedTest(10)
+    public void maxTest() {
+        testResource("maxTest.nl");
+    }
+
 }

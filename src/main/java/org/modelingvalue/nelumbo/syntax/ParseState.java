@@ -444,7 +444,8 @@ public class ParseState implements Mergeable<ParseState> {
                 }
             }
             result.add(node);
-            for (Type sup : node.type().allSupers()) {
+            Type type = node.type();
+            for (Type sup : type.allSupers()) {
                 ParseState next = nodeTypes().get(sup);
                 if (next != null) {
                     return next.tokenState(node.nextToken());
@@ -453,18 +454,22 @@ public class ParseState implements Mergeable<ParseState> {
             Entry<Type, ParseState> ts = nodeTypes().findAny(e -> e.getKey().variable() != null).orElse(null);
             if (ts != null) {
                 var = ts.getKey().variable();
-                Type type = result.getTypeArg(var);
-                if (type != null) {
-                    if (type.isAssignableFrom(node.type())) {
+                Type sup = result.getTypeArg(var);
+                if (sup != null) {
+                    if (sup.isAssignableFrom(type)) {
+                        return ts.getValue().tokenState(node.nextToken());
+                    }
+                    if (sup.isAssignableFrom(type)) {
+                        result.putTypeArg(var, type);
                         return ts.getValue().tokenState(node.nextToken());
                     }
                 } else {
-                    result.putTypeArg(var, node.type());
+                    result.putTypeArg(var, type);
                     return ts.getValue().tokenState(node.nextToken());
                 }
             }
             result.removeLast();
-            result.addException(new ParseException("Node " + node + " of unexpected type " + node.type() + ", expected " + expectedTypes(), node));
+            result.addException(new ParseException("Node " + node + " of unexpected type " + type + ", expected " + expectedTypes(), node));
         }
         return null;
     }
