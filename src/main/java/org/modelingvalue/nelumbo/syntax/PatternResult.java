@@ -197,4 +197,8 @@ public final class PatternResult implements ParseExceptionHandler {
         return typeArgs.get(arg);
     }
 
+    public boolean isEmpty() {
+        return hasLeft ? elements().size() < 2 : elements.isEmpty();
+    }
+
 }
