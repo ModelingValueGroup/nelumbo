@@ -254,7 +254,7 @@ public class ParseState implements Mergeable<ParseState> {
                     if (next != null) {
                         nexts = nexts.add(next);
                         Token t = next.token;
-                        nexts = nexts.addAll(next.state().nodeStates(parser).replaceAll(s -> new TokenState(t, s)));
+                        nexts = nexts.addAll(next.state().nodeStates(ctx).replaceAll(s -> new TokenState(t, s)));
                     }
                 }
                 dirStates = nexts.isEmpty() ? dirStates.removeKey(e.getKey()) : dirStates.put(e.getKey(), nexts);
@@ -267,7 +267,7 @@ public class ParseState implements Mergeable<ParseState> {
         Map<Direction, Set<TokenState>> dirStates = Map.of();
         Set<TokenState> states = Set.of(tokenState(token));
         dirStates = dirStates.put(Direction.token, states);
-        states = nodeStates(parser).replaceAll(s -> new TokenState(token, s));
+        states = nodeStates(ctx).replaceAll(s -> new TokenState(token, s));
         if (!states.isEmpty()) {
             dirStates = dirStates.put(Direction.node, states);
         }
@@ -284,14 +284,14 @@ public class ParseState implements Mergeable<ParseState> {
 
     private Set<ParseState> states(Parser parser, Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx) {
         Set<ParseState> states = Set.of(this);
-        states = states.addAll(nodeStates(parser));
+        states = states.addAll(nodeStates(ctx));
         states = states.addAll(repetitionStates(outerRepetitions));
         states = states.addAll(outerStates(ctx));
         return states;
     }
 
-    private Set<ParseState> nodeStates(Parser parser) {
-        return !nodeTypes().isEmpty() ? Set.of(parser.groupState(group())) : Set.of();
+    private Set<ParseState> nodeStates(ParseContext ctx) {
+        return !nodeTypes().isEmpty() ? Set.of(ctx.groupState(group())) : Set.of();
     }
 
     private Set<ParseState> repetitionStates(Map<RepetitionPattern, ParseState> repetitions) {
@@ -400,7 +400,7 @@ public class ParseState implements Mergeable<ParseState> {
             return next.tokenState(token);
         }
         if (type == TokenType.NAME) {
-            Variable var = parser.variable(token, ctx);
+            Variable var = ctx.variable(token, parser);
             if (var != null) {
                 TokenType tt = var.type().tokenType();
                 next = tt != null ? tokenTypes().get(tt) : null;

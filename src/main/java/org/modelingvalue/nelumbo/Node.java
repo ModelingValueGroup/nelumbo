@@ -28,6 +28,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
@@ -576,9 +577,9 @@ public class Node extends StructImpl implements AstElement {
         return new MatchState<>(functor, state);
     }
 
-    public Node init(KnowledgeBase knowledgeBase) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         for (Transform transform : knowledgeBase.getTransforms(this)) {
-            transform.rewrite(transform.source(), this, knowledgeBase);
+            transform.rewrite(transform.source(), this, knowledgeBase, ctx);
         }
         return this;
     }

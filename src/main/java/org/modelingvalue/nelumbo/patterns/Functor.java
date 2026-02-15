@@ -28,13 +28,7 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.logic.Predicate;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
-import org.modelingvalue.nelumbo.syntax.ParseState;
-import org.modelingvalue.nelumbo.syntax.PatternMergeException;
-import org.modelingvalue.nelumbo.syntax.ThrowingTriFunction;
-import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
+import org.modelingvalue.nelumbo.syntax.*;
 
 public class Functor extends Node {
     @Serial
@@ -44,11 +38,11 @@ public class Functor extends Node {
         return new Functor(elements, pattern, result, local, constructor, leftPrecedence);
     }
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function, Integer leftPrecedence) {
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function, Integer leftPrecedence) {
         return new Functor(elements, pattern, result, local, function, leftPrecedence);
     }
 
-    public static Functor of(Pattern pattern, Type result, boolean local, ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function, Integer leftPrecedence) {
+    public static Functor of(Pattern pattern, Type result, boolean local, ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function, Integer leftPrecedence) {
         return new Functor(List.of(), pattern, result, local, function, leftPrecedence);
     }
 
@@ -104,9 +98,9 @@ public class Functor extends Node {
     }
 
     @SuppressWarnings("unchecked")
-    public ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function() {
+    public ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function() {
         Object val = get(3);
-        return val instanceof ThrowingTriFunction ? (ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node>) val : null;
+        return val instanceof ThrowingQuadFunction ? (ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node>) val : null;
     }
 
     public Integer leftPrecedence() {
@@ -138,7 +132,7 @@ public class Functor extends Node {
         return resultType() + "::=" + pattern();
     }
 
-    public Node construct(List<AstElement> elements, Object[] args, ParseExceptionHandler handler) throws ParseException {
+    public Node construct(List<AstElement> elements, Object[] args, ParseExceptionHandler handler, ParseContext ctx) throws ParseException {
         Constructor<? extends Node> constructor = constructor();
         if (constructor != null) {
             try {
@@ -147,10 +141,10 @@ public class Functor extends Node {
                 handleException(elements, handler, e);
             }
         }
-        ThrowingTriFunction<List<AstElement>, Object[], Functor, ? extends Node> function = function();
+        ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function = function();
         if (function != null) {
             try {
-                return function.apply(elements, args, this);
+                return function.apply(elements, args, this, ctx);
             } catch (Exception e) {
                 handleException(elements, handler, e);
             }
@@ -234,8 +228,8 @@ public class Functor extends Node {
     }
 
     @Override
-    public Functor init(KnowledgeBase knowledgeBase) throws ParseException {
-        return knowledgeBase.register(this);
+    public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+        return ctx.register(this);
     }
 
     public Functor mostSpecific(Functor other) {

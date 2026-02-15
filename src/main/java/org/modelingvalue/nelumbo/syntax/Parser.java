@@ -21,10 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public final class Parser implements ParseExceptionHandler {
@@ -93,7 +94,7 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, knowledgeBase.preStates(), null);
+            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, MutableMap.of(Map.of()), null, knowledgeBase.parseContext());
             Node node = parseNode(token, ctx);
             if (node != null) {
                 result.setRoot(node);
@@ -114,7 +115,7 @@ public final class Parser implements ParseExceptionHandler {
     }
 
     public Node parseNode(Token token, ParseContext ctx) throws ParseException {
-        PatternResult result = preParse(token, ctx, null);
+        PatternResult result = ctx.preParse(token, null, this);
         if (result == null) {
             return null;
         }
@@ -122,7 +123,7 @@ public final class Parser implements ParseExceptionHandler {
         if (left != null && ctx.precedence() < Integer.MAX_VALUE) {
             token = left.nextToken();
             if (token != null) {
-                result = preParse(token, ctx, left);
+                result = ctx.preParse(token, left, this);
                 while (result != null) {
                     if (ctx.precedence() >= result.leftPrecedence()) {
                         return left;
@@ -135,23 +136,11 @@ public final class Parser implements ParseExceptionHandler {
                     if (token == null) {
                         return left;
                     }
-                    result = preParse(token, ctx, left);
+                    result = ctx.preParse(token, left, this);
                 }
             }
         }
         return left;
-    }
-
-    public ParseState groupState(String group) {
-        return knowledgeBase.groupState(group);
-    }
-
-    public Variable variable(Token token, ParseContext ctx) throws ParseException {
-        return knowledgeBase.variable(token, ctx.group(), this);
-    }
-
-    public PatternResult preParse(Token token, ParseContext ctx, Node left) throws ParseException {
-        return knowledgeBase.preParse(token, ctx, left, this);
     }
 
     public KnowledgeBase knowledgeBase() {

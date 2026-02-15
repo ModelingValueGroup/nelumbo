@@ -25,6 +25,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -108,7 +109,7 @@ public class Predicate extends Node {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal().rename(rename.apply(e.getKey().name()))));
     }
 
-    public Predicate setVariables(Map<Variable, Object> vars) throws ParseException {
+    public Predicate setVariables(Map<Variable, Object> vars, ParseContext ctx) throws ParseException {
         Predicate predicate = setBinding(vars);
         if (predicate == this) {
             return this;
@@ -121,7 +122,7 @@ public class Predicate extends Node {
                 if (lit != null) {
                     List<Object> args = n.args();
                     if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
-                        return lit.construct(n.astElements(), args.toArray(), kb);
+                        return lit.construct(n.astElements(), args.toArray(), kb, ctx);
                     }
                 }
             }

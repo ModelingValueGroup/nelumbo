@@ -26,6 +26,7 @@ import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 public final class Transform extends Node {
@@ -82,12 +83,12 @@ public final class Transform extends Node {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         knowledgeBase.addTransform(this);
         return this;
     }
 
-    public void rewrite(Node start, Node node, KnowledgeBase knowledgeBase) throws ParseException {
+    public void rewrite(Node start, Node node, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         Map<Variable, Object> binding = node.getBinding(start);
         if (binding == null) {
             return;
@@ -103,7 +104,7 @@ public final class Transform extends Node {
                     }
                 }
                 functors = functors.put(functor, rewrite);
-                rewrite.init(knowledgeBase);
+                rewrite.init(knowledgeBase, ctx);
             }
         }
         if (start instanceof Pattern) {
@@ -121,7 +122,7 @@ public final class Transform extends Node {
                     }
                     return n;
                 }).setBinding(binding).setAstElements(node.astElements()).resetDeclaration();
-                rewrite.init(knowledgeBase);
+                rewrite.init(knowledgeBase, ctx);
             }
         }
     }

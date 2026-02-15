@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 public final class Import extends Node {
@@ -48,7 +49,7 @@ public final class Import extends Node {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         knowledgeBase.doImport(name(), this);
         return this;
     }

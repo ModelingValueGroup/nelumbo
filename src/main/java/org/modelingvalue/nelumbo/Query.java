@@ -25,6 +25,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 
@@ -34,14 +35,14 @@ public final class Query extends Node implements Evaluatable {
 
     private InferResult       inferResult;
 
-    public Query(Functor functor, List<AstElement> elements, Object... args) throws ParseException {
-        super(functor, elements, args(args));
+    public Query(Functor functor, List<AstElement> elements, ParseContext ctx, Object... args) throws ParseException {
+        super(functor, elements, args(args, ctx));
     }
 
     @SuppressWarnings("unchecked")
-    private static Object[] args(Object[] args) throws ParseException {
+    private static Object[] args(Object[] args, ParseContext ctx) throws ParseException {
         Predicate nodePred = (Predicate) args[0];
-        Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()));
+        Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
         Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
         if (expected.isEmpty()) {
             return new Object[]{predicate};
