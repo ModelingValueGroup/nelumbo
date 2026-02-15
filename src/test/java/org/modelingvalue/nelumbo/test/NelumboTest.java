@@ -97,4 +97,9 @@ public class NelumboTest extends NelumboTestBase {
         testResource("maxTest.nl");
     }
 
+    @RepeatedTest(10)
+    public void fibSumTest() {
+        testResource("fibSumTest.nl");
+    }
+
 }
