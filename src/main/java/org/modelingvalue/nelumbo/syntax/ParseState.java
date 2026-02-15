@@ -22,6 +22,7 @@ import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -433,7 +434,7 @@ public class ParseState implements Mergeable<ParseState> {
         if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
             token = result.addMerge(token, nextToken.prepend("-"));
         }
-        ParseContext ctx = ParseContext.of(this, token, result.context());
+        ParseContext ctx = ParseContext.of(this, token, MutableMap.of(Map.of()), result.context());
         Node node = result.parser().parseNode(token, ctx);
         if (node != null) {
             Variable var = node.variable();

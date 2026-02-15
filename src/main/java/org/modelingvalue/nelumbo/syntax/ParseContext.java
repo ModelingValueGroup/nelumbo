@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.collections.mutable.MutableMap;
+
 public interface ParseContext {
 
     ParseState state();
@@ -28,7 +30,9 @@ public interface ParseContext {
 
     ParseContext outer();
 
-    static ParseContext of(ParseState state, Token token, ParseContext outer) {
+    MutableMap<String, ParseState> preStates();
+
+    static ParseContext of(ParseState state, Token token, MutableMap<String, ParseState> preStates, ParseContext outer) {
         return new ParseContext() {
 
             @Override
@@ -53,19 +57,24 @@ public interface ParseContext {
             }
 
             @Override
+            public MutableMap<String, ParseState> preStates() {
+                return preStates;
+            }
+
+            @Override
             public ParseContext outer() {
                 return outer;
             }
 
             @Override
             public String toString() {
-                return "(" + state() + " " + precedence() + " " + group() + " " + outer() + ")";
+                return "(" + state() + " " + precedence() + " " + group() + " " + preStates() + " " + outer() + ")";
             }
 
         };
     }
 
-    static ParseContext of(String group, int precedence) {
+    static ParseContext of(String group, int precedence, MutableMap<String, ParseState> preStates, ParseContext outer) {
         return new ParseContext() {
 
             @Override
@@ -89,13 +98,18 @@ public interface ParseContext {
             }
 
             @Override
+            public MutableMap<String, ParseState> preStates() {
+                return preStates;
+            }
+
+            @Override
             public ParseContext outer() {
-                return null;
+                return outer;
             }
 
             @Override
             public String toString() {
-                return "(" + precedence + " " + group + ")";
+                return "(" + precedence() + " " + group() + " " + preStates() + " " + outer() + ")";
             }
 
         };

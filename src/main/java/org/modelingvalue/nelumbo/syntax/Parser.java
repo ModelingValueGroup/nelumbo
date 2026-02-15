@@ -101,7 +101,7 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE);
+            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, knowledgeBase.preStates(), null);
             Node node = parseNode(token, ctx);
             if (node != null) {
                 result.setRoot(node);

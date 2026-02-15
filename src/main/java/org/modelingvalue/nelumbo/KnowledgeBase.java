@@ -1011,6 +1011,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return context;
     }
 
+    public MutableMap<String, ParseState> preStates() {
+        return prePatterns;
+    }
+
     @SuppressWarnings("unused")
     public Set<String> imported() {
         return imported.get();
