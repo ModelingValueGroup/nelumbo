@@ -118,7 +118,7 @@ public final class Parser implements ParseExceptionHandler {
         if (result == null) {
             return null;
         }
-        Node left = result.postParse(ctx);
+        Node left = result.postParse();
         if (left != null && ctx.precedence() < Integer.MAX_VALUE) {
             token = left.nextToken();
             if (token != null) {
@@ -127,7 +127,7 @@ public final class Parser implements ParseExceptionHandler {
                     if (ctx.precedence() >= result.leftPrecedence()) {
                         return left;
                     }
-                    left = result.postParse(ctx);
+                    left = result.postParse();
                     if (left == null) {
                         break;
                     }

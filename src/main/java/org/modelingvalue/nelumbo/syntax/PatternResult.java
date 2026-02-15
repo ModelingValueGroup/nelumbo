@@ -140,7 +140,7 @@ public final class PatternResult implements ParseExceptionHandler {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Node postParse(ParseContext ctx) throws ParseException {
+    public Node postParse() throws ParseException {
         ParseState next = state;
         if (next != null) {
             state = null;
