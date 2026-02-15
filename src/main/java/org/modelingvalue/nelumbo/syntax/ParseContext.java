@@ -16,12 +16,10 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
-import java.lang.reflect.Constructor;
-import java.util.function.Consumer;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableMap;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
@@ -136,44 +134,25 @@ public interface ParseContext {
         };
     }
 
-    default Functor register(Functor functor) throws ParseException {
+    default Functor register(KnowledgeBase knowledgeBase, Functor functor) throws ParseException {
         Type type = functor.resultType();
         String group = Type.VARIABLE.isAssignableFrom(type) ? //
-                functor.construct(List.of(), new Object[0], this).type().group() : //
+                functor.construct(List.of(), new Object[0], knowledgeBase, this).type().group() : //
                 type.group();
         boolean local = functor.local();
         try {
             ParseState pre = functor.preStart();
             ParseState post = functor.postStart();
-            if (!local) {
-                if (pre != null) {
-                    prePatterns.set(p -> p.put(group, pre.merge(p.get(group))));
-                }
-                if (post != null) {
-                    postPatterns.set(p -> p.put(group, post.merge(p.get(group))));
-                }
-            }
             if (pre != null) {
-                localPrePatterns.set(p -> p.put(group, pre.merge(p.get(group))));
+                preStates().set(p -> p.put(group, pre.merge(p.get(group))));
             }
             if (post != null) {
-                localPostPatterns.set(p -> p.put(group, post.merge(p.get(group))));
+                postStates().set(p -> p.put(group, post.merge(p.get(group))));
             }
         } catch (PatternMergeException pme) {
-            addException(new ParseException(pme.getMessage(), functor));
+            knowledgeBase.addException(new ParseException(pme.getMessage(), functor));
         }
-        Constructor<? extends Node> constructor = functor.constructor();
-        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
-            Class<? extends Node> cls = constructor.getDeclaringClass();
-            Consumer<Functor> setter = FUNCTOR_REGISTRATION.get().get(cls);
-            if (setter != null) {
-                setter.accept(functor);
-                FUNCTOR_REGISTRATION.updateAndGet(map -> map.remove(cls));
-            }
-        }
-        if (!local) {
-            functors.accumulateAndGet(Set.of(functor), Set::addAll);
-        }
+        knowledgeBase.register(functor);
         return functor;
     }
 
@@ -192,10 +171,9 @@ public interface ParseContext {
 
     default PatternResult preParse(Token token, Node left, Parser parser) throws ParseException {
         ParseState state = (left != null ? postStates() : preStates()).get().get(this.group());
-        return state != null ? preParse(token, left, parser, state) : null;
-    }
-
-    default PatternResult preParse(Token token, Node left, Parser parser, ParseState state) throws ParseException {
+        if (state == null) {
+            return null;
+        }
         if (left != null) {
             for (Type sup : left.type().allSupers()) {
                 ParseState found = state.nodeTypes().get(sup);

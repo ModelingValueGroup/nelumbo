@@ -229,7 +229,7 @@ public class Functor extends Node {
 
     @Override
     public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
-        return ctx.register(this);
+        return ctx.register(knowledgeBase, this);
     }
 
     public Functor mostSpecific(Functor other) {

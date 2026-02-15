@@ -949,6 +949,21 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return IMPORT_MAP.get();
     }
 
+    public void register(Functor functor) {
+        Constructor<? extends Node> constructor = functor.constructor();
+        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
+            Class<? extends Node> cls = constructor.getDeclaringClass();
+            Consumer<Functor> setter = FUNCTOR_REGISTRATION.get().get(cls);
+            if (setter != null) {
+                setter.accept(functor);
+                FUNCTOR_REGISTRATION.updateAndGet(map -> map.remove(cls));
+            }
+        }
+        if (!functor.local()) {
+            functors.accumulateAndGet(Set.of(functor), Set::addAll);
+        }
+    }
+
     public static KnowledgeBase knowledgeBase(String name, Import imp) throws ParseException {
         // Check cache first
         KnowledgeBase kb = IMPORT_MAP.get().get(name);
