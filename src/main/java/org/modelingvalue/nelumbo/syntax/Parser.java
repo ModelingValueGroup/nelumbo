@@ -72,31 +72,23 @@ public final class Parser implements ParseExceptionHandler {
 
     public ParserResult parseNonThrowing() {
         try {
-            return parse(new ParserResult(tokenizerResult, false), false);
+            return parse(new ParserResult(tokenizerResult, false));
         } catch (ParseException e) {
             throw new IllegalStateException(e);
         }
     }
 
     public ParserResult parseThrowing() throws ParseException {
-        return parse(new ParserResult(tokenizerResult, true), false);
+        return parse(new ParserResult(tokenizerResult, true));
     }
 
     public ParserResult parseEvaluate() throws ParseException {
-        ParserResult parserResult = parse(new ParserResult(tokenizerResult, true), false);
+        ParserResult parserResult = parse(new ParserResult(tokenizerResult, true));
         parserResult.evaluate();
         return parserResult;
     }
 
-    public ParserResult parseMutipleNonThrowing() {
-        try {
-            return parse(new ParserResult(tokenizerResult, false), true);
-        } catch (ParseException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private ParserResult parse(ParserResult result, boolean mutiple) throws ParseException {
+    private ParserResult parse(ParserResult result) throws ParseException {
         this.result = result;
         knowledgeBase.setExceptionHandler(this);
         try {
@@ -115,7 +107,7 @@ public final class Parser implements ParseExceptionHandler {
             result.checkAssertions();
             return result;
         } finally {
-            knowledgeBase.endParsing(mutiple);
+            knowledgeBase.endParsing();
             this.result = null;
             tokenizerResult.checkAssertions();
         }

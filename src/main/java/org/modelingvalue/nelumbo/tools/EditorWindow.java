@@ -1085,7 +1085,7 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         String text = getDocumentText(textPane);
         Tokenizer tokenizer = new Tokenizer(text, getEditorFileName());
         TokenizerResult tokenizerResult = tokenizer.tokenize();
-        ParserResult result = new Parser(tokenizerResult).parseMutipleNonThrowing();
+        ParserResult result = new Parser(tokenizerResult).parseNonThrowing();
         showColors(textPane, tokenizerResult);
         showResults(result);
 

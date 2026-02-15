@@ -696,7 +696,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         transformSignatures.set(init != null ? init.transformSignatures.get() : MatchState.EMPTY);
         imported.set(init != null ? init.imported.get() : Set.of());
         resetMemoization();
-        endParsing(false);
     }
 
     public void merge(KnowledgeBase kb, AstElement element) throws ParseException {
@@ -747,12 +746,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return exceptionHandler.exceptions();
     }
 
-    public void endParsing(boolean mutiple) {
-        this.exceptionHandler = null;
-        if (!mutiple) {
-            localPrePatterns.set(m -> prePatterns.get());
-            localPostPatterns.set(m -> postPatterns.get());
-        }
+    public void endParsing() {
+        exceptionHandler = null;
+        localPrePatterns.set(m -> prePatterns.get());
+        localPostPatterns.set(m -> postPatterns.get());
     }
 
     public InferResult getMemoiz(Predicate predicate) {
