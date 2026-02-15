@@ -32,6 +32,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.QualifiedSet;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
@@ -651,11 +652,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final AtomicReference<Set<Transform>>                           transforms          = new AtomicReference<>();
     private final AtomicReference<Map<Type, Set<Pair<Functor, Transform>>>> literalTransforms   = new AtomicReference<>();
     //
-    private final AtomicReference<Map<String, ParseState>>                  prePatterns         = new AtomicReference<>();
-    private final AtomicReference<Map<String, ParseState>>                  postPatterns        = new AtomicReference<>();
+    private final MutableMap<String, ParseState>                            prePatterns         = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, ParseState>                            postPatterns        = MutableMap.concurrent(Map.of());
     //
-    private final AtomicReference<Map<String, ParseState>>                  localPrePatterns    = new AtomicReference<>();
-    private final AtomicReference<Map<String, ParseState>>                  localPostPatterns   = new AtomicReference<>();
+    private final MutableMap<String, ParseState>                            localPrePatterns    = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, ParseState>                            localPostPatterns   = MutableMap.concurrent(Map.of());
     //
     private final AtomicReference<Map<Functor, Functor>>                    literalFunctors     = new AtomicReference<>();
     //
@@ -684,10 +685,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         rules.set(init != null ? init.rules.get() : Set.of());
         transforms.set(init != null ? init.transforms.get() : Set.of());
         literalTransforms.set(init != null ? init.literalTransforms.get() : Map.of());
-        prePatterns.set(init != null ? init.prePatterns.get() : Map.of());
-        postPatterns.set(init != null ? init.postPatterns.get() : Map.of());
-        localPrePatterns.set(prePatterns.get());
-        localPostPatterns.set(postPatterns.get());
+        if (init != null) {
+            prePatterns.set(m -> init.prePatterns.get());
+            postPatterns.set(m -> init.postPatterns.get());
+            localPrePatterns.set(m -> init.prePatterns.get());
+            localPostPatterns.set(m -> init.postPatterns.get());
+        }
         literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
         ruleSignatures.set(init != null ? init.ruleSignatures.get() : MatchState.EMPTY);
         transformSignatures.set(init != null ? init.transformSignatures.get() : MatchState.EMPTY);
@@ -703,10 +706,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             rules.updateAndGet(s -> s.addAll(kb.rules.get()));
             transforms.updateAndGet(s -> s.addAll(kb.transforms.get()));
             literalTransforms.updateAndGet(s -> s.addAll(kb.literalTransforms.get()));
-            prePatterns.updateAndGet(s -> s.addAll(kb.prePatterns.get()));
-            postPatterns.updateAndGet(s -> s.addAll(kb.postPatterns.get()));
-            localPrePatterns.updateAndGet(s -> s.addAll(kb.prePatterns.get()));
-            localPostPatterns.updateAndGet(s -> s.addAll(kb.postPatterns.get()));
+            prePatterns.set(s -> s.addAll(kb.prePatterns.get()));
+            postPatterns.set(s -> s.addAll(kb.postPatterns.get()));
+            localPrePatterns.set(s -> s.addAll(kb.prePatterns.get()));
+            localPostPatterns.set(s -> s.addAll(kb.postPatterns.get()));
             literalFunctors.updateAndGet(s -> s.addAll(kb.literalFunctors.get()));
             ruleSignatures.updateAndGet(s -> kb.ruleSignatures.get().merge(s));
             transformSignatures.updateAndGet(s -> kb.transformSignatures.get().merge(s));
@@ -747,8 +750,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     public void endParsing(boolean mutiple) {
         this.exceptionHandler = null;
         if (!mutiple) {
-            localPrePatterns.set(prePatterns.get());
-            localPostPatterns.set(postPatterns.get());
+            localPrePatterns.set(m -> prePatterns.get());
+            localPostPatterns.set(m -> postPatterns.get());
         }
     }
 
@@ -908,17 +911,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             ParseState post = functor.postStart();
             if (!local) {
                 if (pre != null) {
-                    prePatterns.updateAndGet(p -> p.put(group, pre.merge(p.get(group))));
+                    prePatterns.set(p -> p.put(group, pre.merge(p.get(group))));
                 }
                 if (post != null) {
-                    postPatterns.updateAndGet(p -> p.put(group, post.merge(p.get(group))));
+                    postPatterns.set(p -> p.put(group, post.merge(p.get(group))));
                 }
             }
             if (pre != null) {
-                localPrePatterns.updateAndGet(p -> p.put(group, pre.merge(p.get(group))));
+                localPrePatterns.set(p -> p.put(group, pre.merge(p.get(group))));
             }
             if (post != null) {
-                localPostPatterns.updateAndGet(p -> p.put(group, post.merge(p.get(group))));
+                localPostPatterns.set(p -> p.put(group, post.merge(p.get(group))));
             }
         } catch (PatternMergeException pme) {
             addException(new ParseException(pme.getMessage(), functor));
