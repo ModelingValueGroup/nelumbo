@@ -38,7 +38,7 @@ public abstract class Pattern extends Node {
         return a(List.of(), options);
     }
 
-    public static Pattern n(Type nodeType, Integer precedence) {
+    public static Pattern n(Type nodeType, int precedence) {
         return n(List.of(), nodeType, precedence);
     }
 

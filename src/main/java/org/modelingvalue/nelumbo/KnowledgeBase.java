@@ -64,15 +64,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final int                                                            INITIAL_USAGE_COUNT  = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
     //
-    private static final Pattern                                                        ROOTS                = r(s(a(n(Type.ROOT.list(), null), n(Type.ROOT, null)), t(NEWLINE)), false, null);
+    private static final Pattern                                                        ROOTS                = r(s(a(n(Type.ROOT.list(), Integer.MIN_VALUE), n(Type.ROOT, Integer.MIN_VALUE)), t(NEWLINE)), false, null);
     private static final List<TokenType>                                                TOKEN_TYPES          = List.of(NAME, OPERATOR, STRING, SEMICOLON, SINGLEQUOTE);
     private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(Pattern::t).asList().add(n(Type.PATTERN, Integer.MAX_VALUE));
     private static final Pattern                                                        ALT_NO_COMMA         = a(PATTERNS_NO_COMMA.toArray(Pattern[]::new));
     private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(COMMA));
     private static final Pattern                                                        ALTERNATIVES         = a(PATTERNS.toArray(Pattern[]::new));
     private static final Pattern                                                        SEQUENCE             = r(ALTERNATIVES, true, null);
-    private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                                  //
-            o(s(t("#"), t(NUMBER))),                                                                                                                                                           //
+    private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                                                            //
+            o(s(t("#"), t(NUMBER))),                                                                                                                                                                                     //
             o(s(t("@"), r(t(NAME), true, t(".")))));
     private static final Pattern                                                        CONDITION            = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
     private static final Pattern                                                        SINGLE               = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
@@ -477,7 +477,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }, null).init(this);
 
-                Functor.of(s(n(Type.ROOT, null), t("::>"), t("{"), ROOTS, t("}")), //
+                Functor.of(s(n(Type.ROOT, 0), t("::>"), t("{"), ROOTS, t("}")), //
                         Type.TRANSFORM, false, (elements, args, functor) -> {
                             Node source = (Node) args[0];
                             List<Node> targets = List.of();

@@ -155,13 +155,13 @@ public class ParseState implements Mergeable<ParseState> {
             innerRepetitions = innerRepetitions.put(start, this);
         }
         do {
-            if (pre && !isIncomplete(result) && !result.isEmpty()) {
+            if (pre && isPreComplete(result)) {
                 result.endPreParse(this, token, leftPrecedence());
                 return true;
             }
             int nrOfExceptions = result.nrOfExceptions();
             Direction direction = direction(token, parser, outerRepetitions, ctx);
-            if (direction == Direction.outer && !isIncomplete(result)) {
+            if (direction == Direction.outer && isPostComplete(result)) {
                 result.endPostParse(functor(), token, leftPrecedence());
                 return true;
             }
@@ -212,20 +212,25 @@ public class ParseState implements Mergeable<ParseState> {
             break;
         } while (true);
         if (result.functor() == null && result.state() == null) {
-            if (isIncomplete(result)) {
+            if (isPostComplete(result)) {
+                result.endPostParse(functor(), token, leftPrecedence());
+            } else {
                 if (!pre) {
                     String expectedTokens = expectedTokens(parser, outerRepetitions, ctx);
                     result.addException(new ParseException("Unexpected token " + token + ", expected " + expectedTokens, token));
                 }
                 return false;
             }
-            result.endPostParse(functor(), token, leftPrecedence());
         }
         return true;
     }
 
-    private boolean isIncomplete(PatternResult result) {
-        return functor() == null || (result.hasLeft() && leftPrecedence() == null);
+    private boolean isPreComplete(PatternResult result) {
+        return !result.isEmpty() && (!result.hasLeft() || leftPrecedence() != null);
+    }
+
+    private boolean isPostComplete(PatternResult result) {
+        return functor() != null && (!result.hasLeft() || leftPrecedence() != null);
     }
 
     private String expectedTokens(Parser parser, Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx) {
