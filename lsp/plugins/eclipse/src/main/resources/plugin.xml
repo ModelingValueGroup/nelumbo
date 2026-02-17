@@ -28,10 +28,9 @@
             languageId="nelumbo">
       </contentTypeMapping>
    </extension>
-   <extension point="org.eclipse.tm4e.registry.grammars">
-      <grammar scopeName="source.nelumbo" path="syntaxes/nelumbo.tmLanguage.json"/>
-      <scopeNameContentTypeBinding
-            contentTypeId="org.modelingvalue.nelumbo.lsp.eclipse.nelumbo"
-            scopeName="source.nelumbo"/>
+   <extension point="org.eclipse.ui.genericeditor.presentationReconcilers">
+      <presentationReconciler
+            class="org.modelingvalue.nelumbo.lsp.eclipse.NelumboReconciler"
+            contentType="org.modelingvalue.nelumbo.lsp.eclipse.nelumbo"/>
    </extension>
 </plugin>

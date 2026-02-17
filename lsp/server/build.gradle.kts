@@ -41,7 +41,6 @@ dependencies {
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     // Include websocket launchers so Main.start(ws) can find a WebSocket launcher at runtime
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
-    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket:1.0.0")
     // Jakarta WebSocket server (Tyrus)
     implementation("org.glassfish.tyrus:tyrus-server:2.2.2")
     implementation("org.glassfish.tyrus:tyrus-container-grizzly-server:2.2.2")

@@ -24,10 +24,8 @@ java {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
+// All compile dependencies come from libs/ (copied from the target Eclipse installation).
+// This ensures compile-time and runtime API versions match, and avoids platform-specific Maven artifacts.
 dependencies {
     compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
@@ -54,7 +52,9 @@ val generateManifest = tasks.register("generateManifest") {
             |Require-Bundle: org.eclipse.ui,
             | org.eclipse.ui.genericeditor,
             | org.eclipse.lsp4e,
-            | org.eclipse.tm4e.registry,
+            | org.eclipse.lsp4j,
+            | org.eclipse.lsp4j.jsonrpc,
+            | org.eclipse.jface.text,
             | org.eclipse.core.contenttype
             |
             """.trimMargin()
@@ -80,10 +80,10 @@ tasks.jar {
         ant.withGroovyBuilder {
             "jar"("destfile" to jarFile, "update" to true, "manifest" to manifestFile)
         }
-        val downloads = File(System.getProperty("user.home"), "Downloads")
-        if (downloads.isDirectory) {
-            jarFile.copyTo(File(downloads, jarFile.name), overwrite = true)
-            logger.lifecycle("Copied ${jarFile.name} to ${downloads}")
+        val dropins = File(System.getProperty("user.home"), "Applications/java-2025-12/Eclipse.app/Contents/Eclipse/dropins")
+        if (dropins.isDirectory) {
+            jarFile.copyTo(File(dropins, jarFile.name), overwrite = true)
+            logger.lifecycle("Copied ${jarFile.name} to ${dropins}")
         }
     }
 }
