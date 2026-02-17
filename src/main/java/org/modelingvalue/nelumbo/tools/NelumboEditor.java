@@ -47,6 +47,7 @@ import java.io.Serial;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Objects;
 import java.util.prefs.Preferences;
 
@@ -116,7 +117,7 @@ public class NelumboEditor {
      * Map from TokenType to ColorScheme defining how each token type should be colored.
      * This is mutable so users can customize colors.
      */
-    private static final Map<TokenType, ColorScheme> TOKEN_COLORS = new HashMap<>(DEFAULT_TOKEN_COLORS);
+    private static final Map<TokenType, ColorScheme> TOKEN_COLORS = new ConcurrentHashMap<>(DEFAULT_TOKEN_COLORS);
 
     private static final String PREF_TOKEN_COLOR_PREFIX = "tokenColor.";
 
@@ -214,23 +215,6 @@ public class NelumboEditor {
     }
 
     /**
-     * Finds the resource path for an example by its display name.
-     * Returns null if no example with that name exists.
-     */
-    public String findExamplePath(String displayName) {
-        for (String[] entry : EXAMPLE_RESOURCES) {
-            if (entry[2].equals(displayName)) {
-                String category = entry[0];
-                String fileName = entry[1];
-                return category.equals("Library")
-                        ? NelumboConstants.NELUMBO_LIBRARY + fileName
-                        : NelumboConstants.NELUMBO_EXAMPLES + fileName;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Resolves an import name to its display name and resource path.
      * Returns a String array [displayName, resourcePath], or null if not found.
      */
@@ -258,7 +242,9 @@ public class NelumboEditor {
     // ==================== Token Colors ====================
 
     public static ColorScheme getTokenColor(TokenType tokenType) {
-        return TOKEN_COLORS.get(tokenType);
+        synchronized (TOKEN_COLORS) {
+            return TOKEN_COLORS.get(tokenType);
+        }
     }
 
     private void loadTokenColors() {
@@ -330,8 +316,10 @@ public class NelumboEditor {
     }
 
     public void resetTokenColors() {
-        TOKEN_COLORS.clear();
-        TOKEN_COLORS.putAll(DEFAULT_TOKEN_COLORS);
+        synchronized (TOKEN_COLORS) {
+            TOKEN_COLORS.clear();
+            TOKEN_COLORS.putAll(DEFAULT_TOKEN_COLORS);
+        }
         saveTokenColors();
     }
 
@@ -554,7 +542,43 @@ public class NelumboEditor {
         return examplesMenu;
     }
 
-    // ==================== Static Utility Classes ====================
+    // ==================== Static Utilities ====================
+
+    /**
+     * Runs the given runnable on the EDT and waits for completion.
+     * Wraps checked exceptions into RuntimeException.
+     */
+    static void runOnEDT(Runnable runnable) {
+        callOnEDT(() -> {
+            runnable.run();
+            return null;
+        });
+    }
+
+    /**
+     * Thrown when an EDT call via {@link #callOnEDT} or {@link #runOnEDT} fails
+     * due to thread interruption or an exception in the invoked code.
+     */
+    public static class EDTException extends RuntimeException {
+        EDTException(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    /**
+     * Runs the given supplier on the EDT and returns its result.
+     * Wraps checked exceptions into RuntimeException.
+     */
+    @SuppressWarnings("unchecked")
+    static <T> T callOnEDT(java.util.function.Supplier<T> supplier) {
+        try {
+            Object[] result = new Object[1];
+            javax.swing.SwingUtilities.invokeAndWait(() -> result[0] = supplier.get());
+            return (T) result[0];
+        } catch (InterruptedException | java.lang.reflect.InvocationTargetException e) {
+            throw new EDTException(e);
+        }
+    }
 
     public static Font findFont() {
         Font font;
