@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.google.gson.JsonObject;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbol;
@@ -76,6 +77,10 @@ public class NlWorkspaceService implements WorkspaceService {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    @Override
+    public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
     }
 
     @Override

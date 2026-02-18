@@ -14,6 +14,8 @@ occur.
 ## Table of Contents
 
 - [Features](#features)
+- [Building](#building)
+- [IDE Plugins](#ide-plugins)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [License](#license)
@@ -30,6 +32,44 @@ occur.
 * Easily extensible
 * Easily integrable
 * Written in Java
+
+## Building
+
+Requires Java 21 or later.
+
+Build everything (core library, LSP server, and all IDE plugins):
+
+```sh
+./gradlew build
+```
+
+Build individual components:
+
+```sh
+./gradlew jar                          # core library
+./gradlew :lsp:server:serverJar        # LSP server (shaded jar)
+./gradlew :lsp:plugins:eclipse:jar     # Eclipse plugin (includes LSP server)
+./gradlew :lsp:plugins:intellij:build  # IntelliJ plugin
+```
+
+Run tests:
+
+```sh
+./gradlew test
+```
+
+## IDE Plugins
+
+Nelumbo has LSP-based editor plugins for multiple IDEs:
+
+| IDE | Path | Details |
+|---|---|---|
+| Eclipse | [`lsp/plugins/eclipse`](lsp/plugins/eclipse) | Dropins-based plugin with semantic highlighting |
+| IntelliJ | [`lsp/plugins/intellij`](lsp/plugins/intellij) | IntelliJ platform plugin |
+| VS Code | [`lsp/plugins/vscode`](lsp/plugins/vscode) | VS Code extension |
+| Neovim | [`lsp/plugins/neovim`](lsp/plugins/neovim) | Neovim LSP configuration |
+
+See the README in each plugin directory for installation instructions.
 
 ## Examples
 

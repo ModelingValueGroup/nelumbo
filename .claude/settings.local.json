@@ -33,7 +33,9 @@
       "Bash(unzip:*)",
       "Bash(jar tf:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(javap:*)"
+      "Bash(javap:*)",
+      "Bash(mvn compile:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

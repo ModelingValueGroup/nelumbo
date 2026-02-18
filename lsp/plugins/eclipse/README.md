@@ -4,23 +4,50 @@ Eclipse IDE plugin for the Nelumbo language, providing syntax highlighting, code
 
 ## Prerequisites
 
-- Eclipse IDE 2023-09 or later (with LSP4e included)
+- Eclipse IDE 2025-12 or later (with LSP4e included)
 - Java 21 or later
 
 LSP4e is included in most Eclipse IDE packages (Java, Enterprise, etc.) since 2023-09. If your Eclipse does not include it, install it from the Eclipse Marketplace: search for "LSP4e".
 
 ## Building
 
-From the project root:
+Build the Eclipse plugin (includes the LSP server):
 
 ```sh
 ./gradlew :lsp:plugins:eclipse:jar
+```
+
+Build all plugins (Eclipse, IntelliJ, VS Code, Neovim):
+
+```sh
+./gradlew jar
 ```
 
 The plugin JAR will be at:
 ```
 lsp/plugins/eclipse/build/libs/eclipse-nelumbo-plugin-<version>.jar
 ```
+
+If the Eclipse dropins directory exists at `~/Applications/java-2025-12/Eclipse.app/Contents/Eclipse/dropins`, the jar is automatically copied there.
+
+Start Eclipse with `-clean` the first time to pick up the new plugin:
+
+```sh
+eclipse -clean
+```
+
+## Compile dependencies
+
+All compile dependencies are in the `libs/` directory, copied from the target Eclipse installation. This ensures compile-time and runtime API versions match. To update them, copy the corresponding jars from `~/.p2/pool/plugins/`:
+
+- `org.eclipse.lsp4e_*.jar`
+- `org.eclipse.lsp4j_*.jar`
+- `org.eclipse.lsp4j.jsonrpc_*.jar`
+- `org.eclipse.jface.text_*.jar`
+- `org.eclipse.text_*.jar`
+- `org.eclipse.swt.*.jar` (any platform variant — only used for compilation)
+- `org.eclipse.equinox.common_*.jar`
+- `org.eclipse.core.resources_*.jar`
 
 ## Installation
 
