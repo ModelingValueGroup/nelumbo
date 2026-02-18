@@ -134,24 +134,24 @@ public interface ParseContext {
         };
     }
 
-    default PatternResult preParse(Token token, Node left, Parser parser) throws ParseException {
-        ParseState state = (left != null ? postStates() : preStates()).get().get(this.group());
+    default boolean preParse(String group, Token token, Node left, PatternResult result) throws ParseException {
+        ParseState state = (left != null ? postStates() : preStates()).get().get(group);
         if (state == null) {
-            return null;
+            return false;
         }
         if (left != null) {
             for (Type sup : left.type().allSupers()) {
                 ParseState found = state.nodeTypes().get(sup);
                 if (found != null) {
-                    PatternResult result = new PatternResult(parser, this);
+                    result.clear();
                     result.left(left);
-                    return found.parse(token, result, Map.of(), true) ? result : null;
+                    return found.parse(token, result, Map.of(), true);
                 }
             }
-            return null;
+            return false;
         }
-        PatternResult result = new PatternResult(parser, this);
-        return state.parse(token, result, Map.of(), true) ? result : null;
+        result.clear();
+        return state.parse(token, result, Map.of(), true);
     }
 
     default Functor register(KnowledgeBase knowledgeBase, String group, Functor functor) throws ParseException {
@@ -175,8 +175,8 @@ public interface ParseContext {
         return preStates().get(group);
     }
 
-    default Variable variable(Token token, Parser parser) throws ParseException {
-        ParseState state = groupState(group());
+    default Variable variable(String group, Token token, Parser parser) throws ParseException {
+        ParseState state = groupState(group);
         ParseState found = state != null ? state.tokenTexts().get(token.text()) : null;
         if (found != null && found.functor() != null && found.functor().resultType() == Type.VARIABLE) {
             return (Variable) found.functor().construct(List.of(token), new Object[0], parser, this);

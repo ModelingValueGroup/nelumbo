@@ -55,6 +55,19 @@ public final class PatternResult implements ParseExceptionHandler {
         endRepetitions = Set.of();
     }
 
+    public void clear() {
+        elements.clear();
+        splitted.clear();
+        merged.clear();
+        typeArgs.clear();
+        functor = null;
+        state = null;
+        leftPrecedence = null;
+        endRepetitions = Set.of();
+        nextToken = null;
+        hasLeft = false;
+    }
+
     public Token addSplit(Token original, Token split) {
         splitted.add(Pair.of(original, split));
         return split;

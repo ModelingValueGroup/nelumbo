@@ -411,7 +411,7 @@ public class ParseState implements Mergeable<ParseState> {
         if (type == TokenType.NAME) {
             Variable var = null;
             for (ParseContext pc = ctx; pc != null && var == null; pc = pc.outer()) {
-                var = ctx.variable(token, parser);
+                var = ctx.variable(ctx.group(), token, parser);
             }
             if (var != null) {
                 TokenType tt = var.type().tokenType();
