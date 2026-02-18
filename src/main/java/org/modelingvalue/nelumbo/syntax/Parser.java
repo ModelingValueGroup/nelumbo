@@ -95,7 +95,7 @@ public final class Parser implements ParseExceptionHandler {
         try {
             Token token = tokenizerResult.first();
             ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, MutableMap.of(Map.of()), MutableMap.of(Map.of()), knowledgeBase.parseContext());
-            Node node = parseNode(token, ctx);
+            Node node = parseNode(token, ctx, null);
             if (node != null) {
                 result.setRoot(node);
                 token = node.nextToken();
@@ -114,15 +114,15 @@ public final class Parser implements ParseExceptionHandler {
         }
     }
 
-    protected Node parseNode(Token token, ParseContext ctx) throws ParseException {
-        PatternResult result = new PatternResult(this, ctx);
-        if (!preParse(token, null, result)) {
+    protected Node parseNode(Token token, ParseContext inner, ParseContext outer) throws ParseException {
+        PatternResult result = new PatternResult(this, inner);
+        if (!preParse(token, null, result, outer)) {
             return null;
         }
         Node left = result.postParse();
-        token = left != null && ctx.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;
-        while (token != null && preParse(token, left, result)) {
-            if (ctx.precedence() >= result.leftPrecedence()) {
+        token = left != null && inner.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;
+        while (token != null && preParse(token, left, result, null)) {
+            if (inner.precedence() >= result.leftPrecedence()) {
                 return left;
             }
             left = result.postParse();
@@ -131,8 +131,11 @@ public final class Parser implements ParseExceptionHandler {
         return left;
     }
 
-    private boolean preParse(Token token, Node left, PatternResult result) throws ParseException {
+    private boolean preParse(Token token, Node left, PatternResult result, ParseContext outer) throws ParseException {
         String group = result.context().group();
+        if (outer != null) {
+            return outer.preParse(group, token, left, result);
+        }
         for (ParseContext pc = result.context(); pc != null; pc = pc.outer()) {
             if (pc.preParse(group, token, left, result)) {
                 return true;
