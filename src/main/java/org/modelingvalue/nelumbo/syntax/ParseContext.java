@@ -41,7 +41,7 @@ public interface ParseContext {
 
     MutableMap<String, ParseState> postStates();
 
-    static ParseContext of(ParseState state, Token token, MutableMap<String, ParseState> preStates, ParseContext outer) {
+    static ParseContext of(ParseState state, Token token, MutableMap<String, ParseState> preStates, MutableMap<String, ParseState> postStates, ParseContext outer) {
         return new ParseContext() {
 
             @Override
@@ -72,7 +72,7 @@ public interface ParseContext {
 
             @Override
             public MutableMap<String, ParseState> postStates() {
-                return null;
+                return postStates;
             }
 
             @Override
@@ -82,7 +82,7 @@ public interface ParseContext {
 
             @Override
             public String toString() {
-                return "(" + state() + " " + precedence() + " " + group() + " " + preStates() + " " + outer() + ")";
+                return "(" + precedence() + " " + group() + " " + outer() + ")";
             }
 
         };
@@ -128,18 +128,33 @@ public interface ParseContext {
 
             @Override
             public String toString() {
-                return "(" + precedence() + " " + group() + " " + preStates() + " " + postStates() + " " + outer() + ")";
+                return "(" + precedence() + " " + group() + " " + outer() + ")";
             }
 
         };
     }
 
-    default Functor register(KnowledgeBase knowledgeBase, Functor functor) throws ParseException {
-        Type type = functor.resultType();
-        String group = Type.VARIABLE.isAssignableFrom(type) ? //
-                functor.construct(List.of(), new Object[0], knowledgeBase, this).type().group() : //
-                type.group();
-        boolean local = functor.local();
+    default PatternResult preParse(Token token, Node left, Parser parser) throws ParseException {
+        ParseState state = (left != null ? postStates() : preStates()).get().get(this.group());
+        if (state == null) {
+            return null;
+        }
+        if (left != null) {
+            for (Type sup : left.type().allSupers()) {
+                ParseState found = state.nodeTypes().get(sup);
+                if (found != null) {
+                    PatternResult result = new PatternResult(parser, this);
+                    result.left(left);
+                    return found.parse(token, result, Map.of(), true) ? result : null;
+                }
+            }
+            return null;
+        }
+        PatternResult result = new PatternResult(parser, this);
+        return state.parse(token, result, Map.of(), true) ? result : null;
+    }
+
+    default Functor register(KnowledgeBase knowledgeBase, String group, Functor functor) throws ParseException {
         try {
             ParseState pre = functor.preStart();
             ParseState post = functor.postStart();
@@ -167,26 +182,6 @@ public interface ParseContext {
             return (Variable) found.functor().construct(List.of(token), new Object[0], parser, this);
         }
         return null;
-    }
-
-    default PatternResult preParse(Token token, Node left, Parser parser) throws ParseException {
-        ParseState state = (left != null ? postStates() : preStates()).get().get(this.group());
-        if (state == null) {
-            return null;
-        }
-        if (left != null) {
-            for (Type sup : left.type().allSupers()) {
-                ParseState found = state.nodeTypes().get(sup);
-                if (found != null) {
-                    PatternResult result = new PatternResult(parser, this);
-                    result.left(left);
-                    return found.parse(token, result, Map.of(), true) ? result : null;
-                }
-            }
-            return null;
-        }
-        PatternResult result = new PatternResult(parser, this);
-        return state.parse(token, result, Map.of(), true) ? result : null;
     }
 
 }

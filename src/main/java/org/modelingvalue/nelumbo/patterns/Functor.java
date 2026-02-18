@@ -229,7 +229,19 @@ public class Functor extends Node {
 
     @Override
     public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
-        return ctx.register(knowledgeBase, this);
+        Type type = resultType();
+        String group = Type.VARIABLE.isAssignableFrom(type) ? //
+                construct(List.of(), new Object[0], knowledgeBase, ctx).type().group() : //
+                type.group();
+        boolean local = local();
+        if (local) {
+            for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
+                if (pc.outer().outer() == null) {
+                    return pc.register(knowledgeBase, group, this);
+                }
+            }
+        }
+        return knowledgeBase.parseContext().register(knowledgeBase, group, this);
     }
 
     public Functor mostSpecific(Functor other) {

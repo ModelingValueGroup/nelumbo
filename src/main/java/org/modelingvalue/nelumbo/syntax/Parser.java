@@ -94,7 +94,7 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, MutableMap.of(Map.of()), null, knowledgeBase.parseContext());
+            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, MutableMap.of(Map.of()), MutableMap.of(Map.of()), knowledgeBase.parseContext());
             Node node = parseNode(token, ctx);
             if (node != null) {
                 result.setRoot(node);
@@ -114,8 +114,8 @@ public final class Parser implements ParseExceptionHandler {
         }
     }
 
-    public Node parseNode(Token token, ParseContext ctx) throws ParseException {
-        PatternResult result = ctx.preParse(token, null, this);
+    protected Node parseNode(Token token, ParseContext ctx) throws ParseException {
+        PatternResult result = preParse(token, null, ctx);
         if (result == null) {
             return null;
         }
@@ -123,7 +123,7 @@ public final class Parser implements ParseExceptionHandler {
         if (left != null && ctx.precedence() < Integer.MAX_VALUE) {
             token = left.nextToken();
             if (token != null) {
-                result = ctx.preParse(token, left, this);
+                result = preParse(token, left, ctx);
                 while (result != null) {
                     if (ctx.precedence() >= result.leftPrecedence()) {
                         return left;
@@ -136,11 +136,19 @@ public final class Parser implements ParseExceptionHandler {
                     if (token == null) {
                         return left;
                     }
-                    result = ctx.preParse(token, left, this);
+                    result = preParse(token, left, ctx);
                 }
             }
         }
         return left;
+    }
+
+    private PatternResult preParse(Token token, Node left, ParseContext ctx) throws ParseException {
+        PatternResult result = null;
+        for (ParseContext pc = ctx; pc != null && result == null; pc = pc.outer()) {
+            result = pc.preParse(token, left, this);
+        }
+        return result;
     }
 
     public KnowledgeBase knowledgeBase() {

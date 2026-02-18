@@ -409,7 +409,10 @@ public class ParseState implements Mergeable<ParseState> {
             return next.tokenState(token);
         }
         if (type == TokenType.NAME) {
-            Variable var = ctx.variable(token, parser);
+            Variable var = null;
+            for (ParseContext pc = ctx; pc != null && var == null; pc = pc.outer()) {
+                var = ctx.variable(token, parser);
+            }
             if (var != null) {
                 TokenType tt = var.type().tokenType();
                 next = tt != null ? tokenTypes().get(tt) : null;
@@ -443,46 +446,44 @@ public class ParseState implements Mergeable<ParseState> {
         if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
             token = result.addMerge(token, nextToken.prepend("-"));
         }
-        ParseContext ctx = ParseContext.of(this, token, MutableMap.of(Map.of()), result.context());
-        for (ParseContext pc = result.context(); pc != null; pc = pc.outer()) {
-            Node node = result.parser().parseNode(token, ctx);
-            if (node != null) {
-                Variable var = node.variable();
-                if (var != null) {
-                    ParseState next = nodeTypes().get(Type.VARIABLE);
-                    if (next != null) {
-                        result.add(var);
-                        return next.tokenState(node.nextToken());
-                    }
+        ParseContext ctx = ParseContext.of(this, token, MutableMap.of(Map.of()), MutableMap.of(Map.of()), result.context());
+        Node node = result.parser().parseNode(token, ctx);
+        if (node != null) {
+            Variable var = node.variable();
+            if (var != null) {
+                ParseState next = nodeTypes().get(Type.VARIABLE);
+                if (next != null) {
+                    result.add(var);
+                    return next.tokenState(node.nextToken());
                 }
-                result.add(node);
-                Type type = node.type();
-                for (Type sup : type.allSupers()) {
-                    ParseState next = nodeTypes().get(sup);
-                    if (next != null) {
-                        return next.tokenState(node.nextToken());
-                    }
+            }
+            result.add(node);
+            Type type = node.type();
+            for (Type sup : type.allSupers()) {
+                ParseState next = nodeTypes().get(sup);
+                if (next != null) {
+                    return next.tokenState(node.nextToken());
                 }
-                Entry<Type, ParseState> ts = nodeTypes().findAny(e -> e.getKey().variable() != null).orElse(null);
-                if (ts != null) {
-                    var = ts.getKey().variable();
-                    Type sup = result.getTypeArg(var);
-                    if (sup != null) {
-                        if (sup.isAssignableFrom(type)) {
-                            return ts.getValue().tokenState(node.nextToken());
-                        }
-                        if (sup.isAssignableFrom(type)) {
-                            result.putTypeArg(var, type);
-                            return ts.getValue().tokenState(node.nextToken());
-                        }
-                    } else {
+            }
+            Entry<Type, ParseState> ts = nodeTypes().findAny(e -> e.getKey().variable() != null).orElse(null);
+            if (ts != null) {
+                var = ts.getKey().variable();
+                Type sup = result.getTypeArg(var);
+                if (sup != null) {
+                    if (sup.isAssignableFrom(type)) {
+                        return ts.getValue().tokenState(node.nextToken());
+                    }
+                    if (sup.isAssignableFrom(type)) {
                         result.putTypeArg(var, type);
                         return ts.getValue().tokenState(node.nextToken());
                     }
+                } else {
+                    result.putTypeArg(var, type);
+                    return ts.getValue().tokenState(node.nextToken());
                 }
-                result.removeLast();
-                result.addException(new ParseException("Node " + node + " of unexpected type " + type + ", expected " + expectedTypes(), node));
             }
+            result.removeLast();
+            result.addException(new ParseException("Node " + node + " of unexpected type " + type + ", expected " + expectedTypes(), node));
         }
         return null;
     }
