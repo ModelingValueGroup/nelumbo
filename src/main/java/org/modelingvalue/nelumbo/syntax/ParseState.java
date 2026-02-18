@@ -257,7 +257,7 @@ public class ParseState implements Mergeable<ParseState> {
         Map<Direction, Set<TokenState>> dirStates = dirStates(token, parser, outerRepetitions, ctx);
         do {
             for (Entry<Direction, Set<TokenState>> e : dirStates) {
-                Set<TokenState> nexts = nexts(parser, ctx, e.getValue());
+                Set<TokenState> nexts = nexts(parser, ctx, e.getValue(), false);
                 dirStates = nexts.isEmpty() ? dirStates.removeKey(e.getKey()) : dirStates.put(e.getKey(), nexts);
             }
         } while (dirStates.size() > 1);
@@ -265,14 +265,14 @@ public class ParseState implements Mergeable<ParseState> {
             Entry<Direction, Set<TokenState>> e = dirStates.get(0);
             Set<TokenState> states = e.getValue();
             while (states.size() > 1) {
-                states = nexts(parser, ctx, states);
+                states = nexts(parser, ctx, states, true);
             }
             return new DirectionContext(e.getKey(), states.size() == 1 ? states.get(0).ctx : null);
         }
         return null;
     }
 
-    private Set<TokenState> nexts(Parser parser, ParseContext ctx, Set<TokenState> states) throws ParseException {
+    private Set<TokenState> nexts(Parser parser, ParseContext ctx, Set<TokenState> states, boolean unique) throws ParseException {
         Set<TokenState> nexts = Set.of();
         TokenState last = null;
         int count = 0;
@@ -285,7 +285,7 @@ public class ParseState implements Mergeable<ParseState> {
                 nexts = nexts.addAll(next.state.nodeStates(next.token, ctx, ts.ctx));
             }
         }
-        if (count == 1) {
+        if (unique && count == 1) {
             return Set.of(last);
         }
         return nexts;
@@ -448,7 +448,7 @@ public class ParseState implements Mergeable<ParseState> {
         if (type == TokenType.NAME) {
             Variable var = null;
             for (ParseContext pc = ctx; pc != null && var == null; pc = pc.outer()) {
-                var = ctx.variable(ctx.group(), token, parser);
+                var = pc.variable(ctx.group(), token, parser);
             }
             if (var != null) {
                 TokenType tt = var.type().tokenType();
