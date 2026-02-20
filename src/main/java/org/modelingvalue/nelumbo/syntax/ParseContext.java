@@ -212,8 +212,6 @@ public interface ParseContext {
                     } else {
                         preStates().put(pre.getKey(), m.removeKey(states.getKey()));
                     }
-                } else {
-                    outer().preStates().set(p -> merge(pre.getKey(), states.getKey(), states.getValue(), p));
                 }
             }
         }
@@ -226,8 +224,6 @@ public interface ParseContext {
                     } else {
                         preStates().put(post.getKey(), m.removeKey(states.getKey()));
                     }
-                } else {
-                    outer().preStates().set(p -> merge(post.getKey(), states.getKey(), states.getValue(), p));
                 }
             }
         }

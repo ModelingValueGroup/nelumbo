@@ -454,6 +454,12 @@ public class ParseState implements Mergeable<ParseState> {
         ParseContext inner = ParseContext.of(this, token, MutableMap.of(Map.of()), MutableMap.of(Map.of()), result.context());
         Node node = result.parser().parseNode(token, inner, outer);
         if (node != null) {
+            try {
+                result.context().preStates().set(p -> p.addAll(inner.preStates().get()));
+                result.context().postStates().set(p -> p.addAll(inner.postStates().get()));
+            } catch (Exception exc) {
+                result.addException(new ParseException(exc.getMessage(), node));
+            }
             Variable var = node.variable();
             if (var != null) {
                 ParseState next = nodeTypes().get(Type.VARIABLE);
