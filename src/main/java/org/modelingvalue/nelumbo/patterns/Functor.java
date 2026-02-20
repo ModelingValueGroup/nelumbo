@@ -237,11 +237,11 @@ public class Functor extends Node {
         if (local) {
             for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
                 if (pc.outer().outer() == null) {
-                    return pc.register(knowledgeBase, group, this);
+                    return pc.register(knowledgeBase, group, Type.NAMESPACE, this);
                 }
             }
         }
-        return knowledgeBase.parseContext().register(knowledgeBase, group, this);
+        return knowledgeBase.parseContext().register(knowledgeBase, group, Type.UNIVERSE, this);
     }
 
     public Functor mostSpecific(Functor other) {

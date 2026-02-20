@@ -656,8 +656,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final AtomicReference<Set<Transform>>                           transforms          = new AtomicReference<>();
     private final AtomicReference<Map<Type, Set<Pair<Functor, Transform>>>> literalTransforms   = new AtomicReference<>();
     //
-    private final MutableMap<String, ParseState>                            prePatterns         = MutableMap.concurrent(Map.of());
-    private final MutableMap<String, ParseState>                            postPatterns        = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, Map<Type, ParseState>>                 prePatterns         = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, Map<Type, ParseState>>                 postPatterns        = MutableMap.concurrent(Map.of());
     //
     private final AtomicReference<Map<Functor, Functor>>                    literalFunctors     = new AtomicReference<>();
     //

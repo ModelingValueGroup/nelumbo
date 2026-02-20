@@ -51,6 +51,8 @@ public final class Type extends Node {
     //
     public static final Type    OBJECT           = new Type("Object", $OBJECT);
     public static final Type    TYPE             = new Type("Type", OBJECT);
+    public static final Type    UNIVERSE         = new Type("Universe", OBJECT);
+    public static final Type    NAMESPACE        = new Type("Namespace", OBJECT);
     public static final Type    FUNCTION         = new Type("Function", OBJECT);
     public static final Type    LITERAL          = new Type("Literal", OBJECT);
     public static final Type    ROOT             = new Type("Root", OBJECT);
