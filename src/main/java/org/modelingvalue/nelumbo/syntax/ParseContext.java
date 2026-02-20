@@ -202,4 +202,35 @@ public interface ParseContext {
         return null;
     }
 
+    default void finish(Type type) {
+        for (Entry<String, Map<Type, ParseState>> pre : preStates().get()) {
+            for (Entry<Type, ParseState> states : pre.getValue()) {
+                if (states.getKey().isAssignableFrom(type)) {
+                    Map<Type, ParseState> m = preStates().get(pre.getKey());
+                    if (m.size() == 1) {
+                        preStates().remove(pre.getKey());
+                    } else {
+                        preStates().put(pre.getKey(), m.removeKey(states.getKey()));
+                    }
+                } else {
+                    outer().preStates().set(p -> merge(pre.getKey(), states.getKey(), states.getValue(), p));
+                }
+            }
+        }
+        for (Entry<String, Map<Type, ParseState>> post : preStates().get()) {
+            for (Entry<Type, ParseState> states : post.getValue()) {
+                if (states.getKey().isAssignableFrom(type)) {
+                    Map<Type, ParseState> m = preStates().get(post.getKey());
+                    if (m.size() == 1) {
+                        preStates().remove(post.getKey());
+                    } else {
+                        preStates().put(post.getKey(), m.removeKey(states.getKey()));
+                    }
+                } else {
+                    outer().preStates().set(p -> merge(post.getKey(), states.getKey(), states.getValue(), p));
+                }
+            }
+        }
+    }
+
 }

@@ -182,6 +182,7 @@ public final class PatternResult implements ParseExceptionHandler {
             if (Type.ROOT.isAssignableFrom(node.type())) {
                 node.init(parser.knowledgeBase(), context);
             }
+            context.finish(node.type());
             return node;
         }
         return null;

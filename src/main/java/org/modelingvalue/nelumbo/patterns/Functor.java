@@ -235,11 +235,7 @@ public class Functor extends Node {
                 type.group();
         boolean local = local();
         if (local) {
-            for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
-                if (pc.outer().outer() == null) {
-                    return pc.register(knowledgeBase, group, Type.NAMESPACE, this);
-                }
-            }
+            return ctx.register(knowledgeBase, group, Type.NAMESPACE, this);
         }
         return knowledgeBase.parseContext().register(knowledgeBase, group, Type.UNIVERSE, this);
     }
