@@ -38,6 +38,10 @@ public class NList extends Node {
         super(elementType.list(), elements, args);
     }
 
+    public NList(Functor functor, List<AstElement> elements, List<Node> args) {
+        super(functor, elements, args);
+    }
+
     @NelumboConstructor
     public NList(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, List.of(args));

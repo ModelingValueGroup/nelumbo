@@ -264,12 +264,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.BOOLEAN, false, null).init(this, parseContext);
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
-                        Type.ROOT.list(Type.TOP_GROUP), false, (elements, args, functor, pc) -> {
+                        Type.ROOT_LIST, false, (elements, args, functor, pc) -> {
                             List<Node> roots = List.of();
                             for (Object arg : args) {
                                 roots = roots.add((Node) arg);
                             }
-                            return new NList(Type.ROOT.list(), elements, roots);
+                            return new NList(functor, elements, roots);
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t("<"), t("("), t(">"), r(SEQUENCE, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
