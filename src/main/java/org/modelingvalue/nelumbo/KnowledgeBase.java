@@ -355,7 +355,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (precedence != null) {
                                             pattern = pattern.setPresedence(precedence);
                                         }
-                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern, local, precedence, pc);
+                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern, local ? Type.NAMESPACE : null, precedence, pc);
                                         if (t != null) {
                                             roots = roots.setAstElements(roots.astElements().add(t));
                                         }
@@ -507,7 +507,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     @SuppressWarnings("ConstantValue")
-    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern, boolean local, Integer prec, ParseContext ctx) throws ParseException {
+    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern, Type local, Integer prec, ParseContext ctx) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.isCollection() ? type.element() : null;
@@ -527,14 +527,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
-        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local ? Type.NAMESPACE : null, toLiteral ? null : constructor, prec).init(this, ctx);
+        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : constructor, prec).init(this, ctx);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && constructor != null) {
             nodFunctor.construct(List.of(), new Object[0], this, ctx);
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::literal);
-            Functor litFunctor = Functor.of(List.of(), litPattern, type, local ? Type.NAMESPACE : null, constructor, prec).init(this, ctx);
+            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, constructor, prec).init(this, ctx);
             roots = new NList(List.of(), roots, litFunctor);
             addLiteral(nodFunctor, litFunctor);
             // Implied Rule
