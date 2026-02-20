@@ -10,8 +10,8 @@ NAME AN
 
 attr OT AN AT  ::> { 
     AT       ::= <OT>.AN
-    FactType ::= AN(<OT>,<AT>)
-    Root     ::= <OT>.AN := <AT> 
+    Root     ::= <OT>.AN := <AT>
+    private FactType ::= AN(<OT>,<AT>) 
     OT o
     AT a
     o.AN=a  <=>  AN(o,a)
