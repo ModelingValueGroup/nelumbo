@@ -34,19 +34,19 @@ public class Functor extends Node {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, Constructor<?> constructor, Integer leftPrecedence) {
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, Constructor<?> constructor, Integer leftPrecedence) {
         return new Functor(elements, pattern, result, local, constructor, leftPrecedence);
     }
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, boolean local, ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function, Integer leftPrecedence) {
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function, Integer leftPrecedence) {
         return new Functor(elements, pattern, result, local, function, leftPrecedence);
     }
 
-    public static Functor of(Pattern pattern, Type result, boolean local, ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function, Integer leftPrecedence) {
+    public static Functor of(Pattern pattern, Type result, Type local, ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function, Integer leftPrecedence) {
         return new Functor(List.of(), pattern, result, local, function, leftPrecedence);
     }
 
-    public static Functor of(Pattern pattern, Type result, boolean local, Integer leftPrecedence) {
+    public static Functor of(Pattern pattern, Type result, Type local, Integer leftPrecedence) {
         return new Functor(List.of(), pattern, result, local, null, leftPrecedence);
     }
 
@@ -77,8 +77,8 @@ public class Functor extends Node {
         return (Type) get(1);
     }
 
-    public boolean local() {
-        return (Boolean) get(2);
+    public Type local() {
+        return (Type) get(2);
     }
 
     @Override
@@ -233,9 +233,9 @@ public class Functor extends Node {
         String group = Type.VARIABLE.isAssignableFrom(type) ? //
                 construct(List.of(), new Object[0], knowledgeBase, ctx).type().group() : //
                 type.group();
-        boolean local = local();
-        if (local) {
-            return ctx.register(knowledgeBase, group, Type.NAMESPACE, this);
+        Type local = local();
+        if (local != null) {
+            return ctx.register(knowledgeBase, group, local, this);
         }
         return knowledgeBase.parseContext().register(knowledgeBase, group, Type.UNIVERSE, this);
     }

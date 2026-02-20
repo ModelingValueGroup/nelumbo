@@ -170,7 +170,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             pattern = t(List.of(type), type.rawName());
         }
         return Functor.of(List.of(type), pattern, //
-                Type.TYPE, false, (elements, args, functor, pc) -> {
+                Type.TYPE, null, (elements, args, functor, pc) -> {
                     Type result = ((Type) functor.astElements().first()).setAstElements(elements);
                     if (result.isCollection() && args[0] instanceof Type elem) {
                         result = result.setElement(elem);
@@ -188,13 +188,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             return addType(new Type(var), ctx);
         } else if (Type.BOOLEAN.isAssignableFrom(var.type())) {
             return Functor.of(List.of(var), t(List.of(var), var), //
-                    var.type(), true, (elements, args, functor, pc) -> {
+                    var.type(), Type.NAMESPACE, (elements, args, functor, pc) -> {
                         Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
                         return new BooleanVariable(functor, elements, result);
                     }, null).init(this, ctx);
         } else {
             return Functor.of(List.of(var), t(List.of(var), var), //
-                    Type.VARIABLE, true, (elements, args, functor, pc) -> {
+                    Type.VARIABLE, Type.NAMESPACE, (elements, args, functor, pc) -> {
                         Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
                         return result.setFunctor(functor);
                     }, null).init(this, ctx);
@@ -261,10 +261,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
 
                 equalsFunctor = Functor.of(s(n(Type.OBJECT, 30), t("="), n(Type.OBJECT, 30)), //
-                        Type.BOOLEAN, false, null).init(this, parseContext);
+                        Type.BOOLEAN, null, null).init(this, parseContext);
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
-                        Type.ROOT_LIST, false, (elements, args, functor, pc) -> {
+                        Type.ROOT_LIST, null, (elements, args, functor, pc) -> {
                             List<Node> roots = List.of();
                             for (Object arg : args) {
                                 roots = roots.add((Node) arg);
@@ -273,7 +273,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t("<"), t("("), t(">"), r(SEQUENCE, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
-                        Type.PATTERN, false, (elements, args, functor, pc) -> {
+                        Type.PATTERN, null, (elements, args, functor, pc) -> {
                             List<AstElement> options = List.of();
                             List<AstElement> list = List.of();
                             for (int i = 3; i < elements.size() - 2; i++) {
@@ -292,7 +292,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t("<"), t("("), t(">"), SEQUENCE, o(s(t("<"), t(","), t(">"), SEQUENCE)), t("<"), t(")"), a(t("*"), t("+")), t(">")), //
-                        Type.PATTERN, false, (elements, args, functor, pc) -> {
+                        Type.PATTERN, null, (elements, args, functor, pc) -> {
                             Pattern repeated = null, separator = null;
                             List<AstElement> list = List.of();
                             for (int i = 3; i < elements.size() - 3; i++) {
@@ -316,17 +316,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t("<"), t("("), t(">"), SEQUENCE, t("<"), t(")"), t("?"), t(">")), //
-                        Type.PATTERN, false, (elements, args, functor, pc) -> {
+                        Type.PATTERN, null, (elements, args, functor, pc) -> {
                             return o(elements, pattern(elements));
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t(LEFT), SEQUENCE, t(RIGHT)), //
-                        Type.PATTERN, false, (elements, args, functor, pc) -> {
+                        Type.PATTERN, null, (elements, args, functor, pc) -> {
                             return s(elements, pattern(elements));
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t("<"), n(Type.TYPE, Integer.MAX_VALUE), o(s(t("#"), t(NUMBER))), t(">")), //
-                        Type.PATTERN, false, (elements, args, functor, pc) -> {
+                        Type.PATTERN, null, (elements, args, functor, pc) -> {
                             Type type = (Type) args[0];
                             Integer precedence = null;
                             Optional<String> o = (Optional<String>) args[1];
@@ -338,7 +338,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(o(k("private")), n(Type.TYPE, Integer.MAX_VALUE), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
-                        Type.ROOT.list(), false, (elements, args, functor, pc) -> {
+                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             boolean local = ((Optional<String>) args[0]).isPresent();
                             Type type = (Type) elements.get(local ? 1 : 0);
                             int start = local ? 3 : 2;
@@ -395,7 +395,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t(NAME), o(s(t("<"), n(Type.TYPE, Integer.MAX_VALUE), t(">"))), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
-                        Type.FUNCTOR, false, (elements, args, functor, pc) -> {
+                        Type.FUNCTOR, null, (elements, args, functor, pc) -> {
                             KnowledgeBase kb = CURRENT.get();
                             Set<Type> supers = Set.of();
                             for (Type sup : (List<Type>) args[2]) {
@@ -418,7 +418,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
-                        Type.ROOT.list(), false, (elements, args, functor, pc) -> {
+                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             KnowledgeBase kb = CURRENT.get();
                             StringBuilder sb = new StringBuilder();
@@ -443,7 +443,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(n(Type.TYPE, Integer.MAX_VALUE), r(t(NAME), true, t(","))), //
-                        Type.ROOT.list(), false, (elements, args, functor, pc) -> {
+                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             KnowledgeBase kb = CURRENT.get();
                             Type type = (Type) elements.get(0);
                             NList roots = new NList(List.of(type), Type.ROOT);
@@ -462,17 +462,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }, 0).init(this, parseContext);
                 ruleFunctor = Functor.of(s(n(Type.BOOLEAN, 0), t("<=>"), r(CONDITION, true, t(","))), //
-                        Type.ROOT.list(), false, (elements, args, functor, pc) -> {
+                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             return CURRENT.get().createRules(functor, elements, args, pc);
                         }, null).init(this, parseContext);
 
                 Functor.of(s(n(Type.BOOLEAN, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]")))), //
-                        Type.QUERY, false, (elements, args, functor, pc) -> {
+                        Type.QUERY, null, (elements, args, functor, pc) -> {
                             return new Query(functor, elements, pc, args);
                         }, null).init(this, parseContext);
 
                 Functor.of(s(k("fact"), r(n(Type.BOOLEAN, 0), true, t(","))), //
-                        Type.ROOT.list(), false, (elements, args, functor, pc) -> {
+                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
                             for (Object arg : args) {
                                 Predicate pred = (Predicate) arg;
@@ -483,7 +483,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(n(Type.ROOT, 0), t("::>"), t("{"), ROOTS, t("}")), //
-                        Type.TRANSFORM, false, (elements, args, functor, pc) -> {
+                        Type.TRANSFORM, null, (elements, args, functor, pc) -> {
                             Node source = (Node) args[0];
                             List<Node> targets = List.of();
                             for (Node arg : (List<Node>) args[1]) {
@@ -493,7 +493,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t("("), n(Type.OBJECT, 0), t(")")), //
-                        Type.OBJECT, false, (elements, args, functor, pc) -> {
+                        Type.OBJECT, null, (elements, args, functor, pc) -> {
                             Node node = (Node) args[0];
                             return node.setAstElements(elements);
                         }, null).init(this, parseContext);
@@ -527,14 +527,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
-        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : constructor, prec).init(this, ctx);
+        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local ? Type.NAMESPACE : null, toLiteral ? null : constructor, prec).init(this, ctx);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && constructor != null) {
             nodFunctor.construct(List.of(), new Object[0], this, ctx);
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::literal);
-            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, constructor, prec).init(this, ctx);
+            Functor litFunctor = Functor.of(List.of(), litPattern, type, local ? Type.NAMESPACE : null, constructor, prec).init(this, ctx);
             roots = new NList(List.of(), roots, litFunctor);
             addLiteral(nodFunctor, litFunctor);
             // Implied Rule
@@ -959,7 +959,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 FUNCTOR_REGISTRATION.updateAndGet(map -> map.remove(cls));
             }
         }
-        if (!functor.local()) {
+        if (functor.local() == null) {
             functors.accumulateAndGet(Set.of(functor), Set::addAll);
         }
     }
