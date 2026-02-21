@@ -102,4 +102,9 @@ public class NelumboTest extends NelumboTestBase {
         testResource("fibSumTest.nl");
     }
 
+    @RepeatedTest(10)
+    public void scopingTest() {
+        testResource("scopingTest.nl");
+    }
+
 }
