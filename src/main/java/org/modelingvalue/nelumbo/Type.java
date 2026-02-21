@@ -71,12 +71,15 @@ public final class Type extends Node {
     public static final Type    SET              = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type    LIST             = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type    ROOT_LIST        = new Type("RootList", ROOT.list(TOP_GROUP), NAMESPACE);
+    public static final Type    ROOT_NAMESPACE   = new Type("RootNamespace", ROOT.list(), NAMESPACE, ROOT);
 
     public static List<Type> predefined() {
         return List.of(//
                 OBJECT, //
                 TYPE, //
+                UNIVERSE, //
                 FUNCTION, //
+                NAMESPACE, //
                 LITERAL, //
                 ROOT, //
                 BOOLEAN, //
@@ -91,7 +94,8 @@ public final class Type extends Node {
                 IMPORT, //
                 COLLECTION, //
                 SET, //
-                LIST);
+                LIST, //
+                ROOT_LIST);
     }
 
     private Type       list;

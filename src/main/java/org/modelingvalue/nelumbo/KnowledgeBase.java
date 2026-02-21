@@ -337,11 +337,21 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return tt != null ? t(elements, tt) : n(elements, type, precedence);
                         }, null).init(this, parseContext);
 
-                Functor.of(s(o(a(k("private"), s(k("in"), n(Type.TYPE, Integer.MAX_VALUE)))), n(Type.TYPE, Integer.MAX_VALUE), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
+                Functor.of(s(o(a(k("private"), s(t("{"), n(Type.TYPE, Integer.MIN_VALUE), t("}")))), n(Type.TYPE, Integer.MAX_VALUE), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
-                            boolean local = ((Optional<String>) args[0]).isPresent();
-                            Type type = (Type) elements.get(local ? 1 : 0);
-                            int start = local ? 3 : 2;
+                            Type local = null;
+                            int start = 2;
+                            Optional<Object> mod = (Optional<Object>) args[0];
+                            if (mod.isPresent()) {
+                                if (mod.get() instanceof Type t) {
+                                    local = t;
+                                    start += 3;
+                                } else if (mod.get().equals("private")) {
+                                    local = Type.NAMESPACE;
+                                    start += 1;
+                                }
+                            }
+                            Type type = (Type) elements.get(start - 2);
                             NList roots = new NList(elements.sublist(0, start), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
                             Constructor<?> constructor = null;
@@ -355,7 +365,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (precedence != null) {
                                             pattern = pattern.setPresedence(precedence);
                                         }
-                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern, local ? Type.NAMESPACE : null, precedence, pc);
+                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern, local, precedence, pc);
                                         if (t != null) {
                                             roots = roots.setAstElements(roots.astElements().add(t));
                                         }
@@ -490,6 +500,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 targets = targets.add(arg);
                             }
                             return new Transform(functor, elements, source, targets);
+                        }, null).init(this, parseContext);
+
+                Functor.of(s(t("{"), ROOTS, t("}")), //
+                        Type.ROOT_NAMESPACE, null, (elements, args, functor, pc) -> {
+                            List<Node> roots = List.of();
+                            for (Object arg : args) {
+                                roots = roots.add((Node) arg);
+                            }
+                            return new NList(functor, elements, roots);
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t("("), n(Type.OBJECT, 0), t(")")), //
