@@ -222,18 +222,10 @@ public interface ParseContext {
         }
         Map<Type, Variable> vars = hiddenVariables().get().get(group);
         if (vars != null) {
-            Map<Type, ParseState> states = postStates().get().get(group);
-            if (states != null) {
-                for (Entry<Type, Variable> var : vars) {
-                    for (ParseState state : states.toValues()) {
-                        for (Type sup : var.getValue().type().allSupers()) {
-                            ParseState found = state.nodeTypes().get(sup);
-                            if (found != null) {
-                                result.clear();
-                                result.left(var.getValue());
-                                return found.parse(token, result, Map.of(), true);
-                            }
-                        }
+            for (Entry<Type, Variable> var : vars) {
+                for (ParseContext pc = result.context(); pc != null; pc = pc.outer()) {
+                    if (pc.preParse(group, token, var.getValue(), result)) {
+                        return true;
                     }
                 }
             }
