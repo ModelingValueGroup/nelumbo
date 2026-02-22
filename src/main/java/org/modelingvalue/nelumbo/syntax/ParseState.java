@@ -20,6 +20,7 @@ import java.util.Objects;
 
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.Entry;
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
@@ -416,14 +417,14 @@ public class ParseState implements Mergeable<ParseState> {
         if (type == TokenType.NAME) {
             Variable var = null;
             for (ParseContext pc = ctx; pc != null && var == null; pc = pc.outer()) {
-                var = pc.variable(ctx.group(), token, parser);
+                var = pc.variable(ctx.group(), token.text());
             }
             if (var != null) {
                 TokenType tt = var.type().tokenType();
                 next = tt != null ? tokenTypes().get(tt) : null;
                 if (next != null) {
                     if (result != null) {
-                        result.add(var);
+                        result.add(var.setAstElements(List.of(token)));
                         token.setState(next);
                     }
                     return new TokenState(token.next(), next);
@@ -451,12 +452,11 @@ public class ParseState implements Mergeable<ParseState> {
         if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type()) && !nextToken.text().startsWith("-")) {
             token = result.addMerge(token, nextToken.prepend("-"));
         }
-        ParseContext inner = ParseContext.of(this, token, MutableMap.of(Map.of()), MutableMap.of(Map.of()), result.context());
+        ParseContext inner = ParseContext.of(this, token, result.context());
         Node node = result.parser().parseNode(token, inner, outer);
         if (node != null) {
             try {
-                result.context().preStates().set(p -> p.addAll(inner.preStates().get()));
-                result.context().postStates().set(p -> p.addAll(inner.postStates().get()));
+                result.context().merge(inner);
             } catch (Exception exc) {
                 result.addException(new ParseException(exc.getMessage(), node));
             }

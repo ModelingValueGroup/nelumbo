@@ -189,14 +189,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else if (Type.BOOLEAN.isAssignableFrom(var.type())) {
             return Functor.of(List.of(var), t(List.of(var), var), //
                     var.type(), Type.NAMESPACE, (elements, args, functor, pc) -> {
-                        Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
-                        return new BooleanVariable(functor, elements, result);
+                        Variable v = functor.variable().setAstElements(elements);
+                        return new BooleanVariable(functor, elements, v);
                     }, null).init(this, ctx);
         } else {
             return Functor.of(List.of(var), t(List.of(var), var), //
                     Type.VARIABLE, Type.NAMESPACE, (elements, args, functor, pc) -> {
-                        Variable result = ((Variable) functor.astElements().first()).setAstElements(elements);
-                        return result.setFunctor(functor);
+                        Variable v = functor.variable().setAstElements(elements);
+                        return v.setFunctor(functor);
                     }, null).init(this, ctx);
         }
     }
@@ -452,20 +452,20 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }, null).init(this, parseContext);
 
-                Functor.of(s(n(Type.TYPE, Integer.MAX_VALUE), r(t(NAME), true, t(","))), //
+                Functor.of(s(o(k("hidden")), n(Type.TYPE, Integer.MAX_VALUE), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             KnowledgeBase kb = CURRENT.get();
-                            Type type = (Type) elements.get(0);
+                            boolean hidden = ((Optional<Object>) args[0]).isPresent();
+                            int start = hidden ? 1 : 0;
+                            Type type = (Type) elements.get(start);
                             NList roots = new NList(List.of(type), Type.ROOT);
-                            for (int i = 1; i < elements.size(); i++) {
+                            for (int i = start + 1; i < elements.size(); i++) {
                                 AstElement e = elements.get(i);
                                 if (e instanceof Token t && t.text().equals(",")) {
                                     roots = roots.setAstElements(roots.astElements().add(t));
                                     e = elements.get(++i);
                                 }
-                                Variable var = e instanceof Variable v ? //
-                                        new Variable(List.of(e), type, v) : //
-                                        new Variable(List.of(e), type, ((Token) e).text());
+                                Variable var = new Variable(List.of(e), type, ((Token) e).text(), hidden);
                                 Functor varFun = kb.addVariable(var, pc);
                                 roots = new NList(List.of(), roots, varFun);
                             }
@@ -561,12 +561,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Variable[] litVars = new Variable[args.size()];
             List<Type> litArgs = args.replaceAll(Type::literal);
             for (int v = 0; v < args.size(); v++) {
-                nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1));
-                litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1));
+                nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1), false);
+                litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1), false);
             }
             Node nodNode = nodFunctor.construct(List.of(), nodVars, this, ctx);
             Node litNode = litFunctor.construct(List.of(), litVars, this, ctx);
-            Variable rigthVar = function ? new Variable(List.of(), type.nonFunction(), "r") : null;
+            Variable rigthVar = function ? new Variable(List.of(), type.nonFunction(), "r", false) : null;
             Predicate nodCons = function ? new Predicate(equalsFunctor, List.of(), nodNode, rigthVar) : (Predicate) nodNode;
             Predicate litCond = function ? new Predicate(equalsFunctor, List.of(), litNode, rigthVar) : (Predicate) litNode;
             for (int c = args.size() - 1; c >= 0; c--) {
@@ -677,6 +677,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private final MutableMap<String, Map<Type, ParseState>>                 prePatterns         = MutableMap.concurrent(Map.of());
     private final MutableMap<String, Map<Type, ParseState>>                 postPatterns        = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, Map<Type, Variable>>                   hiddenVariables     = MutableMap.concurrent(Map.of());
     //
     private final AtomicReference<Map<Functor, Functor>>                    literalFunctors     = new AtomicReference<>();
     //
@@ -696,7 +697,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, TRACE_NELUMBO);
-        parseContext = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, prePatterns, postPatterns, null);
+        parseContext = ParseContext.of(prePatterns, postPatterns, hiddenVariables);
         init();
     }
 
@@ -709,6 +710,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         literalTransforms.set(init != null ? init.literalTransforms.get() : Map.of());
         prePatterns.set(m -> init != null ? init.prePatterns.get() : Map.of());
         postPatterns.set(m -> init != null ? init.postPatterns.get() : Map.of());
+        hiddenVariables.set(m -> init != null ? init.hiddenVariables.get() : Map.of());
         literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
         ruleSignatures.set(init != null ? init.ruleSignatures.get() : MatchState.EMPTY);
         transformSignatures.set(init != null ? init.transformSignatures.get() : MatchState.EMPTY);
@@ -725,6 +727,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             literalTransforms.updateAndGet(s -> s.addAll(kb.literalTransforms.get()));
             prePatterns.set(s -> s.addAll(kb.prePatterns.get()));
             postPatterns.set(s -> s.addAll(kb.postPatterns.get()));
+            hiddenVariables.set(s -> s.addAll(kb.hiddenVariables.get()));
             literalFunctors.updateAndGet(s -> s.addAll(kb.literalFunctors.get()));
             ruleSignatures.updateAndGet(s -> kb.ruleSignatures.get().merge(s));
             transformSignatures.updateAndGet(s -> kb.transformSignatures.get().merge(s));

@@ -82,6 +82,12 @@ public class Functor extends Node {
     }
 
     @Override
+    public Variable variable() {
+        List<AstElement> astElements = astElements();
+        return astElements.isEmpty() ? null : astElements.first() instanceof Variable v ? v : null;
+    }
+
+    @Override
     public Functor setBinding(Map<Variable, Object> vars) {
         return (Functor) super.setBinding(vars);
     }

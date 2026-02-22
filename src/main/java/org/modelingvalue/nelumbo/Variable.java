@@ -26,12 +26,8 @@ public final class Variable extends Node {
     @Serial
     private static final long serialVersionUID = -8998368070388908726L;
 
-    public Variable(List<AstElement> elements, Type type, String name) {
-        super(Type.VARIABLE, elements, type, name);
-    }
-
-    protected Variable(List<AstElement> elements, Type type, Variable var) {
-        super(Type.VARIABLE, elements, type, var);
+    public Variable(List<AstElement> elements, Type type, String name, boolean hidden) {
+        super(Type.VARIABLE, elements, type, name, hidden);
     }
 
     private Variable(Object[] array, Variable declaration) {
@@ -50,11 +46,11 @@ public final class Variable extends Node {
 
     public Variable literal() {
         Type type = type();
-        return type.isLiteral() ? this : new Variable(astElements(), type.literal(), name());
+        return type.isLiteral() ? this : new Variable(astElements(), type.literal(), name(), hidden());
     }
 
     public Variable rename(String name) {
-        return new Variable(astElements(), type(), name);
+        return new Variable(astElements(), type(), name, hidden());
     }
 
     @Override
@@ -63,8 +59,11 @@ public final class Variable extends Node {
     }
 
     public String name() {
-        Object n = get(1);
-        return n instanceof Variable var ? var.name() : (String) n;
+        return (String) get(1);
+    }
+
+    public boolean hidden() {
+        return (Boolean) get(2);
     }
 
     @Override

@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -94,7 +92,7 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, MutableMap.of(Map.of()), MutableMap.of(Map.of()), knowledgeBase.parseContext());
+            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, knowledgeBase.parseContext());
             Node node = parseNode(token, ctx, null);
             if (node != null) {
                 result.setRoot(node);
