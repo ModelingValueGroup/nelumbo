@@ -25,6 +25,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Mergeable;
+import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
@@ -582,7 +583,7 @@ public class ParseState implements Mergeable<ParseState> {
 
     private static <T> T elementMerge(T t1, T t2) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
-            throw new PatternMergeException("Non deterministic pattern merge " + t1 + " <> " + t2);
+            throw new NotMergeableException("Non deterministic pattern merge " + t1 + " <> " + t2);
         }
         return t1 == null ? t2 : t1;
     }

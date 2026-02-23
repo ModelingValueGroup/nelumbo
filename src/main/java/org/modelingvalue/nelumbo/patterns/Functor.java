@@ -22,13 +22,20 @@ import java.lang.reflect.Constructor;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.logic.Predicate;
-import org.modelingvalue.nelumbo.syntax.*;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
+import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.ThrowingQuadFunction;
+import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Functor extends Node {
     @Serial
@@ -260,7 +267,7 @@ public class Functor extends Node {
                 }
             }
         }
-        throw new PatternMergeException("Non deterministic pattern merge " + this + " <> " + other);
+        throw new NotMergeableException("Non deterministic pattern merge " + this + " <> " + other);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

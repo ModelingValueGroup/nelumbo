@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.syntax;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableMap;
+import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -246,7 +247,7 @@ public interface ParseContext {
             if (var != null && var.hidden()) {
                 hiddenVariables().set(p -> p.add(group, Map.of(Entry.of(type, var))));
             }
-        } catch (PatternMergeException pme) {
+        } catch (NotMergeableException pme) {
             knowledgeBase.addException(new ParseException(pme.getMessage(), functor));
         }
         knowledgeBase.register(functor);
