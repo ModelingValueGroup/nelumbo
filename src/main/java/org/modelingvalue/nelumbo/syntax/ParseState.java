@@ -293,13 +293,43 @@ public class ParseState implements Mergeable<ParseState> {
     private void nodeStates(Token token, ParseContext ctx, MutableMap<DirectionContext, Set<TokenState>> dirStates) {
         if (!isNodesEmpty()) {
             for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
-                Map<Type, ParseState> states = pc.preStates(group);
-                if (states != null) {
+                Set<TokenState> states = Set.of();
+                Map<Type, ParseState> pres = pc.preStates(group);
+                if (pres != null) {
+                    for (ParseState pre : pres.toValues()) {
+                        states = states.add(new TokenState(token, pre));
+                    }
+                }
+                Map<Type, Variable> hidden = pc.hiddenVariables(group);
+                if (hidden != null) {
+                    for (Entry<Type, Variable> var : hidden) {
+                        states = hiddenStates(token, ctx, var.getValue().type(), states);
+                    }
+                }
+                if (!states.isEmpty()) {
                     DirectionContext key = new DirectionContext(Direction.node, pc);
-                    dirStates.put(key, states.toValues().map(s -> new TokenState(token, s)).asSet());
+                    dirStates.put(key, states);
                 }
             }
         }
+    }
+
+    private Set<TokenState> hiddenStates(Token token, ParseContext ctx, Type varType, Set<TokenState> states) {
+        for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
+            Map<Type, ParseState> posts = pc.postStates(group);
+            if (posts != null) {
+                for (ParseState post : posts.toValues()) {
+                    for (Type sup : varType.allSupers()) {
+                        ParseState found = post.nodeTypes().get(sup);
+                        if (found != null) {
+                            states = states.add(new TokenState(token, found));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return states;
     }
 
     private void repetitionStates(Token token, ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, //

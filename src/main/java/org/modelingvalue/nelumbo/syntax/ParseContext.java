@@ -205,7 +205,7 @@ public interface ParseContext {
 
     default boolean preParse(String group, Token token, Node left, PatternResult result) throws ParseException {
         if (left != null) {
-            Map<Type, ParseState> states = postStates().get().get(group);
+            Map<Type, ParseState> states = postStates(group);
             if (states != null) {
                 for (ParseState state : states.toValues()) {
                     for (Type sup : left.type().allSupers()) {
@@ -220,7 +220,7 @@ public interface ParseContext {
             }
             return false;
         }
-        Map<Type, ParseState> states = preStates().get().get(group);
+        Map<Type, ParseState> states = preStates(group);
         if (states != null) {
             for (ParseState state : states.toValues()) {
                 result.clear();
@@ -261,6 +261,10 @@ public interface ParseContext {
 
     default Map<Type, ParseState> preStates(String group) {
         return preStates().get(group);
+    }
+
+    default Map<Type, ParseState> postStates(String group) {
+        return postStates().get(group);
     }
 
     default Map<Type, Variable> hiddenVariables(String group) {
