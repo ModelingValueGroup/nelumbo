@@ -107,4 +107,9 @@ public class NelumboTest extends NelumboTestBase {
         testResource("scopingTest.nl");
     }
 
+    @RepeatedTest(10)
+    public void hiddenTest() {
+        testResource("hiddenTest.nl");
+    }
+
 }
