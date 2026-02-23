@@ -293,7 +293,7 @@ public class ParseState implements Mergeable<ParseState> {
     private void nodeStates(Token token, ParseContext ctx, MutableMap<DirectionContext, Set<TokenState>> dirStates) {
         if (!isNodesEmpty()) {
             for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
-                Map<Type, ParseState> states = pc.groupStates(group);
+                Map<Type, ParseState> states = pc.preStates(group);
                 if (states != null) {
                     DirectionContext key = new DirectionContext(Direction.node, pc);
                     dirStates.put(key, states.toValues().map(s -> new TokenState(token, s)).asSet());

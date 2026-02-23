@@ -220,16 +220,6 @@ public interface ParseContext {
             }
             return false;
         }
-        Map<Type, Variable> vars = hiddenVariables().get().get(group);
-        if (vars != null) {
-            for (Entry<Type, Variable> var : vars) {
-                for (ParseContext pc = result.context(); pc != null; pc = pc.outer()) {
-                    if (pc.preParse(group, token, var.getValue(), result)) {
-                        return true;
-                    }
-                }
-            }
-        }
         Map<Type, ParseState> states = preStates().get().get(group);
         if (states != null) {
             for (ParseState state : states.toValues()) {
@@ -269,12 +259,16 @@ public interface ParseContext {
         return m.put(group, ts);
     }
 
-    default Map<Type, ParseState> groupStates(String group) {
+    default Map<Type, ParseState> preStates(String group) {
         return preStates().get(group);
     }
 
+    default Map<Type, Variable> hiddenVariables(String group) {
+        return hiddenVariables().get(group);
+    }
+
     default Variable variable(String group, String name) {
-        Map<Type, ParseState> states = groupStates(group);
+        Map<Type, ParseState> states = preStates(group);
         if (states != null) {
             for (ParseState state : states.toValues()) {
                 ParseState found = state.tokenTexts().get(name);
