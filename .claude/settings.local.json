@@ -35,7 +35,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(javap:*)",
       "Bash(mvn compile:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": [],
     "ask": []

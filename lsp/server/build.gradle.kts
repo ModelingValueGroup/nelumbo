@@ -44,8 +44,8 @@ dependencies {
     // Jakarta WebSocket server (Tyrus)
     implementation("org.glassfish.tyrus:tyrus-server:2.2.2")
     implementation("org.glassfish.tyrus:tyrus-container-grizzly-server:2.2.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.0")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.1")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1")
     implementation("org.tomlj:tomlj:1.1.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
