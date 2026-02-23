@@ -36,7 +36,9 @@
       "Bash(javap:*)",
       "Bash(mvn compile:*)",
       "Bash(test:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh api:*)"
     ],
     "deny": [],
     "ask": []
