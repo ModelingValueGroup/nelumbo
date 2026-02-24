@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.lsp.eclipse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -32,14 +33,13 @@ import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.presentation.IPresentationDamager;
 import org.eclipse.jface.text.presentation.IPresentationRepairer;
+import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageServerWrapper;
-import org.eclipse.lsp4e.LanguageServiceAccessor;
-import org.eclipse.lsp4e.LanguageServiceAccessor.LSPDocumentInfo;
+import org.eclipse.lsp4e.LanguageServers;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
-import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Color;
@@ -47,27 +47,19 @@ import org.eclipse.swt.widgets.Display;
 
 public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPresentationRepairer {
     // Colors matching NelumboEditor's DEFAULT_TOKEN_COLORS
-    private static final Map<String, int[]> TOKEN_COLORS = Map.ofEntries(
-            Map.entry("comment",   new int[]{0xCC, 0xCC, 0xCC}),  // END_LINE_COMMENT / IN_LINE_COMMENT
-            Map.entry("string",    new int[]{0x00, 0x66, 0x33}),  // STRING
-            Map.entry("number",    new int[]{0x00, 0x00, 0x77}),  // NUMBER / DECIMAL
-            Map.entry("keyword",   new int[]{0x00, 0x00, 0xFF}),  // KEYWORD
-            Map.entry("modifier",  new int[]{0x00, 0x00, 0xFF}),  // KEYWORD
-            Map.entry("variable",  new int[]{0x33, 0x99, 0x00}),  // VARIABLE
-            Map.entry("property",  new int[]{0x00, 0x00, 0xFF}),  // NAME
-            Map.entry("type",      new int[]{0x88, 0x00, 0x88}),  // TYPE
-            Map.entry("operator",  new int[]{0x33, 0x33, 0x33}),  // OPERATOR
-            Map.entry("decorator", new int[]{0x00, 0xCC, 0xCC})   // META_OPERATOR
-    );
+    private static final Map<String, int[]> TOKEN_COLORS = Map.ofEntries(Map.entry("comment", new int[]{0xCC, 0xCC, 0xCC}),  // END_LINE_COMMENT / IN_LINE_COMMENT
+                                                                         Map.entry("string", new int[]{0x00, 0x66, 0x33}),  // STRING
+                                                                         Map.entry("number", new int[]{0x00, 0x00, 0x77}),  // NUMBER / DECIMAL
+                                                                         Map.entry("keyword", new int[]{0x00, 0x00, 0xFF}),  // KEYWORD
+                                                                         Map.entry("modifier", new int[]{0x00, 0x00, 0xFF}),  // KEYWORD
+                                                                         Map.entry("variable", new int[]{0x33, 0x99, 0x00}),  // VARIABLE
+                                                                         Map.entry("property", new int[]{0x00, 0x00, 0xFF}),  // NAME
+                                                                         Map.entry("type", new int[]{0x88, 0x00, 0x88}),  // TYPE
+                                                                         Map.entry("operator", new int[]{0x33, 0x33, 0x33}),  // OPERATOR
+                                                                         Map.entry("decorator", new int[]{0x00, 0xCC, 0xCC})   // META_OPERATOR
+                                                                        );
 
-    private static final Map<String, Integer> TOKEN_STYLES = Map.of(
-            "keyword", SWT.BOLD,
-            "modifier", SWT.BOLD,
-            "operator", SWT.BOLD
-    );
-
-    private static final int             MAX_RETRIES    = 5;
-    private static final int             RETRY_DELAY_MS = 500;
+    private static final Map<String, Integer> TOKEN_STYLES = Map.of("keyword", SWT.BOLD, "modifier", SWT.BOLD, "operator", SWT.BOLD);
 
     // Dedicated thread avoids ForkJoinPool deadlock with LSP4E's internal locking
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> {
@@ -76,11 +68,11 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
         return t;
     });
 
-    private final ITextViewer          viewer;
-    private IDocument                  document;
-    private SemanticTokens             cachedTokens;
-    private SemanticTokensLegend       cachedLegend;
-    private volatile Future<?>         pendingRequest;
+    private final    ITextViewer          viewer;
+    private          IDocument            document;
+    private          SemanticTokens       cachedTokens;
+    private          SemanticTokensLegend cachedLegend;
+    private volatile Future<?>            pendingRequest;
 
     private final IDocumentListener documentListener = new IDocumentListener() {
         @Override
@@ -130,54 +122,32 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
 
         pendingRequest = EXECUTOR.submit(() -> {
             try {
-                List<LSPDocumentInfo> infos = LanguageServiceAccessor.getLSPDocumentInfosFor(
-                        doc, capabilities -> capabilities.getSemanticTokensProvider() != null
-                );
-                if (infos.isEmpty()) {
-                    return;
-                }
-                LSPDocumentInfo info = infos.get(0);
+                LanguageServers.forDocument(doc).withFilter(capabilities -> capabilities.getSemanticTokensProvider() != null).computeFirst((wrapper, server) -> {
+                    SemanticTokensWithRegistrationOptions provider = wrapper.getServerCapabilities().getSemanticTokensProvider();
+                    if (provider == null) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+                    cachedLegend = provider.getLegend();
 
-                SemanticTokensWithRegistrationOptions provider = info.getCapabilites().getSemanticTokensProvider();
-                if (provider == null) {
-                    return;
-                }
-                cachedLegend = provider.getLegend();
+                    SemanticTokensParams params = new SemanticTokensParams(LSPEclipseUtils.toTextDocumentIdentifier(doc));
 
-                SemanticTokensParams params = new SemanticTokensParams(
-                        new TextDocumentIdentifier(info.getFileUri().toString())
-                );
-
-                LanguageServerWrapper wrapper = info.getLanguageServerWrapper();
-                requestTokens(wrapper, params, 0);
+                    requestTokens(wrapper, params);
+                    return CompletableFuture.completedFuture(null);
+                });
             } catch (Throwable t) {
                 t.printStackTrace(System.err);
             }
         });
     }
 
-    private void requestTokens(LanguageServerWrapper wrapper, SemanticTokensParams params, int attempt) {
-        wrapper.execute(server -> server.getTextDocumentService().semanticTokensFull(params))
-                .thenAccept(tokens -> {
-                    if (tokens != null) {
-                        cachedTokens = tokens;
-                        applyPresentation();
-                    } else if (attempt < MAX_RETRIES) {
-                        // Server returned null — likely didOpen hasn't been sent yet; retry after a delay
-                        EXECUTOR.submit(() -> {
-                            try {
-                                Thread.sleep(RETRY_DELAY_MS);
-                            } catch (InterruptedException e) {
-                                return;
-                            }
-                            requestTokens(wrapper, params, attempt + 1);
-                        });
-                    }
-                })
-                .exceptionally(e -> {
-                    e.printStackTrace(System.err);
-                    return null;
-                });
+    private void requestTokens(LanguageServerWrapper wrapper, SemanticTokensParams params) {
+        wrapper.execute(server -> server.getTextDocumentService().semanticTokensFull(params)).thenAccept(tokens -> {
+            cachedTokens = tokens;
+            applyPresentation();
+        }).exceptionally(e -> {
+            e.printStackTrace(System.err);
+            return null;
+        });
     }
 
     private void applyPresentation() {
@@ -212,9 +182,9 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
 
     @Override
     public void createPresentation(TextPresentation presentation, ITypedRegion damage) {
-        SemanticTokens tokens = cachedTokens;
+        SemanticTokens       tokens = cachedTokens;
         SemanticTokensLegend legend = cachedLegend;
-        IDocument doc = document;
+        IDocument            doc    = document;
 
         if (tokens == null || legend == null || doc == null) {
             return;
@@ -226,14 +196,14 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
         }
 
         List<String> tokenTypes = legend.getTokenTypes();
-        int line = 0;
-        int character = 0;
+        int          line       = 0;
+        int          character  = 0;
 
         for (int i = 0; i + 4 < data.size(); i += 5) {
-            int deltaLine   = data.get(i);
-            int deltaChar   = data.get(i + 1);
-            int length      = data.get(i + 2);
-            int tokenType   = data.get(i + 3);
+            int deltaLine = data.get(i);
+            int deltaChar = data.get(i + 1);
+            int length    = data.get(i + 2);
+            int tokenType = data.get(i + 3);
             // data.get(i + 4) is tokenModifiers — not used
 
             if (deltaLine > 0) {
@@ -248,21 +218,21 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
             }
 
             String typeName = tokenTypes.get(tokenType);
-            int[] rgb = TOKEN_COLORS.get(typeName);
+            int[]  rgb      = TOKEN_COLORS.get(typeName);
             if (rgb == null) {
                 continue;
             }
 
             try {
-                int offset = doc.getLineOffset(line) + character;
-                Color color = new Color(Display.getCurrent(), rgb[0], rgb[1], rgb[2]);
-                int style = TOKEN_STYLES.getOrDefault(typeName, SWT.NORMAL);
+                int   offset = doc.getLineOffset(line) + character;
+                Color color  = new Color(Display.getCurrent(), rgb[0], rgb[1], rgb[2]);
+                int   style  = TOKEN_STYLES.getOrDefault(typeName, SWT.NORMAL);
 
-                StyleRange styleRange       = new StyleRange();
-                styleRange.start            = offset;
-                styleRange.length           = length;
-                styleRange.foreground       = color;
-                styleRange.fontStyle        = style;
+                StyleRange styleRange = new StyleRange();
+                styleRange.start      = offset;
+                styleRange.length     = length;
+                styleRange.foreground = color;
+                styleRange.fontStyle  = style;
                 presentation.addStyleRange(styleRange);
             } catch (Exception e) {
                 // line/offset out of bounds — skip this token

@@ -14,16 +14,19 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+pluginManagement {
+    repositories {
+        maven { url = uri("https://modelingvaluegroup.github.io/gradlePlugins/") }
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = "nelumbo"
 
 // LSP components
 include("lsp:server")
 include("lsp:plugins:eclipse")
 include("lsp:plugins:intellij")
-
-plugins {
-    id("com.gradle.enterprise") version ("3.5")
-}
 
 val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
 println("Gradle: inEclipse=$inEclipse")

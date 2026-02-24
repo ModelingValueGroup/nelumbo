@@ -76,6 +76,12 @@ tasks {
         dependsOn(prepareServerResource)
     }
 
+    configureEach {
+        if (name == "sourcesJar") {
+            dependsOn(prepareServerResource)
+        }
+    }
+
     // Ensure plugin XML patching runs after the server resource is prepared to avoid Gradle validation issues
     named("patchPluginXml") {
         dependsOn(prepareServerResource)
