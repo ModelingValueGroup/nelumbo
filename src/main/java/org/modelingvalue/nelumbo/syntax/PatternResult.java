@@ -173,6 +173,7 @@ public final class PatternResult implements ParseExceptionHandler {
                 functor = functor.setBinding((Map) ta);
             }
             Node node = functor.construct(elements, args, this, context);
+            context.finish(node.type());
             if (hasLeft && args.length == 1 && args[0] instanceof Node arg) {
                 if (node.functor().equals(arg.functor())) {
                     addException(new ParseException("Circular object construction, caused by " + functor, elements));
@@ -180,9 +181,8 @@ public final class PatternResult implements ParseExceptionHandler {
                 }
             }
             if (Type.ROOT.isAssignableFrom(node.type())) {
-                node.init(parser.knowledgeBase(), context);
+                node = node.init(parser.knowledgeBase(), context);
             }
-            context.finish(node.type());
             return node;
         }
         return null;

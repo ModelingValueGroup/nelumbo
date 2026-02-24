@@ -104,6 +104,12 @@ public final class Query extends Node implements Evaluatable {
         return args;
     }
 
+    @Override
+    public Query setBinding(Map<Variable, Object> vars) {
+        vars = vars.replaceAll(e -> e.getKey().type().isLiteral() ? e : Entry.of(e.getKey().literal(), e.getValue()));
+        return (Query) super.setBinding(vars);
+    }
+
     private Query(Object[] array, Query declaration) {
         super(array, declaration);
     }

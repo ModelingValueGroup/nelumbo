@@ -116,6 +116,7 @@ public class NelumboEditor {
             {"Examples", "queryOnly.nl", "Query Only"},
             {"Examples", "hiddenTest.nl", "Hidden Test"},
             {"Examples", "maxTest.nl", "Max Test"},
+            {"Examples", "deHetTest.nl", "De Het Test"},
             {"Examples", "scopingTest.nl", "Scoping Test"}};
 
     private final Preferences                        preferences             = Preferences.userNodeForPackage(NelumboEditor.class);

@@ -98,6 +98,11 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void deHetTest() {
+        testResource("deHetTest.nl");
+    }
+
+    @RepeatedTest(10)
     public void fibSumTest() {
         testResource("fibSumTest.nl");
     }

@@ -21,7 +21,6 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 
@@ -55,6 +54,13 @@ public final class Fact extends Node implements Evaluatable {
     public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
         Predicate predicate = predicate();
         if (!predicate.isFact()) {
+            Functor nodeFunctor = predicate.functor();
+            Functor literalFunctor = knowledgeBase.literal(nodeFunctor);
+            if (literalFunctor != null) {
+                predicate = predicate.setFunctor(literalFunctor);
+            }
+        }
+        if (!predicate.isFact()) {
             handler.addException(new ParseException("The type of " + predicate + " is not FactType.", predicate));
             return;
         }
@@ -63,20 +69,6 @@ public final class Fact extends Node implements Evaluatable {
             return;
         }
         knowledgeBase.addFact(predicate);
-    }
-
-    @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
-        Predicate predicate = predicate();
-        Functor nodeFunctor = predicate.functor();
-        Functor literalFunctor = knowledgeBase.literal(nodeFunctor);
-        if (literalFunctor != null) {
-            predicate = predicate.setFunctor(literalFunctor);
-        }
-        if (predicate.isFact() && predicate.isFullyBound()) {
-            knowledgeBase.addFact(predicate);
-        }
-        return this;
     }
 
 }
