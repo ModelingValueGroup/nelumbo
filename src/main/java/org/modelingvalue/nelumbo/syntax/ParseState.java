@@ -615,7 +615,7 @@ public class ParseState implements Mergeable<ParseState> {
                 elementMerge(group(), state.group()), //
                 startRepetitions().addAll(state.startRepetitions()), //
                 endRepetitions().addAll(state.endRepetitions()), //
-                elementMerge(isKeyword(), state.isKeyword()), //
+                isKeyword() || state.isKeyword(), //
                 elementMerge(visibility(), state.visibility()));
     }
 
