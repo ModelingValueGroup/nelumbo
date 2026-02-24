@@ -35,8 +35,8 @@ public class OptionalPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 3011113311569598643L;
 
-    public OptionalPattern(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public OptionalPattern(Type type, List<AstElement> elements, Pattern optional) {
+        super(type, elements, optional);
     }
 
     protected OptionalPattern(Object[] args, OptionalPattern declaration) {

@@ -34,8 +34,8 @@ public class AlternationPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = -2652813935675033086L;
 
-    public AlternationPattern(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public AlternationPattern(Type type, List<AstElement> elements, List<Pattern> options) {
+        super(type, elements, options);
     }
 
     protected AlternationPattern(Object[] args, AlternationPattern declaration) {

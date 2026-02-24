@@ -33,8 +33,8 @@ public class TokenTypePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 2405616043878166113L;
 
-    public TokenTypePattern(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public TokenTypePattern(Type type, List<AstElement> elements, TokenType tokenType) {
+        super(type, elements, tokenType);
     }
 
     protected TokenTypePattern(Object[] args, TokenTypePattern declaration) {

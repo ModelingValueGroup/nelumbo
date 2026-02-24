@@ -35,8 +35,8 @@ public class RepetitionPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 7257418785045060245L;
 
-    public RepetitionPattern(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public RepetitionPattern(Type type, List<AstElement> elements, Pattern repeated, boolean mandatory, Pattern separator) {
+        super(type, elements, repeated, mandatory, separator);
     }
 
     protected RepetitionPattern(Object[] args, RepetitionPattern declaration) {

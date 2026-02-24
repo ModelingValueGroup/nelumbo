@@ -33,8 +33,12 @@ public class TokenTextPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = -7116490422223451839L;
 
-    public TokenTextPattern(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public TokenTextPattern(Type type, List<AstElement> elements, String text, Boolean isKeyword) {
+        super(type, elements, text, isKeyword);
+    }
+
+    public TokenTextPattern(Type type, List<AstElement> elements, Variable var, Boolean isKeyword) {
+        super(type, elements, var, isKeyword);
     }
 
     protected TokenTextPattern(Object[] args, TokenTextPattern declaration) {
@@ -58,8 +62,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     public boolean isKeyword() {
-        Boolean isKeyword = length() > 1 ? (Boolean) get(1) : false;
-        return isKeyword != null && isKeyword;
+        return (Boolean) get(1);
     }
 
     @Override

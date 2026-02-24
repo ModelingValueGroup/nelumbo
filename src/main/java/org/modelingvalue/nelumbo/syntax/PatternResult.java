@@ -139,8 +139,8 @@ public final class PatternResult implements ParseExceptionHandler {
         return hasLeft;
     }
 
-    public void left(AstElement element) {
-        elements.add(element);
+    public void left(Node left) {
+        elements.add(left);
         hasLeft = true;
     }
 
@@ -213,6 +213,10 @@ public final class PatternResult implements ParseExceptionHandler {
 
     public boolean isEmpty() {
         return hasLeft ? elements().size() < 2 : elements.isEmpty();
+    }
+
+    public Node left() {
+        return hasLeft && elements().size() == 1 ? (Node) elements().first() : null;
     }
 
 }

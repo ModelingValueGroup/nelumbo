@@ -34,8 +34,8 @@ public class SequencePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 1477171023667359130L;
 
-    public SequencePattern(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public SequencePattern(Type type, List<AstElement> elements, List<Pattern> patterns) {
+        super(type, elements, patterns);
     }
 
     protected SequencePattern(Object[] args, SequencePattern declaration) {

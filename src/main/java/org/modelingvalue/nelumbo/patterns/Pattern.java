@@ -39,7 +39,11 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern n(Type nodeType, int precedence) {
-        return n(List.of(), nodeType, precedence);
+        return n(List.of(), nodeType, precedence, null);
+    }
+
+    public static Pattern n(Type nodeType, int precedence, Boolean visible) {
+        return n(List.of(), nodeType, precedence, visible);
     }
 
     public static Pattern o(Pattern optional) {
@@ -78,8 +82,8 @@ public abstract class Pattern extends Node {
         return new AlternationPattern(Type.PATTERN, ast, List.of(options));
     }
 
-    public static Pattern n(List<AstElement> ast, Type nodeType, Integer precedence) {
-        return new NodeTypePattern(Type.PATTERN, ast, nodeType, precedence);
+    public static Pattern n(List<AstElement> ast, Type nodeType, Integer precedence, Boolean visible) {
+        return new NodeTypePattern(Type.PATTERN, ast, nodeType, precedence, visible);
     }
 
     public static Pattern o(List<AstElement> ast, Pattern optional) {
@@ -103,7 +107,7 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern t(List<AstElement> ast, Variable var) {
-        return new TokenTextPattern(Type.PATTERN, ast, var);
+        return new TokenTextPattern(Type.PATTERN, ast, var, false);
     }
 
     public static Pattern t(List<AstElement> ast, TokenType tokenType) {
@@ -113,8 +117,8 @@ public abstract class Pattern extends Node {
     public static Pattern v(List<AstElement> ast, Variable var) {
         Type type = var.type();
         TokenType tt = type.tokenType();
-        return tt != null ? new TokenTextPattern(Type.PATTERN, ast, var) : //
-                new NodeTypePattern(Type.PATTERN, ast, new Type(var), null);
+        return tt != null ? new TokenTextPattern(Type.PATTERN, ast, var, false) : //
+                new NodeTypePattern(Type.PATTERN, ast, new Type(var), null, null);
     }
 
     protected Pattern(Type type, List<AstElement> ast, Object... args) {

@@ -16,25 +16,6 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
-import javax.swing.UIManager;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.StyledEditorKit;
-import javax.swing.text.ViewFactory;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -47,14 +28,22 @@ import java.io.Serial;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.prefs.Preferences;
 
-import com.formdev.flatlaf.FlatLightLaf;
+import javax.swing.*;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.ViewFactory;
+
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
 import org.modelingvalue.nelumbo.syntax.TokenType;
+
+import com.formdev.flatlaf.FlatLightLaf;
 
 /**
  * Main application controller for the Nelumbo Editor.
@@ -89,42 +78,25 @@ public class NelumboEditor {
         }
     }
 
-    private static final String[] FONT_NAMES = {
-            "input mono",
-            "dejavu sans mono",
-            "overpass mono",
-            Font.MONOSPACED
-    };
+    private static final String[]                    FONT_NAMES              = {"input mono", "dejavu sans mono", "overpass mono", Font.MONOSPACED};
 
     /**
      * Default color schemes for token types with style attributes
      */
-    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.ofEntries(
-            Map.entry(TokenType.STRING, new ColorScheme(0x006633, null, false, false, false, false, false)),
-            Map.entry(TokenType.DECIMAL, new ColorScheme(0x000077, null, false, false, false, false, false)),
-            Map.entry(TokenType.NUMBER, new ColorScheme(0x000077, null, false, false, false, false, false)),
-            Map.entry(TokenType.NAME, new ColorScheme(0x0000ff, null, false, false, false, false, false)),
-            Map.entry(TokenType.END_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)),
-            Map.entry(TokenType.IN_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)),
-            Map.entry(TokenType.OPERATOR, new ColorScheme(0x333333, null, true, false, false, false, false)),
-            Map.entry(TokenType.ERROR, new ColorScheme(0xff0000, 0xffdddd, false, false, false, false, false)),
-            Map.entry(TokenType.VARIABLE, new ColorScheme(0x339900, null, false, false, false, false, false)),
-            Map.entry(TokenType.KEYWORD, new ColorScheme(0x0000ff, null, true, false, false, false, false)),
-            Map.entry(TokenType.TYPE, new ColorScheme(0x880088, null, false, false, false, false, false)),
-            Map.entry(TokenType.META_OPERATOR, new ColorScheme(0x00cccc, 0xffffff, false, false, false, false, false)));
+    private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS    = Map.ofEntries(Map.entry(TokenType.STRING, new ColorScheme(0x006633, null, false, false, false, false, false)), Map.entry(TokenType.DECIMAL, new ColorScheme(0x000077, null, false, false, false, false, false)), Map.entry(TokenType.NUMBER, new ColorScheme(0x000077, null, false, false, false, false, false)), Map.entry(TokenType.NAME, new ColorScheme(0x0000ff, null, false, false, false, false, false)), Map.entry(TokenType.END_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)), Map.entry(TokenType.IN_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)), Map.entry(TokenType.OPERATOR, new ColorScheme(0x333333, null, true, false, false, false, false)), Map.entry(TokenType.ERROR, new ColorScheme(0xff0000, 0xffdddd, false, false, false, false, false)), Map.entry(TokenType.VARIABLE, new ColorScheme(0x339900, null, false, false, false, false, false)), Map.entry(TokenType.KEYWORD, new ColorScheme(0x0000ff, null, true, false, false, false, false)), Map.entry(TokenType.TYPE, new ColorScheme(0x880088, null, false, false, false, false, false)), Map.entry(TokenType.META_OPERATOR, new ColorScheme(0x00cccc, 0xffffff, false, false, false, false, false)));
 
     /**
      * Map from TokenType to ColorScheme defining how each token type should be colored.
      * This is mutable so users can customize colors.
      */
-    private static final Map<TokenType, ColorScheme> TOKEN_COLORS = new ConcurrentHashMap<>(DEFAULT_TOKEN_COLORS);
+    private static final Map<TokenType, ColorScheme> TOKEN_COLORS            = new ConcurrentHashMap<>(DEFAULT_TOKEN_COLORS);
 
-    private static final String PREF_TOKEN_COLOR_PREFIX = "tokenColor.";
+    private static final String                      PREF_TOKEN_COLOR_PREFIX = "tokenColor.";
 
     /**
      * Example .nl files bundled with the application: {category, filename, displayName}.
      */
-    private static final String[][] EXAMPLE_RESOURCES = {
+    private static final String[][]                  EXAMPLE_RESOURCES       = {
             // Library files - display names match import names (e.g., "nelumbo.logic")
             {"Library", "logic/logic.nl", "nelumbo.logic"},
             {"Library", "integers/integers.nl", "nelumbo.integers"},
@@ -142,11 +114,13 @@ public class NelumboEditor {
             {"Examples", "collectionsTest.nl", "Collections Test"},
             {"Examples", "transformationTest.nl", "Transformation"},
             {"Examples", "queryOnly.nl", "Query Only"},
-    };
+            {"Examples", "hiddenTest.nl", "Hidden Test"},
+            {"Examples", "maxTest.nl", "Max Test"},
+            {"Examples", "scopingTest.nl", "Scoping Test"}};
 
-    private final Preferences          preferences = Preferences.userNodeForPackage(NelumboEditor.class);
-    private final WindowManager        windowManager;
-    private final EditorImportResolver editorImportResolver;
+    private final Preferences                        preferences             = Preferences.userNodeForPackage(NelumboEditor.class);
+    private final WindowManager                      windowManager;
+    private final EditorImportResolver               editorImportResolver;
 
     public WindowManager getWindowManager() {
         return windowManager;
@@ -222,10 +196,8 @@ public class NelumboEditor {
         // Search in EXAMPLE_RESOURCES for a matching entry by display name
         for (String[] entry : EXAMPLE_RESOURCES) {
             if (entry[2].equals(importName)) {
-                String category     = entry[0];
-                String resourcePath = category.equals("Library")
-                        ? NelumboConstants.NELUMBO_LIBRARY + entry[1]
-                        : NelumboConstants.NELUMBO_EXAMPLES + entry[1];
+                String category = entry[0];
+                String resourcePath = category.equals("Library") ? NelumboConstants.NELUMBO_LIBRARY + entry[1] : NelumboConstants.NELUMBO_EXAMPLES + entry[1];
                 return new String[]{importName, resourcePath};
             }
         }
@@ -523,9 +495,7 @@ public class NelumboEditor {
             String displayName = entry[2];
 
             // Construct full resource path based on category
-            String resourcePath = category.equals("Library")
-                    ? NelumboConstants.NELUMBO_LIBRARY + fileName
-                    : NelumboConstants.NELUMBO_EXAMPLES + fileName;
+            String resourcePath = category.equals("Library") ? NelumboConstants.NELUMBO_LIBRARY + fileName : NelumboConstants.NELUMBO_EXAMPLES + fileName;
 
             // Get or create submenu for this category
             JMenu submenu = submenus.computeIfAbsent(category, k -> {

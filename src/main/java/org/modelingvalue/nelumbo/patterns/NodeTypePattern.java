@@ -34,8 +34,8 @@ public class NodeTypePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 6828401544789430678L;
 
-    public NodeTypePattern(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public NodeTypePattern(Type type, List<AstElement> elements, Type nodeType, Integer precedence, Boolean visible) {
+        super(type, elements, nodeType, precedence, visible);
     }
 
     protected NodeTypePattern(Object[] args, NodeTypePattern declaration) {
@@ -74,9 +74,14 @@ public class NodeTypePattern extends Pattern {
         return (Integer) get(1);
     }
 
+    public Boolean visible() {
+        return (Boolean) get(2);
+    }
+
     @Override
     public ParseState state(ParseState next) {
-        return new ParseState(nodeType(), next, precedence());
+        Boolean visible = visible();
+        return new ParseState(nodeType(), precedence(), visible != null ? next.setVisibility(visible) : next);
     }
 
     @Override
