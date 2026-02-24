@@ -140,6 +140,7 @@ public final class Type extends Node {
 
     public Type(List<AstElement> elements, Variable var, String group) {
         super(TYPE, elements, var, Set.of(OBJECT), group);
+        assert Type.TYPE.equals(var.type());
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {

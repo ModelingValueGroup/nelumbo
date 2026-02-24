@@ -342,10 +342,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return tt != null ? t(elements, tt) : n(elements, type, precedence, visible);
                         }, null).init(this, parseContext);
 
-                Functor.of(s(t("<"), n(Type.VARIABLE, Integer.MAX_VALUE), t(">")), //
+                Functor.of(s(t("<"), n(Type.VARIABLE, Integer.MAX_VALUE), o(s(t("#"), t(NUMBER))), t(">")), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
                             Variable var = (Variable) args[0];
-                            return v(elements, var);
+                            return t(elements, var);
                         }, null).init(this, parseContext);
 
                 Functor.of(s(o(a(k("private"), s(t("{"), n(Type.TYPE, Integer.MIN_VALUE), t("}")))), n(Type.TYPE, Integer.MAX_VALUE), t("::="), r(SEQ_NO_COMMA, true, t(","))), //

@@ -73,8 +73,14 @@ public class TokenTextPattern extends Pattern {
     @Override
     protected TokenTextPattern setBinding(Node declaration, Map<Variable, Object> vars) {
         Variable var = variable();
-        if (var != null && vars.get(var) instanceof String text) {
-            return set(0, text);
+        if (var != null) {
+            Object val = vars.get(var);
+            if (val instanceof String text) {
+                return set(0, text);
+            }
+            if (val instanceof Node node) {
+                return set(0, node.toString());
+            }
         }
         return (TokenTextPattern) super.setBinding(declaration, vars);
     }
