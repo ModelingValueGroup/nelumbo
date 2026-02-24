@@ -532,6 +532,14 @@ public class ParseState implements Mergeable<ParseState> {
             } catch (NotMergeableException exc) {
                 result.addException(new ParseException(exc.getMessage(), node));
             }
+            Type type = node.type();
+            for (Type sup : type.allSupers()) {
+                ParseState next = nodeTypes().get(sup);
+                if (next != null) {
+                    result.add(node);
+                    return new TokenState(node.nextToken(), next);
+                }
+            }
             Variable var = node.variable();
             if (var != null) {
                 ParseState next = nodeTypes().get(Type.VARIABLE);
@@ -540,32 +548,26 @@ public class ParseState implements Mergeable<ParseState> {
                     return new TokenState(node.nextToken(), next);
                 }
             }
-            result.add(node);
-            Type type = node.type();
-            for (Type sup : type.allSupers()) {
-                ParseState next = nodeTypes().get(sup);
-                if (next != null) {
-                    return new TokenState(node.nextToken(), next);
-                }
-            }
             Entry<Type, ParseState> ts = nodeTypes().findAny(e -> e.getKey().variable() != null).orElse(null);
             if (ts != null) {
-                var = ts.getKey().variable();
-                Type sup = result.getTypeArg(var);
+                Variable arg = ts.getKey().variable();
+                Type sup = result.getTypeArg(arg);
                 if (sup != null) {
                     if (sup.isAssignableFrom(type)) {
+                        result.add(node);
                         return new TokenState(node.nextToken(), ts.getValue());
                     }
                     if (sup.isAssignableFrom(type)) {
-                        result.putTypeArg(var, type);
+                        result.putTypeArg(arg, type);
+                        result.add(node);
                         return new TokenState(node.nextToken(), ts.getValue());
                     }
                 } else {
-                    result.putTypeArg(var, type);
+                    result.putTypeArg(arg, type);
+                    result.add(node);
                     return new TokenState(node.nextToken(), ts.getValue());
                 }
             }
-            result.removeLast();
             result.addException(new ParseException("Node " + node + " of unexpected type " + type + ", expected " + expectedTypes(), node));
         }
         return null;
