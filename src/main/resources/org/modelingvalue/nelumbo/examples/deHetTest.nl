@@ -36,7 +36,5 @@ Persoon ::= Piet, Jan
 de naam van Jan is "Jan"
 het adres van Piet is "Kalverstraat"
 
-String a
-
 wat is de naam van Jan ?
 wat is het adres van Piet ?

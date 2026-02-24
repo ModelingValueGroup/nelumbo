@@ -88,7 +88,7 @@ public final class Transform extends Node {
         return this;
     }
 
-    public Node rewrite(Node start, Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+    public Node transform(Node start, Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         Map<Variable, Object> binding = node.getBinding(start);
         if (binding == null) {
             return result;

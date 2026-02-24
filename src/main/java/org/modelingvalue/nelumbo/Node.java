@@ -580,7 +580,7 @@ public class Node extends StructImpl implements AstElement {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         Node rewrite = this;
         for (Transform transform : knowledgeBase.getTransforms(this)) {
-            rewrite = transform.rewrite(transform.source(), this, rewrite, knowledgeBase, ctx);
+            rewrite = transform.transform(transform.source(), this, rewrite, knowledgeBase, ctx);
         }
         return rewrite;
     }

@@ -182,7 +182,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private Functor addVariable(Variable var, ParseContext ctx) throws ParseException {
         Type literal = var.type().literal();
         for (Pair<Functor, Transform> pair : literalTransforms.get().getOrDefault(literal, Set.of())) {
-            pair.b().rewrite(pair.a().pattern(), t(List.of(var), var), null, this, ctx);
+            pair.b().transform(pair.a().pattern(), t(List.of(var), var), null, this, ctx);
         }
         if (Type.TYPE.equals(var.type())) {
             return addType(new Type(var), ctx);
