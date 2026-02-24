@@ -79,7 +79,7 @@ public class TokenTextPattern extends Pattern {
                 return set(0, text);
             }
             if (val instanceof Node node) {
-                return set(0, node.toString());
+                return set(0, node.toString(), node.firstToken().isKeyword());
             }
         }
         return (TokenTextPattern) super.setBinding(declaration, vars);
