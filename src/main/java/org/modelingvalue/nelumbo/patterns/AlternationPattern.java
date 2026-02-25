@@ -99,6 +99,9 @@ public class AlternationPattern extends Pattern {
 
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+        if (ai < 0 || args.size() <= ai) {
+            return -1;
+        }
         Object o = args.get(ai);
         StringBuffer inner = new StringBuffer();
         for (Pattern option : options()) {

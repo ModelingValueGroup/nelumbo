@@ -79,6 +79,9 @@ public class OptionalPattern extends Pattern {
 
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+        if (ai < 0 || args.size() <= ai) {
+            return -1;
+        }
         if (args.get(ai) instanceof Optional<?> opt) {
             StringBuffer inner = new StringBuffer();
             if (opt.isPresent()) {

@@ -53,8 +53,12 @@ public record NlDocument(Workspace workspace,
 
         U.DEBUG("    #tokens    : %4d", tokenizerResult.listAll().size());
         U.DEBUG("    #root-nodes: %4d", parserResult.roots().size());
-        if (!parserResult.roots().isEmpty()) {
-            U.DEBUG_NODE(parserResult.root(), "    ");
+        try {
+            if (!parserResult.roots().isEmpty()) {
+                U.DEBUG_NODE(parserResult.root(), "    ");
+            }
+        } catch (Exception e) {
+            U.DEBUG("    DEBUG_NODE failed: %s", e);
         }
 
         return new NlDocument(workspace, content, version, uri, tokenizerResult, parserResult);

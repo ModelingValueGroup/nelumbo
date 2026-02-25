@@ -109,6 +109,9 @@ public class TokenTextPattern extends Pattern {
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (alt) {
+            if (ai < 0 || args.size() <= ai) {
+                return -1;
+            }
             if (args.get(ai) instanceof String text && text.equals(tokenText())) {
                 addText(sb, previous, text);
                 return ai + 1;

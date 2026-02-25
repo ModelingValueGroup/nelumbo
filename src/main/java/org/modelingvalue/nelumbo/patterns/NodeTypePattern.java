@@ -109,6 +109,9 @@ public class NodeTypePattern extends Pattern {
 
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+        if (ai < 0 || args.size() <= ai) {
+            return -1;
+        }
         if (args.get(ai) instanceof Node node && (//
         nodeType().isAssignableFrom(node instanceof Type type ? type : node.type()) || //
                 (node instanceof Variable && nodeType().isAssignableFrom(Type.VARIABLE)))) {

@@ -111,6 +111,9 @@ public class SequencePattern extends Pattern {
     @SuppressWarnings("unchecked")
     @Override
     protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+        if (ai < 0 || args.size() <= ai) {
+            return -1;
+        }
         if (argTypes(List.of()).size() == 1) {
             args = List.of(List.of(args.get(ai)));
         }
