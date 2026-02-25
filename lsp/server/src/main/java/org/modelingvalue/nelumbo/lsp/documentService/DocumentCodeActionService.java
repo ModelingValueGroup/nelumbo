@@ -23,11 +23,8 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.modelingvalue.nelumbo.lsp.CommandType;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
-import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class DocumentCodeActionService extends DocumentServiceAdapter {
     public DocumentCodeActionService(NlDocumentManager documentManager) {
@@ -40,11 +37,11 @@ public class DocumentCodeActionService extends DocumentServiceAdapter {
         if (document == null) {
             return CompletableFuture.completedFuture(null);
         }
-        Token t = document.tokenAt(params.getRange().getStart());
-        if (t == null || t.type() != TokenType.OPERATOR || !t.text().equals("?")) {
-            return CompletableFuture.completedFuture(null);
-        }
-        List<Either<Command, CodeAction>> actions = List.of(Either.forLeft(CommandType.EXEC_COMMAND.command()));
-        return CompletableFuture.completedFuture(actions);
+        //Token t = document.tokenAt(params.getRange().getStart());
+        //if (t == null || t.type() != TokenType.OPERATOR || !t.text().equals("?")) {
+        return CompletableFuture.completedFuture(null);
+        //}
+        //List<Either<Command, CodeAction>> actions = List.of(Either.forLeft(CommandType.EXEC_COMMAND.command()));
+        //return CompletableFuture.completedFuture(actions);
     }
 }
