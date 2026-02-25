@@ -17,6 +17,7 @@ occur.
 - [Building](#building)
 - [IDE Plugins](#ide-plugins)
 - [Examples](#examples)
+- [Releasing](#releasing)
 - [Contributing](#contributing)
 - [License](#license)
 - [Support](#support)
@@ -140,6 +141,23 @@ fib(1000)=f    ? [(f=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8s
 
     
 ```
+
+## Releasing
+
+Releases are created automatically by CI. The process works as follows:
+
+1. Edit `RELEASE_NOTES.md` in the repository root with the release notes for the upcoming version.
+2. Merge your changes to `master`.
+3. The build workflow runs. On success, the Gradle `mvgTagger` plugin creates and pushes a version tag (e.g. `v1.2.3`).
+4. The tag push triggers the release workflow, which downloads the build artifacts and creates a GitHub release with the contents of `RELEASE_NOTES.md`.
+
+The release includes the following artifacts:
+- **Editor** — standalone Swing-based editor (`nelumbo-*-editor.jar`)
+- **Eclipse plugin** — dropins-based plugin (`eclipse-nelumbo-plugin-*.jar`)
+- **IntelliJ plugin** — LSP4IJ-based plugin (`intellij-nelumbo-plugin-*.zip`)
+- **Slides** — presentation slides (`nelumbo-slides.zip`)
+
+If `RELEASE_NOTES.md` is absent, GitHub will auto-generate release notes from the commit log.
 
 ## Contributing
 

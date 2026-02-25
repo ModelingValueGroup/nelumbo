@@ -16,7 +16,10 @@
 
 name: build
 
-on  : [ push, workflow_dispatch ]
+on:
+    push:
+        branches: [ '**' ]
+    workflow_dispatch:
 
 jobs:
     build:
@@ -42,14 +45,9 @@ jobs:
             
             ################################################################################
             -   name: "build"
-                run : ./gradlew --info
-            
-            -   name: "build-plugins"
-                run : ./gradlew --info :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin
-        
-            -   name: "build-slides"
-                run : ./gradlew --info build-slides
+                run : ./gradlew --info build :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin build-slides
                 
+            ################################################################################
             -   name: "upload-editor-jar"
                 uses: actions/upload-artifact@v6
                 with:

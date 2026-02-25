@@ -1,0 +1,76 @@
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## (C) Copyright 2018-2026 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+##                                                                                                                     ~
+## Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+## compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+## Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+## an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+## specific language governing permissions and limitations under the License.                                          ~
+##                                                                                                                     ~
+## Maintainers:                                                                                                        ~
+##     Wim Bast, Tom Brus                                                                                              ~
+##                                                                                                                     ~
+## Contributors:                                                                                                       ~
+##     Victor Lap                                                                                                      ~
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+name: release
+
+on:
+    push:
+        tags: [ 'v[0-9]+.[0-9]+.[0-9]+*' ]
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v6
+                with:
+                    sparse-checkout: RELEASE_NOTES.md
+                    sparse-checkout-cone-mode: false
+
+            -   name: "download-build-artifacts"
+                env:
+                    GH_TOKEN: ${{ github.token }}
+                run: |
+                    # Find the build workflow run for this commit
+                    RUN_ID=$(gh run list --workflow=build.yaml --commit "$GITHUB_SHA" --limit=1 --json databaseId --jq '.[0].databaseId')
+                    if [ -z "$RUN_ID" ]; then
+                        echo "::error::No build workflow run found for commit $GITHUB_SHA"
+                        exit 1
+                    fi
+                    echo "Found build run: $RUN_ID"
+
+                    # Wait for the build to complete if still running
+                    gh run watch "$RUN_ID" --exit-status
+
+                    # Download all artifacts
+                    gh run download "$RUN_ID" -D artifacts
+
+            -   name: "create-github-release"
+                env:
+                    GH_TOKEN: ${{ github.token }}
+                run: |
+                    TAG="${GITHUB_REF#refs/tags/}"
+                    echo "Creating release for tag: $TAG"
+
+                    ASSETS=()
+                    for f in artifacts/editor/nelumbo*editor.jar \
+                             artifacts/eclipse-plugin/eclipse-nelumbo-plugin-*.jar \
+                             artifacts/intellij-plugin/intellij-nelumbo-plugin-*.zip; do
+                        [ -f "$f" ] && ASSETS+=("$f")
+                    done
+                    if [ -d "artifacts/slides" ]; then
+                        (cd artifacts && zip -qr ../nelumbo-slides.zip slides)
+                        ASSETS+=("nelumbo-slides.zip")
+                    fi
+
+                    NOTES_FLAG=(--generate-notes)
+                    if [ -f "RELEASE_NOTES.md" ]; then
+                        NOTES_FLAG=(--notes-file RELEASE_NOTES.md)
+                    fi
+
+                    gh release create "$TAG" \
+                        --title "Nelumbo $TAG" \
+                        "${NOTES_FLAG[@]}" \
+                        "${ASSETS[@]}"

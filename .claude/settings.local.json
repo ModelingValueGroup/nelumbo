@@ -38,7 +38,8 @@
       "Bash(test:*)",
       "Bash(git fetch:*)",
       "Bash(gh run view:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(gh release view:*)"
     ],
     "deny": [],
     "ask": []
