@@ -63,12 +63,12 @@ Run tests:
 
 Nelumbo has LSP-based editor plugins for multiple IDEs:
 
-| IDE | Path | Details |
-|---|---|---|
-| Eclipse | [`lsp/plugins/eclipse`](lsp/plugins/eclipse) | Dropins-based plugin with semantic highlighting |
-| IntelliJ | [`lsp/plugins/intellij`](lsp/plugins/intellij) | IntelliJ platform plugin |
-| VS Code | [`lsp/plugins/vscode`](lsp/plugins/vscode) | VS Code extension |
-| Neovim | [`lsp/plugins/neovim`](lsp/plugins/neovim) | Neovim LSP configuration |
+| IDE      | Path                                           | Details                                         |
+|----------|------------------------------------------------|-------------------------------------------------|
+| Eclipse  | [`lsp/plugins/eclipse`](lsp/plugins/eclipse)   | Dropins-based plugin with semantic highlighting |
+| IntelliJ | [`lsp/plugins/intellij`](lsp/plugins/intellij) | IntelliJ platform plugin                        |
+| VS Code  | [`lsp/plugins/vscode`](lsp/plugins/vscode)     | VS Code extension                               |
+| Neovim   | [`lsp/plugins/neovim`](lsp/plugins/neovim)     | Neovim LSP configuration                        |
 
 See the README in each plugin directory for installation instructions.
 
@@ -146,15 +146,18 @@ fib(1000)=f    ? [(f=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8s
 
 Releases are created automatically by CI. The process works as follows:
 
-1. Edit `RELEASE_NOTES.md` in the repository root with the release notes for the upcoming version.
-2. Merge your changes to `master`.
+1. You edit `RELEASE_NOTES.md` in the repository root with the release notes for the upcoming version.
+   You can use `${version}` and `${version-num}` for the version tag and version number respectively.
+2. You merge your changes to `master`, that's it!
 3. The build workflow runs. On success, the Gradle `mvgTagger` plugin creates and pushes a version tag (e.g. `v1.2.3`).
-4. The tag push triggers the release workflow, which downloads the build artifacts and creates a GitHub release with the contents of `RELEASE_NOTES.md`.
+4. The tag push triggers the release workflow, which downloads the build artifacts and creates a GitHub release with the
+   contents of `RELEASE_NOTES.md`.
 
 The release includes the following artifacts:
-- **Editor** — standalone Swing-based editor (`nelumbo-*-editor.jar`)
-- **Eclipse plugin** — dropins-based plugin (`eclipse-nelumbo-plugin-*.jar`)
-- **IntelliJ plugin** — LSP4IJ-based plugin (`intellij-nelumbo-plugin-*.zip`)
+
+- **Editor** — standalone Swing-based editor (`nelumbo-${version-num}-editor.jar`)
+- **Eclipse plugin** — dropins-based plugin (`eclipse-nelumbo-plugin-${version-num}.jar`)
+- **IntelliJ plugin** — LSP4IJ-based plugin (`intellij-nelumbo-plugin-${version-num}.zip`)
 - **Slides** — presentation slides (`nelumbo-slides.zip`)
 
 If `RELEASE_NOTES.md` is absent, GitHub will auto-generate release notes from the commit log.
