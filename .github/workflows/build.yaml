@@ -45,7 +45,7 @@ jobs:
             
             ################################################################################
             -   name: "build"
-                run : ./gradlew --info build :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin build-slides
+                run : ./gradlew --info build editorJar :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin build-slides
                 
             ################################################################################
             -   name: "upload-editor-jar"
