@@ -45,8 +45,16 @@ jobs:
             
             ################################################################################
             -   name: "build"
-                run : ./gradlew --info build editorJar :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin build-slides
-                
+                run : |
+                    ./gradlew --info \
+                        mvgCorrector \
+                        build \
+                        editorJar \
+                        :lsp:plugins:eclipse:jar \
+                        :lsp:plugins:intellij:buildPlugin \
+                        mvgTagger \
+                        build-slides
+            
             ################################################################################
             -   name: "upload-editor-jar"
                 uses: actions/upload-artifact@v6
