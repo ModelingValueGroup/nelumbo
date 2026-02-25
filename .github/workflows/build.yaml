@@ -42,10 +42,10 @@ jobs:
             
             ################################################################################
             -   name: "build"
-                run : ./gradlew --info --scan
+                run : ./gradlew --info
             
             -   name: "build-plugins"
-                run : ./gradlew --info --scan :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin
+                run : ./gradlew --info :lsp:plugins:eclipse:jar :lsp:plugins:intellij:buildPlugin
         
             -   name: "build-slides"
                 run : ./gradlew --info build-slides
