@@ -1,8 +1,8 @@
 To start the **nelumbo** editor:
 
 - install java (version 21 or higher, if not yet installed)
-- download `nelumbo-0.9.6-editor.jar`
-- in your command line environment run `java -jar nelumbo-0.9.6-editor.jar`
+- download `nelumbo-${version-num}-editor.jar`
+- in your command line environment run `java -jar nelumbo-${version-num}-editor.jar`
 
 Always start a **nelumbo** specification with an import-statement. For example:
 ```

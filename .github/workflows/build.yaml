@@ -38,6 +38,7 @@ jobs:
                 with:
                     java-version: 21
                     distribution: zulu
+                    cache       : gradle
             
             # Ensure Docker CLI and Buildx are available for docker commands
             -   name: Set up Docker Buildx

@@ -66,6 +66,11 @@ jobs:
                         ASSETS+=("nelumbo-slides.zip")
                     fi
 
+                    # Substitute version placeholders in release notes
+                    if [ -f "RELEASE_NOTES.md" ]; then
+                        sed -i "s/\${version}/$TAG/g; s/\${version-num}/${TAG#v}/g" RELEASE_NOTES.md
+                    fi
+
                     NOTES_FLAG=(--generate-notes)
                     if [ -f "RELEASE_NOTES.md" ]; then
                         NOTES_FLAG=(--notes-file RELEASE_NOTES.md)
