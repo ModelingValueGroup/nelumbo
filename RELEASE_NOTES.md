@@ -14,3 +14,4 @@ String  a
 ```
 Query results are calculated and shown on the fly.
 This editor is not an LSP-based editor, and useful for educational and demo purposes.
+
