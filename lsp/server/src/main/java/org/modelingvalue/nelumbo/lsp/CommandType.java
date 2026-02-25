@@ -23,8 +23,7 @@ import java.util.regex.Pattern;
 import org.eclipse.lsp4j.Command;
 
 public enum CommandType {
-    COMMAND_X, // not a real command, to be used later
-    DEMO_COMMAND,
+    EXEC_COMMAND,
     ;
 
     private static final String  COMMAND_PRE = "nelumbo.";

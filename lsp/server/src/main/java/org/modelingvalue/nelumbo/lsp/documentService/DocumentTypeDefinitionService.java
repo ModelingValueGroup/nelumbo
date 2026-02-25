@@ -23,6 +23,9 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.TypeDefinitionParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.lsp.U;
@@ -41,16 +44,38 @@ public class DocumentTypeDefinitionService extends DocumentServiceAdapter {
         if (document == null) {
             return CompletableFuture.completedFuture(null);
         }
-        Token t = document.tokenAt(params.getPosition());
-        if (t == null || t.type() != TokenType.TYPE) {
+        Token token = document.tokenAt(params.getPosition());
+        if (token == null) {
             return CompletableFuture.completedFuture(null);
         }
-        String typeName = t.text();
-        List<Location> locations = document.tokens().stream() //
-                                           .filter(tt -> tt.type() == TokenType.TYPE && tt.text().equals(typeName)) //
-                                           .map(tt -> new Location(uri, U.range(tt))) //
-                                           .toList();
-        return CompletableFuture.completedFuture(Either.forLeft(locations));
+        // Determine the type name to look up
+        String    typeName  = null;
+        TokenType colorType = token.colorType();
+        if (colorType == TokenType.TYPE) {
+            typeName = token.text();
+        } else if (colorType == TokenType.VARIABLE) {
+            Variable var = token.variable();
+            if (var != null) {
+                typeName = var.type().rawName();
+            }
+        } else if (token.type() == TokenType.NAME) {
+            typeName = token.text();
+        }
+        if (typeName == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        // Find the declaring Type node in roots
+        for (Node root : document.parserResult().roots()) {
+            if (root instanceof Type type) {
+                if (type.name().equals(typeName) || type.rawName().equals(typeName)) {
+                    Token first = type.firstToken();
+                    if (first != null) {
+                        List<Location> locations = List.of(new Location(uri, U.range(first)));
+                        return CompletableFuture.completedFuture(Either.forLeft(locations));
+                    }
+                }
+            }
+        }
+        return CompletableFuture.completedFuture(null);
     }
-
 }

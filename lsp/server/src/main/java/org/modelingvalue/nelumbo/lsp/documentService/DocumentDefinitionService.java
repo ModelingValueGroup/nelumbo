@@ -24,6 +24,7 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
@@ -44,14 +45,26 @@ public class DocumentDefinitionService extends DocumentServiceAdapter {
         }
         Position pos   = params.getPosition();
         Token    token = document.tokenAt(pos);
-        Token tt = document.next(document.next(token));
-        if (Main.debugging()) {
-            System.err.println("    hover " + U.render(pos) + ": token=" + token+", target token=" + tt );
-        }
-        if (tt == null) {
+        if (token == null) {
             return CompletableFuture.completedFuture(null);
         }
-        List<Location> l = List.of(new Location(params.getTextDocument().getUri(), U.range(tt)));
+        Token defToken = token.definition();
+        if (defToken == null) {
+            Node node = token.getNode();
+            if (node != null) {
+                Node decl = node.declaration();
+                if (decl != null) {
+                    defToken = decl.firstToken();
+                }
+            }
+        }
+        if (Main.debugging()) {
+            System.err.println("    definition " + U.render(pos) + ": token=" + token + ", target=" + defToken);
+        }
+        if (defToken == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        List<Location> l = List.of(new Location(params.getTextDocument().getUri(), U.range(defToken)));
         return CompletableFuture.completedFuture(Either.forLeft(l));
     }
 }

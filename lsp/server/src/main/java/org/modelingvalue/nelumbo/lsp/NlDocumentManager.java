@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.lsp;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 
 public class NlDocumentManager {
     private final Workspace                             workspace;
@@ -47,5 +48,9 @@ public class NlDocumentManager {
 
     public void closeDocument(String uri) {
         documentCache.remove(uri);
+    }
+
+    public List<String> uris() {
+        return documentCache.keySet().stream().toList();
     }
 }

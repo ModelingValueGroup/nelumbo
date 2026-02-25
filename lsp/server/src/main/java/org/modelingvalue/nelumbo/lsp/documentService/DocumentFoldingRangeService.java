@@ -16,14 +16,16 @@
 
 package org.modelingvalue.nelumbo.lsp.documentService;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class DocumentFoldingRangeService extends DocumentServiceAdapter {
     public DocumentFoldingRangeService(NlDocumentManager documentManager) {
@@ -36,7 +38,16 @@ public class DocumentFoldingRangeService extends DocumentServiceAdapter {
         if (document == null) {
             return CompletableFuture.completedFuture(null);
         }
-        List<FoldingRange> foldingRanges = Collections.emptyList();
+        List<FoldingRange> foldingRanges = new ArrayList<>();
+        for (Node node : document.parserResult().roots()) {
+            Token first = node.firstToken();
+            Token last  = node.lastToken();
+            if (first != null && last != null && first.line() < last.lastLine()) {
+                FoldingRange fr = new FoldingRange(first.line(), last.lastLine());
+                fr.setKind("region");
+                foldingRanges.add(fr);
+            }
+        }
         return CompletableFuture.completedFuture(foldingRanges);
     }
 }

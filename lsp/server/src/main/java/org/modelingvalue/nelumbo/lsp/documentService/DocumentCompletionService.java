@@ -16,12 +16,14 @@
 
 package org.modelingvalue.nelumbo.lsp.documentService;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.Position;
@@ -44,22 +46,43 @@ public class DocumentCompletionService extends DocumentServiceAdapter {
         }
         Position caretPos   = params.getPosition();
         Token    caretToken = document.tokenAt(caretPos);
-        if (caretToken == null || caretToken.type() != TokenType.NAME) {
+        Set<String>          seen  = new HashSet<>();
+        List<CompletionItem> items = new ArrayList<>();
+
+        // Primary: parser-state-aware completions
+        if (caretToken != null) {
+            for (String completion : caretToken.completions()) {
+                if (seen.add(completion)) {
+                    CompletionItem ci = new CompletionItem(completion);
+                    ci.setKind(CompletionItemKind.Keyword);
+                    ci.setDetail("keyword");
+                    items.add(ci);
+                }
+            }
+        }
+
+        // Supplementary: NAME tokens matching prefix
+        if (caretToken != null && caretToken.type() == TokenType.NAME) {
+            String prefix = caretToken.text().substring(0, caretPos.getCharacter() - caretToken.position());
+            for (Token t : document.tokens()) {
+                if (t.type() == TokenType.NAME && t.text().startsWith(prefix) && seen.add(t.text())) {
+                    CompletionItem ci = new CompletionItem(t.text());
+                    TokenType ct = t.colorType();
+                    ci.setKind(switch (ct) {
+                        case TYPE -> CompletionItemKind.Class;
+                        case VARIABLE -> CompletionItemKind.Variable;
+                        case KEYWORD -> CompletionItemKind.Keyword;
+                        default -> CompletionItemKind.Text;
+                    });
+                    ci.setDetail(ct.name().toLowerCase());
+                    items.add(ci);
+                }
+            }
+        }
+
+        if (items.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
-        String      caretText   = caretToken.text().substring(0, caretPos.getCharacter() - caretToken.position());
-        Set<String> completions = new HashSet<>();
-        List<CompletionItem> completionItems = document.tokens().stream() //
-                                                       .filter(t -> t.type() == TokenType.NAME) //
-                                                       .map(Token::text) //
-                                                       .filter(text -> text.startsWith(caretText) && !completions.contains(text)) //
-                                                       .map(text -> {
-                                                           completions.add(text);
-                                                           CompletionItem ci = new CompletionItem(text);
-                                                           ci.setDetail("nelumbo");
-                                                           return ci;
-                                                       })//
-                                                       .toList();
-        return CompletableFuture.completedFuture(Either.forLeft(completionItems));
+        return CompletableFuture.completedFuture(Either.forLeft(items));
     }
 }

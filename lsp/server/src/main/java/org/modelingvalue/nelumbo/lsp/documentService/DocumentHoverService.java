@@ -26,10 +26,14 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
+import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.lsp.U;
 import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class DocumentHoverService extends DocumentServiceAdapter {
     public DocumentHoverService(NlDocumentManager documentManager) {
@@ -47,19 +51,66 @@ public class DocumentHoverService extends DocumentServiceAdapter {
         if (token == null) {
             return CompletableFuture.completedFuture(null);
         }
-        List<Node>    nodes = document.nodesAt(pos);
-        StringBuilder text  = new StringBuilder();
-        U.DEBUG("    hover [%s]:", U.render(pos));
-        text.append(String.format("under [%s]:", U.render(pos)));
-        U.DEBUG("     - token %s", token);
-        text.append(String.format("\n<br> - [%s] TOKEN %s", U.renderSpan(token), U.escapeMarkdown(token.textTraced())));
-        if (nodes.isEmpty()) {
-            U.DEBUG("        <no nodes found>");
-            text.append("\n<br> - <i>no nodes found</i>");
-        } else {
-            for (Node node : nodes) {
-                U.DEBUG("        - [%s} %s", U.renderSpan(node), node);
-                text.append(String.format("\n<br> - [%s] NODE %s", U.renderSpan(node), U.escapeMarkdown(node.toString())));
+        StringBuilder text = new StringBuilder();
+
+        if (Main.debugging()) {
+            List<Node> debugNodes = document.nodesAt(pos);
+            U.DEBUG("    hover [%s]:", U.render(pos));
+            text.append(String.format("under [%s]:", U.render(pos)));
+            U.DEBUG("     - token %s", token);
+            text.append(String.format("\n<br> - [%s] TOKEN %s", U.renderSpan(token), U.escapeMarkdown(token.textTraced())));
+            if (debugNodes.isEmpty()) {
+                U.DEBUG("        <no nodes found>");
+                text.append("\n<br> - <i>no nodes found</i>");
+            } else {
+                for (Node node : debugNodes) {
+                    U.DEBUG("        - [%s} %s", U.renderSpan(node), node);
+                    text.append(String.format("\n<br> - [%s] NODE %s", U.renderSpan(node), U.escapeMarkdown(node.toString())));
+                }
+            }
+            text.append("\n\n---\n\n");
+        }
+
+        TokenType colorType = token.colorType();
+        switch (colorType) {
+            case TYPE -> {
+                Node node = token.getNode();
+                if (node instanceof Type type) {
+                    text.append("**type** `").append(U.escapeMarkdown(type.name())).append("`");
+                    StringBuilder supersStr = new StringBuilder();
+                    for (Type sup : type.supers()) {
+                        if (!supersStr.isEmpty()) supersStr.append(", ");
+                        supersStr.append("`").append(U.escapeMarkdown(sup.name())).append("`");
+                    }
+                    if (!supersStr.isEmpty()) {
+                        text.append("\n\nSupertypes: ").append(supersStr);
+                    }
+                } else {
+                    text.append("**type** `").append(U.escapeMarkdown(token.text())).append("`");
+                }
+            }
+            case VARIABLE -> {
+                Variable var = token.variable();
+                if (var != null) {
+                    text.append("**variable** `").append(U.escapeMarkdown(var.name()));
+                    text.append("` : `").append(U.escapeMarkdown(var.type().name())).append("`");
+                } else {
+                    text.append("`").append(U.escapeMarkdown(token.text())).append("`");
+                }
+            }
+            case KEYWORD -> {
+                text.append("**keyword** `").append(U.escapeMarkdown(token.text())).append("`");
+            }
+            default -> {
+                text.append("`").append(U.escapeMarkdown(token.text())).append("`");
+                List<Node> nodes = document.nodesAt(pos);
+                if (!nodes.isEmpty()) {
+                    Node node = nodes.getFirst();
+                    text.append(" \u2014 ").append(node.type().name());
+                    if (node.functor() != null) {
+                        text.append(" `").append(U.escapeMarkdown(node.functor().name())).append("`");
+                    }
+                }
             }
         }
 
@@ -69,4 +120,3 @@ public class DocumentHoverService extends DocumentServiceAdapter {
         return CompletableFuture.completedFuture(hover);
     }
 }
-

@@ -78,7 +78,7 @@ public class NlTextDocumentService implements TextDocumentService {
     private final SelectionRangeService             selectionRangeService;
 
     public NlTextDocumentService(Workspace workspace) {
-        NlDocumentManager documentManager = new NlDocumentManager(workspace);
+        NlDocumentManager documentManager = workspace.getDocumentManager();
         this.documentSyncService               = new DocumentSyncService(documentManager);
         this.documentSemanticTokensFullService = new DocumentSemanticTokensFullService(documentManager);
         this.documentFoldingRangeService       = new DocumentFoldingRangeService(documentManager);

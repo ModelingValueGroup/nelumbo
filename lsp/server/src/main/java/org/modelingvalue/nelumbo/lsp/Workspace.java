@@ -42,9 +42,10 @@ import org.tomlj.TomlTable;
 
 @SuppressWarnings("DuplicatedCode")
 public class Workspace {
-    private       Setting      setting      = new Setting();
-    private final List<String> folders      = new ArrayList<>();
-    private final List<Path>   dependencies = new ArrayList<>();
+    private       Setting            setting         = new Setting();
+    private final List<String>       folders         = new ArrayList<>();
+    private final List<Path>         dependencies    = new ArrayList<>();
+    private       NlDocumentManager  documentManager;
 
     public Workspace() {
         findSettings();
@@ -57,6 +58,13 @@ public class Workspace {
         } else {
             getSetting().save(settingFile);
         }
+    }
+
+    public NlDocumentManager getDocumentManager() {
+        if (documentManager == null) {
+            documentManager = new NlDocumentManager(this);
+        }
+        return documentManager;
     }
 
     public Setting getSetting() {

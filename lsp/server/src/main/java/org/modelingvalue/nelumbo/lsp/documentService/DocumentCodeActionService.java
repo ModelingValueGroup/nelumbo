@@ -44,7 +44,7 @@ public class DocumentCodeActionService extends DocumentServiceAdapter {
         if (t == null || t.type() != TokenType.OPERATOR || !t.text().equals("?")) {
             return CompletableFuture.completedFuture(null);
         }
-        List<Either<Command, CodeAction>> actions = List.of(Either.forLeft(CommandType.DEMO_COMMAND.command()));
+        List<Either<Command, CodeAction>> actions = List.of(Either.forLeft(CommandType.EXEC_COMMAND.command()));
         return CompletableFuture.completedFuture(actions);
     }
 }

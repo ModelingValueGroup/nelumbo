@@ -16,17 +16,20 @@
 
 package org.modelingvalue.nelumbo.lsp.documentService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Query;
 import org.modelingvalue.nelumbo.lsp.CommandType;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.lsp.U;
-import org.modelingvalue.nelumbo.syntax.TokenType;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public class DocumentCodeLensService extends DocumentServiceAdapter {
 
@@ -41,18 +44,22 @@ public class DocumentCodeLensService extends DocumentServiceAdapter {
         if (document == null) {
             return CompletableFuture.completedFuture(null);
         }
-        List<CodeLens> codeLenses = document.tokens().stream() //
-                                            .filter(t -> t.type() == TokenType.OPERATOR && t.text().equals("?")) //
-                                            .map(t -> {
-                                                CodeLens cl = new CodeLens();
-                                                cl.setRange(U.range(t));
-                                                Command command = new Command();
-                                                command.setCommand(CommandType.DEMO_COMMAND.commandId());
-                                                command.setTitle("demo");
-                                                command.setArguments(List.of(docUri, t.line(), t.position()));
-                                                cl.setCommand(command);
-                                                return cl;
-                                            }).toList();
+        List<CodeLens> codeLenses = new ArrayList<>();
+        for (Node node : document.parserResult().roots()) {
+            if (node instanceof Query) {
+                Token first = node.firstToken();
+                if (first != null) {
+                    CodeLens cl = new CodeLens();
+                    cl.setRange(U.range(first));
+                    Command command = new Command();
+                    command.setCommand(CommandType.EXEC_COMMAND.commandId());
+                    command.setTitle("Query");
+                    command.setArguments(List.of(docUri, first.line(), first.position()));
+                    cl.setCommand(command);
+                    codeLenses.add(cl);
+                }
+            }
+        }
         return CompletableFuture.completedFuture(codeLenses);
     }
 
