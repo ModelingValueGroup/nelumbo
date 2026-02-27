@@ -58,7 +58,7 @@ jobs:
             
             ################################################################################
             -   name: "upload-editor-jar"
-                uses: actions/upload-artifact@v6
+                uses: actions/upload-artifact@v7
                 with:
                     name: editor
                     path: build/libs/nelumbo*editor.jar
@@ -66,7 +66,7 @@ jobs:
                     retention-days: 30
 
             -   name: "upload-slides"
-                uses: actions/upload-artifact@v6
+                uses: actions/upload-artifact@v7
                 with:
                     name: slides
                     path: docs/site
@@ -74,7 +74,7 @@ jobs:
                     retention-days: 30
                     
             -   name: "upload-eclipse-plugin"
-                uses: actions/upload-artifact@v6
+                uses: actions/upload-artifact@v7
                 with:
                     name: eclipse-plugin
                     path: lsp/plugins/eclipse/build/libs/eclipse-nelumbo-plugin-*.jar
@@ -82,7 +82,7 @@ jobs:
                     retention-days: 30
 
             -   name: "upload-intellij-plugin"
-                uses: actions/upload-artifact@v6
+                uses: actions/upload-artifact@v7
                 with:
                     name: intellij-plugin
                     path: lsp/plugins/intellij/build/distributions/intellij-nelumbo-plugin-*.zip
