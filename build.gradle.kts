@@ -22,7 +22,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("org.modelingvalue.gradle.mvgplugin") version "2.3.19"
-    id("com.gradleup.shadow") version "9.3.1"
+    id("com.gradleup.shadow") version "9.3.2"
     idea
     eclipse
 }
