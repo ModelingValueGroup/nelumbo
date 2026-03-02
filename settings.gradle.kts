@@ -14,13 +14,6 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-pluginManagement {
-    repositories {
-        maven { url = uri("https://modelingvaluegroup.github.io/gradlePlugins/") }
-        gradlePluginPortal()
-    }
-}
-
 rootProject.name = "nelumbo"
 
 // LSP components

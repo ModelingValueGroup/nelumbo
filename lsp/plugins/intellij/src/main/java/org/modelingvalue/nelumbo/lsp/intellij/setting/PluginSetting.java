@@ -24,30 +24,34 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.modelingvalue.nelumbo.lsp.intellij.Constants;
 
-@State(name="org.modelingvalue.nelumbo.lsp.intellij.setting.NelumboSetting", storages={@Storage(Constants.ID + ".xml")})
+@State(name = "org.modelingvalue.nelumbo.lsp.intellij.setting.NelumboSetting", storages = {@Storage(Constants.ID + ".xml")})
 public class PluginSetting implements PersistentStateComponent<PluginSetting.Setting> {
 
     public static class Setting {
-        public Nelumbo nelumbo             = new Nelumbo();
+        public Nelumbo nelumbo = new Nelumbo();
+
         public boolean useJetBrainsRuntime = true;
+    }
 
-        public static class Nelumbo {
-            public Formatting formatting = new Formatting();
-            public Classpath  classpath  = new Classpath();
-            public boolean    debugging  = false;
+    public static class Nelumbo {
+        public Formatting formatting = new Formatting();
+        public Classpath  classpath  = new Classpath();
 
-            public static class Formatting {
-                public PropsSpaceLine propsSpaceLine = PropsSpaceLine.HAS_ANNOTATION;
+        public boolean debugging = false;
 
-                public enum PropsSpaceLine {
-                    ALWAYS, NEVER, HAS_ANNOTATION
-                }
+        public static class Formatting {
+
+            public PropsSpaceLine propsSpaceLine = PropsSpaceLine.HAS_ANNOTATION;
+
+            public enum PropsSpaceLine {
+                ALWAYS, NEVER, HAS_ANNOTATION
             }
 
-            public static class Classpath {
-                public boolean findConfiguration = true;
-                public boolean findOtherProject  = true;
-            }
+        }
+
+        public static class Classpath {
+            public boolean findConfiguration = true;
+            public boolean findOtherProject  = true;
         }
     }
 

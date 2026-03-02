@@ -48,14 +48,8 @@ import org.jetbrains.annotations.NotNull;
 import org.modelingvalue.nelumbo.lsp.intellij.setting.PluginSetting;
 
 public class NelumboLanguageServerFactory implements LanguageServerFactory {
-    public static final String LATEST_ON_GITHUB_URL = "https://api.github.com/repos/ModelingValueGroup/nelumbo-lsp/releases/latest";
-
-    {
-        System.err.println("%%%% NelumboLanguageServerFactory");
-    }
-
     @Override
-    public StreamConnectionProvider createConnectionProvider(Project project) {
+    public @NotNull StreamConnectionProvider createConnectionProvider(@NotNull Project project) {
         System.err.println("%%%% createConnectionProvider");
         try {
             Path dir = Paths.get(System.getProperty("user.home")).resolve(Constants.ID);
@@ -84,7 +78,7 @@ public class NelumboLanguageServerFactory implements LanguageServerFactory {
         }
     }
 
-    private void extractServerJar(Path dir, Path localJarFile) throws IOException {
+    private void extractServerJar(@SuppressWarnings("unused") Path dir, Path localJarFile) throws IOException {
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("server.jar")) {
             if (inputStream != null) {
                 try (OutputStream outputStream = Files.newOutputStream(localJarFile)) {
@@ -100,7 +94,7 @@ public class NelumboLanguageServerFactory implements LanguageServerFactory {
     private void downloadLatestServerJar(Path dir, Path localJarFile) {
         // Query GitHub Releases API for the latest release
         try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).followRedirects(HttpClient.Redirect.NORMAL).build()) {
-            HttpRequest request = HttpRequest.newBuilder(URI.create(LATEST_ON_GITHUB_URL))//
+            HttpRequest request = HttpRequest.newBuilder(URI.create(Constants.LATEST_ON_GITHUB_URL))//
                                              .header("Accept", "application/vnd.github+json")//
                                              .header("User-Agent", "nelumbo-intellij-plugin")//
                                              .timeout(Duration.ofSeconds(30))//
@@ -148,9 +142,7 @@ public class NelumboLanguageServerFactory implements LanguageServerFactory {
             try {
                 try {
                     Files.createSymbolicLink(to, from.getFileName());
-                } catch (UnsupportedOperationException |
-                         IOException |
-                         SecurityException e) {
+                } catch (UnsupportedOperationException | IOException | SecurityException e) {
                     // If symlinks are not allowed, copy instead
                     Files.copy(from, to);
                 }
@@ -173,22 +165,23 @@ public class NelumboLanguageServerFactory implements LanguageServerFactory {
     }
 
     private static @NotNull List<String> makeCommand(Project project, Path localJarFile) {
+        String                jarFile   = localJarFile.toAbsolutePath().toString();
         PluginSetting.Setting settings = PluginSetting.getInstance().getState();
         List<String>          command;
         if (settings != null && settings.useJetBrainsRuntime) {
             JavaProcessCommandBuilder b = new JavaProcessCommandBuilder(project, Constants.SERVER_ID);
-            b.setCp(localJarFile.toAbsolutePath().toString());
+            b.setCp(jarFile);
             command = b.create();
             // lsp4ij's JavaProcessCommandBuilder.create() returns command up to 'java -cp ...'
-            command.add("org.modelingvalue.nelumbo.lsp.Main");
+            command.add(Constants.LSP_SERVER_MAIN_CLASS);
         } else {
-            command = List.of("java", "-cp", localJarFile.toAbsolutePath().toString(), "org.modelingvalue.nelumbo.lsp.Main");
+            command = List.of("java", "-cp", jarFile, Constants.LSP_SERVER_MAIN_CLASS);
         }
         return command;
     }
 
     @Override
-    public LanguageClientImpl createLanguageClient(Project project) {
+    public @NotNull LanguageClientImpl createLanguageClient(@NotNull Project project) {
         return new LanguageClientImpl(project) {
             final Gson gson = new GsonBuilder()//
                                                .setFieldNamingStrategy(FieldNamingPolicy.UPPER_CAMEL_CASE)//

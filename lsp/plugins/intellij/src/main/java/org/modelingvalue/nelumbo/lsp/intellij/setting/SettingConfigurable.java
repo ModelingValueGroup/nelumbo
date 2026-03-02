@@ -34,7 +34,7 @@ import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.jdesktop.swingx.JXTitledSeparator;
 import org.jetbrains.annotations.Nls;
 import org.modelingvalue.nelumbo.lsp.intellij.Constants;
-import org.modelingvalue.nelumbo.lsp.intellij.setting.PluginSetting.Setting.Nelumbo.Formatting.PropsSpaceLine;
+import org.modelingvalue.nelumbo.lsp.intellij.setting.PluginSetting.Nelumbo.Formatting.PropsSpaceLine;
 
 public class SettingConfigurable implements Configurable {
 
