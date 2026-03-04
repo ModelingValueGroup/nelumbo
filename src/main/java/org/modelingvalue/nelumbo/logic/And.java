@@ -21,8 +21,8 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferResult;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
@@ -41,8 +41,8 @@ public final class And extends BinaryPredicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private And(Object[] args, And declaration) {
-        super(args, declaration);
+    private And(Object[] args, List<AstElement> elements, And declaration) {
+        super(args, elements, declaration);
     }
 
     public static And of(Predicate predicate1, Predicate predicate2) {
@@ -55,8 +55,8 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And struct(Object[] array, Node declaration) {
-        return new And(array, (And) declaration);
+    protected And struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new And(array, elements, (And) declaration);
     }
 
     @Override

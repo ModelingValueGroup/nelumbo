@@ -114,8 +114,8 @@ public final class Type extends Node {
         return EQUALS_TYPE;
     }
 
-    private Type(Object[] array, Type declaration) {
-        super(array, declaration);
+    private Type(Object[] array, List<AstElement> elements, Type declaration) {
+        super(array, elements, declaration);
     }
 
     public Type(Class<?> clss, Type... supers) {
@@ -398,8 +398,8 @@ public final class Type extends Node {
     }
 
     @Override
-    protected Type struct(Object[] array, Node declaration) {
-        return new Type(array, (Type) declaration);
+    protected Type struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Type(array, elements, (Type) declaration);
     }
 
     @Override

@@ -62,13 +62,13 @@ public final class NInteger extends Node {
         return new BigInteger(string);
     }
 
-    private NInteger(Object[] array, NInteger declaration) {
-        super(array, declaration);
+    private NInteger(Object[] array, List<AstElement> elements, NInteger declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected NInteger struct(Object[] array, Node declaration) {
-        return new NInteger(array, (NInteger) declaration);
+    protected NInteger struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new NInteger(array, elements, (NInteger) declaration);
     }
 
     @Override

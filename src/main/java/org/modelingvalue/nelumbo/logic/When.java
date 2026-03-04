@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
@@ -32,8 +33,8 @@ public final class When extends BinaryPredicate {
         super(Type.BOOLEAN, List.of(), when, predicate);
     }
 
-    private When(Object[] args, When declaration) {
-        super(args, declaration);
+    private When(Object[] args, List<AstElement> elements, When declaration) {
+        super(args, elements, declaration);
     }
 
     public static When of(Node when, Node predicate) {
@@ -46,8 +47,8 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected When struct(Object[] array, Node declaration) {
-        return new When(array, (When) declaration);
+    protected When struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new When(array, elements, (When) declaration);
     }
 
     @Override

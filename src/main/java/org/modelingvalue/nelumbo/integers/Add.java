@@ -22,8 +22,8 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -37,13 +37,13 @@ public final class Add extends Predicate {
         super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private Add(Object[] array, Add declaration) {
-        super(array, declaration);
+    private Add(Object[] array, List<AstElement> elements, Add declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected Add struct(Object[] array, Node declaration) {
-        return new Add(array, (Add) declaration);
+    protected Add struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Add(array, elements, (Add) declaration);
     }
 
     @Override

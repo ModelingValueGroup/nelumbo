@@ -37,13 +37,13 @@ public final class Transform extends Node {
         super(functor, elements, args);
     }
 
-    private Transform(Object[] array, Transform declaration) {
-        super(array, declaration);
+    private Transform(Object[] array, List<AstElement> elements, Transform declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected Transform struct(Object[] array, Node declaration) {
-        return new Transform(array, (Transform) declaration);
+    protected Transform struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Transform(array, elements, (Transform) declaration);
     }
 
     @Override

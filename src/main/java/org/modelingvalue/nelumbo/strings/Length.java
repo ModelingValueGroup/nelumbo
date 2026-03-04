@@ -22,8 +22,8 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -37,13 +37,13 @@ public final class Length extends Predicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private Length(Object[] array, Length declaration) {
-        super(array, declaration);
+    private Length(Object[] array, List<AstElement> elements, Length declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected Length struct(Object[] array, Node declaration) {
-        return new Length(array, (Length) declaration);
+    protected Length struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Length(array, elements, (Length) declaration);
     }
 
     @Override

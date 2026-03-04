@@ -21,8 +21,8 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -36,13 +36,13 @@ public final class Concat extends Predicate {
         super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private Concat(Object[] array, Concat declaration) {
-        super(array, declaration);
+    private Concat(Object[] array, List<AstElement> elements, Concat declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected Concat struct(Object[] array, Node declaration) {
-        return new Concat(array, (Concat) declaration);
+    protected Concat struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Concat(array, elements, (Concat) declaration);
     }
 
     @Override

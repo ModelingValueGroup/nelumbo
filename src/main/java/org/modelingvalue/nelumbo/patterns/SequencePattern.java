@@ -38,13 +38,13 @@ public class SequencePattern extends Pattern {
         super(type, elements, patterns);
     }
 
-    protected SequencePattern(Object[] args, SequencePattern declaration) {
-        super(args, declaration);
+    protected SequencePattern(Object[] args, List<AstElement> elements, SequencePattern declaration) {
+        super(args, elements, declaration);
     }
 
     @Override
-    protected SequencePattern struct(Object[] array, Node declaration) {
-        return new SequencePattern(array, (SequencePattern) declaration);
+    protected SequencePattern struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new SequencePattern(array, elements, (SequencePattern) declaration);
     }
 
     @SuppressWarnings("unchecked")

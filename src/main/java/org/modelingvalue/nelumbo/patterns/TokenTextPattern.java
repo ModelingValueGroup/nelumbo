@@ -41,13 +41,13 @@ public class TokenTextPattern extends Pattern {
         super(type, elements, var, isKeyword);
     }
 
-    protected TokenTextPattern(Object[] args, TokenTextPattern declaration) {
-        super(args, declaration);
+    protected TokenTextPattern(Object[] args, List<AstElement> elements, TokenTextPattern declaration) {
+        super(args, elements, declaration);
     }
 
     @Override
-    protected TokenTextPattern struct(Object[] array, Node declaration) {
-        return new TokenTextPattern(array, (TokenTextPattern) declaration);
+    protected TokenTextPattern struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new TokenTextPattern(array, elements, (TokenTextPattern) declaration);
     }
 
     public String tokenText() {

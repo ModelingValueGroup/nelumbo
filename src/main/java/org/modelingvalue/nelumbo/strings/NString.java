@@ -28,11 +28,11 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NString extends Node {
     @Serial
-    private static final long             serialVersionUID = 8360866611309554234L;
+    private static final long   serialVersionUID = 8360866611309554234L;
 
     private static final String DELIM            = "\"";
 
-    private static Functor                FUNCTOR;
+    private static Functor      FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(NString.class, f -> FUNCTOR = f);
@@ -59,13 +59,13 @@ public final class NString extends Node {
         return strip(string);
     }
 
-    private NString(Object[] array, NString declaration) {
-        super(array, declaration);
+    private NString(Object[] array, List<AstElement> elements, NString declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected NString struct(Object[] array, Node declaration) {
-        return new NString(array, (NString) declaration);
+    protected NString struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new NString(array, elements, (NString) declaration);
     }
 
     @Override

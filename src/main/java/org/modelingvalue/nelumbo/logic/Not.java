@@ -42,8 +42,8 @@ public final class Not extends CompoundPredicate {
         super(functor, elements, args[0]);
     }
 
-    private Not(Object[] args, Not declaration) {
-        super(args, declaration);
+    private Not(Object[] args, List<AstElement> elements, Not declaration) {
+        super(args, elements, declaration);
     }
 
     public static Not of(Predicate predicate) {
@@ -51,8 +51,8 @@ public final class Not extends CompoundPredicate {
     }
 
     @Override
-    protected Not struct(Object[] array, Node declaration) {
-        return new Not(array, (Not) declaration);
+    protected Not struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Not(array, elements, (Not) declaration);
     }
 
     @Override

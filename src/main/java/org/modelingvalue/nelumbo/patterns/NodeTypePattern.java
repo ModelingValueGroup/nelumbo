@@ -38,13 +38,13 @@ public class NodeTypePattern extends Pattern {
         super(type, elements, nodeType, precedence, visible);
     }
 
-    protected NodeTypePattern(Object[] args, NodeTypePattern declaration) {
-        super(args, declaration);
+    protected NodeTypePattern(Object[] args, List<AstElement> elements, NodeTypePattern declaration) {
+        super(args, elements, declaration);
     }
 
     @Override
-    protected NodeTypePattern struct(Object[] array, Node declaration) {
-        return new NodeTypePattern(array, (NodeTypePattern) declaration);
+    protected NodeTypePattern struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new NodeTypePattern(array, elements, (NodeTypePattern) declaration);
     }
 
     public Type nodeType() {

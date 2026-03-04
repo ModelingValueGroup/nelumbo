@@ -41,8 +41,8 @@ public abstract class CompoundPredicate extends Predicate {
         super(type, elements, predicates);
     }
 
-    protected CompoundPredicate(Object[] args, CompoundPredicate declaration) {
-        super(args, declaration);
+    protected CompoundPredicate(Object[] args, List<AstElement> elements, CompoundPredicate declaration) {
+        super(args, elements, declaration);
     }
 
     @SuppressWarnings("unchecked")

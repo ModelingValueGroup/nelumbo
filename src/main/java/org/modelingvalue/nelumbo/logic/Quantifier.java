@@ -39,8 +39,8 @@ public abstract class Quantifier extends CompoundPredicate {
         super(functor, elements, localVars, predicate);
     }
 
-    protected Quantifier(Object[] args, Quantifier declaration) {
-        super(args, declaration);
+    protected Quantifier(Object[] args, List<AstElement> elements, Quantifier declaration) {
+        super(args, elements, declaration);
     }
 
     @Override

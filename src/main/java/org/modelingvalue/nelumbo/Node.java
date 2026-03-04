@@ -37,29 +37,34 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 @SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long     serialVersionUID = 7315776001191198132L;
-    protected static final int    START            = 2;
+    private static final long      serialVersionUID = 7315776001191198132L;
+    protected static final int     START            = 1;
     //
-    private final Node            declaration;
-    private Map<Variable, Object> binding;
-    private boolean               hashCodeIsCached;
-    private int                   hashCodeCache;
+    private final List<AstElement> elements;
+    private final Node             declaration;
+    //
+    private Map<Variable, Object>  binding;
+    private boolean                hashCodeIsCached;
+    private int                    hashCodeCache;
 
     @NelumboConstructor
     public Node(Functor functor, List<AstElement> elements, Object... args) {
-        super(array(functor, elements, args));
+        super(array(functor, args));
+        this.elements = elements;
         this.declaration = this;
         init(elements);
     }
 
     public Node(Type type, List<AstElement> elements, Object... args) {
-        super(array(type, elements, args));
+        super(array(type, args));
+        this.elements = elements;
         this.declaration = this;
         init(elements);
     }
 
-    protected Node(Object[] args, Node declaration) {
+    protected Node(Object[] args, List<AstElement> elements, Node declaration) {
         super(args);
+        this.elements = elements;
         this.declaration = declaration == null ? this : declaration;
     }
 
@@ -72,7 +77,7 @@ public class Node extends StructImpl implements AstElement {
         for (int i = START; i < array.length; i++) {
             array[i] = resetDeclaration(array[i]);
         }
-        return struct(array, null);
+        return struct(array, elements, null);
     }
 
     private Object resetDeclaration(Object from) {
@@ -88,10 +93,9 @@ public class Node extends StructImpl implements AstElement {
         return from;
     }
 
-    private static Object[] array(Node typeOrFunctor, List<AstElement> elements, Object[] args) {
+    private static Object[] array(Node typeOrFunctor, Object[] args) {
         Object[] result = new Object[START + args.length];
         result[0] = typeOrFunctor;
-        result[1] = elements;
         System.arraycopy(args, 0, result, START, args.length);
         for (int i = 0; i < args.length; i++) {
             if (args[i] instanceof Optional<?> opt) {
@@ -104,13 +108,12 @@ public class Node extends StructImpl implements AstElement {
     public Node setFunctor(Functor functor) {
         Object[] array = toArray();
         array[0] = functor;
-        return struct(array, declaration);
+        return struct(array, elements, declaration);
     }
 
     public Node setAstElements(List<AstElement> elements) {
         Object[] array = toArray();
-        array[1] = elements;
-        Node node = struct(array);
+        Node node = struct(array, elements, declaration);
         node.init(elements);
         return node;
     }
@@ -149,7 +152,7 @@ public class Node extends StructImpl implements AstElement {
 
     @SuppressWarnings("unchecked")
     public final List<AstElement> astElements() {
-        return (List<AstElement>) super.get(1);
+        return elements;
     }
 
     public List<Object> args() {
@@ -314,11 +317,11 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public final Node struct(Object[] array) {
-        return struct(array, declaration);
+        return struct(array, elements, declaration);
     }
 
-    protected Node struct(Object[] array, Node declaration) {
-        return new Node(array, declaration);
+    protected Node struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Node(array, elements, declaration);
     }
 
     public final Set<Variable> allLocalVars() {
@@ -425,7 +428,7 @@ public class Node extends StructImpl implements AstElement {
                 array[i + START] = bound;
             }
         }
-        return array != null ? struct(array, declaration) : this;
+        return array != null ? struct(array, elements, declaration) : this;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

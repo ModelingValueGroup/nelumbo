@@ -22,8 +22,8 @@ import java.util.Objects;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -37,8 +37,8 @@ public class Equal extends Predicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private Equal(Object[] array, Equal declaration) {
-        super(array, declaration);
+    private Equal(Object[] array, List<AstElement> elements, Equal declaration) {
+        super(array, elements, declaration);
     }
 
     public Node left() {
@@ -50,8 +50,8 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected Equal struct(Object[] array, Node declaration) {
-        return new Equal(array, (Equal) declaration);
+    protected Equal struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Equal(array, elements, (Equal) declaration);
     }
 
     @Override

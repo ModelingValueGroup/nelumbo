@@ -39,13 +39,13 @@ public class RepetitionPattern extends Pattern {
         super(type, elements, repeated, mandatory, separator);
     }
 
-    protected RepetitionPattern(Object[] args, RepetitionPattern declaration) {
-        super(args, declaration);
+    protected RepetitionPattern(Object[] args, List<AstElement> elements, RepetitionPattern declaration) {
+        super(args, elements, declaration);
     }
 
     @Override
-    protected RepetitionPattern struct(Object[] array, Node declaration) {
-        return new RepetitionPattern(array, (RepetitionPattern) declaration);
+    protected RepetitionPattern struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new RepetitionPattern(array, elements, (RepetitionPattern) declaration);
     }
 
     public Pattern repeated() {

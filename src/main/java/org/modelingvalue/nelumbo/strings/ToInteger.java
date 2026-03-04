@@ -22,8 +22,8 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -37,13 +37,13 @@ public final class ToInteger extends Predicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private ToInteger(Object[] array, ToInteger declaration) {
-        super(array, declaration);
+    private ToInteger(Object[] array, List<AstElement> elements, ToInteger declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected ToInteger struct(Object[] array, Node declaration) {
-        return new ToInteger(array, (ToInteger) declaration);
+    protected ToInteger struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new ToInteger(array, elements, (ToInteger) declaration);
     }
 
     @Override

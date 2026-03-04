@@ -37,8 +37,8 @@ public final class Rule extends Node implements Evaluatable {
         super(functor, elements, consequence, condition);
     }
 
-    private Rule(Object[] args, Rule declaration) {
-        super(args, declaration);
+    private Rule(Object[] args, List<AstElement> elements, Rule declaration) {
+        super(args, elements, declaration);
     }
 
     @Override
@@ -47,8 +47,8 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    protected Rule struct(Object[] array, Node declaration) {
-        return new Rule(array, (Rule) declaration);
+    protected Rule struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Rule(array, elements, (Rule) declaration);
     }
 
     public final Functor consequenceFunctor() {

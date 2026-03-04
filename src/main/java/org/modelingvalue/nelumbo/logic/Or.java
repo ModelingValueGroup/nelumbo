@@ -21,8 +21,8 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferResult;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
 
@@ -41,8 +41,8 @@ public final class Or extends BinaryPredicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private Or(Object[] args, Or declaration) {
-        super(args, declaration);
+    private Or(Object[] args, List<AstElement> elements, Or declaration) {
+        super(args, elements, declaration);
     }
 
     public static Or of(Predicate predicate1, Predicate predicate2) {
@@ -55,8 +55,8 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
-    protected Or struct(Object[] array, Node declaration) {
-        return new Or(array, (Or) declaration);
+    protected Or struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Or(array, elements, (Or) declaration);
     }
 
     @Override

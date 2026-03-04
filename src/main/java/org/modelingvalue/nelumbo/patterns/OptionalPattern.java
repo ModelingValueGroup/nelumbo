@@ -39,13 +39,13 @@ public class OptionalPattern extends Pattern {
         super(type, elements, optional);
     }
 
-    protected OptionalPattern(Object[] args, OptionalPattern declaration) {
-        super(args, declaration);
+    protected OptionalPattern(Object[] args, List<AstElement> elements, OptionalPattern declaration) {
+        super(args, elements, declaration);
     }
 
     @Override
-    protected OptionalPattern struct(Object[] array, Node declaration) {
-        return new OptionalPattern(array, (OptionalPattern) declaration);
+    protected OptionalPattern struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new OptionalPattern(array, elements, (OptionalPattern) declaration);
     }
 
     public Pattern optional() {

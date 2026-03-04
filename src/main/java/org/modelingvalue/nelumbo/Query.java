@@ -110,13 +110,13 @@ public final class Query extends Node implements Evaluatable {
         return (Query) super.setBinding(vars);
     }
 
-    private Query(Object[] array, Query declaration) {
-        super(array, declaration);
+    private Query(Object[] array, List<AstElement> elements, Query declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected Query struct(Object[] array, Node declaration) {
-        return new Query(array, (Query) declaration);
+    protected Query struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Query(array, elements, (Query) declaration);
     }
 
     @Override

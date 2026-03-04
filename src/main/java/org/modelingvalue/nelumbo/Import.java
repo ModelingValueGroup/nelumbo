@@ -30,13 +30,13 @@ public final class Import extends Node {
         super(Type.IMPORT, elements, path);
     }
 
-    private Import(Object[] array, Import declaration) {
-        super(array, declaration);
+    private Import(Object[] array, List<AstElement> elements, Import declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected Import struct(Object[] array, Node declaration) {
-        return new Import(array, (Import) declaration);
+    protected Import struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Import(array, elements, (Import) declaration);
     }
 
     @Override

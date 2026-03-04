@@ -36,8 +36,8 @@ public class NSet extends Node {
         super(functor, elements, Set.of(args));
     }
 
-    private NSet(Object[] array, NSet declaration) {
-        super(array, declaration);
+    private NSet(Object[] array, List<AstElement> elements, NSet declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
@@ -61,8 +61,8 @@ public class NSet extends Node {
     }
 
     @Override
-    protected NSet struct(Object[] array, Node declaration) {
-        return new NSet(array, (NSet) declaration);
+    protected NSet struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new NSet(array, elements, (NSet) declaration);
     }
 
     @Override

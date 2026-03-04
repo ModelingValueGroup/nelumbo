@@ -22,8 +22,8 @@ import java.math.BigInteger;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -37,13 +37,13 @@ public final class Multiply extends Predicate {
         super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private Multiply(Object[] array, Multiply declaration) {
-        super(array, declaration);
+    private Multiply(Object[] array, List<AstElement> elements, Multiply declaration) {
+        super(array, elements, declaration);
     }
 
     @Override
-    protected Multiply struct(Object[] array, Node declaration) {
-        return new Multiply(array, (Multiply) declaration);
+    protected Multiply struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Multiply(array, elements, (Multiply) declaration);
     }
 
     @Override

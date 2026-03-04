@@ -38,13 +38,13 @@ public class AlternationPattern extends Pattern {
         super(type, elements, options);
     }
 
-    protected AlternationPattern(Object[] args, AlternationPattern declaration) {
-        super(args, declaration);
+    protected AlternationPattern(Object[] args, List<AstElement> elements, AlternationPattern declaration) {
+        super(args, elements, declaration);
     }
 
     @Override
-    protected AlternationPattern struct(Object[] array, Node declaration) {
-        return new AlternationPattern(array, (AlternationPattern) declaration);
+    protected AlternationPattern struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new AlternationPattern(array, elements, (AlternationPattern) declaration);
     }
 
     @SuppressWarnings("unchecked")
