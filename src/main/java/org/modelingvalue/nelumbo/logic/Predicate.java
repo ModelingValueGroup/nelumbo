@@ -294,11 +294,7 @@ public class Predicate extends Node {
         } else if (nrOfUnbound == 0 && context.shallow()) {
             return unresolvable();
         }
-        InferResult result = infer(nrOfUnbound, context);
-        if (context.trace() && !result.unresolvable() && getClass() != Predicate.class && !(this instanceof Quantifier)) {
-            System.out.println(context.prefix() + "  " + this + " " + result);
-        }
-        return result;
+        return infer(nrOfUnbound, context);
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {

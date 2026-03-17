@@ -109,7 +109,8 @@ public final class Rule extends Node implements Evaluatable {
         InferResult ruleResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, //
                 condResult.cycles());
         if (context.trace() && !isSyntatic()) {
-            System.out.println(context.prefix() + predicate + " " + ruleResult);
+            Predicate pred = consequence().setBinding(binding.removeAll(e -> e.getValue() instanceof Type));
+            System.out.println(context.prefix() + consequence + " " + ruleResult.predicate(pred));
         }
         for (Predicate fact : result.facts()) {
             if (falsehoods.contains(fact) || (completeFacts && //
@@ -142,7 +143,7 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     private boolean isSyntatic() {
-        return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().equals("logic.nl"));
+        return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().endsWith("logic/logic.nl"));
     }
 
     @Override
