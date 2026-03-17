@@ -21,7 +21,7 @@ defaultTasks("mvgCorrector", "test", "publish", "mvgTagger", "editorJar")
 plugins {
     `java-library`
     `maven-publish`
-    id("org.modelingvalue.gradle.mvgplugin") version "2.3.19"
+    id("org.modelingvalue.gradle.mvgplugin") version "2.3.21"
     id("com.gradleup.shadow") version "9.3.1"
     idea
     eclipse
@@ -34,7 +34,7 @@ mvgcorrector {
 
 dependencies {
     implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
-    implementation("com.formdev:flatlaf:3.7")
+    implementation("com.formdev:flatlaf:3.7.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
