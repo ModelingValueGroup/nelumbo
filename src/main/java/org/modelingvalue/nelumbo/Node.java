@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo;
 
+import static org.modelingvalue.nelumbo.KnowledgeBase.TRACE_SYNTATIC;
+
 import java.io.Serial;
 import java.util.Objects;
 import java.util.Optional;
@@ -481,6 +483,12 @@ public class Node extends StructImpl implements AstElement {
         return true;
     }
 
+    public Node setVariables() {
+        Map<Variable, Object> vars = getBinding();
+        vars = vars.replaceAll(e -> e.getValue() instanceof Type ? Entry.of(e.getKey(), e.getKey()) : e);
+        return setBinding(vars);
+    }
+
     public final Node replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
         Node to = replacer.apply(this);
         if (to != this) {
@@ -597,6 +605,10 @@ public class Node extends StructImpl implements AstElement {
         for (AstElement e : astElements()) {
             e.deparse(sb);
         }
+    }
+
+    public final boolean isSyntatic() {
+        return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().endsWith("logic/logic.nl"));
     }
 
 }

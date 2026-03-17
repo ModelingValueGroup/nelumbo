@@ -91,14 +91,13 @@ public class Predicate extends Node {
         return setVariables().superToString(previous);
     }
 
-    private String superToString(TokenType[] previous) {
-        return super.toString(previous);
+    @Override
+    public Predicate setVariables() {
+        return (Predicate) super.setVariables();
     }
 
-    private Predicate setVariables() {
-        Map<Variable, Object> vars = getBinding();
-        vars = vars.replaceAll(e -> e.getValue() instanceof Type ? Entry.of(e.getKey(), e.getKey()) : e);
-        return setBinding(vars);
+    private String superToString(TokenType[] previous) {
+        return super.toString(previous);
     }
 
     public static Map<Variable, Object> literals(Map<Variable, Object> vars) {
@@ -294,7 +293,11 @@ public class Predicate extends Node {
         } else if (nrOfUnbound == 0 && context.shallow()) {
             return unresolvable();
         }
-        return infer(nrOfUnbound, context);
+        InferResult result = infer(nrOfUnbound, context);
+        if (context.trace() && !context.shallow() && !result.unresolvable() && getClass() != Predicate.class && !isSyntatic()) {
+            System.out.println(context.prefix() + "  " + this + " " + result.predicate(setVariables()));
+        }
+        return result;
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {

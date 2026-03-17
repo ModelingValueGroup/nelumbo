@@ -16,8 +16,6 @@
 
 package org.modelingvalue.nelumbo;
 
-import static org.modelingvalue.nelumbo.KnowledgeBase.TRACE_SYNTATIC;
-
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
@@ -109,8 +107,7 @@ public final class Rule extends Node implements Evaluatable {
         InferResult ruleResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, //
                 condResult.cycles());
         if (context.trace() && !isSyntatic()) {
-            Predicate pred = consequence().setBinding(binding.removeAll(e -> e.getValue() instanceof Type));
-            System.out.println(context.prefix() + consequence + " " + ruleResult.predicate(pred));
+            System.out.println(context.prefix() + consequence + " " + ruleResult.predicate(consequence.setVariables()));
         }
         for (Predicate fact : result.facts()) {
             if (falsehoods.contains(fact) || (completeFacts && //
@@ -140,10 +137,6 @@ public final class Rule extends Node implements Evaluatable {
     @Override
     public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
         knowledgeBase.addRule(this);
-    }
-
-    private boolean isSyntatic() {
-        return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().endsWith("logic/logic.nl"));
     }
 
     @Override
