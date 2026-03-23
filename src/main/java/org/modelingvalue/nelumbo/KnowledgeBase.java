@@ -65,7 +65,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private static final ContextPool                                                    POOL                 = ContextThread.createPool().setWorkerThreadName("nelumbo");
     private static final QualifiedSet<Predicate, Inference>                             EMPTY_MEMOIZ         = QualifiedSet.of(Inference::premise);
-    private static final int                                                            MAX_LOGIC_MEMOIZ     = Integer.getInteger("MAX_LOGIC_MEMOIZ", 512);
+    private static final int                                                            MAX_LOGIC_MEMOIZ     = Integer.getInteger("MAX_LOGIC_MEMOIZ", 10000);
     private static final int                                                            MAX_LOGIC_MEMOIZ_D4  = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
     private static final int                                                            INITIAL_USAGE_COUNT  = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
@@ -808,7 +808,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public void memoization(Predicate predicate, InferResult result) {
-        boolean known = result.cycles().isEmpty() && result.isComplete();
+        boolean known = result.cycles().isEmpty(); // && result.isComplete();
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();
             if (known) {

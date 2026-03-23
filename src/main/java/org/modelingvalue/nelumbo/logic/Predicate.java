@@ -35,7 +35,7 @@ public class Predicate extends Node {
 
     protected static final boolean RANDOM_NELUMBO     = Boolean.getBoolean("RANDOM_NELUMBO");
     protected static final boolean REVERSE_NELUMBO    = Boolean.getBoolean("REVERSE_NELUMBO");
-    protected static final int     MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 32);
+    protected static final int     MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
 
     private static final int       MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
@@ -302,7 +302,9 @@ public class Predicate extends Node {
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         Functor functor = functor();
-        if (nrOfUnbound > 1 || (context.shallow() && !isShallow(nrOfUnbound, functor)) || (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
+        if (nrOfUnbound > 1 || //
+                (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
+                (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
             return unresolvable();
         }
         KnowledgeBase knowledgebase = context.knowledgebase();
@@ -349,14 +351,15 @@ public class Predicate extends Node {
     private static InferResult flatten(InferResult result, List<Predicate> overflow, InferContext context) {
         int stackSize = context.stack().size();
         List<Predicate> todo = overflow.sublist(stackSize, overflow.size());
+        KnowledgeBase knowledgebase = context.knowledgebase();
         while (!todo.isEmpty()) {
             Predicate predicate = todo.last();
             result = predicate.fixpoint(context.pushOnStack(predicate));
             overflow = result.stackOverflow();
             if (overflow != null) {
-                todo = todo.appendList(overflow.sublist(stackSize, overflow.size()));
+                todo = todo.appendList(overflow.sublist(stackSize + 1, overflow.size()));
             } else {
-                context.knowledgebase().memoization(predicate, result);
+                knowledgebase.memoization(predicate, result);
                 todo = todo.removeLast();
             }
         }

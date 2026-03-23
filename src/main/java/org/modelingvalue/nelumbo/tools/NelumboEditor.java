@@ -117,6 +117,7 @@ public class NelumboEditor {
             {"Examples", "hiddenTest.nl", "Hidden Test"},
             {"Examples", "maxTest.nl", "Max Test"},
             {"Examples", "deHetTest.nl", "De Het Test"},
+            {"Examples", "maxFib.nl", "Maximal Fibonacci"},
             {"Examples", "scopingTest.nl", "Scoping Test"}};
 
     private final Preferences                        preferences             = Preferences.userNodeForPackage(NelumboEditor.class);

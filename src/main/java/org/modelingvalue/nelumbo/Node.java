@@ -608,7 +608,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public final boolean isSyntatic() {
-        return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().endsWith("logic/logic.nl"));
+        return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().contains("/nelumbo/"));
     }
 
 }
