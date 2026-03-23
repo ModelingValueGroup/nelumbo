@@ -103,7 +103,7 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
-    public void fibSumTest() {
+    public void maxFib() {
         testResource("maxFib.nl");
     }
 
