@@ -78,7 +78,7 @@ public class NelumboEditor {
         }
     }
 
-    private static final String[]                    FONT_NAMES              = {"input mono", "dejavu sans mono", "overpass mono", Font.MONOSPACED};
+    private static final String[]                    FONT_NAMES              = {"consolas", "input mono", "dejavu sans mono", "overpass mono", Font.MONOSPACED};
 
     /**
      * Default color schemes for token types with style attributes
