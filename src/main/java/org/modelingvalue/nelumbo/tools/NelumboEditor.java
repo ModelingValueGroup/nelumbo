@@ -136,16 +136,17 @@ public class NelumboEditor {
 			{ "Library", "strings/strings.nl", "nelumbo.strings" },
 			{ "Library", "rationals/rationals.nl", "nelumbo.rationals" },
 			{ "Library", "collections/collections.nl", "nelumbo.collections" },
+			// Tests
+			{ "Tests", "logicTest.nl", "Logic Test" }, { "Tests", "integersTest.nl", "Integers Test" },
+			{ "Tests", "rationalsTest.nl", "Rationals Test" }, { "Tests", "stringsTest.nl", "Strings Test" },
+			{ "Tests", "collectionsTest.nl", "Collections Test" },
 			// Examples
 			{ "Examples", "familyTest.nl", "Family" }, { "Examples", "friendsTest.nl", "Friends" },
 			{ "Examples", "fibonacciTest.nl", "Fibonacci" }, { "Examples", "belastingTest.nl", "Belasting" },
-			{ "Examples", "whoIsTest.nl", "Who Is" }, { "Examples", "logicTest.nl", "Logic Test" },
-			{ "Examples", "integersTest.nl", "Integers Test" }, { "Examples", "rationalsTest.nl", "Rationals Test" },
-			{ "Examples", "stringsTest.nl", "Strings Test" }, { "Examples", "collectionsTest.nl", "Collections Test" },
-			{ "Examples", "transformationTest.nl", "Transformation" }, { "Examples", "queryOnly.nl", "Query Only" },
-			{ "Examples", "hiddenTest.nl", "Hidden Test" }, { "Examples", "maxTest.nl", "Max Test" },
-			{ "Examples", "deHetTest.nl", "De Het Test" }, { "Examples", "maxFib.nl", "Maximal Fibonacci" },
-			{ "Examples", "scopingTest.nl", "Scoping Test" } };
+			{ "Examples", "whoIsTest.nl", "Who Is" }, { "Examples", "transformationTest.nl", "Transformation" },
+			{ "Examples", "queryOnly.nl", "Query Only" }, { "Examples", "hiddenTest.nl", "Hidden" },
+			{ "Examples", "maxTest.nl", "Max" }, { "Examples", "deHetTest.nl", "De Het" },
+			{ "Examples", "maxFib.nl", "Maximal Fibonacci" }, { "Examples", "scopingTest.nl", "Scoping" } };
 
 	private final Preferences preferences = Preferences.userNodeForPackage(NelumboEditor.class);
 	private final WindowManager windowManager;
