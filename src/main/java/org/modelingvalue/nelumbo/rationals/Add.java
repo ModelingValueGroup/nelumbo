@@ -1,0 +1,84 @@
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// (C) Copyright 2018-2026 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+//                                                                                                                     ~
+// Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+// compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+// an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+// specific language governing permissions and limitations under the License.                                          ~
+//                                                                                                                     ~
+// Maintainers:                                                                                                        ~
+//     Wim Bast, Tom Brus                                                                                              ~
+//                                                                                                                     ~
+// Contributors:                                                                                                       ~
+//     Victor Lap                                                                                                      ~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+package org.modelingvalue.nelumbo.rationals;
+
+import java.io.Serial;
+import java.math.BigInteger;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.patterns.Functor;
+
+public final class Add extends Predicate {
+	@Serial
+	private static final long serialVersionUID = 3839770269634935346L;
+
+	@NelumboConstructor
+	public Add(Functor functor, List<AstElement> elements, Object[] args) {
+		super(functor, elements, args[0], args[1], args[2]);
+	}
+
+	private Add(Object[] array, List<AstElement> elements, Add declaration) {
+		super(array, elements, declaration);
+	}
+
+	@Override
+	protected Add struct(Object[] array, List<AstElement> elements, Node declaration) {
+		return new Add(array, elements, (Add) declaration);
+	}
+
+	@Override
+	protected InferResult infer(int nrOfUnbound, InferContext context) {
+		if (nrOfUnbound > 1) {
+			return unresolvable();
+		}
+
+		BigInteger a1n = getVal(0, 0);
+		BigInteger a1d = getVal(0, 1);
+		BigInteger a2n = getVal(1, 0);
+		BigInteger a2d = getVal(1, 1);
+		BigInteger smn = getVal(2, 0);
+		BigInteger smd = getVal(2, 1);
+		if (a1n != null && a2n != null) {
+			BigInteger sn = a1n.multiply(a2d).add(a2n.multiply(a1d));
+			BigInteger sd = a1d.multiply(a2d);
+			Rational s = Rational.of(sn, sd);
+			if (smn != null) {
+				boolean eq = s.equals(get(2));
+				return eq ? factCC() : falsehoodCC();
+			} else {
+				return set(2, s).factCI();
+			}
+		} else if (a1n != null) {
+			BigInteger an = smn.multiply(a1d).subtract(a1n.multiply(smd));
+			BigInteger ad = a1d.multiply(smd);
+			return set(1, Rational.of(an, ad)).factCI();
+		} else if (a2n != null) {
+			BigInteger an = smn.multiply(a2d).subtract(a2n.multiply(smd));
+			BigInteger ad = a2d.multiply(smd);
+			return set(0, Rational.of(an, ad)).factCI();
+		}
+
+		return unknown();
+	}
+
+}

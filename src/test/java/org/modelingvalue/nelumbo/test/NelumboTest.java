@@ -20,101 +20,106 @@ import org.junit.jupiter.api.RepeatedTest;
 
 public class NelumboTest extends NelumboTestBase {
 
-    static {
-        setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "false");
-        setProp("TRACE_SYNTATIC", "false");
-        setProp("VERBOSE_TESTS", "false");
-    }
+	static {
+		setProp("PARALLEL_COLLECTIONS", "false");
+		setProp("REVERSE_NELUMBO", "false");
+		setProp("RANDOM_NELUMBO", "true");
+		setProp("TRACE_NELUMBO", "false");
+		setProp("TRACE_SYNTATIC", "false");
+		setProp("VERBOSE_TESTS", "false");
+	}
 
-    @RepeatedTest(10)
-    public void initTest() {
-        String example = """
-                // Init only
-                """;
-        testString(example, "NelumboTest.initTest");
-    }
+	@RepeatedTest(10)
+	public void initTest() {
+		String example = """
+				// Init only
+				""";
+		testString(example, "NelumboTest.initTest");
+	}
 
-    @RepeatedTest(10)
-    public void logicTest() {
-        testResource("logicTest.nl");
-    }
+	@RepeatedTest(10)
+	public void logicTest() {
+		testResource("logicTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void friendsTest() {
-        testResource("friendsTest.nl");
-    }
+	@RepeatedTest(10)
+	public void friendsTest() {
+		testResource("friendsTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void whoIsTest() {
-        testResource("whoIsTest.nl");
-    }
+	@RepeatedTest(10)
+	public void whoIsTest() {
+		testResource("whoIsTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void familyTest() {
-        testResource("familyTest.nl");
-    }
+	@RepeatedTest(10)
+	public void familyTest() {
+		testResource("familyTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void integersTest() {
-        testResource("integersTest.nl");
-    }
+	@RepeatedTest(10)
+	public void integersTest() {
+		testResource("integersTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void collectionsTest() {
-        testResource("collectionsTest.nl");
-    }
+	@RepeatedTest(10)
+	public void rationalsTest() {
+		testResource("rationalsTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void queryOnlyTest() {
-        testResource("queryOnly.nl");
-    }
+	@RepeatedTest(10)
+	public void collectionsTest() {
+		testResource("collectionsTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void stringsTest() {
-        testResource("stringsTest.nl");
-    }
+	@RepeatedTest(10)
+	public void queryOnlyTest() {
+		testResource("queryOnly.nl");
+	}
 
-    @RepeatedTest(10)
-    public void belastingTest() {
-        testResource("belastingTest.nl");
-    }
+	@RepeatedTest(10)
+	public void stringsTest() {
+		testResource("stringsTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void fibonacciTest() {
-        testResource("fibonacciTest.nl");
-    }
+	@RepeatedTest(10)
+	public void belastingTest() {
+		testResource("belastingTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void transformationTest() {
-        testResource("transformationTest.nl");
-    }
+	@RepeatedTest(10)
+	public void fibonacciTest() {
+		testResource("fibonacciTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void maxTest() {
-        testResource("maxTest.nl");
-    }
+	@RepeatedTest(10)
+	public void transformationTest() {
+		testResource("transformationTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void deHetTest() {
-        testResource("deHetTest.nl");
-    }
+	@RepeatedTest(10)
+	public void maxTest() {
+		testResource("maxTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void maxFib() {
-        testResource("maxFib.nl");
-    }
+	@RepeatedTest(10)
+	public void deHetTest() {
+		testResource("deHetTest.nl");
+	}
 
-    @RepeatedTest(10)
-    public void scopingTest() {
-        testResource("scopingTest.nl");
-    }
+	@RepeatedTest(10)
+	public void maxFib() {
+		testResource("maxFib.nl");
+	}
 
-    @RepeatedTest(10)
-    public void hiddenTest() {
-        testResource("hiddenTest.nl");
-    }
+	@RepeatedTest(10)
+	public void scopingTest() {
+		testResource("scopingTest.nl");
+	}
+
+	@RepeatedTest(10)
+	public void hiddenTest() {
+		testResource("hiddenTest.nl");
+	}
 
 }
