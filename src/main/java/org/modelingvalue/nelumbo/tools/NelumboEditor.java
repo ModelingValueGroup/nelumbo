@@ -147,9 +147,16 @@ public class NelumboEditor {
             { "Examples", "queryOnly.nl", "Query Only" }, { "Examples", "hidden.nl", "Hidden" },
             { "Examples", "max.nl", "Max" }, { "Examples", "deHet.nl", "De Het" },
             { "Examples", "maxFib.nl", "Maximal Fibonacci" }, { "Examples", "scoping.nl", "Scoping" },
-            // Workshop
-            { "Workshop", "power.nl", "Power" }, { "Workshop", "ternary.nl", "Ternary" },
-            { "Workshop", "max.nl", "Max" }, };
+            // Assignments
+            { "Assignments", "powerAssignment.nl", "Power Assignment" },
+            { "Assignments", "ternaryAssignment.nl", "Ternary Assignment" },
+            { "Assignments", "maxAssignment.nl", "Max Assignment" },
+            { "Assignments", "familyAssignment.nl", "Family Assignment" },
+            { "Assignments", "maxFibAssignment.nl", "Maximal Fibonacci Assignment" },
+            // Answers
+            { "Answers", "power.nl", "Power Answer" }, { "Answers", "ternary.nl", "Ternary Answer" },
+            { "Answers", "max.nl", "Max Answer" }, { "Answers", "family.nl", "Family Answer" },
+            { "Answers", "maxFib.nl", "Maximal Fibonacci Answer" }, };
 
     private final Preferences          preferences = Preferences.userNodeForPackage(NelumboEditor.class);
     private final WindowManager        windowManager;
