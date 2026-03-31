@@ -1,5 +1,5 @@
 
-import    org.modelingvalue.nelumbo.examples.friendsTest
+import    org.modelingvalue.nelumbo.examples.friends
 
 Boolean ::= <Person> is <Person>   #30
 Person  ::= a friend of <Person>   #35
