@@ -3,6 +3,9 @@
   
   Type E
   
-  Set<E>  ::= { <(> <E> <,> , <)*> }  @org.modelingvalue.nelumbo.collections.NSet 
-  List<E> ::= [ <(> <E> <,> , <)*> ]  @org.modelingvalue.nelumbo.collections.NList 
+  private Boolean ::= build(<Variable>,<Boolean>,<Set<E>>)  @org.modelingvalue.nelumbo.collections.SetBuilder 
+  
+  Set<E>  ::= { <(> <E> <,> , <)*> }          @org.modelingvalue.nelumbo.collections.NSet,
+              {[<Variable#100>] <Boolean#0>}
+  List<E> ::= [ <(> <E> <,> , <)*> ]          @org.modelingvalue.nelumbo.collections.NList
   
