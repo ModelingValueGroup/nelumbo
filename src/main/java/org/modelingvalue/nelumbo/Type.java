@@ -28,50 +28,50 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Type extends Node {
     @Serial
-    private static final long   serialVersionUID = -4583279157841144493L;
+    private static final long serialVersionUID = -4583279157841144493L;
     //
-    public static final String  DEFAULT_GROUP    = "_";
-    public static final String  TOP_GROUP        = "TOP";
-    public static final String  PATTERN_GROUP    = "PATTERN";
+    public static final String DEFAULT_GROUP = "_";
+    public static final String TOP_GROUP     = "TOP";
+    public static final String PATTERN_GROUP = "PATTERN";
     //
-    private static final Object EQUALS_TYPE      = new Object() {
-                                                     @Override
-                                                     public String toString() {
-                                                         return "Type";
-                                                     }
+    private static final Object EQUALS_TYPE = new Object() {
+        @Override
+        public String toString() {
+            return "Type";
+        }
 
-                                                     @Override
-                                                     public int hashCode() {
-                                                         return 0;
-                                                     }
-                                                 };
+        @Override
+        public int hashCode() {
+            return 0;
+        }
+    };
     //
-    public static final Type    $OBJECT          = new Type(Object.class);
-    public static final Type    $STRING          = new Type(String.class, $OBJECT);
+    public static final Type $OBJECT = new Type(Object.class);
+    public static final Type $STRING = new Type(String.class, $OBJECT);
     //
-    public static final Type    OBJECT           = new Type("Object", $OBJECT);
-    public static final Type    TYPE             = new Type("Type", OBJECT);
-    public static final Type    UNIVERSE         = new Type("Universe", OBJECT);
-    public static final Type    NAMESPACE        = new Type("Namespace", OBJECT);
-    public static final Type    FUNCTION         = new Type("Function", OBJECT);
-    public static final Type    LITERAL          = new Type("Literal", OBJECT);
-    public static final Type    ROOT             = new Type("Root", OBJECT);
-    public static final Type    BOOLEAN          = new Type("Boolean", OBJECT);
-    public static final Type    FACT_TYPE        = new Type("FactType", BOOLEAN);
-    public static final Type    VARIABLE         = new Type("Variable", OBJECT);
-    public static final Type    RULE             = new Type("Rule", ROOT);
-    public static final Type    FUNCTOR          = new Type("Functor", ROOT);
-    public static final Type    FACT             = new Type("Fact", ROOT);
-    public static final Type    PATTERN          = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
-    public static final Type    QUERY            = new Type("Query", Type.ROOT);
-    public static final Type    TRANSFORM        = new Type("Transform", Type.ROOT, NAMESPACE);
-    public static final Type    IMPORT           = new Type("Import", Type.ROOT);
-    private static final Type   TYPE_ARG_VAR     = new Type(new Variable(List.of(), TYPE, "E", false));
-    public static final Type    COLLECTION       = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type    SET              = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type    LIST             = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type    ROOT_LIST        = new Type("RootList", ROOT.list(TOP_GROUP), NAMESPACE);
-    public static final Type    ROOT_NAMESPACE   = new Type("RootNamespace", ROOT.list(), NAMESPACE, ROOT);
+    public static final Type  OBJECT         = new Type("Object", $OBJECT);
+    public static final Type  TYPE           = new Type("Type", OBJECT);
+    public static final Type  UNIVERSE       = new Type("Universe", OBJECT);
+    public static final Type  NAMESPACE      = new Type("Namespace", OBJECT);
+    public static final Type  FUNCTION       = new Type("Function", OBJECT);
+    public static final Type  LITERAL        = new Type("Literal", OBJECT);
+    public static final Type  ROOT           = new Type("Root", OBJECT);
+    public static final Type  BOOLEAN        = new Type("Boolean", OBJECT);
+    public static final Type  FACT_TYPE      = new Type("FactType", BOOLEAN);
+    public static final Type  VARIABLE       = new Type("Variable", OBJECT);
+    public static final Type  RULE           = new Type("Rule", ROOT);
+    public static final Type  FUNCTOR        = new Type("Functor", ROOT);
+    public static final Type  FACT           = new Type("Fact", ROOT);
+    public static final Type  PATTERN        = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
+    public static final Type  QUERY          = new Type("Query", Type.ROOT);
+    public static final Type  TRANSFORM      = new Type("Transform", Type.ROOT, NAMESPACE);
+    public static final Type  IMPORT         = new Type("Import", Type.ROOT);
+    private static final Type TYPE_ARG_VAR   = new Type(new Variable(List.of(), TYPE, "E", false));
+    public static final Type  COLLECTION     = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type  SET            = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type  LIST           = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type  ROOT_LIST      = new Type("RootList", ROOT.list(TOP_GROUP), NAMESPACE);
+    public static final Type  ROOT_NAMESPACE = new Type("RootNamespace", ROOT.list(), NAMESPACE, ROOT);
 
     public static List<Type> predefined() {
         return List.of(//
@@ -200,9 +200,6 @@ public final class Type extends Node {
 
     public Type setElement(Type element) {
         Set<Type> supers = supers().replaceAll(s -> s.isCollection() ? s.setElement(element) : s);
-        for (Type s : element.supers()) {
-            supers = supers.add(setElement(s));
-        }
         return set(3, element).set(1, supers);
     }
 
@@ -326,7 +323,8 @@ public final class Type extends Node {
     public String rawName() {
         Object type = get(0);
         if (type instanceof Set<?> s) {
-            return "(" + ((Set<Type>) s).map(Type::name).sorted().sequential().reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + ")";
+            return "(" + ((Set<Type>) s).map(Type::name).sorted().sequential().reduce("",
+                    (a, b) -> a.isEmpty() ? b : a + "," + b) + ")";
         } else if (type instanceof TokenType tt) {
             return tt.name();
         } else if (type instanceof Variable var) {
@@ -414,6 +412,13 @@ public final class Type extends Node {
         for (Type s : type.allSupers()) {
             if (equals(s)) {
                 return true;
+            } else if (isCollection() && s.isCollection() && get(0).equals(s.get(0))) {
+                if (element().isAssignableFrom(s.element())) {
+                    return true;
+                } else if (element().get(0) instanceof Variable || s.element().get(0) instanceof Variable) {
+                    return true;
+                }
+                return false;
             }
         }
         return false;

@@ -45,7 +45,7 @@ public abstract class Quantifier extends CompoundPredicate {
 
     @Override
     @SuppressWarnings("unchecked")
-    public final List<Variable> localVars() {
+    public List<Variable> localVars() {
         return (List<Variable>) get(0);
     }
 
