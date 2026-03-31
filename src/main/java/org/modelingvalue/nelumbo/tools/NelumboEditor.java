@@ -151,12 +151,13 @@ public class NelumboEditor {
             { "Assignments", "powerAssignment.nl", "Power Assignment" },
             { "Assignments", "ternaryAssignment.nl", "Ternary Assignment" },
             { "Assignments", "maxAssignment.nl", "Max Assignment" },
+            { "Assignments", "evenAssignment.nl", "Even Assignment" },
             { "Assignments", "familyAssignment.nl", "Family Assignment" },
             { "Assignments", "maxFibAssignment.nl", "Maximal Fibonacci Assignment" },
             // Answers
             { "Answers", "power.nl", "Power Answer" }, { "Answers", "ternary.nl", "Ternary Answer" },
-            { "Answers", "max.nl", "Max Answer" }, { "Answers", "family.nl", "Family Answer" },
-            { "Answers", "maxFib.nl", "Maximal Fibonacci Answer" }, };
+            { "Answers", "max.nl", "Max Answer" }, { "Answers", "even.nl", "Even Answer" },
+            { "Answers", "family.nl", "Family Answer" }, { "Answers", "maxFib.nl", "Maximal Fibonacci Answer" }, };
 
     private final Preferences          preferences = Preferences.userNodeForPackage(NelumboEditor.class);
     private final WindowManager        windowManager;
