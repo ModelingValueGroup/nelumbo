@@ -5,26 +5,30 @@
   
   private Boolean ::= add(<Rational>,<Rational>,<Rational>)   @org.modelingvalue.nelumbo.rationals.Add,
                       mult(<Rational>,<Rational>,<Rational>)  @org.modelingvalue.nelumbo.rationals.Multiply
+
    
-  Boolean ::=  <Rational>  >   <Rational>   #30   @org.modelingvalue.nelumbo.rationals.GreaterThan,
+  Boolean ::=  <Rational>  >   <Rational>   #30     @org.modelingvalue.nelumbo.rationals.GreaterThan,
                <Rational> "<"  <Rational>   #30,
                <Rational> "<=" <Rational>   #30,
-               <Rational>  >=  <Rational>   #30
+               <Rational>  >=  <Rational>   #30,
+               iir(<Integer>,<Integer>,<Rational>)  @org.modelingvalue.nelumbo.rationals.IntegersRational
 
-  Rational ::= <DECIMAL>                          @org.modelingvalue.nelumbo.rationals.Rational,
+  Rational ::= <DECIMAL>                            @org.modelingvalue.nelumbo.rationals.Rational,
                <Rational> - <Rational>   #40,
                <Rational> + <Rational>   #40,
                           - <Rational>   #80,
                <Rational> * <Rational>   #50,
                <Rational> / <Rational>   #50,
-                          | <Rational> | #35
+                          | <Rational> | #35,
+               r(<Integer>),
+               r(<Integer>/<Integer>)
 
   Rational a, b, c
     
   a<b    <=>  b>a
   a<=b   <=>  a<b | a=b
   a>=b   <=>  a>b | a=b
-    
+  
   a+b=c  <=>  add(a,b,c)
   a-b=c  <=>  add(c,b,a)
   a*b=c  <=>  mult(a,b,c)
@@ -34,3 +38,9 @@
     
   |a|=b  <=>  b=a   if a>=0.0,
               b=-a  if a<0.0
+  
+  Integer x, y
+  
+  r(x)=a    <=> iir(x,1,a)
+  r(x/y)=a  <=> iir(x,y,a)
+  

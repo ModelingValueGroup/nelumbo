@@ -25,7 +25,16 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Taskbar;
 import java.awt.Toolkit;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +49,20 @@ import java.util.UUID;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
@@ -68,48 +90,49 @@ import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 /**
- * Represents an individual editor window in the multi-window architecture.
- * Each window has its own JFrame, text panes, knowledge base execution loop,
- * and viewer dialogs.
+ * Represents an individual editor window in the multi-window architecture. Each
+ * window has its own JFrame, text panes, knowledge base execution loop, and
+ * viewer dialogs.
  */
-public class EditorWindow extends WindowAdapter implements WindowListener, Runnable, DocumentListener, EditorImportResolver.ImportChangeListener {
+public class EditorWindow extends WindowAdapter
+        implements WindowListener, Runnable, DocumentListener, EditorImportResolver.ImportChangeListener {
 
-    private static final String                  MESSAGES_FILE_NAME    = "messages.nl";
-    private final static String                  INCREASE              = "INCREASE";
-    private final static String                  DECREASE              = "DECREASE";
+    private static final String MESSAGES_FILE_NAME = "messages.nl";
+    private final static String INCREASE = "INCREASE";
+    private final static String DECREASE = "DECREASE";
 
-    private final static DefaultHighlightPainter redPainter            = new DefaultHighlightPainter(new Color(0xffaaaa));
-    private final static DefaultHighlightPainter greenPainter          = new DefaultHighlightPainter(new Color(0xaaffaa));
+    private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xffaaaa));
+    private final static DefaultHighlightPainter greenPainter = new DefaultHighlightPainter(new Color(0xaaffaa));
 
-    private final String                         windowId;
-    private final NelumboEditor                  application;
-    private volatile boolean                     isExample;
-    private final String                         examplePath;
-    private final String                         exampleDisplayName;
-    private final Preferences                    preferences;
-    private volatile int                         windowNumber;                                                            // Window number for regular windows
+    private final String windowId;
+    private final NelumboEditor application;
+    private volatile boolean isExample;
+    private final String examplePath;
+    private final String exampleDisplayName;
+    private final Preferences preferences;
+    private volatile int windowNumber; // Window number for regular windows
 
-    private volatile KnowledgeBase               knowledgeBase;
-    private JFrame                               frame;
-    private JTextPane                            messagesPane;
-    private JTextPane                            textPane;
-    private JMenu                                windowsMenu;
-    private JMenuItem                            undoMenuItem;
-    private JMenuItem                            redoMenuItem;
-    private UndoManager                          undoManager;
-    private CompoundEdit                         currentCompoundEdit;
-    private Timer                                compoundEditTimer;
-    private WindowManager.WindowListListener     windowListListener;
-    private volatile boolean                     quit;
-    private boolean                              refreshRequested;
-    private TreeViewerDialog                     treeViewerDialog;
-    private KnowledgeBaseViewerDialog            knowledgeBaseViewerDialog;
-    private volatile TokenizerResult             lastTokenizerResult;
-    private volatile ParserResult                lastParserResult;
-    private Set<String>                          currentImports        = new HashSet<>();                                 // Tracks current editor imports
-    private int                                  currentUnderlineStart = -1;                                              // Start index of current underline (-1 if none)
-    private int                                  currentUnderlineEnd   = -1;                                              // End index of current underline (-1 if none)
-    private java.awt.Point                       lastMousePosition;                                                       // Last mouse position for key-press underline update
+    private volatile KnowledgeBase knowledgeBase;
+    private JFrame frame;
+    private JTextPane messagesPane;
+    private JTextPane textPane;
+    private JMenu windowsMenu;
+    private JMenuItem undoMenuItem;
+    private JMenuItem redoMenuItem;
+    private UndoManager undoManager;
+    private CompoundEdit currentCompoundEdit;
+    private Timer compoundEditTimer;
+    private WindowManager.WindowListListener windowListListener;
+    private volatile boolean quit;
+    private boolean refreshRequested;
+    private TreeViewerDialog treeViewerDialog;
+    private KnowledgeBaseViewerDialog knowledgeBaseViewerDialog;
+    private volatile TokenizerResult lastTokenizerResult;
+    private volatile ParserResult lastParserResult;
+    private Set<String> currentImports = new HashSet<>(); // Tracks current editor imports
+    private int currentUnderlineStart = -1; // Start index of current underline (-1 if none)
+    private int currentUnderlineEnd = -1; // End index of current underline (-1 if none)
+    private java.awt.Point lastMousePosition; // Last mouse position for key-press underline update
 
     /**
      * Creates a new regular editor window with a pre-assigned window number.
@@ -127,7 +150,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     /**
      * Creates a new editor window for an example.
      */
-    public EditorWindow(NelumboEditor application, String windowId, boolean isExample, String examplePath, String exampleDisplayName) {
+    public EditorWindow(NelumboEditor application, String windowId, boolean isExample, String examplePath,
+            String exampleDisplayName) {
         this.application = application;
         this.windowId = windowId != null ? windowId : UUID.randomUUID().toString();
         this.isExample = isExample;
@@ -154,8 +178,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Returns the file name used for tokenizing this window's content.
-     * Each window uses a unique file name to enable cross-window go-to-definition.
+     * Returns the file name used for tokenizing this window's content. Each window
+     * uses a unique file name to enable cross-window go-to-definition.
      */
     public String getEditorFileName() {
         if (isExample && exampleDisplayName != null) {
@@ -181,8 +205,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Starts the knowledge base execution loop.
-     * This method blocks until the window is closed.
+     * Starts the knowledge base execution loop. This method blocks until the window
+     * is closed.
      */
     public void startExecutionLoop() {
         KnowledgeBase.BASE.run(this);
@@ -235,7 +259,9 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
                     if (!textPane.isEditable()) {
                         int keyCode = e.getKeyCode();
                         // Detect delete, backspace, or paste shortcuts
-                        if (keyCode == KeyEvent.VK_DELETE || keyCode == KeyEvent.VK_BACK_SPACE || ((e.isControlDown() || e.isMetaDown()) && (keyCode == KeyEvent.VK_V || keyCode == KeyEvent.VK_X))) {
+                        if (keyCode == KeyEvent.VK_DELETE || keyCode == KeyEvent.VK_BACK_SPACE
+                                || ((e.isControlDown() || e.isMetaDown())
+                                        && (keyCode == KeyEvent.VK_V || keyCode == KeyEvent.VK_X))) {
                             promptToConvertToEditable();
                         }
                     }
@@ -299,12 +325,14 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         // Set focus on text area
         textPane.requestFocusInWindow();
 
-        // Add mouse listener for go-to-definition (command-click on Mac, control-click on Windows)
+        // Add mouse listener for go-to-definition (command-click on Mac, control-click
+        // on Windows)
         textPane.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
-                boolean modifierHeld = isMac ? (e.getModifiersEx() & InputEvent.META_DOWN_MASK) != 0 : (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0;
+                boolean modifierHeld = isMac ? (e.getModifiersEx() & InputEvent.META_DOWN_MASK) != 0
+                        : (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0;
                 if (modifierHeld) {
                     goToDefinition(e);
                 }
@@ -353,9 +381,10 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Handles go-to-definition when the user command-clicks (Mac) or control-clicks (Windows) on a token.
-     * Navigates to the definition of the token if one exists, including in other editor windows.
-     * Also handles import statements by navigating to the imported file.
+     * Handles go-to-definition when the user command-clicks (Mac) or control-clicks
+     * (Windows) on a token. Navigates to the definition of the token if one exists,
+     * including in other editor windows. Also handles import statements by
+     * navigating to the imported file.
      */
     private void goToDefinition(MouseEvent e) {
         if (lastTokenizerResult == null) {
@@ -368,7 +397,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
             return;
         }
 
-        // Check if click is within an Import statement - if so, navigate to the import source
+        // Check if click is within an Import statement - if so, navigate to the import
+        // source
         Import imp = findImportAtPosition(clickPosition);
         if (imp != null) {
             navigateToImport(imp);
@@ -411,8 +441,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Finds the Import node at the given character position by searching through parser results.
-     * Returns null if no Import is found at that position.
+     * Finds the Import node at the given character position by searching through
+     * parser results. Returns null if no Import is found at that position.
      */
     private Import findImportAtPosition(int position) {
         if (lastParserResult == null) {
@@ -452,9 +482,9 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Navigates to the source of an import statement.
-     * For editor imports (editor.nelumbo_N), brings that editor window to front.
-     * For library/example imports, opens the corresponding window.
+     * Navigates to the source of an import statement. For editor imports
+     * (editor.nelumbo_N), brings that editor window to front. For library/example
+     * imports, opens the corresponding window.
      */
     private void navigateToImport(Import imp) {
         String importName = imp.name();
@@ -556,7 +586,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     private void updateUnderlineHint(MouseEvent e) {
         lastMousePosition = e.getPoint();
         boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
-        boolean modifierHeld = isMac ? (e.getModifiersEx() & InputEvent.META_DOWN_MASK) != 0 : (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0;
+        boolean modifierHeld = isMac ? (e.getModifiersEx() & InputEvent.META_DOWN_MASK) != 0
+                : (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0;
 
         if (!modifierHeld) {
             clearUnderline();
@@ -567,7 +598,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Updates underline hint when modifier key is pressed, using the last known mouse position.
+     * Updates underline hint when modifier key is pressed, using the last known
+     * mouse position.
      */
     private void updateUnderlineHintFromLastPosition() {
         if (lastMousePosition == null) {
@@ -577,9 +609,9 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Updates the underline at the given character position.
-     * Underlines the full import statement if position is within an import,
-     * or a single token if it has a definition.
+     * Updates the underline at the given character position. Underlines the full
+     * import statement if position is within an import, or a single token if it has
+     * a definition.
      */
     private void updateUnderlineAtPosition(int position) {
         if (position < 0) {
@@ -587,7 +619,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
             return;
         }
 
-        // First check if we're in an import statement - if so, underline the whole import
+        // First check if we're in an import statement - if so, underline the whole
+        // import
         Import imp = findImportAtPosition(position);
         if (imp != null) {
             Token first = imp.firstToken();
@@ -657,12 +690,14 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         // File menu
         JMenu fileMenu = new JMenu("File");
         JMenuItem newWindowItem = new JMenuItem("New Window");
-        newWindowItem.setAccelerator(KeyStroke.getKeyStroke('N', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        newWindowItem
+                .setAccelerator(KeyStroke.getKeyStroke('N', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         newWindowItem.addActionListener(e -> application.createNewWindow());
         fileMenu.add(newWindowItem);
 
         JMenuItem closeWindowItem = new JMenuItem("Close Window");
-        closeWindowItem.setAccelerator(KeyStroke.getKeyStroke('W', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        closeWindowItem
+                .setAccelerator(KeyStroke.getKeyStroke('W', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         closeWindowItem.addActionListener(e -> closeWindow());
         fileMenu.add(closeWindowItem);
 
@@ -679,14 +714,18 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         JMenu editMenu = new JMenu("Edit");
 
         undoMenuItem = new JMenuItem("Undo");
-        undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        undoMenuItem
+                .setAccelerator(KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         undoMenuItem.addActionListener(e -> performUndo());
         undoMenuItem.setEnabled(false);
         editMenu.add(undoMenuItem);
 
         redoMenuItem = new JMenuItem("Redo");
         boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
-        redoMenuItem.setAccelerator(isMac ? KeyStroke.getKeyStroke('Z', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK) : KeyStroke.getKeyStroke('Y', InputEvent.CTRL_DOWN_MASK));
+        redoMenuItem.setAccelerator(isMac
+                ? KeyStroke.getKeyStroke('Z',
+                        Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK)
+                : KeyStroke.getKeyStroke('Y', InputEvent.CTRL_DOWN_MASK));
         redoMenuItem.addActionListener(e -> performRedo());
         redoMenuItem.setEnabled(false);
         editMenu.add(redoMenuItem);
@@ -711,12 +750,14 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         // View menu
         JMenu viewMenu = new JMenu("View");
         JMenuItem treeViewerItem = new JMenuItem("Tree Viewer...");
-        treeViewerItem.setAccelerator(KeyStroke.getKeyStroke('T', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        treeViewerItem
+                .setAccelerator(KeyStroke.getKeyStroke('T', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         treeViewerItem.addActionListener(e -> toggleTreeViewer());
         viewMenu.add(treeViewerItem);
 
         JMenuItem knowledgeBaseViewerItem = new JMenuItem("Knowledge Base Viewer...");
-        knowledgeBaseViewerItem.setAccelerator(KeyStroke.getKeyStroke('K', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        knowledgeBaseViewerItem
+                .setAccelerator(KeyStroke.getKeyStroke('K', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         knowledgeBaseViewerItem.addActionListener(e -> toggleKnowledgeBaseViewer());
         viewMenu.add(knowledgeBaseViewerItem);
 
@@ -757,7 +798,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
                 // Add keyboard shortcut for first 9 windows (Cmd-1 through Cmd-9)
                 if (index <= 9) {
-                    item.setAccelerator(KeyStroke.getKeyStroke(Character.forDigit(index, 10), Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+                    item.setAccelerator(KeyStroke.getKeyStroke(Character.forDigit(index, 10),
+                            Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
                 }
 
                 // Mark current window
@@ -895,22 +937,27 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Shows a confirmation dialog if this is an editable window.
-     * Returns true if the window should be closed, false to cancel.
+     * Shows a confirmation dialog if this is an editable window. Returns true if
+     * the window should be closed, false to cancel.
      */
     private boolean confirmCloseIfEditable() {
         if (textPane.isEditable()) {
-            int result = JOptionPane.showConfirmDialog(frame, "The contents of this window will be lost. Are you sure you want to close it?", "Close Window", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            int result = JOptionPane.showConfirmDialog(frame,
+                    "The contents of this window will be lost. Are you sure you want to close it?", "Close Window",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             return result == JOptionPane.YES_OPTION;
         }
         return true; // Read-only windows can be closed without confirmation
     }
 
     /**
-     * Prompts the user to convert this read-only example window to an editable window.
+     * Prompts the user to convert this read-only example window to an editable
+     * window.
      */
     private void promptToConvertToEditable() {
-        int result = JOptionPane.showConfirmDialog(frame, "This is a read-only example. Would you like to create an editable copy?", "Convert to Editable", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(frame,
+                "This is a read-only example. Would you like to create an editable copy?", "Convert to Editable",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
             convertToEditableWindow();
@@ -999,8 +1046,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Called when an import this window depends on has changed.
-     * Triggers a re-parse to update the content.
+     * Called when an import this window depends on has changed. Triggers a re-parse
+     * to update the content.
      */
     @Override
     public void onImportChanged(String importName) {
@@ -1008,7 +1055,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Extracts editor imports (imports starting with "editor.") from the parser result.
+     * Extracts editor imports (imports starting with "editor.") from the parser
+     * result.
      */
     private Set<String> extractEditorImports(ParserResult result) {
         Set<String> imports = new HashSet<>();
@@ -1039,8 +1087,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
     /**
      * Updates the import dependency tracking based on the current parser result.
-     * Registers this window as a listener for imports it depends on,
-     * and unregisters from imports it no longer depends on.
+     * Registers this window as a listener for imports it depends on, and
+     * unregisters from imports it no longer depends on.
      */
     private void updateImportDependencies(ParserResult result) {
         EditorImportResolver resolver = application.getEditorImportResolver();
@@ -1104,7 +1152,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
 
             if (!refreshRequested) {
                 // Phase 5: Apply all post-compute UI updates on EDT
-                runOnEDT(() -> applyUIUpdates(tokenizerResult, result, text, messagesText, textHighlights, messageHighlights));
+                runOnEDT(() -> applyUIUpdates(tokenizerResult, result, text, messagesText, textHighlights,
+                        messageHighlights));
             }
 
             // Phase 6: Non-UI updates on worker thread
@@ -1118,10 +1167,12 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     }
 
     /**
-     * Computes evaluation results on the worker thread without touching Swing components.
-     * Returns the messages text; populates textHighlights and messageHighlights.
+     * Computes evaluation results on the worker thread without touching Swing
+     * components. Returns the messages text; populates textHighlights and
+     * messageHighlights.
      */
-    private String computeResults(ParserResult result, ArrayList<Highlight> textHighlights, ArrayList<Highlight> messageHighlights) {
+    private String computeResults(ParserResult result, ArrayList<Highlight> textHighlights,
+            ArrayList<Highlight> messageHighlights) {
         List<ParseException> exceptions = result.exceptions();
         if (exceptions.isEmpty()) {
             ParserResult throwing = new ParserResult(null, true);
@@ -1172,9 +1223,11 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     /**
      * Applies all UI updates on the EDT after computation is complete.
      */
-    private void applyUIUpdates(TokenizerResult tokenizerResult, ParserResult result, String text, String messagesText, ArrayList<Highlight> textHighlights, ArrayList<Highlight> messageHighlights) {
+    private void applyUIUpdates(TokenizerResult tokenizerResult, ParserResult result, String text, String messagesText,
+            ArrayList<Highlight> textHighlights, ArrayList<Highlight> messageHighlights) {
         // Reset UI state
-        // Create a new Highlighter instead of clearing it because of ArrayIndexOutOfBoundsException when repainting
+        // Create a new Highlighter instead of clearing it because of
+        // ArrayIndexOutOfBoundsException when repainting
         textPane.setHighlighter(new DefaultHighlighter());
         messagesPane.setHighlighter(new DefaultHighlighter());
         currentUnderlineStart = -1;
@@ -1366,7 +1419,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
     private void loadExampleContent() {
         try (InputStream is = getClass().getResourceAsStream(examplePath)) {
             if (is == null) {
-                JOptionPane.showMessageDialog(frame, "Could not find resource: " + examplePath, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "Could not find resource: " + examplePath, "Error",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             String content;
@@ -1382,7 +1436,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
             StyleConstants.setLineSpacing(paragraphStyle, 0.2f);
             doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(frame, "Error loading example: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "Error loading example: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1466,7 +1521,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         int menuShortcutMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
         // Cmd-T: Toggle Tree Viewer
-        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('T', menuShortcutMask), "toggleTreeViewer");
+        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke('T', menuShortcutMask), "toggleTreeViewer");
         dialog.getRootPane().getActionMap().put("toggleTreeViewer", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -1475,7 +1531,8 @@ public class EditorWindow extends WindowAdapter implements WindowListener, Runna
         });
 
         // Cmd-K: Toggle Knowledge Base Viewer
-        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('K', menuShortcutMask), "toggleKnowledgeBaseViewer");
+        dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke('K', menuShortcutMask), "toggleKnowledgeBaseViewer");
         dialog.getRootPane().getActionMap().put("toggleKnowledgeBaseViewer", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {

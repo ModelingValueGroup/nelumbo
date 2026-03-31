@@ -41,15 +41,20 @@ public class Functor extends Node {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, Constructor<?> constructor, Integer leftPrecedence) {
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
+            Constructor<?> constructor, Integer leftPrecedence) {
         return new Functor(elements, pattern, result, local, constructor, leftPrecedence);
     }
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function, Integer leftPrecedence) {
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
+            ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function,
+            Integer leftPrecedence) {
         return new Functor(elements, pattern, result, local, function, leftPrecedence);
     }
 
-    public static Functor of(Pattern pattern, Type result, Type local, ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function, Integer leftPrecedence) {
+    public static Functor of(Pattern pattern, Type result, Type local,
+            ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function,
+            Integer leftPrecedence) {
         return new Functor(List.of(), pattern, result, local, function, leftPrecedence);
     }
 
@@ -57,7 +62,7 @@ public class Functor extends Node {
         return new Functor(List.of(), pattern, result, local, null, leftPrecedence);
     }
 
-    private String     name;
+    private String name;
     private List<Type> argTypes;
     private ParseState start;
     private ParseState startPre;
@@ -113,7 +118,9 @@ public class Functor extends Node {
     @SuppressWarnings("unchecked")
     public ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function() {
         Object val = get(3);
-        return val instanceof ThrowingQuadFunction ? (ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node>) val : null;
+        return val instanceof ThrowingQuadFunction
+                ? (ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node>) val
+                : null;
     }
 
     public Integer leftPrecedence() {
@@ -132,7 +139,6 @@ public class Functor extends Node {
         return name;
     }
 
-    @SuppressWarnings("unchecked")
     public List<Type> argTypes() {
         if (argTypes == null) {
             argTypes = pattern().argTypes(List.of());
@@ -145,7 +151,8 @@ public class Functor extends Node {
         return resultType() + "::=" + pattern();
     }
 
-    public Node construct(List<AstElement> elements, Object[] args, ParseExceptionHandler handler, ParseContext ctx) throws ParseException {
+    public Node construct(List<AstElement> elements, Object[] args, ParseExceptionHandler handler, ParseContext ctx)
+            throws ParseException {
         Constructor<? extends Node> constructor = constructor();
         if (constructor != null) {
             try {
@@ -162,10 +169,12 @@ public class Functor extends Node {
                 handleException(elements, handler, e);
             }
         }
-        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(this, elements, args) : new Node(this, elements, args);
+        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(this, elements, args)
+                : new Node(this, elements, args);
     }
 
-    private void handleException(List<AstElement> elements, ParseExceptionHandler handler, Exception e) throws ParseException {
+    private void handleException(List<AstElement> elements, ParseExceptionHandler handler, Exception e)
+            throws ParseException {
         if (e instanceof ParseException pe) {
             handler.addException(pe);
         } else {
@@ -217,7 +226,9 @@ public class Functor extends Node {
         MutableList<Object> args = MutableList.of(List.of());
         int i = pattern.args(elements, 0, args, false, this, typeArgs);
         assert i >= 0;
-        return pattern instanceof SequencePattern && args.size() == 1 && args.get(0) instanceof List<?> seq ? seq.toArray() : args.toArray();
+        return pattern instanceof SequencePattern && args.size() == 1 && args.get(0) instanceof List<?> seq
+                ? seq.toArray()
+                : args.toArray();
     }
 
     public String string(List<Object> args, TokenType[] previous) {
@@ -270,7 +281,7 @@ public class Functor extends Node {
         throw new NotMergeableException("Non deterministic pattern merge " + this + " <> " + other);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected Functor setBinding(Node declaration, Map<Variable, Object> vars) {
         Functor functor = (Functor) super.setBinding(declaration, vars);

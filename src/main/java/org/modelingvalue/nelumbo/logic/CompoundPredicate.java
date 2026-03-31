@@ -45,7 +45,6 @@ public abstract class CompoundPredicate extends Predicate {
         super(args, elements, declaration);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public InferResult resolve(InferContext context) {
         Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(), this));
@@ -125,10 +124,6 @@ public abstract class CompoundPredicate extends Predicate {
             completeFalsehoods = false;
         }
         return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
-    protected final Predicate predicate(int i) {
-        return (Predicate) get(i);
     }
 
 }

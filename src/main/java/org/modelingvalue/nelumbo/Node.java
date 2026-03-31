@@ -29,6 +29,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -39,15 +40,15 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 @SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long      serialVersionUID = 7315776001191198132L;
-    protected static final int     START            = 1;
+    private static final long serialVersionUID = 7315776001191198132L;
+    protected static final int START = 1;
     //
     private final List<AstElement> elements;
-    private final Node             declaration;
+    private final Node declaration;
     //
-    private Map<Variable, Object>  binding;
-    private boolean                hashCodeIsCached;
-    private int                    hashCodeCache;
+    private Map<Variable, Object> binding;
+    private boolean hashCodeIsCached;
+    private int hashCodeCache;
 
     @NelumboConstructor
     public Node(Functor functor, List<AstElement> elements, Object... args) {
@@ -394,10 +395,11 @@ public class Node extends StructImpl implements AstElement {
                 }
             }
         } else if (declVal instanceof Node declNode && thisVal instanceof Node thisNode) {
-            //noinspection ConstantValue
+            // noinspection ConstantValue
             assert !(declVal instanceof Type);
             vars = thisNode.getBinding(declNode, vars);
-        } else if (declVal instanceof ContainingCollection<?> declList && thisVal instanceof ContainingCollection<?> thisList && //
+        } else if (declVal instanceof ContainingCollection<?> declList
+                && thisVal instanceof ContainingCollection<?> thisList && //
                 declList.size() == thisList.size()) {
             for (int ii = 0; ii < declList.size(); ii++) {
                 vars = getBinding(declList.get(ii), thisList.get(ii), vars, i);
@@ -433,7 +435,7 @@ public class Node extends StructImpl implements AstElement {
         return array != null ? struct(array, elements, declaration) : this;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected final Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i) {
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
@@ -452,7 +454,8 @@ public class Node extends StructImpl implements AstElement {
         } else if (declVal instanceof Node declNode && !(declNode instanceof Type) && //
                 thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
             return thisNode.setBinding(declNode, vars);
-        } else if (declVal instanceof ContainingCollection declList && thisVal instanceof ContainingCollection thisList && //
+        } else if (declVal instanceof ContainingCollection declList && thisVal instanceof ContainingCollection thisList
+                && //
                 declList.size() == thisList.size()) {
             ContainingCollection list = declList.clear();
             for (int ii = 0; ii < declList.size(); ii++) {
@@ -509,7 +512,7 @@ public class Node extends StructImpl implements AstElement {
         }
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Object replace(Object from, ThrowingFunction<Node, Node> replacer) throws ParseException {
         if (from instanceof Node fromNode) {
             return fromNode.replace(replacer);
@@ -609,6 +612,10 @@ public class Node extends StructImpl implements AstElement {
 
     public final boolean isSyntatic() {
         return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().contains("/nelumbo/"));
+    }
+
+    protected final Predicate predicate(int i) {
+        return (Predicate) get(i);
     }
 
 }

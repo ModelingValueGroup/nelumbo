@@ -97,7 +97,7 @@ public final class Rational extends Node {
 		if (string.length() > 2) {
 			string = string.substring(0, string.length() - 2) + "." + string.substring(string.length() - 2);
 		} else {
-			string += ".00";
+			string = "0." + string;
 		}
 		if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
 			previous[0] = TokenType.NUMBER;

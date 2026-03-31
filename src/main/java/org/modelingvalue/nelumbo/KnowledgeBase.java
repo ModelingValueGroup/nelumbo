@@ -16,8 +16,25 @@
 
 package org.modelingvalue.nelumbo;
 
-import static org.modelingvalue.nelumbo.patterns.Pattern.*;
-import static org.modelingvalue.nelumbo.syntax.TokenType.*;
+import static org.modelingvalue.nelumbo.patterns.Pattern.a;
+import static org.modelingvalue.nelumbo.patterns.Pattern.k;
+import static org.modelingvalue.nelumbo.patterns.Pattern.n;
+import static org.modelingvalue.nelumbo.patterns.Pattern.o;
+import static org.modelingvalue.nelumbo.patterns.Pattern.r;
+import static org.modelingvalue.nelumbo.patterns.Pattern.s;
+import static org.modelingvalue.nelumbo.patterns.Pattern.t;
+import static org.modelingvalue.nelumbo.syntax.TokenType.BEGINOFFILE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.COMMA;
+import static org.modelingvalue.nelumbo.syntax.TokenType.ENDOFFILE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.LEFT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.NAME;
+import static org.modelingvalue.nelumbo.syntax.TokenType.NEWLINE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.NUMBER;
+import static org.modelingvalue.nelumbo.syntax.TokenType.OPERATOR;
+import static org.modelingvalue.nelumbo.syntax.TokenType.RIGHT;
+import static org.modelingvalue.nelumbo.syntax.TokenType.SEMICOLON;
+import static org.modelingvalue.nelumbo.syntax.TokenType.SINGLEQUOTE;
+import static org.modelingvalue.nelumbo.syntax.TokenType.STRING;
 
 import java.io.PrintStream;
 import java.io.Serial;
@@ -58,35 +75,38 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 @SuppressWarnings("DuplicatedCode")
 public final class KnowledgeBase implements ParseExceptionHandler {
 
-    private static final boolean                                                        TRACE_NELUMBO        = Boolean.getBoolean("TRACE_NELUMBO");
-    public static final boolean                                                         TRACE_SYNTATIC       = Boolean.getBoolean("TRACE_SYNTATIC");
+    private static final boolean TRACE_NELUMBO = Boolean.getBoolean("TRACE_NELUMBO");
+    public static final boolean TRACE_SYNTATIC = Boolean.getBoolean("TRACE_SYNTATIC");
     //
-    public static final Context<KnowledgeBase>                                          CURRENT              = Context.of();
+    public static final Context<KnowledgeBase> CURRENT = Context.of();
     //
-    private static final ContextPool                                                    POOL                 = ContextThread.createPool().setWorkerThreadName("nelumbo");
-    private static final QualifiedSet<Predicate, Inference>                             EMPTY_MEMOIZ         = QualifiedSet.of(Inference::premise);
-    private static final int                                                            MAX_LOGIC_MEMOIZ     = Integer.getInteger("MAX_LOGIC_MEMOIZ", 10000);
-    private static final int                                                            MAX_LOGIC_MEMOIZ_D4  = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
-    private static final int                                                            INITIAL_USAGE_COUNT  = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
-    private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(Map.of());
+    private static final ContextPool POOL = ContextThread.createPool().setWorkerThreadName("nelumbo");
+    private static final QualifiedSet<Predicate, Inference> EMPTY_MEMOIZ = QualifiedSet.of(Inference::premise);
+    private static final int MAX_LOGIC_MEMOIZ = Integer.getInteger("MAX_LOGIC_MEMOIZ", 10000);
+    private static final int MAX_LOGIC_MEMOIZ_D4 = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
+    private static final int INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
+    private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(
+            Map.of());
     //
-    private static final Pattern                                                        ROOTS                = r(s(a(n(Type.ROOT.list(), Integer.MIN_VALUE), n(Type.ROOT, Integer.MIN_VALUE)), t(NEWLINE)), false, null);
-    private static final List<TokenType>                                                TOKEN_TYPES          = List.of(NAME, OPERATOR, STRING, SEMICOLON, SINGLEQUOTE);
-    private static final List<Pattern>                                                  PATTERNS_NO_COMMA    = TOKEN_TYPES.map(Pattern::t).asList().add(n(Type.PATTERN, Integer.MAX_VALUE));
-    private static final Pattern                                                        ALT_NO_COMMA         = a(PATTERNS_NO_COMMA.toArray(Pattern[]::new));
-    private static final List<Pattern>                                                  PATTERNS             = PATTERNS_NO_COMMA.prepend(t(COMMA));
-    private static final Pattern                                                        ALTERNATIVES         = a(PATTERNS.toArray(Pattern[]::new));
-    private static final Pattern                                                        SEQUENCE             = r(ALTERNATIVES, true, null);
-    private static final Pattern                                                        SEQ_NO_COMMA         = s(r(ALT_NO_COMMA, true, null),                                                                            //
-            o(s(t("#"), t(NUMBER))),                                                                                                                                                                                     //
+    private static final Pattern ROOTS = r(
+            s(a(n(Type.ROOT.list(), Integer.MIN_VALUE), n(Type.ROOT, Integer.MIN_VALUE)), t(NEWLINE)), false, null);
+    private static final List<TokenType> TOKEN_TYPES = List.of(NAME, OPERATOR, STRING, SEMICOLON, SINGLEQUOTE);
+    private static final List<Pattern> PATTERNS_NO_COMMA = TOKEN_TYPES.map(Pattern::t).asList()
+            .add(n(Type.PATTERN, Integer.MAX_VALUE));
+    private static final Pattern ALT_NO_COMMA = a(PATTERNS_NO_COMMA.toArray(Pattern[]::new));
+    private static final List<Pattern> PATTERNS = PATTERNS_NO_COMMA.prepend(t(COMMA));
+    private static final Pattern ALTERNATIVES = a(PATTERNS.toArray(Pattern[]::new));
+    private static final Pattern SEQUENCE = r(ALTERNATIVES, true, null);
+    private static final Pattern SEQ_NO_COMMA = s(r(ALT_NO_COMMA, true, null), //
+            o(s(t("#"), t(NUMBER))), //
             o(s(t("@"), r(t(NAME), true, t(".")))));
-    private static final Pattern                                                        CONDITION            = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
-    private static final Pattern                                                        SINGLE               = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
-    private static final Pattern                                                        BINDING              = s(t("("), r(SINGLE, false, t(",")), t(")"));
-    private static final Pattern                                                        ALTERNATIVE          = a(t(".."), BINDING);
-    private static final Pattern                                                        PREDICTION           = r(ALTERNATIVE, false, t(","));
+    private static final Pattern CONDITION = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
+    private static final Pattern SINGLE = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
+    private static final Pattern BINDING = s(t("("), r(SINGLE, false, t(",")), t(")"));
+    private static final Pattern ALTERNATIVE = a(t(".."), BINDING);
+    private static final Pattern PREDICTION = r(ALTERNATIVE, false, t(","));
     //
-    public static final KnowledgeBase                                                   BASE                 = new KnowledgeBase(null).initBase();
+    public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
 
     public static void registerFunctorSetter(Class<? extends Node> clazz, Consumer<Functor> setter) {
         FUNCTOR_REGISTRATION.updateAndGet(map -> map.put(clazz, setter));
@@ -96,7 +116,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         @Serial
         private static final long serialVersionUID = 1531759272582548244L;
 
-        public int                count            = INITIAL_USAGE_COUNT;
+        public int count = INITIAL_USAGE_COUNT;
 
         public Inference(Predicate predicate, InferResult result) {
             super(predicate, result);
@@ -117,9 +137,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private static final class LogicTask extends ForkJoinTask<KnowledgeBase> {
         @Serial
-        private static final long   serialVersionUID = -1375078574164947441L;
+        private static final long serialVersionUID = -1375078574164947441L;
 
-        private final Runnable      runnable;
+        private final Runnable runnable;
         private final KnowledgeBase knowledgebase;
 
         public LogicTask(Runnable runnable, KnowledgeBase init) {
@@ -245,7 +265,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return ruleFunctor;
     }
 
-    @SuppressWarnings({"unchecked", "CodeBlock2Expr"})
+    @SuppressWarnings({ "unchecked", "CodeBlock2Expr" })
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             try {
@@ -272,7 +292,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return new NList(functor, elements, roots);
                         }, null).init(this, parseContext);
 
-                Functor.of(s(t("<"), t("("), t(">"), r(SEQUENCE, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
+                Functor.of(
+                        s(t("<"), t("("), t(">"), r(SEQUENCE, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
                             List<AstElement> options = List.of();
                             List<AstElement> list = List.of();
@@ -291,7 +312,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return a(elements, options.toArray(Pattern[]::new));
                         }, null).init(this, parseContext);
 
-                Functor.of(s(t("<"), t("("), t(">"), SEQUENCE, o(s(t("<"), t(","), t(">"), SEQUENCE)), t("<"), t(")"), a(t("*"), t("+")), t(">")), //
+                Functor.of(
+                        s(t("<"), t("("), t(">"), SEQUENCE, o(s(t("<"), t(","), t(">"), SEQUENCE)), t("<"), t(")"),
+                                a(t("*"), t("+")), t(">")), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
                             Pattern repeated = null, separator = null;
                             List<AstElement> list = List.of();
@@ -325,7 +348,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return s(elements, pattern(elements));
                         }, null).init(this, parseContext);
 
-                Functor.of(s(t("<"), o(a(k("visible"), k("hidden"))), n(Type.TYPE, Integer.MAX_VALUE), o(s(t("#"), t(NUMBER))), t(">")), //
+                Functor.of(
+                        s(t("<"), o(a(k("visible"), k("hidden"))), n(Type.TYPE, Integer.MAX_VALUE),
+                                o(s(t("#"), t(NUMBER))), t(">")), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
                             Boolean visible = null;
                             Optional<String> v = (Optional<String>) args[0];
@@ -348,7 +373,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return t(elements, var);
                         }, null).init(this, parseContext);
 
-                Functor.of(s(o(a(k("private"), s(t("{"), n(Type.TYPE, Integer.MIN_VALUE), t("}")))), n(Type.TYPE, Integer.MAX_VALUE), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
+                Functor.of(
+                        s(o(a(k("private"), s(t("{"), n(Type.TYPE, Integer.MIN_VALUE), t("}")))),
+                                n(Type.TYPE, Integer.MAX_VALUE), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             Type local = null;
                             int start = 2;
@@ -376,7 +403,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (precedence != null) {
                                             pattern = pattern.setPresedence(precedence);
                                         }
-                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern, local, precedence, pc);
+                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern,
+                                                local, precedence, pc);
                                         if (t != null) {
                                             roots = roots.setAstElements(roots.astElements().add(t));
                                         }
@@ -402,8 +430,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         String className = qname.toString();
                                         try {
                                             constructor = NelumboConstructor.Finder.find(className);
-                                        } catch (SecurityException | ClassNotFoundException | NoSuchMethodException ex) {
-                                            CURRENT.get().addException(new ParseException(ex, ex + " during finding class with Node constructor " + className, t.next()));
+                                        } catch (SecurityException | ClassNotFoundException
+                                                | NoSuchMethodException ex) {
+                                            CURRENT.get().addException(new ParseException(ex,
+                                                    ex + " during finding class with Node constructor " + className,
+                                                    t.next()));
                                         }
                                     } else {
                                         pttrn = pttrn.add(e);
@@ -415,7 +446,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }, null).init(this, parseContext);
 
-                Functor.of(s(t(NAME), o(s(t("<"), n(Type.TYPE, Integer.MAX_VALUE), t(">"))), t("::"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
+                Functor.of(
+                        s(t(NAME), o(s(t("<"), n(Type.TYPE, Integer.MAX_VALUE), t(">"))), t("::"),
+                                r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
                         Type.FUNCTOR, null, (elements, args, functor, pc) -> {
                             KnowledgeBase kb = CURRENT.get();
                             Set<Type> supers = Set.of();
@@ -429,7 +462,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             if (arg != null) {
                                 Variable var = arg.variable();
                                 if (var == null || !Type.TYPE.equals(var.type())) {
-                                    kb.addException(new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
+                                    kb.addException(new ParseException(
+                                            "Type argument " + arg + " must be a Variable of type <Type>", arg));
                                 }
                                 type = new Type(elements, name, supers, group, arg);
                             } else {
@@ -537,7 +571,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     @SuppressWarnings("ConstantValue")
-    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor, Pattern pattern, Type local, Integer prec, ParseContext ctx) throws ParseException {
+    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor,
+            Pattern pattern, Type local, Integer prec, ParseContext ctx) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.isCollection() ? type.element() : null;
@@ -549,7 +584,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 function = true;
             }
             if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type) //
-                    && args.noneMatch(t -> Type.OBJECT.equals(t.element()) // 
+                    && args.noneMatch(t -> Type.OBJECT.equals(t.element()) //
                             || Type.BOOLEAN.isAssignableFrom(t.element()) //
                             || Type.VARIABLE.isAssignableFrom(t.element()) //
                             || Type.LITERAL.isAssignableFrom(t.element()))) {
@@ -557,7 +592,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
-        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : constructor, prec).init(this, ctx);
+        Functor nodFunctor = Functor
+                .of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : constructor, prec)
+                .init(this, ctx);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && constructor != null) {
             nodFunctor.construct(List.of(), new Object[0], this, ctx);
@@ -578,8 +615,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Node nodNode = nodFunctor.construct(List.of(), nodVars, this, ctx);
             Node litNode = litFunctor.construct(List.of(), litVars, this, ctx);
             Variable rigthVar = function ? new Variable(List.of(), type.nonFunction(), "r", false) : null;
-            Predicate nodCons = function ? new Predicate(equalsFunctor, List.of(), nodNode, rigthVar) : (Predicate) nodNode;
-            Predicate litCond = function ? new Predicate(equalsFunctor, List.of(), litNode, rigthVar) : (Predicate) litNode;
+            Predicate nodCons = function ? new Predicate(equalsFunctor, List.of(), nodNode, rigthVar)
+                    : (Predicate) nodNode;
+            Predicate litCond = function ? new Predicate(equalsFunctor, List.of(), litNode, rigthVar)
+                    : (Predicate) litNode;
             for (int c = args.size() - 1; c >= 0; c--) {
                 Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
                 litCond = And.of(eq, litCond);
@@ -596,7 +635,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private NList createRules(Functor functor, List<AstElement> elements, Object[] args, ParseContext ctx) throws ParseException {
+    private NList createRules(Functor functor, List<AstElement> elements, Object[] args, ParseContext ctx)
+            throws ParseException {
         Predicate p = (Predicate) args[0];
         Functor consFunctor = p.functor();
         Functor litFunctor = literalFunctors.get().get(consFunctor);
@@ -605,7 +645,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
         NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
         Node l = consFunctor.equals(equalsFunctor) ? (Node) p.get(0) : p;
-        Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e).resetDeclaration();
+        Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e)
+                .resetDeclaration();
         Map<Variable, Object> consVars = cons.getBinding();
         Map<Variable, Object> nodeVars = l == cons ? consVars : l.getBinding();
         Functor nodeFunctor = l.functor();
@@ -616,15 +657,18 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
             Map<Variable, Object> condVars = cond.getBinding();
             Map<Variable, Object> whenVars = when != null ? when.getBinding() : null;
-            Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars).removeAllKey(consVars);
+            Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars)
+                    .removeAllKey(consVars);
             if (!nonConsVars.isEmpty()) {
                 Map<Variable, Object> localVars = nonConsVars.removeAllKey(cond.allLocalVars());
                 if (when != null) {
                     localVars = localVars.removeAllKey(when.allLocalVars());
                 }
                 if (!localVars.isEmpty()) {
-                    String message = "Rule has local variables " + nonConsVars.map(e -> e.getKey().toString()).reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + " in condition";
-                    addException(when != null ? new ParseException(message, cond, when) : new ParseException(message, cond));
+                    String message = "Rule has local variables " + nonConsVars.map(e -> e.getKey().toString())
+                            .reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + " in condition";
+                    addException(
+                            when != null ? new ParseException(message, cond, when) : new ParseException(message, cond));
                 }
             }
             if (literalFunctor != null) {
@@ -656,14 +700,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return roots;
     }
 
-    private final static AtomicReference<Map<String, KnowledgeBase>> IMPORT_MAP       = new AtomicReference<>(Map.of());
-    private final static AtomicReference<List<ImportResolver>>       IMPORT_RESOLVERS = new AtomicReference<>(List.of(new ResourceImportResolver()));
+    private final static AtomicReference<Map<String, KnowledgeBase>> IMPORT_MAP = new AtomicReference<>(Map.of());
+    private final static AtomicReference<List<ImportResolver>> IMPORT_RESOLVERS = new AtomicReference<>(
+            List.of(new ResourceImportResolver()));
 
     /**
      * Registers an import resolver. Resolvers added later have higher priority.
      *
-     * @param resolver
-     *            the resolver to register
+     * @param resolver the resolver to register
      */
     public static void registerResolver(ImportResolver resolver) {
         // Add at front for priority (newer resolvers checked first)
@@ -673,37 +717,36 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     /**
      * Unregisters an import resolver.
      *
-     * @param resolver
-     *            the resolver to unregister
+     * @param resolver the resolver to unregister
      */
     public static void unregisterResolver(ImportResolver resolver) {
         IMPORT_RESOLVERS.updateAndGet(l -> l.remove(resolver));
     }
 
-    private final AtomicReference<Set<Functor>>                             functors            = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, InferResult>>              facts               = new AtomicReference<>();
-    private final AtomicReference<Set<Rule>>                                rules               = new AtomicReference<>();
-    private final AtomicReference<Set<Transform>>                           transforms          = new AtomicReference<>();
-    private final AtomicReference<Map<Type, Set<Pair<Functor, Transform>>>> literalTransforms   = new AtomicReference<>();
+    private final AtomicReference<Set<Functor>> functors = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, InferResult>> facts = new AtomicReference<>();
+    private final AtomicReference<Set<Rule>> rules = new AtomicReference<>();
+    private final AtomicReference<Set<Transform>> transforms = new AtomicReference<>();
+    private final AtomicReference<Map<Type, Set<Pair<Functor, Transform>>>> literalTransforms = new AtomicReference<>();
     //
-    private final MutableMap<String, Map<Type, ParseState>>                 prePatterns         = MutableMap.concurrent(Map.of());
-    private final MutableMap<String, Map<Type, ParseState>>                 postPatterns        = MutableMap.concurrent(Map.of());
-    private final MutableMap<String, Map<Type, Variable>>                   hiddenVariables     = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, Map<Type, ParseState>> prePatterns = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, Map<Type, ParseState>> postPatterns = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, Map<Type, Variable>> hiddenVariables = MutableMap.concurrent(Map.of());
     //
-    private final AtomicReference<Map<Functor, Functor>>                    literalFunctors     = new AtomicReference<>();
+    private final AtomicReference<Map<Functor, Functor>> literalFunctors = new AtomicReference<>();
     //
-    private final AtomicReference<Set<String>>                              imported            = new AtomicReference<>();
+    private final AtomicReference<Set<String>> imported = new AtomicReference<>();
     //
-    private final AtomicReference<MatchState<Rule>>                         ruleSignatures      = new AtomicReference<>();
-    private final AtomicReference<MatchState<Transform>>                    transformSignatures = new AtomicReference<>();
+    private final AtomicReference<MatchState<Rule>> ruleSignatures = new AtomicReference<>();
+    private final AtomicReference<MatchState<Transform>> transformSignatures = new AtomicReference<>();
     //
-    private final AtomicReference<QualifiedSet<Predicate, Inference>[]>     memoization         = new AtomicReference<>();
-    private final InferContext                                              context;
-    private final ParseContext                                              parseContext;
-    private final KnowledgeBase                                             init;
+    private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization = new AtomicReference<>();
+    private final InferContext context;
+    private final ParseContext parseContext;
+    private final KnowledgeBase init;
 
-    private boolean                                                         stopped;
-    private ParseExceptionHandler                                           exceptionHandler;
+    private boolean stopped;
+    private ParseExceptionHandler exceptionHandler;
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
@@ -751,7 +794,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     @SuppressWarnings("unchecked")
     private void resetMemoization() {
-        memoization.set(init != null ? init.memoization.get() : new QualifiedSet[]{EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ});
+        memoization.set(init != null ? init.memoization.get()
+                : new QualifiedSet[] { EMPTY_MEMOIZ, EMPTY_MEMOIZ, EMPTY_MEMOIZ });
     }
 
     public void setExceptionHandler(ParseExceptionHandler exceptionHandler) {
@@ -897,7 +941,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         resetMemoization();
     }
 
-    private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact, Predicate predicate, int i, Type cls) {
+    private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact,
+            Predicate predicate, int i, Type cls) {
         Type type = predicate.getType(i);
         if (cls.isAssignableFrom(type)) {
             InferResult pre = map.get(predicate);
