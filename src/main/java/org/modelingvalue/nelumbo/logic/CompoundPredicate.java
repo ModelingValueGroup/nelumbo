@@ -64,8 +64,7 @@ public abstract class CompoundPredicate extends Predicate {
                 InferResult result = predicate.infer(shallow);
                 if (result.hasStackOverflow()) {
                     return result;
-                }
-                if (!result.unresolvable()) {
+                } else if (!result.unresolvable()) {
                     next = applyBindings(result, binding, predicate, next, cycles, completeFacts, completeFalsehoods);
                 }
                 result = predicate.infer(reduce);
@@ -80,8 +79,7 @@ public abstract class CompoundPredicate extends Predicate {
                     result = predicate.infer(deep);
                     if (result.hasStackOverflow()) {
                         return result;
-                    }
-                    if (!result.unresolvable()) {
+                    } else if (!result.unresolvable()) {
                         next = applyBindings(result, binding, predicate, next, cycles, completeFacts,
                                 completeFalsehoods);
 
