@@ -53,8 +53,8 @@ public abstract class CompoundPredicate extends Predicate {
                 cycles = MutableSet.of(Set.of());
         boolean[] completeFacts = new boolean[] { true }, completeFalsehoods = new boolean[] { true };
         InferContext deep = context.toDeep(); // Resolve variables shallow
-        InferContext shallow = context.toShallow(); // resolve variables deep
-        InferContext reduce = context.toReduce(); // Do not resolve variables and simplify predicate
+        InferContext shallow = context.toShallow(); // Resolve variables deep
+        InferContext reduce = context.toReduce(); // Do not resolve variables but perform logic and simplify
         do {
             now = next;
             next = Map.of();
