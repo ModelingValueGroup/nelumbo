@@ -31,11 +31,11 @@ public final class NBoolean extends Predicate {
     @Serial
     private static final long serialVersionUID = -8515171118744898263L;
     //
-    public static NBoolean    TRUE;
-    public static NBoolean    FALSE;
-    public static NBoolean    UNKNOWN;
+    public static NBoolean TRUE;
+    public static NBoolean FALSE;
+    public static NBoolean UNKNOWN;
     //
-    private InferResult       result;
+    private InferResult result;
 
     @NelumboConstructor
     public NBoolean(Functor functor, List<AstElement> elements, Object[] args) {

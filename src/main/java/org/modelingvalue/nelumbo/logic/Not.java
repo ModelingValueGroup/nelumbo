@@ -31,7 +31,7 @@ public final class Not extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -4543178470298951866L;
 
-    private static Functor    FUNCTOR;
+    private static Functor FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(Not.class, f -> FUNCTOR = f);
@@ -47,7 +47,7 @@ public final class Not extends CompoundPredicate {
     }
 
     public static Not of(Predicate predicate) {
-        return new Not(FUNCTOR, List.of(), new Object[]{predicate});
+        return new Not(FUNCTOR, List.of(), new Object[] { predicate });
     }
 
     @Override
@@ -86,7 +86,7 @@ public final class Not extends CompoundPredicate {
         } else if (!predResult.unresolvable()) {
             return predResult.flipComplete();
         } else {
-            return InferResult.UNRESOLVABLE;
+            return unresolvable();
         }
     }
 

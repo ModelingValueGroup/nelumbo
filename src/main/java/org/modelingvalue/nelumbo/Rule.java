@@ -104,7 +104,7 @@ public final class Rule extends Node implements Evaluatable {
                 completeFalsehoods = false;
             }
         }
-        InferResult ruleResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, //
+        InferResult ruleResult = InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
                 condResult.cycles());
         if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + consequence + " " + ruleResult.predicate(consequence.setVariables()));
@@ -125,7 +125,7 @@ public final class Rule extends Node implements Evaluatable {
         }
         completeFacts |= result.completeFacts();
         completeFalsehoods |= result.completeFalsehoods();
-        return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, //
+        return InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
                 result.cycles().addAll(ruleResult.cycles()));
     }
 

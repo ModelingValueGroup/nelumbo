@@ -61,6 +61,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         InferResult[] predResult = new InferResult[2];
         predicate[0] = predicate(0);
         predicate[1] = predicate(1);
+        order(predicate);
         for (int i = 0; i < 2; i++) {
             predResult[i] = predicate[i].infer(context);
             if (predResult[i].hasStackOverflow()) {
@@ -100,7 +101,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         } else if (!predResult[1].unresolvable()) {
             return predResult[1];
         } else {
-            return InferResult.UNRESOLVABLE;
+            return unresolvable();
         }
     }
 

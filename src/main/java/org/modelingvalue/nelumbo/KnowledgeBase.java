@@ -934,7 +934,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Type type = predicate.getType(i);
         if (cls.isAssignableFrom(type)) {
             InferResult pre = map.get(predicate);
-            map = map.put(predicate, InferResult.factsCI(pre != null ? pre.facts().add(fact) : fact.singleton()));
+            map = map.put(predicate,
+                    InferResult.factsCI(predicate, pre != null ? pre.facts().add(fact) : fact.singleton()));
             if (!cls.equals(type)) {
                 for (Type gen : generalizations(type, cls)) {
                     map = addFact(map, fact, predicate.setType(i, gen), i, cls);
@@ -949,7 +950,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         if (result != null) {
             result = result.cast(predicate);
         } else {
-            result = predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(Set.of());
+            result = predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(predicate, Set.of());
         }
         if (context.trace()) {
             System.out.println(context.prefix() + "  " + predicate + " " + result);

@@ -33,7 +33,7 @@ public final class UniversalQuantifier extends Quantifier {
     @Serial
     private static final long serialVersionUID = 8390514736994316431L;
 
-    private static Functor    FUNCTOR;
+    private static Functor FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(UniversalQuantifier.class, f -> FUNCTOR = f);
@@ -90,7 +90,7 @@ public final class UniversalQuantifier extends Quantifier {
         } else if (falsehoods.isEmpty() && facts.isEmpty()) {
             facts = facts.add(this);
         }
-        return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
+        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }
 
 }

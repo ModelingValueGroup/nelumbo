@@ -33,7 +33,7 @@ public final class ExistentialQuantifier extends Quantifier {
     @Serial
     private static final long serialVersionUID = 7237451657373739426L;
 
-    private static Functor    FUNCTOR;
+    private static Functor FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(ExistentialQuantifier.class, f -> FUNCTOR = f);
@@ -90,7 +90,7 @@ public final class ExistentialQuantifier extends Quantifier {
         } else if (falsehoods.isEmpty() && facts.isEmpty()) {
             falsehoods = falsehoods.add(this);
         }
-        return InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
+        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }
 
 }

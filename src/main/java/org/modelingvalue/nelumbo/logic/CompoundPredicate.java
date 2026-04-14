@@ -52,9 +52,9 @@ public abstract class CompoundPredicate extends Predicate {
         MutableSet<Predicate> facts = MutableSet.of(Set.of()), falsehoods = MutableSet.of(Set.of()),
                 cycles = MutableSet.of(Set.of());
         boolean[] completeFacts = new boolean[] { true }, completeFalsehoods = new boolean[] { true };
-        InferContext deep = context.toDeep();
-        InferContext shallow = context.toShallow();
-        InferContext reduce = context.toReduce();
+        InferContext deep = context.toDeep(); // Resolve variables shallow
+        InferContext shallow = context.toShallow(); // resolve variables deep
+        InferContext reduce = context.toReduce(); // Do not resolve variables and simplify predicate
         do {
             now = next;
             next = Map.of();
@@ -77,24 +77,26 @@ public abstract class CompoundPredicate extends Predicate {
                     facts.add(setBinding(binding));
                 } else {
                     predicate = result.predicate();
-                    if (predicate != null) {
-                        result = predicate.infer(deep);
-                        if (result.hasStackOverflow()) {
-                            return result;
-                        }
-                        if (!result.unresolvable()) {
-                            next = applyBindings(result, binding, predicate, next, cycles, completeFacts,
-                                    completeFalsehoods);
-                        }
+                    result = predicate.infer(deep);
+                    if (result.hasStackOverflow()) {
+                        return result;
+                    }
+                    if (!result.unresolvable()) {
+                        next = applyBindings(result, binding, predicate, next, cycles, completeFacts,
+                                completeFalsehoods);
+
                     }
                 }
             }
         } while (!next.isEmpty());
-        if (completeFacts[0] && completeFalsehoods[0] && facts.isEmpty() && falsehoods.isEmpty()) {
+        if (completeFacts[0] && completeFalsehoods[0] && facts.isEmpty() && falsehoods.isEmpty())
+
+        {
             completeFacts[0] = false;
             completeFalsehoods[0] = false;
         }
-        return InferResult.of(facts.get(), completeFacts[0], falsehoods.get(), completeFalsehoods[0], cycles.get());
+        return InferResult.of(this, facts.get(), completeFacts[0], falsehoods.get(), completeFalsehoods[0],
+                cycles.get());
     }
 
     private static Map<Map<Variable, Object>, Predicate> applyBindings(InferResult result,

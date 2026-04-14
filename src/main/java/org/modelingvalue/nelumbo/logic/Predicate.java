@@ -23,7 +23,14 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.InferContext;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Rule;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -31,17 +38,17 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Predicate extends Node {
     @Serial
-    private static final long      serialVersionUID   = -1605559565948158856L;
+    private static final long serialVersionUID = -1605559565948158856L;
 
-    protected static final boolean RANDOM_NELUMBO     = Boolean.getBoolean("RANDOM_NELUMBO");
-    protected static final boolean REVERSE_NELUMBO    = Boolean.getBoolean("REVERSE_NELUMBO");
-    protected static final int     MAX_LOGIC_DEPTH    = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
+    protected static final boolean RANDOM_NELUMBO  = Boolean.getBoolean("RANDOM_NELUMBO");
+    protected static final boolean REVERSE_NELUMBO = Boolean.getBoolean("REVERSE_NELUMBO");
+    protected static final int     MAX_LOGIC_DEPTH = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
 
-    private static final int       MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
+    private static final int MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
-    public static Node             INCOMPLETE         = new Predicate(Type.BOOLEAN, List.of(), "..");
+    public static Node INCOMPLETE = new Predicate(Type.BOOLEAN, List.of(), "..");
 
-    private int                    nrOfUnbound        = -1;
+    private int nrOfUnbound = -1;
 
     public Predicate(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, args);
@@ -237,25 +244,23 @@ public class Predicate extends Node {
     }
 
     public final InferResult factCC() {
-        return InferResult.factsCC(singleton());
+        return InferResult.factsCC(this, singleton());
     }
 
     public final InferResult falsehoodCC() {
-        return InferResult.falsehoodsCC(singleton());
+        return InferResult.falsehoodsCC(this, singleton());
     }
 
     public final InferResult factCI() {
-        return InferResult.factsCI(singleton());
+        return InferResult.factsCI(this, singleton());
     }
 
-    @SuppressWarnings("unused")
     public final InferResult falsehoodIC() {
-        return InferResult.falsehoodsIC(singleton());
+        return InferResult.falsehoodsIC(this, singleton());
     }
 
-    @SuppressWarnings("unused")
     public final InferResult factIC() {
-        return InferResult.factsIC(singleton());
+        return InferResult.factsIC(this, singleton());
     }
 
     public final InferResult falsehoodCI() {
@@ -263,7 +268,7 @@ public class Predicate extends Node {
     }
 
     public final InferResult falsehoodsII() {
-        return InferResult.falsehoodsII(singleton());
+        return InferResult.falsehoodsII(this, singleton());
     }
 
     public final Set<Predicate> singleton() {
@@ -289,12 +294,13 @@ public class Predicate extends Node {
     protected InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 && context.reduce()) {
-            return unresolvable();
-        } else if (nrOfUnbound == 0 && context.shallow()) {
+            return unknown();
+        }
+        if (nrOfUnbound == 0 && !context.reduce()) {
             return unresolvable();
         }
         InferResult result = infer(nrOfUnbound, context);
-        if (context.trace() && !context.shallow() && !result.unresolvable() && getClass() != Predicate.class && !isSyntatic()) {
+        if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
             System.out.println(context.prefix() + "  " + this + " " + result.predicate(setVariables()));
         }
         return result;
@@ -317,7 +323,7 @@ public class Predicate extends Node {
             }
             result = context.getCycleResult(this);
             if (result != null) {
-                return context.reduce() ? unknown() : result;
+                return result;
             }
             List<Predicate> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
@@ -380,13 +386,14 @@ public class Predicate extends Node {
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
-                    cycleResult = InferResult.of(nextResult.facts(), true, nextResult.falsehoods(), true, nextResult.cycles().remove(this));
+                    cycleResult = InferResult.of(this, nextResult.facts(), true, nextResult.falsehoods(), true,
+                            nextResult.cycles().remove(this));
                     context.knowledgebase().memoization(this, cycleResult);
                     nextResult = inferRules(context.putCycleResult(this, cycleResult));
                     if (nextResult.hasStackOverflow()) {
                         return nextResult;
                     }
-                    return InferResult.of(nextResult.facts(), nextResult.completeFacts(), //
+                    return InferResult.of(this, nextResult.facts(), nextResult.completeFacts(), //
                             nextResult.falsehoods(), nextResult.completeFalsehoods(), //
                             nextResult.cycles().remove(this));
                 }

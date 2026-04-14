@@ -105,7 +105,7 @@ public final class When extends BinaryPredicate {
         } else if (!predResult[1].unresolvable()) {
             return predResult[1];
         } else {
-            return InferResult.UNRESOLVABLE;
+            return unresolvable();
         }
     }
 

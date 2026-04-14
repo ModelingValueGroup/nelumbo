@@ -50,8 +50,10 @@ public class NelumboTestBase {
         assertEquals(getResult(query1), getResult(query2));
     }
 
-    public static void hasResult(Predicate query, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods, boolean completeFalsehoods) {
-        InferResult expectedResult = InferResult.of(facts, completeFacts, falsehoods, completeFalsehoods, Set.of());
+    public static void hasResult(Predicate query, Set<Predicate> facts, boolean completeFacts,
+            Set<Predicate> falsehoods, boolean completeFalsehoods) {
+        InferResult expectedResult = InferResult.of(query, facts, completeFacts, falsehoods, completeFalsehoods,
+                Set.of());
         InferResult queryResult = getResult(query);
         assertEquals(expectedResult, queryResult);
     }

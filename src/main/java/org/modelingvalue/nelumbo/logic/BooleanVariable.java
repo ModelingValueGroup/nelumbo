@@ -34,7 +34,7 @@ public class BooleanVariable extends Predicate {
     @Serial
     private static final long serialVersionUID = 5130317339420169185L;
 
-    private InferResult       result;
+    private InferResult result;
 
     public BooleanVariable(Functor functor, List<AstElement> elements, Variable var) {
         super(functor, elements, var);
@@ -88,6 +88,9 @@ public class BooleanVariable extends Predicate {
     protected InferResult infer(InferContext context) {
         if (get(0) instanceof Predicate pred) {
             return pred.infer(context);
+        }
+        if (context != null && context.reduce()) {
+            return unknown();
         }
         if (context != null && context.shallow()) {
             return unresolvable();
