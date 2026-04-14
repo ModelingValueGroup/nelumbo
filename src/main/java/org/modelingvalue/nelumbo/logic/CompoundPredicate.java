@@ -89,9 +89,7 @@ public abstract class CompoundPredicate extends Predicate {
                 }
             }
         } while (!next.isEmpty());
-        if (completeFacts[0] && completeFalsehoods[0] && facts.isEmpty() && falsehoods.isEmpty())
-
-        {
+        if (completeFacts[0] && completeFalsehoods[0] && facts.isEmpty() && falsehoods.isEmpty()) {
             completeFacts[0] = false;
             completeFalsehoods[0] = false;
         }
