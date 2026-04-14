@@ -82,7 +82,6 @@ public abstract class CompoundPredicate extends Predicate {
                     } else if (!result.unresolvable()) {
                         next = applyBindings(result, binding, predicate, next, cycles, completeFacts,
                                 completeFalsehoods);
-
                     }
                 }
             }
