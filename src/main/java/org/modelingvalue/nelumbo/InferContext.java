@@ -82,15 +82,15 @@ public interface InferContext {
     }
 
     default InferContext toReduce() {
-        return of(knowledgebase(), stack(), cycleResult(), false, true, trace());
+        return reduce() ? this : of(knowledgebase(), stack(), cycleResult(), false, true, trace());
     }
 
     default InferContext toShallow() {
-        return of(knowledgebase(), stack(), cycleResult(), true, false, trace());
+        return shallow() ? this : of(knowledgebase(), stack(), cycleResult(), true, false, trace());
     }
 
     default InferContext toDeep() {
-        return of(knowledgebase(), stack(), cycleResult(), false, false, trace());
+        return deep() ? this : of(knowledgebase(), stack(), cycleResult(), false, false, trace());
     }
 
     default InferContext trace(boolean trace) {
