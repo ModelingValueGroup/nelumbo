@@ -14,6 +14,7 @@ occur.
 ## Table of Contents
 
 - [Features](#features)
+- [Documentation](#documentation)
 - [Building](#building)
 - [IDE Plugins](#ide-plugins)
 - [Examples](#examples)
@@ -33,6 +34,12 @@ occur.
 * Easily extensible
 * Easily integrable
 * Written in Java
+
+## Documentation
+
+Detailed documentation.
+
+- [Detailed documentation](docs/documentation.md)
 
 ## Building
 

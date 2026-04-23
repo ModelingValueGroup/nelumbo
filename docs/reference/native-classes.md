@@ -1,0 +1,258 @@
+# Native classes — the catalogue
+
+Every pattern in the standard library that needs Java backing is bound to a class under `src/main/java/org/modelingvalue/nelumbo/`. This page catalogues all 21 shipped native classes, grouped by structural role, with a note on what each one does and how it returns its results.
+
+Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.
+
+---
+
+## Package layout
+
+```
+org.modelingvalue.nelumbo.*           base classes and engine
+    Node                              base class for AST nodes (values)
+    Predicate           (in .logic)   base class for Boolean-producing natives
+    CompoundPredicate   (in .logic)   predicate holding sub-predicates
+    BinaryPredicate     (in .logic)   two-argument predicate with reduction logic
+    Quantifier          (in .logic)   base for E[] and A[]
+    InferContext, InferResult         context and result types for infer()
+
+org.modelingvalue.nelumbo.logic       Boolean, connectives, quantifiers, equality
+    NBoolean, Not, And, Or, Equal, ExistentialQuantifier, UniversalQuantifier
+
+org.modelingvalue.nelumbo.integers    integer arithmetic
+    NInteger, Add, Multiply, GreaterThan
+
+org.modelingvalue.nelumbo.rationals   exact rational arithmetic
+    Rational, Add, Multiply, GreaterThan, IntegersRational
+
+org.modelingvalue.nelumbo.strings     string operations
+    NString, Concat, Length, ToInteger
+
+org.modelingvalue.nelumbo.collections container literals
+    NSet, NList
+```
+
+---
+
+## Roles
+
+Shipped natives fall into five structural roles. Reading this classification first makes the per-class notes below easier to follow.
+
+| Role | Base class | What it does | Example |
+|---|---|---|---|
+| **Constant / literal** | `Node` (or `Predicate` for `NBoolean`) | Parses a source literal into a value object | `NInteger`, `NString`, `Rational`, `NBoolean` |
+| **Three-arg functional relation** | `Predicate` | Relation with one output and one or more inputs; binds the missing one | `Add`, `Multiply`, `Concat`, `IntegersRational`, `ToInteger` |
+| **Comparison predicate** | `Predicate` | Two-arg relation that decides true/false when both sides are known | `GreaterThan` (integers and rationals), `Equal`, `Length` |
+| **Logical connective** | `BinaryPredicate` / `CompoundPredicate` | Combines sub-predicate results according to a truth table | `And`, `Or`, `Not` |
+| **Quantifier** | `Quantifier` (extends `CompoundPredicate`) | Evaluates a sub-predicate under many bindings and aggregates | `ExistentialQuantifier`, `UniversalQuantifier` |
+| **Container** | `Node` | Literal collection of elements | `NSet`, `NList` |
+
+---
+
+## `org.modelingvalue.nelumbo.logic`
+
+### `NBoolean`
+
+- Backs: `Boolean ::= true, false, unknown`
+- Role: constant
+- Value: a `Boolean` field (`true`, `false`, or `null` for `unknown`)
+- Notes: singletons `TRUE`, `FALSE`, `UNKNOWN` are maintained as static fields and reused by connectives to produce compact results. The `infer` method returns `factCC()` / `falsehoodCC()` / `unknown()` based on the stored value.
+
+### `Not`
+
+- Backs: `! <Boolean>`
+- Role: logical connective (unary)
+- Base: `CompoundPredicate`
+- Strategy: inspects the sub-predicate's result. If the sub is `isTrueCC()`, returns `NBoolean.FALSE.result()`. If `isFalseCC()`, returns `NBoolean.TRUE.result()`. Otherwise returns `predResult.flipComplete()` — swap the facts and falsehoods, and swap their closure flags. This is the formal three-valued negation.
+
+### `And`, `Or`
+
+- Back: `<Boolean> & <Boolean>` and `<Boolean> | <Boolean>`
+- Role: logical connective (binary)
+- Base: `BinaryPredicate`
+- Strategy: each overrides four short-circuit predicates: `isTrue(one, i)`, `isFalse(one, i)`, `isTrue(pair)`, `isFalse(pair)`, plus `isLeft(pair)` and `isRight(pair)` for reduction.
+  - `And`: returns `false` (reduced) if one operand is `isFalseCC()`; returns `true` only when both operands are `isTrueCC()`; reduces to the other operand when one is `isTrueCC()`.
+  - `Or`: mirror image. Returns `true` if one operand is `isTrueCC()`; returns `false` only when both are `isFalseCC()`; reduces to the other operand when one is `isFalseCC()`.
+- This is where the non-pessimistic three-valued behaviour of `unknown & false = false` and `unknown | true = true` is implemented.
+
+### `Equal`
+
+- Backs: `<Object> = <Object>` (indirectly, via the rules in `logic.nl`)
+- Role: comparison predicate
+- Strategy: structural equality over `Node`s, with `Type`-vs-value handling. Returns a `factCC()` if both sides unify exactly, `factCI()` if they unify up to an unresolved type, or `falsehoodCC()`/`falsehoodCI()` if they provably disagree.
+- The `eq` logic is the single source of truth for comparing any two values in Nelumbo.
+
+### `ExistentialQuantifier`, `UniversalQuantifier`
+
+- Back: `E[...](<Boolean>)` and `A[...](<Boolean>)`
+- Role: quantifier
+- Base: `Quantifier` extends `CompoundPredicate`
+- Strategy: evaluate the body under the current binding, then **strip the local variables** from each resulting binding and aggregate:
+  - `ExistentialQuantifier` adds each body-fact to the facts side (with locals removed); body-falsehoods go to the falsehoods side unless they are already on the facts side (an existential witness overrides a matching falsehood).
+  - `UniversalQuantifier` is the mirror: body-falsehoods go to the falsehoods side; body-facts go to the facts side unless they match a falsehood (a universal counterexample overrides a matching fact).
+- Completeness is conservative: if the body's corresponding side was incomplete, the quantifier's side is marked incomplete.
+
+---
+
+## `org.modelingvalue.nelumbo.integers`
+
+### `NInteger`
+
+- Backs: `Integer ::= <NUMBER>`
+- Role: constant
+- Value: `BigInteger`
+- Notes: parses decimal (`123`) and base-N (`36#xyz`) literals via the `#` separator. Values large enough to exceed `Long` range print in base 36.
+
+### `Add`
+
+- Backs: `private Boolean ::= add(<Integer>, <Integer>, <Integer>)`
+- Role: three-arg functional relation
+- Strategy: the canonical three-way relation pattern. If all three are bound, verify and return `factCC`/`falsehoodCC`. If two are bound, compute and return `set(i, computed).factCI()`. If more than one is unbound, return `unresolvable()`.
+- The stdlib uses this single class for both addition and subtraction by the rule rewrite `a - b = c <=> add(c, b, a)`.
+
+### `Multiply`
+
+- Backs: `private Boolean ::= mult(<Integer>, <Integer>, <Integer>)`
+- Role: three-arg functional relation
+- Strategy: as `Add`, with one extra subtlety for division. When the product is bound and a factor is bound, use `divideAndRemainder`: if the remainder is zero, return `set(other, quotient).factCI()`; otherwise return `falsehoodCI()` (no integer completes the equation). This is how `21 / 10 = a` yields `[]` on the facts side.
+
+### `GreaterThan`
+
+- Backs: `Boolean ::= <Integer> > <Integer>` (only `>`; `<`, `<=`, `>=` are in `integers.nl`)
+- Role: comparison predicate
+- Strategy: when both sides are bound, compare and return `factCC()` or `falsehoodCC()`. When only one side is bound, use `set(i, get(1-i)).falsehoodsII()` — which records the specific falsehood "`x > x`" with both sides open, contributing partial information without overclaiming.
+
+---
+
+## `org.modelingvalue.nelumbo.rationals`
+
+### `Rational`
+
+- Backs: `Rational ::= <DECIMAL>`
+- Role: constant
+- Value: two `BigInteger`s — numerator and denominator, stored in reduced form via `gcd`.
+- Notes: `Rational.of(num, den)` normalises. The `toString` method prints a decimal form with two fractional digits.
+
+### `Add`, `Multiply`
+
+- Back: `private Boolean ::= add(...)` and `mult(...)` over `Rational`
+- Role: three-arg functional relation
+- Strategy: same three-way pattern as the integer versions, but the arithmetic goes via numerator-denominator crossed-multiplication. Both operators construct results with `Rational.of(num, den)` (which normalises).
+
+### `GreaterThan`
+
+- Backs: `Boolean ::= <Rational> > <Rational>`
+- Role: comparison predicate
+- Strategy: cross-multiply before comparing: `ln*rd > rn*ld` iff `l > r` when both are positive-denominator rationals. Same `set(i, ...).falsehoodsII()` partial-falsehood strategy as the integer comparison.
+
+### `IntegersRational`
+
+- Backs: `private Boolean ::= iir(<Integer>, <Integer>, <Rational>)`
+- Role: three-arg functional relation (with an unusual signature: takes two integers and a rational)
+- Strategy: when both integers are bound, construct the rational and either verify or bind the output. When the rational is bound and both integers are unbound, split the rational into numerator and denominator — this is how `r(x/y) = 0.5` could bind `x, y`. When exactly one integer is bound, declare `unresolvable()`.
+- This is the conversion bridge between integers and rationals, used by `r(x)` and `r(x/y)` at the language level.
+
+---
+
+## `org.modelingvalue.nelumbo.strings`
+
+### `NString`
+
+- Backs: `String ::= <STRING>`
+- Role: constant
+- Value: Java `String`, with surrounding double quotes stripped on parse and re-added on print.
+
+### `Concat`
+
+- Backs: `private Boolean ::= string_concat(<String>, <String>, <String>)`
+- Role: three-arg functional relation
+- Strategy: the three-way pattern applied to strings. All three bound: verify. Two bound, sum unbound: concatenate and return `set(2, ...).factCI()`. The clever cases are when the **sum and one addend** are bound: use `startsWith` / `endsWith` to compute the missing addend, or return `falsehoodCI()` if no addend completes the equation.
+- This is what makes `a + "bar" = "foobar"` produce `(a="foo")` — the native splits "foobar" at the known suffix.
+
+### `Length`
+
+- Backs: `private Boolean ::= string_length(<String>, <Integer>)`
+- Role: comparison / functional relation (two-arg; output is the integer length)
+- Strategy: when the string is bound, compute its length and either verify the supplied integer or bind it. When only the integer is bound, return `unknown()` — the relation cannot enumerate all strings of a given length.
+
+### `ToInteger`
+
+- Backs: `private Boolean ::= integer_string(<Integer>, <String>)`
+- Role: three-arg functional relation (two-arg in practice: the conversion is `Integer <-> String`)
+- Strategy: parses the string as a `BigInteger` via `Integer.parseInt` (note: the current implementation uses the fixed-width `int` parser, which limits the range on the parse side). Handles `NumberFormatException` by returning `falsehoodCC()` (if the integer was also supplied) or `falsehoodCI()` (if not). The reverse direction formats an integer with `BigInteger.toString()` into the canonical decimal form.
+
+---
+
+## `org.modelingvalue.nelumbo.collections`
+
+### `NSet`
+
+- Backs: `Set<E> ::= { <(> <E> <,> , <)*> }`
+- Role: container constant
+- Value: backed by the internal immutable `Set<T>` collection type.
+
+### `NList`
+
+- Backs: `List<E> ::= [ <(> <E> <,> , <)*> ]`
+- Role: container constant
+- Value: backed by the internal immutable `List<T>` collection type.
+- Notes: `NList` supports an `elementsFlattened()` helper that recursively unwraps nested `NList` values. This is useful when a parse produces a tree of concatenated list fragments that you want to flatten.
+
+---
+
+## Cross-reference — by `.nl` binding site
+
+This table lets you go from a line in an `.nl` file to the Java class that implements it.
+
+| `.nl` file | Pattern | `@` binding |
+|---|---|---|
+| `logic.nl` | `true`, `false`, `unknown` | `NBoolean` |
+| `logic.nl` | `!<Boolean>` | `Not` |
+| `logic.nl` | `<Boolean> & <Boolean>` | `And` |
+| `logic.nl` | `<Boolean> | <Boolean>` | `Or` |
+| `logic.nl` | `E[...](...)` | `ExistentialQuantifier` |
+| `logic.nl` | `A[...](...)` | `UniversalQuantifier` |
+| `logic.nl` | `eq(<Object>,<Object>)` *(private)* | `Equal` |
+| `integers.nl` | `<NUMBER>` | `NInteger` |
+| `integers.nl` | `add(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Add` |
+| `integers.nl` | `mult(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Multiply` |
+| `integers.nl` | `<Integer> > <Integer>` | `integers.GreaterThan` |
+| `rationals.nl` | `<DECIMAL>` | `rationals.Rational` |
+| `rationals.nl` | `add(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Add` |
+| `rationals.nl` | `mult(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Multiply` |
+| `rationals.nl` | `<Rational> > <Rational>` | `rationals.GreaterThan` |
+| `rationals.nl` | `iir(<Integer>,<Integer>,<Rational>)` *(private)* | `IntegersRational` |
+| `strings.nl` | `<STRING>` | `NString` |
+| `strings.nl` | `string_concat(<String>,<String>,<String>)` *(private)* | `Concat` |
+| `strings.nl` | `string_length(<String>,<Integer>)` *(private)* | `Length` |
+| `strings.nl` | `integer_string(<Integer>,<String>)` *(private)* | `ToInteger` |
+| `collections.nl` | `Set<E> ::= { ... }` | `NSet` |
+| `collections.nl` | `List<E> ::= [ ... ]` | `NList` |
+
+21 classes, five packages, backing roughly twice that many language-level patterns once you count the Nelumbo-defined derivations (`<`, `<=`, `>=`, `-` unary, `-` binary, `/`, `|x|`, `->`, `<->`, `!=`, `str`, `int`, `len`, `r`).
+
+---
+
+## What is *not* native
+
+A few constructs that might look like they should be native are actually pure Nelumbo definitions:
+
+- `->` and `<->` — defined in `logic.nl` as rewrites using `!`, `|`, and `&`.
+- `!=` — defined in `logic.nl` as `!(a = b)`.
+- `<`, `<=`, `>=` on integers and rationals — defined in the respective modules as rewrites using `>` and `=`.
+- `-` (binary subtraction) — defined as `a - b = c <=> add(c, b, a)`.
+- `-` (unary) — defined as `-a = b <=> 0 - a = b`.
+- `/` — defined as `a / b = c <=> mult(c, b, a)`.
+- `|x|` — defined via a two-clause rule with mutually exclusive guards.
+
+Looking at the stdlib with this lens — **what is native and what is not** — is one of the best ways to understand Nelumbo's design philosophy. The Java surface is deliberately minimal; the rest is the meta-language at work.
+
+---
+
+## See also
+
+- [`native-api.md`](native-api.md) — the API surface: `infer`, `InferResult`, the helper methods, the completeness-flag convention
+- [`../guides/native-cookbook.md`](../guides/native-cookbook.md) — hands-on recipes for writing new natives
+- [`../explanation/architecture.md`](../explanation/architecture.md) — why the Java/Nelumbo split is drawn where it is
+- [`stdlib/`](stdlib/) — per-module reference for what each stdlib module exports
