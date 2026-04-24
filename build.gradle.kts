@@ -16,7 +16,7 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-defaultTasks("mvgCorrector", "test", "publish", "mvgTagger", "editorJar")
+defaultTasks("mvgCorrector", "test", "publish", "mvgTagger", "editorJar", "cliJar")
 
 plugins {
     `java-library`
@@ -59,8 +59,28 @@ tasks {
         }
     }
 
+    register<ShadowJar>("cliJar") {
+        archiveClassifier.set("cli")
+        manifest {
+            attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboCli"
+        }
+        from(sourceSets.main.get().output)
+        configurations = listOf(project.configurations.runtimeClasspath.get())
+
+        // Exclude signature files from signed dependencies to avoid SecurityException
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+
+        doFirst {
+            // Clean only previous shadow jars; leave regular publication jars intact
+            val libsDir = layout.buildDirectory.dir("libs")
+            libsDir.get().asFile.listFiles()
+                ?.filter { f -> f.isFile && (f.name.endsWith("-cli.jar") || f.name.contains("-cli-")) }
+                ?.forEach { it.delete() }
+        }
+    }
+
     shadowJar {
-        // Disable default shadowJar task; use editorJar instead
+        // Disable default shadowJar task; use editorJar / cliJar instead
         enabled = false
     }
 }

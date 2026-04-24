@@ -17,6 +17,7 @@ occur.
 - [Documentation](#documentation)
 - [Building](#building)
 - [IDE Plugins](#ide-plugins)
+- [Command-Line Interface](#command-line-interface)
 - [Examples](#examples)
 - [Releasing](#releasing)
 - [Contributing](#contributing)
@@ -58,6 +59,7 @@ Build individual components:
 ./gradlew :lsp:server:serverJar        # LSP server (shaded jar)
 ./gradlew :lsp:plugins:eclipse:jar     # Eclipse plugin (includes LSP server)
 ./gradlew :lsp:plugins:intellij:build  # IntelliJ plugin
+./gradlew cliJar                       # command-line runner (shaded jar)
 ```
 
 Run tests:
@@ -78,6 +80,16 @@ Nelumbo has LSP-based editor plugins for multiple IDEs:
 | Neovim   | [`lsp/plugins/neovim`](lsp/plugins/neovim)     | Neovim LSP configuration                        |
 
 See the README in each plugin directory for installation instructions.
+
+## Command-Line Interface
+
+`NelumboCli` parses and evaluates one or more `.nl` files from the terminal, printing each query together with its inferred result. Queries that declare expected results are compared and mismatches are reported as errors. Build the shaded jar with `./gradlew cliJar` (output in `build/libs/nelumbo-<version>-cli.jar`) and run it with `java`:
+
+```sh
+java -jar build/libs/nelumbo-<version>-cli.jar [options] <file>...
+```
+
+Pass `-` in place of a filename to read from stdin. Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
 
 ## Examples
 
