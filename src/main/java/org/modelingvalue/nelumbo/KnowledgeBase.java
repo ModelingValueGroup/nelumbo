@@ -55,7 +55,6 @@ import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-@SuppressWarnings("DuplicatedCode")
 public final class KnowledgeBase implements ParseExceptionHandler {
 
     private static final boolean TRACE_NELUMBO  = Boolean.getBoolean("TRACE_NELUMBO");
@@ -76,23 +75,20 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(
             Map.of());
     //
-    private static final Pattern         ROOTS             = r(
+    private static final Pattern ROOTS = r(
             s(a(n(Type.ROOT.list(), Integer.MIN_VALUE), n(Type.ROOT, Integer.MIN_VALUE)), t(NEWLINE)), false, null);
-    private static final List<TokenType> TOKEN_TYPES       = List.of(NAME, OPERATOR, STRING, SEMICOLON, SINGLEQUOTE);
-    private static final List<Pattern>   PATTERNS_NO_COMMA = TOKEN_TYPES.map(Pattern::t).asList()
+    //
+    private static final List<TokenType> TOKEN_TYPE_LIST = List.of(COMMA, NAME, OPERATOR, STRING, SEMICOLON,
+            SINGLEQUOTE);
+    private static final List<Pattern>   PATTERN_LIST    = TOKEN_TYPE_LIST.map(Pattern::t).asList()
             .add(n(Type.PATTERN, Integer.MAX_VALUE));
-    private static final Pattern         ALT_NO_COMMA      = a(PATTERNS_NO_COMMA.toArray(Pattern[]::new));
-    private static final List<Pattern>   PATTERNS          = PATTERNS_NO_COMMA.prepend(t(COMMA));
-    private static final Pattern         ALTERNATIVES      = a(PATTERNS.toArray(Pattern[]::new));
-    private static final Pattern         SEQUENCE          = r(ALTERNATIVES, true, null);
-    private static final Pattern         SEQ_NO_COMMA      = s(r(ALT_NO_COMMA, true, null),                           //
-            o(s(t("#"), t(NUMBER))),                                                                                  //
-            o(s(t("@"), r(t(NAME), true, t(".")))));
-    private static final Pattern         CONDITION         = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
-    private static final Pattern         SINGLE            = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
-    private static final Pattern         BINDING           = s(t("("), r(SINGLE, false, t(",")), t(")"));
-    private static final Pattern         ALTERNATIVE       = a(t(".."), BINDING);
-    private static final Pattern         PREDICTION        = r(ALTERNATIVE, false, t(","));
+    private static final Pattern         PATTERNS        = r(a(PATTERN_LIST.toArray(Pattern[]::new)), true, null);
+    //
+    private static final Pattern CONDITION   = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
+    private static final Pattern SINGLE      = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
+    private static final Pattern BINDING     = s(t("("), r(SINGLE, false, t(",")), t(")"));
+    private static final Pattern ALTERNATIVE = a(t(".."), BINDING);
+    private static final Pattern PREDICTION  = r(ALTERNATIVE, false, t(","));
     //
     public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
 
@@ -281,7 +277,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(
-                        s(t("<"), t("("), t(">"), r(SEQUENCE, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
+                        s(t("<"), t("("), t(">"), r(PATTERNS, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
                             List<AstElement> options = List.of();
                             List<AstElement> list = List.of();
@@ -301,7 +297,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext);
 
                 Functor.of(
-                        s(t("<"), t("("), t(">"), SEQUENCE, o(s(t("<"), t(","), t(">"), SEQUENCE)), t("<"), t(")"),
+                        s(t("<"), t("("), t(">"), PATTERNS, o(s(t("<"), t(","), t(">"), PATTERNS)), t("<"), t(")"),
                                 a(t("*"), t("+")), t(">")), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
                             Pattern repeated = null, separator = null;
@@ -326,12 +322,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return r(elements, repeated, mandatory, separator);
                         }, null).init(this, parseContext);
 
-                Functor.of(s(t("<"), t("("), t(">"), SEQUENCE, t("<"), t(")"), t("?"), t(">")), //
+                Functor.of(s(t("<"), t("("), t(">"), PATTERNS, t("<"), t(")"), t("?"), t(">")), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
                             return o(elements, pattern(elements));
                         }, null).init(this, parseContext);
 
-                Functor.of(s(t(LEFT), SEQUENCE, t(RIGHT)), //
+                Functor.of(s(t(LEFT), PATTERNS, t(RIGHT)), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
                             return s(elements, pattern(elements));
                         }, null).init(this, parseContext);
@@ -363,7 +359,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(
                         s(o(a(k("private"), s(t("{"), n(Type.TYPE, Integer.MIN_VALUE), t("}")))),
-                                n(Type.TYPE, Integer.MAX_VALUE), t("::="), r(SEQ_NO_COMMA, true, t(","))), //
+                                n(Type.TYPE, Integer.MAX_VALUE), t("::="),
+                                r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true,
+                                        t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             Type local = null;
                             int start = 2;
@@ -998,7 +996,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return parseContext;
     }
 
-    @SuppressWarnings("unused")
     public Set<String> imported() {
         return imported.get();
     }
@@ -1010,7 +1007,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
-    @SuppressWarnings("unused")
     public static Map<String, KnowledgeBase> importMap() {
         return IMPORT_MAP.get();
     }
