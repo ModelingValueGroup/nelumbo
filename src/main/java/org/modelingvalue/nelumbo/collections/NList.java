@@ -27,7 +27,7 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class NList extends Node {
+public final class NList extends Node {
     @Serial
     private static final long serialVersionUID = 2275866157289787141L;
 
@@ -66,7 +66,6 @@ public class NList extends Node {
         return (NList) super.setAstElements(elements);
     }
 
-    @SuppressWarnings("unused")
     public Type elementType() {
         return type().element();
     }
@@ -101,5 +100,10 @@ public class NList extends Node {
     @Override
     public String toString(TokenType[] previous) {
         return elements().toString().substring(4);
+    }
+
+    @Override
+    public Node add(Node added) {
+        return new NList(List.of(), this, added);
     }
 }

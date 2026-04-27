@@ -88,14 +88,16 @@ public final class Transform extends Node {
         return this;
     }
 
-    public Node transform(Node start, Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+    public Node transform(Node start, Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx)
+            throws ParseException {
         Map<Variable, Object> binding = node.getBinding(start);
         if (binding == null) {
             return result;
         }
         Map<Functor, Functor> functors = Map.of();
         for (Node target : targetsFlattened()) {
-            if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType()) && !functor.pattern().equals(start)) {
+            if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())
+                    && !functor.pattern().equals(start)) {
                 Functor rewrite = functor.setBinding(binding).resetDeclaration();
                 for (Entry<Functor, Functor> e : functors) {
                     if (functor.equals(knowledgeBase.literal(e.getKey()))) {
@@ -131,12 +133,7 @@ public final class Transform extends Node {
     }
 
     private static Node add(Node result, Node rewrite) {
-        if (result instanceof NList list) {
-            return new NList(List.of(), list, rewrite);
-        } else if (result != null) {
-            return new NList(Type.ROOT, List.of(result, rewrite), List.of(result, rewrite));
-        }
-        return null;
+        return result != null ? result.add(rewrite) : null;
     }
 
 }

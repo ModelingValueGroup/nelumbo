@@ -14,13 +14,20 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Evaluatable;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 
@@ -28,8 +35,20 @@ public final class Fact extends Node implements Evaluatable {
     @Serial
     private static final long serialVersionUID = 6226473785860814115L;
 
-    public Fact(Functor functor, List<AstElement> elements, Object... args) {
+    @NelumboConstructor
+    public Fact(Functor functor, List<AstElement> elements, ParseContext ctx, Object... args) {
         super(functor, elements, args);
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+        NList facts = new NList(astElements().sublist(0, 1), Type.ROOT);
+        for (int i = 0; i < length(); i++) {
+            Predicate pred = getVal(i);
+            Fact fact = new Fact(functor(), List.of(pred), ctx, pred);
+            facts = new NList(List.of(), facts, fact);
+        }
+        return facts;
     }
 
     private Fact(Object[] array, List<AstElement> elements, Fact declaration) {

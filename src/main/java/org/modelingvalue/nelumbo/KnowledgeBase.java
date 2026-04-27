@@ -532,17 +532,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return CURRENT.get().createRules(functor, elements, args, pc);
                         }, null).init(this, parseContext);
 
-                Functor.of(s(k("fact"), r(n(Type.BOOLEAN, 0), true, t(","))), //
-                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
-                            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
-                            for (Object arg : args) {
-                                Predicate pred = (Predicate) arg;
-                                Fact fact = new Fact(functor, List.of(pred), pred);
-                                roots = new NList(List.of(), roots, fact);
-                            }
-                            return roots;
-                        }, null).init(this, parseContext);
-
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
             }

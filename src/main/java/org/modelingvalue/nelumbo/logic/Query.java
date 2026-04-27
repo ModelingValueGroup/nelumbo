@@ -44,26 +44,31 @@ public final class Query extends Node implements Evaluatable {
 
     @NelumboConstructor
     public Query(Functor functor, List<AstElement> elements, ParseContext ctx, Object... args) throws ParseException {
-        super(functor, elements, args(args, ctx));
+        super(functor, elements, args);
     }
 
-    @SuppressWarnings("unchecked")
-    private static Object[] args(Object[] args, ParseContext ctx) throws ParseException {
-        Predicate nodePred = (Predicate) args[0];
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+        Predicate nodePred = predicate();
         Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
-        Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
-        if (expected.isEmpty()) {
-            return new Object[] { predicate };
+        List<List<Object>> expected = length() > 1 ? getVal(1) : null;
+        if (expected == null) {
+            Object[] array = new Object[2];
+            array[0] = functor();
+            array[1] = predicate;
+            return struct(array);
+        } else {
+            List<Object> facts = expected.get(0);
+            List<Object> falsehoods = expected.get(1);
+            Object[] array = new Object[6];
+            array[0] = functor();
+            array[1] = predicate;
+            array[2] = bindings(facts.filter(List.class).asList());
+            array[3] = !facts.contains("..");
+            array[4] = bindings(falsehoods.filter(List.class).asList());
+            array[5] = !falsehoods.contains("..");
+            return struct(array);
         }
-        List<Object> facts = expected.get().get(0);
-        List<Object> falsehoods = expected.get().get(1);
-        Object[] array = new Object[5];
-        array[0] = predicate;
-        array[1] = bindings(facts.filter(List.class).asList());
-        array[2] = !facts.contains("..");
-        array[3] = bindings(falsehoods.filter(List.class).asList());
-        array[4] = !falsehoods.contains("..");
-        return array;
     }
 
     @SuppressWarnings("unchecked")

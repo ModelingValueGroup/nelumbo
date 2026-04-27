@@ -29,6 +29,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
+import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -618,6 +619,10 @@ public class Node extends StructImpl implements AstElement {
 
     protected final Predicate predicate(int i) {
         return (Predicate) get(i);
+    }
+
+    public Node add(Node added) {
+        return new NList(Type.ROOT, List.of(this, added), List.of(this, added));
     }
 
 }
