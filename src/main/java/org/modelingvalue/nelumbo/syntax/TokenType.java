@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public enum TokenType {
     SINGLEQUOTE("'"), //
     SEMICOLON(";"), //
-    COMMA(",", CONTINUES_ON_NEXT_LINE), //
+    COMMA(",", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     LEFT("[\\(\\[\\{]", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     RIGHT("[\\)\\]\\}]", VARIABLE_CONTENT), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //
@@ -39,14 +39,13 @@ public enum TokenType {
     NEWLINE("\\R", CONTINUES_ON_NEXT_LINE, LAYOUT), //
     HSPACE("\\h+", SKIP, LAYOUT), //
     ERROR(".", VARIABLE_CONTENT), //
-    //================ rest is not actually matched:
+    // ================ rest is not actually matched:
     BEGINOFFILE, //
     ENDOFFILE, //
     ENDOFLINE, //
     VARIABLE, //
     KEYWORD, //
-    TYPE,
-    META_OPERATOR,//
+    TYPE, META_OPERATOR,//
     ;
 
     // Combined patterns for efficient matching - built once at class load
@@ -61,7 +60,8 @@ public enum TokenType {
         TokenType[] lookup = new TokenType[TokenType.values().length + 1]; // index 0 unused (groups start at 1)
         for (TokenType tt : TokenType.values()) {
             if (!tt.isNotMatched()) {
-                // Convert internal capturing groups to non-capturing (but not escaped literal parens like \()
+                // Convert internal capturing groups to non-capturing (but not escaped literal
+                // parens like \()
                 String p = tt.pattern.pattern().replaceAll("(?<!\\\\)\\((?!\\?)", "(?:");
                 sb.append(sep).append("(").append(p).append(")");
                 sep = "|";
@@ -70,7 +70,7 @@ public enum TokenType {
             }
         }
         String fullRegexp = sb.toString();
-        //noinspection RegExpUnnecessaryNonCapturingGroup
+        // noinspection RegExpUnnecessaryNonCapturingGroup
         COMBINED_FULL_MATCH_PATTERN = Pattern.compile("^(?:" + fullRegexp + ")$", Pattern.DOTALL);
         COMBINED_PATTERN = Pattern.compile(fullRegexp, Pattern.MULTILINE | Pattern.DOTALL);
         COMBINED_PATTERN_LOOKUP = Arrays.copyOf(lookup, group);
@@ -125,7 +125,6 @@ public enum TokenType {
         return variableContent;
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isNotMatched() {
         return notMatched;
     }

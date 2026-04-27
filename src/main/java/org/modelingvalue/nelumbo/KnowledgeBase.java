@@ -79,11 +79,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final Pattern ROOTS = r(
             s(a(n(Type.ROOT.list(), Integer.MIN_VALUE), n(Type.ROOT, Integer.MIN_VALUE)), t(NEWLINE)), false, null);
     //
-    private static final List<TokenType> TOKEN_TYPE_LIST = List.of(COMMA, NAME, OPERATOR, STRING, SEMICOLON,
-            SINGLEQUOTE);
-    private static final List<Pattern>   PATTERN_LIST    = TOKEN_TYPE_LIST.map(Pattern::t).asList()
-            .add(n(Type.PATTERN, Integer.MAX_VALUE));
-    private static final Pattern         PATTERNS        = r(a(PATTERN_LIST.toArray(Pattern[]::new)), true, null);
+    private static final List<TokenType> PATTERN_TOKEN_TYPE_LIST = List.of(NAME, OPERATOR, SEMICOLON, SINGLEQUOTE,
+            COMMA);
+    //
+    private static final Pattern PATTERNS = r(n(Type.PATTERN, Integer.MAX_VALUE), true, null);
     //
     private static final Pattern CONDITION   = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
     private static final Pattern SINGLE      = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
@@ -206,23 +205,25 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
+    private Functor addPattern(TokenType tokenType, ParseContext ctx) throws ParseException {
+        return Functor.of(t(tokenType), //
+                Type.PATTERN, null, (elements, args, functor, pc) -> {
+                    if (args[0] instanceof Variable var) {
+                        return t(elements, var);
+                    } else {
+                        return t(elements, (String) args[0]);
+                    }
+                }, null).init(this, ctx);
+    }
+
     private Pattern pattern(List<AstElement> elements) {
         List<Pattern> patterns = List.of();
         for (int i = 0; i < elements.size(); i++) {
             AstElement e = elements.get(i);
             if (e instanceof Token t) {
-                String text = t.text();
-                if (t.type() == STRING) {
-                    text = text.substring(1, text.length() - 1);
-                }
-                Pattern tokenPattern = t.type() == STRING && TokenType.of(text) == TokenType.NAME ? //
-                        k(List.of(t), text) : t(List.of(t), text);
+                Pattern tokenPattern = t(List.of(t), t.text());
                 patterns = patterns.add(tokenPattern);
                 elements = elements.replace(i, tokenPattern);
-            } else if (e instanceof Variable v) {
-                Pattern variablePattern = t(List.of(v), v);
-                patterns = patterns.add(variablePattern);
-                elements = elements.replace(i, variablePattern);
             } else {
                 Pattern pattern = (Pattern) e;
                 if (pattern instanceof SequencePattern sp) {
@@ -240,7 +241,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private static Functor ruleFunctor;
 
-    @SuppressWarnings({ "unchecked", "CodeBlock2Expr" })
+    @SuppressWarnings({ "unchecked" })
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             try {
@@ -262,6 +263,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 roots = roots.add((Node) arg);
                             }
                             return new NList(functor, elements, roots);
+                        }, null).init(this, parseContext);
+
+                for (TokenType tokenType : PATTERN_TOKEN_TYPE_LIST) {
+                    addPattern(tokenType, parseContext);
+                }
+
+                Functor.of(t(STRING), //
+                        Type.PATTERN, null, (elements, args, functor, pc) -> {
+                            String text = (String) args[0];
+                            text = text.substring(1, text.length() - 1);
+                            return TokenType.of(text) == TokenType.NAME ? k(elements, text) : t(elements, text);
                         }, null).init(this, parseContext);
 
                 Functor.of(
@@ -545,7 +557,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    @SuppressWarnings("ConstantValue")
     private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor,
             Pattern pattern, Type local, Integer prec, ParseContext ctx) throws ParseException {
         boolean toLiteral = false, function = false;
@@ -869,7 +880,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
-    @SuppressWarnings("UnusedReturnValue")
     public Rule addRule(Rule rule) {
         rules.updateAndGet(s -> s.add(rule));
         MatchState<Rule> state = rule.consequence().state(new MatchState<>(rule));
@@ -882,7 +892,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return ruleSignatures.get().match(predicate);
     }
 
-    @SuppressWarnings("UnusedReturnValue")
     public Transform addTransform(Transform transform) {
         transforms.updateAndGet(s -> s.add(transform));
         Node source = transform.source();

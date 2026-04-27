@@ -44,7 +44,9 @@ public interface ParseContext {
 
     MutableMap<String, Map<Type, Variable>> hiddenVariables();
 
-    static ParseContext of(MutableMap<String, Map<Type, ParseState>> preStates, MutableMap<String, Map<Type, ParseState>> postStates, MutableMap<String, Map<Type, Variable>> hiddenVariables) {
+    static ParseContext of(MutableMap<String, Map<Type, ParseState>> preStates,
+            MutableMap<String, Map<Type, ParseState>> postStates,
+            MutableMap<String, Map<Type, Variable>> hiddenVariables) {
         return new ParseContext() {
 
             @Override
@@ -233,7 +235,8 @@ public interface ParseContext {
         return false;
     }
 
-    default Functor register(KnowledgeBase knowledgeBase, String group, Type type, Functor functor) throws ParseException {
+    default Functor register(KnowledgeBase knowledgeBase, String group, Type type, Functor functor)
+            throws ParseException {
         try {
             ParseState preStart = functor.preStart();
             ParseState postStart = functor.postStart();
@@ -254,7 +257,8 @@ public interface ParseContext {
         return functor;
     }
 
-    default Map<String, Map<Type, ParseState>> merge(String group, Type type, ParseState state, Map<String, Map<Type, ParseState>> m) {
+    default Map<String, Map<Type, ParseState>> merge(String group, Type type, ParseState state,
+            Map<String, Map<Type, ParseState>> m) {
         Map<Type, ParseState> ts = m.get(group);
         ts = ts != null ? ts.put(type, state.merge(ts.get(type))) : Map.of(Entry.of(type, state));
         return m.put(group, ts);
@@ -272,9 +276,8 @@ public interface ParseContext {
         return hiddenVariables().get(group);
     }
 
-    default Variable variable(String group, String name) {
-        Map<Type, ParseState> states = preStates(group);
-        if (states != null) {
+    default Variable variable(String name) {
+        for (Map<Type, ParseState> states : preStates().get().toValues()) {
             for (ParseState state : states.toValues()) {
                 ParseState found = state.tokenTexts().get(name);
                 if (found != null && found.functor() != null) {
