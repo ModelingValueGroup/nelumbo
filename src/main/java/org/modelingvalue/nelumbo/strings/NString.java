@@ -24,7 +24,6 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NString extends Node {
@@ -40,7 +39,7 @@ public final class NString extends Node {
     }
 
     @NelumboConstructor
-    public NString(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
+    public NString(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, parse((String) args[0]));
     }
 

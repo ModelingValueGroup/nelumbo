@@ -27,14 +27,13 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class GreaterThan extends Predicate {
     @Serial
     private static final long serialVersionUID = -9139221151771172295L;
 
     @NelumboConstructor
-    public GreaterThan(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
+    public GreaterThan(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args[0], args[1]);
     }
 

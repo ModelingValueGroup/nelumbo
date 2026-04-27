@@ -25,7 +25,6 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public class NIs extends Predicate {
     @Serial
@@ -42,7 +41,7 @@ public class NIs extends Predicate {
     }
 
     @NelumboConstructor
-    public NIs(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
+    public NIs(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args[0], args[1]);
     }
 

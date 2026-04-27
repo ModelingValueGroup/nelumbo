@@ -156,7 +156,7 @@ public class Functor extends Node {
         Constructor<? extends Node> constructor = constructor();
         if (constructor != null) {
             try {
-                return constructor.newInstance(this, elements, ctx, args);
+                return constructor.newInstance(this, elements, args);
             } catch (Exception e) {
                 handleException(elements, handler, e);
             }

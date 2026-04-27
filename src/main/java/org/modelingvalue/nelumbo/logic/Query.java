@@ -43,7 +43,7 @@ public final class Query extends Node implements Evaluatable {
     private InferResult inferResult;
 
     @NelumboConstructor
-    public Query(Functor functor, List<AstElement> elements, ParseContext ctx, Object... args) throws ParseException {
+    public Query(Functor functor, List<AstElement> elements, Object... args) throws ParseException {
         super(functor, elements, args);
     }
 

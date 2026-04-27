@@ -28,14 +28,13 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class IntegersRational extends Predicate {
     @Serial
     private static final long serialVersionUID = -7882486910269514611L;
 
     @NelumboConstructor
-    public IntegersRational(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
+    public IntegersRational(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, args[0], args[1], args[2]);
     }
 

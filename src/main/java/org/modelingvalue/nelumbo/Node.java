@@ -51,10 +51,6 @@ public class Node extends StructImpl implements AstElement {
     private int                   hashCodeCache;
 
     @NelumboConstructor
-    public Node(Functor functor, List<AstElement> elements, ParseContext ctx, Object... args) {
-        this(functor, elements, args);
-    }
-
     public Node(Functor functor, List<AstElement> elements, Object... args) {
         super(array(functor, args));
         this.elements = elements;

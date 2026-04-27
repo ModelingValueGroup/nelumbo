@@ -25,7 +25,6 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Rational extends Node {
@@ -41,7 +40,7 @@ public final class Rational extends Node {
     }
 
     @NelumboConstructor
-    public Rational(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
+    public Rational(Functor functor, List<AstElement> elements, Object[] args) {
         super(functor, elements, parse((String) args[0]));
     }
 

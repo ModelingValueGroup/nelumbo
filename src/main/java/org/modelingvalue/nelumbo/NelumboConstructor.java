@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.patterns.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 /**
  * Marks a constructor that is called through introspection (reflection) and
@@ -46,7 +45,7 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 public @interface NelumboConstructor {
     class Finder {
         private static final Class<?>[]                               EXPECTED_PARAMS = { Functor.class, List.class,
-                ParseContext.class, Object[].class };
+                Object[].class };
         private static final Map<String, Constructor<? extends Node>> CACHE           = new ConcurrentHashMap<>();
         private static int                                            cacheHits;
 

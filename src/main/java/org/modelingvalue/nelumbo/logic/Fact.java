@@ -36,7 +36,7 @@ public final class Fact extends Node implements Evaluatable {
     private static final long serialVersionUID = 6226473785860814115L;
 
     @NelumboConstructor
-    public Fact(Functor functor, List<AstElement> elements, ParseContext ctx, Object... args) {
+    public Fact(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, args);
     }
 
@@ -45,7 +45,7 @@ public final class Fact extends Node implements Evaluatable {
         NList facts = new NList(astElements().sublist(0, 1), Type.ROOT);
         for (int i = 0; i < length(); i++) {
             Predicate pred = getVal(i);
-            Fact fact = new Fact(functor(), List.of(pred), ctx, pred);
+            Fact fact = new Fact(functor(), List.of(pred), pred);
             facts = new NList(List.of(), facts, fact);
         }
         return facts;
