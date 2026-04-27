@@ -503,27 +503,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }, 0).init(this, parseContext);
 
-                ruleFunctor = Functor.of(s(n(Type.BOOLEAN, 0), t("<=>"), r(CONDITION, true, t(","))), //
-                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
-                            return CURRENT.get().createRules(functor, elements, args, pc);
-                        }, null).init(this, parseContext);
-
-                Functor.of(s(n(Type.BOOLEAN, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]")))), //
-                        Type.QUERY, null, (elements, args, functor, pc) -> {
-                            return new Query(functor, elements, pc, args);
-                        }, null).init(this, parseContext);
-
-                Functor.of(s(k("fact"), r(n(Type.BOOLEAN, 0), true, t(","))), //
-                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
-                            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
-                            for (Object arg : args) {
-                                Predicate pred = (Predicate) arg;
-                                Fact fact = new Fact(functor, List.of(pred), pred);
-                                roots = new NList(List.of(), roots, fact);
-                            }
-                            return roots;
-                        }, null).init(this, parseContext);
-
                 Functor.of(s(n(Type.ROOT, 0), t("::>"), t("{"), ROOTS, t("}")), //
                         Type.TRANSFORM, null, (elements, args, functor, pc) -> {
                             Node source = (Node) args[0];
@@ -547,6 +526,29 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         Type.OBJECT, null, (elements, args, functor, pc) -> {
                             Node node = (Node) args[0];
                             return node.setAstElements(elements);
+                        }, null).init(this, parseContext);
+
+                // TODO: Move to logic
+
+                ruleFunctor = Functor.of(s(n(Type.BOOLEAN, 0), t("<=>"), r(CONDITION, true, t(","))), //
+                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
+                            return CURRENT.get().createRules(functor, elements, args, pc);
+                        }, null).init(this, parseContext);
+
+                Functor.of(s(n(Type.BOOLEAN, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]")))), //
+                        Type.QUERY, null, (elements, args, functor, pc) -> {
+                            return new Query(functor, elements, pc, args);
+                        }, null).init(this, parseContext);
+
+                Functor.of(s(k("fact"), r(n(Type.BOOLEAN, 0), true, t(","))), //
+                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
+                            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
+                            for (Object arg : args) {
+                                Predicate pred = (Predicate) arg;
+                                Fact fact = new Fact(functor, List.of(pred), pred);
+                                roots = new NList(List.of(), roots, fact);
+                            }
+                            return roots;
                         }, null).init(this, parseContext);
 
             } catch (ParseException e) {
