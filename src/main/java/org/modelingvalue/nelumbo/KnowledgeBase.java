@@ -42,6 +42,7 @@ import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.And;
 import org.modelingvalue.nelumbo.logic.BooleanVariable;
 import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
+import org.modelingvalue.nelumbo.logic.NIs;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.When;
 import org.modelingvalue.nelumbo.patterns.Functor;
@@ -237,17 +238,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return patterns.size() > 1 ? s(elements, patterns.toArray(Pattern[]::new)) : patterns.first();
     }
 
-    private static Functor equalsFunctor;
     private static Functor ruleFunctor;
-
-    public static Functor equalsFunctor() {
-        return equalsFunctor;
-    }
-
-    @SuppressWarnings("unused")
-    public static Functor ruleFunctor() {
-        return ruleFunctor;
-    }
 
     @SuppressWarnings({ "unchecked", "CodeBlock2Expr" })
     private KnowledgeBase initBase() {
@@ -263,9 +254,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         addType(new Type(tokenType), parseContext);
                     }
                 }
-
-                equalsFunctor = Functor.of(s(n(Type.OBJECT, 30), t("="), n(Type.OBJECT, 30)), //
-                        Type.BOOLEAN, null, null).init(this, parseContext);
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
                         Type.ROOT_LIST, null, (elements, args, functor, pc) -> {
@@ -502,6 +490,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             }
                             return roots;
                         }, 0).init(this, parseContext);
+
                 ruleFunctor = Functor.of(s(n(Type.BOOLEAN, 0), t("<=>"), r(CONDITION, true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             return CURRENT.get().createRules(functor, elements, args, pc);
@@ -601,12 +590,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Node nodNode = nodFunctor.construct(List.of(), nodVars, this, ctx);
             Node litNode = litFunctor.construct(List.of(), litVars, this, ctx);
             Variable rigthVar = function ? new Variable(List.of(), type.nonFunction(), "r", false) : null;
-            Predicate nodCons = function ? new Predicate(equalsFunctor, List.of(), nodNode, rigthVar)
-                    : (Predicate) nodNode;
-            Predicate litCond = function ? new Predicate(equalsFunctor, List.of(), litNode, rigthVar)
-                    : (Predicate) litNode;
+            Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
+            Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
             for (int c = args.size() - 1; c >= 0; c--) {
-                Predicate eq = new Predicate(equalsFunctor, List.of(), nodVars[c], litVars[c]);
+                Predicate eq = new NIs(List.of(), nodVars[c], litVars[c]);
                 litCond = And.of(eq, litCond);
             }
             ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), List.of(litVars), litCond);
@@ -630,7 +617,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             addException(new ParseException("Rule consequence " + p + " must be a Predicate, not a FactType", p));
         }
         NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
-        Node l = consFunctor.equals(equalsFunctor) ? (Node) p.get(0) : p;
+        Node l = p instanceof NIs ? (Node) p.get(0) : p;
         Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e)
                 .resetDeclaration();
         Map<Variable, Object> consVars = cons.getBinding();

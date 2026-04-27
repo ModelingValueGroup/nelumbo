@@ -344,13 +344,7 @@ public class Predicate extends Node {
         }
     }
 
-    private boolean isShallow(int nrOfUnbound, Functor functor) {
-        if (nrOfUnbound == 1 && KnowledgeBase.equalsFunctor().equals(functor)) {
-            Node a = getVal(0);
-            Node b = getVal(1);
-            return (b == null && a != null && Type.LITERAL.isAssignableFrom(a.type())) || //
-                    (a == null && b != null && Type.LITERAL.isAssignableFrom(b.type()));
-        }
+    protected boolean isShallow(int nrOfUnbound, Functor functor) {
         return false;
     }
 
