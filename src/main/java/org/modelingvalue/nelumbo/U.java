@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 @SuppressWarnings("unused")

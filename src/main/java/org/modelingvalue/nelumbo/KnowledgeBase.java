@@ -84,7 +84,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private static final Pattern PATTERNS = r(n(Type.PATTERN, Integer.MAX_VALUE), true, null);
     //
-    private static final Pattern CONDITION   = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
+    private static final Pattern RULE_CONDITION = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
+    //
     private static final Pattern SINGLE      = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
     private static final Pattern BINDING     = s(t("("), r(SINGLE, false, t(",")), t(")"));
     private static final Pattern ALTERNATIVE = a(t(".."), BINDING);
@@ -324,7 +325,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(t("<"), t("("), t(">"), PATTERNS, t("<"), t(")"), t("?"), t(">")), //
                         Type.PATTERN, null, (elements, args, functor, pc) -> {
-                            return o(elements, pattern(elements));
+                            Pattern optional = pattern(elements.sublist(3, elements.size() - 4));
+                            return o(elements, optional);
                         }, null).init(this, parseContext);
 
                 Functor.of(s(t(LEFT), PATTERNS, t(RIGHT)), //
@@ -530,14 +532,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 // TODO: Move to logic
 
-                ruleFunctor = Functor.of(s(n(Type.BOOLEAN, 0), t("<=>"), r(CONDITION, true, t(","))), //
+                ruleFunctor = Functor.of(s(n(Type.BOOLEAN, 0), t("<=>"), r(RULE_CONDITION, true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             return CURRENT.get().createRules(functor, elements, args, pc);
-                        }, null).init(this, parseContext);
-
-                Functor.of(s(n(Type.BOOLEAN, 0), t("?"), o(s(t("["), PREDICTION, t("]"), t("["), PREDICTION, t("]")))), //
-                        Type.QUERY, null, (elements, args, functor, pc) -> {
-                            return new Query(functor, elements, pc, args);
                         }, null).init(this, parseContext);
 
                 Functor.of(s(k("fact"), r(n(Type.BOOLEAN, 0), true, t(","))), //

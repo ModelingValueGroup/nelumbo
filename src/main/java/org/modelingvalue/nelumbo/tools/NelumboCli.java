@@ -26,7 +26,7 @@ import java.util.ArrayList;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Query;
+import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;

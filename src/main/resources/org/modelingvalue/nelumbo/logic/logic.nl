@@ -14,6 +14,8 @@
               <Boolean> -> <Boolean>                  #18,
               <Boolean> "<->" <Boolean>               #16,
               <Object> != <Object>                    #30
+              
+  Root    ::= <Boolean#0> ? <(> [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]  [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ] <)?>  @org.modelingvalue.nelumbo.logic.Query
 
   Boolean p1, p2
     

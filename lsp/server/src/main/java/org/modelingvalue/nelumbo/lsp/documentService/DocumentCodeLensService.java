@@ -24,7 +24,7 @@ import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Query;
+import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.lsp.CommandType;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;

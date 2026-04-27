@@ -30,7 +30,7 @@ import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Query;
+import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.lsp.CommandType;
 import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;

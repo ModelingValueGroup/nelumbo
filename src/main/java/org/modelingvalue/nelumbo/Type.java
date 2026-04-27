@@ -59,11 +59,8 @@ public final class Type extends Node {
     public static final Type  BOOLEAN        = new Type("Boolean", OBJECT);
     public static final Type  FACT_TYPE      = new Type("FactType", BOOLEAN);
     public static final Type  VARIABLE       = new Type("Variable", OBJECT);
-    public static final Type  RULE           = new Type("Rule", ROOT);
     public static final Type  FUNCTOR        = new Type("Functor", ROOT);
-    public static final Type  FACT           = new Type("Fact", ROOT);
     public static final Type  PATTERN        = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
-    public static final Type  QUERY          = new Type("Query", Type.ROOT);
     public static final Type  TRANSFORM      = new Type("Transform", Type.ROOT, NAMESPACE);
     public static final Type  IMPORT         = new Type("Import", Type.ROOT);
     private static final Type TYPE_ARG_VAR   = new Type(new Variable(List.of(), TYPE, "E", false));
@@ -85,11 +82,8 @@ public final class Type extends Node {
                 BOOLEAN, //
                 FACT_TYPE, //
                 VARIABLE, //
-                RULE, //
                 FUNCTOR, //
-                FACT, //
                 PATTERN, //
-                QUERY, //
                 TRANSFORM, //
                 IMPORT, //
                 COLLECTION, //

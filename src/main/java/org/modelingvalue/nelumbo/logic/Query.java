@@ -14,7 +14,7 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 import java.util.Optional;
@@ -23,7 +23,14 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Evaluatable;
+import org.modelingvalue.nelumbo.InconsistencyException;
+import org.modelingvalue.nelumbo.InferResult;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -33,8 +40,9 @@ public final class Query extends Node implements Evaluatable {
     @Serial
     private static final long serialVersionUID = -6751904607718047038L;
 
-    private InferResult       inferResult;
+    private InferResult inferResult;
 
+    @NelumboConstructor
     public Query(Functor functor, List<AstElement> elements, ParseContext ctx, Object... args) throws ParseException {
         super(functor, elements, args(args, ctx));
     }
@@ -45,7 +53,7 @@ public final class Query extends Node implements Evaluatable {
         Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
         Optional<List<List<Object>>> expected = (Optional<List<List<Object>>>) args[1];
         if (expected.isEmpty()) {
-            return new Object[]{predicate};
+            return new Object[] { predicate };
         }
         List<Object> facts = expected.get().get(0);
         List<Object> falsehoods = expected.get().get(1);
@@ -168,7 +176,8 @@ public final class Query extends Node implements Evaluatable {
             Set<Map<Variable, Object>> falseBindings = falsehoods();
             Set<Predicate> falsePredicates = falseBindings.map(predicate::setBinding).asSet();
             boolean completeFalsehoods = completeFalsehoods();
-            InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates, completeFalsehoods, Set.of());
+            InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
+                    completeFalsehoods, Set.of());
             if (!found.equals(expected) && !found.toString().equals(expected.toString())) {
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //
