@@ -84,13 +84,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     private static final Pattern PATTERNS = r(n(Type.PATTERN, Integer.MAX_VALUE), true, null);
     //
-    private static final Pattern RULE_CONDITION = s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0))));
-    //
-    private static final Pattern SINGLE      = s(n(Type.VARIABLE, 100), t("="), n(Type.OBJECT, 100));
-    private static final Pattern BINDING     = s(t("("), r(SINGLE, false, t(",")), t(")"));
-    private static final Pattern ALTERNATIVE = a(t(".."), BINDING);
-    private static final Pattern PREDICTION  = r(ALTERNATIVE, false, t(","));
-    //
     public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
 
     public static void registerFunctorSetter(Class<? extends Node> clazz, Consumer<Functor> setter) {
@@ -532,7 +525,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 // TODO: Move to logic
 
-                ruleFunctor = Functor.of(s(n(Type.BOOLEAN, 0), t("<=>"), r(RULE_CONDITION, true, t(","))), //
+                ruleFunctor = Functor.of(
+                        s(n(Type.BOOLEAN, 0), t("<=>"),
+                                r(s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0)))), true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             return CURRENT.get().createRules(functor, elements, args, pc);
                         }, null).init(this, parseContext);
