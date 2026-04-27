@@ -25,19 +25,20 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class And extends BinaryPredicate {
     @Serial
     private static final long serialVersionUID = -7248491569810098948L;
 
-    private static Functor    FUNCTOR;
+    private static Functor FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(And.class, f -> FUNCTOR = f);
     }
 
     @NelumboConstructor
-    public And(Functor functor, List<AstElement> elements, Object[] args) {
+    public And(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, args[0], args[1]);
     }
 
@@ -46,7 +47,7 @@ public final class And extends BinaryPredicate {
     }
 
     public static And of(Predicate predicate1, Predicate predicate2) {
-        return new And(FUNCTOR, List.of(), new Object[]{predicate1, predicate2});
+        return new And(FUNCTOR, List.of(), null, new Object[] { predicate1, predicate2 });
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NList extends Node {
@@ -43,7 +44,7 @@ public class NList extends Node {
     }
 
     @NelumboConstructor
-    public NList(Functor functor, List<AstElement> elements, Object[] args) {
+    public NList(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, List.of(args));
     }
 
@@ -77,9 +78,9 @@ public class NList extends Node {
 
     public <T extends Node> List<T> elementsFlattened() {
         List<T> result = List.of();
-        for (T e : this.<T> elements()) {
+        for (T e : this.<T>elements()) {
             if (e instanceof NList nl) {
-                result = result.addAll(nl.<T> elementsFlattened());
+                result = result.addAll(nl.<T>elementsFlattened());
             } else {
                 result = result.add(e);
             }

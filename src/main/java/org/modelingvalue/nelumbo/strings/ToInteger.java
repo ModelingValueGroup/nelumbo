@@ -27,13 +27,14 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class ToInteger extends Predicate {
     @Serial
     private static final long serialVersionUID = -2874326869672600959L;
 
     @NelumboConstructor
-    public ToInteger(Functor functor, List<AstElement> elements, Object[] args) {
+    public ToInteger(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, args[0], args[1]);
     }
 

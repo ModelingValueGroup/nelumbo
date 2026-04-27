@@ -28,11 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 /**
- * Marks a constructor that is called through introspection (reflection) and therefore
- * appears unused in static code analysis. This annotation serves as documentation that
- * the constructor is intentionally present for reflective instantiation of Node subclasses.
+ * Marks a constructor that is called through introspection (reflection) and
+ * therefore appears unused in static code analysis. This annotation serves as
+ * documentation that the constructor is intentionally present for reflective
+ * instantiation of Node subclasses.
  * <p>
  * Constructors marked with this annotation have the signature:<br>
  * {@code (Functor, List<AstElement>, Object[])}
@@ -43,9 +45,10 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 @SuppressWarnings("unused")
 public @interface NelumboConstructor {
     class Finder {
-        private static final Class<?>[]                               EXPECTED_PARAMS = {Functor.class, List.class, Object[].class};
+        private static final Class<?>[]                               EXPECTED_PARAMS = { Functor.class, List.class,
+                ParseContext.class, Object[].class };
         private static final Map<String, Constructor<? extends Node>> CACHE           = new ConcurrentHashMap<>();
-        private static       int                                      cacheHits;
+        private static int                                            cacheHits;
 
         @SuppressWarnings("unchecked")
         static Constructor<? extends Node> find(String className) throws ClassNotFoundException, NoSuchMethodException {
@@ -55,10 +58,13 @@ public @interface NelumboConstructor {
                 for (Constructor<?> c : clazz.getConstructors()) {
                     if (c.isAnnotationPresent(NelumboConstructor.class)) {
                         if (!Node.class.isAssignableFrom(c.getDeclaringClass())) {
-                            throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName() + " is invalid: class must extend " + Node.class.getSimpleName());
+                            throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName()
+                                    + " is invalid: class must extend " + Node.class.getSimpleName());
                         }
                         if (!Arrays.equals(c.getParameterTypes(), EXPECTED_PARAMS)) {
-                            throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName() + " has wrong signature: " + Arrays.toString(c.getParameterTypes()) + ", expected: " + Arrays.toString(EXPECTED_PARAMS));
+                            throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName()
+                                    + " has wrong signature: " + Arrays.toString(c.getParameterTypes()) + ", expected: "
+                                    + Arrays.toString(EXPECTED_PARAMS));
                         }
                         result = (Constructor<? extends Node>) c;
                         CACHE.put(className, result);

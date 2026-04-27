@@ -25,23 +25,24 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NInteger extends Node {
     @Serial
-    private static final long       serialVersionUID = 2454372545442550574L;
+    private static final long serialVersionUID = 2454372545442550574L;
 
-    private static final BigInteger MIN              = BigInteger.valueOf(Long.MIN_VALUE);
-    private static final BigInteger MAX              = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigInteger MIN = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigInteger MAX = BigInteger.valueOf(Long.MAX_VALUE);
 
-    private static Functor          FUNCTOR;
+    private static Functor FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(NInteger.class, f -> FUNCTOR = f);
     }
 
     @NelumboConstructor
-    public NInteger(Functor functor, List<AstElement> elements, Object[] args) {
+    public NInteger(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, parse((String) args[0]));
     }
 
@@ -83,7 +84,9 @@ public final class NInteger extends Node {
     @Override
     public String toString(TokenType[] previous) {
         BigInteger value = value();
-        String string = value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX)) : value.toString();
+        String string = value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0
+                ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX))
+                : value.toString();
         if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
             previous[0] = TokenType.NUMBER;
             return " " + string;

@@ -62,7 +62,7 @@ public class Functor extends Node {
         return new Functor(List.of(), pattern, result, local, null, leftPrecedence);
     }
 
-    private String name;
+    private String     name;
     private List<Type> argTypes;
     private ParseState start;
     private ParseState startPre;
@@ -156,7 +156,7 @@ public class Functor extends Node {
         Constructor<? extends Node> constructor = constructor();
         if (constructor != null) {
             try {
-                return constructor.newInstance(this, elements, args);
+                return constructor.newInstance(this, elements, ctx, args);
             } catch (Exception e) {
                 handleException(elements, handler, e);
             }

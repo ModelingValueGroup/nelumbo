@@ -27,42 +27,43 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class GreaterThan extends Predicate {
-	@Serial
-	private static final long serialVersionUID = -9139221151771172295L;
+    @Serial
+    private static final long serialVersionUID = -9139221151771172295L;
 
-	@NelumboConstructor
-	public GreaterThan(Functor functor, List<AstElement> elements, Object[] args) {
-		super(functor, elements, args[0], args[1]);
-	}
+    @NelumboConstructor
+    public GreaterThan(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
+        super(functor, elements, args[0], args[1]);
+    }
 
-	private GreaterThan(Object[] array, List<AstElement> elements, GreaterThan declaration) {
-		super(array, elements, declaration);
-	}
+    private GreaterThan(Object[] array, List<AstElement> elements, GreaterThan declaration) {
+        super(array, elements, declaration);
+    }
 
-	@Override
-	protected GreaterThan struct(Object[] array, List<AstElement> elements, Node declaration) {
-		return new GreaterThan(array, elements, (GreaterThan) declaration);
-	}
+    @Override
+    protected GreaterThan struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new GreaterThan(array, elements, (GreaterThan) declaration);
+    }
 
-	@Override
-	protected InferResult infer(int nrOfUnbound, InferContext context) {
-		if (nrOfUnbound > 1) {
-			return unresolvable();
-		}
+    @Override
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        if (nrOfUnbound > 1) {
+            return unresolvable();
+        }
 
-		BigInteger ln = getVal(0, 0);
-		BigInteger ld = getVal(0, 1);
-		BigInteger rn = getVal(1, 0);
-		BigInteger rd = getVal(1, 1);
-		if (ln == null) {
-			return set(0, get(1)).falsehoodsII();
-		}
-		if (rn == null) {
-			return set(1, get(0)).falsehoodsII();
-		}
-		return ln.multiply(rd).compareTo(ld.multiply(rn)) > 0 ? factCC() : falsehoodCC();
-	}
+        BigInteger ln = getVal(0, 0);
+        BigInteger ld = getVal(0, 1);
+        BigInteger rn = getVal(1, 0);
+        BigInteger rd = getVal(1, 1);
+        if (ln == null) {
+            return set(0, get(1)).falsehoodsII();
+        }
+        if (rn == null) {
+            return set(1, get(0)).falsehoodsII();
+        }
+        return ln.multiply(rd).compareTo(ld.multiply(rn)) > 0 ? factCC() : falsehoodCC();
+    }
 
 }

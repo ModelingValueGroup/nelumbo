@@ -27,13 +27,14 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public class Equal extends Predicate {
     @Serial
     private static final long serialVersionUID = -5516286818572134367L;
 
     @NelumboConstructor
-    public Equal(Functor functor, List<AstElement> elements, Object[] args) {
+    public Equal(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, args[0], args[1]);
     }
 
@@ -61,7 +62,7 @@ public class Equal extends Predicate {
 
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        boolean[] complete = new boolean[]{true};
+        boolean[] complete = new boolean[] { true };
         Node eq = eq(left(), right(), complete);
         if (eq == null) {
             return complete[0] ? falsehoodCC() : falsehoodCI();

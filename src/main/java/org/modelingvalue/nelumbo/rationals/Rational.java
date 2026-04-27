@@ -25,86 +25,87 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Rational extends Node {
-	@Serial
-	private static final long serialVersionUID = 5534246508330776916L;
+    @Serial
+    private static final long serialVersionUID = 5534246508330776916L;
 
-	private static final BigInteger HUNDERD = BigInteger.valueOf(100);
+    private static final BigInteger HUNDERD = BigInteger.valueOf(100);
 
-	private static Functor FUNCTOR;
+    private static Functor FUNCTOR;
 
-	static {
-		KnowledgeBase.registerFunctorSetter(Rational.class, f -> FUNCTOR = f);
-	}
+    static {
+        KnowledgeBase.registerFunctorSetter(Rational.class, f -> FUNCTOR = f);
+    }
 
-	@NelumboConstructor
-	public Rational(Functor functor, List<AstElement> elements, Object[] args) {
-		super(functor, elements, parse((String) args[0]));
-	}
+    @NelumboConstructor
+    public Rational(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
+        super(functor, elements, parse((String) args[0]));
+    }
 
-	private Rational(Functor functor, List<AstElement> elements, BigInteger numerator, BigInteger denominator) {
-		super(functor, elements, normalize(numerator, denominator));
-	}
+    private Rational(Functor functor, List<AstElement> elements, BigInteger numerator, BigInteger denominator) {
+        super(functor, elements, normalize(numerator, denominator));
+    }
 
-	public static Rational of(BigInteger numerator, BigInteger denominator) {
-		return new Rational(FUNCTOR, List.of(), numerator, denominator);
-	}
+    public static Rational of(BigInteger numerator, BigInteger denominator) {
+        return new Rational(FUNCTOR, List.of(), numerator, denominator);
+    }
 
-	private static Object[] parse(String string) {
-		while (string.charAt(string.length() - 1) == '0') {
-			string = string.substring(0, string.length() - 1);
-		}
-		int i = string.indexOf('.');
-		int dec = string.length() - i - 1;
-		string = string.substring(0, i) + string.substring(i + 1);
-		return normalize(new BigInteger(string), BigInteger.TEN.pow(dec));
-	}
+    private static Object[] parse(String string) {
+        while (string.charAt(string.length() - 1) == '0') {
+            string = string.substring(0, string.length() - 1);
+        }
+        int i = string.indexOf('.');
+        int dec = string.length() - i - 1;
+        string = string.substring(0, i) + string.substring(i + 1);
+        return normalize(new BigInteger(string), BigInteger.TEN.pow(dec));
+    }
 
-	private static Object[] normalize(BigInteger numerator, BigInteger denominator) {
-		BigInteger gcd = numerator.gcd(denominator);
-		return new Object[] { numerator.divide(gcd), denominator.divide(gcd) };
-	}
+    private static Object[] normalize(BigInteger numerator, BigInteger denominator) {
+        BigInteger gcd = numerator.gcd(denominator);
+        return new Object[] { numerator.divide(gcd), denominator.divide(gcd) };
+    }
 
-	private Rational(Object[] array, List<AstElement> elements, Rational declaration) {
-		super(array, elements, declaration);
-	}
+    private Rational(Object[] array, List<AstElement> elements, Rational declaration) {
+        super(array, elements, declaration);
+    }
 
-	@Override
-	protected Rational struct(Object[] array, List<AstElement> elements, Node declaration) {
-		return new Rational(array, elements, (Rational) declaration);
-	}
+    @Override
+    protected Rational struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new Rational(array, elements, (Rational) declaration);
+    }
 
-	@Override
-	public Rational set(int i, Object... a) {
-		return (Rational) super.set(i, a);
-	}
+    @Override
+    public Rational set(int i, Object... a) {
+        return (Rational) super.set(i, a);
+    }
 
-	public BigInteger numerator() {
-		return (BigInteger) get(0);
-	}
+    public BigInteger numerator() {
+        return (BigInteger) get(0);
+    }
 
-	public BigInteger denominator() {
-		return (BigInteger) get(1);
-	}
+    public BigInteger denominator() {
+        return (BigInteger) get(1);
+    }
 
-	@Override
-	public String toString(TokenType[] previous) {
-		BigInteger num = numerator();
-		BigInteger den = denominator();
-		String string = num.multiply(HUNDERD).divide(den).toString();
-		if (string.length() > 2) {
-			string = string.substring(0, string.length() - 2) + "." + string.substring(string.length() - 2);
-		} else {
-			string = "0." + string;
-		}
-		if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
-			previous[0] = TokenType.NUMBER;
-			return " " + string;
-		}
-		previous[0] = TokenType.DECIMAL;
-		return string;
-	}
+    @Override
+    public String toString(TokenType[] previous) {
+        BigInteger num = numerator();
+        BigInteger den = denominator();
+        String string = num.multiply(HUNDERD).divide(den).toString();
+        if (string.length() > 2) {
+            string = string.substring(0, string.length() - 2) + "." + string.substring(string.length() - 2);
+        } else {
+            string = "0." + string;
+        }
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
+            previous[0] = TokenType.NUMBER;
+            return " " + string;
+        }
+        previous[0] = TokenType.DECIMAL;
+        return string;
+    }
 
 }

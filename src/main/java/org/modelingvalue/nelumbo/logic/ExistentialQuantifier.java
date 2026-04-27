@@ -28,6 +28,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class ExistentialQuantifier extends Quantifier {
     @Serial
@@ -40,7 +41,7 @@ public final class ExistentialQuantifier extends Quantifier {
     }
 
     @NelumboConstructor
-    public ExistentialQuantifier(Functor functor, List<AstElement> elements, Object[] args) {
+    public ExistentialQuantifier(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, args);
     }
 

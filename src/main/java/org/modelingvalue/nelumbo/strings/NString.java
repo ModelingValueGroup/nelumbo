@@ -24,22 +24,23 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NString extends Node {
     @Serial
-    private static final long   serialVersionUID = 8360866611309554234L;
+    private static final long serialVersionUID = 8360866611309554234L;
 
-    private static final String DELIM            = "\"";
+    private static final String DELIM = "\"";
 
-    private static Functor      FUNCTOR;
+    private static Functor FUNCTOR;
 
     static {
         KnowledgeBase.registerFunctorSetter(NString.class, f -> FUNCTOR = f);
     }
 
     @NelumboConstructor
-    public NString(Functor functor, List<AstElement> elements, Object[] args) {
+    public NString(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, parse((String) args[0]));
     }
 

@@ -28,51 +28,52 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class IntegersRational extends Predicate {
-	@Serial
-	private static final long serialVersionUID = -7882486910269514611L;
+    @Serial
+    private static final long serialVersionUID = -7882486910269514611L;
 
-	@NelumboConstructor
-	public IntegersRational(Functor functor, List<AstElement> elements, Object[] args) {
-		super(functor, elements, args[0], args[1], args[2]);
-	}
+    @NelumboConstructor
+    public IntegersRational(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
+        super(functor, elements, args[0], args[1], args[2]);
+    }
 
-	private IntegersRational(Object[] array, List<AstElement> elements, IntegersRational declaration) {
-		super(array, elements, declaration);
-	}
+    private IntegersRational(Object[] array, List<AstElement> elements, IntegersRational declaration) {
+        super(array, elements, declaration);
+    }
 
-	@Override
-	protected IntegersRational struct(Object[] array, List<AstElement> elements, Node declaration) {
-		return new IntegersRational(array, elements, (IntegersRational) declaration);
-	}
+    @Override
+    protected IntegersRational struct(Object[] array, List<AstElement> elements, Node declaration) {
+        return new IntegersRational(array, elements, (IntegersRational) declaration);
+    }
 
-	@Override
-	protected InferResult infer(int nrOfUnbound, InferContext context) {
-		if (nrOfUnbound > 2) {
-			return unresolvable();
-		}
+    @Override
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        if (nrOfUnbound > 2) {
+            return unresolvable();
+        }
 
-		BigInteger in = getVal(0, 0);
-		BigInteger id = getVal(1, 0);
-		BigInteger rn = getVal(2, 0);
-		BigInteger rd = getVal(2, 1);
+        BigInteger in = getVal(0, 0);
+        BigInteger id = getVal(1, 0);
+        BigInteger rn = getVal(2, 0);
+        BigInteger rd = getVal(2, 1);
 
-		if (in != null && id != null) {
-			Rational ir = Rational.of(in, id);
-			if (rn != null && rd != null) {
-				boolean eq = ir.equals(get(2));
-				return eq ? factCC() : falsehoodCC();
-			} else {
-				return set(2, Rational.of(in, id)).factCI();
-			}
-		} else if (in == null && id == null) {
-			set(0, NInteger.of(rn), NInteger.of(rd)).factCI();
-		} else {
-			return unresolvable();
-		}
+        if (in != null && id != null) {
+            Rational ir = Rational.of(in, id);
+            if (rn != null && rd != null) {
+                boolean eq = ir.equals(get(2));
+                return eq ? factCC() : falsehoodCC();
+            } else {
+                return set(2, Rational.of(in, id)).factCI();
+            }
+        } else if (in == null && id == null) {
+            set(0, NInteger.of(rn), NInteger.of(rd)).factCI();
+        } else {
+            return unresolvable();
+        }
 
-		return unknown();
-	}
+        return unknown();
+    }
 
 }

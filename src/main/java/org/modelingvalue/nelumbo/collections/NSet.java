@@ -25,6 +25,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NSet extends Node {
@@ -32,7 +33,7 @@ public class NSet extends Node {
     private static final long serialVersionUID = 840888260991475386L;
 
     @NelumboConstructor
-    public NSet(Functor functor, List<AstElement> elements, Object[] args) {
+    public NSet(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, Set.of(args));
     }
 

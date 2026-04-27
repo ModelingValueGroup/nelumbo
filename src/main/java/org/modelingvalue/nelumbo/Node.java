@@ -37,20 +37,23 @@ import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-@SuppressWarnings("unused")
 public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long serialVersionUID = 7315776001191198132L;
-    protected static final int START = 1;
+    private static final long  serialVersionUID = 7315776001191198132L;
+    protected static final int START            = 1;
     //
     private final List<AstElement> elements;
-    private final Node declaration;
+    private final Node             declaration;
     //
     private Map<Variable, Object> binding;
-    private boolean hashCodeIsCached;
-    private int hashCodeCache;
+    private boolean               hashCodeIsCached;
+    private int                   hashCodeCache;
 
     @NelumboConstructor
+    public Node(Functor functor, List<AstElement> elements, ParseContext ctx, Object... args) {
+        this(functor, elements, args);
+    }
+
     public Node(Functor functor, List<AstElement> elements, Object... args) {
         super(array(functor, args));
         this.elements = elements;
@@ -153,7 +156,6 @@ public class Node extends StructImpl implements AstElement {
         return (Node) super.get(0);
     }
 
-    @SuppressWarnings("unchecked")
     public final List<AstElement> astElements() {
         return elements;
     }
@@ -556,7 +558,7 @@ public class Node extends StructImpl implements AstElement {
     public <E> MatchState<E> state(MatchState<E> state) {
         for (Object arg : args().reverse()) {
             switch (arg) {
-            case Type type -> {
+            case Type type    -> {
                 TokenType tt = type.tokenType();
                 if (tt != null) {
                     state = new MatchState<>(tt, state);
@@ -578,10 +580,10 @@ public class Node extends StructImpl implements AstElement {
                     state = new MatchState<>(type, state);
                 }
             }
-            case Node node -> {
+            case Node node    -> {
                 state = node.state(state);
             }
-            default -> {
+            default           -> {
                 state = new MatchState<>(arg.getClass(), state);
             }
             }

@@ -27,13 +27,14 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class Length extends Predicate {
     @Serial
     private static final long serialVersionUID = 4405805306602130025L;
 
     @NelumboConstructor
-    public Length(Functor functor, List<AstElement> elements, Object[] args) {
+    public Length(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, args[0], args[1]);
     }
 

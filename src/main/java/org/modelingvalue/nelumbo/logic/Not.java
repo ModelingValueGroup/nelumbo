@@ -26,6 +26,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class Not extends CompoundPredicate {
     @Serial
@@ -38,7 +39,7 @@ public final class Not extends CompoundPredicate {
     }
 
     @NelumboConstructor
-    public Not(Functor functor, List<AstElement> elements, Object[] args) {
+    public Not(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, args[0]);
     }
 
@@ -47,7 +48,7 @@ public final class Not extends CompoundPredicate {
     }
 
     public static Not of(Predicate predicate) {
-        return new Not(FUNCTOR, List.of(), new Object[] { predicate });
+        return new Not(FUNCTOR, List.of(), null, new Object[] { predicate });
     }
 
     @Override

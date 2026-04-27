@@ -26,13 +26,14 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 
 public final class Concat extends Predicate {
     @Serial
     private static final long serialVersionUID = -317279750710781401L;
 
     @NelumboConstructor
-    public Concat(Functor functor, List<AstElement> elements, Object[] args) {
+    public Concat(Functor functor, List<AstElement> elements, ParseContext ctx, Object[] args) {
         super(functor, elements, args[0], args[1], args[2]);
     }
 
@@ -70,7 +71,8 @@ public final class Concat extends Predicate {
             }
         } else if (addend2 != null && sum != null) {
             if (sum.endsWith(addend2)) {
-                return set(0, org.modelingvalue.nelumbo.strings.NString.of(sum.substring(0, addend2.length()))).factCI();
+                return set(0, org.modelingvalue.nelumbo.strings.NString.of(sum.substring(0, addend2.length())))
+                        .factCI();
             } else {
                 return falsehoodCI();
             }
