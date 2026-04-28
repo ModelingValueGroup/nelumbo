@@ -52,15 +52,15 @@ public final class Query extends Node implements Evaluatable {
         }
         Predicate nodePred = predicate();
         Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
-        List<List<Object>> expected = getVal(1);
+        List<Node> expected = getVal(1);
         if (expected == null) {
             Object[] array = new Object[2];
             array[0] = functor();
             array[1] = predicate;
             return struct(array);
         } else {
-            List<Object> facts = expected.get(0);
-            List<Object> falsehoods = expected.get(1);
+            List<Object> facts = expected.get(0).args();
+            List<Object> falsehoods = expected.get(1).args();
             Object[] array = new Object[6];
             array[0] = functor();
             array[1] = predicate;

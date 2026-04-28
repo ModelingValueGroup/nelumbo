@@ -11,13 +11,17 @@
               E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @org.modelingvalue.nelumbo.logic.ExistentialQuantifier,
               A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @org.modelingvalue.nelumbo.logic.UniversalQuantifier,
               <Object> = <Object>                     #30     @org.modelingvalue.nelumbo.logic.NIs,
+              <Object> != <Object>                    #30,
               <Boolean> -> <Boolean>                  #18,
-              <Boolean> "<->" <Boolean>               #16,
-              <Object> != <Object>                    #30
+              <Boolean> "<->" <Boolean>               #16
+              
+  Binding :: Object #BINDING
+  
+  Binding ::=  [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
               
   Root    ::= "fact" <(> <Boolean#0> <,> , <)+>                                         @org.modelingvalue.nelumbo.logic.Fact,
               <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>    @org.modelingvalue.nelumbo.logic.Rule,
-              <Boolean#0> ? <(> [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]  [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ] <)?>  @org.modelingvalue.nelumbo.logic.Query
+              <Boolean#0> ? <(> <Binding> <Binding> <)?>                                @org.modelingvalue.nelumbo.logic.Query
    
 
   Boolean p1, p2
