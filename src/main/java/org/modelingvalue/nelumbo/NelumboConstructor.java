@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 
 /**
  * Marks a constructor that is called through introspection (reflection) and
@@ -41,37 +42,52 @@ import org.modelingvalue.nelumbo.patterns.Functor;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.CONSTRUCTOR)
-@SuppressWarnings("unused")
 public @interface NelumboConstructor {
     class Finder {
         private static final Class<?>[]                               EXPECTED_PARAMS = { Functor.class, List.class,
                 Object[].class };
         private static final Map<String, Constructor<? extends Node>> CACHE           = new ConcurrentHashMap<>();
-        private static int                                            cacheHits;
 
-        @SuppressWarnings("unchecked")
-        static Constructor<? extends Node> find(String className) throws ClassNotFoundException, NoSuchMethodException {
+        static Constructor<? extends Node> find(Class<? extends Node> clazz, KnowledgeBase kb, List<AstElement> list)
+                throws ParseException {
+            return find(clazz.getName(), kb, list);
+        }
+
+        static Constructor<? extends Node> find(String className, KnowledgeBase kb, List<AstElement> list)
+                throws ParseException {
             Constructor<? extends Node> result = CACHE.get(className);
             if (result == null) {
-                Class<?> clazz = Class.forName(className);
-                for (Constructor<?> c : clazz.getConstructors()) {
-                    if (c.isAnnotationPresent(NelumboConstructor.class)) {
-                        if (!Node.class.isAssignableFrom(c.getDeclaringClass())) {
-                            throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName()
-                                    + " is invalid: class must extend " + Node.class.getSimpleName());
-                        }
-                        if (!Arrays.equals(c.getParameterTypes(), EXPECTED_PARAMS)) {
-                            throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName()
-                                    + " has wrong signature: " + Arrays.toString(c.getParameterTypes()) + ", expected: "
-                                    + Arrays.toString(EXPECTED_PARAMS));
-                        }
-                        result = (Constructor<? extends Node>) c;
-                        CACHE.put(className, result);
+                try {
+                    Class<?> clazz = Class.forName(className);
+                    result = find(clazz);
+                    CACHE.put(className, result);
+                } catch (SecurityException | ClassNotFoundException | NoSuchMethodException ex) {
+                    kb.addException(new ParseException(ex,
+                            ex + " during finding class with Node constructor " + className, list));
+                }
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        private static Constructor<? extends Node> find(Class<?> clazz) throws NoSuchMethodException {
+            Constructor<? extends Node> result = null;
+            for (Constructor<?> c : clazz.getConstructors()) {
+                if (c.isAnnotationPresent(NelumboConstructor.class)) {
+                    if (!Node.class.isAssignableFrom(c.getDeclaringClass())) {
+                        throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName()
+                                + " is invalid: class must extend " + Node.class.getSimpleName());
                     }
+                    if (!Arrays.equals(c.getParameterTypes(), EXPECTED_PARAMS)) {
+                        throw new NoSuchMethodException("@NelumboConstructor on " + c.getDeclaringClass().getName()
+                                + " has wrong signature: " + Arrays.toString(c.getParameterTypes()) + ", expected: "
+                                + Arrays.toString(EXPECTED_PARAMS));
+                    }
+                    result = (Constructor<? extends Node>) c;
                 }
-                if (result == null) {
-                    System.err.println("Warning: no @NelumboConstructor annotated constructor found for " + className);
-                }
+            }
+            if (result == null) {
+                throw new NoSuchMethodException("@NelumboConstructor on " + clazz.getName() + " is not found");
             }
             return result;
         }

@@ -16,6 +16,7 @@
 
 package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.nelumbo.lang.Import;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 /**

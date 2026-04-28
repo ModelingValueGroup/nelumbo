@@ -20,9 +20,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.Import;
 import org.modelingvalue.nelumbo.ImportResolver;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.lang.Import;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 /**

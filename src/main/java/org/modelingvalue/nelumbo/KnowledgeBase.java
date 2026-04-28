@@ -39,6 +39,7 @@ import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.lang.Import;
 import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.logic.And;
 import org.modelingvalue.nelumbo.logic.BooleanVariable;
@@ -359,6 +360,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true,
                                         t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
+                            KnowledgeBase kb = CURRENT.get();
                             Type local = null;
                             int start = 2;
                             Optional<Object> mod = (Optional<Object>) args[0];
@@ -385,8 +387,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (precedence != null) {
                                             pattern = pattern.setPresedence(precedence);
                                         }
-                                        roots = CURRENT.get().createFunctor(type, roots, ast, constructor, pattern,
-                                                local, precedence, pc);
+                                        roots = kb.createFunctor(type, roots, ast, constructor, pattern, local,
+                                                precedence, pc);
                                         if (t != null) {
                                             roots = roots.setAstElements(roots.astElements().add(t));
                                         }
@@ -400,6 +402,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         i++;
                                         precedence = Integer.parseInt(t.text());
                                     } else if (t.text().equals("@")) {
+                                        int s = ast.size();
                                         ast = ast.add(t);
                                         StringBuilder qname = new StringBuilder();
                                         t = t.next();
@@ -410,14 +413,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                             t = t.next();
                                         } while (t.text().equals(".") || t.type() == NAME);
                                         String className = qname.toString();
-                                        try {
-                                            constructor = NelumboConstructor.Finder.find(className);
-                                        } catch (SecurityException | ClassNotFoundException
-                                                | NoSuchMethodException ex) {
-                                            CURRENT.get().addException(new ParseException(ex,
-                                                    ex + " during finding class with Node constructor " + className,
-                                                    t.next()));
-                                        }
+                                        constructor = NelumboConstructor.Finder.find(className, kb,
+                                                ast.sublist(s, ast.size()));
                                     } else {
                                         pttrn = pttrn.add(e);
                                     }
@@ -454,30 +451,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return kb.addType(type, pc);
                         }, null).init(this, parseContext, false);
 
-                Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
-                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
-                            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
-                            KnowledgeBase kb = CURRENT.get();
-                            StringBuilder sb = new StringBuilder();
-                            List<AstElement> el = List.of();
-                            for (int i = 1; i <= elements.size(); i++) {
-                                Token t = i < elements.size() ? (Token) elements.get(i) : null;
-                                if (t == null || t.text().equals(",")) {
-                                    Import ip = new Import(el, sb.toString());
-                                    roots = new NList(List.of(), roots, ip);
-                                    if (t != null) {
-                                        roots = roots.setAstElements(roots.astElements().add(t));
-                                    }
-                                    el = List.of();
-                                    sb = new StringBuilder();
-                                    ip.init(kb, pc, false);
-                                } else {
-                                    sb.append(t.text());
-                                    el = el.add(t);
-                                }
-                            }
-                            return roots;
-                        }, null).init(this, parseContext, false);
+                Functor.of(List.of(), s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
+                        Type.ROOT, null, NelumboConstructor.Finder.find(Import.class, CURRENT.get(), List.of()), null)
+                        .init(this, parseContext, false);
 
                 Functor.of(s(o(k("hidden")), n(Type.TYPE, Integer.MAX_VALUE), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
@@ -527,7 +503,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.isCollection() ? type.element() : null;
-        if (args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
+        if (!Type.ROOT.isAssignableFrom(type) && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
             type = type.literal();
         } else {
             if (!Type.BOOLEAN.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {

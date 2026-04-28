@@ -14,20 +14,55 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Token;
 
 public final class Import extends Node {
     @Serial
     private static final long serialVersionUID = 4184295220819695199L;
 
-    public Import(List<AstElement> elements, String path) {
-        super(Type.ROOT, elements, path);
+    @NelumboConstructor
+    public Import(Functor functor, List<AstElement> elements, Object... args) {
+        super(functor, elements, args);
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+        List<AstElement> elements = astElements();
+        Functor functor = functor();
+        NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
+        StringBuilder sb = new StringBuilder();
+        List<AstElement> el = List.of();
+        for (int i = 1; i <= elements.size(); i++) {
+            Token t = i < elements.size() ? (Token) elements.get(i) : null;
+            if (t == null || t.text().equals(",")) {
+                Import ip = new Import(functor, el, sb.toString());
+                roots = new NList(List.of(), roots, ip);
+                if (t != null) {
+                    roots = roots.setAstElements(roots.astElements().add(t));
+                }
+                el = List.of();
+                sb = new StringBuilder();
+                knowledgeBase.doImport(ip.name(), ip);
+            } else {
+                sb.append(t.text());
+                el = el.add(t);
+            }
+        }
+        return roots;
     }
 
     private Import(Object[] array, List<AstElement> elements, Import declaration) {
@@ -46,12 +81,6 @@ public final class Import extends Node {
 
     public String name() {
         return (String) get(0);
-    }
-
-    @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
-        knowledgeBase.doImport(name(), this);
-        return this;
     }
 
 }

@@ -38,6 +38,11 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void langTest() {
+        testResource("langTest.nl");
+    }
+
+    @RepeatedTest(10)
     public void logicTest() {
         testResource("logicTest.nl");
     }
