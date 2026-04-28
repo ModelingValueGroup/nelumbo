@@ -61,7 +61,6 @@ public final class Type extends Node {
     public static final Type  VARIABLE       = new Type("Variable", OBJECT);
     public static final Type  FUNCTOR        = new Type("Functor", ROOT);
     public static final Type  PATTERN        = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
-    public static final Type  TRANSFORM      = new Type("Transform", Type.ROOT, NAMESPACE);
     private static final Type TYPE_ARG_VAR   = new Type(new Variable(List.of(), TYPE, "E", false));
     public static final Type  COLLECTION     = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type  SET            = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
@@ -83,7 +82,6 @@ public final class Type extends Node {
                 VARIABLE, //
                 FUNCTOR, //
                 PATTERN, //
-                TRANSFORM, //
                 COLLECTION, //
                 SET, //
                 LIST, //

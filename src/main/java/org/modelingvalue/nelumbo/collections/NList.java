@@ -43,7 +43,7 @@ public final class NList extends Node {
     }
 
     @NelumboConstructor
-    public NList(Functor functor, List<AstElement> elements, Object[] args) {
+    public NList(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, List.of(args));
     }
 

@@ -30,6 +30,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;

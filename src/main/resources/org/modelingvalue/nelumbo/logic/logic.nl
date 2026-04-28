@@ -1,4 +1,5 @@
-
+  
+  import  nelumbo.lang
  
   private Boolean ::= eq(<Object>,<Object>)                   @org.modelingvalue.nelumbo.logic.Equal
  

@@ -32,7 +32,7 @@ public class NSet extends Node {
     private static final long serialVersionUID = 840888260991475386L;
 
     @NelumboConstructor
-    public NSet(Functor functor, List<AstElement> elements, Object[] args) {
+    public NSet(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, Set.of(args));
     }
 

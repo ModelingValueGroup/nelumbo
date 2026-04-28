@@ -39,6 +39,7 @@ import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.logic.And;
 import org.modelingvalue.nelumbo.logic.BooleanVariable;
 import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
@@ -497,16 +498,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             }
                             return roots;
                         }, 0).init(this, parseContext, false);
-
-                Functor.of(s(n(Type.ROOT, 0), t("::>"), t("{"), ROOTS, t("}")), //
-                        Type.TRANSFORM, null, (elements, args, functor, pc) -> {
-                            Node source = (Node) args[0];
-                            List<Node> targets = List.of();
-                            for (Node arg : (List<Node>) args[1]) {
-                                targets = targets.add(arg);
-                            }
-                            return new Transform(functor, elements, source, targets);
-                        }, null).init(this, parseContext, false);
 
                 Functor.of(s(t("{"), ROOTS, t("}")), //
                         Type.ROOT_NAMESPACE, null, (elements, args, functor, pc) -> {
