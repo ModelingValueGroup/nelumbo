@@ -252,7 +252,7 @@ public class Functor extends Node {
     }
 
     @Override
-    public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+    public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
         Type type = resultType();
         String group = Type.VARIABLE.isAssignableFrom(type) ? //
                 construct(List.of(), new Object[0], knowledgeBase, ctx).type().group() : //

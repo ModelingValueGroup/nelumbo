@@ -38,12 +38,12 @@ public final class PatternResult implements ParseExceptionHandler {
     private final MutableList<Pair<Token, Token>> merged;
     private final MutableMap<Variable, Type>      typeArgs;
 
-    private Functor                               functor;
-    private ParseState                            state;
-    private Integer                               leftPrecedence;
-    private Set<RepetitionPattern>                endRepetitions;
-    private Token                                 nextToken;
-    private boolean                               hasLeft;
+    private Functor                functor;
+    private ParseState             state;
+    private Integer                leftPrecedence;
+    private Set<RepetitionPattern> endRepetitions;
+    private Token                  nextToken;
+    private boolean                hasLeft;
 
     public PatternResult(Parser parser, ParseContext context) {
         this.parser = parser;
@@ -152,7 +152,7 @@ public final class PatternResult implements ParseExceptionHandler {
         elements.removeLast();
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Node postParse() throws ParseException {
         ParseState next = state;
         if (next != null) {
@@ -181,7 +181,7 @@ public final class PatternResult implements ParseExceptionHandler {
                 }
             }
             if (Type.ROOT.isAssignableFrom(node.type())) {
-                node = node.init(parser.knowledgeBase(), context);
+                node = node.init(parser.knowledgeBase(), context, false);
             }
             return node;
         }

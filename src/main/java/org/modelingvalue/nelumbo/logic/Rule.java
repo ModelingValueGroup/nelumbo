@@ -14,25 +14,46 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
+import java.util.Optional;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Evaluatable;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.Type;
+import org.modelingvalue.nelumbo.Variable;
+import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Rule extends Node implements Evaluatable {
     @Serial
     private static final long serialVersionUID = -4602043866952049391L;
 
-    public Rule(Functor functor, List<AstElement> elements, Predicate consequence, Predicate condition) {
-        super(functor, elements, consequence, condition);
+    private static Functor FUNCTOR;
+
+    static {
+        KnowledgeBase.registerFunctorSetter(Rule.class, f -> FUNCTOR = f);
+    }
+
+    @NelumboConstructor
+    public Rule(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args[0], args[1]);
+    }
+
+    public Rule(List<AstElement> elements, Predicate consequence, Predicate condition) {
+        super(FUNCTOR, elements, consequence, condition);
     }
 
     private Rule(Object[] args, List<AstElement> elements, Rule declaration) {
@@ -59,6 +80,76 @@ public final class Rule extends Node implements Evaluatable {
 
     public final Predicate condition() {
         return (Predicate) get(1);
+    }
+
+    @SuppressWarnings("unchecked")
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+        if (transforming) {
+            return this;
+        }
+        Predicate p = consequence();
+        Functor consFunctor = p.functor();
+        Functor litFunctor = knowledgeBase.literal(consFunctor);
+        if (Type.FACT_TYPE.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
+            knowledgeBase.addException(
+                    new ParseException("Rule consequence " + p + " must be a Predicate, not a FactType", p));
+        }
+        List<AstElement> elements = astElements();
+        NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
+        Node l = p instanceof NIs ? (Node) p.get(0) : p;
+        Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e)
+                .resetDeclaration();
+        Map<Variable, Object> consVars = cons.getBinding();
+        Map<Variable, Object> nodeVars = l == cons ? consVars : l.getBinding();
+        Functor nodeFunctor = l.functor();
+        Functor literalFunctor = nodeFunctor != null ? knowledgeBase.literal(nodeFunctor) : null;
+        int i = 0;
+        for (List<Object> condIf : (List<List<Object>>) get(1)) {
+            Predicate cond = (Predicate) condIf.get(0);
+            Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
+            Map<Variable, Object> condVars = cond.getBinding();
+            Map<Variable, Object> whenVars = when != null ? when.getBinding() : null;
+            Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars)
+                    .removeAllKey(consVars);
+            if (!nonConsVars.isEmpty()) {
+                Map<Variable, Object> localVars = nonConsVars.removeAllKey(cond.allLocalVars());
+                if (when != null) {
+                    localVars = localVars.removeAllKey(when.allLocalVars());
+                }
+                if (!localVars.isEmpty()) {
+                    String message = "Rule has local variables " + nonConsVars.map(e -> e.getKey().toString())
+                            .reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + " in condition";
+                    knowledgeBase.addException(
+                            when != null ? new ParseException(message, cond, when) : new ParseException(message, cond));
+                }
+            }
+            if (literalFunctor != null) {
+                Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(nonConsVars));
+                cons = cons.setVariables(litVars, ctx);
+                cond = cond.setVariables(litVars, ctx);
+                if (when != null) {
+                    when = when.setVariables(litVars, ctx);
+                }
+            } else if (!nonConsVars.isEmpty()) {
+                Map<Variable, Object> litVars = Predicate.literals(nonConsVars);
+                cond = cond.setVariables(litVars, ctx);
+                if (when != null) {
+                    when = when.setVariables(litVars, ctx);
+                }
+            }
+            Rule rule = new Rule(when != null ? List.of(cond, when) : List.of(cond), //
+                    cons, when != null ? When.of(when, cond) : cond);
+            roots = new NList(List.of(), roots, rule);
+            for (i++; i < elements.size(); i++) {
+                if (elements.get(i) instanceof Token t && t.text().equals(",")) {
+                    roots = roots.setAstElements(roots.astElements().add(t));
+                    break;
+                }
+            }
+        }
+        return roots;
     }
 
     public final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {

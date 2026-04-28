@@ -83,7 +83,7 @@ public final class Transform extends Node {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
         knowledgeBase.addTransform(this);
         return this;
     }
@@ -106,7 +106,7 @@ public final class Transform extends Node {
                     }
                 }
                 functors = functors.put(functor, rewrite);
-                rewrite.init(knowledgeBase, ctx);
+                rewrite.init(knowledgeBase, ctx, true);
                 result = add(result, rewrite);
             }
         }
@@ -125,7 +125,7 @@ public final class Transform extends Node {
                     }
                     return n;
                 }).setBinding(binding).setAstElements(node.astElements()).resetDeclaration();
-                rewrite.init(knowledgeBase, ctx);
+                rewrite.init(knowledgeBase, ctx, true);
                 result = add(result, rewrite);
             }
         }

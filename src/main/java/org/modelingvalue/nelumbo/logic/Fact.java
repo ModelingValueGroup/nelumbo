@@ -41,7 +41,10 @@ public final class Fact extends Node implements Evaluatable {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+        if (transforming) {
+            return this;
+        }
         NList facts = new NList(astElements().sublist(0, 1), Type.ROOT);
         for (int i = 0; i < length(); i++) {
             Predicate pred = getVal(i);

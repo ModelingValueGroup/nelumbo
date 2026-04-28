@@ -15,7 +15,8 @@
               <Boolean> "<->" <Boolean>               #16,
               <Object> != <Object>                    #30
               
-  Root    ::= fact <(> <Boolean#0> <,> , <)+>                 @org.modelingvalue.nelumbo.logic.Fact,            
+  Root    ::= "fact" <(> <Boolean#0> <,> , <)+>                                         @org.modelingvalue.nelumbo.logic.Fact,
+              <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>    @org.modelingvalue.nelumbo.logic.Rule,
               <Boolean#0> ? <(> [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]  [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ] <)?>  @org.modelingvalue.nelumbo.logic.Query
    
 

@@ -25,8 +25,6 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Evaluatable;
-import org.modelingvalue.nelumbo.InconsistencyException;
-import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -48,10 +46,13 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+        if (transforming) {
+            return this;
+        }
         Predicate nodePred = predicate();
         Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
-        List<List<Object>> expected = length() > 1 ? getVal(1) : null;
+        List<List<Object>> expected = getVal(1);
         if (expected == null) {
             Object[] array = new Object[2];
             array[0] = functor();

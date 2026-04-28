@@ -590,7 +590,7 @@ public class Node extends StructImpl implements AstElement {
         return new MatchState<>(functor, state);
     }
 
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
         Node rewrite = this;
         for (Transform transform : knowledgeBase.getTransforms(this)) {
             rewrite = transform.transform(transform.source(), this, rewrite, knowledgeBase, ctx);

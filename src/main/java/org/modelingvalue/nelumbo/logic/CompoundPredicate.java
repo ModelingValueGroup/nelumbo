@@ -23,8 +23,6 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.InferResult;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
 import org.modelingvalue.nelumbo.patterns.Functor;

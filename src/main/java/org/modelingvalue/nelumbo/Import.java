@@ -49,7 +49,7 @@ public final class Import extends Node {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
         knowledgeBase.doImport(name(), this);
         return this;
     }
