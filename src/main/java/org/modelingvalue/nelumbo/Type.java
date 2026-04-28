@@ -74,8 +74,8 @@ public final class Type extends Node {
                 OBJECT, //
                 TYPE, //
                 UNIVERSE, //
-                FUNCTION, //
                 NAMESPACE, //
+                FUNCTION, //
                 LITERAL, //
                 ROOT, //
                 BOOLEAN, //
@@ -87,7 +87,8 @@ public final class Type extends Node {
                 COLLECTION, //
                 SET, //
                 LIST, //
-                ROOT_LIST);
+                ROOT_LIST, //
+                ROOT_NAMESPACE);
     }
 
     private Type       list;
