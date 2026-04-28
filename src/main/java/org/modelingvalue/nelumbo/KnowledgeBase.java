@@ -451,9 +451,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return kb.addType(type, pc);
                         }, null).init(this, parseContext, false);
 
-                Functor.of(List.of(), s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
-                        Type.ROOT, null, NelumboConstructor.Finder.find(Import.class, CURRENT.get(), List.of()), null)
-                        .init(this, parseContext, false);
+                Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
+                        Type.ROOT, null, Import.class, null).init(this, parseContext, false);
 
                 Functor.of(s(o(k("hidden")), n(Type.TYPE, Integer.MAX_VALUE), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {

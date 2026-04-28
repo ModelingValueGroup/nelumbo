@@ -43,17 +43,17 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.CONSTRUCTOR)
 public @interface NelumboConstructor {
-    class Finder {
+    public class Finder {
         private static final Class<?>[]                               EXPECTED_PARAMS = { Functor.class, List.class,
                 Object[].class };
         private static final Map<String, Constructor<? extends Node>> CACHE           = new ConcurrentHashMap<>();
 
-        static Constructor<? extends Node> find(Class<? extends Node> clazz, KnowledgeBase kb, List<AstElement> list)
+        public static Constructor<? extends Node> find(Class<?> clazz, KnowledgeBase kb, List<AstElement> list)
                 throws ParseException {
             return find(clazz.getName(), kb, list);
         }
 
-        static Constructor<? extends Node> find(String className, KnowledgeBase kb, List<AstElement> list)
+        public static Constructor<? extends Node> find(String className, KnowledgeBase kb, List<AstElement> list)
                 throws ParseException {
             Constructor<? extends Node> result = CACHE.get(className);
             if (result == null) {

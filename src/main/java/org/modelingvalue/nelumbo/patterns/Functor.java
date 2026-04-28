@@ -25,6 +25,7 @@ import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.Type;
 import org.modelingvalue.nelumbo.Variable;
@@ -40,6 +41,12 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 public class Functor extends Node {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
+
+    public static Functor of(Pattern pattern, Type result, Type local, Class<?> clazz, Integer leftPrecedence)
+            throws ParseException {
+        return new Functor(List.of(), pattern, result, local,
+                NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()), leftPrecedence);
+    }
 
     public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
             Constructor<?> constructor, Integer leftPrecedence) {
