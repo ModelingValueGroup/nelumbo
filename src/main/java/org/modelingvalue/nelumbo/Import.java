@@ -27,7 +27,7 @@ public final class Import extends Node {
     private static final long serialVersionUID = 4184295220819695199L;
 
     public Import(List<AstElement> elements, String path) {
-        super(Type.IMPORT, elements, path);
+        super(Type.ROOT, elements, path);
     }
 
     private Import(Object[] array, List<AstElement> elements, Import declaration) {
