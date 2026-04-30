@@ -1,6 +1,10 @@
 
- Transform :: Root, Namespace
+ // TopNamespace  :: Root, Namespace #TOP
+ RootNamespace :: Root, Namespace
  
- Transform ::= <Root#0> ::> { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> } @org.modelingvalue.nelumbo.lang.Transform
+ TopNamespace  ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE> @org.modelingvalue.nelumbo.lang.Namespace
+ RootNamespace ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                       @org.modelingvalue.nelumbo.lang.Namespace
  
- Root ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>                            @org.modelingvalue.nelumbo.lang.Import
+ Root          ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>          @org.modelingvalue.nelumbo.lang.Import,
+                   <Root#0> ::> <RootNamespace>                           @org.modelingvalue.nelumbo.lang.Transform
+

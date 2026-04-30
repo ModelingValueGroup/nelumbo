@@ -40,9 +40,9 @@ public enum TokenType {
     HSPACE("\\h+", SKIP, LAYOUT), //
     ERROR(".", VARIABLE_CONTENT), //
     // ================ rest is not actually matched:
-    BEGINOFFILE, //
-    ENDOFFILE, //
-    ENDOFLINE, //
+    BEGINOFFILE("", LAYOUT), //
+    ENDOFFILE("", LAYOUT), //
+    ENDOFLINE("", LAYOUT), //
     VARIABLE, //
     KEYWORD, //
     TYPE, META_OPERATOR,//

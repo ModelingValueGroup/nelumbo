@@ -104,7 +104,7 @@ public class SyntaxTest extends NelumboTestBase {
                 String nl = "-4=-(2+2) ?";
 
                 TokenizerResult tr = new Tokenizer(nl, "SyntaxTest.tokenSplitTest").tokenize();
-                //U.printTokens("before-parse", tokens);
+                // U.printTokens("before-parse", tokens);
                 List<Token> all = tr.listAll();
                 assertEquals(11, all.size(), "wrong number of tokens returned by tokenize()");
                 assertEquals(",-4,=-,(,2,+,2,), ,?,", //
@@ -112,7 +112,7 @@ public class SyntaxTest extends NelumboTestBase {
                         "token texts before-parse not as expected");
 
                 List<Node> result = new Parser(tr).parseEvaluate().roots();
-                //U.printTokens("after-parse", tokens);
+                // U.printTokens("after-parse", tokens);
                 all = tr.listAll();
                 assertEquals(12, all.size(), "wrong number of tokens after parse()");
                 assertEquals(",-4,=,-,(,2,+,2,), ,?,", //

@@ -40,6 +40,7 @@ import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Import;
+import org.modelingvalue.nelumbo.lang.Namespace;
 import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.logic.And;
 import org.modelingvalue.nelumbo.logic.BooleanVariable;
@@ -80,8 +81,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(
             Map.of());
     //
-    private static final Pattern ROOTS = r(
-            s(a(n(Type.ROOT.list(), Integer.MIN_VALUE), n(Type.ROOT, Integer.MIN_VALUE)), t(NEWLINE)), false, null);
+    private static final Pattern ROOTS = r(s(a(n(Type.ROOT.list()), n(Type.ROOT)), t(NEWLINE)), false, null);
     //
     private static final List<TokenType> PATTERN_TOKEN_TYPE_LIST = List.of(NAME, OPERATOR, SEMICOLON, SINGLEQUOTE,
             COMMA);
@@ -242,6 +242,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         CURRENT.run(this, () -> {
             try {
 
+                Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.TOP_NAMESPACE, null, Namespace.class, null)
+                        .init(this, parseContext, false);
+
                 for (Type type : Type.predefined()) {
                     addType(type, parseContext);
                 }
@@ -251,15 +254,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         addType(new Type(tokenType), parseContext);
                     }
                 }
-
-                Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), //
-                        Type.ROOT_LIST, null, (elements, args, functor, pc) -> {
-                            List<Node> roots = List.of();
-                            for (Object arg : args) {
-                                roots = roots.add((Node) arg);
-                            }
-                            return new NList(functor, elements, roots);
-                        }, null).init(this, parseContext, false);
 
                 for (TokenType tokenType : PATTERN_TOKEN_TYPE_LIST) {
                     addPattern(tokenType, parseContext);
@@ -473,15 +467,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             }
                             return roots;
                         }, 0).init(this, parseContext, false);
-
-                Functor.of(s(t("{"), ROOTS, t("}")), //
-                        Type.ROOT_NAMESPACE, null, (elements, args, functor, pc) -> {
-                            List<Node> roots = List.of();
-                            for (Object arg : args) {
-                                roots = roots.add((Node) arg);
-                            }
-                            return new NList(functor, elements, roots);
-                        }, null).init(this, parseContext, false);
 
                 Functor.of(s(t("("), n(Type.OBJECT, 0), t(")")), //
                         Type.OBJECT, null, (elements, args, functor, pc) -> {

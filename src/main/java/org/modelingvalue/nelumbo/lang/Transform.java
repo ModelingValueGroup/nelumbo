@@ -62,9 +62,8 @@ public final class Transform extends Node {
         return (Node) get(0);
     }
 
-    @SuppressWarnings("unchecked")
     public List<Node> targets() {
-        return (List<Node>) get(1);
+        return ((NList) get(1)).<Node>elements();
     }
 
     public List<Node> targetsFlattened() {

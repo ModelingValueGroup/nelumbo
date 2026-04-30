@@ -38,11 +38,19 @@ public abstract class Pattern extends Node {
         return a(List.of(), options);
     }
 
+    public static Pattern n(Type nodeType) {
+        return n(List.of(), nodeType, null, null);
+    }
+
+    public static Pattern n(Type nodeType, boolean visible) {
+        return n(List.of(), nodeType, null, visible);
+    }
+
     public static Pattern n(Type nodeType, int precedence) {
         return n(List.of(), nodeType, precedence, null);
     }
 
-    public static Pattern n(Type nodeType, int precedence, Boolean visible) {
+    public static Pattern n(Type nodeType, int precedence, boolean visible) {
         return n(List.of(), nodeType, precedence, visible);
     }
 
@@ -95,7 +103,8 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern s(List<AstElement> ast, Pattern... elements) {
-        return new SequencePattern(Type.PATTERN, ast, List.of(elements).replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e)));
+        return new SequencePattern(Type.PATTERN, ast,
+                List.of(elements).replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e)));
     }
 
     public static Pattern t(List<AstElement> ast, String tokenText) {
@@ -152,10 +161,12 @@ public abstract class Pattern extends Node {
 
     protected abstract int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt);
 
-    protected abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs);
+    protected abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt,
+            Functor functor, Map<Variable, Type> typeArgs);
 
     public static boolean isEndOfLine(Token token) {
-        return token.type() == TokenType.ENDOFFILE || (token.previous() != null && token.line() > token.previous().line());
+        return token.type() == TokenType.ENDOFFILE
+                || (token.previous() != null && token.line() > token.previous().line());
     }
 
     protected void addText(StringBuffer sb, TokenType[] previous, String text) {
