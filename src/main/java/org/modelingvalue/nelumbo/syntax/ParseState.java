@@ -208,8 +208,10 @@ public class ParseState implements Mergeable<ParseState> {
             DirectionContext dirState = directionContext(token, outerRepetitions, ctx);
             TokenState next = null;
             if (dirState != null) {
-                if (dirState.direction == Direction.outer && isPostComplete(result)) {
-                    result.endPostParse(functor(), token, leftPrecedence());
+                if (dirState.direction == Direction.outer) {
+                    if (isPostComplete(result)) {
+                        result.endPostParse(functor(), token, leftPrecedence());
+                    }
                     return true;
                 }
                 if (dirState.direction == Direction.repeat) {
@@ -289,7 +291,7 @@ public class ParseState implements Mergeable<ParseState> {
 
     private String expectedTokens(Token token, Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx)
             throws ParseException {
-        return dirStates(token, outerRepetitions, ctx).flatMap(Entry::getValue) //
+        return dirStates(token, outerRepetitions, ctx, group).flatMap(Entry::getValue) //
                 .flatMap(s -> Collection.concat(s.state.tokenTexts().toKeys(), s.state.tokenTypes().toKeys())) //
                 .map(o -> o instanceof String ? ("'" + o + "'") : o.toString()) //
                 .reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b);
@@ -300,18 +302,14 @@ public class ParseState implements Mergeable<ParseState> {
         if (token == null) {
             return null;
         }
-        Map<DirectionContext, Set<TokenState>> dirStates = dirStates(token, outerRepetitions, ctx);
+        Map<DirectionContext, Set<TokenState>> dirStates = dirStates(token, outerRepetitions, ctx, group);
         while (dirStates.size() > 1) {
             for (Entry<DirectionContext, Set<TokenState>> e : dirStates) {
                 Set<TokenState> nexts = Set.of();
                 for (TokenState ts : e.getValue()) {
-                    MutableMap<DirectionContext, Set<TokenState>> nodeStates = MutableMap.of(Map.of());
-                    ts.state.nodeStates(ts.token, ctx, nodeStates);
-                    nexts = nexts.addAll(nodeStates.get().flatMap(Entry::getValue));
-                    TokenState next = ts.state.tokenNext(ts.token, ctx);
-                    if (next != null) {
-                        nexts = nexts.add(next);
-                    }
+                    Map<DirectionContext, Set<TokenState>> nextStates = ts.state.dirStates(ts.token, outerRepetitions,
+                            ctx, group);
+                    nexts = nexts.addAll(nextStates.flatMap(Entry::getValue));
                 }
                 dirStates = nexts.isEmpty() ? dirStates.removeKey(e.getKey()) : dirStates.put(e.getKey(), nexts);
             }
@@ -320,13 +318,13 @@ public class ParseState implements Mergeable<ParseState> {
     }
 
     private Map<DirectionContext, Set<TokenState>> dirStates(Token token,
-            Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx) throws ParseException {
+            Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx, String group) throws ParseException {
         MutableMap<DirectionContext, Set<TokenState>> dirStates = MutableMap.of(Map.of());
         tokenTextStates(token, ctx, dirStates);
         tokenTypeStates(token, ctx, dirStates);
-        repetitionStates(token, ctx, outerRepetitions, dirStates);
-        outerStates(token, ctx, dirStates);
         nodeStates(token, ctx, dirStates);
+        repetitionStates(token, ctx, outerRepetitions, dirStates);
+        outerStates(token, ctx, dirStates, group);
         return dirStates.get();
     }
 
@@ -345,6 +343,53 @@ public class ParseState implements Mergeable<ParseState> {
         if (next != null) {
             DirectionContext key = new DirectionContext(Direction.tokenType, ctx);
             dirStates.put(key, Set.of(next));
+        }
+    }
+
+    private void nodeStates(Token token, ParseContext ctx, MutableMap<DirectionContext, Set<TokenState>> dirStates)
+            throws ParseException {
+        if (!isNodesEmpty()) {
+            for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
+                Set<TokenState> states = Set.of();
+                Map<Type, ParseState> pres = pc.preStates(group);
+                if (pres != null) {
+                    for (ParseState pre : pres.toValues()) {
+                        TokenState next = pre.tokenNext(token, ctx);
+                        if (next != null) {
+                            states = states.add(next);
+                            if (next.state.functor() != null) {
+                                Type type = next.state.functor().resultType();
+                                for (Type sup : type.allSupers()) {
+                                    ParseState state = nodeTypes().get(sup);
+                                    if (state != null) {
+                                        states = states.add(new TokenState(next.token, state));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (!states.isEmpty()) {
+                        DirectionContext key = new DirectionContext(Direction.node, pc);
+                        dirStates.put(key, states);
+                    }
+                }
+            }
+            if (dirStates.isEmpty()) {
+                for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
+                    Map<Type, Variable> hidden = pc.hiddenVariables(group);
+                    if (hidden != null) {
+                        Set<TokenState> states = Set.of();
+                        for (Entry<Type, Variable> var : hidden) {
+                            states = postStates(token, pc, var.getValue().type(), states, group, false);
+                        }
+                        if (!states.isEmpty()) {
+                            DirectionContext key = new DirectionContext(Direction.node, pc);
+                            dirStates.put(key, states);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -367,13 +412,14 @@ public class ParseState implements Mergeable<ParseState> {
         }
     }
 
-    private void outerStates(Token token, ParseContext ctx, MutableMap<DirectionContext, Set<TokenState>> dirStates)
-            throws ParseException {
+    private void outerStates(Token token, ParseContext ctx, MutableMap<DirectionContext, Set<TokenState>> dirStates,
+            String group) throws ParseException {
         if (functor() != null) {
             Type type = functor().resultType();
             Set<TokenState> states = Set.of();
-            for (ParseContext pc = ctx; pc != null && pc.state() != null; pc = pc.outer()) {
-                if (!pc.state().nodeTypes().isEmpty()) {
+            for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
+                if (pc.outer() != null && pc.state() != null && !pc.state().isNodesEmpty()) {
+                    group = pc.state().group();
                     for (Type sup : type.allSupers()) {
                         ParseState state = pc.state().nodeTypes().get(sup);
                         if (state != null) {
@@ -385,6 +431,9 @@ public class ParseState implements Mergeable<ParseState> {
                         }
                     }
                 }
+                if (group != null) {
+                    states = postStates(token, pc, type, states, group, true);
+                }
             }
             if (!states.isEmpty()) {
                 DirectionContext key = new DirectionContext(Direction.outer, ctx);
@@ -393,58 +442,19 @@ public class ParseState implements Mergeable<ParseState> {
         }
     }
 
-    private void nodeStates(Token token, ParseContext ctx, MutableMap<DirectionContext, Set<TokenState>> dirStates)
-            throws ParseException {
-        if (!isNodesEmpty()) {
-            for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
-                Set<TokenState> states = Set.of();
-                Map<Type, ParseState> pres = pc.preStates(group);
-                if (pres != null) {
-                    for (ParseState pre : pres.toValues()) {
-                        TokenState next = pre.tokenNext(token, ctx);
-                        if (next != null) {
+    private static Set<TokenState> postStates(Token token, ParseContext ctx, Type type, Set<TokenState> states,
+            String group, boolean visible) throws ParseException {
+        Map<Type, ParseState> posts = ctx.postStates(group);
+        if (posts != null) {
+            for (ParseState post : posts.toValues()) {
+                for (Type sup : type.allSupers()) {
+                    ParseState found = post.nodeTypes().get(sup);
+                    if (found != null) {
+                        TokenState next = found.tokenNext(token, ctx);
+                        if (next != null && (visible || next.state.visibility() != Visibility.visible)) {
                             states = states.add(next);
                         }
-                    }
-                    if (!states.isEmpty()) {
-                        DirectionContext key = new DirectionContext(Direction.node, pc);
-                        dirStates.put(key, states);
-                    }
-                }
-            }
-            if (dirStates.isEmpty()) {
-                for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
-                    Map<Type, Variable> hidden = pc.hiddenVariables(group);
-                    if (hidden != null) {
-                        Set<TokenState> states = Set.of();
-                        for (Entry<Type, Variable> var : hidden) {
-                            states = hiddenStates(token, ctx, var.getValue().type(), states);
-                        }
-                        if (!states.isEmpty()) {
-                            DirectionContext key = new DirectionContext(Direction.node, pc);
-                            dirStates.put(key, states);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private Set<TokenState> hiddenStates(Token token, ParseContext ctx, Type type, Set<TokenState> states)
-            throws ParseException {
-        for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
-            Map<Type, ParseState> posts = pc.postStates(group);
-            if (posts != null) {
-                for (ParseState post : posts.toValues()) {
-                    for (Type sup : type.allSupers()) {
-                        ParseState found = post.nodeTypes().get(sup);
-                        if (found != null) {
-                            TokenState next = found.tokenNext(token, ctx);
-                            if (next != null && next.state.visibility() != Visibility.visible) {
-                                states = states.add(next);
-                            }
-                            break;
-                        }
+                        break;
                     }
                 }
             }
@@ -514,9 +524,6 @@ public class ParseState implements Mergeable<ParseState> {
             return null;
         }
         TokenType type = token.type();
-        if (result == null && type.isVariableContent()) {
-            return null;
-        }
         ParseState next = tokenTypes().get(TokenType.NEWLINE);
         if (next != null && Pattern.isEndOfLine(token)) {
             if (result != null) {
@@ -547,6 +554,9 @@ public class ParseState implements Mergeable<ParseState> {
                     return new TokenState(token.next(), next);
                 }
             }
+        }
+        if (result == null && type == TokenType.COMMA) {
+            return null;
         }
         next = tokenTypes().get(type);
         if (next != null) {

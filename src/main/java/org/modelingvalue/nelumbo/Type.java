@@ -65,7 +65,7 @@ public final class Type extends Node {
     public static final Type  COLLECTION    = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type  SET           = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type  LIST          = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type  TOP_NAMESPACE = new Type("TopNamespace", ROOT.list(TOP_GROUP), ROOT, NAMESPACE);
+    public static final Type  TOP_NAMESPACE = new Type("TopNamespace", TOP_GROUP, ROOT.list(), ROOT, NAMESPACE);
 
     public static List<Type> predefined() {
         return List.of(//

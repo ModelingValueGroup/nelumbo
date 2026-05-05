@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public enum TokenType {
     SINGLEQUOTE("'"), //
     SEMICOLON(";"), //
-    COMMA(",", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
+    COMMA(",", CONTINUES_ON_NEXT_LINE), //
     LEFT("[\\(\\[\\{]", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     RIGHT("[\\)\\]\\}]", VARIABLE_CONTENT), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //

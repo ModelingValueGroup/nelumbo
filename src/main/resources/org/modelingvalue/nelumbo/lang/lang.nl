@@ -1,5 +1,5 @@
 
- // TopNamespace  :: Root, Namespace #TOP
+ TopNamespace  :: List<Root>, Root, Namespace #TOP
  RootNamespace :: Root, Namespace
  
  TopNamespace  ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE> @org.modelingvalue.nelumbo.lang.Namespace

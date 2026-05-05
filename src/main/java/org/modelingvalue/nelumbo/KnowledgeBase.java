@@ -196,7 +196,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                     }, null).init(this, ctx, false);
         } else {
             return Functor.of(List.of(var), t(List.of(var), var), //
-                    Type.VARIABLE, Type.NAMESPACE, (elements, args, functor, pc) -> {
+                    var.type(), Type.NAMESPACE, (elements, args, functor, pc) -> {
                         Variable v = functor.variable().setAstElements(elements);
                         return v.setFunctor(functor);
                     }, null).init(this, ctx, false);
