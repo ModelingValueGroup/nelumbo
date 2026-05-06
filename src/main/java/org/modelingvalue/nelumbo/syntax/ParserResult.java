@@ -31,7 +31,7 @@ public class ParserResult implements ParseExceptionHandler {
     private final boolean                     throwing;
     private final MutableList<ParseException> exceptions;
 
-    private Node                              root;
+    private Node root;
 
     public ParserResult(TokenizerResult tokenizerResult, boolean throwing) {
         this.tokenizerResult = tokenizerResult;
@@ -62,6 +62,10 @@ public class ParserResult implements ParseExceptionHandler {
     @Override
     public List<ParseException> exceptions() {
         return exceptions.toImmutable();
+    }
+
+    public TokenizerResult getTokenizerResult() {
+        return tokenizerResult;
     }
 
     public void throwException() throws ParseException {

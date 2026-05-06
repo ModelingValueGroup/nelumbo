@@ -98,41 +98,44 @@ public class EditorWindow extends WindowAdapter
         implements WindowListener, Runnable, DocumentListener, EditorImportResolver.ImportChangeListener {
 
     private static final String MESSAGES_FILE_NAME = "messages.nl";
-    private final static String INCREASE = "INCREASE";
-    private final static String DECREASE = "DECREASE";
+    private final static String INCREASE           = "INCREASE";
+    private final static String DECREASE           = "DECREASE";
 
-    private final static DefaultHighlightPainter redPainter = new DefaultHighlightPainter(new Color(0xffaaaa));
+    private final static DefaultHighlightPainter redPainter   = new DefaultHighlightPainter(new Color(0xffaaaa));
     private final static DefaultHighlightPainter greenPainter = new DefaultHighlightPainter(new Color(0xaaffaa));
 
-    private final String windowId;
+    private final String        windowId;
     private final NelumboEditor application;
-    private volatile boolean isExample;
-    private final String examplePath;
-    private final String exampleDisplayName;
-    private final Preferences preferences;
-    private volatile int windowNumber; // Window number for regular windows
+    private volatile boolean    isExample;
+    private final String        examplePath;
+    private final String        exampleDisplayName;
+    private final Preferences   preferences;
+    private volatile int        windowNumber;      // Window number for regular windows
 
-    private volatile KnowledgeBase knowledgeBase;
-    private JFrame frame;
-    private JTextPane messagesPane;
-    private JTextPane textPane;
-    private JMenu windowsMenu;
-    private JMenuItem undoMenuItem;
-    private JMenuItem redoMenuItem;
-    private UndoManager undoManager;
-    private CompoundEdit currentCompoundEdit;
-    private Timer compoundEditTimer;
+    private volatile KnowledgeBase           knowledgeBase;
+    private JFrame                           frame;
+    private JTextPane                        messagesPane;
+    private JTextPane                        textPane;
+    private JMenu                            windowsMenu;
+    private JMenuItem                        undoMenuItem;
+    private JMenuItem                        redoMenuItem;
+    private UndoManager                      undoManager;
+    private CompoundEdit                     currentCompoundEdit;
+    private Timer                            compoundEditTimer;
     private WindowManager.WindowListListener windowListListener;
-    private volatile boolean quit;
-    private boolean refreshRequested;
-    private TreeViewerDialog treeViewerDialog;
-    private KnowledgeBaseViewerDialog knowledgeBaseViewerDialog;
-    private volatile TokenizerResult lastTokenizerResult;
-    private volatile ParserResult lastParserResult;
-    private Set<String> currentImports = new HashSet<>(); // Tracks current editor imports
-    private int currentUnderlineStart = -1; // Start index of current underline (-1 if none)
-    private int currentUnderlineEnd = -1; // End index of current underline (-1 if none)
-    private java.awt.Point lastMousePosition; // Last mouse position for key-press underline update
+    private volatile boolean                 quit;
+    private boolean                          refreshRequested;
+    private TreeViewerDialog                 treeViewerDialog;
+    private KnowledgeBaseViewerDialog        knowledgeBaseViewerDialog;
+    private volatile TokenizerResult         lastTokenizerResult;
+    private volatile ParserResult            lastParserResult;
+    private Set<String>                      currentImports        = new HashSet<>(); // Tracks current editor imports
+    private int                              currentUnderlineStart = -1;              // Start index of current
+                                                                                      // underline (-1 if none)
+    private int                              currentUnderlineEnd   = -1;              // End index of current underline
+                                                                                      // (-1 if none)
+    private java.awt.Point                   lastMousePosition;                       // Last mouse position for
+                                                                                      // key-press underline update
 
     /**
      * Creates a new regular editor window with a pre-assigned window number.
@@ -1174,10 +1177,11 @@ public class EditorWindow extends WindowAdapter
     private String computeResults(ParserResult result, ArrayList<Highlight> textHighlights,
             ArrayList<Highlight> messageHighlights) {
         List<ParseException> exceptions = result.exceptions();
+        StringBuilder messages = new StringBuilder();
+        int prevLine = 0, nextLine;
         if (exceptions.isEmpty()) {
             ParserResult throwing = new ParserResult(null, true);
-            StringBuilder messages = new StringBuilder();
-            int index = 0, prevLine = 0, nextLine;
+            int index = 0;
             for (Node root : result.roots()) {
                 if (root instanceof Evaluatable eval) {
                     ParseException pe = null;
@@ -1206,18 +1210,16 @@ public class EditorWindow extends WindowAdapter
                     }
                 }
             }
-            return messages.toString();
         } else {
-            StringBuilder messages = new StringBuilder();
-            int prevLine = 0, nextLine;
             for (ParseException pe : exceptions) {
                 nextLine = pe.line();
                 messages.append(emptyLines(nextLine - prevLine)).append(pe.getShortMessage()).append("\n");
                 textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
                 prevLine = ++nextLine;
             }
-            return messages.toString();
         }
+        messages.append(emptyLines(result.getTokenizerResult().lastAll().lastLine() - prevLine));
+        return messages.toString();
     }
 
     /**
