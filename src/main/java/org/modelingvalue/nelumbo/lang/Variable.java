@@ -20,12 +20,31 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Variable extends Node {
     @Serial
     private static final long serialVersionUID = -8998368070388908726L;
+
+    @NelumboConstructor
+    public Variable(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, init(args));
+    }
+
+    private static Object[] init(Object[] args) {
+        Object hidden = args[0];
+        Object type = args[1];
+        args[0] = type;
+        args[1] = hidden;
+        return args;
+    }
 
     public Variable(List<AstElement> elements, Type type, String name, boolean hidden) {
         super(Type.VARIABLE, elements, type, name, hidden);
@@ -99,6 +118,30 @@ public final class Variable extends Node {
     @Override
     public Variable variable() {
         return this;
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+        if (get(2) instanceof Boolean) {
+            return this;
+        }
+        boolean hidden = get(1) != null;
+        List<AstElement> elements = astElements();
+        Type type = (Type) get(0);
+        NList roots = new NList(List.of(type), Type.ROOT);
+        int start = hidden ? 1 : 0;
+        for (int i = start + 1; i < elements.size(); i++) {
+            AstElement e = elements.get(i);
+            if (e instanceof Token t && t.text().equals(",")) {
+                roots = roots.setAstElements(roots.astElements().add(t));
+                e = elements.get(++i);
+            }
+            Variable var = new Variable(List.of(e), type, ((Token) e).text(), hidden);
+            Functor varFun = knowledgeBase.addVariable(var, ctx);
+            roots = new NList(List.of(), roots, varFun);
+        }
+        return roots;
+
     }
 
 }

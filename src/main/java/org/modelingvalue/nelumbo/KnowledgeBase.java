@@ -183,7 +183,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }, null).init(this, ctx, false);
     }
 
-    private Functor addVariable(Variable var, ParseContext ctx) throws ParseException {
+    public Functor addVariable(Variable var, ParseContext ctx) throws ParseException {
         Type literal = var.type().toLiteral();
         for (Pair<Functor, Transform> pair : literalTransforms.get().getOrDefault(literal, Set.of())) {
             pair.b().transform(pair.a().pattern(), t(List.of(var), var), null, this, ctx);
@@ -449,26 +449,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             }
                             return kb.addType(type, pc);
                         }, null).init(this, parseContext, false);
-
-                Functor.of(s(o(k("hidden")), n(Type.TYPE, Integer.MAX_VALUE), r(t(NAME), true, t(","))), //
-                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
-                            KnowledgeBase kb = CURRENT.get();
-                            boolean hidden = ((Optional<Object>) args[0]).isPresent();
-                            int start = hidden ? 1 : 0;
-                            Type type = (Type) elements.get(start);
-                            NList roots = new NList(List.of(type), Type.ROOT);
-                            for (int i = start + 1; i < elements.size(); i++) {
-                                AstElement e = elements.get(i);
-                                if (e instanceof Token t && t.text().equals(",")) {
-                                    roots = roots.setAstElements(roots.astElements().add(t));
-                                    e = elements.get(++i);
-                                }
-                                Variable var = new Variable(List.of(e), type, ((Token) e).text(), hidden);
-                                Functor varFun = kb.addVariable(var, pc);
-                                roots = new NList(List.of(), roots, varFun);
-                            }
-                            return roots;
-                        }, 0).init(this, parseContext, false);
 
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
