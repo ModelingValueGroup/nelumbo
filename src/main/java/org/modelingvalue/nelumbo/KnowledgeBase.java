@@ -163,7 +163,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return POOL.invoke(new LogicTask(runnable, this));
     }
 
-    private Functor addType(Type type, ParseContext ctx) throws ParseException {
+    public Functor addType(Type type, ParseContext ctx) throws ParseException {
         Variable var = type.variable();
         Pattern pattern;
         if (var != null) {
@@ -249,6 +249,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
                 Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), Type.ROOT, null, Import.class,
                         null).init(this, parseContext, false);
+
+                Functor.of(
+                        s(t(NAME), o(s(t("<"), n(Type.TYPE, 100), t(">"))), t("::"), r(n(Type.TYPE, 100), true, t(",")),
+                                o(s(t("#"), t(NAME)))), //
+                        Type.ROOT, null, Type.class, null).init(this, parseContext, false);
 
                 for (Type type : Type.predefined()) {
                     addType(type, parseContext);
@@ -422,32 +427,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 }
                             }
                             return roots;
-                        }, null).init(this, parseContext, false);
-
-                Functor.of(
-                        s(t(NAME), o(s(t("<"), n(Type.TYPE, Integer.MAX_VALUE), t(">"))), t("::"),
-                                r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")), o(s(t("#"), t(NAME)))), //
-                        Type.FUNCTOR, null, (elements, args, functor, pc) -> {
-                            KnowledgeBase kb = CURRENT.get();
-                            Set<Type> supers = Set.of();
-                            for (Type sup : (List<Type>) args[2]) {
-                                supers = supers.add(sup);
-                            }
-                            String group = ((Optional<String>) args[3]).orElse(Type.DEFAULT_GROUP);
-                            Type type;
-                            String name = (String) args[0];
-                            Type arg = ((Optional<Type>) args[1]).orElse(null);
-                            if (arg != null) {
-                                Variable var = arg.variable();
-                                if (var == null || !Type.TYPE.equals(var.type())) {
-                                    kb.addException(new ParseException(
-                                            "Type argument " + arg + " must be a Variable of type <Type>", arg));
-                                }
-                                type = new Type(elements, name, supers, group, arg);
-                            } else {
-                                type = new Type(elements, name, supers, group);
-                            }
-                            return kb.addType(type, pc);
                         }, null).init(this, parseContext, false);
 
             } catch (ParseException e) {

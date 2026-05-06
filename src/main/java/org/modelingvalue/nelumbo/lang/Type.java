@@ -24,7 +24,11 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Type extends Node {
@@ -103,6 +107,11 @@ public final class Type extends Node {
     @Override
     protected Object typeForEquals() {
         return EQUALS_TYPE;
+    }
+
+    @NelumboConstructor
+    public Type(Functor functor, List<AstElement> elements, Object[] args) {
+        super(functor, elements, args);
     }
 
     private Type(Object[] array, List<AstElement> elements, Type declaration) {
@@ -444,6 +453,36 @@ public final class Type extends Node {
     public boolean isAssignableFrom(Class<?> type) {
         Class<?> clss = clss();
         return clss != null && clss.isAssignableFrom(type);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+        if (get(2) instanceof String) {
+            return this;
+        }
+        Set<Type> supers = Set.of();
+        for (Type sup : (List<Type>) get(2)) {
+            supers = supers.add(sup);
+        }
+        String group = (String) get(3);
+        if (group == null) {
+            group = DEFAULT_GROUP;
+        }
+        Type type;
+        String name = (String) get(0);
+        Type arg = (Type) get(1);
+        if (arg != null) {
+            Variable var = arg.variable();
+            if (var == null || !Type.TYPE.equals(var.type())) {
+                knowledgeBase.addException(
+                        new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
+            }
+            type = new Type(astElements(), name, supers, group, arg);
+        } else {
+            type = new Type(astElements(), name, supers, group);
+        }
+        return knowledgeBase.addType(type, ctx);
     }
 
 }
