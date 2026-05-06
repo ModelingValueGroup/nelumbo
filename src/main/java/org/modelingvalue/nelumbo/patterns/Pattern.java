@@ -24,8 +24,9 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -159,9 +160,9 @@ public abstract class Pattern extends Node {
 
     public abstract List<Type> argTypes(List<Type> types);
 
-    protected abstract int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt);
+    public abstract int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt);
 
-    protected abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt,
+    public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt,
             Functor functor, Map<Variable, Type> typeArgs);
 
     public static boolean isEndOfLine(Token token) {

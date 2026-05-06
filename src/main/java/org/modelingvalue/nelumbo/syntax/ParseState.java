@@ -27,9 +27,9 @@ import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 

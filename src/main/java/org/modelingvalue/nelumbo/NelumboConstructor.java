@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 /**

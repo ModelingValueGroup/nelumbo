@@ -24,10 +24,10 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.integers.NInteger;
+import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
-import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class IntegersRational extends Predicate {
     @Serial

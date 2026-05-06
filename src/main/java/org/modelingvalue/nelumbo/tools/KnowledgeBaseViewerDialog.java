@@ -37,11 +37,11 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.Rule;
-import org.modelingvalue.nelumbo.patterns.Functor;
 
 @SuppressWarnings("serial")
 public class KnowledgeBaseViewerDialog extends JDialog {
@@ -297,13 +297,13 @@ public class KnowledgeBaseViewerDialog extends JDialog {
     }
 
     private String formatArgTypes(Functor functor) {
-        org.modelingvalue.collections.List<org.modelingvalue.nelumbo.Type> argTypes = functor.argTypes();
+        org.modelingvalue.collections.List<org.modelingvalue.nelumbo.lang.Type> argTypes = functor.argTypes();
         if (argTypes == null || argTypes.isEmpty()) {
             return "()";
         }
         StringBuilder sb = new StringBuilder("(");
         boolean first = true;
-        for (org.modelingvalue.nelumbo.Type t : argTypes) {
+        for (org.modelingvalue.nelumbo.lang.Type t : argTypes) {
             if (!first) {
                 sb.append(", ");
             }
@@ -415,17 +415,17 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Types");
 
         // Collect all types from functors - using fully qualified names to avoid conflict with java.awt.Window.Type
-        java.util.Set<org.modelingvalue.nelumbo.Type> allTypes = new java.util.HashSet<>();
-        java.util.Map<org.modelingvalue.nelumbo.Type, Set<org.modelingvalue.nelumbo.Type>> supersMap = new java.util.HashMap<>();
+        java.util.Set<org.modelingvalue.nelumbo.lang.Type> allTypes = new java.util.HashSet<>();
+        java.util.Map<org.modelingvalue.nelumbo.lang.Type, Set<org.modelingvalue.nelumbo.lang.Type>> supersMap = new java.util.HashMap<>();
 
         for (Functor f : kb.functors()) {
-            org.modelingvalue.nelumbo.Type resultType = f.resultType();
+            org.modelingvalue.nelumbo.lang.Type resultType = f.resultType();
             if (resultType != null) {
                 allTypes.add(resultType);
-                Set<org.modelingvalue.nelumbo.Type> supers = resultType.supers();
+                Set<org.modelingvalue.nelumbo.lang.Type> supers = resultType.supers();
                 if (supers != null) {
                     supersMap.put(resultType, supers);
-                    for (org.modelingvalue.nelumbo.Type sup : supers) {
+                    for (org.modelingvalue.nelumbo.lang.Type sup : supers) {
                         allTypes.add(sup);
                     }
                 }
@@ -433,18 +433,18 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         }
 
         // Find root types (types with no supers or only Object as super)
-        java.util.List<org.modelingvalue.nelumbo.Type> rootTypes = new ArrayList<>();
-        for (org.modelingvalue.nelumbo.Type t : allTypes) {
-            Set<org.modelingvalue.nelumbo.Type> supers = supersMap.get(t);
+        java.util.List<org.modelingvalue.nelumbo.lang.Type> rootTypes = new ArrayList<>();
+        for (org.modelingvalue.nelumbo.lang.Type t : allTypes) {
+            Set<org.modelingvalue.nelumbo.lang.Type> supers = supersMap.get(t);
             if (supers == null || supers.isEmpty()) {
                 rootTypes.add(t);
             }
         }
-        rootTypes.sort(Comparator.comparing(org.modelingvalue.nelumbo.Type::name));
+        rootTypes.sort(Comparator.comparing(org.modelingvalue.nelumbo.lang.Type::name));
 
         // Build tree recursively
-        java.util.Set<org.modelingvalue.nelumbo.Type> visited = new java.util.HashSet<>();
-        for (org.modelingvalue.nelumbo.Type t : rootTypes) {
+        java.util.Set<org.modelingvalue.nelumbo.lang.Type> visited = new java.util.HashSet<>();
+        for (org.modelingvalue.nelumbo.lang.Type t : rootTypes) {
             DefaultMutableTreeNode typeNode = buildTypeNode(t, allTypes, supersMap, visited);
             root.add(typeNode);
         }
@@ -453,9 +453,9 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         expandAllNodes(typeHierarchyTree);
     }
 
-    private DefaultMutableTreeNode buildTypeNode(org.modelingvalue.nelumbo.Type theType, java.util.Set<org.modelingvalue.nelumbo.Type> allTypes, java.util.Map<org.modelingvalue.nelumbo.Type, Set<org.modelingvalue.nelumbo.Type>> supersMap, java.util.Set<org.modelingvalue.nelumbo.Type> visited) {
+    private DefaultMutableTreeNode buildTypeNode(org.modelingvalue.nelumbo.lang.Type theType, java.util.Set<org.modelingvalue.nelumbo.lang.Type> allTypes, java.util.Map<org.modelingvalue.nelumbo.lang.Type, Set<org.modelingvalue.nelumbo.lang.Type>> supersMap, java.util.Set<org.modelingvalue.nelumbo.lang.Type> visited) {
         String nodeText = theType.name();
-        if (theType.group() != null && !theType.group().equals(org.modelingvalue.nelumbo.Type.DEFAULT_GROUP)) {
+        if (theType.group() != null && !theType.group().equals(org.modelingvalue.nelumbo.lang.Type.DEFAULT_GROUP)) {
             nodeText += " [" + theType.group() + "]";
         }
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(nodeText);
@@ -466,16 +466,16 @@ public class KnowledgeBaseViewerDialog extends JDialog {
         visited.add(theType);
 
         // Find subtypes
-        java.util.List<org.modelingvalue.nelumbo.Type> subtypes = new ArrayList<>();
-        for (org.modelingvalue.nelumbo.Type t : allTypes) {
-            Set<org.modelingvalue.nelumbo.Type> supers = supersMap.get(t);
+        java.util.List<org.modelingvalue.nelumbo.lang.Type> subtypes = new ArrayList<>();
+        for (org.modelingvalue.nelumbo.lang.Type t : allTypes) {
+            Set<org.modelingvalue.nelumbo.lang.Type> supers = supersMap.get(t);
             if (supers != null && supers.contains(theType)) {
                 subtypes.add(t);
             }
         }
-        subtypes.sort(Comparator.comparing(org.modelingvalue.nelumbo.Type::name));
+        subtypes.sort(Comparator.comparing(org.modelingvalue.nelumbo.lang.Type::name));
 
-        for (org.modelingvalue.nelumbo.Type subtype : subtypes) {
+        for (org.modelingvalue.nelumbo.lang.Type subtype : subtypes) {
             node.add(buildTypeNode(subtype, allTypes, supersMap, visited));
         }
 

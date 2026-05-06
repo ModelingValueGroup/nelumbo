@@ -23,9 +23,9 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 
 public class BooleanVariable extends Predicate {
 

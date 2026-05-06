@@ -21,8 +21,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
     @Serial

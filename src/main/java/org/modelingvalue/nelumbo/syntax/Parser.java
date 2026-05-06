@@ -25,8 +25,8 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public final class Parser implements ParseExceptionHandler {

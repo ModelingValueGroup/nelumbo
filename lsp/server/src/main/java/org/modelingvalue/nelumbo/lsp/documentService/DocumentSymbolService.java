@@ -26,16 +26,16 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
+import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Transform;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.logic.Fact;
 import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.logic.Rule;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.lsp.U;
-import org.modelingvalue.nelumbo.patterns.Functor;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class DocumentSymbolService extends DocumentServiceAdapter {

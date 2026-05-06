@@ -24,9 +24,9 @@ import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public final class PatternResult implements ParseExceptionHandler {

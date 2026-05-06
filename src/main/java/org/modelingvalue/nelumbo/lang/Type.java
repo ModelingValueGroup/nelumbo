@@ -14,7 +14,7 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
 import java.util.Optional;
@@ -23,7 +23,8 @@ import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.patterns.Functor;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Type extends Node {
@@ -178,7 +179,7 @@ public final class Type extends Node {
     }
 
     @Override
-    protected Type setBinding(Node declaration, Map<Variable, Object> vars) {
+    public Type setBinding(Node declaration, Map<Variable, Object> vars) {
         if (isCollection()) {
             Variable var = element().variable();
             if (var != null && vars.get(var) instanceof Type elt) {

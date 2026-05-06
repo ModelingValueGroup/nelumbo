@@ -23,8 +23,9 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.Type;
-import org.modelingvalue.nelumbo.Variable;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -107,7 +108,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    protected int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (alt) {
             if (ai < 0 || args.size() <= ai) {
                 return -1;
@@ -123,7 +124,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    protected int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Token t && t.text().equals(tokenText())) {
