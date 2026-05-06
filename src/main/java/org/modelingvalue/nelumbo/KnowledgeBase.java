@@ -182,7 +182,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private Functor addVariable(Variable var, ParseContext ctx) throws ParseException {
-        Type literal = var.type().literal();
+        Type literal = var.type().toLiteral();
         for (Pair<Functor, Transform> pair : literalTransforms.get().getOrDefault(literal, Set.of())) {
             pair.b().transform(pair.a().pattern(), t(List.of(var), var), null, this, ctx);
         }
@@ -196,7 +196,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                     }, null).init(this, ctx, false);
         } else {
             return Functor.of(List.of(var), t(List.of(var), var), //
-                    var.type(), Type.NAMESPACE, (elements, args, functor, pc) -> {
+                    var.type().toVariable(), Type.NAMESPACE, (elements, args, functor, pc) -> {
                         Variable v = functor.variable().setAstElements(elements);
                         return v.setFunctor(functor);
                     }, null).init(this, ctx, false);
@@ -488,10 +488,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.isCollection() ? type.element() : null;
         if (!Type.ROOT.isAssignableFrom(type) && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
-            type = type.literal();
+            type = type.toLiteral();
         } else {
             if (!Type.BOOLEAN.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {
-                type = type.function();
+                type = type.toFunction();
                 function = true;
             }
             if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type) //
@@ -511,7 +511,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             nodFunctor.construct(List.of(), new Object[0], this, ctx);
         }
         if (toLiteral) {
-            Pattern litPattern = pattern.setTypes(Type::literal);
+            Pattern litPattern = pattern.setTypes(Type::toLiteral);
             Functor litFunctor = Functor.of(List.of(), litPattern, type, local, constructor, prec).init(this, ctx,
                     false);
             roots = new NList(List.of(), roots, litFunctor);
@@ -519,7 +519,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             // Implied Rule
             Variable[] nodVars = new Variable[args.size()];
             Variable[] litVars = new Variable[args.size()];
-            List<Type> litArgs = args.replaceAll(Type::literal);
+            List<Type> litArgs = args.replaceAll(Type::toLiteral);
             for (int v = 0; v < args.size(); v++) {
                 nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1), false);
                 litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1), false);

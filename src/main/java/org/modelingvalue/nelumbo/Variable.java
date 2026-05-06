@@ -46,7 +46,7 @@ public final class Variable extends Node {
 
     public Variable literal() {
         Type type = type();
-        return type.isLiteral() ? this : new Variable(astElements(), type.literal(), name(), hidden());
+        return type.isLiteral() ? this : new Variable(astElements(), type.toLiteral(), name(), hidden());
     }
 
     public Variable rename(String name) {

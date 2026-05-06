@@ -90,6 +90,7 @@ public final class Type extends Node {
     private Type       list;
     private Type       set;
     private Type       literal;
+    private Type       variable;
     private Type       function;
     private List<Type> allSupers;
 
@@ -213,7 +214,7 @@ public final class Type extends Node {
         return get(0) instanceof Set;
     }
 
-    public Type function() {
+    public Type toFunction() {
         if (isFunction()) {
             return this;
         } else if (function == null) {
@@ -238,7 +239,6 @@ public final class Type extends Node {
         return FUNCTION.isAssignableFrom(this);
     }
 
-    @SuppressWarnings("unused")
     public Type nonLiteral() {
         if (isLiteral()) {
             Optional<Type> first = supers().findFirst(s -> s != LITERAL);
@@ -251,7 +251,7 @@ public final class Type extends Node {
         }
     }
 
-    public Type literal() {
+    public Type toLiteral() {
         if (isLiteral()) {
             return this;
         } else if (literal == null) {
@@ -262,6 +262,31 @@ public final class Type extends Node {
 
     public boolean isLiteral() {
         return LITERAL.isAssignableFrom(this);
+    }
+
+    public Type nonVariable() {
+        if (isVariable()) {
+            Optional<Type> first = supers().findFirst(s -> s != VARIABLE);
+            if (first.isEmpty()) {
+                throw new IllegalStateException("No non-variable supertype for " + this);
+            }
+            return first.get();
+        } else {
+            return this;
+        }
+    }
+
+    public Type toVariable() {
+        if (isVariable()) {
+            return this;
+        } else if (variable == null) {
+            return variable = equals(OBJECT) ? VARIABLE : new Type(this, VARIABLE);
+        }
+        return variable;
+    }
+
+    public boolean isVariable() {
+        return VARIABLE.isAssignableFrom(this);
     }
 
     public Type list() {
@@ -347,9 +372,11 @@ public final class Type extends Node {
 
     public Type rewrite(Type type) {
         if (isLiteral()) {
-            return type.literal();
+            return type.toLiteral();
         } else if (isFunction()) {
-            return type.function();
+            return type.toFunction();
+        } else if (isVariable()) {
+            return type.toVariable();
         } else {
             return type;
         }

@@ -354,19 +354,30 @@ public class ParseState implements Mergeable<ParseState> {
                 Map<Type, ParseState> pres = pc.preStates(group);
                 if (pres != null) {
                     for (ParseState pre : pres.toValues()) {
-                        TokenState next = pre.tokenNext(token, ctx);
-                        if (next != null) {
-                            states = states.add(next);
-                            if (next.state.functor() != null) {
-                                Type type = next.state.functor().resultType();
+                        TokenState next1 = pre.tokenNext(token, ctx);
+                        if (next1 != null) {
+                            states = states.add(next1);
+                            if (next1.state.functor() != null) {
+                                TokenState next2 = null;
+                                Type type = next1.state.functor().resultType();
                                 for (Type sup : type.allSupers()) {
                                     ParseState state = nodeTypes().get(sup);
                                     if (state != null) {
-                                        states = states.add(new TokenState(next.token, state));
+                                        next2 = new TokenState(next1.token, state);
                                         break;
                                     }
                                 }
+                                if (next2 == null) {
+                                    Entry<Type, ParseState> e = argType();
+                                    if (e != null) {
+                                        next2 = new TokenState(next1.token, e.getValue());
+                                    }
+                                }
+                                if (next2 != null) {
+                                    states = states.add(next2);
+                                }
                             }
+
                         }
                     }
                     if (!states.isEmpty()) {
@@ -381,7 +392,7 @@ public class ParseState implements Mergeable<ParseState> {
                     if (hidden != null) {
                         Set<TokenState> states = Set.of();
                         for (Entry<Type, Variable> var : hidden) {
-                            states = postStates(token, pc, var.getValue().type(), states, group, false);
+                            states = postStates(token, pc, var.getValue().type(), states, group);
                         }
                         if (!states.isEmpty()) {
                             DirectionContext key = new DirectionContext(Direction.node, pc);
@@ -419,20 +430,21 @@ public class ParseState implements Mergeable<ParseState> {
             Set<TokenState> states = Set.of();
             for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
                 if (pc.outer() != null && pc.state() != null && !pc.state().isNodesEmpty()) {
-                    group = pc.state().group();
                     for (Type sup : type.allSupers()) {
                         ParseState state = pc.state().nodeTypes().get(sup);
                         if (state != null) {
                             TokenState next = state.tokenNext(token, ctx);
                             if (next != null) {
                                 states = states.add(next);
+                            } else if (state.functor() != null) {
+                                type = state.functor().resultType();
                             }
                             break;
                         }
                     }
                 }
                 if (group != null) {
-                    states = postStates(token, pc, type, states, group, true);
+                    states = postStates(token, pc, type, states, group);
                 }
             }
             if (!states.isEmpty()) {
@@ -443,7 +455,7 @@ public class ParseState implements Mergeable<ParseState> {
     }
 
     private static Set<TokenState> postStates(Token token, ParseContext ctx, Type type, Set<TokenState> states,
-            String group, boolean visible) throws ParseException {
+            String group) throws ParseException {
         Map<Type, ParseState> posts = ctx.postStates(group);
         if (posts != null) {
             for (ParseState post : posts.toValues()) {
@@ -451,7 +463,7 @@ public class ParseState implements Mergeable<ParseState> {
                     ParseState found = post.nodeTypes().get(sup);
                     if (found != null) {
                         TokenState next = found.tokenNext(token, ctx);
-                        if (next != null && (visible || next.state.visibility() != Visibility.visible)) {
+                        if (next != null) {
                             states = states.add(next);
                         }
                         break;
@@ -555,9 +567,6 @@ public class ParseState implements Mergeable<ParseState> {
                 }
             }
         }
-        if (result == null && type == TokenType.COMMA) {
-            return null;
-        }
         next = tokenTypes().get(type);
         if (next != null) {
             if (result != null) {
@@ -602,7 +611,7 @@ public class ParseState implements Mergeable<ParseState> {
                     return new TokenState(node.nextToken(), next);
                 }
             }
-            Entry<Type, ParseState> ts = nodeTypes().findAny(e -> e.getKey().variable() != null).orElse(null);
+            Entry<Type, ParseState> ts = argType();
             if (ts != null) {
                 Variable arg = ts.getKey().variable();
                 Type sup = result.getTypeArg(arg);
@@ -624,6 +633,15 @@ public class ParseState implements Mergeable<ParseState> {
             }
             result.addException(new ParseException(
                     "Node " + node + " of unexpected type " + type + ", expected " + expectedTypes(), node));
+        }
+        return null;
+    }
+
+    private Entry<Type, ParseState> argType() {
+        for (Entry<Type, ParseState> e : nodeTypes()) {
+            if (e.getKey().variable() != null) {
+                return e;
+            }
         }
         return null;
     }
