@@ -8,3 +8,6 @@
  Root          ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>          @org.modelingvalue.nelumbo.lang.Import,
                    <Root#0> ::> <RootNamespace>                           @org.modelingvalue.nelumbo.lang.Transform
 
+ Type T
+ 
+ T ::= ( <T> )  @org.modelingvalue.nelumbo.lang.Parenthesized

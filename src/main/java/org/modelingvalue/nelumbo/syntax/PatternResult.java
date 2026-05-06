@@ -180,9 +180,7 @@ public final class PatternResult implements ParseExceptionHandler {
                 }
             }
             Type type = node.type();
-            if (Type.ROOT.isAssignableFrom(type)) {
-                node = node.init(parser.knowledgeBase(), context, false);
-            }
+            node = node.init(parser.knowledgeBase(), context, false);
             context.finish(type);
             return node;
         }

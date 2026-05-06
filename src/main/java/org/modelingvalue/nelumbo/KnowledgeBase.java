@@ -245,6 +245,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.TOP_NAMESPACE, null, Namespace.class, null)
                         .init(this, parseContext, false);
 
+                Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), Type.ROOT, null, Import.class,
+                        null).init(this, parseContext, false);
+
                 for (Type type : Type.predefined()) {
                     addType(type, parseContext);
                 }
@@ -445,9 +448,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return kb.addType(type, pc);
                         }, null).init(this, parseContext, false);
 
-                Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), //
-                        Type.ROOT, null, Import.class, null).init(this, parseContext, false);
-
                 Functor.of(s(o(k("hidden")), n(Type.TYPE, Integer.MAX_VALUE), r(t(NAME), true, t(","))), //
                         Type.ROOT.list(), null, (elements, args, functor, pc) -> {
                             KnowledgeBase kb = CURRENT.get();
@@ -468,12 +468,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             return roots;
                         }, 0).init(this, parseContext, false);
 
-                Functor.of(s(t("("), n(Type.OBJECT, 0), t(")")), //
-                        Type.OBJECT, null, (elements, args, functor, pc) -> {
-                            Node node = (Node) args[0];
-                            return node.setAstElements(elements);
-                        }, null).init(this, parseContext, false);
-
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
             }
@@ -489,7 +483,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Type e = type.isCollection() ? type.element() : null;
         if (!Type.ROOT.isAssignableFrom(type) && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
             type = type.toLiteral();
-        } else {
+        } else if (type.variable() == null) {
             if (!Type.BOOLEAN.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {
                 type = type.toFunction();
                 function = true;
