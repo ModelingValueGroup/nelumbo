@@ -1,6 +1,11 @@
   
   import  nelumbo.lang
  
+  Boolean         :: Object
+  FactType        :: Boolean
+  Function        :: Object
+  Literal         :: Object
+  
   private Boolean ::= eq(<Object>,<Object>)                   @org.modelingvalue.nelumbo.logic.Equal
  
   Boolean ::= true                                            @org.modelingvalue.nelumbo.logic.NBoolean,

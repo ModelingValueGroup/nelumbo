@@ -1,4 +1,11 @@
 
+ Type          :: Object
+ Universe      :: Object
+ Namespace     :: Object
+ Root          :: Object
+ Variable      :: Object
+ Pattern       :: Object #PATTERN
+ Functor       :: Root
  TopNamespace  :: List<Root>, Root, Namespace #TOP
  RootNamespace :: Root, Namespace
  

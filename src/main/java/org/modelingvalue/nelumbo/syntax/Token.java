@@ -27,7 +27,7 @@ import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 
-@SuppressWarnings({"unused"})
+@SuppressWarnings({ "unused" })
 public final class Token implements AstElement {
 
     private final TokenType type;
@@ -44,16 +44,16 @@ public final class Token implements AstElement {
     private final int       lastPosition; // last position (column) in the line (0-based)
     private final String    fileName;
 
-    private Token           next;
-    private Token           previous;
+    private Token next;
+    private Token previous;
 
-    private Token           nextAll;
-    private Token           previousAll;
+    private Token nextAll;
+    private Token previousAll;
 
-    private ParseState      state;
-    private Node            node;
-    private boolean         isTextMatch;
-    private boolean         isKeyword;
+    private ParseState state;
+    private Node       node;
+    private boolean    isTextMatch;
+    private boolean    isKeyword;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -137,7 +137,8 @@ public final class Token implements AstElement {
 
     public Token prepend(String prefix) {
         String sup = prefix + text;
-        Token merge = new Token(TokenType.of(sup), sup, line, position - prefix.length(), index - prefix.length(), fileName);
+        Token merge = new Token(TokenType.of(sup), sup, line, position - prefix.length(), index - prefix.length(),
+                fileName);
         merge.next = next;
         merge.nextAll = nextAll;
         return merge;
@@ -238,10 +239,12 @@ public final class Token implements AstElement {
                 // not within the token lines => not contained
                 return false;
             } else if (l == line) {
-                // on first line of the token => check column (this token extends to the end of the line)
+                // on first line of the token => check column (this token extends to the end of
+                // the line)
                 return position <= c;
             } else if (l == lastLine()) {
-                // on last line of the token => check column (this token starts at the beginning of the line)
+                // on last line of the token => check column (this token starts at the beginning
+                // of the line)
                 return c < positionEnd;
             } else {
                 // on some middle line of the token => always contained
@@ -324,7 +327,9 @@ public final class Token implements AstElement {
     }
 
     public void setNode(Node node) {
-        this.node = node;
+        if (this.node == null) {
+            this.node = node;
+        }
     }
 
     public ParseState getState() {
@@ -384,7 +389,9 @@ public final class Token implements AstElement {
         return (text().equals("<") || text().equals(">")) && isPatternNode() ? TokenType.META_OPERATOR : //
                 isVariableNode() ? TokenType.VARIABLE : //
                         type() == TokenType.NAME && isTypeNode() ? TokenType.TYPE : //
-                                type() == TokenType.NAME && isTextMatch() && (isKeyword() || isLitteralNode()) ? TokenType.KEYWORD : //
+                                type() == TokenType.NAME && isTextMatch() && (isKeyword() || isLitteralNode())
+                                        ? TokenType.KEYWORD
+                                        : //
                                         type();
     }
 
