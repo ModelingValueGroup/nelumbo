@@ -458,8 +458,15 @@ public final class Type extends Node {
     @SuppressWarnings("unchecked")
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
-        if (get(2) instanceof String) {
+        if (length() > 2 && get(2) instanceof String) {
             return this;
+        }
+        if (get(-1) instanceof Functor functor && functor.astElements().first() instanceof Type type) {
+            Type result = type.setAstElements(astElements());
+            if (result.isCollection() && get(0) instanceof Type elem) {
+                result = result.setElement(elem);
+            }
+            return result.setFunctor(functor);
         }
         Set<Type> supers = Set.of();
         for (Type sup : (List<Type>) get(2)) {
@@ -483,6 +490,7 @@ public final class Type extends Node {
             type = new Type(astElements(), name, supers, group);
         }
         return knowledgeBase.addType(type, ctx);
+
     }
 
 }

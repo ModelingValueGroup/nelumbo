@@ -48,6 +48,12 @@ public class Functor extends Node {
                 NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()), leftPrecedence);
     }
 
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, Class<?> clazz,
+            Integer leftPrecedence) throws ParseException {
+        return new Functor(elements, pattern, result, local,
+                NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()), leftPrecedence);
+    }
+
     public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
             Constructor<?> constructor, Integer leftPrecedence) {
         return new Functor(elements, pattern, result, local, constructor, leftPrecedence);

@@ -173,14 +173,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else {
             pattern = t(List.of(type), type.rawName());
         }
-        return Functor.of(List.of(type), pattern, //
-                Type.TYPE, null, (elements, args, functor, pc) -> {
-                    Type result = ((Type) functor.astElements().first()).setAstElements(elements);
-                    if (result.isCollection() && args[0] instanceof Type elem) {
-                        result = result.setElement(elem);
-                    }
-                    return result.setFunctor(functor);
-                }, null).init(this, ctx, false);
+        return Functor.of(List.of(type), pattern, Type.TYPE, null, Type.class, null).init(this, ctx, false);
     }
 
     public Functor addVariable(Variable var, ParseContext ctx) throws ParseException {
