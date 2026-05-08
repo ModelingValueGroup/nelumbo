@@ -44,26 +44,35 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 @Target(ElementType.CONSTRUCTOR)
 public @interface NelumboConstructor {
     public class Finder {
-        private static final Class<?>[]                               EXPECTED_PARAMS = { Functor.class, List.class,
-                Object[].class };
-        private static final Map<String, Constructor<? extends Node>> CACHE           = new ConcurrentHashMap<>();
+        private static final Class<?>[] EXPECTED_PARAMS = { Functor.class, List.class, Object[].class };
 
-        public static Constructor<? extends Node> find(Class<?> clazz, KnowledgeBase kb, List<AstElement> list)
-                throws ParseException {
-            return find(clazz.getName(), kb, list);
-        }
+        private static final Map<String, Class<?>>                      CACHE1 = new ConcurrentHashMap<>();
+        private static final Map<Class<?>, Constructor<? extends Node>> CACHE2 = new ConcurrentHashMap<>();
 
         public static Constructor<? extends Node> find(String className, KnowledgeBase kb, List<AstElement> list)
                 throws ParseException {
-            Constructor<? extends Node> result = CACHE.get(className);
+            Class<?> clazz = CACHE1.get(className);
+            if (clazz == null) {
+                try {
+                    clazz = Class.forName(className);
+                    CACHE1.put(className, clazz);
+                } catch (SecurityException | ClassNotFoundException ex) {
+                    kb.addException(new ParseException(ex, ex + " during finding class " + className, list));
+                }
+            }
+            return find(clazz, kb, list);
+        }
+
+        public static Constructor<? extends Node> find(Class<?> clazz, KnowledgeBase kb, List<AstElement> list)
+                throws ParseException {
+            Constructor<? extends Node> result = CACHE2.get(clazz);
             if (result == null) {
                 try {
-                    Class<?> clazz = Class.forName(className);
                     result = find(clazz);
-                    CACHE.put(className, result);
-                } catch (SecurityException | ClassNotFoundException | NoSuchMethodException ex) {
+                    CACHE2.put(clazz, result);
+                } catch (SecurityException | NoSuchMethodException ex) {
                     kb.addException(new ParseException(ex,
-                            ex + " during finding class with Node constructor " + className, list));
+                            ex + " during finding Node constructor in " + clazz.getName(), list));
                 }
             }
             return result;
