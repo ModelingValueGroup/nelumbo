@@ -24,6 +24,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
@@ -46,30 +47,30 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
-        if (transforming) {
-            return this;
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing) {
+            Predicate nodePred = predicate();
+            Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
+            List<Node> expected = getVal(1);
+            if (expected == null) {
+                Object[] array = new Object[2];
+                array[0] = functor();
+                array[1] = predicate;
+                return struct(array);
+            } else {
+                List<Object> facts = expected.get(0).args();
+                List<Object> falsehoods = expected.get(1).args();
+                Object[] array = new Object[6];
+                array[0] = functor();
+                array[1] = predicate;
+                array[2] = bindings(facts.filter(List.class).asList());
+                array[3] = !facts.contains("..");
+                array[4] = bindings(falsehoods.filter(List.class).asList());
+                array[5] = !falsehoods.contains("..");
+                return struct(array);
+            }
         }
-        Predicate nodePred = predicate();
-        Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
-        List<Node> expected = getVal(1);
-        if (expected == null) {
-            Object[] array = new Object[2];
-            array[0] = functor();
-            array[1] = predicate;
-            return struct(array);
-        } else {
-            List<Object> facts = expected.get(0).args();
-            List<Object> falsehoods = expected.get(1).args();
-            Object[] array = new Object[6];
-            array[0] = functor();
-            array[1] = predicate;
-            array[2] = bindings(facts.filter(List.class).asList());
-            array[3] = !facts.contains("..");
-            array[4] = bindings(falsehoods.filter(List.class).asList());
-            array[5] = !falsehoods.contains("..");
-            return struct(array);
-        }
+        return this;
     }
 
     @SuppressWarnings("unchecked")

@@ -24,6 +24,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -265,7 +266,8 @@ public class Functor extends Node {
     }
 
     @Override
-    public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+    public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason)
+            throws ParseException {
         Type type = resultType();
         String group = Type.VARIABLE.isAssignableFrom(type) ? //
                 construct(List.of(), new Object[0], knowledgeBase, ctx).type().group() : //

@@ -20,6 +20,7 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -51,12 +52,15 @@ public final class Namespace extends Node {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
-        List<Node> roots = List.of();
-        for (Object arg : args()) {
-            roots = roots.add((Node) arg);
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing) {
+            List<Node> roots = List.of();
+            for (Object arg : args()) {
+                roots = roots.add((Node) arg);
+            }
+            return new NList(functor(), astElements(), roots);
         }
-        return new NList(functor(), astElements(), roots);
+        return this;
     }
 
 }

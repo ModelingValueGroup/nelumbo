@@ -20,6 +20,7 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -49,8 +50,11 @@ public final class Parenthesized extends Node {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
-        return node().setAstElements(astElements());
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing) {
+            return node().setAstElements(astElements());
+        }
+        return this;
     }
 
 }

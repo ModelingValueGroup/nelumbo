@@ -20,6 +20,7 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -38,29 +39,32 @@ public final class Import extends Node {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
-        List<AstElement> elements = astElements();
-        Functor functor = functor();
-        NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
-        StringBuilder sb = new StringBuilder();
-        List<AstElement> el = List.of();
-        for (int i = 1; i <= elements.size(); i++) {
-            Token t = i < elements.size() ? (Token) elements.get(i) : null;
-            if (t == null || t.text().equals(",")) {
-                Import ip = new Import(functor, el, sb.toString());
-                roots = new NList(List.of(), roots, ip);
-                if (t != null) {
-                    roots = roots.setAstElements(roots.astElements().add(t));
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing) {
+            List<AstElement> elements = astElements();
+            Functor functor = functor();
+            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
+            StringBuilder sb = new StringBuilder();
+            List<AstElement> el = List.of();
+            for (int i = 1; i <= elements.size(); i++) {
+                Token t = i < elements.size() ? (Token) elements.get(i) : null;
+                if (t == null || t.text().equals(",")) {
+                    Import ip = new Import(functor, el, sb.toString());
+                    roots = new NList(List.of(), roots, ip);
+                    if (t != null) {
+                        roots = roots.setAstElements(roots.astElements().add(t));
+                    }
+                    el = List.of();
+                    sb = new StringBuilder();
+                    knowledgeBase.doImport(ip.name(), ip);
+                } else {
+                    sb.append(t.text());
+                    el = el.add(t);
                 }
-                el = List.of();
-                sb = new StringBuilder();
-                knowledgeBase.doImport(ip.name(), ip);
-            } else {
-                sb.append(t.text());
-                el = el.add(t);
             }
+            return roots;
         }
-        return roots;
+        return this;
     }
 
     private Import(Object[] array, List<AstElement> elements, Import declaration) {

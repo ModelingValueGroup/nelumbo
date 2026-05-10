@@ -593,9 +593,9 @@ public class Node extends StructImpl implements AstElement {
         return new MatchState<>(functor, state);
     }
 
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         Node rewrite = this;
-        if (Type.ROOT.isAssignableFrom(type())) {
+        if (reason == ConstructionReason.parsing && Type.ROOT.isAssignableFrom(type())) {
             for (Transform transform : knowledgeBase.getTransforms(this)) {
                 rewrite = transform.transform(transform.source(), this, rewrite, knowledgeBase, ctx);
             }

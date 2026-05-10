@@ -24,6 +24,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -110,7 +111,7 @@ public final class Type extends Node {
     }
 
     @NelumboConstructor
-    public Type(Functor functor, List<AstElement> elements, Object[] args) {
+    public Type(Functor functor, List<AstElement> elements, Object... args) {
         super(functor, elements, args);
     }
 
@@ -368,7 +369,7 @@ public final class Type extends Node {
     @Override
     @SuppressWarnings("unchecked")
     public Variable variable() {
-        Object type = get(0);
+        Object type = length() > 0 ? get(0) : null;
         if (type instanceof Set<?> s) {
             for (Type t : (Set<Type>) s) {
                 Variable var = t.variable();
@@ -457,11 +458,12 @@ public final class Type extends Node {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (length() > 2 && get(2) instanceof String) {
             return this;
         }
-        if (get(-1) instanceof Functor functor && functor.astElements().first() instanceof Type type) {
+        if (reason == ConstructionReason.parsing && get(-1) instanceof Functor functor
+                && functor.astElements().first() instanceof Type type) {
             Type result = type.setAstElements(astElements());
             if (result.isCollection() && get(0) instanceof Type elem) {
                 result = result.setElement(elem);

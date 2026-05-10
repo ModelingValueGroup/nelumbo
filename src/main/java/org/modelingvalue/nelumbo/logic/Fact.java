@@ -20,6 +20,7 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
@@ -41,17 +42,17 @@ public final class Fact extends Node implements Evaluatable {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
-        if (transforming) {
-            return this;
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing) {
+            NList facts = new NList(astElements().sublist(0, 1), Type.ROOT);
+            for (int i = 0; i < length(); i++) {
+                Predicate pred = getVal(i);
+                Fact fact = new Fact(functor(), List.of(pred), pred);
+                facts = new NList(List.of(), facts, fact);
+            }
+            return facts;
         }
-        NList facts = new NList(astElements().sublist(0, 1), Type.ROOT);
-        for (int i = 0; i < length(); i++) {
-            Predicate pred = getVal(i);
-            Fact fact = new Fact(functor(), List.of(pred), pred);
-            facts = new NList(List.of(), facts, fact);
-        }
-        return facts;
+        return this;
     }
 
     private Fact(Object[] array, List<AstElement> elements, Fact declaration) {

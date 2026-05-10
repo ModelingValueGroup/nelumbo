@@ -23,6 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -86,7 +87,7 @@ public final class Transform extends Node {
     }
 
     @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, boolean transforming) throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         knowledgeBase.addTransform(this);
         return this;
     }
@@ -109,7 +110,7 @@ public final class Transform extends Node {
                     }
                 }
                 functors = functors.put(functor, rewrite);
-                rewrite.init(knowledgeBase, ctx, true);
+                rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
             }
         }
@@ -128,7 +129,7 @@ public final class Transform extends Node {
                     }
                     return n;
                 }).setBinding(binding).setAstElements(node.astElements()).resetDeclaration();
-                rewrite.init(knowledgeBase, ctx, true);
+                rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
             }
         }

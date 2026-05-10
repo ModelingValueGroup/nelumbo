@@ -23,6 +23,7 @@ import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
@@ -180,7 +181,7 @@ public final class PatternResult implements ParseExceptionHandler {
                 }
             }
             Type type = node.type();
-            node = node.init(parser.knowledgeBase(), context, false);
+            node = node.init(parser.knowledgeBase(), context, ConstructionReason.parsing);
             context.finish(type);
             return node;
         }
