@@ -47,7 +47,6 @@ import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.logic.And;
-import org.modelingvalue.nelumbo.logic.BooleanVariable;
 import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
@@ -184,18 +183,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
         if (Type.TYPE.equals(var.type())) {
             return addType(new Type(var), ctx);
-        } else if (Type.BOOLEAN.isAssignableFrom(var.type())) {
-            return Functor.of(List.of(var), t(List.of(var), var), //
-                    var.type(), Type.NAMESPACE, (elements, args, functor, pc) -> {
-                        Variable v = functor.variable().setAstElements(elements);
-                        return new BooleanVariable(functor, elements, v);
-                    }, null).init(this, ctx, bootstrapping);
         } else {
-            return Functor.of(List.of(var), t(List.of(var), var), //
-                    var.type().toVariable(), Type.NAMESPACE, (elements, args, functor, pc) -> {
-                        Variable v = functor.variable().setAstElements(elements);
-                        return v.setFunctor(functor);
-                    }, null).init(this, ctx, bootstrapping);
+            Type type = Type.BOOLEAN.isAssignableFrom(var.type()) ? var.type() : var.type().toVariable();
+            return Functor.of(List.of(var), t(List.of(var), var), type, Type.NAMESPACE, Variable.class, null).init(this,
+                    ctx, bootstrapping);
         }
     }
 

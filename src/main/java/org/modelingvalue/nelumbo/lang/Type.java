@@ -459,40 +459,41 @@ public final class Type extends Node {
     @SuppressWarnings("unchecked")
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (length() > 2 && get(2) instanceof String) {
-            return this;
-        }
-        if (reason == ConstructionReason.parsing && get(-1) instanceof Functor functor
-                && functor.astElements().first() instanceof Type type) {
-            Type result = type.setAstElements(astElements());
-            if (result.isCollection() && get(0) instanceof Type elem) {
-                result = result.setElement(elem);
+        if (reason == ConstructionReason.parsing) {
+            if (length() > 2 && get(2) instanceof String) {
+                return this;
             }
-            return result.setFunctor(functor);
-        }
-        Set<Type> supers = Set.of();
-        for (Type sup : (List<Type>) get(2)) {
-            supers = supers.add(sup);
-        }
-        String group = (String) get(3);
-        if (group == null) {
-            group = DEFAULT_GROUP;
-        }
-        Type type;
-        String name = (String) get(0);
-        Type arg = (Type) get(1);
-        if (arg != null) {
-            Variable var = arg.variable();
-            if (var == null || !Type.TYPE.equals(var.type())) {
-                knowledgeBase.addException(
-                        new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
+            if (get(-1) instanceof Functor functor && functor.astElements().first() instanceof Type type) {
+                Type result = type.setAstElements(astElements());
+                if (result.isCollection() && get(0) instanceof Type elem) {
+                    result = result.setElement(elem);
+                }
+                return result.setFunctor(functor);
             }
-            type = new Type(astElements(), name, supers, group, arg);
-        } else {
-            type = new Type(astElements(), name, supers, group);
+            Set<Type> supers = Set.of();
+            for (Type sup : (List<Type>) get(2)) {
+                supers = supers.add(sup);
+            }
+            String group = (String) get(3);
+            if (group == null) {
+                group = DEFAULT_GROUP;
+            }
+            Type type;
+            String name = (String) get(0);
+            Type arg = (Type) get(1);
+            if (arg != null) {
+                Variable var = arg.variable();
+                if (var == null || !Type.TYPE.equals(var.type())) {
+                    knowledgeBase.addException(
+                            new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
+                }
+                type = new Type(astElements(), name, supers, group, arg);
+            } else {
+                type = new Type(astElements(), name, supers, group);
+            }
+            return knowledgeBase.addType(type, ctx);
         }
-        return knowledgeBase.addType(type, ctx);
-
+        return this;
     }
 
 }

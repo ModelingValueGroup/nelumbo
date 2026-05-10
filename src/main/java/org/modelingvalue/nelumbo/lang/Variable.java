@@ -25,6 +25,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.logic.BooleanVariable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Token;
@@ -40,10 +41,12 @@ public final class Variable extends Node {
     }
 
     private static Object[] init(Object[] args) {
-        Object hidden = args[0];
-        Object type = args[1];
-        args[0] = type;
-        args[1] = hidden;
+        if (args.length > 0) {
+            Object hidden = args[0];
+            Object type = args[1];
+            args[0] = type;
+            args[1] = hidden;
+        }
         return args;
     }
 
@@ -76,7 +79,7 @@ public final class Variable extends Node {
 
     @Override
     public Type type() {
-        return (Type) get(0);
+        return length() > 0 ? (Type) get(0) : super.type();
     }
 
     public String name() {
@@ -123,26 +126,35 @@ public final class Variable extends Node {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (get(2) instanceof Boolean) {
-            return this;
-        }
-        boolean hidden = get(1) != null;
-        List<AstElement> elements = astElements();
-        Type type = (Type) get(0);
-        NList roots = new NList(List.of(type), Type.ROOT);
-        int start = hidden ? 1 : 0;
-        for (int i = start + 1; i < elements.size(); i++) {
-            AstElement e = elements.get(i);
-            if (e instanceof Token t && t.text().equals(",")) {
-                roots = roots.setAstElements(roots.astElements().add(t));
-                e = elements.get(++i);
+        if (reason == ConstructionReason.parsing) {
+            if (length() > 0 && get(2) instanceof Boolean) {
+                return this;
             }
-            Variable var = new Variable(List.of(e), type, ((Token) e).text(), hidden);
-            Functor varFun = knowledgeBase.addVariable(var, ctx);
-            roots = new NList(List.of(), roots, varFun);
+            if (get(-1) instanceof Functor functor && functor.astElements().first() instanceof Variable var) {
+                if (Type.BOOLEAN.isAssignableFrom(var.type())) {
+                    return new BooleanVariable(functor, astElements(), var);
+                } else {
+                    return var.setAstElements(astElements()).setFunctor(functor);
+                }
+            }
+            boolean hidden = get(1) != null;
+            List<AstElement> elements = astElements();
+            Type type = (Type) get(0);
+            NList roots = new NList(List.of(type), Type.ROOT);
+            int start = hidden ? 1 : 0;
+            for (int i = start + 1; i < elements.size(); i++) {
+                AstElement e = elements.get(i);
+                if (e instanceof Token t && t.text().equals(",")) {
+                    roots = roots.setAstElements(roots.astElements().add(t));
+                    e = elements.get(++i);
+                }
+                Variable var = new Variable(List.of(e), type, ((Token) e).text(), hidden);
+                Functor varFun = knowledgeBase.addVariable(var, ctx);
+                roots = new NList(List.of(), roots, varFun);
+            }
+            return roots;
         }
-        return roots;
-
+        return this;
     }
 
 }
