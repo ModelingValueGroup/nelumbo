@@ -6,17 +6,17 @@
   Function        :: Object
   Literal         :: Object
   
-  private Boolean ::= eq(<Object>,<Object>)                   @org.modelingvalue.nelumbo.logic.Equal
+  private Boolean ::= eq(<Object>,<Object>)                   @nelumbo.logic.Equal
  
-  Boolean ::= true                                            @org.modelingvalue.nelumbo.logic.NBoolean,
-              false                                           @org.modelingvalue.nelumbo.logic.NBoolean,
-              unknown                                         @org.modelingvalue.nelumbo.logic.NBoolean,
-              ! <Boolean>                             #25     @org.modelingvalue.nelumbo.logic.Not,
-              <Boolean> & <Boolean>                   #22     @org.modelingvalue.nelumbo.logic.And,
-              <Boolean> | <Boolean>                   #20     @org.modelingvalue.nelumbo.logic.Or,
-              E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @org.modelingvalue.nelumbo.logic.ExistentialQuantifier,
-              A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @org.modelingvalue.nelumbo.logic.UniversalQuantifier,
-              <Object> = <Object>                     #30     @org.modelingvalue.nelumbo.logic.NIs,
+  Boolean ::= true                                            @nelumbo.logic.NBoolean,
+              false                                           @nelumbo.logic.NBoolean,
+              unknown                                         @nelumbo.logic.NBoolean,
+              ! <Boolean>                             #25     @nelumbo.logic.Not,
+              <Boolean> & <Boolean>                   #22     @nelumbo.logic.And,
+              <Boolean> | <Boolean>                   #20     @nelumbo.logic.Or,
+              E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
+              A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.UniversalQuantifier,
+              <Object> = <Object>                     #30     @nelumbo.logic.NIs,
               <Object> != <Object>                    #30,
               <Boolean> -> <Boolean>                  #18,
               <Boolean> "<->" <Boolean>               #16
@@ -25,9 +25,9 @@
   
   Binding ::=  [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
               
-  Root    ::= "fact" <(> <Boolean#0> <,> , <)+>                                         @org.modelingvalue.nelumbo.logic.Fact,
-              <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>    @org.modelingvalue.nelumbo.logic.Rule,
-              <Boolean#0> ? <(> <Binding> <Binding> <)?>                                @org.modelingvalue.nelumbo.logic.Query
+  Root    ::= "fact" <(> <Boolean#0> <,> , <)+>                                         @nelumbo.logic.Fact,
+              <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>    @nelumbo.logic.Rule,
+              <Boolean#0> ? <(> <Binding> <Binding> <)?>                                @nelumbo.logic.Query
    
 
   Boolean p1, p2

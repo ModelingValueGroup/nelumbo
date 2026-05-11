@@ -7,6 +7,6 @@
   Set<E>         :: Collection<E>
   List<E>        :: Collection<E>  
 
-  Set<E>  ::= { <(> <E> <,> , <)*> }  @org.modelingvalue.nelumbo.collections.NSet 
-  List<E> ::= [ <(> <E> <,> , <)*> ]  @org.modelingvalue.nelumbo.collections.NList 
+  Set<E>  ::= { <(> <E> <,> , <)*> }  @nelumbo.collections.NSet 
+  List<E> ::= [ <(> <E> <,> , <)*> ]  @nelumbo.collections.NList 
   

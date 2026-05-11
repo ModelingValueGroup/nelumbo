@@ -54,7 +54,11 @@ public @interface NelumboConstructor {
             Class<?> clazz = CACHE1.get(className);
             if (clazz == null) {
                 try {
-                    clazz = Class.forName(className);
+                    if (className.startsWith(ResourceImportResolver.NELUMBO_PREFIX)) {
+                        clazz = Class.forName(ResourceImportResolver.ORG_MODELINGVALUE_PREFIX + className);
+                    } else {
+                        clazz = Class.forName(className);
+                    }
                     CACHE1.put(className, clazz);
                 } catch (SecurityException | ClassNotFoundException ex) {
                     kb.addException(new ParseException(ex, ex + " during finding class " + className, list));

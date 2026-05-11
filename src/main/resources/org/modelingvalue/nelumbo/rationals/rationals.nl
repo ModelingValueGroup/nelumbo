@@ -3,17 +3,17 @@
     
   Rational :: Object
   
-  private Boolean ::= add(<Rational>,<Rational>,<Rational>)   @org.modelingvalue.nelumbo.rationals.Add,
-                      mult(<Rational>,<Rational>,<Rational>)  @org.modelingvalue.nelumbo.rationals.Multiply
+  private Boolean ::= add(<Rational>,<Rational>,<Rational>)   @nelumbo.rationals.Add,
+                      mult(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Multiply
 
    
-  Boolean ::=  <Rational>  >   <Rational>   #30     @org.modelingvalue.nelumbo.rationals.GreaterThan,
+  Boolean ::=  <Rational>  >   <Rational>   #30     @nelumbo.rationals.GreaterThan,
                <Rational> "<"  <Rational>   #30,
                <Rational> "<=" <Rational>   #30,
                <Rational>  >=  <Rational>   #30,
-               iir(<Integer>,<Integer>,<Rational>)  @org.modelingvalue.nelumbo.rationals.IntegersRational
+               iir(<Integer>,<Integer>,<Rational>)  @nelumbo.rationals.IntegersRational
 
-  Rational ::= <DECIMAL>                            @org.modelingvalue.nelumbo.rationals.Rational,
+  Rational ::= <DECIMAL>                            @nelumbo.rationals.Rational,
                <Rational> - <Rational>   #40,
                <Rational> + <Rational>   #40,
                           - <Rational>   #80,
