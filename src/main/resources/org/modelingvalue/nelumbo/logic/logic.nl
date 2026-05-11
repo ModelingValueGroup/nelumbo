@@ -6,7 +6,7 @@
   Function        :: Object
   Literal         :: Object
   
-  private Boolean ::= eq(<Object>,<Object>)                   @nelumbo.logic.Equal
+  private Boolean ::= eq(<Literal>,<Literal>)                 @nelumbo.logic.Equal
  
   Boolean ::= true                                            @nelumbo.logic.NBoolean,
               false                                           @nelumbo.logic.NBoolean,
