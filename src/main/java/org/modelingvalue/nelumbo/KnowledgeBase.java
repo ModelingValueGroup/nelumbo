@@ -229,7 +229,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         CURRENT.run(this, () -> {
             try {
 
-                Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.TOP_NAMESPACE, null, Namespace.class, null)
+                Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.ROOT_NAMESPACE, null, Namespace.class, null)
                         .init(this, parseContext, bootstrapping);
 
                 Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), Type.ROOT, null, Import.class,

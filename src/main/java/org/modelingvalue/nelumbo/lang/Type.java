@@ -37,7 +37,6 @@ public final class Type extends Node {
     private static final long serialVersionUID = -4583279157841144493L;
     //
     public static final String DEFAULT_GROUP = "_";
-    public static final String TOP_GROUP     = "TOP";
     public static final String PATTERN_GROUP = "PATTERN";
     //
     private static final Object EQUALS_TYPE = new Object() {
@@ -55,23 +54,23 @@ public final class Type extends Node {
     public static final Type $OBJECT = new Type(Object.class);
     public static final Type $STRING = new Type(String.class, $OBJECT);
     //
-    public static final Type  OBJECT        = new Type("Object", $OBJECT);
-    public static final Type  TYPE          = new Type("Type", OBJECT);
-    public static final Type  UNIVERSE      = new Type("Universe", OBJECT);
-    public static final Type  NAMESPACE     = new Type("Namespace", OBJECT);
-    public static final Type  FUNCTION      = new Type("Function", OBJECT);
-    public static final Type  LITERAL       = new Type("Literal", OBJECT);
-    public static final Type  ROOT          = new Type("Root", OBJECT);
-    public static final Type  BOOLEAN       = new Type("Boolean", OBJECT);
-    public static final Type  FACT_TYPE     = new Type("FactType", BOOLEAN);
-    public static final Type  VARIABLE      = new Type("Variable", OBJECT);
-    public static final Type  FUNCTOR       = new Type("Functor", ROOT);
-    public static final Type  PATTERN       = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
-    private static final Type TYPE_ARG_VAR  = new Type(new Variable(List.of(), TYPE, "E", false));
-    public static final Type  COLLECTION    = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type  SET           = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type  LIST          = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type  TOP_NAMESPACE = new Type("TopNamespace", TOP_GROUP, ROOT.list(), ROOT, NAMESPACE);
+    public static final Type  OBJECT         = new Type("Object", $OBJECT);
+    public static final Type  TYPE           = new Type("Type", OBJECT);
+    public static final Type  UNIVERSE       = new Type("Universe", OBJECT);
+    public static final Type  NAMESPACE      = new Type("Namespace", OBJECT);
+    public static final Type  FUNCTION       = new Type("Function", OBJECT);
+    public static final Type  LITERAL        = new Type("Literal", OBJECT);
+    public static final Type  ROOT           = new Type("Root", OBJECT);
+    public static final Type  BOOLEAN        = new Type("Boolean", OBJECT);
+    public static final Type  FACT_TYPE      = new Type("FactType", BOOLEAN);
+    public static final Type  VARIABLE       = new Type("Variable", OBJECT);
+    public static final Type  FUNCTOR        = new Type("Functor", ROOT);
+    public static final Type  PATTERN        = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
+    private static final Type TYPE_ARG_VAR   = new Type(new Variable(List.of(), TYPE, "E", false));
+    public static final Type  COLLECTION     = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type  SET            = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type  LIST           = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type  ROOT_NAMESPACE = new Type("RootNamespace", ROOT.list(), ROOT, NAMESPACE);
 
     public static List<Type> predefined() {
         return List.of(//
@@ -90,7 +89,7 @@ public final class Type extends Node {
                 COLLECTION, //
                 SET, //
                 LIST, //
-                TOP_NAMESPACE);
+                ROOT_NAMESPACE);
     }
 
     private Type       list;

@@ -65,7 +65,7 @@ public final class Parser implements ParseExceptionHandler {
     private final KnowledgeBase   knowledgeBase;
     private final TokenizerResult tokenizerResult;
 
-    private ParserResult          result;
+    private ParserResult result;
 
     public Parser(TokenizerResult tokenizerResult) {
         this.knowledgeBase = KnowledgeBase.CURRENT.get();
@@ -95,7 +95,7 @@ public final class Parser implements ParseExceptionHandler {
         knowledgeBase.setExceptionHandler(this);
         try {
             Token token = tokenizerResult.first();
-            ParseContext ctx = ParseContext.of(Type.TOP_GROUP, Integer.MIN_VALUE, knowledgeBase.parseContext());
+            ParseContext ctx = ParseContext.of(Type.DEFAULT_GROUP, Integer.MIN_VALUE, knowledgeBase.parseContext());
             Node node = parseNode(token, ctx, null);
             if (node != null) {
                 result.setRoot(node);
@@ -135,8 +135,10 @@ public final class Parser implements ParseExceptionHandler {
         return left;
     }
 
-    private boolean preParse(String group, Token token, Node left, PatternResult result, ParseContext outer) throws ParseException {
-        for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null : pc.outer()) {
+    private boolean preParse(String group, Token token, Node left, PatternResult result, ParseContext outer)
+            throws ParseException {
+        for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null
+                : pc.outer()) {
             if (pc.preParse(group, token, left, result)) {
                 return true;
             }
@@ -144,8 +146,10 @@ public final class Parser implements ParseExceptionHandler {
         return false;
     }
 
-    private boolean hiddenParse(String group, Token token, PatternResult result, ParseContext outer) throws ParseException {
-        for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null : pc.outer()) {
+    private boolean hiddenParse(String group, Token token, PatternResult result, ParseContext outer)
+            throws ParseException {
+        for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null
+                : pc.outer()) {
             Map<Type, Variable> vars = pc.hiddenVariables(group);
             if (vars != null) {
                 for (Entry<Type, Variable> var : vars) {
