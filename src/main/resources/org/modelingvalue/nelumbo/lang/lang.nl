@@ -22,7 +22,7 @@
  Functor       :: Root            // Language pattern with a type, e.g. a function or an operator
  Pattern       :: Object #PATTERN // Syntaxtual pattern
  Namespace     :: Object          // Local scope type
- RootNamespace :: Root, Namespace // 
+ RootNamespace :: Root, Namespace
  
  Namespace     ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace
  RootNamespace ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                        @nelumbo.lang.Namespace
