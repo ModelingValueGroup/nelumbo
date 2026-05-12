@@ -304,17 +304,38 @@ public class ParseState implements Mergeable<ParseState> {
         }
         Map<DirectionContext, Set<TokenState>> dirStates = dirStates(token, outerRepetitions, ctx, group);
         while (dirStates.size() > 1) {
+            int max = max(dirStates);
             for (Entry<DirectionContext, Set<TokenState>> e : dirStates) {
-                Set<TokenState> nexts = Set.of();
-                for (TokenState ts : e.getValue()) {
-                    Map<DirectionContext, Set<TokenState>> nextStates = ts.state.dirStates(ts.token, outerRepetitions,
-                            ctx, group);
-                    nexts = nexts.addAll(nextStates.flatMap(Entry::getValue));
-                }
-                dirStates = nexts.isEmpty() ? dirStates.removeKey(e.getKey()) : dirStates.put(e.getKey(), nexts);
+                Set<TokenState> prev, next = e.getValue();
+                do {
+                    prev = next;
+                    next = Set.of();
+                    for (TokenState ts : prev) {
+                        Map<DirectionContext, Set<TokenState>> nextStates = ts.state.dirStates(ts.token,
+                                outerRepetitions, ctx, group);
+                        next = next.addAll(nextStates.flatMap(Entry::getValue));
+                    }
+                } while (!next.isEmpty() && max(next) <= max);
+                dirStates = next.isEmpty() ? dirStates.removeKey(e.getKey()) : dirStates.put(e.getKey(), next);
             }
         }
         return dirStates.isEmpty() ? null : dirStates.get(0).getKey();
+    }
+
+    private static int max(Map<DirectionContext, Set<TokenState>> dirStates) {
+        int max = -1;
+        for (Entry<DirectionContext, Set<TokenState>> e : dirStates) {
+            max = Math.max(max, max(e.getValue()));
+        }
+        return max;
+    }
+
+    private static int max(Set<TokenState> states) {
+        int max = -1;
+        for (TokenState ts : states) {
+            max = Math.max(max, ts.token.index());
+        }
+        return max;
     }
 
     private Map<DirectionContext, Set<TokenState>> dirStates(Token token,
