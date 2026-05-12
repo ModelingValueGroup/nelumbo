@@ -235,20 +235,20 @@ public interface ParseContext {
         return false;
     }
 
-    default Functor register(KnowledgeBase knowledgeBase, String group, Type type, Functor functor)
+    default Functor register(KnowledgeBase knowledgeBase, String group, Type scope, Functor functor)
             throws ParseException {
         try {
             ParseState preStart = functor.preStart();
             ParseState postStart = functor.postStart();
             if (preStart != null) {
-                preStates().set(p -> merge(group, type, preStart, p));
+                preStates().set(p -> merge(group, scope, preStart, p));
             }
             if (postStart != null) {
-                postStates().set(p -> merge(group, type, postStart, p));
+                postStates().set(p -> merge(group, scope, postStart, p));
             }
             Variable var = functor.variable();
             if (var != null && var.hidden()) {
-                hiddenVariables().set(p -> p.add(group, Map.of(Entry.of(type, var))));
+                hiddenVariables().set(p -> p.add(group, Map.of(Entry.of(scope, var))));
             }
         } catch (NotMergeableException pme) {
             knowledgeBase.addException(new ParseException(pme.getMessage(), functor));
@@ -257,10 +257,10 @@ public interface ParseContext {
         return functor;
     }
 
-    default Map<String, Map<Type, ParseState>> merge(String group, Type type, ParseState state,
+    default Map<String, Map<Type, ParseState>> merge(String group, Type scope, ParseState state,
             Map<String, Map<Type, ParseState>> m) {
         Map<Type, ParseState> ts = m.get(group);
-        ts = ts != null ? ts.put(type, state.merge(ts.get(type))) : Map.of(Entry.of(type, state));
+        ts = ts != null ? ts.put(scope, state.merge(ts.get(scope))) : Map.of(Entry.of(scope, state));
         return m.put(group, ts);
     }
 
@@ -288,16 +288,16 @@ public interface ParseContext {
         return null;
     }
 
-    default void finish(Type type) {
-        clear(type, preStates());
-        clear(type, postStates());
-        clear(type, hiddenVariables());
+    default void finish(Type scope) {
+        clear(scope, preStates());
+        clear(scope, postStates());
+        clear(scope, hiddenVariables());
     }
 
-    default <T> void clear(Type type, MutableMap<String, Map<Type, T>> map) {
+    default <T> void clear(Type scope, MutableMap<String, Map<Type, T>> map) {
         for (Entry<String, Map<Type, T>> pre : map.get()) {
             for (Entry<Type, T> ts : pre.getValue()) {
-                if (ts.getKey().isAssignableFrom(type)) {
+                if (ts.getKey().isAssignableFrom(scope)) {
                     Map<Type, T> m = map.get(pre.getKey());
                     if (m.size() == 1) {
                         map.remove(pre.getKey());

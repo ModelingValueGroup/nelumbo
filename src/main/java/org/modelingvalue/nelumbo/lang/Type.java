@@ -56,7 +56,7 @@ public final class Type extends Node {
     //
     public static final Type  OBJECT         = new Type("Object", $OBJECT);
     public static final Type  TYPE           = new Type("Type", OBJECT);
-    public static final Type  UNIVERSE       = new Type("Universe", OBJECT);
+    public static final Type  GLOBAL         = new Type("Global", OBJECT);
     public static final Type  NAMESPACE      = new Type("Namespace", OBJECT);
     public static final Type  FUNCTION       = new Type("Function", OBJECT);
     public static final Type  LITERAL        = new Type("Literal", OBJECT);
@@ -76,7 +76,7 @@ public final class Type extends Node {
         return List.of(//
                 OBJECT, //
                 TYPE, //
-                UNIVERSE, //
+                GLOBAL, //
                 NAMESPACE, //
                 FUNCTION, //
                 LITERAL, //

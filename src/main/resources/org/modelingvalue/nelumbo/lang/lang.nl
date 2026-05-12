@@ -1,6 +1,6 @@
 
  Type          :: Object
- Universe      :: Object
+ Global        :: Object
  Namespace     :: Object
  Root          :: Object
  Variable      :: Object

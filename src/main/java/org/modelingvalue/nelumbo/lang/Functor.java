@@ -276,7 +276,7 @@ public class Functor extends Node {
         if (local != null) {
             return ctx.register(knowledgeBase, group, local, this);
         }
-        return knowledgeBase.parseContext().register(knowledgeBase, group, Type.UNIVERSE, this);
+        return knowledgeBase.parseContext().register(knowledgeBase, group, Type.GLOBAL, this);
     }
 
     public Functor mostSpecific(Functor other) {
