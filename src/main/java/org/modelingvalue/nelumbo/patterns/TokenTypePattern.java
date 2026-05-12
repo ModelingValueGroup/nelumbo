@@ -92,7 +92,8 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+            Map<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             TokenType type = tokenType();
@@ -116,7 +117,7 @@ public class TokenTypePattern extends Pattern {
     }
 
     private static boolean isEmpty(TokenType type) {
-        return type == TokenType.NEWLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE || type == TokenType.ENDOFLINE;
+        return type == TokenType.NEWLINE || type == TokenType.BEGINOFFILE || type == TokenType.ENDOFFILE;
     }
 
     @Override

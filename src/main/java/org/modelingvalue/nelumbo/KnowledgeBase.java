@@ -173,7 +173,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else {
             pattern = t(List.of(type), type.rawName());
         }
-        return Functor.of(List.of(type), pattern, Type.TYPE, null, Type.class, null).init(this, ctx, bootstrapping);
+        Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, null, Type.class, null);
+        if (type.supers().contains(Type.NATIVE)) {
+            if (parseContext().type(type.name()) == null) {
+                addException(new ParseException("Native type " + type.name() + " is not defined in bootstrap.", type));
+            }
+        } else {
+            functor.init(this, ctx, bootstrapping);
+        }
+        return functor;
     }
 
     public Functor addVariable(Variable var, ParseContext ctx) throws ParseException {
@@ -245,7 +253,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
 
                 for (TokenType tokenType : TokenType.values()) {
-                    if (!tokenType.isNotMatched() && !tokenType.isSkip()) {
+                    if (!tokenType.isNotMatched() && !tokenType.isSkip() && tokenType != TokenType.ERROR) {
                         addType(new Type(tokenType), parseContext);
                     }
                 }

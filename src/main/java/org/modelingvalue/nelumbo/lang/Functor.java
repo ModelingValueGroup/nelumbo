@@ -109,8 +109,17 @@ public class Functor extends Node {
 
     @Override
     public Variable variable() {
+        return constructedVariable();
+    }
+
+    public Variable constructedVariable() {
         List<AstElement> astElements = astElements();
         return astElements.isEmpty() ? null : astElements.first() instanceof Variable v ? v : null;
+    }
+
+    public Type constructedType() {
+        List<AstElement> astElements = astElements();
+        return astElements.isEmpty() ? null : astElements.first() instanceof Type t ? t : null;
     }
 
     @Override
@@ -276,7 +285,7 @@ public class Functor extends Node {
         if (local != null) {
             return ctx.register(knowledgeBase, group, local, this);
         }
-        return knowledgeBase.parseContext().register(knowledgeBase, group, Type.GLOBAL, this);
+        return knowledgeBase.parseContext().register(knowledgeBase, group, Type.WORLD, this);
     }
 
     public Functor mostSpecific(Functor other) {

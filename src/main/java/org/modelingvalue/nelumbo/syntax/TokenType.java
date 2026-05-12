@@ -42,7 +42,6 @@ public enum TokenType {
     // ================ rest is not actually matched:
     BEGINOFFILE("", LAYOUT), //
     ENDOFFILE("", LAYOUT), //
-    ENDOFLINE("", LAYOUT), //
     VARIABLE, //
     KEYWORD, //
     TYPE, META_OPERATOR,//

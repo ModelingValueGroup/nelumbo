@@ -1,11 +1,27 @@
+ 
+ // Token Types
+ SINGLEQUOTE   :: NATIVE // '
+ SEMICOLON     :: NATIVE // ;
+ COMMA         :: NATIVE // ,
+ LEFT          :: NATIVE // [\(\[\{]
+ RIGHT         :: NATIVE // [\)\]\}]
+ STRING        :: NATIVE // "([^"\\]|\\[\s\S])*"
+ DECIMAL       :: NATIVE // -?[0-9]+\.[0-9]+
+ NUMBER        :: NATIVE // -?[0-9]+(#[0-9a-zA-Z]+)?
+ NAME          :: NATIVE // [a-zA-Z_][0-9a-zA-Z_]*
+ OPERATOR      :: NATIVE // (?!//)[~!@#$%^&*=+|:<>.?/-]+
+ NEWLINE       :: NATIVE // \R
+ BEGINOFFILE   :: NATIVE 
+ ENDOFFILE     :: NATIVE 
 
+ // Object Types
+ Object        :: NATIVE
  Type          :: Object
- Global        :: Object
- Namespace     :: Object
- Root          :: Object
  Variable      :: Object
- Pattern       :: Object #PATTERN
+ Root          :: Object
  Functor       :: Root
+ Pattern       :: Object #PATTERN
+ Namespace     :: Object // Local scope type
  RootNamespace :: List<Root>, Root, Namespace
  
  RootNamespace ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace,

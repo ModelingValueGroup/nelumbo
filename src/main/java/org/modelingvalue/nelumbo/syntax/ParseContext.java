@@ -281,7 +281,19 @@ public interface ParseContext {
             for (ParseState state : states.toValues()) {
                 ParseState found = state.tokenTexts().get(name);
                 if (found != null && found.functor() != null) {
-                    return found.functor().variable();
+                    return found.functor().constructedVariable();
+                }
+            }
+        }
+        return null;
+    }
+
+    default Type type(String name) {
+        for (Map<Type, ParseState> states : preStates().get().toValues()) {
+            for (ParseState state : states.toValues()) {
+                ParseState found = state.tokenTexts().get(name);
+                if (found != null && found.functor() != null) {
+                    return found.functor().constructedType();
                 }
             }
         }
