@@ -18,14 +18,14 @@
  Object        :: NATIVE
  Type          :: Object
  Variable      :: Object
- Root          :: Object
- Functor       :: Root
- Pattern       :: Object #PATTERN
- Namespace     :: Object // Local scope type
- RootNamespace :: List<Root>, Root, Namespace
+ Root          :: Object          // An object in the top of the hierarchy 
+ Functor       :: Root            // Language pattern with a type, e.g. a function or an operator
+ Pattern       :: Object #PATTERN // Syntaxtual pattern
+ Namespace     :: Object          // Local scope type
+ RootNamespace :: Root, Namespace // 
  
- RootNamespace ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace,
-                   { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                        @nelumbo.lang.Namespace
+ Namespace     ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace
+ RootNamespace ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                        @nelumbo.lang.Namespace
  
  Root          ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>                                 @nelumbo.lang.Import,
                    <Root#0> ::> <RootNamespace>                                                  @nelumbo.lang.Transform,

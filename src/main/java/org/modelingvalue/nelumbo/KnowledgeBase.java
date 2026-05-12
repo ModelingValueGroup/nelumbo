@@ -237,7 +237,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         CURRENT.run(this, () -> {
             try {
 
-                Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.ROOT_NAMESPACE, null, Namespace.class, null)
+                Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.NAMESPACE, null, Namespace.class, null)
                         .init(this, parseContext, bootstrapping);
 
                 Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), Type.ROOT, null, Import.class,
@@ -435,14 +435,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.isCollection() ? type.element() : null;
-        if (!Type.ROOT.isAssignableFrom(type) && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
+        if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
+                && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
             type = type.toLiteral();
         } else if (type.variable() == null) {
-            if (!Type.BOOLEAN.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)) {
+            if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
+                    && !Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)) {
                 type = type.toFunction();
                 function = true;
             }
-            if (!Type.ROOT.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type) //
+            if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
+                    && !Type.NAMESPACE.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type) //
                     && args.noneMatch(t -> Type.OBJECT.equals(t.element()) //
                             || Type.BOOLEAN.isAssignableFrom(t.element()) //
                             || Type.VARIABLE.isAssignableFrom(t.element()) //
