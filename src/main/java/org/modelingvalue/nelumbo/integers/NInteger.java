@@ -21,8 +21,8 @@ import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -34,11 +34,8 @@ public final class NInteger extends Node {
     private static final BigInteger MIN = BigInteger.valueOf(Long.MIN_VALUE);
     private static final BigInteger MAX = BigInteger.valueOf(Long.MAX_VALUE);
 
+    @NelumboFunctorField
     private static Functor FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(NInteger.class, f -> FUNCTOR = f);
-    }
 
     @NelumboConstructor
     public NInteger(Functor functor, List<AstElement> elements, Object[] args) {

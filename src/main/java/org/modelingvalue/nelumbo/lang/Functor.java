@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -27,6 +28,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Pattern;
@@ -45,35 +47,26 @@ public class Functor extends Node {
 
     public static Functor of(Pattern pattern, Type result, Type local, Class<?> clazz, Integer leftPrecedence)
             throws ParseException {
-        return new Functor(List.of(), pattern, result, local,
-                NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()), leftPrecedence);
+        return of(List.of(), pattern, result, local, clazz, leftPrecedence);
     }
 
     public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, Class<?> clazz,
             Integer leftPrecedence) throws ParseException {
         return new Functor(elements, pattern, result, local,
-                NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()), leftPrecedence);
+                clazz != null ? NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()) : null,
+                leftPrecedence);
     }
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
-            Constructor<?> constructor, Integer leftPrecedence) {
-        return new Functor(elements, pattern, result, local, constructor, leftPrecedence);
+    public static Functor of(Pattern pattern, Type result, Type local,
+            ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function,
+            Integer leftPrecedence) {
+        return of(List.of(), pattern, result, local, function, leftPrecedence);
     }
 
     public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
             ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function,
             Integer leftPrecedence) {
         return new Functor(elements, pattern, result, local, function, leftPrecedence);
-    }
-
-    public static Functor of(Pattern pattern, Type result, Type local,
-            ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function,
-            Integer leftPrecedence) {
-        return new Functor(List.of(), pattern, result, local, function, leftPrecedence);
-    }
-
-    public static Functor of(Pattern pattern, Type result, Type local, Integer leftPrecedence) {
-        return new Functor(List.of(), pattern, result, local, null, leftPrecedence);
     }
 
     private String     name;
@@ -277,6 +270,20 @@ public class Functor extends Node {
     @Override
     public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason)
             throws ParseException {
+        Constructor<? extends Node> constructor = constructor();
+        List<AstElement> elements = astElements();
+        if (constructor != null && !elements.isEmpty()) {
+            Field field = NelumboFunctorField.Finder.find(constructor.getDeclaringClass(), knowledgeBase, elements);
+            if (field != null) {
+                try {
+                    field.set(null, this);
+                } catch (IllegalArgumentException | IllegalAccessException ex) {
+                    knowledgeBase.addException(new ParseException(ex,
+                            ex + " during setting FUNCTOR field in " + constructor.getDeclaringClass().getName(),
+                            elements));
+                }
+            }
+        }
         Type type = resultType();
         String group = Type.VARIABLE.isAssignableFrom(type) ? //
                 construct(List.of(), new Object[0], knowledgeBase, ctx).type().group() : //

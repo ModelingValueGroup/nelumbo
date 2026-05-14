@@ -49,8 +49,7 @@ public @interface NelumboConstructor {
         private static final Map<String, Class<?>>                      CACHE1 = new ConcurrentHashMap<>();
         private static final Map<Class<?>, Constructor<? extends Node>> CACHE2 = new ConcurrentHashMap<>();
 
-        public static Constructor<? extends Node> find(String className, KnowledgeBase kb, List<AstElement> list)
-                throws ParseException {
+        public static Class<?> find(String className, KnowledgeBase kb, List<AstElement> list) throws ParseException {
             Class<?> clazz = CACHE1.get(className);
             if (clazz == null) {
                 try {
@@ -64,7 +63,7 @@ public @interface NelumboConstructor {
                     kb.addException(new ParseException(ex, ex + " during finding class " + className, list));
                 }
             }
-            return find(clazz, kb, list);
+            return clazz;
         }
 
         public static Constructor<? extends Node> find(Class<?> clazz, KnowledgeBase kb, List<AstElement> list)

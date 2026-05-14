@@ -20,8 +20,8 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -32,11 +32,8 @@ public final class NString extends Node {
 
     private static final String DELIM = "\"";
 
+    @NelumboFunctorField
     private static Functor FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(NString.class, f -> FUNCTOR = f);
-    }
 
     @NelumboConstructor
     public NString(Functor functor, List<AstElement> elements, Object[] args) {

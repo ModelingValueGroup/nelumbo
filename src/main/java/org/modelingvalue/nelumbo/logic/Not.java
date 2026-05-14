@@ -20,8 +20,8 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 
@@ -29,11 +29,8 @@ public final class Not extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -4543178470298951866L;
 
+    @NelumboFunctorField
     private static Functor FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(Not.class, f -> FUNCTOR = f);
-    }
 
     @NelumboConstructor
     public Not(Functor functor, List<AstElement> elements, Object[] args) {

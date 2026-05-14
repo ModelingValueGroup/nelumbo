@@ -22,11 +22,9 @@ import static org.modelingvalue.nelumbo.syntax.TokenType.*;
 
 import java.io.PrintStream;
 import java.io.Serial;
-import java.lang.reflect.Constructor;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -70,18 +68,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     //
     public static final Context<KnowledgeBase> CURRENT = Context.of();
     //
-    private static final ContextPool                                                    POOL                 = ContextThread
-            .createPool().setWorkerThreadName("nelumbo");
-    private static final QualifiedSet<Predicate, Inference>                             EMPTY_MEMOIZ         = QualifiedSet
-            .of(Inference::premise);
-    private static final int                                                            MAX_LOGIC_MEMOIZ     = Integer
-            .getInteger("MAX_LOGIC_MEMOIZ", 10000);
-    private static final int                                                            MAX_LOGIC_MEMOIZ_D4  = KnowledgeBase.MAX_LOGIC_MEMOIZ
-            / 4;
-    private static final int                                                            INITIAL_USAGE_COUNT  = Integer
+    private static final ContextPool                        POOL                = ContextThread.createPool()
+            .setWorkerThreadName("nelumbo");
+    private static final QualifiedSet<Predicate, Inference> EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
+    private static final int                                MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ",
+            10000);
+    private static final int                                MAX_LOGIC_MEMOIZ_D4 = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
+    private static final int                                INITIAL_USAGE_COUNT = Integer
             .getInteger("INITIAL_USAGE_COUNT", 4);
-    private static final AtomicReference<Map<Class<? extends Node>, Consumer<Functor>>> FUNCTOR_REGISTRATION = new AtomicReference<>(
-            Map.of());
     //
     private static final Pattern ROOTS = r(s(a(n(Type.ROOT.list()), n(Type.ROOT)), t(NEWLINE)), false, null);
     //
@@ -91,10 +85,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final Pattern PATTERNS = r(n(Type.PATTERN, Integer.MAX_VALUE), true, null);
     //
     public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
-
-    public static void registerFunctorSetter(Class<? extends Node> clazz, Consumer<Functor> setter) {
-        FUNCTOR_REGISTRATION.updateAndGet(map -> map.put(clazz, setter));
-    }
 
     private static class Inference extends Struct2Impl<Predicate, InferResult> {
         @Serial
@@ -373,7 +363,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                             Type type = (Type) elements.get(start - 2);
                             NList roots = new NList(elements.sublist(0, start), Type.ROOT);
                             List<AstElement> pttrn = List.of(), ast = List.of();
-                            Constructor<?> constructor = null;
+                            Class<?> clazz = null;
                             Integer precedence = null;
                             for (int i = start; i <= elements.size(); i++) {
                                 AstElement e = i < elements.size() ? elements.get(i) : null;
@@ -384,13 +374,13 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                         if (precedence != null) {
                                             pattern = pattern.setPresedence(precedence);
                                         }
-                                        roots = kb.createFunctor(type, roots, ast, constructor, pattern, local,
-                                                precedence, pc);
+                                        roots = kb.createFunctor(type, roots, ast, clazz, pattern, local, precedence,
+                                                pc);
                                         if (t != null) {
                                             roots = roots.setAstElements(roots.astElements().add(t));
                                         }
                                         ast = pttrn = List.of();
-                                        constructor = null;
+                                        clazz = null;
                                         precedence = null;
                                     } else if (t.text().equals("#")) {
                                         ast = ast.add(t);
@@ -410,7 +400,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                             t = t.next();
                                         } while (t.text().equals(".") || t.type() == NAME);
                                         String className = qname.toString();
-                                        constructor = NelumboConstructor.Finder.find(className, kb,
+                                        clazz = NelumboConstructor.Finder.find(className, kb,
                                                 ast.sublist(s, ast.size()));
                                     } else {
                                         pttrn = pttrn.add(e);
@@ -430,8 +420,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Constructor<?> constructor,
-            Pattern pattern, Type local, Integer prec, ParseContext ctx) throws ParseException {
+    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
+            Type local, Integer prec, ParseContext ctx) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.isCollection() ? type.element() : null;
@@ -454,16 +444,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
-        Functor nodFunctor = Functor
-                .of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : constructor, prec)
+        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : clazz, prec)
                 .init(this, ctx, bootstrapping);
         roots = new NList(List.of(), roots, nodFunctor);
-        if (pattern instanceof TokenTextPattern && constructor != null) {
+        if (pattern instanceof TokenTextPattern && clazz != null) {
             nodFunctor.construct(List.of(), new Object[0], this, ctx);
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
-            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, constructor, prec).init(this, ctx,
+            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, clazz, prec).init(this, ctx,
                     bootstrapping);
             roots = new NList(List.of(), roots, litFunctor);
             addLiteral(nodFunctor, litFunctor);
@@ -819,15 +808,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public void register(Functor functor) {
-        Constructor<? extends Node> constructor = functor.constructor();
-        if (constructor != null && !FUNCTOR_REGISTRATION.get().isEmpty()) {
-            Class<? extends Node> cls = constructor.getDeclaringClass();
-            Consumer<Functor> setter = FUNCTOR_REGISTRATION.get().get(cls);
-            if (setter != null) {
-                setter.accept(functor);
-                FUNCTOR_REGISTRATION.updateAndGet(map -> map.remove(cls));
-            }
-        }
         if (functor.local() == null) {
             functors.accumulateAndGet(Set.of(functor), Set::addAll);
         }

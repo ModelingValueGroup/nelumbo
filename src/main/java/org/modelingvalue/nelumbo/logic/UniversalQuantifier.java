@@ -21,8 +21,8 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -31,11 +31,8 @@ public final class UniversalQuantifier extends Quantifier {
     @Serial
     private static final long serialVersionUID = 8390514736994316431L;
 
+    @NelumboFunctorField
     private static Functor FUNCTOR;
-
-    static {
-        KnowledgeBase.registerFunctorSetter(UniversalQuantifier.class, f -> FUNCTOR = f);
-    }
 
     @NelumboConstructor
     public UniversalQuantifier(Functor functor, List<AstElement> elements, Object[] args) {
