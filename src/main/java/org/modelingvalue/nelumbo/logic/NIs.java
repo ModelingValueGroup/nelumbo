@@ -42,8 +42,8 @@ public class NIs extends Predicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private NIs(Object[] array, List<AstElement> elements, NIs declaration) {
-        super(array, elements, declaration);
+    private NIs(Object[] array, Node functorOrType, List<AstElement> elements, NIs declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     public Node left() {
@@ -55,8 +55,8 @@ public class NIs extends Predicate {
     }
 
     @Override
-    protected NIs struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new NIs(array, elements, (NIs) declaration);
+    protected NIs struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new NIs(array, functorOrType, elements, (NIs) declaration);
     }
 
     @Override

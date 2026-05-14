@@ -54,8 +54,8 @@ public final class Variable extends Node {
         super(Type.VARIABLE, elements, type, name, hidden);
     }
 
-    private Variable(Object[] array, List<AstElement> elements, Variable declaration) {
-        super(array, elements, declaration);
+    private Variable(Object[] array, Node functorOrType, List<AstElement> elements, Variable declaration) {
+        super(array, Type.VARIABLE, elements, declaration);
     }
 
     @Override
@@ -91,8 +91,8 @@ public final class Variable extends Node {
     }
 
     @Override
-    protected Variable struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Variable(array, elements, (Variable) declaration);
+    protected Variable struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Variable(array, functorOrType, elements, (Variable) declaration);
     }
 
     @Override
@@ -130,7 +130,8 @@ public final class Variable extends Node {
             if (length() > 0 && get(2) instanceof Boolean) {
                 return this;
             }
-            if (get(-1) instanceof Functor functor && functor.astElements().first() instanceof Variable var) {
+            if (super.functorOrType() instanceof Functor functor
+                    && functor.astElements().first() instanceof Variable var) {
                 if (Type.BOOLEAN.isAssignableFrom(var.type())) {
                     return new BooleanVariable(functor, astElements(), var);
                 } else {

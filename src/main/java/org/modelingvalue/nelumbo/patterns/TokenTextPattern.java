@@ -42,13 +42,14 @@ public class TokenTextPattern extends Pattern {
         super(type, elements, var, isKeyword);
     }
 
-    protected TokenTextPattern(Object[] args, List<AstElement> elements, TokenTextPattern declaration) {
-        super(args, elements, declaration);
+    protected TokenTextPattern(Object[] args, Node functorOrType, List<AstElement> elements,
+            TokenTextPattern declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected TokenTextPattern struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new TokenTextPattern(array, elements, (TokenTextPattern) declaration);
+    protected TokenTextPattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new TokenTextPattern(array, functorOrType, elements, (TokenTextPattern) declaration);
     }
 
     public String tokenText() {
@@ -124,7 +125,8 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+            Map<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Token t && t.text().equals(tokenText())) {

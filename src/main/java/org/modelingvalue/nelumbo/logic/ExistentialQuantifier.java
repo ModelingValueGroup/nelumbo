@@ -43,13 +43,15 @@ public final class ExistentialQuantifier extends Quantifier {
         super(FUNCTOR, elements, localVars, predicate);
     }
 
-    private ExistentialQuantifier(Object[] args, List<AstElement> elements, ExistentialQuantifier declaration) {
-        super(args, elements, declaration);
+    private ExistentialQuantifier(Object[] args, Node functorOrType, List<AstElement> elements,
+            ExistentialQuantifier declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected ExistentialQuantifier struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new ExistentialQuantifier(array, elements, (ExistentialQuantifier) declaration);
+    protected ExistentialQuantifier struct(Object[] array, Node functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new ExistentialQuantifier(array, functorOrType, elements, (ExistentialQuantifier) declaration);
     }
 
     @Override

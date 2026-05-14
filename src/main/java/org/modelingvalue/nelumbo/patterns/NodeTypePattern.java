@@ -39,13 +39,14 @@ public class NodeTypePattern extends Pattern {
         super(type, elements, nodeType, precedence, visible);
     }
 
-    protected NodeTypePattern(Object[] args, List<AstElement> elements, NodeTypePattern declaration) {
-        super(args, elements, declaration);
+    protected NodeTypePattern(Object[] args, Node functorOrType, List<AstElement> elements,
+            NodeTypePattern declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected NodeTypePattern struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new NodeTypePattern(array, elements, (NodeTypePattern) declaration);
+    protected NodeTypePattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new NodeTypePattern(array, functorOrType, elements, (NodeTypePattern) declaration);
     }
 
     public Type nodeType() {
@@ -136,7 +137,8 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+            Map<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {

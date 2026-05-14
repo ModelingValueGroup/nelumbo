@@ -37,13 +37,13 @@ public final class Length extends Predicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private Length(Object[] array, List<AstElement> elements, Length declaration) {
-        super(array, elements, declaration);
+    private Length(Object[] array, Node functorOrType, List<AstElement> elements, Length declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected Length struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Length(array, elements, (Length) declaration);
+    protected Length struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Length(array, functorOrType, elements, (Length) declaration);
     }
 
     @Override

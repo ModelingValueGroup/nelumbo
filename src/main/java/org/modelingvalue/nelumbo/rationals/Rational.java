@@ -64,13 +64,13 @@ public final class Rational extends Node {
         return new Object[] { numerator.divide(gcd), denominator.divide(gcd) };
     }
 
-    private Rational(Object[] array, List<AstElement> elements, Rational declaration) {
-        super(array, elements, declaration);
+    private Rational(Object[] array, Node functorOrType, List<AstElement> elements, Rational declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected Rational struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Rational(array, elements, (Rational) declaration);
+    protected Rational struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Rational(array, functorOrType, elements, (Rational) declaration);
     }
 
     @Override

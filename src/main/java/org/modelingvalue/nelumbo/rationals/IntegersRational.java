@@ -38,13 +38,14 @@ public final class IntegersRational extends Predicate {
         super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private IntegersRational(Object[] array, List<AstElement> elements, IntegersRational declaration) {
-        super(array, elements, declaration);
+    private IntegersRational(Object[] array, Node functorOrType, List<AstElement> elements,
+            IntegersRational declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected IntegersRational struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new IntegersRational(array, elements, (IntegersRational) declaration);
+    protected IntegersRational struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new IntegersRational(array, functorOrType, elements, (IntegersRational) declaration);
     }
 
     @Override

@@ -36,13 +36,13 @@ public final class Parenthesized extends Node {
         super(functor, elements, args);
     }
 
-    private Parenthesized(Object[] array, List<AstElement> elements, Parenthesized declaration) {
-        super(array, elements, declaration);
+    private Parenthesized(Object[] array, Node functorOrType, List<AstElement> elements, Parenthesized declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected Parenthesized struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Parenthesized(array, elements, (Parenthesized) declaration);
+    protected Parenthesized struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Parenthesized(array, functorOrType, elements, (Parenthesized) declaration);
     }
 
     public Node node() {

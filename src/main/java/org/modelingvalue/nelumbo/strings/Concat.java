@@ -36,13 +36,13 @@ public final class Concat extends Predicate {
         super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private Concat(Object[] array, List<AstElement> elements, Concat declaration) {
-        super(array, elements, declaration);
+    private Concat(Object[] array, Node functorOrType, List<AstElement> elements, Concat declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected Concat struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Concat(array, elements, (Concat) declaration);
+    protected Concat struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Concat(array, functorOrType, elements, (Concat) declaration);
     }
 
     @Override

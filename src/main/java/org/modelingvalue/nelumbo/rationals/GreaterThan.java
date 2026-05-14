@@ -37,13 +37,13 @@ public final class GreaterThan extends Predicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private GreaterThan(Object[] array, List<AstElement> elements, GreaterThan declaration) {
-        super(array, elements, declaration);
+    private GreaterThan(Object[] array, Node functorOrType, List<AstElement> elements, GreaterThan declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected GreaterThan struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new GreaterThan(array, elements, (GreaterThan) declaration);
+    protected GreaterThan struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new GreaterThan(array, functorOrType, elements, (GreaterThan) declaration);
     }
 
     @Override

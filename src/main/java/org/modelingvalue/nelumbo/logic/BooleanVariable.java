@@ -43,13 +43,13 @@ public class BooleanVariable extends Predicate {
         return List.of(variable());
     }
 
-    private BooleanVariable(Object[] args, List<AstElement> elements, BooleanVariable declaration) {
-        super(args, elements, declaration);
+    private BooleanVariable(Object[] args, Node functorOrType, List<AstElement> elements, BooleanVariable declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected BooleanVariable struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new BooleanVariable(array, elements, (BooleanVariable) declaration);
+    protected BooleanVariable struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new BooleanVariable(array, functorOrType, elements, (BooleanVariable) declaration);
     }
 
     @Override

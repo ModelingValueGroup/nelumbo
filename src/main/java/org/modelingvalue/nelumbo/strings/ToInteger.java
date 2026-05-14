@@ -37,13 +37,13 @@ public final class ToInteger extends Predicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private ToInteger(Object[] array, List<AstElement> elements, ToInteger declaration) {
-        super(array, elements, declaration);
+    private ToInteger(Object[] array, Node functorOrType, List<AstElement> elements, ToInteger declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected ToInteger struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new ToInteger(array, elements, (ToInteger) declaration);
+    protected ToInteger struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new ToInteger(array, functorOrType, elements, (ToInteger) declaration);
     }
 
     @Override

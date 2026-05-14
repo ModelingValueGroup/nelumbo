@@ -39,13 +39,14 @@ public class SequencePattern extends Pattern {
         super(type, elements, patterns);
     }
 
-    protected SequencePattern(Object[] args, List<AstElement> elements, SequencePattern declaration) {
-        super(args, elements, declaration);
+    protected SequencePattern(Object[] args, Node functorOrType, List<AstElement> elements,
+            SequencePattern declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected SequencePattern struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new SequencePattern(array, elements, (SequencePattern) declaration);
+    protected SequencePattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new SequencePattern(array, functorOrType, elements, (SequencePattern) declaration);
     }
 
     @SuppressWarnings("unchecked")
@@ -134,7 +135,8 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+            Map<Variable, Type> typeArgs) {
         List<Object> result = List.of();
         for (Pattern element : elements()) {
             MutableList<Object> inner = MutableList.of(List.of());

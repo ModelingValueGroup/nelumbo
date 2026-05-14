@@ -37,8 +37,8 @@ public final class Or extends BinaryPredicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private Or(Object[] args, List<AstElement> elements, Or declaration) {
-        super(args, elements, declaration);
+    private Or(Object[] args, Node functorOrType, List<AstElement> elements, Or declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     public static Or of(Predicate predicate1, Predicate predicate2) {
@@ -51,8 +51,8 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
-    protected Or struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Or(array, elements, (Or) declaration);
+    protected Or struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Or(array, functorOrType, elements, (Or) declaration);
     }
 
     @Override

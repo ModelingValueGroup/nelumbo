@@ -51,8 +51,8 @@ public final class NList extends Node {
         super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
     }
 
-    private NList(Object[] array, List<AstElement> elements, NList declaration) {
-        super(array, elements, declaration);
+    private NList(Object[] array, Node functorOrType, List<AstElement> elements, NList declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
@@ -87,8 +87,8 @@ public final class NList extends Node {
     }
 
     @Override
-    protected NList struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new NList(array, elements, (NList) declaration);
+    protected NList struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new NList(array, functorOrType, elements, (NList) declaration);
     }
 
     @Override

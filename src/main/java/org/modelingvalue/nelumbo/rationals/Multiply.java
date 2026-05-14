@@ -37,13 +37,13 @@ public final class Multiply extends Predicate {
         super(functor, elements, args[0], args[1], args[2]);
     }
 
-    private Multiply(Object[] array, List<AstElement> elements, Multiply declaration) {
-        super(array, elements, declaration);
+    private Multiply(Object[] array, Node functorOrType, List<AstElement> elements, Multiply declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected Multiply struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Multiply(array, elements, (Multiply) declaration);
+    protected Multiply struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Multiply(array, functorOrType, elements, (Multiply) declaration);
     }
 
     @Override

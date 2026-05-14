@@ -457,8 +457,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             roots = new NList(List.of(), roots, litFunctor);
             addLiteral(nodFunctor, litFunctor);
             // Implied Rule
-            Variable[] nodVars = new Variable[args.size()];
-            Variable[] litVars = new Variable[args.size()];
+            Object[] nodVars = new Object[args.size()];
+            Object[] litVars = new Object[args.size()];
             List<Type> litArgs = args.replaceAll(Type::toLiteral);
             for (int v = 0; v < args.size(); v++) {
                 nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1), false);
@@ -470,10 +470,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
             Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
             for (int c = args.size() - 1; c >= 0; c--) {
-                Predicate eq = new NIs(List.of(), nodVars[c], litVars[c]);
+                Predicate eq = new NIs(List.of(), (Variable) nodVars[c], (Variable) litVars[c]);
                 litCond = And.of(eq, litCond);
             }
-            ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), List.of(litVars), litCond);
+            List<Variable> localVars = List.of();
+            for (int v = 0; v < args.size(); v++) {
+                localVars = localVars.add((Variable) litVars[v]);
+            }
+            ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
             Rule rule = new Rule(List.of(), nodCons, exists);
             roots = new NList(List.of(), roots, rule);
         }

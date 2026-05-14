@@ -40,13 +40,14 @@ public class OptionalPattern extends Pattern {
         super(type, elements, optional);
     }
 
-    protected OptionalPattern(Object[] args, List<AstElement> elements, OptionalPattern declaration) {
-        super(args, elements, declaration);
+    protected OptionalPattern(Object[] args, Node functorOrType, List<AstElement> elements,
+            OptionalPattern declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected OptionalPattern struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new OptionalPattern(array, elements, (OptionalPattern) declaration);
+    protected OptionalPattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new OptionalPattern(array, functorOrType, elements, (OptionalPattern) declaration);
     }
 
     public Pattern optional() {
@@ -98,7 +99,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+            Map<Variable, Type> typeArgs) {
         MutableList<Object> inner = MutableList.of(List.of());
         int ii = optional().args(elements, i, inner, true, functor, typeArgs);
         if (ii >= 0) {

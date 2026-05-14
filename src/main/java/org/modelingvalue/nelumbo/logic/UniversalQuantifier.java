@@ -43,13 +43,15 @@ public final class UniversalQuantifier extends Quantifier {
         super(FUNCTOR, elements, localVars, predicate);
     }
 
-    private UniversalQuantifier(Object[] args, List<AstElement> elements, UniversalQuantifier declaration) {
-        super(args, elements, declaration);
+    private UniversalQuantifier(Object[] args, Node functorOrType, List<AstElement> elements,
+            UniversalQuantifier declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected UniversalQuantifier struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new UniversalQuantifier(array, elements, (UniversalQuantifier) declaration);
+    protected UniversalQuantifier struct(Object[] array, Node functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new UniversalQuantifier(array, functorOrType, elements, (UniversalQuantifier) declaration);
     }
 
     @Override

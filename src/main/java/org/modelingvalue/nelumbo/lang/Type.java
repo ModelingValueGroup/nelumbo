@@ -100,7 +100,7 @@ public final class Type extends Node {
     private List<Type> allSupers;
 
     @Override
-    public Node typeOrFunctor() {
+    public Node functorOrType() {
         return TYPE;
     }
 
@@ -114,8 +114,8 @@ public final class Type extends Node {
         super(functor, elements, args);
     }
 
-    private Type(Object[] array, List<AstElement> elements, Type declaration) {
-        super(array, elements, declaration);
+    private Type(Object[] array, Node functorOrType, List<AstElement> elements, Type declaration) {
+        super(array, TYPE, elements, declaration);
     }
 
     public Type(Class<?> clss, Type... supers) {
@@ -422,8 +422,8 @@ public final class Type extends Node {
     }
 
     @Override
-    protected Type struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Type(array, elements, (Type) declaration);
+    protected Type struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Type(array, functorOrType, elements, (Type) declaration);
     }
 
     @Override
@@ -462,7 +462,8 @@ public final class Type extends Node {
             if (length() > 2 && get(2) instanceof String) {
                 return this;
             }
-            if (get(-1) instanceof Functor functor && functor.astElements().first() instanceof Type type) {
+            if (super.functorOrType() instanceof Functor functor
+                    && functor.astElements().first() instanceof Type type) {
                 Type result = type.setAstElements(astElements());
                 if (result.isCollection() && get(0) instanceof Type elem) {
                     result = result.setElement(elem);

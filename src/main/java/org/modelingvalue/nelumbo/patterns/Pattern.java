@@ -132,12 +132,12 @@ public abstract class Pattern extends Node {
         super(type, ast, args);
     }
 
-    protected Pattern(Object[] args, List<AstElement> elements, Pattern declaration) {
-        super(args, elements, declaration);
+    protected Pattern(Object[] args, Node functorOrType, List<AstElement> elements, Pattern declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected abstract Pattern struct(Object[] array, List<AstElement> elements, Node declaration);
+    protected abstract Pattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration);
 
     public abstract ParseState state(ParseState next);
 
@@ -162,8 +162,8 @@ public abstract class Pattern extends Node {
 
     public abstract int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt);
 
-    public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt,
-            Functor functor, Map<Variable, Type> typeArgs);
+    public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+            Map<Variable, Type> typeArgs);
 
     public static boolean isEndOfLine(Token token) {
         return token.type() == TokenType.ENDOFFILE

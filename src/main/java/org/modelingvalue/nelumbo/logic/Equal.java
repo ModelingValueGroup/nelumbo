@@ -35,8 +35,8 @@ public class Equal extends Predicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private Equal(Object[] array, List<AstElement> elements, Equal declaration) {
-        super(array, elements, declaration);
+    private Equal(Object[] array, Node functorOrType, List<AstElement> elements, Equal declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     public Node left() {
@@ -48,8 +48,8 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected Equal struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Equal(array, elements, (Equal) declaration);
+    protected Equal struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Equal(array, functorOrType, elements, (Equal) declaration);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class Equal extends Predicate {
         } else if (left instanceof Type && right instanceof Type) { // right always a Type here!
             complete[0] = false;
             return Objects.equals(left, right) ? left : null;
-        } else if (!left.typeOrFunctor().equals(right.typeOrFunctor())) {
+        } else if (!left.functorOrType().equals(right.functorOrType())) {
             return null;
         } else if (left.length() != right.length()) {
             return null;
@@ -96,7 +96,7 @@ public class Equal extends Predicate {
                 if (array == null) {
                     array = left.toArray();
                 }
-                array[i + START] = eq;
+                array[i] = eq;
             }
         }
         return array != null ? left.struct(array) : left;

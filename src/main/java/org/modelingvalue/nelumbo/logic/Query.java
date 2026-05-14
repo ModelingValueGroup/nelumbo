@@ -53,20 +53,18 @@ public final class Query extends Node implements Evaluatable {
             Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
             List<Node> expected = getVal(1);
             if (expected == null) {
-                Object[] array = new Object[2];
-                array[0] = functor();
-                array[1] = predicate;
+                Object[] array = new Object[1];
+                array[0] = predicate;
                 return struct(array);
             } else {
                 List<Object> facts = expected.get(0).args();
                 List<Object> falsehoods = expected.get(1).args();
-                Object[] array = new Object[6];
-                array[0] = functor();
-                array[1] = predicate;
-                array[2] = bindings(facts.filter(List.class).asList());
-                array[3] = !facts.contains("..");
-                array[4] = bindings(falsehoods.filter(List.class).asList());
-                array[5] = !falsehoods.contains("..");
+                Object[] array = new Object[5];
+                array[0] = predicate;
+                array[1] = bindings(facts.filter(List.class).asList());
+                array[2] = !facts.contains("..");
+                array[3] = bindings(falsehoods.filter(List.class).asList());
+                array[4] = !falsehoods.contains("..");
                 return struct(array);
             }
         }
@@ -125,13 +123,13 @@ public final class Query extends Node implements Evaluatable {
         return (Query) super.setBinding(vars);
     }
 
-    private Query(Object[] array, List<AstElement> elements, Query declaration) {
-        super(array, elements, declaration);
+    private Query(Object[] array, Node functorOrType, List<AstElement> elements, Query declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected Query struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Query(array, elements, (Query) declaration);
+    protected Query struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Query(array, functorOrType, elements, (Query) declaration);
     }
 
     @Override

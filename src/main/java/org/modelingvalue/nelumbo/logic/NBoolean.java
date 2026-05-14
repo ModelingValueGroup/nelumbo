@@ -57,8 +57,8 @@ public final class NBoolean extends Predicate {
                 "false".equalsIgnoreCase(arg) ? Boolean.FALSE : null;
     }
 
-    private NBoolean(Object[] args, List<AstElement> elements, NBoolean declaration) {
-        super(args, elements, declaration);
+    private NBoolean(Object[] args, Node functorOrType, List<AstElement> elements, NBoolean declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     private Boolean getBoolean() {
@@ -86,8 +86,8 @@ public final class NBoolean extends Predicate {
     }
 
     @Override
-    protected NBoolean struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new NBoolean(array, elements, (NBoolean) declaration);
+    protected NBoolean struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new NBoolean(array, functorOrType, elements, (NBoolean) declaration);
     }
 
     @Override

@@ -39,13 +39,15 @@ public class AlternationPattern extends Pattern {
         super(type, elements, options);
     }
 
-    protected AlternationPattern(Object[] args, List<AstElement> elements, AlternationPattern declaration) {
-        super(args, elements, declaration);
+    protected AlternationPattern(Object[] args, Node functorOrType, List<AstElement> elements,
+            AlternationPattern declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected AlternationPattern struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new AlternationPattern(array, elements, (AlternationPattern) declaration);
+    protected AlternationPattern struct(Object[] array, Node functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new AlternationPattern(array, functorOrType, elements, (AlternationPattern) declaration);
     }
 
     @SuppressWarnings("unchecked")
@@ -64,7 +66,8 @@ public class AlternationPattern extends Pattern {
 
     @Override
     public String toString(TokenType[] previous) {
-        return "<(>" + options().map(Object::toString).reduce("", (a, b) -> a.isEmpty() || b.isEmpty() ? a + b : a + "<|>" + b) + "<)>";
+        return "<(>" + options().map(Object::toString).reduce("",
+                (a, b) -> a.isEmpty() || b.isEmpty() ? a + b : a + "<|>" + b) + "<)>";
     }
 
     @Override
@@ -118,7 +121,8 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+            Map<Variable, Type> typeArgs) {
         for (Pattern option : options()) {
             MutableList<Object> inner = MutableList.of(List.of());
             int ii = option.args(elements, i, inner, true, functor, typeArgs);

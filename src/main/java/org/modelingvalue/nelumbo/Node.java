@@ -43,9 +43,9 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Node extends StructImpl implements AstElement {
     @Serial
-    private static final long  serialVersionUID = 7315776001191198132L;
-    protected static final int START            = 1;
+    private static final long serialVersionUID = 7315776001191198132L;
     //
+    private final Node             functorOrType;
     private final List<AstElement> elements;
     private final Node             declaration;
     //
@@ -55,21 +55,22 @@ public class Node extends StructImpl implements AstElement {
 
     @NelumboConstructor
     public Node(Functor functor, List<AstElement> elements, Object... args) {
-        super(array(functor, args));
+        super(array(args));
+        this.functorOrType = functor;
         this.elements = elements;
         this.declaration = this;
-        init(elements);
     }
 
     public Node(Type type, List<AstElement> elements, Object... args) {
-        super(array(type, args));
+        super(array(args));
+        this.functorOrType = type;
         this.elements = elements;
         this.declaration = this;
-        init(elements);
     }
 
-    protected Node(Object[] args, List<AstElement> elements, Node declaration) {
+    protected Node(Object[] args, Node functorOrType, List<AstElement> elements, Node declaration) {
         super(args);
+        this.functorOrType = functorOrType;
         this.elements = elements;
         this.declaration = declaration == null ? this : declaration;
     }
@@ -80,10 +81,10 @@ public class Node extends StructImpl implements AstElement {
 
     public Node resetDeclaration() {
         Object[] array = toArray();
-        for (int i = START; i < array.length; i++) {
+        for (int i = 0; i < array.length; i++) {
             array[i] = resetDeclaration(array[i]);
         }
-        return struct(array, elements, null);
+        return struct(array, functorOrType, elements, null);
     }
 
     private Object resetDeclaration(Object from) {
@@ -99,61 +100,35 @@ public class Node extends StructImpl implements AstElement {
         return from;
     }
 
-    private static Object[] array(Node typeOrFunctor, Object[] args) {
-        Object[] result = new Object[START + args.length];
-        result[0] = typeOrFunctor;
-        System.arraycopy(args, 0, result, START, args.length);
+    private static Object[] array(Object[] args) {
         for (int i = 0; i < args.length; i++) {
             if (args[i] instanceof Optional<?> opt) {
-                result[i + START] = opt.orElse(null);
+                args[i] = opt.orElse(null);
             }
         }
-        return result;
+        return args;
     }
 
     public Node setFunctor(Functor functor) {
-        Object[] array = toArray();
-        array[0] = functor;
-        return struct(array, elements, declaration);
+        return struct(toArray(), functor, elements, declaration);
     }
 
     public Node setAstElements(List<AstElement> elements) {
-        Object[] array = toArray();
-        Node node = struct(array, elements, declaration);
-        node.init(elements);
-        return node;
-    }
-
-    private void init(List<AstElement> elements) {
-        for (AstElement e : elements) {
-            if (e instanceof Token token) {
-                token.setNode(this);
-            }
-        }
-    }
-
-    @Override
-    public int length() {
-        return super.length() - START;
-    }
-
-    @Override
-    public Object get(int i) {
-        return super.get(i + START);
+        return struct(toArray(), functorOrType, elements, declaration);
     }
 
     public Type type() {
-        Node tf = typeOrFunctor();
+        Node tf = functorOrType();
         return tf instanceof Functor ? ((Functor) tf).resultType() : (Type) tf;
     }
 
     public Functor functor() {
-        Node tf = typeOrFunctor();
+        Node tf = functorOrType();
         return tf instanceof Functor ? (Functor) tf : null;
     }
 
-    public Node typeOrFunctor() {
-        return (Node) super.get(0);
+    public Node functorOrType() {
+        return functorOrType;
     }
 
     public final List<AstElement> astElements() {
@@ -234,7 +209,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     protected Object typeForEquals() {
-        return typeOrFunctor();
+        return functorOrType();
     }
 
     public List<Variable> localVars() {
@@ -294,7 +269,7 @@ public class Node extends StructImpl implements AstElement {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + f + START] = a[i];
+                array[i + f] = a[i];
             }
         }
         return array;
@@ -311,7 +286,7 @@ public class Node extends StructImpl implements AstElement {
 
     private Node set(int ii, int[] idx, Object val) {
         Object[] array = toArray();
-        int i = idx[ii] + START;
+        int i = idx[ii];
         if (ii < idx.length - 1) {
             Node s = (Node) array[i];
             array[i] = s.set(ii + 1, idx, val);
@@ -322,11 +297,11 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public final Node struct(Object[] array) {
-        return struct(array, elements, declaration);
+        return struct(array, functorOrType, elements, declaration);
     }
 
-    protected Node struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Node(array, elements, declaration);
+    protected Node struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Node(array, functorOrType, elements, declaration);
     }
 
     public final Set<Variable> allLocalVars() {
@@ -431,10 +406,10 @@ public class Node extends StructImpl implements AstElement {
                 if (array == null) {
                     array = toArray();
                 }
-                array[i + START] = bound;
+                array[i] = bound;
             }
         }
-        return array != null ? struct(array, elements, declaration) : this;
+        return array != null ? struct(array, functorOrType, elements, declaration) : this;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -507,7 +482,7 @@ public class Node extends StructImpl implements AstElement {
                     if (array == null) {
                         array = toArray();
                     }
-                    array[i + START] = toVal;
+                    array[i] = toVal;
                 }
             }
             return array != null ? struct(array) : this;

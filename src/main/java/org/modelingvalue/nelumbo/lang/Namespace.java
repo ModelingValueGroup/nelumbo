@@ -37,13 +37,13 @@ public final class Namespace extends Node {
         super(functor, elements, args);
     }
 
-    private Namespace(Object[] array, List<AstElement> elements, Namespace declaration) {
-        super(array, elements, declaration);
+    private Namespace(Object[] array, Node functorOrType, List<AstElement> elements, Namespace declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected Namespace struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Namespace(array, elements, (Namespace) declaration);
+    protected Namespace struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Namespace(array, functorOrType, elements, (Namespace) declaration);
     }
 
     @Override

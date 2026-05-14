@@ -21,6 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 
@@ -36,8 +37,9 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         super(type, elements, predicate1, predicate2);
     }
 
-    protected BinaryPredicate(Object[] args, List<AstElement> elements, BinaryPredicate declaration) {
-        super(args, elements, declaration);
+    protected BinaryPredicate(Object[] args, Node functorOrType, List<AstElement> elements,
+            BinaryPredicate declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override

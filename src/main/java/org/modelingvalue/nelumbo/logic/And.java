@@ -37,8 +37,8 @@ public final class And extends BinaryPredicate {
         super(functor, elements, args[0], args[1]);
     }
 
-    private And(Object[] args, List<AstElement> elements, And declaration) {
-        super(args, elements, declaration);
+    private And(Object[] args, Node functorOrType, List<AstElement> elements, And declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     public static And of(Predicate predicate1, Predicate predicate2) {
@@ -51,8 +51,8 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new And(array, elements, (And) declaration);
+    protected And struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new And(array, functorOrType, elements, (And) declaration);
     }
 
     @Override

@@ -32,8 +32,8 @@ public final class When extends BinaryPredicate {
         super(Type.BOOLEAN, List.of(), when, predicate);
     }
 
-    private When(Object[] args, List<AstElement> elements, When declaration) {
-        super(args, elements, declaration);
+    private When(Object[] args, Node functorOrType, List<AstElement> elements, When declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     public static When of(Node when, Node predicate) {
@@ -46,8 +46,8 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected When struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new When(array, elements, (When) declaration);
+    protected When struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new When(array, functorOrType, elements, (When) declaration);
     }
 
     @Override

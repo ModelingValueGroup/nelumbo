@@ -38,13 +38,14 @@ public class TokenTypePattern extends Pattern {
         super(type, elements, tokenType);
     }
 
-    protected TokenTypePattern(Object[] args, List<AstElement> elements, TokenTypePattern declaration) {
-        super(args, elements, declaration);
+    protected TokenTypePattern(Object[] args, Node functorOrType, List<AstElement> elements,
+            TokenTypePattern declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected TokenTypePattern struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new TokenTypePattern(array, elements, (TokenTypePattern) declaration);
+    protected TokenTypePattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new TokenTypePattern(array, functorOrType, elements, (TokenTypePattern) declaration);
     }
 
     public TokenType tokenType() {

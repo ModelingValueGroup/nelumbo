@@ -56,13 +56,13 @@ public final class NString extends Node {
         return strip(string);
     }
 
-    private NString(Object[] array, List<AstElement> elements, NString declaration) {
-        super(array, elements, declaration);
+    private NString(Object[] array, Node functorOrType, List<AstElement> elements, NString declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected NString struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new NString(array, elements, (NString) declaration);
+    protected NString struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new NString(array, functorOrType, elements, (NString) declaration);
     }
 
     @Override

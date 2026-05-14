@@ -42,13 +42,13 @@ public final class Transform extends Node {
         super(functor, elements, args);
     }
 
-    private Transform(Object[] array, List<AstElement> elements, Transform declaration) {
-        super(array, elements, declaration);
+    private Transform(Object[] array, Node functorOrType, List<AstElement> elements, Transform declaration) {
+        super(array, functorOrType, elements, declaration);
     }
 
     @Override
-    protected Transform struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Transform(array, elements, (Transform) declaration);
+    protected Transform struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Transform(array, functorOrType, elements, (Transform) declaration);
     }
 
     @Override
@@ -121,7 +121,7 @@ public final class Transform extends Node {
         for (Node target : targetsFlattened()) {
             if (!(target instanceof Functor)) {
                 Node rewrite = target.replace(n -> {
-                    if (n.typeOrFunctor() instanceof Functor f) {
+                    if (n.functorOrType() instanceof Functor f) {
                         Functor r = fm.get(f);
                         if (r != null) {
                             return n.setFunctor(r);

@@ -23,6 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -39,8 +40,9 @@ public abstract class CompoundPredicate extends Predicate {
         super(type, elements, predicates);
     }
 
-    protected CompoundPredicate(Object[] args, List<AstElement> elements, CompoundPredicate declaration) {
-        super(args, elements, declaration);
+    protected CompoundPredicate(Object[] args, Node functorOrType, List<AstElement> elements,
+            CompoundPredicate declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override

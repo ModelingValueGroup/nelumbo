@@ -36,17 +36,20 @@ public class RepetitionPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 7257418785045060245L;
 
-    public RepetitionPattern(Type type, List<AstElement> elements, Pattern repeated, boolean mandatory, Pattern separator) {
+    public RepetitionPattern(Type type, List<AstElement> elements, Pattern repeated, boolean mandatory,
+            Pattern separator) {
         super(type, elements, repeated, mandatory, separator);
     }
 
-    protected RepetitionPattern(Object[] args, List<AstElement> elements, RepetitionPattern declaration) {
-        super(args, elements, declaration);
+    protected RepetitionPattern(Object[] args, Node functorOrType, List<AstElement> elements,
+            RepetitionPattern declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
-    protected RepetitionPattern struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new RepetitionPattern(array, elements, (RepetitionPattern) declaration);
+    protected RepetitionPattern struct(Object[] array, Node functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new RepetitionPattern(array, functorOrType, elements, (RepetitionPattern) declaration);
     }
 
     public Pattern repeated() {
@@ -132,7 +135,8 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor, Map<Variable, Type> typeArgs) {
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+            Map<Variable, Type> typeArgs) {
         Pattern repeated = repeated();
         Pattern separator = separator();
         boolean mandatory = mandatory();

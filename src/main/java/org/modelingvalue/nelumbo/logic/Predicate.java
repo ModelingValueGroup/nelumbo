@@ -55,8 +55,8 @@ public class Predicate extends Node {
         super(type, elements, args);
     }
 
-    protected Predicate(Object[] args, List<AstElement> elements, Predicate declaration) {
-        super(args, elements, declaration);
+    protected Predicate(Object[] args, Node functorOrType, List<AstElement> elements, Predicate declaration) {
+        super(args, functorOrType, elements, declaration);
     }
 
     @Override
@@ -81,13 +81,7 @@ public class Predicate extends Node {
 
     public Predicate castFrom(Predicate from) {
         Object[] array = from.toArray();
-        array[0] = functor();
-        return from.struct(array, astElements(), declaration());
-    }
-
-    @SuppressWarnings("unused")
-    protected Predicate clearDeclaration() {
-        return struct(toArray(), astElements(), null);
+        return from.struct(array, functorOrType(), astElements(), declaration());
     }
 
     @Override
@@ -150,8 +144,8 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Predicate(array, elements, (Predicate) declaration);
+    protected Predicate struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
+        return new Predicate(array, functorOrType, elements, (Predicate) declaration);
     }
 
     public Type getType(int i) {
@@ -171,11 +165,6 @@ public class Predicate extends Node {
             System.out.println(context.prefix() + predicate + " " + result);
         }
         return result;
-    }
-
-    @SuppressWarnings("unused")
-    protected InferResult expand(InferContext context) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -203,11 +192,11 @@ public class Predicate extends Node {
                         if (array == null) {
                             array = toArray();
                         }
-                        array[i + START] = toDecl;
+                        array[i] = toDecl;
                     }
                 }
             }
-            return array != null ? struct(array, astElements(), decl) : this;
+            return array != null ? struct(array, functorOrType(), astElements(), decl) : this;
         }
     }
 
@@ -222,14 +211,14 @@ public class Predicate extends Node {
 
     protected final Predicate setPredicates(int from, Predicate... a) {
         Object[] declArray = declaration().toArray();
-        int i = from + START;
+        int i = from;
         for (int x = 0; x < a.length; x++) {
             declArray[i + x] = a[x].declaration();
         }
-        Predicate newDeclaration = declaration().struct(declArray, declaration().astElements(), null);
+        Predicate newDeclaration = declaration().struct(declArray, functorOrType(), declaration().astElements(), null);
         Object[] predArray = toArray();
-        System.arraycopy(a, 0, predArray, from + START, a.length);
-        return struct(predArray, astElements(), newDeclaration);
+        System.arraycopy(a, 0, predArray, from, a.length);
+        return struct(predArray, functorOrType(), astElements(), newDeclaration);
     }
 
     public final InferResult unknown() {
@@ -275,13 +264,13 @@ public class Predicate extends Node {
     @Override
     public Predicate setType(int i, Type type) {
         Object[] array = setArray(i, type);
-        return array != null ? struct(array, astElements(), null) : this;
+        return array != null ? struct(array, functorOrType(), astElements(), null) : this;
     }
 
     @Override
     protected Predicate setTyped(int i, Node typed) {
         Object[] array = setArray(i, typed);
-        return array != null ? struct(array, astElements(), null) : this;
+        return array != null ? struct(array, functorOrType(), astElements(), null) : this;
     }
 
     public InferResult resolve(InferContext context) {
