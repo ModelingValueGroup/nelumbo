@@ -36,22 +36,12 @@ public final class Variable extends Node {
     private static final long serialVersionUID = -8998368070388908726L;
 
     @NelumboConstructor
-    public Variable(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, init(args));
+    public Variable(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
+        super(functor, elements, declararion, args);
     }
 
-    private static Object[] init(Object[] args) {
-        if (args.length > 0) {
-            Object hidden = args[0];
-            Object type = args[1];
-            args[0] = type;
-            args[1] = hidden;
-        }
-        return args;
-    }
-
-    public Variable(List<AstElement> elements, Type type, String name, boolean hidden) {
-        super(Type.VARIABLE, elements, type, name, hidden);
+    public Variable(List<AstElement> elements, boolean hidden, Type type, String name) {
+        super(Type.VARIABLE, elements, null, hidden, type, name);
     }
 
     private Variable(Object[] array, Node functorOrType, List<AstElement> elements, Variable declaration) {
@@ -70,24 +60,24 @@ public final class Variable extends Node {
 
     public Variable literal() {
         Type type = type();
-        return type.isLiteral() ? this : new Variable(astElements(), type.toLiteral(), name(), hidden());
+        return type.isLiteral() ? this : new Variable(astElements(), hidden(), type.toLiteral(), name());
     }
 
     public Variable rename(String name) {
-        return new Variable(astElements(), type(), name, hidden());
+        return new Variable(astElements(), hidden(), type(), name);
+    }
+
+    public boolean hidden() {
+        return (Boolean) get(0);
     }
 
     @Override
     public Type type() {
-        return length() > 0 ? (Type) get(0) : super.type();
+        return length() > 0 ? (Type) get(1) : super.type();
     }
 
     public String name() {
-        return (String) get(1);
-    }
-
-    public boolean hidden() {
-        return (Boolean) get(2);
+        return (String) get(2);
     }
 
     @Override
@@ -116,7 +106,7 @@ public final class Variable extends Node {
     }
 
     public Variable setType(Type type) {
-        return set(0, type);
+        return set(1, type);
     }
 
     @Override
@@ -127,7 +117,7 @@ public final class Variable extends Node {
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
-            if (length() > 0 && get(2) instanceof Boolean) {
+            if (length() > 0 && get(0) instanceof Boolean) {
                 return this;
             }
             if (super.functorOrType() instanceof Functor functor
@@ -138,9 +128,9 @@ public final class Variable extends Node {
                     return var.setAstElements(astElements()).setFunctor(functor);
                 }
             }
-            boolean hidden = get(1) != null;
+            boolean hidden = get(0) != null;
             List<AstElement> elements = astElements();
-            Type type = (Type) get(0);
+            Type type = (Type) get(1);
             NList roots = new NList(List.of(type), Type.ROOT);
             int start = hidden ? 1 : 0;
             for (int i = start + 1; i < elements.size(); i++) {
@@ -149,7 +139,7 @@ public final class Variable extends Node {
                     roots = roots.setAstElements(roots.astElements().add(t));
                     e = elements.get(++i);
                 }
-                Variable var = new Variable(List.of(e), type, ((Token) e).text(), hidden);
+                Variable var = new Variable(List.of(e), hidden, type, ((Token) e).text());
                 Functor varFun = knowledgeBase.addVariable(var, ctx);
                 roots = new NList(List.of(), roots, varFun);
             }

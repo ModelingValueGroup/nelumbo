@@ -33,8 +33,8 @@ public final class Namespace extends Node {
     private static final long serialVersionUID = 8774934413042142443L;
 
     @NelumboConstructor
-    public Namespace(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+    public Namespace(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
+        super(functor, elements, declararion, args);
     }
 
     private Namespace(Object[] array, Node functorOrType, List<AstElement> elements, Namespace declaration) {

@@ -34,8 +34,8 @@ public final class Import extends Node {
     private static final long serialVersionUID = 4184295220819695199L;
 
     @NelumboConstructor
-    public Import(Functor functor, List<AstElement> elements, Object... args) {
-        super(functor, elements, args);
+    public Import(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
+        super(functor, elements, declararion, args);
     }
 
     @Override
@@ -49,7 +49,7 @@ public final class Import extends Node {
             for (int i = 1; i <= elements.size(); i++) {
                 Token t = i < elements.size() ? (Token) elements.get(i) : null;
                 if (t == null || t.text().equals(",")) {
-                    Import ip = new Import(functor, el, sb.toString());
+                    Import ip = new Import(functor, el, null, sb.toString());
                     roots = new NList(List.of(), roots, ip);
                     if (t != null) {
                         roots = roots.setAstElements(roots.astElements().add(t));

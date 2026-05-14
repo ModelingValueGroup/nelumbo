@@ -33,8 +33,8 @@ public final class Multiply extends Predicate {
     private static final long serialVersionUID = 6350761148609377565L;
 
     @NelumboConstructor
-    public Multiply(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1], args[2]);
+    public Multiply(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private Multiply(Object[] array, Node functorOrType, List<AstElement> elements, Multiply declaration) {

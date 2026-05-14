@@ -21,10 +21,14 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NSet extends Node {
@@ -32,8 +36,8 @@ public class NSet extends Node {
     private static final long serialVersionUID = 840888260991475386L;
 
     @NelumboConstructor
-    public NSet(Functor functor, List<AstElement> elements, Object... args) {
-        super(functor, elements, Set.of(args));
+    public NSet(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private NSet(Object[] array, Node functorOrType, List<AstElement> elements, NSet declaration) {
@@ -74,5 +78,13 @@ public class NSet extends Node {
     public String toString(TokenType[] previous) {
         String string = elements().toString();
         return "{" + string.substring(4, string.length() - 1) + "}";
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof Set)) {
+            return this;
+        }
+        return struct(new Object[] { Set.of(super.args()) }, functorOrType(), astElements(), null);
     }
 }

@@ -67,7 +67,7 @@ public final class Type extends Node {
     public static final Type  VARIABLE     = new Type("Variable", OBJECT);
     public static final Type  FUNCTOR      = new Type("Functor", ROOT);
     public static final Type  PATTERN      = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
-    private static final Type TYPE_ARG_VAR = new Type(new Variable(List.of(), TYPE, "E", false));
+    private static final Type TYPE_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
     public static final Type  COLLECTION   = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type  SET          = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type  LIST         = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
@@ -110,8 +110,8 @@ public final class Type extends Node {
     }
 
     @NelumboConstructor
-    public Type(Functor functor, List<AstElement> elements, Object... args) {
-        super(functor, elements, args);
+    public Type(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
+        super(functor, elements, declararion, args);
     }
 
     private Type(Object[] array, Node functorOrType, List<AstElement> elements, Type declaration) {
@@ -119,19 +119,19 @@ public final class Type extends Node {
     }
 
     public Type(Class<?> clss, Type... supers) {
-        super(TYPE, List.of(), clss, supers.length == 0 ? Set.of() : Set.of(supers), group(supers));
+        super(TYPE, List.of(), null, clss, supers.length == 0 ? Set.of() : Set.of(supers), group(supers));
     }
 
     public Type(String name, String group, Type... supers) {
-        super(TYPE, List.of(), name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group);
+        super(TYPE, List.of(), null, name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group);
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE, List.of(), name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group(supers));
+        super(TYPE, List.of(), null, name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group(supers));
     }
 
     public Type(TokenType type) {
-        super(TYPE, List.of(), type, Set.of(), DEFAULT_GROUP);
+        super(TYPE, List.of(), null, type, Set.of(), DEFAULT_GROUP);
     }
 
     public Type(Variable var) {
@@ -139,16 +139,16 @@ public final class Type extends Node {
     }
 
     public Type(List<AstElement> elements, Variable var, String group) {
-        super(TYPE, elements, var, Set.of(OBJECT), group);
+        super(TYPE, elements, null, var, Set.of(OBJECT), group);
         assert Type.TYPE.equals(var.type());
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
-        super(TYPE, elements, name, supers.asSet(), group);
+        super(TYPE, elements, null, name, supers.asSet(), group);
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, Type element) {
-        super(TYPE, elements, name, supers.asSet(), group, element);
+        super(TYPE, elements, null, name, supers.asSet(), group, element);
     }
 
     private Type(String name, Type sup, Type element, String group) {
@@ -156,12 +156,9 @@ public final class Type extends Node {
     }
 
     public Type(Type super1, Type super2) {
-        super(TYPE, //
-                List.of(), //
-                Set.of(super1, super2), //
-                Set.of(super1, super2) //
-                        .addAll(super1.supers().remove(OBJECT).replaceAll(s1 -> new Type(s1, super2))) //
-                        .addAll(super2.supers().remove(OBJECT).replaceAll(s2 -> new Type(super1, s2))) //
+        super(TYPE, List.of(), null, Set.of(super1, super2), Set.of(super1, super2) //
+                .addAll(super1.supers().remove(OBJECT).replaceAll(s1 -> new Type(s1, super2))) //
+                .addAll(super2.supers().remove(OBJECT).replaceAll(s2 -> new Type(super1, s2))) //
                 , super1.group());
     }
 

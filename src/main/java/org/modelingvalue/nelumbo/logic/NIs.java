@@ -38,8 +38,8 @@ public class NIs extends Predicate {
     }
 
     @NelumboConstructor
-    public NIs(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public NIs(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private NIs(Object[] array, Node functorOrType, List<AstElement> elements, NIs declaration) {

@@ -33,8 +33,8 @@ public final class Not extends CompoundPredicate {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Not(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0]);
+    public Not(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private Not(Object[] args, Node functorOrType, List<AstElement> elements, Not declaration) {
@@ -42,7 +42,7 @@ public final class Not extends CompoundPredicate {
     }
 
     public static Not of(Predicate predicate) {
-        return new Not(FUNCTOR, List.of(), new Object[] { predicate });
+        return new Not(FUNCTOR, List.of(), null, predicate);
     }
 
     @Override

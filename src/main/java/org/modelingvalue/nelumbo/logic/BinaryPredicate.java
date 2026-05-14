@@ -29,12 +29,12 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -928776822979604743L;
 
-    protected BinaryPredicate(Functor functor, List<AstElement> elements, Object predicate1, Object predicate2) {
-        super(functor, elements, predicate1, predicate2);
+    protected BinaryPredicate(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
+        super(functor, elements, declararion, args);
     }
 
-    protected BinaryPredicate(Type type, List<AstElement> elements, Object predicate1, Object predicate2) {
-        super(type, elements, predicate1, predicate2);
+    protected BinaryPredicate(Type type, List<AstElement> elements, Node declararion, Object... args) {
+        super(type, elements, declararion, args);
     }
 
     protected BinaryPredicate(Object[] args, Node functorOrType, List<AstElement> elements,

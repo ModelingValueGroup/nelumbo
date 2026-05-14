@@ -47,12 +47,12 @@ public final class Rule extends Node implements Evaluatable {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Rule(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public Rule(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     public Rule(List<AstElement> elements, Predicate consequence, Predicate condition) {
-        super(FUNCTOR, elements, consequence, condition);
+        super(FUNCTOR, elements, null, consequence, condition);
     }
 
     private Rule(Object[] args, Node functorOrType, List<AstElement> elements, Rule declaration) {

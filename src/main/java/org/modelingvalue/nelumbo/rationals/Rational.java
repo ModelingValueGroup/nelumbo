@@ -21,10 +21,14 @@ import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Rational extends Node {
@@ -37,12 +41,12 @@ public final class Rational extends Node {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Rational(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse((String) args[0]));
+    public Rational(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private Rational(Functor functor, List<AstElement> elements, BigInteger numerator, BigInteger denominator) {
-        super(functor, elements, normalize(numerator, denominator));
+        super(functor, elements, null, normalize(numerator, denominator));
     }
 
     public static Rational of(BigInteger numerator, BigInteger denominator) {
@@ -102,6 +106,14 @@ public final class Rational extends Node {
         }
         previous[0] = TokenType.DECIMAL;
         return string;
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing && get(0) instanceof String string) {
+            return struct(parse(string), functorOrType(), astElements(), null);
+        }
+        return this;
     }
 
 }

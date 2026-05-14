@@ -33,8 +33,8 @@ public final class GreaterThan extends Predicate {
     private static final long serialVersionUID = -9139221151771172295L;
 
     @NelumboConstructor
-    public GreaterThan(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public GreaterThan(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private GreaterThan(Object[] array, Node functorOrType, List<AstElement> elements, GreaterThan declaration) {

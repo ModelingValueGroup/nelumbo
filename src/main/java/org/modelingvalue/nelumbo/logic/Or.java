@@ -33,8 +33,8 @@ public final class Or extends BinaryPredicate {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Or(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public Or(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private Or(Object[] args, Node functorOrType, List<AstElement> elements, Or declaration) {
@@ -42,7 +42,7 @@ public final class Or extends BinaryPredicate {
     }
 
     public static Or of(Predicate predicate1, Predicate predicate2) {
-        return new Or(FUNCTOR, List.of(), new Object[] { predicate1, predicate2 });
+        return new Or(FUNCTOR, List.of(), null, predicate1, predicate2);
     }
 
     @Override

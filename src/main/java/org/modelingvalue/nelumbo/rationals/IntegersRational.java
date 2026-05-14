@@ -34,8 +34,8 @@ public final class IntegersRational extends Predicate {
     private static final long serialVersionUID = -7882486910269514611L;
 
     @NelumboConstructor
-    public IntegersRational(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1], args[2]);
+    public IntegersRational(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private IntegersRational(Object[] array, Node functorOrType, List<AstElement> elements,

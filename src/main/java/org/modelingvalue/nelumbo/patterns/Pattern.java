@@ -129,7 +129,7 @@ public abstract class Pattern extends Node {
     }
 
     protected Pattern(Type type, List<AstElement> ast, Object... args) {
-        super(type, ast, args);
+        super(type, ast, null, args);
     }
 
     protected Pattern(Object[] args, Node functorOrType, List<AstElement> elements, Pattern declaration) {

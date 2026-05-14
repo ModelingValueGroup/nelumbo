@@ -19,11 +19,16 @@ package org.modelingvalue.nelumbo.collections;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NList extends Node {
@@ -31,24 +36,24 @@ public final class NList extends Node {
     private static final long serialVersionUID = 2275866157289787141L;
 
     public NList(List<AstElement> elements, Type elementType) {
-        super(elementType.list(), elements, List.of());
+        super(elementType.list(), elements, null, List.of());
     }
 
     public NList(Type elementType, List<AstElement> elements, List<Node> args) {
-        super(elementType.list(), elements, args);
+        super(elementType.list(), elements, null, args);
     }
 
     public NList(Functor functor, List<AstElement> elements, List<Node> args) {
-        super(functor, elements, args);
+        super(functor, elements, null, args);
     }
 
     @NelumboConstructor
-    public NList(Functor functor, List<AstElement> elements, Object... args) {
-        super(functor, elements, List.of(args));
+    public NList(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     public NList(List<AstElement> elements, NList list, Node last) {
-        super(list.type(), list.astElements().addAll(elements).add(last), list.elements().add(last));
+        super(list.type(), list.astElements().addAll(elements).add(last), null, list.elements().add(last));
     }
 
     private NList(Object[] array, Node functorOrType, List<AstElement> elements, NList declaration) {
@@ -104,5 +109,13 @@ public final class NList extends Node {
     @Override
     public Node add(Node added) {
         return new NList(List.of(), this, added);
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof List)) {
+            return this;
+        }
+        return struct(new Object[] { Set.of(super.args()) }, functorOrType(), astElements(), null);
     }
 }

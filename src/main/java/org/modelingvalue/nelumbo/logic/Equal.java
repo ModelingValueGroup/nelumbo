@@ -31,8 +31,8 @@ public class Equal extends Predicate {
     private static final long serialVersionUID = -5516286818572134367L;
 
     @NelumboConstructor
-    public Equal(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public Equal(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private Equal(Object[] array, Node functorOrType, List<AstElement> elements, Equal declaration) {

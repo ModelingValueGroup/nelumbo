@@ -38,8 +38,8 @@ public final class Transform extends Node {
     private static final long serialVersionUID = -5542746717620873208L;
 
     @NelumboConstructor
-    public Transform(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+    public Transform(Functor functor, List<AstElement> elements, Node declararion, Object[] args) {
+        super(functor, elements, declararion, args);
     }
 
     private Transform(Object[] array, Node functorOrType, List<AstElement> elements, Transform declaration) {

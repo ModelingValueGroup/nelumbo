@@ -32,8 +32,8 @@ public final class Parenthesized extends Node {
     private static final long serialVersionUID = 1327185915147325168L;
 
     @NelumboConstructor
-    public Parenthesized(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+    public Parenthesized(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
+        super(functor, elements, declararion, args);
     }
 
     private Parenthesized(Object[] array, Node functorOrType, List<AstElement> elements, Parenthesized declaration) {

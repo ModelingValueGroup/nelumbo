@@ -35,12 +35,12 @@ public final class UniversalQuantifier extends Quantifier {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public UniversalQuantifier(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+    public UniversalQuantifier(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     protected UniversalQuantifier(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(FUNCTOR, elements, localVars, predicate);
+        super(FUNCTOR, elements, null, localVars, predicate);
     }
 
     private UniversalQuantifier(Object[] args, Node functorOrType, List<AstElement> elements,

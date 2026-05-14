@@ -43,16 +43,16 @@ public class Predicate extends Node {
 
     private static final int MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
-    public static Node INCOMPLETE = new Predicate(Type.BOOLEAN, List.of(), "..");
+    public static Node INCOMPLETE = new Predicate(Type.BOOLEAN, List.of(), null, "..");
 
     private int nrOfUnbound = -1;
 
-    public Predicate(Functor functor, List<AstElement> elements, Object... args) {
-        super(functor, elements, args);
+    public Predicate(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
-    public Predicate(Type type, List<AstElement> elements, Object... args) {
-        super(type, elements, args);
+    public Predicate(Type type, List<AstElement> elements, Node declaration, Object... args) {
+        super(type, elements, declaration, args);
     }
 
     protected Predicate(Object[] args, Node functorOrType, List<AstElement> elements, Predicate declaration) {

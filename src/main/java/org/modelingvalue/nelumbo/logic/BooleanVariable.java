@@ -35,7 +35,7 @@ public class BooleanVariable extends Predicate {
     private InferResult result;
 
     public BooleanVariable(Functor functor, List<AstElement> elements, Variable var) {
-        super(functor, elements, var);
+        super(functor, elements, null, var);
     }
 
     @Override

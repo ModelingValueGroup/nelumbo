@@ -20,10 +20,14 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NString extends Node {
@@ -36,24 +40,20 @@ public final class NString extends Node {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public NString(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse((String) args[0]));
+    public NString(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private NString(Functor functor, List<AstElement> elements, String val) {
-        super(functor, elements, val);
+        super(functor, elements, null, val);
     }
 
     public static NString of(String val) {
         return new NString(FUNCTOR, List.of(), val);
     }
 
-    public static String strip(String val) {
-        return val != null && val.startsWith(DELIM) ? val.substring(1, val.length() - 1) : null;
-    }
-
-    private static String parse(String string) {
-        return strip(string);
+    private static String strip(String val) {
+        return val.substring(1, val.length() - 1);
     }
 
     private NString(Object[] array, Node functorOrType, List<AstElement> elements, NString declaration) {
@@ -77,6 +77,15 @@ public final class NString extends Node {
     @Override
     public String toString(TokenType[] previous) {
         return DELIM + value() + DELIM;
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing && get(0) instanceof String val && val.startsWith(DELIM)) {
+            return set(0, strip(val));
+        }
+        return this;
+
     }
 
 }

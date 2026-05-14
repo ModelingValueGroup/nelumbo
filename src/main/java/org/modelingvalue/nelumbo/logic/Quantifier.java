@@ -30,12 +30,8 @@ public abstract class Quantifier extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -4838100281214165385L;
 
-    protected Quantifier(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
-    }
-
-    protected Quantifier(Functor functor, List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(functor, elements, localVars, predicate);
+    protected Quantifier(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     protected Quantifier(Object[] args, Node functorOrType, List<AstElement> elements, Quantifier declaration) {

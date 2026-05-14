@@ -32,12 +32,12 @@ public abstract class CompoundPredicate extends Predicate {
     @Serial
     private static final long serialVersionUID = -4926802375244295351L;
 
-    protected CompoundPredicate(Functor functor, List<AstElement> elements, Object... predicates) {
-        super(functor, elements, predicates);
+    protected CompoundPredicate(Functor functor, List<AstElement> elements, Node declaration, Object... predicates) {
+        super(functor, elements, declaration, predicates);
     }
 
-    protected CompoundPredicate(Type type, List<AstElement> elements, Object... predicates) {
-        super(type, elements, predicates);
+    protected CompoundPredicate(Type type, List<AstElement> elements, Node declaration, Object... predicates) {
+        super(type, elements, declaration, predicates);
     }
 
     protected CompoundPredicate(Object[] args, Node functorOrType, List<AstElement> elements,

@@ -33,8 +33,8 @@ public final class Length extends Predicate {
     private static final long serialVersionUID = 4405805306602130025L;
 
     @NelumboConstructor
-    public Length(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public Length(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private Length(Object[] array, Node functorOrType, List<AstElement> elements, Length declaration) {

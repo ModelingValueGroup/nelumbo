@@ -33,8 +33,8 @@ public final class ToInteger extends Predicate {
     private static final long serialVersionUID = -2874326869672600959L;
 
     @NelumboConstructor
-    public ToInteger(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public ToInteger(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private ToInteger(Object[] array, Node functorOrType, List<AstElement> elements, ToInteger declaration) {

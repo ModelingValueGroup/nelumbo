@@ -76,7 +76,7 @@ public class Functor extends Node {
     private ParseState startPost;
 
     private Functor(List<AstElement> elements, Object... args) {
-        super(Type.FUNCTOR, elements, args);
+        super(Type.FUNCTOR, elements, null, args);
     }
 
     private Functor(Object[] array, Node functorOrType, List<AstElement> elements, Functor declaration) {
@@ -172,7 +172,7 @@ public class Functor extends Node {
         Constructor<? extends Node> constructor = constructor();
         if (constructor != null) {
             try {
-                return constructor.newInstance(this, elements, args);
+                return constructor.newInstance(this, elements, null, args);
             } catch (Exception e) {
                 handleException(elements, handler, e);
             }
@@ -185,8 +185,8 @@ public class Functor extends Node {
                 handleException(elements, handler, e);
             }
         }
-        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(this, elements, args)
-                : new Node(this, elements, args);
+        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(this, elements, null, args)
+                : new Node(this, elements, null, args);
     }
 
     private void handleException(List<AstElement> elements, ParseExceptionHandler handler, Exception e)

@@ -33,8 +33,8 @@ public final class And extends BinaryPredicate {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public And(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public And(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private And(Object[] args, Node functorOrType, List<AstElement> elements, And declaration) {
@@ -42,7 +42,7 @@ public final class And extends BinaryPredicate {
     }
 
     public static And of(Predicate predicate1, Predicate predicate2) {
-        return new And(FUNCTOR, List.of(), new Object[] { predicate1, predicate2 });
+        return new And(FUNCTOR, List.of(), null, new Object[] { predicate1, predicate2 });
     }
 
     @Override

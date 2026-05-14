@@ -33,8 +33,8 @@ public final class Add extends Predicate {
     private static final long serialVersionUID = 2384355866476367685L;
 
     @NelumboConstructor
-    public Add(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1], args[2]);
+    public Add(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private Add(Object[] array, Node functorOrType, List<AstElement> elements, Add declaration) {

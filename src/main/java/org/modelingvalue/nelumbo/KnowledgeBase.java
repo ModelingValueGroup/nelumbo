@@ -448,7 +448,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 .init(this, ctx, bootstrapping);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && clazz != null) {
-            nodFunctor.construct(List.of(), new Object[0], this, ctx);
+            nodFunctor.construct(List.of(), new Object[0], this, ctx).init(this, ctx, ConstructionReason.parsing);
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
@@ -461,12 +461,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             Object[] litVars = new Object[args.size()];
             List<Type> litArgs = args.replaceAll(Type::toLiteral);
             for (int v = 0; v < args.size(); v++) {
-                nodVars[v] = new Variable(List.of(), args.get(v), "n" + (v + 1), false);
-                litVars[v] = new Variable(List.of(), litArgs.get(v), "l" + (v + 1), false);
+                nodVars[v] = new Variable(List.of(), false, args.get(v), "n" + (v + 1));
+                litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1));
             }
             Node nodNode = nodFunctor.construct(List.of(), nodVars, this, ctx);
             Node litNode = litFunctor.construct(List.of(), litVars, this, ctx);
-            Variable rigthVar = function ? new Variable(List.of(), type.nonFunction(), "r", false) : null;
+            Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
             Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
             Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
             for (int c = args.size() - 1; c >= 0; c--) {
@@ -802,8 +802,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public void doImport(String name, Import imp) throws ParseException {
         if (!imported.get().contains(name)) {
-            merge(knowledgeBase(name, imp), imp);
-            imported.updateAndGet(s -> s.add(name));
+            KnowledgeBase kb = knowledgeBase(name, imp);
+            if (kb != null) {
+                merge(kb, imp);
+                imported.updateAndGet(s -> s.add(name));
+            }
         }
     }
 
@@ -817,13 +820,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
     }
 
-    public static KnowledgeBase knowledgeBase(String name, Import imp) throws ParseException {
+    public KnowledgeBase knowledgeBase(String name, Import imp) throws ParseException {
         // Check cache first
         KnowledgeBase kb = IMPORT_MAP.get().get(name);
         if (kb != null) {
             return kb;
         }
-
         // Try each resolver in order
         for (ImportResolver resolver : IMPORT_RESOLVERS.get()) {
             if (!resolver.canHandle(name)) {
@@ -839,8 +841,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 return result.knowledgeBase();
             }
         }
-
-        throw new ParseException("Cannot resolve import: " + name, imp);
+        addException(new ParseException("Cannot resolve import: " + name, imp));
+        return null;
     }
 
 }

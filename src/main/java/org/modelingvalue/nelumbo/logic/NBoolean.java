@@ -20,9 +20,13 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NBoolean extends Predicate {
@@ -36,15 +40,8 @@ public final class NBoolean extends Predicate {
     private InferResult result;
 
     @NelumboConstructor
-    public NBoolean(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse(functor.name()));
-        if (TRUE == null && isTrue()) {
-            TRUE = this;
-        } else if (FALSE == null && isFalse()) {
-            FALSE = this;
-        } else if (UNKNOWN == null && isUnknown()) {
-            UNKNOWN = this;
-        }
+    public NBoolean(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     @Override
@@ -120,6 +117,23 @@ public final class NBoolean extends Predicate {
         }
         previous[0] = TokenType.NAME;
         return string;
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing && length() == 0) {
+            Boolean bool = parse(functor().name());
+            NBoolean result = struct(new Object[] { bool }, functorOrType(), astElements(), null);
+            if (TRUE == null && result.isTrue()) {
+                TRUE = result;
+            } else if (FALSE == null && result.isFalse()) {
+                FALSE = result;
+            } else if (UNKNOWN == null && result.isUnknown()) {
+                UNKNOWN = result;
+            }
+            return result;
+        }
+        return this;
     }
 
 }

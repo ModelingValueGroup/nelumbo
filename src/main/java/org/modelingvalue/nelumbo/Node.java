@@ -54,18 +54,18 @@ public class Node extends StructImpl implements AstElement {
     private int                   hashCodeCache;
 
     @NelumboConstructor
-    public Node(Functor functor, List<AstElement> elements, Object... args) {
+    public Node(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
         super(array(args));
         this.functorOrType = functor;
         this.elements = elements;
-        this.declaration = this;
+        this.declaration = declaration == null ? this : declaration;
     }
 
-    public Node(Type type, List<AstElement> elements, Object... args) {
+    public Node(Type type, List<AstElement> elements, Node declaration, Object... args) {
         super(array(args));
         this.functorOrType = type;
         this.elements = elements;
-        this.declaration = this;
+        this.declaration = declaration == null ? this : declaration;
     }
 
     protected Node(Object[] args, Node functorOrType, List<AstElement> elements, Node declaration) {

@@ -21,10 +21,14 @@ import java.math.BigInteger;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NInteger extends Node {
@@ -38,12 +42,12 @@ public final class NInteger extends Node {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public NInteger(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse((String) args[0]));
+    public NInteger(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private NInteger(Functor functor, List<AstElement> elements, BigInteger val) {
-        super(functor, elements, val);
+        super(functor, elements, null, val);
     }
 
     public static NInteger of(BigInteger val) {
@@ -89,6 +93,14 @@ public final class NInteger extends Node {
         }
         previous[0] = TokenType.NUMBER;
         return string;
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing && get(0) instanceof String string) {
+            return set(0, parse(string));
+        }
+        return this;
     }
 
 }

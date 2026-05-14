@@ -32,8 +32,8 @@ public final class Concat extends Predicate {
     private static final long serialVersionUID = -317279750710781401L;
 
     @NelumboConstructor
-    public Concat(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1], args[2]);
+    public Concat(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     private Concat(Object[] array, Node functorOrType, List<AstElement> elements, Concat declaration) {

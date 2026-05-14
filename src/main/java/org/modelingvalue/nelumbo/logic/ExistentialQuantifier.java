@@ -35,12 +35,12 @@ public final class ExistentialQuantifier extends Quantifier {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public ExistentialQuantifier(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+    public ExistentialQuantifier(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     public ExistentialQuantifier(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(FUNCTOR, elements, localVars, predicate);
+        super(FUNCTOR, elements, null, localVars, predicate);
     }
 
     private ExistentialQuantifier(Object[] args, Node functorOrType, List<AstElement> elements,

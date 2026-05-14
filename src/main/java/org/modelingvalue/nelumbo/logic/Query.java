@@ -42,8 +42,8 @@ public final class Query extends Node implements Evaluatable {
     private InferResult inferResult;
 
     @NelumboConstructor
-    public Query(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args);
+    public Query(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+        super(functor, elements, declaration, args);
     }
 
     @Override
