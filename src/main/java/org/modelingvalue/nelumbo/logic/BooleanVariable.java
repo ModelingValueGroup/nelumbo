@@ -50,8 +50,8 @@ public class BooleanVariable extends Predicate {
     }
 
     @Override
-    protected BooleanVariable struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected BooleanVariable set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new BooleanVariable(functorOrType, elements, declaration, array);
     }
 

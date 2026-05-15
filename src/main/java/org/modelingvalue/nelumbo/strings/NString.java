@@ -58,7 +58,7 @@ public final class NString extends Node {
     }
 
     @Override
-    protected NString struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected NString set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new NString(functorOrType, elements, declaration, array);
     }
 

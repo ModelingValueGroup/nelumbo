@@ -71,7 +71,7 @@ public class Node extends StructImpl implements AstElement {
         for (int i = 0; i < array.length; i++) {
             array[i] = resetDeclaration(array[i]);
         }
-        return struct(array, functorOrType, elements, null);
+        return set(functorOrType, elements, null, array);
     }
 
     private Object resetDeclaration(Object from) {
@@ -97,11 +97,11 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Node setFunctor(Functor functor) {
-        return struct(toArray(), functor, elements, declaration);
+        return set(functor, elements, declaration, toArray());
     }
 
     public Node setAstElements(List<AstElement> elements) {
-        return struct(toArray(), functorOrType, elements, declaration);
+        return set(functorOrType, elements, declaration, toArray());
     }
 
     public Type type() {
@@ -264,7 +264,7 @@ public class Node extends StructImpl implements AstElement {
 
     public Node set(int f, Object... a) {
         Object[] array = setArray(f, a);
-        return array != null ? struct(array) : this;
+        return array != null ? setArgs(array) : this;
     }
 
     public Node set(int[] idx, Object val) {
@@ -280,14 +280,14 @@ public class Node extends StructImpl implements AstElement {
         } else {
             array[i] = val;
         }
-        return struct(array);
+        return setArgs(array);
     }
 
-    public final Node struct(Object[] array) {
-        return struct(array, functorOrType, elements, declaration);
+    public final Node setArgs(Object[] arg) {
+        return set(functorOrType, elements, declaration, arg);
     }
 
-    protected Node struct(Object[] args, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Node set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
         return new Node(functorOrType, elements, declaration, args);
     }
 
@@ -396,7 +396,7 @@ public class Node extends StructImpl implements AstElement {
                 array[i] = bound;
             }
         }
-        return array != null ? struct(array, functorOrType, elements, declaration) : this;
+        return array != null ? set(functorOrType, elements, declaration, array) : this;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -472,7 +472,7 @@ public class Node extends StructImpl implements AstElement {
                     array[i] = toVal;
                 }
             }
-            return array != null ? struct(array) : this;
+            return array != null ? setArgs(array) : this;
         }
     }
 

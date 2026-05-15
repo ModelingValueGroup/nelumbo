@@ -43,8 +43,8 @@ public final class Transform extends Node {
     }
 
     @Override
-    protected Transform struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected Transform set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new Transform(functorOrType, elements, declaration, array);
     }
 

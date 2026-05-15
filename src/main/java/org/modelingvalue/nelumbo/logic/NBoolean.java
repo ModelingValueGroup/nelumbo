@@ -45,8 +45,8 @@ public final class NBoolean extends Predicate {
     }
 
     @Override
-    protected NBoolean struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected NBoolean set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new NBoolean(functorOrType, elements, declaration, array);
     }
 
@@ -120,7 +120,7 @@ public final class NBoolean extends Predicate {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing && length() == 0) {
             Boolean bool = parse(functor().name());
-            NBoolean result = struct(new Object[] { bool }, functorOrType(), astElements(), null);
+            NBoolean result = set(functorOrType(), astElements(), null, new Object[] { bool });
             if (TRUE == null && result.isTrue()) {
                 TRUE = result;
             } else if (FALSE == null && result.isFalse()) {

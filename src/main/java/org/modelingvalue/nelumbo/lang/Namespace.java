@@ -38,8 +38,8 @@ public final class Namespace extends Node {
     }
 
     @Override
-    protected Namespace struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected Namespace set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new Namespace(functorOrType, elements, declaration, array);
     }
 

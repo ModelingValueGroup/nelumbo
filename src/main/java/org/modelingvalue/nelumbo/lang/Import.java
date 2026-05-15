@@ -68,7 +68,7 @@ public final class Import extends Node {
     }
 
     @Override
-    protected Import struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Import set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new Import(functorOrType, elements, declaration, array);
     }
 

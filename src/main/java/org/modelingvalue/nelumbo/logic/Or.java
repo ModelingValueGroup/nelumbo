@@ -48,7 +48,7 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
-    protected Or struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Or set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new Or(functorOrType, elements, declaration, array);
     }
 

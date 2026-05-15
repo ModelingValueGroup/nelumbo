@@ -48,7 +48,7 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected And set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new And(functorOrType, elements, declaration, array);
     }
 

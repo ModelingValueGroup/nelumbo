@@ -55,7 +55,7 @@ public final class Query extends Node implements Evaluatable {
             if (expected == null) {
                 Object[] array = new Object[1];
                 array[0] = predicate;
-                return struct(array);
+                return setArgs(array);
             } else {
                 List<Object> facts = expected.get(0).args();
                 List<Object> falsehoods = expected.get(1).args();
@@ -65,7 +65,7 @@ public final class Query extends Node implements Evaluatable {
                 array[2] = !facts.contains("..");
                 array[3] = bindings(falsehoods.filter(List.class).asList());
                 array[4] = !falsehoods.contains("..");
-                return struct(array);
+                return setArgs(array);
             }
         }
         return this;
@@ -124,7 +124,7 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @Override
-    protected Query struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Query set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new Query(functorOrType, elements, declaration, array);
     }
 

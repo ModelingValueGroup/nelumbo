@@ -58,7 +58,7 @@ public final class NList extends Node {
     }
 
     @Override
-    protected NList struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected NList set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new NList(functorOrType, elements, declaration, array);
     }
 
@@ -113,6 +113,6 @@ public final class NList extends Node {
         if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof List)) {
             return this;
         }
-        return struct(new Object[] { Set.of(super.args()) }, functorOrType(), astElements(), null);
+        return set(functorOrType(), astElements(), null, new Object[] { Set.of(super.args()) });
     }
 }

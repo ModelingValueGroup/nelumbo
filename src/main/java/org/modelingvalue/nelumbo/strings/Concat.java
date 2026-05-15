@@ -37,7 +37,7 @@ public final class Concat extends Predicate {
     }
 
     @Override
-    protected Concat struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Concat set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new Concat(functorOrType, elements, declaration, array);
     }
 

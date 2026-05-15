@@ -37,8 +37,8 @@ public final class Parenthesized extends Node {
     }
 
     @Override
-    protected Parenthesized struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected Parenthesized set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new Parenthesized(functorOrType, elements, declaration, array);
     }
 

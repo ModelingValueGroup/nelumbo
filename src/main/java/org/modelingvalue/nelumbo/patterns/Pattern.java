@@ -134,8 +134,8 @@ public abstract class Pattern extends Node {
     }
 
     @Override
-    protected abstract Pattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration);
+    protected abstract Pattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array);
 
     public abstract ParseState state(ParseState next);
 

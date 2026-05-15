@@ -38,8 +38,8 @@ public final class Multiply extends Predicate {
     }
 
     @Override
-    protected Multiply struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected Multiply set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new Multiply(functorOrType, elements, declaration, array);
     }
 

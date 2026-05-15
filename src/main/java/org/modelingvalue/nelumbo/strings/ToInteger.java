@@ -38,8 +38,8 @@ public final class ToInteger extends Predicate {
     }
 
     @Override
-    protected ToInteger struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected ToInteger set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new ToInteger(functorOrType, elements, declaration, array);
     }
 

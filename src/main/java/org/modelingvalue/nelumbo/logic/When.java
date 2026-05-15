@@ -49,7 +49,7 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected When struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected When set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new When(functorOrType, elements, declaration, array);
     }
 

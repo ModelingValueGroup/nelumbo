@@ -44,7 +44,7 @@ public class NIs extends Predicate {
     }
 
     @Override
-    protected NIs struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected NIs set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new NIs(functorOrType, elements, declaration, array);
     }
 

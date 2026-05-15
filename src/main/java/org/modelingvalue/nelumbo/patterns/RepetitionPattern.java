@@ -49,8 +49,8 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    protected RepetitionPattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected RepetitionPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new RepetitionPattern(functorOrType, elements, declaration, array);
     }
 

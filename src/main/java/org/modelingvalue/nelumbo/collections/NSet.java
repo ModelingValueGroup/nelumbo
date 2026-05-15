@@ -61,7 +61,7 @@ public class NSet extends Node {
     }
 
     @Override
-    protected NSet struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected NSet set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new NSet(functorOrType, elements, declaration, array);
     }
 
@@ -81,6 +81,6 @@ public class NSet extends Node {
         if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof Set)) {
             return this;
         }
-        return struct(new Object[] { Set.of(super.args()) }, functorOrType(), astElements(), null);
+        return set(functorOrType(), astElements(), null, new Object[] { Set.of(super.args()) });
     }
 }

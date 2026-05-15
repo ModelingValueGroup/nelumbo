@@ -85,7 +85,7 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    protected Functor struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Functor set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new Functor(functorOrType, elements, declaration, array);
     }
 

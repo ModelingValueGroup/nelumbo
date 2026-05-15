@@ -48,8 +48,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    protected OptionalPattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected OptionalPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new OptionalPattern(functorOrType, elements, declaration, array);
     }
 

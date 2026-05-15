@@ -47,8 +47,8 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    protected NodeTypePattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected NodeTypePattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new NodeTypePattern(functorOrType, elements, declaration, array);
     }
 

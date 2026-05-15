@@ -36,7 +36,7 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected Equal struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Equal set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new Equal(functorOrType, elements, declaration, array);
     }
 
@@ -95,7 +95,7 @@ public class Equal extends Predicate {
                 array[i] = eq;
             }
         }
-        return array != null ? left.struct(array) : left;
+        return array != null ? left.setArgs(array) : left;
     }
 
     private static Object eq(Object left, Object right, boolean[] complete) {

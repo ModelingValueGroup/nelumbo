@@ -50,8 +50,8 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    protected TokenTextPattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected TokenTextPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new TokenTextPattern(functorOrType, elements, declaration, array);
     }
 

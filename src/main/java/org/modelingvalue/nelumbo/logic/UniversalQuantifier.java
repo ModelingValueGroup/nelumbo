@@ -46,8 +46,8 @@ public final class UniversalQuantifier extends Quantifier {
     }
 
     @Override
-    protected UniversalQuantifier struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected UniversalQuantifier set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new UniversalQuantifier(functorOrType, elements, declaration, array);
     }
 

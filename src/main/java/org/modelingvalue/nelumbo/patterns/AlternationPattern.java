@@ -47,8 +47,8 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    protected AlternationPattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected AlternationPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new AlternationPattern(functorOrType, elements, declaration, array);
     }
 

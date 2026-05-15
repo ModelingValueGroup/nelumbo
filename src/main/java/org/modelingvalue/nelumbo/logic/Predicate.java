@@ -74,7 +74,7 @@ public class Predicate extends Node {
 
     public Predicate castFrom(Predicate from) {
         Object[] array = from.toArray();
-        return from.struct(array, functorOrType(), astElements(), declaration());
+        return from.set(functorOrType(), astElements(), declaration(), array);
     }
 
     @Override
@@ -137,8 +137,8 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected Predicate set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new Predicate(functorOrType, elements, declaration, array);
     }
 
@@ -190,7 +190,7 @@ public class Predicate extends Node {
                     }
                 }
             }
-            return array != null ? struct(array, functorOrType(), astElements(), decl) : this;
+            return array != null ? set(functorOrType(), astElements(), decl, array) : this;
         }
     }
 
@@ -209,10 +209,10 @@ public class Predicate extends Node {
         for (int x = 0; x < a.length; x++) {
             declArray[i + x] = a[x].declaration();
         }
-        Predicate newDeclaration = declaration().struct(declArray, functorOrType(), declaration().astElements(), null);
+        Predicate newDeclaration = declaration().set(functorOrType(), declaration().astElements(), null, declArray);
         Object[] predArray = toArray();
         System.arraycopy(a, 0, predArray, from, a.length);
-        return struct(predArray, functorOrType(), astElements(), newDeclaration);
+        return set(functorOrType(), astElements(), newDeclaration, predArray);
     }
 
     public final InferResult unknown() {
@@ -258,13 +258,13 @@ public class Predicate extends Node {
     @Override
     public Predicate setType(int i, Type type) {
         Object[] array = setArray(i, type);
-        return array != null ? struct(array, functorOrType(), astElements(), null) : this;
+        return array != null ? set(functorOrType(), astElements(), null, array) : this;
     }
 
     @Override
     protected Predicate setTyped(int i, Node typed) {
         Object[] array = setArray(i, typed);
-        return array != null ? struct(array, functorOrType(), astElements(), null) : this;
+        return array != null ? set(functorOrType(), astElements(), null, array) : this;
     }
 
     public InferResult resolve(InferContext context) {

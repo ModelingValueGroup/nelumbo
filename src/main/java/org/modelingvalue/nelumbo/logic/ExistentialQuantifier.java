@@ -46,8 +46,8 @@ public final class ExistentialQuantifier extends Quantifier {
     }
 
     @Override
-    protected ExistentialQuantifier struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected ExistentialQuantifier set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new ExistentialQuantifier(functorOrType, elements, declaration, array);
     }
 

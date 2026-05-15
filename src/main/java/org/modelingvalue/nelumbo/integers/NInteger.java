@@ -65,8 +65,8 @@ public final class NInteger extends Node {
     }
 
     @Override
-    protected NInteger struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected NInteger set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new NInteger(functorOrType, elements, declaration, array);
     }
 

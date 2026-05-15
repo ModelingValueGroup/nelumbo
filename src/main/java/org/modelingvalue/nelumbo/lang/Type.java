@@ -415,7 +415,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @Override
-    protected Type struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Type set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new Type(functorOrType, elements, declaration, array);
     }
 

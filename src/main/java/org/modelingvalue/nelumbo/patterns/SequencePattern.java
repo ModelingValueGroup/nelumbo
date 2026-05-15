@@ -47,8 +47,8 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    protected SequencePattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected SequencePattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new SequencePattern(functorOrType, elements, declaration, array);
     }
 

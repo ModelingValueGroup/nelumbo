@@ -77,8 +77,8 @@ public final class Variable extends Node {
     }
 
     @Override
-    protected Variable struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected Variable set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new Variable(functorOrType, elements, declaration, array);
     }
 

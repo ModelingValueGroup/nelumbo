@@ -38,7 +38,7 @@ public final class Length extends Predicate {
     }
 
     @Override
-    protected Length struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+    protected Length set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
         return new Length(functorOrType, elements, declaration, array);
     }
 

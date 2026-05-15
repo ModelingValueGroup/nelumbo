@@ -70,8 +70,8 @@ public final class Rational extends Node {
     }
 
     @Override
-    protected Rational struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected Rational set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new Rational(functorOrType, elements, declaration, array);
     }
 
@@ -109,7 +109,7 @@ public final class Rational extends Node {
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing && get(0) instanceof String string) {
-            return struct(parse(string), functorOrType(), astElements(), null);
+            return set(functorOrType(), astElements(), null, parse(string));
         }
         return this;
     }

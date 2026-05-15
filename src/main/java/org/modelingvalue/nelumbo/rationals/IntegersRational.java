@@ -39,8 +39,8 @@ public final class IntegersRational extends Predicate {
     }
 
     @Override
-    protected IntegersRational struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected IntegersRational set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new IntegersRational(functorOrType, elements, declaration, array);
     }
 

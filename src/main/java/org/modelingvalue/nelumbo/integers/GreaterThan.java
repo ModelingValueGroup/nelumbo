@@ -38,8 +38,8 @@ public final class GreaterThan extends Predicate {
     }
 
     @Override
-    protected GreaterThan struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
-            Node declaration) {
+    protected GreaterThan set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object[] array) {
         return new GreaterThan(functorOrType, elements, declaration, array);
     }
 
