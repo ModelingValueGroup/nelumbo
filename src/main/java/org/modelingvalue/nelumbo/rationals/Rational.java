@@ -27,6 +27,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -41,8 +42,8 @@ public final class Rational extends Node {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Rational(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public Rational(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     private Rational(Functor functor, List<AstElement> elements, BigInteger numerator, BigInteger denominator) {
@@ -68,13 +69,10 @@ public final class Rational extends Node {
         return new Object[] { numerator.divide(gcd), denominator.divide(gcd) };
     }
 
-    private Rational(Object[] array, Node functorOrType, List<AstElement> elements, Rational declaration) {
-        super(array, functorOrType, elements, declaration);
-    }
-
     @Override
-    protected Rational struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Rational(array, functorOrType, elements, (Rational) declaration);
+    protected Rational struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new Rational(functorOrType, elements, declaration, array);
     }
 
     @Override

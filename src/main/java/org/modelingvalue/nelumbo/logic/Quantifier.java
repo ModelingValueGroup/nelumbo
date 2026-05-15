@@ -21,7 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
@@ -30,12 +30,8 @@ public abstract class Quantifier extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -4838100281214165385L;
 
-    protected Quantifier(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
-    }
-
-    protected Quantifier(Object[] args, Node functorOrType, List<AstElement> elements, Quantifier declaration) {
-        super(args, functorOrType, elements, declaration);
+    protected Quantifier(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     @Override

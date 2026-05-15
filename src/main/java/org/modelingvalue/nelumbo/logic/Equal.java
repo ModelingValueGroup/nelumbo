@@ -23,7 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 
 public class Equal extends Predicate {
@@ -31,12 +31,18 @@ public class Equal extends Predicate {
     private static final long serialVersionUID = -5516286818572134367L;
 
     @NelumboConstructor
-    public Equal(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public Equal(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
-    private Equal(Object[] array, Node functorOrType, List<AstElement> elements, Equal declaration) {
-        super(array, functorOrType, elements, declaration);
+    @Override
+    protected Equal struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new Equal(functorOrType, elements, declaration, array);
+    }
+
+    @Override
+    public Equal set(int i, Object... a) {
+        return (Equal) super.set(i, a);
     }
 
     public Node left() {
@@ -45,16 +51,6 @@ public class Equal extends Predicate {
 
     public Node right() {
         return (Node) get(1);
-    }
-
-    @Override
-    protected Equal struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Equal(array, functorOrType, elements, (Equal) declaration);
-    }
-
-    @Override
-    public Equal set(int i, Object... a) {
-        return (Equal) super.set(i, a);
     }
 
     @Override

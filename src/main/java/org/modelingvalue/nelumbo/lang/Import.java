@@ -34,8 +34,8 @@ public final class Import extends Node {
     private static final long serialVersionUID = 4184295220819695199L;
 
     @NelumboConstructor
-    public Import(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
-        super(functor, elements, declararion, args);
+    public Import(FunctorOrType functorOrTyper, List<AstElement> elements, Node declararion, Object... args) {
+        super(functorOrTyper, elements, declararion, args);
     }
 
     @Override
@@ -67,13 +67,9 @@ public final class Import extends Node {
         return this;
     }
 
-    private Import(Object[] array, Node functorOrType, List<AstElement> elements, Import declaration) {
-        super(array, functorOrType, elements, declaration);
-    }
-
     @Override
-    protected Import struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Import(array, functorOrType, elements, (Import) declaration);
+    protected Import struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new Import(functorOrType, elements, declaration, array);
     }
 
     @Override

@@ -23,8 +23,10 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -36,17 +38,18 @@ public class SequencePattern extends Pattern {
     private static final long serialVersionUID = 1477171023667359130L;
 
     public SequencePattern(Type type, List<AstElement> elements, List<Pattern> patterns) {
-        super(type, elements, patterns);
+        super(type, elements, null, patterns);
     }
 
-    protected SequencePattern(Object[] args, Node functorOrType, List<AstElement> elements,
-            SequencePattern declaration) {
-        super(args, functorOrType, elements, declaration);
+    @NelumboConstructor
+    public SequencePattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
+        super(functorOrType, ast, declaration, args);
     }
 
     @Override
-    protected SequencePattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new SequencePattern(array, functorOrType, elements, (SequencePattern) declaration);
+    protected SequencePattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new SequencePattern(functorOrType, elements, declaration, array);
     }
 
     @SuppressWarnings("unchecked")

@@ -36,16 +36,12 @@ public final class Variable extends Node {
     private static final long serialVersionUID = -8998368070388908726L;
 
     @NelumboConstructor
-    public Variable(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
-        super(functor, elements, declararion, args);
+    public Variable(FunctorOrType functorOrType, List<AstElement> elements, Node declararion, Object... args) {
+        super(functorOrType, elements, declararion, args);
     }
 
     public Variable(List<AstElement> elements, boolean hidden, Type type, String name) {
         super(Type.VARIABLE, elements, null, hidden, type, name);
-    }
-
-    private Variable(Object[] array, Node functorOrType, List<AstElement> elements, Variable declaration) {
-        super(array, Type.VARIABLE, elements, declaration);
     }
 
     @Override
@@ -81,8 +77,9 @@ public final class Variable extends Node {
     }
 
     @Override
-    protected Variable struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Variable(array, functorOrType, elements, (Variable) declaration);
+    protected Variable struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new Variable(functorOrType, elements, declaration, array);
     }
 
     @Override

@@ -31,6 +31,7 @@ import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -47,16 +48,12 @@ public final class Rule extends Node implements Evaluatable {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Rule(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public Rule(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     public Rule(List<AstElement> elements, Predicate consequence, Predicate condition) {
         super(FUNCTOR, elements, null, consequence, condition);
-    }
-
-    private Rule(Object[] args, Node functorOrType, List<AstElement> elements, Rule declaration) {
-        super(args, functorOrType, elements, declaration);
     }
 
     @Override
@@ -65,8 +62,8 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    protected Rule struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Rule(array, functorOrType, elements, (Rule) declaration);
+    protected Rule struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new Rule(functorOrType, elements, declaration, array);
     }
 
     public final Functor consequenceFunctor() {

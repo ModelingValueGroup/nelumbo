@@ -23,8 +23,10 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -36,17 +38,18 @@ public class NodeTypePattern extends Pattern {
     private static final long serialVersionUID = 6828401544789430678L;
 
     public NodeTypePattern(Type type, List<AstElement> elements, Type nodeType, Integer precedence, Boolean visible) {
-        super(type, elements, nodeType, precedence, visible);
+        super(type, elements, null, nodeType, precedence, visible);
     }
 
-    protected NodeTypePattern(Object[] args, Node functorOrType, List<AstElement> elements,
-            NodeTypePattern declaration) {
-        super(args, functorOrType, elements, declaration);
+    @NelumboConstructor
+    public NodeTypePattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
+        super(functorOrType, ast, declaration, args);
     }
 
     @Override
-    protected NodeTypePattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new NodeTypePattern(array, functorOrType, elements, (NodeTypePattern) declaration);
+    protected NodeTypePattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new NodeTypePattern(functorOrType, elements, declaration, array);
     }
 
     public Type nodeType() {

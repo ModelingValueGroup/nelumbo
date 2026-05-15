@@ -25,6 +25,7 @@ import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -128,16 +129,13 @@ public abstract class Pattern extends Node {
         return new TokenTypePattern(Type.PATTERN, ast, tokenType);
     }
 
-    protected Pattern(Type type, List<AstElement> ast, Object... args) {
-        super(type, ast, null, args);
-    }
-
-    protected Pattern(Object[] args, Node functorOrType, List<AstElement> elements, Pattern declaration) {
-        super(args, functorOrType, elements, declaration);
+    protected Pattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
+        super(functorOrType, ast, declaration, args);
     }
 
     @Override
-    protected abstract Pattern struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration);
+    protected abstract Pattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration);
 
     public abstract ParseState state(ParseState next);
 

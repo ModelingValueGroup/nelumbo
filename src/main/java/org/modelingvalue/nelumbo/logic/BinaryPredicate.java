@@ -22,24 +22,15 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -928776822979604743L;
 
-    protected BinaryPredicate(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
-        super(functor, elements, declararion, args);
-    }
-
-    protected BinaryPredicate(Type type, List<AstElement> elements, Node declararion, Object... args) {
-        super(type, elements, declararion, args);
-    }
-
-    protected BinaryPredicate(Object[] args, Node functorOrType, List<AstElement> elements,
-            BinaryPredicate declaration) {
-        super(args, functorOrType, elements, declaration);
+    protected BinaryPredicate(FunctorOrType functorOrType, List<AstElement> elements, Node declararion,
+            Object... args) {
+        super(functorOrType, elements, declararion, args);
     }
 
     @Override

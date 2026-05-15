@@ -27,6 +27,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -47,16 +48,8 @@ public class Predicate extends Node {
 
     private int nrOfUnbound = -1;
 
-    public Predicate(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
-    }
-
-    public Predicate(Type type, List<AstElement> elements, Node declaration, Object... args) {
-        super(type, elements, declaration, args);
-    }
-
-    protected Predicate(Object[] args, Node functorOrType, List<AstElement> elements, Predicate declaration) {
-        super(args, functorOrType, elements, declaration);
+    public Predicate(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     @Override
@@ -144,8 +137,9 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Predicate(array, functorOrType, elements, (Predicate) declaration);
+    protected Predicate struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new Predicate(functorOrType, elements, declaration, array);
     }
 
     public Type getType(int i) {

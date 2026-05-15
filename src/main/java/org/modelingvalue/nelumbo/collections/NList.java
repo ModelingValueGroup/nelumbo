@@ -26,6 +26,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -48,16 +49,17 @@ public final class NList extends Node {
     }
 
     @NelumboConstructor
-    public NList(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public NList(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     public NList(List<AstElement> elements, NList list, Node last) {
         super(list.type(), list.astElements().addAll(elements).add(last), null, list.elements().add(last));
     }
 
-    private NList(Object[] array, Node functorOrType, List<AstElement> elements, NList declaration) {
-        super(array, functorOrType, elements, declaration);
+    @Override
+    protected NList struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new NList(functorOrType, elements, declaration, array);
     }
 
     @Override
@@ -89,11 +91,6 @@ public final class NList extends Node {
             }
         }
         return result;
-    }
-
-    @Override
-    protected NList struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new NList(array, functorOrType, elements, (NList) declaration);
     }
 
     @Override

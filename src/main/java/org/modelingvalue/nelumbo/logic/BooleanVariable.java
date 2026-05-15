@@ -22,8 +22,9 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
@@ -34,8 +35,13 @@ public class BooleanVariable extends Predicate {
 
     private InferResult result;
 
-    public BooleanVariable(Functor functor, List<AstElement> elements, Variable var) {
-        super(functor, elements, null, var);
+    @NelumboConstructor
+    public BooleanVariable(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
+    }
+
+    public BooleanVariable(FunctorOrType functorOrType, List<AstElement> elements, Variable var) {
+        super(functorOrType, elements, null, var);
     }
 
     @Override
@@ -43,13 +49,10 @@ public class BooleanVariable extends Predicate {
         return List.of(variable());
     }
 
-    private BooleanVariable(Object[] args, Node functorOrType, List<AstElement> elements, BooleanVariable declaration) {
-        super(args, functorOrType, elements, declaration);
-    }
-
     @Override
-    protected BooleanVariable struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new BooleanVariable(array, functorOrType, elements, (BooleanVariable) declaration);
+    protected BooleanVariable struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new BooleanVariable(functorOrType, elements, declaration, array);
     }
 
     @Override

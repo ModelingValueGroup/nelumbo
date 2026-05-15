@@ -31,6 +31,7 @@ import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -45,7 +46,7 @@ public class Node extends StructImpl implements AstElement {
     @Serial
     private static final long serialVersionUID = 7315776001191198132L;
     //
-    private final Node             functorOrType;
+    private final FunctorOrType    functorOrType;
     private final List<AstElement> elements;
     private final Node             declaration;
     //
@@ -54,22 +55,8 @@ public class Node extends StructImpl implements AstElement {
     private int                   hashCodeCache;
 
     @NelumboConstructor
-    public Node(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+    public Node(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
         super(array(args));
-        this.functorOrType = functor;
-        this.elements = elements;
-        this.declaration = declaration == null ? this : declaration;
-    }
-
-    public Node(Type type, List<AstElement> elements, Node declaration, Object... args) {
-        super(array(args));
-        this.functorOrType = type;
-        this.elements = elements;
-        this.declaration = declaration == null ? this : declaration;
-    }
-
-    protected Node(Object[] args, Node functorOrType, List<AstElement> elements, Node declaration) {
-        super(args);
         this.functorOrType = functorOrType;
         this.elements = elements;
         this.declaration = declaration == null ? this : declaration;
@@ -118,16 +105,16 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Type type() {
-        Node tf = functorOrType();
+        FunctorOrType tf = functorOrType();
         return tf instanceof Functor ? ((Functor) tf).resultType() : (Type) tf;
     }
 
     public Functor functor() {
-        Node tf = functorOrType();
+        FunctorOrType tf = functorOrType();
         return tf instanceof Functor ? (Functor) tf : null;
     }
 
-    public Node functorOrType() {
+    public FunctorOrType functorOrType() {
         return functorOrType;
     }
 
@@ -300,8 +287,8 @@ public class Node extends StructImpl implements AstElement {
         return struct(array, functorOrType, elements, declaration);
     }
 
-    protected Node struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Node(array, functorOrType, elements, declaration);
+    protected Node struct(Object[] args, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new Node(functorOrType, elements, declaration, args);
     }
 
     public final Set<Variable> allLocalVars() {

@@ -32,17 +32,14 @@ public final class Parenthesized extends Node {
     private static final long serialVersionUID = 1327185915147325168L;
 
     @NelumboConstructor
-    public Parenthesized(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
-        super(functor, elements, declararion, args);
-    }
-
-    private Parenthesized(Object[] array, Node functorOrType, List<AstElement> elements, Parenthesized declaration) {
-        super(array, functorOrType, elements, declaration);
+    public Parenthesized(FunctorOrType functorOrType, List<AstElement> elements, Node declararion, Object... args) {
+        super(functorOrType, elements, declararion, args);
     }
 
     @Override
-    protected Parenthesized struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Parenthesized(array, functorOrType, elements, (Parenthesized) declaration);
+    protected Parenthesized struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new Parenthesized(functorOrType, elements, declaration, array);
     }
 
     public Node node() {

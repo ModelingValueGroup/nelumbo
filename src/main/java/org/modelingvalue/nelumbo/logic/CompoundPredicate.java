@@ -24,25 +24,16 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Variable;
 
 public abstract class CompoundPredicate extends Predicate {
     @Serial
     private static final long serialVersionUID = -4926802375244295351L;
 
-    protected CompoundPredicate(Functor functor, List<AstElement> elements, Node declaration, Object... predicates) {
-        super(functor, elements, declaration, predicates);
-    }
-
-    protected CompoundPredicate(Type type, List<AstElement> elements, Node declaration, Object... predicates) {
-        super(type, elements, declaration, predicates);
-    }
-
-    protected CompoundPredicate(Object[] args, Node functorOrType, List<AstElement> elements,
-            CompoundPredicate declaration) {
-        super(args, functorOrType, elements, declaration);
+    protected CompoundPredicate(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
+            Object... predicates) {
+        super(functorOrType, elements, declaration, predicates);
     }
 
     @Override

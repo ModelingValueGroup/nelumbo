@@ -41,7 +41,7 @@ import org.modelingvalue.nelumbo.syntax.ThrowingQuadFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class Functor extends Node {
+public class Functor extends Node implements FunctorOrType {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
@@ -79,13 +79,14 @@ public class Functor extends Node {
         super(Type.FUNCTOR, elements, null, args);
     }
 
-    private Functor(Object[] array, Node functorOrType, List<AstElement> elements, Functor declaration) {
-        super(array, functorOrType, elements, declaration);
+    @NelumboConstructor
+    public Functor(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     @Override
-    protected Functor struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Functor(array, functorOrType, elements, (Functor) declaration);
+    protected Functor struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new Functor(functorOrType, elements, declaration, array);
     }
 
     public Pattern pattern() {

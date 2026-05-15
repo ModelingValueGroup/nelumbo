@@ -24,7 +24,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.integers.NInteger;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -34,18 +34,14 @@ public final class IntegersRational extends Predicate {
     private static final long serialVersionUID = -7882486910269514611L;
 
     @NelumboConstructor
-    public IntegersRational(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
-    }
-
-    private IntegersRational(Object[] array, Node functorOrType, List<AstElement> elements,
-            IntegersRational declaration) {
-        super(array, functorOrType, elements, declaration);
+    public IntegersRational(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     @Override
-    protected IntegersRational struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new IntegersRational(array, functorOrType, elements, (IntegersRational) declaration);
+    protected IntegersRational struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new IntegersRational(functorOrType, elements, declaration, array);
     }
 
     @Override

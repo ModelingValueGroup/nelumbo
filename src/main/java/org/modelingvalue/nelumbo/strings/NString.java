@@ -26,6 +26,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -40,8 +41,8 @@ public final class NString extends Node {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public NString(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public NString(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     private NString(Functor functor, List<AstElement> elements, String val) {
@@ -56,13 +57,9 @@ public final class NString extends Node {
         return val.substring(1, val.length() - 1);
     }
 
-    private NString(Object[] array, Node functorOrType, List<AstElement> elements, NString declaration) {
-        super(array, functorOrType, elements, declaration);
-    }
-
     @Override
-    protected NString struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new NString(array, functorOrType, elements, (NString) declaration);
+    protected NString struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new NString(functorOrType, elements, declaration, array);
     }
 
     @Override

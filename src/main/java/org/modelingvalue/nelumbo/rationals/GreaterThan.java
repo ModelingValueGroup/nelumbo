@@ -23,7 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -33,17 +33,14 @@ public final class GreaterThan extends Predicate {
     private static final long serialVersionUID = -9139221151771172295L;
 
     @NelumboConstructor
-    public GreaterThan(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
-    }
-
-    private GreaterThan(Object[] array, Node functorOrType, List<AstElement> elements, GreaterThan declaration) {
-        super(array, functorOrType, elements, declaration);
+    public GreaterThan(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     @Override
-    protected GreaterThan struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new GreaterThan(array, functorOrType, elements, (GreaterThan) declaration);
+    protected GreaterThan struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new GreaterThan(functorOrType, elements, declaration, array);
     }
 
     @Override

@@ -20,7 +20,9 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -28,16 +30,17 @@ public final class When extends BinaryPredicate {
     @Serial
     private static final long serialVersionUID = 9105566742523301113L;
 
-    private When(Node when, Node predicate) {
-        super(Type.BOOLEAN, List.of(), null, when, predicate);
-    }
-
-    private When(Object[] args, Node functorOrType, List<AstElement> elements, When declaration) {
-        super(args, functorOrType, elements, declaration);
-    }
-
     public static When of(Node when, Node predicate) {
         return new When(when, predicate);
+    }
+
+    @NelumboConstructor
+    public When(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
+    }
+
+    private When(Node when, Node predicate) {
+        super(Type.BOOLEAN, List.of(), null, when, predicate);
     }
 
     @Override
@@ -46,8 +49,8 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected When struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new When(array, functorOrType, elements, (When) declaration);
+    protected When struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new When(functorOrType, elements, declaration, array);
     }
 
     @Override

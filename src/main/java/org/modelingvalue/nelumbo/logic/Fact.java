@@ -27,6 +27,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -37,8 +38,22 @@ public final class Fact extends Node implements Evaluatable {
     private static final long serialVersionUID = 6226473785860814115L;
 
     @NelumboConstructor
-    public Fact(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
+    public Fact(FunctorOrType functor, List<AstElement> elements, Node declaration, Object... args) {
         super(functor, elements, declaration, args);
+    }
+
+    @Override
+    protected Fact struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new Fact(functorOrType, elements, declaration, array);
+    }
+
+    @Override
+    public Fact set(int i, Object... a) {
+        return (Fact) super.set(i, a);
+    }
+
+    public Predicate predicate() {
+        return (Predicate) get(0);
     }
 
     @Override
@@ -53,24 +68,6 @@ public final class Fact extends Node implements Evaluatable {
             return facts;
         }
         return this;
-    }
-
-    private Fact(Object[] array, Node functorOrType, List<AstElement> elements, Fact declaration) {
-        super(array, functorOrType, elements, declaration);
-    }
-
-    @Override
-    protected Fact struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Fact(array, functorOrType, elements, (Fact) declaration);
-    }
-
-    @Override
-    public Fact set(int i, Object... a) {
-        return (Fact) super.set(i, a);
-    }
-
-    public Predicate predicate() {
-        return (Predicate) get(0);
     }
 
     @Override

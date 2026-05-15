@@ -23,7 +23,7 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -33,17 +33,14 @@ public final class ToInteger extends Predicate {
     private static final long serialVersionUID = -2874326869672600959L;
 
     @NelumboConstructor
-    public ToInteger(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
-    }
-
-    private ToInteger(Object[] array, Node functorOrType, List<AstElement> elements, ToInteger declaration) {
-        super(array, functorOrType, elements, declaration);
+    public ToInteger(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     @Override
-    protected ToInteger struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new ToInteger(array, functorOrType, elements, (ToInteger) declaration);
+    protected ToInteger struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new ToInteger(functorOrType, elements, declaration, array);
     }
 
     @Override

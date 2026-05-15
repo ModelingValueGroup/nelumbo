@@ -23,8 +23,10 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -36,18 +38,18 @@ public class AlternationPattern extends Pattern {
     private static final long serialVersionUID = -2652813935675033086L;
 
     public AlternationPattern(Type type, List<AstElement> elements, List<Pattern> options) {
-        super(type, elements, options);
+        super(type, elements, null, options);
     }
 
-    protected AlternationPattern(Object[] args, Node functorOrType, List<AstElement> elements,
-            AlternationPattern declaration) {
-        super(args, functorOrType, elements, declaration);
+    @NelumboConstructor
+    public AlternationPattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
+        super(functorOrType, ast, declaration, args);
     }
 
     @Override
-    protected AlternationPattern struct(Object[] array, Node functorOrType, List<AstElement> elements,
+    protected AlternationPattern struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
             Node declaration) {
-        return new AlternationPattern(array, functorOrType, elements, (AlternationPattern) declaration);
+        return new AlternationPattern(functorOrType, elements, declaration, array);
     }
 
     @SuppressWarnings("unchecked")

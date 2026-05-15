@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 
 public class NIs extends Predicate {
@@ -38,12 +39,13 @@ public class NIs extends Predicate {
     }
 
     @NelumboConstructor
-    public NIs(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public NIs(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
-    private NIs(Object[] array, Node functorOrType, List<AstElement> elements, NIs declaration) {
-        super(array, functorOrType, elements, declaration);
+    @Override
+    protected NIs struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new NIs(functorOrType, elements, declaration, array);
     }
 
     public Node left() {
@@ -52,11 +54,6 @@ public class NIs extends Predicate {
 
     public Node right() {
         return (Node) get(1);
-    }
-
-    @Override
-    protected NIs struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new NIs(array, functorOrType, elements, (NIs) declaration);
     }
 
     @Override

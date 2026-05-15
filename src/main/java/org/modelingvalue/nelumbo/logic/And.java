@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 
 public final class And extends BinaryPredicate {
     @Serial
@@ -33,12 +34,8 @@ public final class And extends BinaryPredicate {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public And(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
-    }
-
-    private And(Object[] args, Node functorOrType, List<AstElement> elements, And declaration) {
-        super(args, functorOrType, elements, declaration);
+    public And(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     public static And of(Predicate predicate1, Predicate predicate2) {
@@ -51,8 +48,8 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new And(array, functorOrType, elements, (And) declaration);
+    protected And struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new And(functorOrType, elements, declaration, array);
     }
 
     @Override

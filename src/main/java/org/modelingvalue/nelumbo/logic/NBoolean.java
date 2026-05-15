@@ -24,7 +24,7 @@ import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -40,8 +40,14 @@ public final class NBoolean extends Predicate {
     private InferResult result;
 
     @NelumboConstructor
-    public NBoolean(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public NBoolean(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
+    }
+
+    @Override
+    protected NBoolean struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new NBoolean(functorOrType, elements, declaration, array);
     }
 
     @Override
@@ -52,10 +58,6 @@ public final class NBoolean extends Predicate {
     private static Boolean parse(String arg) {
         return "true".equalsIgnoreCase(arg) ? Boolean.TRUE : //
                 "false".equalsIgnoreCase(arg) ? Boolean.FALSE : null;
-    }
-
-    private NBoolean(Object[] args, Node functorOrType, List<AstElement> elements, NBoolean declaration) {
-        super(args, functorOrType, elements, declaration);
     }
 
     private Boolean getBoolean() {
@@ -80,11 +82,6 @@ public final class NBoolean extends Predicate {
 
     public InferResult result() {
         return infer(null);
-    }
-
-    @Override
-    protected NBoolean struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new NBoolean(array, functorOrType, elements, (NBoolean) declaration);
     }
 
     @Override

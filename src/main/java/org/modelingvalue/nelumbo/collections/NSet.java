@@ -25,7 +25,7 @@ import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -36,12 +36,8 @@ public class NSet extends Node {
     private static final long serialVersionUID = 840888260991475386L;
 
     @NelumboConstructor
-    public NSet(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
-    }
-
-    private NSet(Object[] array, Node functorOrType, List<AstElement> elements, NSet declaration) {
-        super(array, functorOrType, elements, declaration);
+    public NSet(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     @Override
@@ -65,8 +61,8 @@ public class NSet extends Node {
     }
 
     @Override
-    protected NSet struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new NSet(array, functorOrType, elements, (NSet) declaration);
+    protected NSet struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new NSet(functorOrType, elements, declaration, array);
     }
 
     @Override

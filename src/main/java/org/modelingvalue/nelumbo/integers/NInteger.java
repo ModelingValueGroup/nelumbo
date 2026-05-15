@@ -27,6 +27,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -41,17 +42,17 @@ public final class NInteger extends Node {
     @NelumboFunctorField
     private static Functor FUNCTOR;
 
+    public static NInteger of(BigInteger val) {
+        return new NInteger(FUNCTOR, List.of(), val);
+    }
+
     @NelumboConstructor
-    public NInteger(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public NInteger(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     private NInteger(Functor functor, List<AstElement> elements, BigInteger val) {
         super(functor, elements, null, val);
-    }
-
-    public static NInteger of(BigInteger val) {
-        return new NInteger(FUNCTOR, List.of(), val);
     }
 
     private static BigInteger parse(String string) {
@@ -63,13 +64,10 @@ public final class NInteger extends Node {
         return new BigInteger(string);
     }
 
-    private NInteger(Object[] array, Node functorOrType, List<AstElement> elements, NInteger declaration) {
-        super(array, functorOrType, elements, declaration);
-    }
-
     @Override
-    protected NInteger struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new NInteger(array, functorOrType, elements, (NInteger) declaration);
+    protected NInteger struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements,
+            Node declaration) {
+        return new NInteger(functorOrType, elements, declaration, array);
     }
 
     @Override

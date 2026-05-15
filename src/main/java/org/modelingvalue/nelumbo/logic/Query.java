@@ -29,7 +29,7 @@ import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -42,8 +42,8 @@ public final class Query extends Node implements Evaluatable {
     private InferResult inferResult;
 
     @NelumboConstructor
-    public Query(Functor functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public Query(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
+        super(functorOrType, elements, declaration, args);
     }
 
     @Override
@@ -123,13 +123,9 @@ public final class Query extends Node implements Evaluatable {
         return (Query) super.setBinding(vars);
     }
 
-    private Query(Object[] array, Node functorOrType, List<AstElement> elements, Query declaration) {
-        super(array, functorOrType, elements, declaration);
-    }
-
     @Override
-    protected Query struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Query(array, functorOrType, elements, (Query) declaration);
+    protected Query struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new Query(functorOrType, elements, declaration, array);
     }
 
     @Override

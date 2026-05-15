@@ -32,7 +32,7 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Type extends Node {
+public final class Type extends Node implements FunctorOrType {
     @Serial
     private static final long serialVersionUID = -4583279157841144493L;
     //
@@ -100,7 +100,7 @@ public final class Type extends Node {
     private List<Type> allSupers;
 
     @Override
-    public Node functorOrType() {
+    public FunctorOrType functorOrType() {
         return TYPE;
     }
 
@@ -110,12 +110,8 @@ public final class Type extends Node {
     }
 
     @NelumboConstructor
-    public Type(Functor functor, List<AstElement> elements, Node declararion, Object... args) {
-        super(functor, elements, declararion, args);
-    }
-
-    private Type(Object[] array, Node functorOrType, List<AstElement> elements, Type declaration) {
-        super(array, TYPE, elements, declaration);
+    public Type(FunctorOrType functorOrType, List<AstElement> elements, Node declararion, Object... args) {
+        super(functorOrType, elements, declararion, args);
     }
 
     public Type(Class<?> clss, Type... supers) {
@@ -419,8 +415,8 @@ public final class Type extends Node {
     }
 
     @Override
-    protected Type struct(Object[] array, Node functorOrType, List<AstElement> elements, Node declaration) {
-        return new Type(array, functorOrType, elements, (Type) declaration);
+    protected Type struct(Object[] array, FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
+        return new Type(functorOrType, elements, declaration, array);
     }
 
     @Override
