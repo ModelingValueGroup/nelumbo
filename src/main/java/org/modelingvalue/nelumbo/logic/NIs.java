@@ -34,7 +34,7 @@ public class NIs extends Predicate {
     private static Functor FUNCTOR;
 
     public NIs(List<AstElement> elements, Node left, Node right) {
-        super(FUNCTOR, elements, left, right);
+        super(FUNCTOR, elements, null, left, right);
     }
 
     @NelumboConstructor

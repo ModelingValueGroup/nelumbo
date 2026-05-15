@@ -42,7 +42,7 @@ public final class And extends BinaryPredicate {
     }
 
     public static And of(Predicate predicate1, Predicate predicate2) {
-        return new And(FUNCTOR, List.of(), null, new Object[] { predicate1, predicate2 });
+        return new And(FUNCTOR, List.of(), null, predicate1, predicate2);
     }
 
     @Override
