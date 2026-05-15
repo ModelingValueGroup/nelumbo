@@ -47,8 +47,8 @@ public final class ExistentialQuantifier extends Quantifier {
 
     @Override
     protected ExistentialQuantifier set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new ExistentialQuantifier(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new ExistentialQuantifier(functorOrType, elements, declaration, args);
     }
 
     @Override

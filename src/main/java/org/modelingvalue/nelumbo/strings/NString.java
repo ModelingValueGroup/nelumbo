@@ -58,8 +58,8 @@ public final class NString extends Node {
     }
 
     @Override
-    protected NString set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new NString(functorOrType, elements, declaration, array);
+    protected NString set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new NString(functorOrType, elements, declaration, args);
     }
 
     @Override

@@ -47,8 +47,8 @@ public final class UniversalQuantifier extends Quantifier {
 
     @Override
     protected UniversalQuantifier set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new UniversalQuantifier(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new UniversalQuantifier(functorOrType, elements, declaration, args);
     }
 
     @Override

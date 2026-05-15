@@ -58,8 +58,8 @@ public final class NList extends Node {
     }
 
     @Override
-    protected NList set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new NList(functorOrType, elements, declaration, array);
+    protected NList set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new NList(functorOrType, elements, declaration, args);
     }
 
     @Override

@@ -48,8 +48,8 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new And(functorOrType, elements, declaration, array);
+    protected And set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new And(functorOrType, elements, declaration, args);
     }
 
     @Override

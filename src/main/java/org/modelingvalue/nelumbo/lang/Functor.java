@@ -85,8 +85,8 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    protected Functor set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Functor(functorOrType, elements, declaration, array);
+    protected Functor set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Functor(functorOrType, elements, declaration, args);
     }
 
     public Pattern pattern() {

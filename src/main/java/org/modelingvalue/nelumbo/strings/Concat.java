@@ -37,8 +37,8 @@ public final class Concat extends Predicate {
     }
 
     @Override
-    protected Concat set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Concat(functorOrType, elements, declaration, array);
+    protected Concat set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Concat(functorOrType, elements, declaration, args);
     }
 
     @Override

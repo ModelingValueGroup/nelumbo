@@ -39,8 +39,8 @@ public final class Multiply extends Predicate {
 
     @Override
     protected Multiply set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new Multiply(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new Multiply(functorOrType, elements, declaration, args);
     }
 
     @Override

@@ -71,8 +71,8 @@ public final class Rational extends Node {
 
     @Override
     protected Rational set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new Rational(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new Rational(functorOrType, elements, declaration, args);
     }
 
     @Override

@@ -78,8 +78,8 @@ public final class Variable extends Node {
 
     @Override
     protected Variable set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new Variable(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new Variable(functorOrType, elements, declaration, args);
     }
 
     @Override

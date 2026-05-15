@@ -51,8 +51,8 @@ public class BooleanVariable extends Predicate {
 
     @Override
     protected BooleanVariable set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new BooleanVariable(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new BooleanVariable(functorOrType, elements, declaration, args);
     }
 
     @Override

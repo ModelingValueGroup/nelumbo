@@ -48,8 +48,8 @@ public class AlternationPattern extends Pattern {
 
     @Override
     protected AlternationPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new AlternationPattern(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new AlternationPattern(functorOrType, elements, declaration, args);
     }
 
     @SuppressWarnings("unchecked")

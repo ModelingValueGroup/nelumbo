@@ -40,8 +40,8 @@ public final class IntegersRational extends Predicate {
 
     @Override
     protected IntegersRational set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new IntegersRational(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new IntegersRational(functorOrType, elements, declaration, args);
     }
 
     @Override

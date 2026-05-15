@@ -124,8 +124,8 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @Override
-    protected Query set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Query(functorOrType, elements, declaration, array);
+    protected Query set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Query(functorOrType, elements, declaration, args);
     }
 
     @Override

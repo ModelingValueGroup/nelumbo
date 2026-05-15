@@ -43,8 +43,8 @@ public final class Fact extends Node implements Evaluatable {
     }
 
     @Override
-    protected Fact set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Fact(functorOrType, elements, declaration, array);
+    protected Fact set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Fact(functorOrType, elements, declaration, args);
     }
 
     @Override

@@ -48,8 +48,8 @@ public class SequencePattern extends Pattern {
 
     @Override
     protected SequencePattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new SequencePattern(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new SequencePattern(functorOrType, elements, declaration, args);
     }
 
     @SuppressWarnings("unchecked")

@@ -49,8 +49,8 @@ public class OptionalPattern extends Pattern {
 
     @Override
     protected OptionalPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new OptionalPattern(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new OptionalPattern(functorOrType, elements, declaration, args);
     }
 
     public Pattern optional() {

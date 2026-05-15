@@ -47,8 +47,8 @@ public class TokenTypePattern extends Pattern {
 
     @Override
     protected TokenTypePattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new TokenTypePattern(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new TokenTypePattern(functorOrType, elements, declaration, args);
     }
 
     public TokenType tokenType() {

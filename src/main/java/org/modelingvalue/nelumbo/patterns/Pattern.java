@@ -135,7 +135,7 @@ public abstract class Pattern extends Node {
 
     @Override
     protected abstract Pattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array);
+            Object[] args);
 
     public abstract ParseState state(ParseState next);
 

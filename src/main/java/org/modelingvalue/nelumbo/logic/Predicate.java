@@ -138,8 +138,8 @@ public class Predicate extends Node {
 
     @Override
     protected Predicate set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new Predicate(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new Predicate(functorOrType, elements, declaration, args);
     }
 
     public Type getType(int i) {

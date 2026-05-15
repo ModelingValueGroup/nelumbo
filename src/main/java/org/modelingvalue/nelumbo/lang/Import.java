@@ -68,8 +68,8 @@ public final class Import extends Node {
     }
 
     @Override
-    protected Import set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Import(functorOrType, elements, declaration, array);
+    protected Import set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Import(functorOrType, elements, declaration, args);
     }
 
     @Override

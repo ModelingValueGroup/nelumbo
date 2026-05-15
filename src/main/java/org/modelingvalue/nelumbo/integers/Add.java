@@ -38,8 +38,8 @@ public final class Add extends Predicate {
     }
 
     @Override
-    protected Add set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Add(functorOrType, elements, declaration, array);
+    protected Add set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Add(functorOrType, elements, declaration, args);
     }
 
     @Override

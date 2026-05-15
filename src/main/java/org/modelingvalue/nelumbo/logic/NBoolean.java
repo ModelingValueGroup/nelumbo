@@ -46,8 +46,8 @@ public final class NBoolean extends Predicate {
 
     @Override
     protected NBoolean set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new NBoolean(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new NBoolean(functorOrType, elements, declaration, args);
     }
 
     @Override

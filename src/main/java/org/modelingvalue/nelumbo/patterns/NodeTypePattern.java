@@ -48,8 +48,8 @@ public class NodeTypePattern extends Pattern {
 
     @Override
     protected NodeTypePattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new NodeTypePattern(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new NodeTypePattern(functorOrType, elements, declaration, args);
     }
 
     public Type nodeType() {

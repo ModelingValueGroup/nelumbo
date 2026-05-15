@@ -61,8 +61,8 @@ public class NSet extends Node {
     }
 
     @Override
-    protected NSet set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new NSet(functorOrType, elements, declaration, array);
+    protected NSet set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new NSet(functorOrType, elements, declaration, args);
     }
 
     @Override

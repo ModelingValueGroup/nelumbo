@@ -62,8 +62,8 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    protected Rule set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Rule(functorOrType, elements, declaration, array);
+    protected Rule set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Rule(functorOrType, elements, declaration, args);
     }
 
     public final Functor consequenceFunctor() {

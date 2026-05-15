@@ -44,8 +44,8 @@ public final class Transform extends Node {
 
     @Override
     protected Transform set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new Transform(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new Transform(functorOrType, elements, declaration, args);
     }
 
     @Override

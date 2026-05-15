@@ -36,8 +36,8 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected Equal set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Equal(functorOrType, elements, declaration, array);
+    protected Equal set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Equal(functorOrType, elements, declaration, args);
     }
 
     @Override

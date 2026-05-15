@@ -49,8 +49,8 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected When set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new When(functorOrType, elements, declaration, array);
+    protected When set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new When(functorOrType, elements, declaration, args);
     }
 
     @Override

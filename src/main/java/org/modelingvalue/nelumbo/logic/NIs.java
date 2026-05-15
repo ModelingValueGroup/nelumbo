@@ -44,8 +44,8 @@ public class NIs extends Predicate {
     }
 
     @Override
-    protected NIs set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new NIs(functorOrType, elements, declaration, array);
+    protected NIs set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new NIs(functorOrType, elements, declaration, args);
     }
 
     public Node left() {

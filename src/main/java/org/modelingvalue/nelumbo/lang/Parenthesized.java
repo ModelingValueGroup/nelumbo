@@ -38,8 +38,8 @@ public final class Parenthesized extends Node {
 
     @Override
     protected Parenthesized set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new Parenthesized(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new Parenthesized(functorOrType, elements, declaration, args);
     }
 
     public Node node() {

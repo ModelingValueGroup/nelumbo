@@ -50,8 +50,8 @@ public class RepetitionPattern extends Pattern {
 
     @Override
     protected RepetitionPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new RepetitionPattern(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new RepetitionPattern(functorOrType, elements, declaration, args);
     }
 
     public Pattern repeated() {

@@ -38,8 +38,8 @@ public final class Length extends Predicate {
     }
 
     @Override
-    protected Length set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Length(functorOrType, elements, declaration, array);
+    protected Length set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Length(functorOrType, elements, declaration, args);
     }
 
     @Override

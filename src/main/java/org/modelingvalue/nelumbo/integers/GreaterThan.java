@@ -39,8 +39,8 @@ public final class GreaterThan extends Predicate {
 
     @Override
     protected GreaterThan set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new GreaterThan(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new GreaterThan(functorOrType, elements, declaration, args);
     }
 
     @Override

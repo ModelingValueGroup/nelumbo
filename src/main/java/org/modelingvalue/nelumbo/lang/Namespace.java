@@ -39,8 +39,8 @@ public final class Namespace extends Node {
 
     @Override
     protected Namespace set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new Namespace(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new Namespace(functorOrType, elements, declaration, args);
     }
 
     @Override

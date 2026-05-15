@@ -51,8 +51,8 @@ public class TokenTextPattern extends Pattern {
 
     @Override
     protected TokenTextPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] array) {
-        return new TokenTextPattern(functorOrType, elements, declaration, array);
+            Object[] args) {
+        return new TokenTextPattern(functorOrType, elements, declaration, args);
     }
 
     public String tokenText() {

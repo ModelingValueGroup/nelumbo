@@ -43,8 +43,8 @@ public final class Not extends CompoundPredicate {
     }
 
     @Override
-    protected Not set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] array) {
-        return new Not(functorOrType, elements, declaration, array);
+    protected Not set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
+        return new Not(functorOrType, elements, declaration, args);
     }
 
     @Override
