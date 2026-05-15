@@ -177,22 +177,10 @@ public class Node extends StructImpl implements AstElement {
             return false;
         } else if (obj.getClass() != getClass()) {
             return false;
-        } else if (super.equals(obj)) {
-            return true;
-        } else {
-            if (!typeForEquals().equals(other.typeForEquals())) {
-                return false;
-            } else if (length() != other.length()) {
-                return false;
-            } else {
-                for (int i = 0; i < length(); i++) {
-                    if (!Objects.equals(get(i), other.get(i))) {
-                        return false;
-                    }
-                }
-                return true;
-            }
+        } else if (!typeForEquals().equals(other.typeForEquals())) {
+            return false;
         }
+        return super.equals(obj);
     }
 
     protected Object typeForEquals() {
