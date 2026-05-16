@@ -138,7 +138,11 @@ public class Predicate extends Node {
 
     @Override
     protected Predicate set(NodeInfo nodeInfo, Object[] args) {
-        return new Predicate(nodeInfo, args);
+        if (getClass() == Predicate.class) {
+            return new Predicate(nodeInfo, args);
+        } else {
+            return (Predicate) super.set(nodeInfo, args);
+        }
     }
 
     public Type getType(int i) {

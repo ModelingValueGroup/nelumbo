@@ -19,6 +19,8 @@ package org.modelingvalue.nelumbo;
 import static org.modelingvalue.nelumbo.KnowledgeBase.TRACE_SYNTATIC;
 
 import java.io.Serial;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -270,6 +272,22 @@ public class Node extends StructImpl implements AstElement {
     }
 
     protected Node set(NodeInfo nodeInfo, Object[] args) {
+        if (getClass() != Node.class) {
+            Functor functor = functor();
+            if (functor != null) {
+                Constructor<?> constructor = functor.constructor();
+                if (constructor != null) {
+                    try {
+                        return (Node) constructor.newInstance(nodeInfo, args);
+                    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                            | InvocationTargetException e) {
+                        throw new IllegalArgumentException(e);
+                    }
+                }
+            }
+            throw new IllegalStateException(
+                    "Specialisation of Node " + this.getClass().getName() + " without @NelumboConstructor");
+        }
         return new Node(nodeInfo, args);
     }
 
