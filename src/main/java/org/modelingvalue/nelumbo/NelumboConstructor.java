@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 /**
@@ -37,15 +36,14 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
  * instantiation of Node subclasses.
  * <p>
  * Constructors marked with this annotation have the signature:<br>
- * {@code (FunctorOrType, List<AstElement>, Node, Object[])}
+ * {@code (NodeInfo, Object[])}
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.CONSTRUCTOR)
 public @interface NelumboConstructor {
     public class Finder {
-        private static final Class<?>[] EXPECTED_PARAMS = { FunctorOrType.class, List.class, Node.class,
-                Object[].class };
+        private static final Class<?>[] EXPECTED_PARAMS = { NodeInfo.class, Object[].class };
 
         private static final Map<String, Class<?>>                      CACHE1 = new ConcurrentHashMap<>();
         private static final Map<Class<?>, Constructor<? extends Node>> CACHE2 = new ConcurrentHashMap<>();

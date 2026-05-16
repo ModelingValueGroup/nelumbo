@@ -18,13 +18,10 @@ package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 
 public final class Or extends BinaryPredicate {
     @Serial
@@ -34,12 +31,12 @@ public final class Or extends BinaryPredicate {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Or(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public Or(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public static Or of(Predicate predicate1, Predicate predicate2) {
-        return new Or(FUNCTOR, List.of(), null, predicate1, predicate2);
+        return new Or(NodeInfo.of(FUNCTOR), predicate1, predicate2);
     }
 
     @Override
@@ -48,8 +45,8 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
-    protected Or set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Or(functorOrType, elements, declaration, args);
+    protected Or set(NodeInfo nodeInfo, Object[] args) {
+        return new Or(nodeInfo, args);
     }
 
     @Override

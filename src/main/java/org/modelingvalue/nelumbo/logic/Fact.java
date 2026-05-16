@@ -19,15 +19,14 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -38,13 +37,13 @@ public final class Fact extends Node implements Evaluatable {
     private static final long serialVersionUID = 6226473785860814115L;
 
     @NelumboConstructor
-    public Fact(FunctorOrType functor, List<AstElement> elements, Node declaration, Object... args) {
-        super(functor, elements, declaration, args);
+    public Fact(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected Fact set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Fact(functorOrType, elements, declaration, args);
+    protected Fact set(NodeInfo nodeInfo, Object[] args) {
+        return new Fact(nodeInfo, args);
     }
 
     @Override
@@ -62,7 +61,7 @@ public final class Fact extends Node implements Evaluatable {
             NList facts = new NList(astElements().sublist(0, 1), Type.ROOT);
             for (int i = 0; i < length(); i++) {
                 Predicate pred = getVal(i);
-                Fact fact = new Fact(functor(), List.of(pred), null, pred);
+                Fact fact = new Fact(NodeInfo.of(functor(), List.of(pred)), pred);
                 facts = new NList(List.of(), facts, fact);
             }
             return facts;

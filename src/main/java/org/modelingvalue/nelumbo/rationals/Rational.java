@@ -19,15 +19,13 @@ package org.modelingvalue.nelumbo.rationals;
 import java.io.Serial;
 import java.math.BigInteger;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -42,16 +40,12 @@ public final class Rational extends Node {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Rational(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
-    }
-
-    private Rational(Functor functor, List<AstElement> elements, BigInteger numerator, BigInteger denominator) {
-        super(functor, elements, null, normalize(numerator, denominator));
+    public Rational(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public static Rational of(BigInteger numerator, BigInteger denominator) {
-        return new Rational(FUNCTOR, List.of(), numerator, denominator);
+        return new Rational(NodeInfo.of(FUNCTOR), normalize(numerator, denominator));
     }
 
     private static Object[] parse(String string) {
@@ -70,9 +64,8 @@ public final class Rational extends Node {
     }
 
     @Override
-    protected Rational set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new Rational(functorOrType, elements, declaration, args);
+    protected Rational set(NodeInfo nodeInfo, Object[] args) {
+        return new Rational(nodeInfo, args);
     }
 
     @Override
@@ -109,7 +102,7 @@ public final class Rational extends Node {
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing && get(0) instanceof String string) {
-            return set(functorOrType(), astElements(), null, parse(string));
+            return set(nodeInfo().resetDeclaration(),  parse(string));
         }
         return this;
     }

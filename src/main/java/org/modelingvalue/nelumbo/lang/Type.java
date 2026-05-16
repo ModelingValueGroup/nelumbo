@@ -28,6 +28,7 @@ import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -110,24 +111,24 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @NelumboConstructor
-    public Type(FunctorOrType functorOrType, List<AstElement> elements, Node declararion, Object... args) {
-        super(functorOrType, elements, declararion, args);
+    public Type(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public Type(Class<?> clss, Type... supers) {
-        super(TYPE, List.of(), null, clss, supers.length == 0 ? Set.of() : Set.of(supers), group(supers));
+        super(NodeInfo.of(TYPE), clss, supers.length == 0 ? Set.of() : Set.of(supers), group(supers));
     }
 
     public Type(String name, String group, Type... supers) {
-        super(TYPE, List.of(), null, name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group);
+        super(NodeInfo.of(TYPE), name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group);
     }
 
     public Type(String name, Type... supers) {
-        super(TYPE, List.of(), null, name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group(supers));
+        super(NodeInfo.of(TYPE), name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group(supers));
     }
 
     public Type(TokenType type) {
-        super(TYPE, List.of(), null, type, Set.of(), DEFAULT_GROUP);
+        super(NodeInfo.of(TYPE), type, Set.of(), DEFAULT_GROUP);
     }
 
     public Type(Variable var) {
@@ -135,16 +136,16 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type(List<AstElement> elements, Variable var, String group) {
-        super(TYPE, elements, null, var, Set.of(OBJECT), group);
+        super(NodeInfo.of(TYPE, elements), var, Set.of(OBJECT), group);
         assert Type.TYPE.equals(var.type());
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
-        super(TYPE, elements, null, name, supers.asSet(), group);
+        super(NodeInfo.of(TYPE, elements), name, supers.asSet(), group);
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, Type element) {
-        super(TYPE, elements, null, name, supers.asSet(), group, element);
+        super(NodeInfo.of(TYPE, elements), name, supers.asSet(), group, element);
     }
 
     private Type(String name, Type sup, Type element, String group) {
@@ -152,7 +153,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type(Type super1, Type super2) {
-        super(TYPE, List.of(), null, Set.of(super1, super2), Set.of(super1, super2) //
+        super(NodeInfo.of(TYPE), Set.of(super1, super2), Set.of(super1, super2) //
                 .addAll(super1.supers().remove(OBJECT).replaceAll(s1 -> new Type(s1, super2))) //
                 .addAll(super2.supers().remove(OBJECT).replaceAll(s2 -> new Type(super1, s2))) //
                 , super1.group());
@@ -415,8 +416,8 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @Override
-    protected Type set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Type(functorOrType, elements, declaration, args);
+    protected Type set(NodeInfo nodeInfo, Object[] args) {
+        return new Type(nodeInfo, args);
     }
 
     @Override

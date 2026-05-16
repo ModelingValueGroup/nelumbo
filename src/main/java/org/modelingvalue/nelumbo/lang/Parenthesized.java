@@ -18,12 +18,11 @@ package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
@@ -32,14 +31,13 @@ public final class Parenthesized extends Node {
     private static final long serialVersionUID = 1327185915147325168L;
 
     @NelumboConstructor
-    public Parenthesized(FunctorOrType functorOrType, List<AstElement> elements, Node declararion, Object... args) {
-        super(functorOrType, elements, declararion, args);
+    public Parenthesized(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected Parenthesized set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new Parenthesized(functorOrType, elements, declaration, args);
+    protected Parenthesized set(NodeInfo nodeInfo, Object[] args) {
+        return new Parenthesized(nodeInfo, args);
     }
 
     public Node node() {

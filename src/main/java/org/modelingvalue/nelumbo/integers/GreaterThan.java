@@ -19,11 +19,8 @@ package org.modelingvalue.nelumbo.integers;
 import java.io.Serial;
 import java.math.BigInteger;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -33,14 +30,13 @@ public final class GreaterThan extends Predicate {
     private static final long serialVersionUID = 5338681256251602011L;
 
     @NelumboConstructor
-    public GreaterThan(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public GreaterThan(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected GreaterThan set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new GreaterThan(functorOrType, elements, declaration, args);
+    protected GreaterThan set(NodeInfo nodeInfo, Object[] args) {
+        return new GreaterThan(nodeInfo, args);
     }
 
     @Override

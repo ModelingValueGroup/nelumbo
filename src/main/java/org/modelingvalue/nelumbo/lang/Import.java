@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -34,8 +35,8 @@ public final class Import extends Node {
     private static final long serialVersionUID = 4184295220819695199L;
 
     @NelumboConstructor
-    public Import(FunctorOrType functorOrTyper, List<AstElement> elements, Node declararion, Object... args) {
-        super(functorOrTyper, elements, declararion, args);
+    public Import(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
@@ -49,7 +50,7 @@ public final class Import extends Node {
             for (int i = 1; i <= elements.size(); i++) {
                 Token t = i < elements.size() ? (Token) elements.get(i) : null;
                 if (t == null || t.text().equals(",")) {
-                    Import ip = new Import(functor, el, null, sb.toString());
+                    Import ip = new Import(NodeInfo.of(functor, el), sb.toString());
                     roots = new NList(List.of(), roots, ip);
                     if (t != null) {
                         roots = roots.setAstElements(roots.astElements().add(t));
@@ -68,8 +69,8 @@ public final class Import extends Node {
     }
 
     @Override
-    protected Import set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Import(functorOrType, elements, declaration, args);
+    protected Import set(NodeInfo nodeInfo, Object[] args) {
+        return new Import(nodeInfo, args);
     }
 
     @Override

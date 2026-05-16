@@ -24,6 +24,7 @@ import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.BooleanVariable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -36,12 +37,17 @@ public final class Variable extends Node {
     private static final long serialVersionUID = -8998368070388908726L;
 
     @NelumboConstructor
-    public Variable(FunctorOrType functorOrType, List<AstElement> elements, Node declararion, Object... args) {
-        super(functorOrType, elements, declararion, args);
+    public Variable(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public Variable(List<AstElement> elements, boolean hidden, Type type, String name) {
-        super(Type.VARIABLE, elements, null, hidden, type, name);
+        super(NodeInfo.of(Type.VARIABLE, elements), hidden, type, name);
+    }
+
+    @Override
+    protected Variable set(NodeInfo nodeInfo, Object[] args) {
+        return new Variable(nodeInfo, args);
     }
 
     @Override
@@ -74,12 +80,6 @@ public final class Variable extends Node {
 
     public String name() {
         return (String) get(2);
-    }
-
-    @Override
-    protected Variable set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new Variable(functorOrType, elements, declaration, args);
     }
 
     @Override

@@ -18,13 +18,10 @@ package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 
 public final class Not extends CompoundPredicate {
     @Serial
@@ -34,17 +31,17 @@ public final class Not extends CompoundPredicate {
     private static Functor FUNCTOR;
 
     public static Not of(Predicate predicate) {
-        return new Not(FUNCTOR, List.of(), null, predicate);
+        return new Not(NodeInfo.of(FUNCTOR), predicate);
     }
 
     @NelumboConstructor
-    public Not(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public Not(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected Not set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Not(functorOrType, elements, declaration, args);
+    protected Not set(NodeInfo nodeInfo, Object[] args) {
+        return new Not(nodeInfo, args);
     }
 
     @Override

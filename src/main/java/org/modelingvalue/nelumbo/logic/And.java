@@ -18,13 +18,10 @@ package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 
 public final class And extends BinaryPredicate {
     @Serial
@@ -34,12 +31,12 @@ public final class And extends BinaryPredicate {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public And(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public And(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public static And of(Predicate predicate1, Predicate predicate2) {
-        return new And(FUNCTOR, List.of(), null, predicate1, predicate2);
+        return new And(NodeInfo.of(FUNCTOR), predicate1, predicate2);
     }
 
     @Override
@@ -48,8 +45,8 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new And(functorOrType, elements, declaration, args);
+    protected And set(NodeInfo nodeInfo, Object[] args) {
+        return new And(nodeInfo, args);
     }
 
     @Override

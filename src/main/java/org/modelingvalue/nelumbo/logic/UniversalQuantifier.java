@@ -23,9 +23,8 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Variable;
 
 public final class UniversalQuantifier extends Quantifier {
@@ -36,19 +35,17 @@ public final class UniversalQuantifier extends Quantifier {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public UniversalQuantifier(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public UniversalQuantifier(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     protected UniversalQuantifier(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(FUNCTOR, elements, null, localVars, predicate);
+        super(NodeInfo.of(FUNCTOR, elements), localVars, predicate);
     }
 
     @Override
-    protected UniversalQuantifier set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new UniversalQuantifier(functorOrType, elements, declaration, args);
+    protected UniversalQuantifier set(NodeInfo nodeInfo, Object[] args) {
+        return new UniversalQuantifier(nodeInfo, args);
     }
 
     @Override

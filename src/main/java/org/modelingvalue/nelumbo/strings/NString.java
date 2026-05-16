@@ -18,15 +18,13 @@ package org.modelingvalue.nelumbo.strings;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -41,16 +39,12 @@ public final class NString extends Node {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public NString(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
-    }
-
-    private NString(Functor functor, List<AstElement> elements, String val) {
-        super(functor, elements, null, val);
+    public NString(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public static NString of(String val) {
-        return new NString(FUNCTOR, List.of(), val);
+        return new NString(NodeInfo.of(FUNCTOR), val);
     }
 
     private static String strip(String val) {
@@ -58,8 +52,8 @@ public final class NString extends Node {
     }
 
     @Override
-    protected NString set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new NString(functorOrType, elements, declaration, args);
+    protected NString set(NodeInfo nodeInfo, Object[] args) {
+        return new NString(nodeInfo, args);
     }
 
     @Override

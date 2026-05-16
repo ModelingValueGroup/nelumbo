@@ -23,8 +23,8 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 
 public class NIs extends Predicate {
@@ -35,17 +35,17 @@ public class NIs extends Predicate {
     private static Functor FUNCTOR;
 
     public NIs(List<AstElement> elements, Node left, Node right) {
-        super(FUNCTOR, elements, null, left, right);
+        super(NodeInfo.of(FUNCTOR, elements), left, right);
     }
 
     @NelumboConstructor
-    public NIs(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public NIs(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected NIs set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new NIs(functorOrType, elements, declaration, args);
+    protected NIs set(NodeInfo nodeInfo, Object[] args) {
+        return new NIs(nodeInfo, args);
     }
 
     public Node left() {

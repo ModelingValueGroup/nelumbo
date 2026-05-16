@@ -19,11 +19,11 @@ package org.modelingvalue.nelumbo.lang;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -33,14 +33,13 @@ public final class Namespace extends Node {
     private static final long serialVersionUID = 8774934413042142443L;
 
     @NelumboConstructor
-    public Namespace(FunctorOrType functorOrType, List<AstElement> elements, Node declararion, Object... args) {
-        super(functorOrType, elements, declararion, args);
+    public Namespace(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected Namespace set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new Namespace(functorOrType, elements, declaration, args);
+    protected Namespace set(NodeInfo nodeInfo, Object[] args) {
+        return new Namespace(nodeInfo, args);
     }
 
     @Override

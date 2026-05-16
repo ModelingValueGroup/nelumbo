@@ -18,11 +18,8 @@ package org.modelingvalue.nelumbo.strings;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -32,13 +29,13 @@ public final class Concat extends Predicate {
     private static final long serialVersionUID = -317279750710781401L;
 
     @NelumboConstructor
-    public Concat(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public Concat(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected Concat set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Concat(functorOrType, elements, declaration, args);
+    protected Concat set(NodeInfo nodeInfo, Object[] args) {
+        return new Concat(nodeInfo, args);
     }
 
     @Override

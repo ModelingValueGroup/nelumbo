@@ -24,9 +24,8 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -38,18 +37,17 @@ public class SequencePattern extends Pattern {
     private static final long serialVersionUID = 1477171023667359130L;
 
     public SequencePattern(Type type, List<AstElement> elements, List<Pattern> patterns) {
-        super(type, elements, null, patterns);
+        super(NodeInfo.of(type, elements), patterns);
     }
 
     @NelumboConstructor
-    public SequencePattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
-        super(functorOrType, ast, declaration, args);
+    public SequencePattern(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected SequencePattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new SequencePattern(functorOrType, elements, declaration, args);
+    protected SequencePattern set(NodeInfo nodeInfo, Object[] args) {
+        return new SequencePattern(nodeInfo, args);
     }
 
     @SuppressWarnings("unchecked")

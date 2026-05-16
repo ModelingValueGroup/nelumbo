@@ -29,7 +29,7 @@ import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -42,8 +42,8 @@ public final class Query extends Node implements Evaluatable {
     private InferResult inferResult;
 
     @NelumboConstructor
-    public Query(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public Query(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
@@ -124,8 +124,8 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @Override
-    protected Query set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Query(functorOrType, elements, declaration, args);
+    protected Query set(NodeInfo nodeInfo, Object[] args) {
+        return new Query(nodeInfo, args);
     }
 
     @Override

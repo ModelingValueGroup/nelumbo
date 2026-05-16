@@ -19,11 +19,9 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 import java.util.Objects;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Type;
 
 public class Equal extends Predicate {
@@ -31,13 +29,13 @@ public class Equal extends Predicate {
     private static final long serialVersionUID = -5516286818572134367L;
 
     @NelumboConstructor
-    public Equal(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public Equal(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected Equal set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Equal(functorOrType, elements, declaration, args);
+    protected Equal set(NodeInfo nodeInfo, Object[] args) {
+        return new Equal(nodeInfo, args);
     }
 
     @Override

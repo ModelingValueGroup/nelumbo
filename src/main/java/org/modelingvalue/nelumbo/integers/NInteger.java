@@ -19,15 +19,13 @@ package org.modelingvalue.nelumbo.integers;
 import java.io.Serial;
 import java.math.BigInteger;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -43,16 +41,12 @@ public final class NInteger extends Node {
     private static Functor FUNCTOR;
 
     public static NInteger of(BigInteger val) {
-        return new NInteger(FUNCTOR, List.of(), val);
+        return new NInteger(NodeInfo.of(FUNCTOR), val);
     }
 
     @NelumboConstructor
-    public NInteger(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
-    }
-
-    private NInteger(Functor functor, List<AstElement> elements, BigInteger val) {
-        super(functor, elements, null, val);
+    public NInteger(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     private static BigInteger parse(String string) {
@@ -65,9 +59,8 @@ public final class NInteger extends Node {
     }
 
     @Override
-    protected NInteger set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new NInteger(functorOrType, elements, declaration, args);
+    protected NInteger set(NodeInfo nodeInfo, Object[] args) {
+        return new NInteger(nodeInfo, args);
     }
 
     @Override

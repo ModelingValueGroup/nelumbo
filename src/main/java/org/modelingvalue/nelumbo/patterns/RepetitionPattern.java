@@ -25,9 +25,8 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -40,18 +39,17 @@ public class RepetitionPattern extends Pattern {
 
     public RepetitionPattern(Type type, List<AstElement> elements, Pattern repeated, boolean mandatory,
             Pattern separator) {
-        super(type, elements, null, repeated, mandatory, separator);
+        super(NodeInfo.of(type, elements), repeated, mandatory, separator);
     }
 
     @NelumboConstructor
-    public RepetitionPattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
-        super(functorOrType, ast, declaration, args);
+    public RepetitionPattern(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected RepetitionPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new RepetitionPattern(functorOrType, elements, declaration, args);
+    protected RepetitionPattern set(NodeInfo nodeInfo, Object[] args) {
+        return new RepetitionPattern(nodeInfo, args);
     }
 
     public Pattern repeated() {

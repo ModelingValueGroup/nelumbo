@@ -19,12 +19,11 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -40,14 +39,13 @@ public final class NBoolean extends Predicate {
     private InferResult result;
 
     @NelumboConstructor
-    public NBoolean(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public NBoolean(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected NBoolean set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new NBoolean(functorOrType, elements, declaration, args);
+    protected NBoolean set(NodeInfo nodeInfo, Object[] args) {
+        return new NBoolean(nodeInfo, args);
     }
 
     @Override
@@ -120,7 +118,7 @@ public final class NBoolean extends Predicate {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing && length() == 0) {
             Boolean bool = parse(functor().name());
-            NBoolean result = set(functorOrType(), astElements(), null, new Object[] { bool });
+            NBoolean result = set(nodeInfo().resetDeclaration(), new Object[] { bool });
             if (TRUE == null && result.isTrue()) {
                 TRUE = result;
             } else if (FALSE == null && result.isFalse()) {

@@ -24,8 +24,8 @@ import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -37,22 +37,21 @@ public class TokenTextPattern extends Pattern {
     private static final long serialVersionUID = -7116490422223451839L;
 
     public TokenTextPattern(Type type, List<AstElement> elements, String text, Boolean isKeyword) {
-        super(type, elements, null, text, isKeyword);
+        super(NodeInfo.of(type, elements), text, isKeyword);
     }
 
     public TokenTextPattern(Type type, List<AstElement> elements, Variable var, Boolean isKeyword) {
-        super(type, elements, null, var, isKeyword);
+        super(NodeInfo.of(type, elements), var, isKeyword);
     }
 
     @NelumboConstructor
-    public TokenTextPattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
-        super(functorOrType, ast, declaration, args);
+    public TokenTextPattern(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected TokenTextPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new TokenTextPattern(functorOrType, elements, declaration, args);
+    protected TokenTextPattern set(NodeInfo nodeInfo, Object[] args) {
+        return new TokenTextPattern(nodeInfo, args);
     }
 
     public String tokenText() {

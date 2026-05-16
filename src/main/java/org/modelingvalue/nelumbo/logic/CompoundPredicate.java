@@ -19,21 +19,17 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 
 import org.modelingvalue.collections.Entry;
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Variable;
 
 public abstract class CompoundPredicate extends Predicate {
     @Serial
     private static final long serialVersionUID = -4926802375244295351L;
 
-    protected CompoundPredicate(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object... predicates) {
-        super(functorOrType, elements, declaration, predicates);
+    protected CompoundPredicate(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override

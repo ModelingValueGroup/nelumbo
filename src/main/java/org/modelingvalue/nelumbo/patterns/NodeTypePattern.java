@@ -25,8 +25,8 @@ import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -38,18 +38,17 @@ public class NodeTypePattern extends Pattern {
     private static final long serialVersionUID = 6828401544789430678L;
 
     public NodeTypePattern(Type type, List<AstElement> elements, Type nodeType, Integer precedence, Boolean visible) {
-        super(type, elements, null, nodeType, precedence, visible);
+        super(NodeInfo.of(type, elements), nodeType, precedence, visible);
     }
 
     @NelumboConstructor
-    public NodeTypePattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
-        super(functorOrType, ast, declaration, args);
+    public NodeTypePattern(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected NodeTypePattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new NodeTypePattern(functorOrType, elements, declaration, args);
+    protected NodeTypePattern set(NodeInfo nodeInfo, Object[] args) {
+        return new NodeTypePattern(nodeInfo, args);
     }
 
     public Type nodeType() {

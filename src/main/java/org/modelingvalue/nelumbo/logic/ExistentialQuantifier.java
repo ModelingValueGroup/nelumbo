@@ -23,9 +23,8 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Variable;
 
 public final class ExistentialQuantifier extends Quantifier {
@@ -36,19 +35,17 @@ public final class ExistentialQuantifier extends Quantifier {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public ExistentialQuantifier(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public ExistentialQuantifier(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public ExistentialQuantifier(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(FUNCTOR, elements, null, localVars, predicate);
+        super(NodeInfo.of(FUNCTOR, elements), localVars, predicate);
     }
 
     @Override
-    protected ExistentialQuantifier set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new ExistentialQuantifier(functorOrType, elements, declaration, args);
+    protected ExistentialQuantifier set(NodeInfo nodeInfo, Object[] args) {
+        return new ExistentialQuantifier(nodeInfo, args);
     }
 
     @Override

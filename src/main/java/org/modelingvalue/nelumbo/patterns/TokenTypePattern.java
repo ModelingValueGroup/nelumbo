@@ -23,9 +23,8 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -37,18 +36,17 @@ public class TokenTypePattern extends Pattern {
     private static final long serialVersionUID = 2405616043878166113L;
 
     public TokenTypePattern(Type type, List<AstElement> elements, TokenType tokenType) {
-        super(type, elements, null, tokenType);
+        super(NodeInfo.of(type, elements), tokenType);
     }
 
     @NelumboConstructor
-    public TokenTypePattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
-        super(functorOrType, ast, declaration, args);
+    public TokenTypePattern(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected TokenTypePattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new TokenTypePattern(functorOrType, elements, declaration, args);
+    protected TokenTypePattern set(NodeInfo nodeInfo, Object[] args) {
+        return new TokenTypePattern(nodeInfo, args);
     }
 
     public TokenType tokenType() {

@@ -19,18 +19,14 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.NodeInfo;
 
 public abstract class BinaryPredicate extends CompoundPredicate {
     @Serial
     private static final long serialVersionUID = -928776822979604743L;
 
-    protected BinaryPredicate(FunctorOrType functorOrType, List<AstElement> elements, Node declararion,
-            Object... args) {
-        super(functorOrType, elements, declararion, args);
+    protected BinaryPredicate(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override

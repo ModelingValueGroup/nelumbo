@@ -46,23 +46,40 @@ public class Node extends StructImpl implements AstElement {
     @Serial
     private static final long serialVersionUID = 7315776001191198132L;
     //
-    private final FunctorOrType    functorOrType;
-    private final List<AstElement> elements;
-    private final Node             declaration;
+    private final NodeInfo nodeInfo;
+
     //
     private Map<Variable, Object> binding;
     private int                   hashCodeCache;
 
     @NelumboConstructor
-    public Node(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(array(args));
-        this.functorOrType = functorOrType;
-        this.elements = elements;
-        this.declaration = declaration == null ? this : declaration;
+    public Node(NodeInfo nodeInfo, Object... args) {
+        super(removeOptionals(args));
+        this.nodeInfo = nodeInfo.declaration() == null ? nodeInfo.setDeclaration(this) : nodeInfo;
+    }
+
+    public NodeInfo nodeInfo() {
+        return nodeInfo;
+    }
+
+    public FunctorOrType functorOrType() {
+        return nodeInfo.functorOrType();
+    }
+
+    public final List<AstElement> astElements() {
+        return nodeInfo.elements();
     }
 
     public Node declaration() {
-        return declaration;
+        return nodeInfo.declaration();
+    }
+
+    public Node setFunctor(Functor functor) {
+        return set(nodeInfo.setFunctorOrType(functor), toArray());
+    }
+
+    public Node setAstElements(List<AstElement> elements) {
+        return set(nodeInfo.setElements(elements), toArray());
     }
 
     public Node resetDeclaration() {
@@ -70,7 +87,7 @@ public class Node extends StructImpl implements AstElement {
         for (int i = 0; i < array.length; i++) {
             array[i] = resetDeclaration(array[i]);
         }
-        return set(functorOrType, elements, null, array);
+        return set(nodeInfo.resetDeclaration(), array);
     }
 
     private Object resetDeclaration(Object from) {
@@ -86,21 +103,13 @@ public class Node extends StructImpl implements AstElement {
         return from;
     }
 
-    private static Object[] array(Object[] args) {
+    private static Object[] removeOptionals(Object[] args) {
         for (int i = 0; i < args.length; i++) {
             if (args[i] instanceof Optional<?> opt) {
                 args[i] = opt.orElse(null);
             }
         }
         return args;
-    }
-
-    public Node setFunctor(Functor functor) {
-        return set(functor, elements, declaration, toArray());
-    }
-
-    public Node setAstElements(List<AstElement> elements) {
-        return set(functorOrType, elements, declaration, toArray());
     }
 
     public Type type() {
@@ -111,14 +120,6 @@ public class Node extends StructImpl implements AstElement {
     public Functor functor() {
         FunctorOrType tf = functorOrType();
         return tf instanceof Functor ? (Functor) tf : null;
-    }
-
-    public FunctorOrType functorOrType() {
-        return functorOrType;
-    }
-
-    public final List<AstElement> astElements() {
-        return elements;
     }
 
     public List<Object> args() {
@@ -264,12 +265,12 @@ public class Node extends StructImpl implements AstElement {
         return setArgs(array);
     }
 
-    public final Node setArgs(Object[] arg) {
-        return set(functorOrType, elements, declaration, arg);
+    public Node setArgs(Object[] args) {
+        return set(nodeInfo, args);
     }
 
-    protected Node set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Node(functorOrType, elements, declaration, args);
+    protected Node set(NodeInfo nodeInfo, Object[] args) {
+        return new Node(nodeInfo, args);
     }
 
     public final Set<Variable> allLocalVars() {
@@ -293,7 +294,7 @@ public class Node extends StructImpl implements AstElement {
 
     public final Map<Variable, Object> getBinding() {
         if (binding == null) {
-            binding = getBinding(declaration);
+            binding = getBinding(declaration());
         }
         return binding;
     }
@@ -358,11 +359,11 @@ public class Node extends StructImpl implements AstElement {
     }
 
     protected Node set(Variable var, Object val) {
-        return setBinding(declaration, Map.of(Entry.of(var, val)));
+        return setBinding(declaration(), Map.of(Entry.of(var, val)));
     }
 
     public Node setBinding(Map<Variable, Object> vars) {
-        return setBinding(declaration, vars);
+        return setBinding(declaration(), vars);
     }
 
     protected Node setBinding(Node declaration, Map<Variable, Object> vars) {
@@ -377,7 +378,7 @@ public class Node extends StructImpl implements AstElement {
                 array[i] = bound;
             }
         }
-        return array != null ? set(functorOrType, elements, declaration, array) : this;
+        return array != null ? set(nodeInfo, array) : this;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

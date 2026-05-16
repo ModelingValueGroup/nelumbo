@@ -29,9 +29,9 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -48,12 +48,12 @@ public final class Rule extends Node implements Evaluatable {
     private static Functor FUNCTOR;
 
     @NelumboConstructor
-    public Rule(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public Rule(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public Rule(List<AstElement> elements, Predicate consequence, Predicate condition) {
-        super(FUNCTOR, elements, null, consequence, condition);
+        super(NodeInfo.of(FUNCTOR, elements), consequence, condition);
     }
 
     @Override
@@ -62,8 +62,8 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    protected Rule set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Rule(functorOrType, elements, declaration, args);
+    protected Rule set(NodeInfo nodeInfo, Object[] args) {
+        return new Rule(nodeInfo, args);
     }
 
     public final Functor consequenceFunctor() {

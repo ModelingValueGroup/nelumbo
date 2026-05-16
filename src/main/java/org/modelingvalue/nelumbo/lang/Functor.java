@@ -30,6 +30,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
@@ -76,17 +77,17 @@ public class Functor extends Node implements FunctorOrType {
     private ParseState startPost;
 
     private Functor(List<AstElement> elements, Object... args) {
-        super(Type.FUNCTOR, elements, null, args);
+        super(NodeInfo.of(Type.FUNCTOR, elements), args);
     }
 
     @NelumboConstructor
-    public Functor(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public Functor(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected Functor set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new Functor(functorOrType, elements, declaration, args);
+    protected Functor set(NodeInfo nodeInfo, Object[] args) {
+        return new Functor(nodeInfo, args);
     }
 
     public Pattern pattern() {
@@ -173,7 +174,7 @@ public class Functor extends Node implements FunctorOrType {
         Constructor<? extends Node> constructor = constructor();
         if (constructor != null) {
             try {
-                return constructor.newInstance(this, elements, null, args);
+                return constructor.newInstance(NodeInfo.of(this, elements), args);
             } catch (Exception e) {
                 handleException(elements, handler, e);
             }
@@ -186,8 +187,8 @@ public class Functor extends Node implements FunctorOrType {
                 handleException(elements, handler, e);
             }
         }
-        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(this, elements, null, args)
-                : new Node(this, elements, null, args);
+        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(NodeInfo.of(this, elements), args)
+                : new Node(NodeInfo.of(this, elements), args);
     }
 
     private void handleException(List<AstElement> elements, ParseExceptionHandler handler, Exception e)

@@ -25,7 +25,7 @@ import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -36,8 +36,13 @@ public class NSet extends Node {
     private static final long serialVersionUID = 840888260991475386L;
 
     @NelumboConstructor
-    public NSet(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public NSet(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
+    }
+
+    @Override
+    protected NSet set(NodeInfo nodeInfo, Object[] args) {
+        return new NSet(nodeInfo, args);
     }
 
     @Override
@@ -45,7 +50,6 @@ public class NSet extends Node {
         return (NSet) super.setAstElements(elements);
     }
 
-    @SuppressWarnings("unused")
     public Type elementType() {
         return type().element();
     }
@@ -58,11 +62,6 @@ public class NSet extends Node {
     @Override
     public List<Object> args() {
         return elements().asList();
-    }
-
-    @Override
-    protected NSet set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object[] args) {
-        return new NSet(functorOrType, elements, declaration, args);
     }
 
     @Override
@@ -81,6 +80,6 @@ public class NSet extends Node {
         if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof Set)) {
             return this;
         }
-        return set(functorOrType(), astElements(), null, new Object[] { Set.of(super.args()) });
+        return setArgs(new Object[] { Set.of(super.args()) });
     }
 }

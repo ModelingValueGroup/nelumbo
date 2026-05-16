@@ -23,11 +23,11 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -44,12 +44,13 @@ public class Predicate extends Node {
 
     private static final int MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
-    public static Node INCOMPLETE = new Predicate(Type.BOOLEAN, List.of(), null, "..");
+    public static Node INCOMPLETE = new Predicate(NodeInfo.of(Type.BOOLEAN), "..");
 
     private int nrOfUnbound = -1;
 
-    public Predicate(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    @NelumboConstructor
+    public Predicate(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
@@ -73,8 +74,7 @@ public class Predicate extends Node {
     }
 
     public Predicate castFrom(Predicate from) {
-        Object[] array = from.toArray();
-        return from.set(functorOrType(), astElements(), declaration(), array);
+        return set(nodeInfo(), from.toArray());
     }
 
     @Override
@@ -137,9 +137,8 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new Predicate(functorOrType, elements, declaration, args);
+    protected Predicate set(NodeInfo nodeInfo, Object[] args) {
+        return new Predicate(nodeInfo, args);
     }
 
     public Type getType(int i) {
@@ -167,6 +166,11 @@ public class Predicate extends Node {
     }
 
     @Override
+    public Predicate setArgs(Object[] array) {
+        return (Predicate) super.setArgs(array);
+    }
+
+    @Override
     public Predicate set(int i, Object... a) {
         return (Predicate) super.set(i, a);
     }
@@ -190,7 +194,7 @@ public class Predicate extends Node {
                     }
                 }
             }
-            return array != null ? set(functorOrType(), astElements(), decl, array) : this;
+            return array != null ? setArgs(array) : this;
         }
     }
 
@@ -209,10 +213,10 @@ public class Predicate extends Node {
         for (int x = 0; x < a.length; x++) {
             declArray[i + x] = a[x].declaration();
         }
-        Predicate newDeclaration = declaration().set(functorOrType(), declaration().astElements(), null, declArray);
+        Predicate newDeclaration = declaration().setArgs(declArray);
         Object[] predArray = toArray();
         System.arraycopy(a, 0, predArray, from, a.length);
-        return set(functorOrType(), astElements(), newDeclaration, predArray);
+        return set(nodeInfo().setDeclaration(newDeclaration), predArray);
     }
 
     public final InferResult unknown() {
@@ -258,13 +262,13 @@ public class Predicate extends Node {
     @Override
     public Predicate setType(int i, Type type) {
         Object[] array = setArray(i, type);
-        return array != null ? set(functorOrType(), astElements(), null, array) : this;
+        return array != null ? setArgs(array) : this;
     }
 
     @Override
     protected Predicate setTyped(int i, Node typed) {
         Object[] array = setArray(i, typed);
-        return array != null ? set(functorOrType(), astElements(), null, array) : this;
+        return array != null ? setArgs(array) : this;
     }
 
     public InferResult resolve(InferContext context) {

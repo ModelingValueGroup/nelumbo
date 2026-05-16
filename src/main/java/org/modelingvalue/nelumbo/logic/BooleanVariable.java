@@ -24,6 +24,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -36,12 +37,12 @@ public class BooleanVariable extends Predicate {
     private InferResult result;
 
     @NelumboConstructor
-    public BooleanVariable(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, Object... args) {
-        super(functorOrType, elements, declaration, args);
+    public BooleanVariable(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public BooleanVariable(FunctorOrType functorOrType, List<AstElement> elements, Variable var) {
-        super(functorOrType, elements, null, var);
+        super(NodeInfo.of(functorOrType, elements), var);
     }
 
     @Override
@@ -50,9 +51,8 @@ public class BooleanVariable extends Predicate {
     }
 
     @Override
-    protected BooleanVariable set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new BooleanVariable(functorOrType, elements, declaration, args);
+    protected BooleanVariable set(NodeInfo nodeInfo, Object[] args) {
+        return new BooleanVariable(nodeInfo, args);
     }
 
     @Override

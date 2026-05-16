@@ -22,11 +22,11 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
@@ -38,14 +38,13 @@ public final class Transform extends Node {
     private static final long serialVersionUID = -5542746717620873208L;
 
     @NelumboConstructor
-    public Transform(FunctorOrType functorOrType, List<AstElement> elements, Node declararion, Object[] args) {
-        super(functorOrType, elements, declararion, args);
+    public Transform(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected Transform set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new Transform(functorOrType, elements, declaration, args);
+    protected Transform set(NodeInfo nodeInfo, Object[] args) {
+        return new Transform(nodeInfo, args);
     }
 
     @Override

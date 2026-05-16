@@ -25,9 +25,8 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseState;
@@ -39,18 +38,17 @@ public class OptionalPattern extends Pattern {
     private static final long serialVersionUID = 3011113311569598643L;
 
     public OptionalPattern(Type type, List<AstElement> elements, Pattern optional) {
-        super(type, elements, null, optional);
+        super(NodeInfo.of(type, elements), optional);
     }
 
     @NelumboConstructor
-    public OptionalPattern(FunctorOrType functorOrType, List<AstElement> ast, Node declaration, Object... args) {
-        super(functorOrType, ast, declaration, args);
+    public OptionalPattern(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
-    protected OptionalPattern set(FunctorOrType functorOrType, List<AstElement> elements, Node declaration,
-            Object[] args) {
-        return new OptionalPattern(functorOrType, elements, declaration, args);
+    protected OptionalPattern set(NodeInfo nodeInfo, Object[] args) {
+        return new OptionalPattern(nodeInfo, args);
     }
 
     public Pattern optional() {
