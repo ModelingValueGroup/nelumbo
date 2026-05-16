@@ -51,7 +51,6 @@ public class Node extends StructImpl implements AstElement {
     private final Node             declaration;
     //
     private Map<Variable, Object> binding;
-    private boolean               hashCodeIsCached;
     private int                   hashCodeCache;
 
     @NelumboConstructor
@@ -152,15 +151,9 @@ public class Node extends StructImpl implements AstElement {
 
     @Override
     public int hashCode() {
-        if (!hashCodeIsCached) {
-            int r = 1;
-            for (int i = 0; i < length(); i++) {
-                Object e = get(i);
-                r = 31 * r + (e == null ? 0 : e.hashCode());
-            }
-            r = 31 * r + typeForEquals().hashCode();
-            hashCodeCache = r == 0 ? 1 : r;
-            hashCodeIsCached = true;
+        if (hashCodeCache == 0) {
+            int hc = 31 * super.hashCode() + typeForEquals().hashCode();
+            hashCodeCache = hc == 0 ? 1 : hc;
         }
         return hashCodeCache;
     }
