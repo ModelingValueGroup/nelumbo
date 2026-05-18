@@ -59,11 +59,6 @@ public final class NInteger extends Node {
     }
 
     @Override
-    protected NInteger set(NodeInfo nodeInfo, Object[] args) {
-        return new NInteger(nodeInfo, args);
-    }
-
-    @Override
     public NInteger set(int i, Object... a) {
         return (NInteger) super.set(i, a);
     }

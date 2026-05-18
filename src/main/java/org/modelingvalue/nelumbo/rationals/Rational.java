@@ -64,11 +64,6 @@ public final class Rational extends Node {
     }
 
     @Override
-    protected Rational set(NodeInfo nodeInfo, Object[] args) {
-        return new Rational(nodeInfo, args);
-    }
-
-    @Override
     public Rational set(int i, Object... a) {
         return (Rational) super.set(i, a);
     }
@@ -102,7 +97,7 @@ public final class Rational extends Node {
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing && get(0) instanceof String string) {
-            return set(nodeInfo().resetDeclaration(),  parse(string));
+            return set(nodeInfo().resetDeclaration(), parse(string));
         }
         return this;
     }

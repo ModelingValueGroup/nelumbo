@@ -36,11 +36,6 @@ public final class IntegersRational extends Predicate {
     }
 
     @Override
-    protected IntegersRational set(NodeInfo nodeInfo, Object[] args) {
-        return new IntegersRational(nodeInfo, args);
-    }
-
-    @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 2) {
             return unresolvable();

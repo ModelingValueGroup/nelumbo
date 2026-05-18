@@ -35,11 +35,6 @@ public final class Length extends Predicate {
     }
 
     @Override
-    protected Length set(NodeInfo nodeInfo, Object[] args) {
-        return new Length(nodeInfo, args);
-    }
-
-    @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
             return unresolvable();

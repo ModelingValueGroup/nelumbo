@@ -34,11 +34,6 @@ public final class Concat extends Predicate {
     }
 
     @Override
-    protected Concat set(NodeInfo nodeInfo, Object[] args) {
-        return new Concat(nodeInfo, args);
-    }
-
-    @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
             return unresolvable();

@@ -52,11 +52,6 @@ public final class NString extends Node {
     }
 
     @Override
-    protected NString set(NodeInfo nodeInfo, Object[] args) {
-        return new NString(nodeInfo, args);
-    }
-
-    @Override
     public NString set(int i, Object... a) {
         return (NString) super.set(i, a);
     }

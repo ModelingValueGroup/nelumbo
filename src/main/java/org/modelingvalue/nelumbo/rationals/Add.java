@@ -35,11 +35,6 @@ public final class Add extends Predicate {
     }
 
     @Override
-    protected Add set(NodeInfo nodeInfo, Object[] args) {
-        return new Add(nodeInfo, args);
-    }
-
-    @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
             return unresolvable();

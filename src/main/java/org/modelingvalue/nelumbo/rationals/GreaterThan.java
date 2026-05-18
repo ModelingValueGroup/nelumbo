@@ -35,11 +35,6 @@ public final class GreaterThan extends Predicate {
     }
 
     @Override
-    protected GreaterThan set(NodeInfo nodeInfo, Object[] args) {
-        return new GreaterThan(nodeInfo, args);
-    }
-
-    @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
             return unresolvable();
