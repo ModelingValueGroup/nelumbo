@@ -445,7 +445,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
         Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : clazz, prec)
-                .init(this, ctx, bootstrapping);
+                .init(this, ctx, ConstructionReason.transforming);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && clazz != null) {
             nodFunctor.construct(List.of(), new Object[0], this, ctx).init(this, ctx, ConstructionReason.parsing);
@@ -453,7 +453,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
             Functor litFunctor = Functor.of(List.of(), litPattern, type, local, clazz, prec).init(this, ctx,
-                    bootstrapping);
+                    ConstructionReason.transforming);
             roots = new NList(List.of(), roots, litFunctor);
             addLiteral(nodFunctor, litFunctor);
             // Implied Rule
