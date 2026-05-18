@@ -63,18 +63,10 @@ public final class Rational extends Node {
         return new Object[] { numerator.divide(gcd), denominator.divide(gcd) };
     }
 
-    public BigInteger numerator() {
-        return (BigInteger) get(0);
-    }
-
-    public BigInteger denominator() {
-        return (BigInteger) get(1);
-    }
-
     @Override
     public String toString(TokenType[] previous) {
-        BigInteger num = numerator();
-        BigInteger den = denominator();
+        BigInteger num = getVal(0);
+        BigInteger den = getVal(1);
         String string = num.multiply(HUNDERD).divide(den).toString();
         if (string.length() > 2) {
             string = string.substring(0, string.length() - 2) + "." + string.substring(string.length() - 2);

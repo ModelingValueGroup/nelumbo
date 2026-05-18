@@ -51,13 +51,9 @@ public final class NString extends Node {
         return val.substring(1, val.length() - 1);
     }
 
-    public String value() {
-        return (String) get(0);
-    }
-
     @Override
     public String toString(TokenType[] previous) {
-        return DELIM + value() + DELIM;
+        return DELIM + getVal(0) + DELIM;
     }
 
     @Override

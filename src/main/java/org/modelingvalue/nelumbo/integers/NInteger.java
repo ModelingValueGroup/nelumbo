@@ -58,13 +58,9 @@ public final class NInteger extends Node {
         return new BigInteger(string);
     }
 
-    public BigInteger value() {
-        return (BigInteger) get(0);
-    }
-
     @Override
     public String toString(TokenType[] previous) {
-        BigInteger value = value();
+        BigInteger value = getVal(0);
         String string = value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0
                 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX))
                 : value.toString();
