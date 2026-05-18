@@ -183,23 +183,27 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             return addType(new Type(var), ctx);
         } else {
             Type type = Type.BOOLEAN.isAssignableFrom(var.type()) ? var.type() : var.type().toVariable();
-            return Functor.of(List.of(var), t(List.of(var), var), type, Type.NAMESPACE, Variable.class, null).init(this,
-                    ctx, bootstrapping);
+            Functor functor = Functor.of(List.of(var), t(List.of(var), var), type, Type.NAMESPACE, Variable.class,
+                    null);
+            functor.init(this, ctx, bootstrapping);
+            return functor;
         }
     }
 
     private Functor addPattern(TokenType tokenType, ParseContext ctx) throws ParseException {
-        return Functor.of(t(tokenType), //
+        Functor variable = Functor.of(t(tokenType), //
                 Type.PATTERN, null, (elements, args, functor, pc) -> {
                     if (args[0] instanceof Variable var) {
                         return t(elements, var);
                     } else {
                         return t(elements, (String) args[0]);
                     }
-                }, null).init(this, ctx, bootstrapping);
+                }, null);
+        variable.init(this, ctx, bootstrapping);
+        return variable;
     }
 
-    private Pattern pattern(List<AstElement> elements) {
+    public Pattern pattern(List<AstElement> elements) {
         List<Pattern> patterns = List.of();
         for (int i = 0; i < elements.size(); i++) {
             AstElement e = elements.get(i);
@@ -346,71 +350,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                                 n(Type.TYPE, Integer.MAX_VALUE), t("::="),
                                 r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true,
                                         t(","))), //
-                        Type.ROOT.list(), null, (elements, args, functor, pc) -> {
-                            KnowledgeBase kb = CURRENT.get();
-                            Type local = null;
-                            int start = 2;
-                            Optional<Object> mod = (Optional<Object>) args[0];
-                            if (mod.isPresent()) {
-                                if (mod.get() instanceof Type t) {
-                                    local = t;
-                                    start += 3;
-                                } else if (mod.get().equals("private")) {
-                                    local = Type.NAMESPACE;
-                                    start += 1;
-                                }
-                            }
-                            Type type = (Type) elements.get(start - 2);
-                            NList roots = new NList(elements.sublist(0, start), Type.ROOT);
-                            List<AstElement> pttrn = List.of(), ast = List.of();
-                            Class<?> clazz = null;
-                            Integer precedence = null;
-                            for (int i = start; i <= elements.size(); i++) {
-                                AstElement e = i < elements.size() ? elements.get(i) : null;
-                                if (e == null || e instanceof Token) {
-                                    Token t = (Token) e;
-                                    if (t == null || t.text().equals(",")) {
-                                        Pattern pattern = pattern(pttrn);
-                                        if (precedence != null) {
-                                            pattern = pattern.setPresedence(precedence);
-                                        }
-                                        roots = kb.createFunctor(type, roots, ast, clazz, pattern, local, precedence,
-                                                pc);
-                                        if (t != null) {
-                                            roots = roots.setAstElements(roots.astElements().add(t));
-                                        }
-                                        ast = pttrn = List.of();
-                                        clazz = null;
-                                        precedence = null;
-                                    } else if (t.text().equals("#")) {
-                                        ast = ast.add(t);
-                                        t = t.next();
-                                        ast = ast.add(t);
-                                        i++;
-                                        precedence = Integer.parseInt(t.text());
-                                    } else if (t.text().equals("@")) {
-                                        int s = ast.size();
-                                        ast = ast.add(t);
-                                        StringBuilder qname = new StringBuilder();
-                                        t = t.next();
-                                        do {
-                                            ast = ast.add(t);
-                                            i++;
-                                            qname.append(t.text());
-                                            t = t.next();
-                                        } while (t.text().equals(".") || t.type() == NAME);
-                                        String className = qname.toString();
-                                        clazz = NelumboConstructor.Finder.find(className, kb,
-                                                ast.sublist(s, ast.size()));
-                                    } else {
-                                        pttrn = pttrn.add(e);
-                                    }
-                                } else {
-                                    pttrn = pttrn.add(e);
-                                }
-                            }
-                            return roots;
-                        }, null).init(this, parseContext, bootstrapping);
+                        Type.ROOT.list(), null, Functor.class, null).init(this, parseContext, bootstrapping);
 
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
@@ -420,7 +360,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
+    public NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
             Type local, Integer prec, ParseContext ctx) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
@@ -444,16 +384,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
-        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : clazz, prec)
-                .init(this, ctx, ConstructionReason.transforming);
+        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : clazz, prec);
+        nodFunctor.init(this, ctx, ConstructionReason.transforming);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && clazz != null) {
             nodFunctor.construct(List.of(), new Object[0], this, ctx).init(this, ctx, ConstructionReason.parsing);
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
-            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, clazz, prec).init(this, ctx,
-                    ConstructionReason.transforming);
+            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, clazz, prec);
+            litFunctor.init(this, ctx, ConstructionReason.transforming);
             roots = new NList(List.of(), roots, litFunctor);
             addLiteral(nodFunctor, litFunctor);
             // Implied Rule

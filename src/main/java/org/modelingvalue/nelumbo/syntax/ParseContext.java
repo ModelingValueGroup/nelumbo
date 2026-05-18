@@ -235,7 +235,7 @@ public interface ParseContext {
         return false;
     }
 
-    default Functor register(KnowledgeBase knowledgeBase, String group, Type scope, Functor functor)
+    default void register(KnowledgeBase knowledgeBase, String group, Type scope, Functor functor)
             throws ParseException {
         try {
             ParseState preStart = functor.preStart();
@@ -254,7 +254,6 @@ public interface ParseContext {
             knowledgeBase.addException(new ParseException(pme.getMessage(), functor));
         }
         knowledgeBase.register(functor);
-        return functor;
     }
 
     default Map<String, Map<Type, ParseState>> merge(String group, Type scope, ParseState state,

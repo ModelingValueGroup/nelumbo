@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo.lang;
 
+import static org.modelingvalue.nelumbo.syntax.TokenType.NAME;
+
 import java.io.Serial;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -31,6 +33,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
@@ -270,8 +273,70 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    public Functor init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason)
-            throws ParseException {
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing) {
+            Type local = null;
+            int start = 2;
+            Object mod = get(0);
+            if (mod != null) {
+                if (mod instanceof Type t) {
+                    local = t;
+                    start += 3;
+                } else if (mod.equals("private")) {
+                    local = Type.NAMESPACE;
+                    start += 1;
+                }
+            }
+            List<AstElement> elements = astElements();
+            Type type = (Type) elements.get(start - 2);
+            NList roots = new NList(elements.sublist(0, start), Type.ROOT);
+            List<AstElement> pttrn = List.of(), ast = List.of();
+            Class<?> clazz = null;
+            Integer precedence = null;
+            for (int i = start; i <= elements.size(); i++) {
+                AstElement e = i < elements.size() ? elements.get(i) : null;
+                if (e == null || e instanceof Token) {
+                    Token t = (Token) e;
+                    if (t == null || t.text().equals(",")) {
+                        Pattern pattern = knowledgeBase.pattern(pttrn);
+                        if (precedence != null) {
+                            pattern = pattern.setPresedence(precedence);
+                        }
+                        roots = knowledgeBase.createFunctor(type, roots, ast, clazz, pattern, local, precedence, ctx);
+                        if (t != null) {
+                            roots = roots.setAstElements(roots.astElements().add(t));
+                        }
+                        ast = pttrn = List.of();
+                        clazz = null;
+                        precedence = null;
+                    } else if (t.text().equals("#")) {
+                        ast = ast.add(t);
+                        t = t.next();
+                        ast = ast.add(t);
+                        i++;
+                        precedence = Integer.parseInt(t.text());
+                    } else if (t.text().equals("@")) {
+                        int s = ast.size();
+                        ast = ast.add(t);
+                        StringBuilder qname = new StringBuilder();
+                        t = t.next();
+                        do {
+                            ast = ast.add(t);
+                            i++;
+                            qname.append(t.text());
+                            t = t.next();
+                        } while (t.text().equals(".") || t.type() == NAME);
+                        String className = qname.toString();
+                        clazz = NelumboConstructor.Finder.find(className, knowledgeBase, ast.sublist(s, ast.size()));
+                    } else {
+                        pttrn = pttrn.add(e);
+                    }
+                } else {
+                    pttrn = pttrn.add(e);
+                }
+            }
+            return roots;
+        }
         Constructor<? extends Node> constructor = constructor();
         List<AstElement> elements = astElements();
         if (constructor != null && !elements.isEmpty()) {
@@ -292,9 +357,11 @@ public class Functor extends Node implements FunctorOrType {
                 type.group();
         Type local = local();
         if (local != null) {
-            return ctx.register(knowledgeBase, group, local, this);
+            ctx.register(knowledgeBase, group, local, this);
+        } else {
+            knowledgeBase.parseContext().register(knowledgeBase, group, Type.WORLD, this);
         }
-        return knowledgeBase.parseContext().register(knowledgeBase, group, Type.WORLD, this);
+        return this;
     }
 
     public Functor mostSpecific(Functor other) {
