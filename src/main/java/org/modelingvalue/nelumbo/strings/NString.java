@@ -51,11 +51,6 @@ public final class NString extends Node {
         return val.substring(1, val.length() - 1);
     }
 
-    @Override
-    public NString set(int i, Object... a) {
-        return (NString) super.set(i, a);
-    }
-
     public String value() {
         return (String) get(0);
     }

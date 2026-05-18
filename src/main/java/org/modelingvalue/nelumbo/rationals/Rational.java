@@ -63,11 +63,6 @@ public final class Rational extends Node {
         return new Object[] { numerator.divide(gcd), denominator.divide(gcd) };
     }
 
-    @Override
-    public Rational set(int i, Object... a) {
-        return (Rational) super.set(i, a);
-    }
-
     public BigInteger numerator() {
         return (BigInteger) get(0);
     }

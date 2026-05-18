@@ -58,11 +58,6 @@ public final class NInteger extends Node {
         return new BigInteger(string);
     }
 
-    @Override
-    public NInteger set(int i, Object... a) {
-        return (NInteger) super.set(i, a);
-    }
-
     public BigInteger value() {
         return (BigInteger) get(0);
     }
