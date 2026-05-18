@@ -45,16 +45,6 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    protected And set(NodeInfo nodeInfo, Object[] args) {
-        return new And(nodeInfo, args);
-    }
-
-    @Override
-    public And set(int i, Object... a) {
-        return (And) super.set(i, a);
-    }
-
-    @Override
     protected boolean isTrue(InferResult predResult, int i) {
         return false;
     }

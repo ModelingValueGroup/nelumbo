@@ -45,11 +45,6 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
-    protected Or set(NodeInfo nodeInfo, Object[] args) {
-        return new Or(nodeInfo, args);
-    }
-
-    @Override
     public Or set(int i, Object... a) {
         return (Or) super.set(i, a);
     }

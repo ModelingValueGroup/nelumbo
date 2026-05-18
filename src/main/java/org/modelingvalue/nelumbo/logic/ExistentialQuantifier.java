@@ -44,11 +44,6 @@ public final class ExistentialQuantifier extends Quantifier {
     }
 
     @Override
-    protected ExistentialQuantifier set(NodeInfo nodeInfo, Object[] args) {
-        return new ExistentialQuantifier(nodeInfo, args);
-    }
-
-    @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
         List<Variable> localVars = localVars();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();

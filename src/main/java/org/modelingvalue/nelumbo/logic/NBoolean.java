@@ -44,11 +44,6 @@ public final class NBoolean extends Predicate {
     }
 
     @Override
-    protected NBoolean set(NodeInfo nodeInfo, Object[] args) {
-        return new NBoolean(nodeInfo, args);
-    }
-
-    @Override
     public List<Object> args() {
         return List.of();
     }
@@ -101,6 +96,11 @@ public final class NBoolean extends Predicate {
     @Override
     public NBoolean set(int i, Object... a) {
         return (NBoolean) super.set(i, a);
+    }
+
+    @Override
+    protected final NBoolean set(NodeInfo nodeInfo, Object[] args) {
+        return (NBoolean) super.set(nodeInfo, args);
     }
 
     @Override

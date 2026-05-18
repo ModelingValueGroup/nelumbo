@@ -34,11 +34,6 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected Equal set(NodeInfo nodeInfo, Object[] args) {
-        return new Equal(nodeInfo, args);
-    }
-
-    @Override
     public Equal set(int i, Object... a) {
         return (Equal) super.set(i, a);
     }

@@ -43,11 +43,6 @@ public class NIs extends Predicate {
         super(nodeInfo, args);
     }
 
-    @Override
-    protected NIs set(NodeInfo nodeInfo, Object[] args) {
-        return new NIs(nodeInfo, args);
-    }
-
     public Node left() {
         return (Node) get(0);
     }

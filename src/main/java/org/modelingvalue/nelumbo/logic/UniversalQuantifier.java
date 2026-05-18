@@ -44,11 +44,6 @@ public final class UniversalQuantifier extends Quantifier {
     }
 
     @Override
-    protected UniversalQuantifier set(NodeInfo nodeInfo, Object[] args) {
-        return new UniversalQuantifier(nodeInfo, args);
-    }
-
-    @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
         List<Variable> localVars = localVars();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();

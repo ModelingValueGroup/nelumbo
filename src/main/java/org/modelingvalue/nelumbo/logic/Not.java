@@ -40,11 +40,6 @@ public final class Not extends CompoundPredicate {
     }
 
     @Override
-    protected Not set(NodeInfo nodeInfo, Object[] args) {
-        return new Not(nodeInfo, args);
-    }
-
-    @Override
     public Not set(int i, Object... a) {
         return (Not) super.set(i, a);
     }
