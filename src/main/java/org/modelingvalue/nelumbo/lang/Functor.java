@@ -420,6 +420,10 @@ public class Functor extends Node implements FunctorOrType {
         throw new NotMergeableException("Non deterministic pattern merge " + this + " <> " + other);
     }
 
+    public Functor nonBootstrap(Functor functor) {
+        return functor.firstToken() != null && firstToken() == null ? functor : this;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected Functor setBinding(Node declaration, Map<Variable, Object> vars) {

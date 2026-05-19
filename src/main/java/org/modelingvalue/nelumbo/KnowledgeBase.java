@@ -162,14 +162,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else {
             pattern = t(List.of(type), type.rawName());
         }
-        Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, null, Type.class, null);
         if (type.supers().contains(Type.NATIVE)) {
-            if (parseContext().type(type.name()) == null) {
+            Type nat = parseContext().type(type.name());
+            if (nat == null) {
                 addException(new ParseException("Native type " + type.name() + " is not defined in bootstrap.", type));
+            } else {
+                type = nat.setAstElements(type.astElements());
             }
-        } else {
-            functor.init(this, ctx, bootstrapping);
         }
+        Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, null, Type.class, null);
+        functor.init(this, ctx, bootstrapping);
         return functor;
     }
 

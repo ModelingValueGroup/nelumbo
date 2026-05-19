@@ -712,7 +712,7 @@ public class ParseState implements Mergeable<ParseState> {
     private Functor funtorMerge(ParseState state) {
         return functor() == null ? state.functor() : //
                 state.functor() == null ? functor() : //
-                        functor().equals(state.functor()) ? functor() : //
+                        functor().equals(state.functor()) ? functor().nonBootstrap(state.functor()) : //
                                 functor().mostSpecific(state.functor());
     }
 
