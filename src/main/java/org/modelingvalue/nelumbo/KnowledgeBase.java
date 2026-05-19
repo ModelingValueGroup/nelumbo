@@ -82,7 +82,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final List<TokenType> PATTERN_TOKEN_TYPE_LIST = List.of(NAME, OPERATOR, SEMICOLON, SINGLEQUOTE,
             COMMA);
     //
-    private static final Pattern PATTERNS = r(n(Type.PATTERN, Integer.MAX_VALUE), true, null);
+    private static final Pattern PATTERNS = r(n(Type.PATTERN, 100), true, null);
     //
     public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
 
@@ -346,8 +346,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         }, null).init(this, parseContext, bootstrapping);
 
                 Functor.of(
-                        s(o(a(k("private"), s(t("{"), n(Type.TYPE, Integer.MIN_VALUE), t("}")))),
-                                n(Type.TYPE, Integer.MAX_VALUE), t("::="),
+                        s(o(k("private")), n(Type.TYPE, 100), t("::="),
                                 r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true,
                                         t(","))), //
                         Type.ROOT.list(), null, Functor.class, null).init(this, parseContext, bootstrapping);

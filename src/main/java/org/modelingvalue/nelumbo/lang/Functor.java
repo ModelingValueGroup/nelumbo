@@ -278,14 +278,9 @@ public class Functor extends Node implements FunctorOrType {
             Type local = null;
             int start = 2;
             Object mod = get(0);
-            if (mod != null) {
-                if (mod instanceof Type t) {
-                    local = t;
-                    start += 3;
-                } else if (mod.equals("private")) {
-                    local = Type.NAMESPACE;
-                    start += 1;
-                }
+            if (mod != null && mod.equals("private")) {
+                local = Type.NAMESPACE;
+                start += 1;
             }
             List<AstElement> elements = astElements();
             Type type = (Type) elements.get(start - 2);
