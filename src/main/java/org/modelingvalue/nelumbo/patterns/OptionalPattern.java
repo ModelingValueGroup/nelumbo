@@ -128,7 +128,7 @@ public class OptionalPattern extends Pattern {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
             List<AstElement> elements = astElements();
-            Pattern optional = knowledgeBase.pattern(elements.sublist(3, elements.size() - 4));
+            Pattern optional = pattern(elements.sublist(3, elements.size() - 4));
             return o(elements, optional);
         }
         return this;

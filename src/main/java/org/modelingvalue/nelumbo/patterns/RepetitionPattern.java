@@ -196,10 +196,10 @@ public class RepetitionPattern extends Pattern {
                 if (e instanceof Token t && t.text().startsWith("<")) {
                     if (!list.isEmpty()) {
                         if (repeated == null) {
-                            repeated = knowledgeBase.pattern(list);
+                            repeated = pattern(list);
                             list = List.of();
                         } else {
-                            separator = knowledgeBase.pattern(list);
+                            separator = pattern(list);
                         }
                     }
                     i += 2;

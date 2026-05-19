@@ -160,7 +160,7 @@ public class AlternationPattern extends Pattern {
                 AstElement e = elements.get(i);
                 if (e instanceof Token t && t.text().startsWith("<")) {
                     if (!list.isEmpty()) {
-                        options = options.add(knowledgeBase.pattern(list));
+                        options = options.add(pattern(list));
                         list = List.of();
                     }
                     i += 2;

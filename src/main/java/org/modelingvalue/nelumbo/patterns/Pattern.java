@@ -180,4 +180,27 @@ public abstract class Pattern extends Node {
 
     public abstract Pattern declaration(Token token);
 
+    public static Pattern pattern(List<AstElement> elements) {
+        List<Pattern> patterns = List.of();
+        for (int i = 0; i < elements.size(); i++) {
+            AstElement e = elements.get(i);
+            if (e instanceof Token t) {
+                Pattern tokenPattern = t(List.of(t), t.text());
+                patterns = patterns.add(tokenPattern);
+                elements = elements.replace(i, tokenPattern);
+            } else {
+                Pattern pattern = (Pattern) e;
+                if (pattern instanceof SequencePattern sp) {
+                    patterns = patterns.addAll(sp.elements());
+                    elements = elements.removeIndex(i);
+                    elements = elements.insertList(i, sp.astElements());
+                    i = i - 1 + sp.astElements().size();
+                } else {
+                    patterns = patterns.add(pattern);
+                }
+            }
+        }
+        return patterns.size() > 1 ? s(elements, patterns.toArray(Pattern[]::new)) : patterns.first();
+    }
+
 }

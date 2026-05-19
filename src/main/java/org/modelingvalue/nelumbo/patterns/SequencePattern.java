@@ -173,7 +173,7 @@ public class SequencePattern extends Pattern {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
             List<AstElement> elements = astElements();
-            return s(elements, knowledgeBase.pattern(elements));
+            return s(elements, pattern(elements));
         }
         return this;
     }

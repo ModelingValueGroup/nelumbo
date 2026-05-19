@@ -34,9 +34,14 @@ import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.logic.And;
+import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
+import org.modelingvalue.nelumbo.logic.NIs;
 import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.logic.Rule;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
+import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
@@ -264,11 +269,11 @@ public class Functor extends Node implements FunctorOrType {
                 if (e == null || e instanceof Token) {
                     Token t = (Token) e;
                     if (t == null || t.text().equals(",")) {
-                        Pattern pattern = knowledgeBase.pattern(pttrn);
+                        Pattern pattern = Pattern.pattern(pttrn);
                         if (precedence != null) {
                             pattern = pattern.setPresedence(precedence);
                         }
-                        roots = knowledgeBase.createFunctor(type, roots, ast, clazz, pattern, local, precedence, ctx);
+                        roots = createFunctor(type, roots, ast, clazz, pattern, local, precedence, knowledgeBase, ctx);
                         if (t != null) {
                             roots = roots.setAstElements(roots.astElements().add(t));
                         }
@@ -328,6 +333,74 @@ public class Functor extends Node implements FunctorOrType {
             knowledgeBase.parseContext().register(knowledgeBase, group, Type.WORLD, this);
         }
         return this;
+    }
+
+    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
+            Type local, Integer prec, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+        boolean toLiteral = false, function = false;
+        List<Type> args = pattern.argTypes(List.of());
+        Type e = type.isCollection() ? type.element() : null;
+        if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
+                && !Type.PATTERN.isAssignableFrom(type)
+                && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
+            type = type.toLiteral();
+        } else if (type.variable() == null) {
+            if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
+                    && !Type.ROOT.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
+                    && !Type.NAMESPACE.isAssignableFrom(type)) {
+                type = type.toFunction();
+                function = true;
+            }
+            if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
+                    && !Type.NAMESPACE.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
+                    && !Type.COLLECTION.isAssignableFrom(type) //
+                    && args.noneMatch(t -> Type.OBJECT.equals(t.element()) //
+                            || Type.BOOLEAN.isAssignableFrom(t.element()) //
+                            || Type.VARIABLE.isAssignableFrom(t.element()) //
+                            || Type.LITERAL.isAssignableFrom(t.element()))) {
+                toLiteral = true;
+            }
+        }
+        Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
+        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : clazz, prec);
+        nodFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
+        roots = new NList(List.of(), roots, nodFunctor);
+        if (pattern instanceof TokenTextPattern && clazz != null) {
+            nodFunctor.construct(List.of(), new Object[0], knowledgeBase, ctx).init(knowledgeBase, ctx,
+                    ConstructionReason.parsing);
+        }
+        if (toLiteral) {
+            Pattern litPattern = pattern.setTypes(Type::toLiteral);
+            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, clazz, prec);
+            litFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
+            roots = new NList(List.of(), roots, litFunctor);
+            knowledgeBase.addLiteral(nodFunctor, litFunctor);
+            // Implied Rule
+            Object[] nodVars = new Object[args.size()];
+            Object[] litVars = new Object[args.size()];
+            List<Type> litArgs = args.replaceAll(Type::toLiteral);
+            for (int v = 0; v < args.size(); v++) {
+                nodVars[v] = new Variable(List.of(), false, args.get(v), "n" + (v + 1));
+                litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1));
+            }
+            Node nodNode = nodFunctor.construct(List.of(), nodVars, knowledgeBase, ctx);
+            Node litNode = litFunctor.construct(List.of(), litVars, knowledgeBase, ctx);
+            Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
+            Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
+            Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
+            for (int c = args.size() - 1; c >= 0; c--) {
+                Predicate eq = new NIs(List.of(), (Variable) nodVars[c], (Variable) litVars[c]);
+                litCond = And.of(eq, litCond);
+            }
+            List<Variable> localVars = List.of();
+            for (int v = 0; v < args.size(); v++) {
+                localVars = localVars.add((Variable) litVars[v]);
+            }
+            ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
+            Rule rule = new Rule(List.of(), nodCons, exists);
+            roots = new NList(List.of(), roots, rule);
+        }
+        return roots;
     }
 
     public Functor mostSpecific(Functor other) {

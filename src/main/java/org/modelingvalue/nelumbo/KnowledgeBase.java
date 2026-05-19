@@ -36,18 +36,14 @@ import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
 import org.modelingvalue.collections.util.Pair;
-import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Import;
 import org.modelingvalue.nelumbo.lang.Namespace;
 import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
-import org.modelingvalue.nelumbo.logic.And;
-import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
-import org.modelingvalue.nelumbo.logic.NIs;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.Rule;
 import org.modelingvalue.nelumbo.patterns.AlternationPattern;
@@ -199,29 +195,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return functor;
     }
 
-    public Pattern pattern(List<AstElement> elements) {
-        List<Pattern> patterns = List.of();
-        for (int i = 0; i < elements.size(); i++) {
-            AstElement e = elements.get(i);
-            if (e instanceof Token t) {
-                Pattern tokenPattern = t(List.of(t), t.text());
-                patterns = patterns.add(tokenPattern);
-                elements = elements.replace(i, tokenPattern);
-            } else {
-                Pattern pattern = (Pattern) e;
-                if (pattern instanceof SequencePattern sp) {
-                    patterns = patterns.addAll(sp.elements());
-                    elements = elements.removeIndex(i);
-                    elements = elements.insertList(i, sp.astElements());
-                    i = i - 1 + sp.astElements().size();
-                } else {
-                    patterns = patterns.add(pattern);
-                }
-            }
-        }
-        return patterns.size() > 1 ? s(elements, patterns.toArray(Pattern[]::new)) : patterns.first();
-    }
-
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             try {
@@ -281,73 +254,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         });
         return this;
 
-    }
-
-    public NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
-            Type local, Integer prec, ParseContext ctx) throws ParseException {
-        boolean toLiteral = false, function = false;
-        List<Type> args = pattern.argTypes(List.of());
-        Type e = type.isCollection() ? type.element() : null;
-        if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
-                && !Type.PATTERN.isAssignableFrom(type)
-                && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
-            type = type.toLiteral();
-        } else if (type.variable() == null) {
-            if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
-                    && !Type.ROOT.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
-                    && !Type.NAMESPACE.isAssignableFrom(type)) {
-                type = type.toFunction();
-                function = true;
-            }
-            if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
-                    && !Type.NAMESPACE.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
-                    && !Type.COLLECTION.isAssignableFrom(type) //
-                    && args.noneMatch(t -> Type.OBJECT.equals(t.element()) //
-                            || Type.BOOLEAN.isAssignableFrom(t.element()) //
-                            || Type.VARIABLE.isAssignableFrom(t.element()) //
-                            || Type.LITERAL.isAssignableFrom(t.element()))) {
-                toLiteral = true;
-            }
-        }
-        Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
-        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : clazz, prec);
-        nodFunctor.init(this, ctx, ConstructionReason.transforming);
-        roots = new NList(List.of(), roots, nodFunctor);
-        if (pattern instanceof TokenTextPattern && clazz != null) {
-            nodFunctor.construct(List.of(), new Object[0], this, ctx).init(this, ctx, ConstructionReason.parsing);
-        }
-        if (toLiteral) {
-            Pattern litPattern = pattern.setTypes(Type::toLiteral);
-            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, clazz, prec);
-            litFunctor.init(this, ctx, ConstructionReason.transforming);
-            roots = new NList(List.of(), roots, litFunctor);
-            addLiteral(nodFunctor, litFunctor);
-            // Implied Rule
-            Object[] nodVars = new Object[args.size()];
-            Object[] litVars = new Object[args.size()];
-            List<Type> litArgs = args.replaceAll(Type::toLiteral);
-            for (int v = 0; v < args.size(); v++) {
-                nodVars[v] = new Variable(List.of(), false, args.get(v), "n" + (v + 1));
-                litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1));
-            }
-            Node nodNode = nodFunctor.construct(List.of(), nodVars, this, ctx);
-            Node litNode = litFunctor.construct(List.of(), litVars, this, ctx);
-            Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
-            Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
-            Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
-            for (int c = args.size() - 1; c >= 0; c--) {
-                Predicate eq = new NIs(List.of(), (Variable) nodVars[c], (Variable) litVars[c]);
-                litCond = And.of(eq, litCond);
-            }
-            List<Variable> localVars = List.of();
-            for (int v = 0; v < args.size(); v++) {
-                localVars = localVars.add((Variable) litVars[v]);
-            }
-            ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
-            Rule rule = new Rule(List.of(), nodCons, exists);
-            roots = new NList(List.of(), roots, rule);
-        }
-        return roots;
     }
 
     public void addLiteral(Functor nodFunctor, Functor litFunctor) {
