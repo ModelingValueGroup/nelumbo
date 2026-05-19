@@ -30,8 +30,8 @@
  Root          ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>                                 @nelumbo.lang.Import,
                    <Root#0> ::> <RootNamespace>                                                  @nelumbo.lang.Transform,
                    <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                            @nelumbo.lang.Variable,
-                   <NAME> <(> < <Type#100> > <)?> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?> @nelumbo.lang.Type  // ,
-                  // <(> "private" <)?> <Type#100> ::= <(> <(> <Pattern#100> <)>+ <(> # <NUMBER> <)?> <(> @ <(> <NAME> <,> . <)+> <)?> <,> , <)+>  @nelumbo.lang.Functor
+                   <NAME> <(> < <Type#100> > <)?> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?> @nelumbo.lang.Type,
+                   <(> "private" <)?> <Type#100> ::= <(> <(> <Pattern#100> <)+> <(> # <NUMBER> <)?> <(> @ <(> <NAME> <,> . <)+> <)?> <,> , <)+>  @nelumbo.lang.Functor
 
  Type T
  

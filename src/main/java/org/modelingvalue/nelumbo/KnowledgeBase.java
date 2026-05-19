@@ -349,7 +349,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         s(o(k("private")), n(Type.TYPE, 100), t("::="),
                                 r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true,
                                         t(","))), //
-                        Type.ROOT.list(), null, Functor.class, null).init(this, parseContext, bootstrapping);
+                        Type.ROOT, null, Functor.class, null).init(this, parseContext, bootstrapping);
 
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
