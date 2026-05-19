@@ -32,20 +32,20 @@ The two blocks above (from [`scoping.nl`](../../src/main/resources/org/modelingv
 - **Wrapping a pattern transformation expansion** (see [`../guides/language-transformations.md`](../guides/language-transformations.md) — the `::> { ... }` block is a scope)
 - **Making two versions of the same construct coexist** in a single file for comparison
 
-### `{Namespace}`
+### Custom scope types
 
-A scope may prefix a pattern declaration with `{Namespace}` to mark it as belonging to the current scope's namespace:
+Any type that specialises `Namespace` introduces a scope of its own — no explicit `{Namespace}` prefix is needed (and none is accepted). Declaring a functor `private` within such a type confines it to that namespace, exactly as `private` does inside a `{ ... }` block.
 
 ```
 {
    Aa :: Object
-   {Namespace} Aa ::= XXX
+   private Aa ::= XXX
    Aa x
    x = XXX ? [(x=XXX)][..]
 }
 ```
 
-This is used when a transformation or tool needs to tell declarations in different scopes apart even when they share a name. For most hand-written code, ordinary scoping is enough.
+From [`scoping.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl). The `private` keeps `XXX` local to the block; outside the block the literal does not exist.
 
 ---
 
