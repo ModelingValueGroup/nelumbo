@@ -41,7 +41,6 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.ParseState;
-import org.modelingvalue.nelumbo.syntax.ThrowingQuadFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
@@ -59,18 +58,6 @@ public class Functor extends Node implements FunctorOrType {
         return new Functor(elements, pattern, result, local,
                 clazz != null ? NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()) : null,
                 leftPrecedence);
-    }
-
-    public static Functor of(Pattern pattern, Type result, Type local,
-            ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function,
-            Integer leftPrecedence) {
-        return of(List.of(), pattern, result, local, function, leftPrecedence);
-    }
-
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
-            ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function,
-            Integer leftPrecedence) {
-        return new Functor(elements, pattern, result, local, function, leftPrecedence);
     }
 
     private String     name;
@@ -136,14 +123,6 @@ public class Functor extends Node implements FunctorOrType {
         return val instanceof Constructor ? (Constructor<? extends Node>) val : null;
     }
 
-    @SuppressWarnings("unchecked")
-    public ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function() {
-        Object val = get(3);
-        return val instanceof ThrowingQuadFunction
-                ? (ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node>) val
-                : null;
-    }
-
     public Integer leftPrecedence() {
         return (Integer) get(4);
     }
@@ -178,14 +157,6 @@ public class Functor extends Node implements FunctorOrType {
         if (constructor != null) {
             try {
                 return constructor.newInstance(NodeInfo.of(this, elements), args);
-            } catch (Exception e) {
-                handleException(elements, handler, e);
-            }
-        }
-        ThrowingQuadFunction<List<AstElement>, Object[], Functor, ParseContext, ? extends Node> function = function();
-        if (function != null) {
-            try {
-                return function.apply(elements, args, this, ctx);
             } catch (Exception e) {
                 handleException(elements, handler, e);
             }

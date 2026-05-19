@@ -22,7 +22,6 @@ import static org.modelingvalue.nelumbo.syntax.TokenType.*;
 
 import java.io.PrintStream;
 import java.io.Serial;
-import java.util.Optional;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -51,7 +50,11 @@ import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.NIs;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.Rule;
+import org.modelingvalue.nelumbo.patterns.AlternationPattern;
+import org.modelingvalue.nelumbo.patterns.NodeTypePattern;
+import org.modelingvalue.nelumbo.patterns.OptionalPattern;
 import org.modelingvalue.nelumbo.patterns.Pattern;
+import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
 import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -219,7 +222,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return patterns.size() > 1 ? s(elements, patterns.toArray(Pattern[]::new)) : patterns.first();
     }
 
-    @SuppressWarnings({ "unchecked" })
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             try {
@@ -230,10 +232,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), Type.ROOT, null, Import.class,
                         null).init(this, parseContext, bootstrapping);
 
-                Functor.of(
-                        s(t(NAME), o(s(t("<"), n(Type.TYPE, 100), t(">"))), t("::"), r(n(Type.TYPE, 100), true, t(",")),
-                                o(s(t("#"), t(NAME)))), //
-                        Type.ROOT, null, Type.class, null).init(this, parseContext, bootstrapping);
+                Functor.of(s(t(NAME), o(s(t("<"), n(Type.TYPE, 100), t(">"))), t("::"),
+                        r(n(Type.TYPE, 100), true, t(",")), o(s(t("#"), t(NAME)))), Type.ROOT, null, Type.class, null)
+                        .init(this, parseContext, bootstrapping);
 
                 for (Type type : Type.predefined()) {
                     addType(type, parseContext);
@@ -250,91 +251,28 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
 
                 Functor.of(
-                        s(t("<"), t("("), t(">"), r(PATTERNS, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
-                        Type.PATTERN, null, (elements, args, functor, pc) -> {
-                            List<AstElement> options = List.of();
-                            List<AstElement> list = List.of();
-                            for (int i = 3; i < elements.size() - 2; i++) {
-                                AstElement e = elements.get(i);
-                                if (e instanceof Token t && t.text().startsWith("<")) {
-                                    if (!list.isEmpty()) {
-                                        options = options.add(pattern(list));
-                                        list = List.of();
-                                    }
-                                    i += 2;
-                                } else {
-                                    list = list.add(e);
-                                }
-                            }
-                            return a(elements, options.toArray(Pattern[]::new));
-                        }, null).init(this, parseContext, bootstrapping);
+                        s(t("<"), t("("), t(">"), r(PATTERNS, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")),
+                        Type.PATTERN, null, AlternationPattern.class, null).init(this, parseContext, bootstrapping);
 
-                Functor.of(
-                        s(t("<"), t("("), t(">"), PATTERNS, o(s(t("<"), t(","), t(">"), PATTERNS)), t("<"), t(")"),
-                                a(t("*"), t("+")), t(">")), //
-                        Type.PATTERN, null, (elements, args, functor, pc) -> {
-                            Pattern repeated = null, separator = null;
-                            List<AstElement> list = List.of();
-                            for (int i = 3; i < elements.size() - 3; i++) {
-                                AstElement e = elements.get(i);
-                                if (e instanceof Token t && t.text().startsWith("<")) {
-                                    if (!list.isEmpty()) {
-                                        if (repeated == null) {
-                                            repeated = pattern(list);
-                                            list = List.of();
-                                        } else {
-                                            separator = pattern(list);
-                                        }
-                                    }
-                                    i += 2;
-                                } else {
-                                    list = list.add(e);
-                                }
-                            }
-                            boolean mandatory = args[2].equals("+");
-                            return r(elements, repeated, mandatory, separator);
-                        }, null).init(this, parseContext, bootstrapping);
+                Functor.of(s(t("<"), t("("), t(">"), PATTERNS, o(s(t("<"), t(","), t(">"), PATTERNS)), t("<"), t(")"),
+                        a(t("*"), t("+")), t(">")), Type.PATTERN, null, RepetitionPattern.class, null)
+                        .init(this, parseContext, bootstrapping);
 
-                Functor.of(s(t("<"), t("("), t(">"), PATTERNS, t("<"), t(")"), t("?"), t(">")), //
-                        Type.PATTERN, null, (elements, args, functor, pc) -> {
-                            Pattern optional = pattern(elements.sublist(3, elements.size() - 4));
-                            return o(elements, optional);
-                        }, null).init(this, parseContext, bootstrapping);
+                Functor.of(s(t("<"), t("("), t(">"), PATTERNS, t("<"), t(")"), t("?"), t(">")), Type.PATTERN, null,
+                        OptionalPattern.class, null).init(this, parseContext, bootstrapping);
 
-                Functor.of(s(t(LEFT), PATTERNS, t(RIGHT)), //
-                        Type.PATTERN, null, (elements, args, functor, pc) -> {
-                            return s(elements, pattern(elements));
-                        }, null).init(this, parseContext, bootstrapping);
+                Functor.of(s(t(LEFT), PATTERNS, t(RIGHT)), Type.PATTERN, null, SequencePattern.class, null).init(this,
+                        parseContext, bootstrapping);
 
-                Functor.of(
-                        s(t("<"), o(a(k("visible"), k("hidden"))), n(Type.TYPE, Integer.MAX_VALUE),
-                                o(s(t("#"), t(NUMBER))), t(">")), //
-                        Type.PATTERN, null, (elements, args, functor, pc) -> {
-                            Boolean visible = null;
-                            Optional<String> v = (Optional<String>) args[0];
-                            if (v.isPresent()) {
-                                visible = v.get().equals("visible");
-                            }
-                            Type type = (Type) args[1];
-                            Integer precedence = null;
-                            Optional<String> p = (Optional<String>) args[2];
-                            if (p.isPresent()) {
-                                precedence = Integer.parseInt(p.get());
-                            }
-                            TokenType tt = type.tokenType();
-                            return tt != null ? t(elements, tt) : n(elements, type, precedence, visible);
-                        }, null).init(this, parseContext, bootstrapping);
+                Functor.of(s(t("<"), o(a(k("visible"), k("hidden"))), n(Type.TYPE, Integer.MAX_VALUE),
+                        o(s(t("#"), t(NUMBER))), t(">")), Type.PATTERN, null, NodeTypePattern.class, null)
+                        .init(this, parseContext, bootstrapping);
 
-                Functor.of(s(t("<"), n(Type.VARIABLE, Integer.MAX_VALUE), o(s(t("#"), t(NUMBER))), t(">")), //
-                        Type.PATTERN, null, (elements, args, functor, pc) -> {
-                            Variable var = (Variable) args[0];
-                            return t(elements, var);
-                        }, null).init(this, parseContext, bootstrapping);
+                Functor.of(s(t("<"), n(Type.VARIABLE, Integer.MAX_VALUE), o(s(t("#"), t(NUMBER))), t(">")),
+                        Type.PATTERN, null, TokenTextPattern.class, null).init(this, parseContext, bootstrapping);
 
-                Functor.of(
-                        s(o(k("private")), n(Type.TYPE, 100), t("::="),
-                                r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true,
-                                        t(","))), //
+                Functor.of(s(o(k("private")), n(Type.TYPE, 100), t("::="),
+                        r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true, t(","))),
                         Type.ROOT, null, Functor.class, null).init(this, parseContext, bootstrapping);
 
             } catch (ParseException e) {
