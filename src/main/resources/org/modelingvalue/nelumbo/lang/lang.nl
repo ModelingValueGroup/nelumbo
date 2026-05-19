@@ -27,6 +27,13 @@
  Namespace     ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace
  RootNamespace ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                        @nelumbo.lang.Namespace
  
+ Pattern       ::= <NAME>         @nelumbo.patterns.TokenTextPattern,
+                   <STRING>       @nelumbo.patterns.TokenTextPattern,
+                   <OPERATOR>     @nelumbo.patterns.TokenTextPattern,
+                   <SEMICOLON>    @nelumbo.patterns.TokenTextPattern,
+                   <SINGLEQUOTE>  @nelumbo.patterns.TokenTextPattern,
+                   <COMMA>        @nelumbo.patterns.TokenTextPattern
+ 
  Root          ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>                                 @nelumbo.lang.Import,
                    <Root#0> ::> <RootNamespace>                                                  @nelumbo.lang.Transform,
                    <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                            @nelumbo.lang.Variable,

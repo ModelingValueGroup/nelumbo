@@ -80,7 +80,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final Pattern ROOTS = r(s(a(n(Type.ROOT.list()), n(Type.ROOT)), t(NEWLINE)), false, null);
     //
     private static final List<TokenType> PATTERN_TOKEN_TYPE_LIST = List.of(NAME, OPERATOR, SEMICOLON, SINGLEQUOTE,
-            COMMA);
+            COMMA, STRING);
     //
     private static final Pattern PATTERNS = r(n(Type.PATTERN, 100), true, null);
     //
@@ -191,16 +191,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private Functor addPattern(TokenType tokenType, ParseContext ctx) throws ParseException {
-        Functor variable = Functor.of(t(tokenType), //
-                Type.PATTERN, null, (elements, args, functor, pc) -> {
-                    if (args[0] instanceof Variable var) {
-                        return t(elements, var);
-                    } else {
-                        return t(elements, (String) args[0]);
-                    }
-                }, null);
-        variable.init(this, ctx, bootstrapping);
-        return variable;
+        Functor functor = Functor.of(t(tokenType), Type.PATTERN, null, TokenTextPattern.class, null);
+        functor.init(this, ctx, bootstrapping);
+        return functor;
     }
 
     public Pattern pattern(List<AstElement> elements) {
@@ -255,13 +248,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 for (TokenType tokenType : PATTERN_TOKEN_TYPE_LIST) {
                     addPattern(tokenType, parseContext);
                 }
-
-                Functor.of(t(STRING), //
-                        Type.PATTERN, null, (elements, args, functor, pc) -> {
-                            String text = (String) args[0];
-                            text = text.substring(1, text.length() - 1);
-                            return TokenType.of(text) == TokenType.NAME ? k(elements, text) : t(elements, text);
-                        }, null).init(this, parseContext, bootstrapping);
 
                 Functor.of(
                         s(t("<"), t("("), t(">"), r(PATTERNS, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")), //
@@ -365,16 +351,19 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.isCollection() ? type.element() : null;
         if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
+                && !Type.PATTERN.isAssignableFrom(type)
                 && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
             type = type.toLiteral();
         } else if (type.variable() == null) {
             if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
-                    && !Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)) {
+                    && !Type.ROOT.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
+                    && !Type.NAMESPACE.isAssignableFrom(type)) {
                 type = type.toFunction();
                 function = true;
             }
             if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
-                    && !Type.NAMESPACE.isAssignableFrom(type) && !Type.COLLECTION.isAssignableFrom(type) //
+                    && !Type.NAMESPACE.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
+                    && !Type.COLLECTION.isAssignableFrom(type) //
                     && args.noneMatch(t -> Type.OBJECT.equals(t.element()) //
                             || Type.BOOLEAN.isAssignableFrom(t.element()) //
                             || Type.VARIABLE.isAssignableFrom(t.element()) //
