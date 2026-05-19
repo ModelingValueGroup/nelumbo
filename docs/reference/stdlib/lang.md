@@ -142,7 +142,7 @@ Reading these alternatives in order:
 |---|---|---|
 | `<NAME>`, `<STRING>`, `<OPERATOR>`, `<SEMICOLON>`, `<SINGLEQUOTE>`, `<COMMA>` | `TokenTextPattern` | A literal token — the text appears verbatim. |
 | `"<" <Variable#100> ">"`                                     | `TokenTextPattern`      | A `<Variable>` hole — binding site for a quantifier or rule. |
-| `"<(" ... "<|>" ... ")>"`                                    | `AlternationPattern`    | An alternation group: `<(> A <\|> B <\|> C <)>`. |
+| `"<(" ... "<\|>" ... ")>"`                                   | `AlternationPattern`    | An alternation group: `<(> A <\|> B <\|> C <)>`. |
 | `"<(" ... "<,>" ... ")>" + or *`                             | `RepetitionPattern`     | A repetition group, with optional separator: `<(> P <,> , <)+>` or `... <)*>`. |
 | `"<(" ... ")?>"`                                             | `OptionalPattern`       | An optional group: `<(> super <)?>`.            |
 | `<LEFT> ... <RIGHT>`                                         | `SequencePattern`       | A bracketed sequence — any of `(...)`, `[...]`, `{...}`. |
