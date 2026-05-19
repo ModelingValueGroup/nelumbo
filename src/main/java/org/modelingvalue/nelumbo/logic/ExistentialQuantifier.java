@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import static org.modelingvalue.nelumbo.patterns.Pattern.*;
+
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
@@ -25,7 +27,9 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 
 public final class ExistentialQuantifier extends Quantifier {
     @Serial
@@ -33,6 +37,15 @@ public final class ExistentialQuantifier extends Quantifier {
 
     @NelumboFunctorField
     private static Functor FUNCTOR;
+
+    static {
+        try {
+            FUNCTOR = Functor.of(s(t("E"), t("["), r(n(Type.VARIABLE, 100), true, t(",")), t("]"), t("("),
+                    n(Type.BOOLEAN, 0), t(")")), Type.BOOLEAN, null, ExistentialQuantifier.class, null);
+        } catch (ParseException e) {
+            throw new IllegalStateException("Cannot create functor for NIs", e);
+        }
+    }
 
     @NelumboConstructor
     public ExistentialQuantifier(NodeInfo nodeInfo, Object... args) {

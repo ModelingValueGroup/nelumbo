@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import static org.modelingvalue.nelumbo.patterns.Pattern.*;
+
 import java.io.Serial;
 import java.util.Optional;
 
@@ -46,6 +48,17 @@ public final class Rule extends Node implements Evaluatable {
 
     @NelumboFunctorField
     private static Functor FUNCTOR;
+
+    static {
+        try {
+            FUNCTOR = Functor.of(
+                    s(n(Type.BOOLEAN, 0), t("<=>"),
+                            r(s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0)))), true, t(","))),
+                    Type.BOOLEAN, null, Rule.class, null);
+        } catch (ParseException e) {
+            throw new IllegalStateException("Cannot create functor for NIs", e);
+        }
+    }
 
     @NelumboConstructor
     public Rule(NodeInfo nodeInfo, Object... args) {

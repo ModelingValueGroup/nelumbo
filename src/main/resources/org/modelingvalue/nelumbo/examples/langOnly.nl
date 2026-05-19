@@ -52,3 +52,7 @@
        private Local ::= X, Y, Z
        Local v
     }
+    
+    Color :: Object
+    
+    Color ::= mix(<Color>,<Color>)
