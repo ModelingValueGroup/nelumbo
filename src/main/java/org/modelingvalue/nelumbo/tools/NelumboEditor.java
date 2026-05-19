@@ -132,7 +132,8 @@ public class NelumboEditor {
      */
     private static final String[][] EXAMPLE_RESOURCES = {
             // Library files - display names match import names (e.g., "nelumbo.logic")
-            { "Library", "logic/logic.nl", "nelumbo.logic" }, { "Library", "integers/integers.nl", "nelumbo.integers" },
+            { "Library", "lang/lang.nl", "nelumbo.lang" }, { "Library", "logic/logic.nl", "nelumbo.logic" },
+            { "Library", "integers/integers.nl", "nelumbo.integers" },
             { "Library", "strings/strings.nl", "nelumbo.strings" },
             { "Library", "rationals/rationals.nl", "nelumbo.rationals" },
             { "Library", "collections/collections.nl", "nelumbo.collections" },
