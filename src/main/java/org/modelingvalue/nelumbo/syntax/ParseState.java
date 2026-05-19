@@ -699,7 +699,7 @@ public class ParseState implements Mergeable<ParseState> {
             }
         }
         return new ParseState(tokenTexts, tokenTypes, nodeTypes, //
-                funtorMerge(state), //
+                functorMerge(state), //
                 leftPrecedenceMerge(state), //
                 elementMerge(innerPrecedence(), state.innerPrecedence()), //
                 elementMerge(group(), state.group()), //
@@ -709,7 +709,7 @@ public class ParseState implements Mergeable<ParseState> {
                 elementMerge(visibility(), state.visibility()));
     }
 
-    private Functor funtorMerge(ParseState state) {
+    private Functor functorMerge(ParseState state) {
         return functor() == null ? state.functor() : //
                 state.functor() == null ? functor() : //
                         functor().equals(state.functor()) ? functor().nonBootstrap(state.functor()) : //
