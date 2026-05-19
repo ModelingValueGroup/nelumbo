@@ -2,7 +2,12 @@
 
 This page describes the grammar of Nelumbo itself — the syntax you write in a `.nl` file. It is the foundation the rest of the reference refers back to.
 
-Nelumbo is a **meta-language**: most of what feels like "the language" (numbers, strings, arithmetic, logical connectives) is defined in Nelumbo by the standard library, using the same `::=` pattern mechanism you will use for your own DSLs. The grammar described here is only the irreducible core.
+Nelumbo is a **meta-language**, and the meta-ness goes all the way down. Even the grammar described on this page is itself defined in `.nl` files:
+
+- The pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>`, `<,>`, `<|>`, …), the top-level declaration forms (`import`, `T :: S`, `T ::= P`, `T v`, `::>`, scope blocks), and the underlying object hierarchy (`Object`, `Type`, `Variable`, `Root`, …) are all declared in [`lang.nl`](../reference/stdlib/lang.md). The Java core contains just enough hand-coded parsing to load `lang.nl`; from that point on, the user's own `::=` patterns are what parse every subsequent file.
+- The three execution-driving statement forms (`fact`, `<=>`, `?`), along with the `Boolean` type and every logical operator, are declared in [`logic.nl`](../reference/stdlib/logic.md).
+
+So "the grammar of Nelumbo" is really *the set of patterns that `lang.nl` and `logic.nl` install when they are loaded*. This page documents that surface; the per-module reference pages document where each piece is declared.
 
 ---
 

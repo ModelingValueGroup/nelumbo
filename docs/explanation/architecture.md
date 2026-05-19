@@ -14,17 +14,27 @@ Nelumbo is built in layers. Reading a single `.nl` file can make it feel like on
  │              User-written libraries              │    .nl files
  │        your reusable modules and transformations │
  ├──────────────────────────────────────────────────┤
- │                Nelumbo standard library          │    .nl files
- │   logic, integers, rationals, strings,           │    in src/main/resources/
- │   collections                                    │
+ │           Numeric / data stdlib modules          │    .nl files
+ │     integers, rationals, strings, collections    │    in src/main/resources/
+ ├──────────────────────────────────────────────────┤
+ │           nelumbo.logic — three-valued logic     │    .nl file
+ │   Boolean, !, &, |, ->, <->, =, !=, E[], A[],    │
+ │   plus the top-level forms `fact`, `<=>`, `?`    │
+ ├──────────────────────────────────────────────────┤
+ │           nelumbo.lang — syntactic bootstrap     │    .nl file
+ │  token types, Object hierarchy, the pattern      │
+ │  meta-grammar, `import`, `::`, `::=`, `::>`,     │
+ │  variable / type / functor declarations          │
  ├──────────────────────────────────────────────────┤
  │                Nelumbo Java core                 │    .java files
- │  parser, type system, reasoner, binder,          │
- │  @-bound native primitives                       │
+ │  tokenizer, hardcoded bootstrap parser for       │
+ │  lang.nl, reasoner, binder, @-bound natives      │
  └──────────────────────────────────────────────────┘
 ```
 
 Each layer is built out of the layer below, and each layer is accessible to layers above. The diagram is not aspirational; it is literally how the shipped code is organised.
+
+The split between `nelumbo.lang` and `nelumbo.logic` is important. **The entire syntax of Nelumbo is defined in `.nl` files** — `lang.nl` declares the grammar of patterns, types, variables, and top-level statements; `logic.nl` declares the three-valued Boolean layer plus the `fact`, `<=>`, and `?` statements that drive execution. The Java core contains just enough hardcoded parsing to load `lang.nl`; from that point on, every file (including `lang.nl` itself, on a second pass) is parsed using the `::=` patterns the loaded files have installed.
 
 ---
 
@@ -34,24 +44,25 @@ Each layer is built out of the layer below, and each layer is accessible to laye
 
 At the bottom is a Java codebase in `src/main/java/org/modelingvalue/nelumbo/`. It does four jobs:
 
-1. **Parse `.nl` files** into an AST, honouring `::=`, `::`, `<=>`, `::>`, and the rest of the grammar.
+1. **Tokenize and bootstrap-parse `lang.nl`.** The tokenizer is in Java. The parser used to read `lang.nl` is a hand-coded bootstrap — it knows just enough about `::`, `::=`, `<NAME>`, and the token types to load `lang.nl`. Every subsequent file (including a re-read of `lang.nl` itself) is parsed using the `::=` declarations installed by the loaded files.
 2. **Resolve names**, apply visibility and scope rules, and load imported modules.
-3. **Run the reasoner** — the navigator that produces candidate bindings and the three-valued logic that classifies them as facts, falsehoods, or unknown.
-4. **Host native primitives** — Java classes referenced by `@...` annotations that provide the operations the language cannot derive from itself.
+3. **Run the reasoner** — the navigator that produces candidate bindings, together with the three-valued logic that classifies them as facts, falsehoods, or unknown.
+4. **Host native primitives** — Java classes referenced by `@...` annotations from `.nl` source, providing operations the language cannot derive from itself.
 
-The Java core is small and focused. It deliberately does **not** know about integers, rationals, strings, or collections. Those are library concepts, added on top.
+The Java core is small and focused. It deliberately does **not** know about integers, rationals, strings, or collections, and not even about `Boolean`, `<=>`, `?`, or `fact`. Those are all introduced from `.nl` files.
 
 ### The standard library (`nelumbo.*` modules)
 
-Five `.nl` files under `src/main/resources/org/modelingvalue/nelumbo/` collectively form the stdlib:
+Six `.nl` files under `src/main/resources/org/modelingvalue/nelumbo/` collectively form the stdlib:
 
-- `logic/logic.nl` — Boolean values, connectives, quantifiers, equality
+- `lang/lang.nl` — the syntactic bootstrap: tokens, the `Object` / `Type` / `Variable` / `Root` / `Pattern` / `Namespace` / `Functor` hierarchy, the pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>` , …), and the top-level forms `import`, `::`, `::=`, `::>`.
+- `logic/logic.nl` — Boolean values, connectives (`!`, `&`, `|`, `->`, `<->`), quantifiers (`E[]`, `A[]`), equality (`=`, `!=`), and the three execution-driving statement forms `fact`, `<=>`, `?`.
 - `integers/integers.nl` — arbitrary-precision integers, arithmetic, comparison
 - `rationals/rationals.nl` — exact rationals built on integers
 - `strings/strings.nl` — strings and integer-string conversion
 - `collections/collections.nl` — generic `Set<E>` and `List<E>`
 
-These files are ordinary Nelumbo. They use `import`, `::`, `::=`, `<=>`, `::>`, and `private` exactly the way your code does. The only thing that sets them apart is that they bind certain patterns to Java classes using `@`:
+These files are ordinary Nelumbo. They use `import`, `::`, `::=`, `<=>`, `::>`, and `private` exactly the way your code does. What sets them apart is that they bind certain patterns to Java classes using `@`:
 
 ```
 private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Add
@@ -59,9 +70,10 @@ private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.ne
 
 What this means in practice:
 
-- The stdlib is **a library, not the language.** You could write your program without it (`deHet.nl` and `transformation.nl` import only `nelumbo.strings` or `nelumbo.logic`; other modules are optional).
-- Most of what looks like language features — `->`, `<->`, `-` as unary, `|x|`, `<=`, `int(s)`, `str(i)` — is **defined in Nelumbo**, not native. Only a handful of genuinely irreducible primitives (`add`, `mult`, `>` between integers, string concat, and so on) are implemented in Java.
-- You can study the stdlib to learn idiom. It is 145 lines of Nelumbo across five files, and it demonstrates almost every feature of the language.
+- **The language's syntax lives in `lang.nl`.** The hand-coded Java bootstrap exists only to load that file — once `lang.nl` is in place, the same `::=` declarations the user writes are what parse the rest.
+- **The three-valued logic lives in `logic.nl`.** That includes `<=>` itself: rules are a statement form declared in `logic.nl`, not a Java keyword. Without `nelumbo.logic`, a `.nl` file can declare types and patterns but cannot write rules, assert facts, or run queries.
+- Most of what looks like language features — `->`, `<->`, `-` as unary, `|x|`, `<=`, `int(s)`, `str(i)` — is **defined in Nelumbo**, not native. Only a handful of genuinely irreducible primitives (the tokenizer, `add`, `mult`, `>` between integers, string concat, and so on) are implemented in Java.
+- You can study the stdlib to learn idiom. It is around 200 lines of Nelumbo across six files, and it demonstrates almost every feature of the language.
 
 ### User-written libraries
 
@@ -102,7 +114,7 @@ This is the right choice for:
 - Performance-critical paths where a rule-based implementation is too slow
 - Integration with external Java libraries
 
-The stdlib itself follows a clear discipline on this: the **minimum possible** is native, and everything else is in Nelumbo. `add` and `mult` are native; subtraction, division, unary minus, and absolute value are in Nelumbo. `>` is native; `<`, `<=`, `>=` are in Nelumbo. `NBoolean`, `And`, `Or`, `Not`, `Equal`, `E[]`, and `A[]` are native; `->` and `<->` are in Nelumbo.
+The stdlib itself follows a clear discipline on this: the **minimum possible** is native, and everything else is in Nelumbo. `add` and `mult` are native; subtraction, division, unary minus, and absolute value are in Nelumbo. `>` is native; `<`, `<=`, `>=` are in Nelumbo. `NBoolean`, `And`, `Or`, `Not`, the equality natives `NIs` and `Equal`, `E[]`, and `A[]` are native; `->`, `<->`, and `!=` are in Nelumbo.
 
 When in doubt, reach for the in-language path first. Drop to Java only when the in-language path cannot express what you need.
 
@@ -118,8 +130,8 @@ fib(5) = f  ?  [(f=5)][..]
 
 What actually happens when this runs:
 
-1. **Parser (Java)** tokenises the line, recognises `=`, `?`, `[`, `]`, `(`, `)`, `..`, and the identifier `f`. It uses pattern declarations (`Integer ::= fib(<Integer>)` from your file; `Integer ::= <NUMBER>` from `integers.nl`; `=` from `logic.nl`) to build an AST.
-2. **Name resolver (Java)** ties `f` to its variable declaration (`Integer n, f`), `fib` to your pattern declaration, `=` to the native `Equal` predicate.
+1. **Parser (Java + loaded `.nl` declarations)** tokenises the line. The tokenizer is Java; the actual grammar (`?`, `[..][..]`, `=`, `fib(<Integer>)`, the `<NUMBER>` `5`) is recognised using pattern declarations loaded from `lang.nl`, `logic.nl`, `integers.nl`, and your own file.
+2. **Name resolver (Java)** ties `f` to its variable declaration (`Integer n, f`), `fib` to your pattern declaration, `=` to the native `NIs` predicate declared in `logic.nl`.
 3. **Reasoner (Java)** starts with the query `fib(5) = f`. Because `=` is a relation, the reasoner treats it as an equation to solve.
 4. **Your rule in Nelumbo** fires: `fib(n) = f <=> f = fib(n-1) + fib(n-2) if n > 1`. The reasoner recursively evaluates `fib(4)` and `fib(3)`.
 5. **Stdlib rule in Nelumbo** (`integers.nl`): `a + b = c <=> add(a, b, c)`. The reasoner turns each addition into a call to the private `add` relation.
@@ -148,7 +160,7 @@ When you are looking for how to do something, ask: **which layer is the right on
 
 - [`../reference/grammar.md`](../reference/grammar.md) — what the core grammar is
 - [`../reference/stdlib/logic.md`](../reference/stdlib/logic.md) — the foundation stdlib module
-- [`../guides/stdlib-tour.md`](../guides/stdlib-tour.md) — guided read-through of all five stdlib modules
+- [`../guides/stdlib-tour.md`](../guides/stdlib-tour.md) — guided read-through of all six stdlib modules
 - [`../guides/writing-your-own-module.md`](../guides/writing-your-own-module.md) — the in-language extension path
 - [`../guides/native-cookbook.md`](../guides/native-cookbook.md) — the host-language extension path
 - [`../reference/native-classes.md`](../reference/native-classes.md) — catalogue of every shipped native

@@ -1,8 +1,8 @@
 # `nelumbo.rationals`
 
-Exact rational arithmetic — no floating-point rounding. Layered on top of `nelumbo.integers`.
+Exact rational arithmetic — no floating-point rounding. Mirrors the shape of `nelumbo.integers` over a separate `Rational` type, plus integer-to-rational conversion.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl) — 47 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl) — 46 lines.
 
 **Import:**
 
@@ -10,7 +10,7 @@ Exact rational arithmetic — no floating-point rounding. Layered on top of `nel
 import nelumbo.rationals
 ```
 
-`nelumbo.rationals` imports `nelumbo.integers` (and thus transitively `nelumbo.logic`). You get integers, logic, and rationals with a single import.
+`nelumbo.rationals` imports `nelumbo.integers` (and thus, transitively, `nelumbo.logic`). One import gets you logic, integers, and rationals.
 
 ---
 
@@ -20,90 +20,106 @@ import nelumbo.rationals
 Rational :: Object
 ```
 
-A value of type `Rational` is an exact rational number — an integer numerator over an integer denominator, held in reduced form. No floating-point, no rounding.
+A `Rational` is an exact rational — integer numerator over integer denominator, held in reduced form. There is no floating-point and no rounding.
+
+`Rational` is **distinct** from `Integer`. The rules below are typed, and there is no silent promotion: to mix an integer with a rational you must call `r(...)` explicitly.
 
 ---
 
 ## Literals
 
-Rationals have a decimal-literal form and a constructor form:
-
 ```
-Rational ::= <DECIMAL>              @...Rational
-Rational ::= r(<Integer>)
-Rational ::= r(<Integer>/<Integer>)
+Rational ::= <DECIMAL>                  @nelumbo.rationals.Rational,
+             r(<Integer>),
+             r(<Integer>/<Integer>)
 ```
 
-- `<DECIMAL>` — literals with a decimal point: `0.0`, `-1.5`, `3.14`, `1.0`
-- `r(n)` — promote an integer `n` to a rational
-- `r(n/d)` — the rational `n/d` from two integer components
+- `<DECIMAL>` — `lang.nl` token `-?[0-9]+\.[0-9]+`, e.g., `0.0`, `1.0`, `-1.5`, `3.14`. The mandatory decimal point distinguishes it from `<NUMBER>`.
+- `r(<Integer>)` — promote an integer.
+- `r(<Integer>/<Integer>)` — build a rational from numerator/denominator integers.
 
-The two `r(...)` forms are defined in Nelumbo on top of a private native primitive:
+The two `r(...)` forms reduce to a public native predicate `iir`:
 
 ```
-private Boolean ::= iir(<Integer>, <Integer>, <Rational>)  @...IntegersRational
+Boolean ::= ...,
+            iir(<Integer>,<Integer>,<Rational>)  @nelumbo.rationals.IntegersRational
 
-r(x)   = a  <=>  iir(x, 1, a)
-r(x/y) = a  <=>  iir(x, y, a)
+Integer x, y
+Rational a
+
+r(x)   = a   <=>  iir(x, 1, a)
+r(x/y) = a   <=>  iir(x, y, a)
 ```
+
+`iir(n, d, q)` holds when `q` is the rational `n/d`. Like the other relational primitives, it is bidirectional: if the rational is known you can solve for compatible integer numerator/denominator pairs (subject to the usual three-valued constraints).
 
 ---
 
 ## Arithmetic
 
-The same shape as `integers`, over `Rational`:
+```
+Rational ::= <Rational> - <Rational>   #40,
+             <Rational> + <Rational>   #40,
+                        - <Rational>   #80,
+             <Rational> * <Rational>   #50,
+             <Rational> / <Rational>   #50,
+                        | <Rational> | #35
+```
 
-| Pattern | `#N` | Meaning |
+| Pattern                   | `#N` | Meaning            |
 |---|---|---|
-| `<Rational> + <Rational>` | 40 | addition |
-| `<Rational> - <Rational>` | 40 | subtraction |
-| `<Rational> * <Rational>` | 50 | multiplication |
-| `<Rational> / <Rational>` | 50 | **exact** division |
-| `- <Rational>`            | 80 | unary negation |
-| `| <Rational> |`          | 35 | absolute value |
+| `<Rational> + <Rational>` | 40   | addition           |
+| `<Rational> - <Rational>` | 40   | subtraction        |
+| `<Rational> * <Rational>` | 50   | multiplication     |
+| `<Rational> / <Rational>` | 50   | **exact** division |
+| `- <Rational>`            | 80   | unary negation     |
+| `\| <Rational> \|`        | 35   | absolute value     |
 
-Defined the same way as integers, in terms of two private native primitives:
+Defined exactly like the integer counterparts, in terms of two private natives:
 
 ```
-private Boolean ::= add(<Rational>,<Rational>,<Rational>)   @...Add
-private Boolean ::= mult(<Rational>,<Rational>,<Rational>)  @...Multiply
+private Boolean ::= add(<Rational>,<Rational>,<Rational>)   @nelumbo.rationals.Add,
+                    mult(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Multiply
 
-a + b = c  <=>  add(a, b, c)
-a - b = c  <=>  add(c, b, a)
-a * b = c  <=>  mult(a, b, c)
-a / b = c  <=>  mult(c, b, a)
+Rational a, b, c
 
--a = b  <=>  0.0 - a = b
+a + b = c   <=>  add(a, b, c)
+a - b = c   <=>  add(c, b, a)
+a * b = c   <=>  mult(a, b, c)
+a / b = c   <=>  mult(c, b, a)
 
-|a| = b  <=>  b = a   if a >= 0.0,
-              b = -a  if a <  0.0
+- a = b     <=>  0.0 - a = b
+
+|a| = b     <=>  b =  a   if a >= 0.0,
+                b = -a   if a < 0.0
 ```
 
-Note the literal `0.0` (not `0`) in the rules. Rationals and integers are **distinct types**; the rules are typed, and you cannot silently mix them.
+The literal `0.0` (not `0`) in the negation rule keeps the operands in `Rational` — `0` is an `Integer` and the typed `-` would not match.
 
 ### Division is exact
 
-Unlike `Integer` division, rational division does not truncate:
+Where integer division truncates, rational division does not:
 
 ```
-21.0 / 10.0 = a   ? [(a=2.1)][..]
-21.0 / 10.0 = 2.0 ? [][()]
+20.0 / 10.0 = 2.0   ? [()][]
+21.0 / 10.0 = a     ? [(a=2.1)][..]
+21.0 / 10.0 = 2.0   ? [][()]
 ```
 
-The first query produces the exact result `2.1`. The second asserts `21.0 / 10.0 = 2.0` and correctly receives a falsehood.
+The middle query returns the exact result `2.1`. The third asserts the wrong answer and correctly receives a falsehood.
 
 ---
 
 ## Comparison
 
 ```
-<Rational>  >  <Rational>   #30   @...GreaterThan
-<Rational> "<" <Rational>   #30
-<Rational> "<=" <Rational>  #30
-<Rational> >=  <Rational>   #30
+Boolean ::= <Rational>  >   <Rational>   #30   @nelumbo.rationals.GreaterThan,
+            <Rational> "<"  <Rational>   #30,
+            <Rational> "<=" <Rational>   #30,
+            <Rational>  >=  <Rational>   #30
 ```
 
-As in `integers`, only `>` is native; `<`, `<=`, `>=` are defined in Nelumbo:
+Same arrangement as `integers`: only `>` is native, the rest are defined in Nelumbo.
 
 ```
 a <  b  <=>  b > a
@@ -113,31 +129,19 @@ a >= b  <=>  a > b | a = b
 
 ---
 
-## Integer-to-rational conversion
-
-```
-private Boolean ::= iir(<Integer>, <Integer>, <Rational>)  @...IntegersRational
-
-r(x)   = a  <=>  iir(x, 1, a)
-r(x/y) = a  <=>  iir(x, y, a)
-```
-
-`r(5) = a` yields `a = 5.0`. `r(1/3) = a` yields the exact rational `1/3`. `iir` works in multiple directions like other primitives: given a rational, you can ask for compatible integer numerator/denominator pairs — subject to the usual constraints around the fact/falsehood/unknown trichotomy.
-
-There is no silent promotion from `Integer` to `Rational`. If you want to mix them in an expression, you must call `r(...)` explicitly, by design — it keeps the type system honest and surfaces conversions where they happen.
-
----
-
 ## Exports summary
 
-After `import nelumbo.rationals`, in addition to everything from `integers` and `logic`:
+Added to what `nelumbo.integers` (and `nelumbo.logic`) already export:
 
-- Type: `Rational`
-- Literals: `<DECIMAL>`
-- Constructors: `r(x)`, `r(x/y)`
-- Operators: `+`, `-` (binary and unary), `*`, `/`, `|x|`, `<`, `<=`, `>`, `>=` — all on `Rational`
+| Kind        | Names |
+|---|---|
+| Type        | `Rational`                                                          |
+| Literals    | `<DECIMAL>`                                                         |
+| Constructors| `r(x)`, `r(x/y)`                                                    |
+| Operators   | `+`, `-` (binary and unary), `*`, `/`, `\|x\|`, `<`, `<=`, `>`, `>=` on `Rational` |
+| Predicate   | `iir(n, d, q)` — integer-pair / rational conversion                  |
 
-`add`, `mult`, `iir` are `private`.
+`add` and `mult` are `private`. `iir` is **public**, so user rules can call it directly when the `r(...)` constructors aren't quite the shape needed.
 
 ---
 

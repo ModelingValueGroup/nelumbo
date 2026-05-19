@@ -4,7 +4,7 @@ This page walks through `fibonacci.nl` one line at a time. By the end you will h
 
 Before reading on, make sure you have read [`reading-a-test.md`](reading-a-test.md). If `[(f=5)][..]` does not mean anything to you yet, start there.
 
-The file we are working with is [`src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl). It is 18 lines long.
+The file we are working with is [`src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl). It is 19 lines long.
 
 ---
 
@@ -30,7 +30,7 @@ fib(100)=f     ? [(f=36#22r8fozas3n8w3)][..]
 fib(1000)=f    ? [(f=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf)][..]
 ```
 
-That is the whole thing. A working, tested, arbitrary-precision Fibonacci implementation in a logic language, in the same number of lines as a Python version. Now let us read it.
+That is the whole thing: a working, tested, arbitrary-precision Fibonacci implementation in a logic language. The naive recursive form is fast even at `fib(1000)` because Nelumbo's reasoner memoises inferences automatically — the same code written directly in Python would be exponential and never finish, since Python has no implied memoisation. Now let us read it.
 
 ---
 

@@ -1,8 +1,8 @@
 # `nelumbo.collections`
 
-Generic sets and lists.
+Generic sets and lists. The smallest stdlib module — and the only one that uses Nelumbo's generic-type parameter mechanism.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 8 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 11 lines.
 
 **Import:**
 
@@ -10,88 +10,86 @@ Generic sets and lists.
 import nelumbo.collections
 ```
 
-`nelumbo.collections` imports `nelumbo.integers` transitively (and thus `logic`). The module itself is tiny because most of the work is in the native bindings.
+`nelumbo.collections` imports `nelumbo.integers` (and thus `nelumbo.logic`).
 
 ---
 
-## Types and literals
+## Types
 
 ```
 Type E
 
-Set<E>  ::= { <(> <E> <,> , <)*> }   @...NSet
-List<E> ::= [ <(> <E> <,> , <)*> ]   @...NList
+Collection<E>  :: Object
+Set<E>         :: Collection<E>
+List<E>        :: Collection<E>
 ```
 
-Two **generic** type constructors, each parameterised by an element type `E`:
-
-- `Set<E>` — curly-braced literal, unordered, no duplicates
-- `List<E>` — square-bracketed literal, ordered, duplicates preserved
-
-The `Type E` declaration introduces `E` as a generic type parameter. The two `::=` declarations then define literal syntax for `Set<E>` and `List<E>` using the zero-or-more repetition marker (`<)*>`, comma-separated).
-
-### Collection type
-
-Some examples also reference `Collection<E>` as a super-type of both:
-
-```
-Collection<Integer> c
-```
-
-From [`collectionsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/collectionsTest.nl). `Collection` is the common supertype when you want a variable that can hold either a `Set` or a `List`.
+- `Type E` introduces `E` as a generic type parameter — the same mechanism is available in user code (see also `Type T` in `lang.nl` for the generic parenthesization rule `T ::= (<T>)`).
+- `Collection<E>` is the common supertype.
+- `Set<E>` and `List<E>` are both subtypes of `Collection<E>`. A variable of type `Collection<E>` can hold either.
 
 ---
 
 ## Literals
 
 ```
-{}                  // empty Set<E>
-{1, 2, 3}           // Set<Integer> with three elements
-[]                  // empty List<E>
-[1, 2, 3]           // List<Integer> with three elements
+Set<E>  ::= { <(> <E> <,> , <)*> }   @nelumbo.collections.NSet
+List<E> ::= [ <(> <E> <,> , <)*> ]   @nelumbo.collections.NList
 ```
 
-The element type is inferred from the context (a variable's declared type or the type hole receiving the literal).
+| Syntax       | Type     | Notes                                  |
+|---|---|---|
+| `{}`         | `Set<E>`  | empty set                              |
+| `{x, y, z}`  | `Set<E>`  | unordered, no duplicates               |
+| `[]`         | `List<E>` | empty list                             |
+| `[x, y, z]`  | `List<E>` | ordered, duplicates preserved          |
+
+The `<(> ... <,> , <)*>` fragment is the zero-or-more comma-separated repetition (see [`built-in-tokens.md`](../built-in-tokens.md#structural-markers--repetition-and-grouping)). The element type `E` is inferred from the surrounding context — the declared type of the receiving variable or pattern hole.
 
 ---
 
 ## Usage
 
-From [`collectionsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/collectionsTest.nl):
+The whole of `collectionsTest.nl`:
 
 ```
+import nelumbo.collections
+
 List<Integer>       l
 Set<Integer>        s
 Collection<Integer> c
 
-s = {1, 2, 3}   ?  [(s={1,2,3})][..]
-s = {}          ?  [(s={})][..]
+s = {1,2,3}   ?   [(s={1,2,3})][..]
+s = {}        ?   [(s={})][..]
 ```
 
-The facts side includes the full literal — `{1,2,3}` and `{}` — showing how collection values are printed in results.
+Collection values print back in their literal form on the facts side.
 
 ---
 
 ## Status
 
-`collections` is the youngest of the stdlib modules and the smallest. At the current stage (v0.9.x) it provides literal constructors and the basic type infrastructure. Richer operations (membership, union, map, fold) are expected but may be added over time; check the module source and [`collectionsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/collectionsTest.nl) for the latest behaviour.
+`collections` provides type declarations and literal constructors. There are no built-in operations in the module itself — no membership predicate, no union, no map, no fold. The two native classes `NSet` and `NList` only realise the literal forms.
 
-This is also the only stdlib module that showcases Nelumbo's **generic type parameters** (`Type E`, `Set<E>`). The mechanism is general — you can use it in your own modules to define generic containers or parameterised abstractions. See [`../../guides/generics.md`](../../guides/generics.md) when that Phase 4 guide lands.
+This is also the only stdlib module that demonstrates generic-type parameters in action. The mechanism is general: a user module can declare `Type T` and parameterise its own types and patterns the same way.
 
 ---
 
 ## Exports summary
 
-After `import nelumbo.collections`, in addition to everything from `integers` and `logic`:
+Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 
-- Generic type parameter mechanism: `Type E`
-- Types: `Set<E>`, `List<E>` (and `Collection<E>` where exposed)
-- Literals: `{...}` for sets, `[...]` for lists
+| Kind          | Names                                |
+|---|---|
+| Types         | `Collection<E>`, `Set<E>`, `List<E>` |
+| Literals      | `{...}` for sets, `[...]` for lists  |
+
+(The `Type E` declaration introduces the parameter binding inside `collections.nl`; the *mechanism* of generic-type parameters is supplied by `nelumbo.lang` and is available to importers regardless of `collections`.)
 
 ---
 
 ## See also
 
 - [`integers.md`](integers.md) — the module `collections` imports
-- [`../built-in-tokens.md`](../built-in-tokens.md#structural-markers--repetition-and-grouping) — the repetition markers `<(>`, `<)*>`, `<,>` used in the literal declarations
+- [`built-in-tokens.md`](../built-in-tokens.md#structural-markers--repetition-and-grouping) — the repetition markers `<(>`, `<)*>`, `<,>` used in the literal declarations
 - [`collectionsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/collectionsTest.nl) — executable specification

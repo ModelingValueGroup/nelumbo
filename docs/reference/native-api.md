@@ -22,12 +22,24 @@ The form of a pattern with a native binding is:
 
 The Java class named by `@` must:
 
-1. Extend an appropriate base class — typically `org.modelingvalue.nelumbo.logic.Predicate`
-2. Provide a constructor annotated with `@NelumboConstructor`
-3. Override `infer(int, InferContext)` to perform the native reasoning
-4. Override `struct(Object[], List<AstElement>, Node)` to support the engine's internal re-structuring
+1. Extend an appropriate base class — typically `org.modelingvalue.nelumbo.logic.Predicate`.
+2. Provide a single public constructor annotated with `@NelumboConstructor`, with the signature `(NodeInfo, Object...)`. The engine instantiates the class through this constructor by reflection.
+3. Override `infer(int, InferContext)` to perform the native reasoning (Predicate subclasses) — or one of the other base-class hooks (`init(...)` for parsed literals, the `isTrue` / `isFalse` family for `BinaryPredicate` subclasses, etc.).
 
-The engine instantiates the class when it parses a use of the pattern, and calls `infer` when it needs to resolve a query against the pattern.
+That is the entire required surface. There is no `struct(...)` override and no private re-structuring constructor; the base classes handle re-structuring automatically.
+
+If the native needs to construct instances of itself at runtime (a typical literal-type concern — e.g., `Add` building `NInteger`s from `BigInteger` results), declare a static `Functor FUNCTOR` field marked with `@NelumboFunctorField`. The engine populates it by reflection during parsing, and your `of(...)` factory can then build instances via `NodeInfo.of(FUNCTOR)`. There is no static block, no `registerFunctorSetter` call.
+
+```java
+@NelumboFunctorField
+private static Functor FUNCTOR;
+
+public static NMyValue of(MyJavaValue val) {
+    return new NMyValue(NodeInfo.of(FUNCTOR), val);
+}
+```
+
+`@NelumboConstructor` enforces the `(NodeInfo, Object...)` signature; `@NelumboFunctorField` enforces a `static Functor` field. Both annotations exist purely to (a) document that the constructor or field is wired by reflection (it would otherwise look unused) and (b) let the engine find them deterministically.
 
 ---
 
@@ -70,14 +82,16 @@ The `set(i, v)` family of helpers constructs a new predicate with argument `i` s
 
 ## Worked example — `Add`
 
-The integer addition primitive, bound to the pattern `add(<Integer>, <Integer>, <Integer>)`:
+The integer addition primitive, bound to the pattern `add(<Integer>, <Integer>, <Integer>)`. This is the complete source of `org.modelingvalue.nelumbo.integers.Add`:
 
 ```java
 public final class Add extends Predicate {
+    @Serial
+    private static final long serialVersionUID = 2384355866476367685L;
 
     @NelumboConstructor
-    public Add(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1], args[2]);
+    public Add(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
@@ -111,6 +125,7 @@ public final class Add extends Predicate {
 
 Reading this:
 
+- The whole class is the annotated constructor (one line of real work) plus `infer`. No functor field is needed because `Add` itself never constructs an `Add` instance — only `NInteger`s, which carry their own `@NelumboFunctorField`.
 - `getVal(i, 0)` reads the current value of argument `i` as a `BigInteger`, or `null` if unbound.
 - If at least two arguments are unbound, the predicate cannot do anything useful — it returns `unresolvable()` so the engine can retry once more bindings are known.
 - If all three are bound, the predicate checks whether the sum is correct and returns `factCC()` (proven true, closed on both sides) or `falsehoodCC()` (proven false, closed on both sides).
@@ -122,24 +137,34 @@ This is what lets `add(a, b, c)` be used relationally: the same Java method answ
 
 ## Worked example — `GreaterThan`
 
-A comparison primitive showing the "enumerate falsehoods" pattern:
+A comparison primitive showing the "enumerate falsehoods" pattern. Full source of `org.modelingvalue.nelumbo.integers.GreaterThan`:
 
 ```java
-@Override
-protected InferResult infer(int nrOfUnbound, InferContext context) {
-    if (nrOfUnbound > 1) {
-        return unresolvable();
+public final class GreaterThan extends Predicate {
+    @Serial
+    private static final long serialVersionUID = 5338681256251602011L;
+
+    @NelumboConstructor
+    public GreaterThan(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
-    BigInteger l = getVal(0, 0);
-    BigInteger r = getVal(1, 0);
-    if (l == null) {
-        return set(0, get(1)).falsehoodsII();
+    @Override
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        if (nrOfUnbound > 1) {
+            return unresolvable();
+        }
+
+        BigInteger l = getVal(0, 0);
+        BigInteger r = getVal(1, 0);
+        if (l == null) {
+            return set(0, get(1)).falsehoodsII();
+        }
+        if (r == null) {
+            return set(1, get(0)).falsehoodsII();
+        }
+        return l.compareTo(r) > 0 ? factCC() : falsehoodCC();
     }
-    if (r == null) {
-        return set(1, get(0)).falsehoodsII();
-    }
-    return l.compareTo(r) > 0 ? factCC() : falsehoodCC();
 }
 ```
 
@@ -209,4 +234,4 @@ The stdlib itself follows this rule: `add`, `mult`, `string_concat`, and the com
 - [`writing-rules.md`](writing-rules.md) — the in-language alternative
 - [`../guides/language-transformations.md`](../guides/language-transformations.md) — the meta-level alternative (Phase 3)
 - [`stdlib/integers.md`](stdlib/integers.md) — a concrete module with three native predicates and several Nelumbo-defined ones
-- [`stdlib/logic.md`](stdlib/logic.md) — see how `->` and `<->` are in-language, while `!`, `&`, `|`, `E[]`, `A[]`, and `eq` are native
+- [`stdlib/logic.md`](stdlib/logic.md) — see how `->`, `<->`, and `!=` are in-language, while `!`, `&`, `|`, `E[]`, `A[]`, `NIs` (for `=`), and `Equal` (for the private `eq`) are native

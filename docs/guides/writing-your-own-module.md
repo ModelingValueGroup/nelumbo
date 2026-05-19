@@ -1,6 +1,6 @@
 # Writing your own module
 
-A Nelumbo **module** is a `.nl` file that other `.nl` files can `import`. Nothing more, nothing less. The stdlib modules (`nelumbo.logic`, `nelumbo.integers`, etc.) are ordinary modules that happen to ship with Nelumbo. A module you write sits at the same layer; it is a first-class library in the same sense.
+A Nelumbo **module** is a `.nl` file that other `.nl` files can `import`. Nothing more, nothing less. The stdlib modules (`nelumbo.lang`, `nelumbo.logic`, `nelumbo.integers`, …) are ordinary modules that happen to ship with Nelumbo — even `lang.nl`, which declares the language's syntax, is structurally just another `.nl` file. A module you write sits at the same layer; it is a first-class library in the same sense.
 
 This guide shows how to structure a module, what to export and what to keep private, and how to make it findable from other files.
 
@@ -45,7 +45,7 @@ The path in an `import` statement is the **dotted form of the file path**, relat
 | `src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl` | `org.modelingvalue.nelumbo.integers` — or the short alias `nelumbo.integers` |
 | `src/main/resources/org/modelingvalue/nelumbo/examples/friends.nl` | `org.modelingvalue.nelumbo.examples.friends` |
 
-The `nelumbo.X` short aliases are reserved for the five shipped stdlib modules. Your own modules use their full dotted path.
+The `nelumbo.X` short aliases are reserved for the six shipped stdlib modules (`lang`, `logic`, `integers`, `rationals`, `strings`, `collections`). Your own modules use their full dotted path.
 
 ### Imports in your own project
 

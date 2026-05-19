@@ -1,6 +1,6 @@
 # Native classes — the catalogue
 
-Every pattern in the standard library that needs Java backing is bound to a class under `src/main/java/org/modelingvalue/nelumbo/`. This page catalogues all 21 shipped native classes, grouped by structural role, with a note on what each one does and how it returns its results.
+Every pattern in the standard library that needs Java backing is bound to a class under `src/main/java/org/modelingvalue/nelumbo/`. This page catalogues the shipped native classes, grouped by structural role, with a note on what each one does and how it returns its results.
 
 Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.
 
@@ -17,8 +17,17 @@ org.modelingvalue.nelumbo.*           base classes and engine
     Quantifier          (in .logic)   base for E[] and A[]
     InferContext, InferResult         context and result types for infer()
 
-org.modelingvalue.nelumbo.logic       Boolean, connectives, quantifiers, equality
-    NBoolean, Not, And, Or, Equal, ExistentialQuantifier, UniversalQuantifier
+org.modelingvalue.nelumbo.lang        top-level statement forms declared by lang.nl
+    Import, Type, Variable, Functor, Transform, Namespace, Parenthesized
+
+org.modelingvalue.nelumbo.patterns    pattern meta-grammar declared by lang.nl
+    TokenTextPattern, AlternationPattern, RepetitionPattern,
+    OptionalPattern, SequencePattern, NodeTypePattern
+
+org.modelingvalue.nelumbo.logic       Boolean, connectives, quantifiers, equality,
+                                       plus the fact/<=>/? statement forms
+    NBoolean, Not, And, Or, NIs, Equal, ExistentialQuantifier,
+    UniversalQuantifier, Fact, Rule, Query
 
 org.modelingvalue.nelumbo.integers    integer arithmetic
     NInteger, Add, Multiply, GreaterThan
@@ -32,6 +41,8 @@ org.modelingvalue.nelumbo.strings     string operations
 org.modelingvalue.nelumbo.collections container literals
     NSet, NList
 ```
+
+The `lang` and `patterns` packages are the natives that back the patterns declared in `lang.nl`. They implement the bootstrap layer — without them, the hand-coded parser could read `lang.nl` but no `@`-bound class would exist to handle the patterns it declares.
 
 ---
 
@@ -76,12 +87,18 @@ Shipped natives fall into five structural roles. Reading this classification fir
   - `Or`: mirror image. Returns `true` if one operand is `isTrueCC()`; returns `false` only when both are `isFalseCC()`; reduces to the other operand when one is `isFalseCC()`.
 - This is where the non-pessimistic three-valued behaviour of `unknown & false = false` and `unknown | true = true` is implemented.
 
+### `NIs`
+
+- Backs: `Boolean ::= <Object> = <Object> #30`
+- Role: comparison predicate (public)
+- Strategy: the general-purpose equality native. Handles equality between any two `Object` values, including variables and partially-bound expressions. Returns `factCC()` / `falsehoodCC()` when both sides are fully ground, and partial-information results otherwise.
+
 ### `Equal`
 
-- Backs: `<Object> = <Object>` (indirectly, via the rules in `logic.nl`)
-- Role: comparison predicate
-- Strategy: structural equality over `Node`s, with `Type`-vs-value handling. Returns a `factCC()` if both sides unify exactly, `factCI()` if they unify up to an unresolved type, or `falsehoodCC()`/`falsehoodCI()` if they provably disagree.
-- The `eq` logic is the single source of truth for comparing any two values in Nelumbo.
+- Backs: `private Boolean ::= eq(<Literal>, <Literal>)`
+- Role: comparison predicate (private — used only via the rules `l1 = l2 <=> eq(l1, l2)` inside `logic.nl`)
+- Strategy: structural equality over literal `Node`s. Returns `factCC()` if both sides unify exactly, `falsehoodCC()` if they provably disagree.
+- The `eq` predicate is the leaf primitive for comparing two `Literal` values; `NIs` builds on it for the general `Object`-equality case.
 
 ### `ExistentialQuantifier`, `UniversalQuantifier`
 
@@ -207,13 +224,30 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 
 | `.nl` file | Pattern | `@` binding |
 |---|---|---|
+| `lang.nl` | `Namespace ::= ...` and `RootNamespace ::= { ... }` | `nelumbo.lang.Namespace` |
+| `lang.nl` | `Pattern ::= <NAME> \| <STRING> \| <OPERATOR> \| ...` (literal tokens) | `nelumbo.patterns.TokenTextPattern` |
+| `lang.nl` | `Pattern ::= <(> ... <\|> ... <)>` | `nelumbo.patterns.AlternationPattern` |
+| `lang.nl` | `Pattern ::= <(> ... <,> ... <)+/*>` | `nelumbo.patterns.RepetitionPattern` |
+| `lang.nl` | `Pattern ::= <(> ... <)?>` | `nelumbo.patterns.OptionalPattern` |
+| `lang.nl` | `Pattern ::= <LEFT> ... <RIGHT>` | `nelumbo.patterns.SequencePattern` |
+| `lang.nl` | `Pattern ::= "<" (vis/hid)? <Type> (#N)? ">"` | `nelumbo.patterns.NodeTypePattern` |
+| `lang.nl` | `Root ::= "import" ...` | `nelumbo.lang.Import` |
+| `lang.nl` | `Root ::= <Root> ::> <RootNamespace>` | `nelumbo.lang.Transform` |
+| `lang.nl` | `Root ::= (hidden)? <Type> <NAME>, ...` | `nelumbo.lang.Variable` |
+| `lang.nl` | `Root ::= <NAME> ... :: <Type>, ...` | `nelumbo.lang.Type` |
+| `lang.nl` | `Root ::= (private)? <Type> ::= <Pattern>+, ...` | `nelumbo.lang.Functor` |
+| `lang.nl` | `T ::= (<T>)` (generic parenthesisation) | `nelumbo.lang.Parenthesized` |
 | `logic.nl` | `true`, `false`, `unknown` | `NBoolean` |
 | `logic.nl` | `!<Boolean>` | `Not` |
 | `logic.nl` | `<Boolean> & <Boolean>` | `And` |
-| `logic.nl` | `<Boolean> | <Boolean>` | `Or` |
+| `logic.nl` | `<Boolean> \| <Boolean>` | `Or` |
 | `logic.nl` | `E[...](...)` | `ExistentialQuantifier` |
 | `logic.nl` | `A[...](...)` | `UniversalQuantifier` |
-| `logic.nl` | `eq(<Object>,<Object>)` *(private)* | `Equal` |
+| `logic.nl` | `<Object> = <Object>` | `NIs` |
+| `logic.nl` | `eq(<Literal>,<Literal>)` *(private)* | `Equal` |
+| `logic.nl` | `Root ::= "fact" ...` | `nelumbo.logic.Fact` |
+| `logic.nl` | `Root ::= <Boolean> "<=>" ...` | `nelumbo.logic.Rule` |
+| `logic.nl` | `Root ::= <Boolean> ? (Binding Binding)?` | `nelumbo.logic.Query` |
 | `integers.nl` | `<NUMBER>` | `NInteger` |
 | `integers.nl` | `add(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Add` |
 | `integers.nl` | `mult(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Multiply` |
@@ -222,7 +256,7 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `rationals.nl` | `add(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Add` |
 | `rationals.nl` | `mult(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Multiply` |
 | `rationals.nl` | `<Rational> > <Rational>` | `rationals.GreaterThan` |
-| `rationals.nl` | `iir(<Integer>,<Integer>,<Rational>)` *(private)* | `IntegersRational` |
+| `rationals.nl` | `iir(<Integer>,<Integer>,<Rational>)` | `IntegersRational` |
 | `strings.nl` | `<STRING>` | `NString` |
 | `strings.nl` | `string_concat(<String>,<String>,<String>)` *(private)* | `Concat` |
 | `strings.nl` | `string_length(<String>,<Integer>)` *(private)* | `Length` |
@@ -230,7 +264,7 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `collections.nl` | `Set<E> ::= { ... }` | `NSet` |
 | `collections.nl` | `List<E> ::= [ ... ]` | `NList` |
 
-21 classes, five packages, backing roughly twice that many language-level patterns once you count the Nelumbo-defined derivations (`<`, `<=`, `>=`, `-` unary, `-` binary, `/`, `|x|`, `->`, `<->`, `!=`, `str`, `int`, `len`, `r`).
+The natives back roughly twice as many language-level patterns once you count the Nelumbo-defined derivations (`<`, `<=`, `>=`, `-` unary, `-` binary, `/`, `|x|`, `->`, `<->`, `!=`, `str`, `int`, `len`, `r`).
 
 ---
 
@@ -245,6 +279,7 @@ A few constructs that might look like they should be native are actually pure Ne
 - `-` (unary) — defined as `-a = b <=> 0 - a = b`.
 - `/` — defined as `a / b = c <=> mult(c, b, a)`.
 - `|x|` — defined via a two-clause rule with mutually exclusive guards.
+- `str`, `int`, `len`, `r(...)` — surface wrappers around the underlying string and rational primitives.
 
 Looking at the stdlib with this lens — **what is native and what is not** — is one of the best ways to understand Nelumbo's design philosophy. The Java surface is deliberately minimal; the rest is the meta-language at work.
 

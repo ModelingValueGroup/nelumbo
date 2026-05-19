@@ -11,20 +11,20 @@ A block introduces a lexical scope. Any declaration inside the block — imports
 ```
 {
    Aa :: Object
-   Aa ::= XXX
+   private Aa ::= XXX
    Aa x
    x = XXX ? [(x=XXX)][..]
 }
 
 {
    Bb :: Object
-   Bb ::= XXX
+   private Bb ::= XXX
    Bb x
    x = XXX ? [(x=XXX)][..]
 }
 ```
 
-The two blocks above each define a type, a literal, a variable, and a test. None of them collide, even though both use the name `XXX` and both use `x`. The scopes are independent.
+The two blocks above (from [`scoping.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl)) each define a type, a literal, a variable, and a test. None of them collide, even though both use the name `XXX` and both use `x`. The scopes are independent; the `private` modifier on each `::=` keeps the `XXX` literal local to its block.
 
 ### What scopes are good for
 
@@ -66,10 +66,10 @@ The `visible` keyword is the complement of `hidden`; see the section on hidden d
 A `private` declaration is not exported. It is a detail of the module's implementation.
 
 ```
-private Boolean ::= eq(<Object>, <Object>)  @org.modelingvalue.nelumbo.logic.Equal
+private Boolean ::= eq(<Literal>, <Literal>)  @org.modelingvalue.nelumbo.logic.Equal
 ```
 
-From `logic.nl`. The `eq` predicate is the native equality primitive; it is used by the `=` rule inside `logic.nl` but is not something callers should reach for directly — they should use `=`.
+From `logic.nl`. The `eq` predicate is the native literal-equality primitive; it is used by the rule `l1 = l2 <=> eq(l1, l2)` inside `logic.nl` but is not something callers should reach for directly — they should use `=`. (The general-case `=` operator on `Object` is bound to a separate, public native `NIs`.)
 
 Other `private` patterns in the stdlib include `add`, `mult`, `string_concat`, `string_length`, `integer_string`. All of them are native-backed primitives that the module wraps in friendlier operators.
 

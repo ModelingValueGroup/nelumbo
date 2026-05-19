@@ -1,12 +1,14 @@
 # Operators
 
-This page is a complete catalogue of the operators that are part of core Nelumbo or of the `nelumbo.logic` standard module. Operators from `integers`, `rationals`, `strings`, and `collections` are documented on the per-module stdlib pages.
+This page is a complete catalogue of the operators contributed by `nelumbo.lang` (the syntactic bootstrap) and `nelumbo.logic` (the three-valued logic layer). Operators from `integers`, `rationals`, `strings`, and `collections` are documented on the per-module stdlib pages.
+
+None of these operators are hardcoded in the Java core. Everything below is declared by a `::=` pattern in `lang.nl` or `logic.nl` and bound to a native class via `@`.
 
 ---
 
-## Declarative operators
+## Declarative operators (from `nelumbo.lang`)
 
-These shape the program itself. They are not values; you do not compute with them.
+These shape the program itself. They are not values; you do not compute with them. All are declared as `Root ::=` or `Pattern ::=` patterns in `lang.nl`.
 
 ### `::` — type subtyping
 
@@ -25,14 +27,6 @@ T ::= pattern
 
 Declares a new way to produce a value of type `T`. Extends the language's syntax. Multiple `::=` declarations for the same type are allowed and accumulate. See [`grammar.md`](grammar.md#pattern-declarations).
 
-### `<=>` — rule (bi-implication)
-
-```
-L <=> R
-```
-
-Asserts that `L` holds exactly when `R` holds. Multiple rules may share the same `L`; their results merge. See [`writing-rules.md`](writing-rules.md).
-
 ### `::>` — pattern transformation
 
 ```
@@ -40,6 +34,29 @@ L ::> { ... declarations ... }
 ```
 
 Expands an occurrence of pattern `L` into the declarations in the block. A macro-like mechanism for building DSLs on top of Nelumbo. See [`../guides/language-transformations.md`](../guides/language-transformations.md).
+
+---
+
+## Execution-driving forms (from `nelumbo.logic`)
+
+These are also `Root ::=` patterns, but they are declared in `logic.nl`, not `lang.nl` — they depend on `Boolean`, which `logic.nl` introduces. Without `import nelumbo.logic`, a file cannot use `fact`, `<=>`, or `?`.
+
+### `fact` — ground-truth assertion
+
+```
+fact E
+fact E1, E2, E3
+```
+
+Asserts one or more comma-separated ground-truth facts. See [`grammar.md`](grammar.md#facts).
+
+### `<=>` — rule (bi-implication)
+
+```
+L <=> R
+```
+
+Asserts that `L` holds exactly when `R` holds. Multiple rules may share the same `L`; their results merge. See [`writing-rules.md`](writing-rules.md).
 
 ### `?` — query / test
 
@@ -96,13 +113,13 @@ p <-> q
 
 Defined in `logic.nl` as `(p -> q) & (q -> p)`.
 
-### `=` — equality
+### `=` — equality (`#30`)
 
 ```
 a = b
 ```
 
-Identity comparison. `l1 = l2` is decided by the native `eq` predicate for literal-to-literal comparison. `l1 = f1` (literal to function) is resolved by inverting to `f1 = l1`. This means equality is usable in both directions: `fib(5) = f` and `5 = f` are both valid.
+Identity comparison. Declared in `logic.nl` as `Boolean ::= <Object> = <Object> #30 @nelumbo.logic.NIs`. The public native `NIs` handles the general case; a separate private native `Equal` backs the private `eq(<Literal>, <Literal>)` predicate, which the rule `l1 = l2 <=> eq(l1, l2)` invokes for literal-to-literal comparison. A second rule, `l1 = f1 <=> f1 = l1`, inverts a literal-equals-function query into function-equals-literal form, so equality is usable in either direction: `fib(5) = f` and `5 = fib(n)` both work.
 
 ### `!=` — inequality (`#30`)
 
@@ -172,14 +189,11 @@ Not an operator in the same sense, but syntactically significant. `if G` attache
 
 ## Special identifiers
 
-| Name | Meaning |
-|---|---|
-| `Object` | Root of the type hierarchy |
-| `Boolean` | Core logical type (from `nelumbo.logic`) |
-| `FactType` | Declares a ground-truth relation (see [`grammar.md`](grammar.md#facttype-declarations)) |
-| `Root` | The entry-point production for statement-level parsing (used by transformations; see [`transformation.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/transformation.nl)) |
-| `Type` | Introduces a generic type parameter |
-| `true`, `false`, `unknown` | The three Boolean values (from `nelumbo.logic`) |
+| Name | Origin | Meaning |
+|---|---|---|
+| `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` | `nelumbo.lang` | The core object hierarchy. `Root` is the entry-point production for top-level statements; `Type` is used as a generic parameter introducer (`Type T`). |
+| `Boolean`, `FactType`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `FactType` is a `Boolean` subtype for ground-truth relations (see [`grammar.md`](grammar.md#facttype-declarations)). |
+| `true`, `false`, `unknown` | `nelumbo.logic` | The three Boolean values. |
 
 ---
 

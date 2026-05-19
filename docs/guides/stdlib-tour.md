@@ -1,77 +1,159 @@
 # Standard library tour
 
-The Nelumbo standard library is 145 lines of Nelumbo across five files. That is remarkably small — and because it is written in Nelumbo, reading it is one of the best ways to learn how the language is actually used.
+The Nelumbo standard library is around 200 lines of Nelumbo across six files. That is remarkably small — and because it is written in Nelumbo, reading it is one of the best ways to learn how the language is actually used.
 
-This guide walks through all five modules in dependency order, showing how each builds on the previous ones, what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
+This guide walks through all six modules in dependency order, showing how each builds on the previous ones, what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
 
 The files:
 
-1. [`logic.nl`](#1-nelumbologic-29-lines) — 29 lines — Boolean, connectives, quantifiers, equality
-2. [`integers.nl`](#2-nelumbointegers-37-lines) — 37 lines — arithmetic and comparison
-3. [`rationals.nl`](#3-nelumborationals-47-lines) — 47 lines — exact rational arithmetic
-4. [`strings.nl`](#4-nelumbostrings-24-lines) — 24 lines — string operations
-5. [`collections.nl`](#5-nelumbocollections-8-lines) — 8 lines — generic `Set<E>` and `List<E>`
+1. [`lang.nl`](#1-nelumbolang-51-lines) — 51 lines — syntactic bootstrap: tokens, object hierarchy, the pattern meta-grammar, top-level forms
+2. [`logic.nl`](#2-nelumbologic-44-lines) — 44 lines — Boolean, connectives, quantifiers, equality, and the `fact`/`<=>`/`?` statement forms
+3. [`integers.nl`](#3-nelumbointegers-36-lines) — 36 lines — arithmetic and comparison
+4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
+5. [`strings.nl`](#5-nelumbostrings-24-lines) — 24 lines — string operations
+6. [`collections.nl`](#6-nelumbocollections-11-lines) — 11 lines — generic `Set<E>` and `List<E>`
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
 
 ---
 
-## 1. `nelumbo.logic` (29 lines)
+## 1. `nelumbo.lang` (51 lines)
 
-The foundation. Every other module imports this, directly or transitively.
+The syntactic bootstrap. Every other `.nl` file — including `logic.nl` — is parsed using the `::=` declarations in this file. The Java core knows just enough to load `lang.nl`; from there on, the same machinery the user writes parses everything.
 
 ```
-private Boolean ::= eq(<Object>, <Object>)                  @...Equal
+import nelumbo.lang   // not literally — this is itself nelumbo.lang
 
-Boolean ::= true                                            @...NBoolean,
-            false                                           @...NBoolean,
-            unknown                                         @...NBoolean,
-            ! <Boolean>                             #25     @...Not,
-            <Boolean> & <Boolean>                   #22     @...And,
-            <Boolean> | <Boolean>                   #20     @...Or,
-            E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @...ExistentialQuantifier,
-            A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @...UniversalQuantifier,
+// Token types — produced by the tokenizer
+SINGLEQUOTE :: NATIVE   SEMICOLON :: NATIVE   COMMA  :: NATIVE
+LEFT        :: NATIVE   RIGHT     :: NATIVE   STRING :: NATIVE
+DECIMAL     :: NATIVE   NUMBER    :: NATIVE   NAME   :: NATIVE
+OPERATOR    :: NATIVE   NEWLINE   :: NATIVE
+BEGINOFFILE :: NATIVE   ENDOFFILE :: NATIVE
+
+// Object hierarchy
+Object        :: NATIVE
+Type          :: Object
+Variable      :: Object
+Root          :: Object             // a top-level statement
+Functor       :: Root                // a `::=`-declared pattern
+Pattern       :: Object #PATTERN     // a pattern fragment
+Namespace     :: Object              // a `{ ... }` scope
+RootNamespace :: Root, Namespace
+
+// File / scope grammar
+Namespace     ::= <BEGINOFFILE> ... <ENDOFFILE>   @...Namespace
+RootNamespace ::= { ... }                          @...Namespace
+
+// Pattern meta-grammar — declares the syntax of `::=` patterns themselves
+Pattern ::= <NAME>                                       @nelumbo.patterns.TokenTextPattern,
+            <STRING>                                     @nelumbo.patterns.TokenTextPattern,
+            ...
+            <LEFT> ... <RIGHT>                           @nelumbo.patterns.SequencePattern,
+            "<" (visible|hidden)? <Type#100> (#NUMBER)? ">"  @nelumbo.patterns.NodeTypePattern
+
+// Top-level statement forms
+Root ::= "import" ...                                                @nelumbo.lang.Import,
+         <Root#0> ::> <RootNamespace>                                @nelumbo.lang.Transform,
+         (hidden)? <Type#100> <NAME>, ...                             @nelumbo.lang.Variable,
+         <NAME> (< <Type#100> >)? :: <Type#100>, ... (# <NAME>)?     @nelumbo.lang.Type,
+         (private)? <Type#100> ::= <Pattern#100>+ (#NUMBER)? (@...)?  @nelumbo.lang.Functor
+
+// Generic parenthesisation — one rule, applies to every type
+Type T
+T ::= (<T>)   @nelumbo.lang.Parenthesized
+```
+
+### What is unique about this file
+
+- **No `<=>` rules, no `fact`, no `?`.** All those forms are declared in `logic.nl` and are not yet available when `lang.nl` is being loaded. `lang.nl` contains only `::`, `::=`, and `::>` declarations.
+- **Self-bootstrap.** The declarations describe the very syntax used to write them. The Java parser used to first read `lang.nl` is a minimal hand-coded equivalent of these rules; once the file is loaded, the patterns it installed take over.
+- **Every other stdlib module starts with `import nelumbo.lang` transitively** — `logic.nl` imports it directly; everything else gets it via `logic`.
+
+### Idioms to notice
+
+- The `Pattern` block is the densest part of the file: it uses quoted operator characters (`"<"`, `"("`, `"|"`, `","`, `")"`, …) to talk about the very `<...>` syntax those characters have meaning in. This is the meta-syntax describing itself.
+- The `Type T` / `T ::= (<T>)` pair at the end is the canonical demonstration of generics. `collections.nl` uses the same mechanism for `Set<E>` and `List<E>`.
+
+See [`../reference/stdlib/lang.md`](../reference/stdlib/lang.md) for the full annotated walk-through.
+
+---
+
+## 2. `nelumbo.logic` (44 lines)
+
+The three-valued logic layer. This is where Boolean, the connectives, and — crucially — the `fact`, `<=>`, and `?` statement forms are declared.
+
+```
+import nelumbo.lang
+
+Boolean   :: Object
+FactType  :: Boolean
+Function  :: Object
+Literal   :: Object
+
+private Boolean ::= eq(<Literal>,<Literal>)                 @nelumbo.logic.Equal
+
+Boolean ::= true                                            @nelumbo.logic.NBoolean,
+            false                                           @nelumbo.logic.NBoolean,
+            unknown                                         @nelumbo.logic.NBoolean,
+            ! <Boolean>                             #25     @nelumbo.logic.Not,
+            <Boolean> & <Boolean>                   #22     @nelumbo.logic.And,
+            <Boolean> | <Boolean>                   #20     @nelumbo.logic.Or,
+            E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
+            A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.UniversalQuantifier,
+            <Object> =  <Object>                    #30     @nelumbo.logic.NIs,
+            <Object> != <Object>                    #30,
             <Boolean> -> <Boolean>                  #18,
-            <Boolean> "<->" <Boolean>               #16,
-            <Object> != <Object>                    #30
+            <Boolean> "<->" <Boolean>               #16
+
+Binding :: Object #BINDING
+Binding ::= [ ... ]
+
+// Top-level statement forms — declared here, not in the Java core
+Root ::= "fact" <Boolean#0>, ...                                       @nelumbo.logic.Fact,
+         <Boolean#0> "<=>" (<Boolean#0> ("if" <Boolean#0>)?), ...      @nelumbo.logic.Rule,
+         <Boolean#0> ? (<Binding> <Binding>)?                          @nelumbo.logic.Query
 
 Boolean p1, p2
-
-p1->p2  <=> !p1|p2
-p1<->p2 <=> (p1->p2)&(p2->p1)
+p1 -> p2  <=> !p1 | p2
+p1 <-> p2 <=> (p1 -> p2) & (p2 -> p1)
 
 Literal  l1, l2
 Function f1, f2
 Object   n1, n2
 
-l1=l2  <=> eq(l1, l2)
-l1=f1  <=> f1=l1
-n1!=n2 <=> !(n1=n2)
+l1 = l2  <=> eq(l1, l2)
+l1 = f1  <=> f1 = l1
+n1 != n2 <=> !(n1 = n2)
 ```
 
 ### What is native here
 
-Six of the things in this file are bound to Java classes — the ones with `@...` annotations: `eq`, `NBoolean`, `Not`, `And`, `Or`, `ExistentialQuantifier`, `UniversalQuantifier`. Everything else is derived in Nelumbo.
+Nine native bindings: `Equal` (for the private literal-equality `eq`), `NBoolean`, `Not`, `And`, `Or`, `ExistentialQuantifier`, `UniversalQuantifier`, `NIs` (the public `<Object> = <Object>` operator), and three statement-form natives `Fact`, `Rule`, `Query`. Everything else is derived in Nelumbo.
 
 ### What is derived
 
-- **`->` (implication)** is defined as `!p | q`. No Java code is involved.
+- **`->` (implication)** is defined as `!p | q`. No Java code involved.
 - **`<->` (bi-implication)** is defined as `(p -> q) & (q -> p)`.
 - **`!=` (inequality)** is defined as `!(n1 = n2)`.
 - **`=` for mixed literal/function** is defined as a rewrite: `l1 = f1 <=> f1 = l1`, swapping sides so the function is on the left. This is what makes `5 = fib(n)` work the same way as `fib(n) = 5`.
 
 This is the module's first big lesson: **even at the deepest level of the language, most derivations happen in Nelumbo, not Java.** The Java surface is kept small.
 
+### The key statement forms
+
+`fact`, `<=>`, and `?` are themselves `Root ::=` patterns declared in this file. A `.nl` file that imports only `nelumbo.lang` (and not `nelumbo.logic`) can declare types and patterns but has no way to assert facts, write rules, or run queries.
+
 ### Idioms to notice
 
-- The `::=` declaration lists many alternatives separated by commas — all productions for `Boolean`. This is the conventional way to declare a type with many forms.
-- Precedence annotations follow a ladder: `<->` at 16, `->` at 18, `|` at 20, `&` at 22, `!` at 25, `!=` at 30. Tighter-binding operators get higher numbers.
+- The `::=` declaration for `Boolean` lists many alternatives separated by commas — all productions for `Boolean`. This is the conventional way to declare a type with many forms.
+- Precedence annotations follow a ladder: `<->` at 16, `->` at 18, `|` at 20, `&` at 22, `!` at 25, `=`/`!=` at 30. Tighter-binding operators get higher numbers.
 - `E[...]` and `A[...]` use `<Variable#100>` to require that the binding-site position contains a bare variable (precedence 100 is near the top — almost primary-expression tight). The body uses `<Boolean#0>` to accept any Boolean expression, even low-precedence ones.
-- Three distinct internal types (`Literal`, `Function`, `Object`) appear in the equality rules. These are used to classify operands so the right rule fires.
+- Four internal types (`Boolean`, `Literal`, `Function`, `Object`) appear in the equality rules. The `Literal`/`Function`/`Object` split is what makes the three equality rules sufficient.
 
 ---
 
-## 2. `nelumbo.integers` (37 lines)
+## 3. `nelumbo.integers` (36 lines)
 
 Builds arithmetic on top of logic.
 
@@ -173,7 +255,7 @@ Read it when you want to confirm how an operator behaves in a case you are unsur
 
 ---
 
-## 3. `nelumbo.rationals` (47 lines)
+## 4. `nelumbo.rationals` (46 lines)
 
 Builds exact rationals on top of integers. Structurally identical to `integers`.
 
@@ -243,7 +325,7 @@ This is a good template: **when adding a new numeric-like type, mirror the integ
 
 ---
 
-## 4. `nelumbo.strings` (24 lines)
+## 5. `nelumbo.strings` (24 lines)
 
 The smallest non-trivial module.
 
@@ -297,7 +379,7 @@ All three work from the same rule and the same native. The native `Concat` handl
 
 ---
 
-## 5. `nelumbo.collections` (8 lines)
+## 6. `nelumbo.collections` (11 lines)
 
 The shortest module.
 
@@ -305,6 +387,10 @@ The shortest module.
 import nelumbo.integers
 
 Type E
+
+Collection<E> :: Object
+Set<E>        :: Collection<E>
+List<E>       :: Collection<E>
 
 Set<E>  ::= { <(> <E> <,> , <)*> }  @...NSet
 List<E> ::= [ <(> <E> <,> , <)*> ]  @...NList
@@ -314,8 +400,8 @@ That's the whole module.
 
 ### What it introduces
 
-- **`Type E`** — the declaration that introduces a generic type parameter. This is the only module that demonstrates generics in the stdlib.
-- **`Set<E>` and `List<E>`** — parameterised container types with literal syntax.
+- **`Type E`** — the declaration that introduces a generic type parameter. `lang.nl` uses the same mechanism for parenthesisation (`Type T; T ::= (<T>)`); this is its first use to define container types.
+- **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype.
 
 ### How the literal syntax works
 
@@ -336,9 +422,10 @@ Operations — membership, union, length, map, fold — are not in the module as
 
 ## The takeaway
 
-Reading all five stdlib modules in order, a few observations crystallise:
+Reading all six stdlib modules in order, a few observations crystallise:
 
-- **The stdlib is small.** 145 lines of Nelumbo total. Not because the language is underpowered — because the language is expressive enough that a little code covers a lot.
+- **The stdlib is small.** Around 200 lines of Nelumbo total. Not because the language is underpowered — because the language is expressive enough that a little code covers a lot.
+- **The syntax itself is in `.nl` files.** `lang.nl` declares the pattern meta-grammar and the `::`, `::=`, `::>`, `import`, variable, type, and functor statement forms. `logic.nl` declares `fact`, `<=>`, and `?`. The Java core only knows enough to load `lang.nl`.
 - **Most of it is not native.** Perhaps a quarter of the pattern declarations have `@` annotations. The rest are defined in Nelumbo using rules.
 - **Layering is strict.** Each module imports the one below it; no module imports sideways. This is a good model for your own libraries.
 - **Three-way relations are the canonical primitive shape.** If you are thinking of adding a new operation, check whether it fits the `op(a, b, c)` shape; if it does, you can probably reuse the integer/rational/string pattern.

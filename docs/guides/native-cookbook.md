@@ -4,10 +4,44 @@ This guide is a hands-on reference for writing new Java natives bound to Nelumbo
 
 Before diving in, make sure you have read:
 
-- [`../reference/native-api.md`](../reference/native-api.md) — the API surface (`Predicate`, `infer`, `InferResult`, the helper family `factCC`/`factCI`/etc.)
+- [`../reference/native-api.md`](../reference/native-api.md) — the API surface (`Predicate`, `infer`, `InferResult`, the helper family `factCC` / `factCI` / etc.)
 - [`../reference/native-classes.md`](../reference/native-classes.md) — the catalogue of what ships today
 
 And before reaching for a native at all, confirm you are not on the wrong extension path. **The in-language path (rules, transformations, modules) handles most cases.** See [`writing-your-own-module.md`](writing-your-own-module.md) and [`language-transformations.md`](language-transformations.md). Natives are for genuine primitives.
+
+---
+
+## The two annotations
+
+Two annotations wire a Java class to the Nelumbo engine. Both exist because reflection-driven code looks unused to static analysers — the annotations document that the constructor or field is intentional and let the engine find them deterministically.
+
+### `@NelumboConstructor`
+
+Marks the single public constructor that the engine calls when it parses a use of the pattern. The signature is fixed:
+
+```java
+@NelumboConstructor
+public MyClass(NodeInfo nodeInfo, Object... args) {
+    super(nodeInfo, args);
+}
+```
+
+That is the entire constructor body for almost every native. There is no `struct(...)` method to override, no private re-structuring constructor — the base classes (`Node`, `Predicate`, `BinaryPredicate`, …) take care of restructuring automatically.
+
+### `@NelumboFunctorField`
+
+Marks a `static Functor FUNCTOR` field that the engine fills in by reflection during parsing. You only need this if your native's Java code needs to **construct new instances of the pattern at runtime** — typically a value type whose factory is called from another predicate (`NInteger.of(BigInteger)` called from `Add`, etc.).
+
+```java
+@NelumboFunctorField
+private static Functor FUNCTOR;
+
+public static MyValue of(MyJavaValue val) {
+    return new MyValue(NodeInfo.of(FUNCTOR), val);
+}
+```
+
+Predicate natives like `Add`, `Multiply`, `GreaterThan`, `Concat`, `Length`, and `ToInteger` do **not** need `@NelumboFunctorField` — they never build instances of themselves; they only build instances of the value types they yield (`NInteger`, `NString`).
 
 ---
 
@@ -15,9 +49,9 @@ And before reaching for a native at all, confirm you are not on the wrong extens
 
 1. [Three-arg functional relation](#recipe-1-three-arg-functional-relation) — `Add`, `Multiply`, `Concat`, `IntegersRational`, `ToInteger`
 2. [Comparison predicate](#recipe-2-comparison-predicate) — `GreaterThan`, `Length`
-3. [Constant / literal type](#recipe-3-constant-literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
+3. [Constant / literal type](#recipe-3-constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
 4. [Binary logical connective](#recipe-4-binary-logical-connective) — `And`, `Or`
-5. [Container / collection literal](#recipe-5-container-collection-literal) — `NSet`, `NList`
+5. [Container / collection literal](#recipe-5-container--collection-literal) — `NSet`, `NList`
 
 Each recipe includes: when to use it, the skeleton class, the key decisions you must make, and pointers to the shipped implementation to study.
 
@@ -52,31 +86,20 @@ a - b = c  <=>  myop(c, b, a)
 package com.example;
 
 import java.io.Serial;
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.InferContext;
-import org.modelingvalue.nelumbo.InferResult;
+
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.logic.InferContext;
+import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
-import org.modelingvalue.nelumbo.patterns.Functor;
 
 public final class MyOp extends Predicate {
     @Serial
     private static final long serialVersionUID = 1L;
 
     @NelumboConstructor
-    public MyOp(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1], args[2]);
-    }
-
-    private MyOp(Object[] array, List<AstElement> elements, MyOp declaration) {
-        super(array, elements, declaration);
-    }
-
-    @Override
-    protected MyOp struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new MyOp(array, elements, (MyOp) declaration);
+    public MyOp(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
@@ -85,7 +108,6 @@ public final class MyOp extends Predicate {
             return unresolvable();
         }
 
-        // Read values from the bound arguments.
         // getVal(i, j) reads sub-value j of argument i; for simple scalars j=0.
         MyT1Value a = getVal(0, 0);   // null if unbound
         MyT2Value b = getVal(1, 0);
@@ -107,7 +129,6 @@ public final class MyOp extends Predicate {
             return set(1, MyT2Native.of(computedB)).factCI();
             // Or, if no b works: return falsehoodCI();
         } else if (b != null && c != null) {
-            // Compute a from b and c.
             MyT1Value computedA = /* compute inverse */ ;
             return set(0, MyT1Native.of(computedA)).factCI();
         }
@@ -126,7 +147,7 @@ public final class MyOp extends Predicate {
 
 ### Study the source
 
-- `org.modelingvalue.nelumbo.integers.Add` — cleanest example
+- `org.modelingvalue.nelumbo.integers.Add` — cleanest example, ~15 lines of real code
 - `org.modelingvalue.nelumbo.integers.Multiply` — shows the "falsehood when no answer exists" pattern (division remainder ≠ 0)
 - `org.modelingvalue.nelumbo.strings.Concat` — shows "infer an operand via suffix/prefix matching"
 
@@ -136,7 +157,7 @@ public final class MyOp extends Predicate {
 
 **Use when** you have a two-argument Boolean relation that, when both sides are bound, produces `true` or `false`, but cannot always bind a missing side.
 
-The stdlib uses this shape for `GreaterThan` (integers and rationals) and `Length`. `Equal` is a richer variant covered below.
+The stdlib uses this shape for `GreaterThan` (integers and rationals) and `Length`. `Equal` and `NIs` are richer variants for equality.
 
 ### Nelumbo-side declaration
 
@@ -144,26 +165,16 @@ The stdlib uses this shape for `GreaterThan` (integers and rationals) and `Lengt
 Boolean ::= <T> ">" <T>  #30  @com.example.MyCompare
 ```
 
-(With whatever operator, precedence, and types make sense for your comparison.)
-
 ### Java skeleton
 
 ```java
 public final class MyCompare extends Predicate {
-    @Serial private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @NelumboConstructor
-    public MyCompare(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
-    }
-
-    private MyCompare(Object[] array, List<AstElement> elements, MyCompare declaration) {
-        super(array, elements, declaration);
-    }
-
-    @Override
-    protected MyCompare struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new MyCompare(array, elements, (MyCompare) declaration);
+    public MyCompare(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     @Override
@@ -201,7 +212,7 @@ public final class MyCompare extends Predicate {
 
 - `org.modelingvalue.nelumbo.integers.GreaterThan` — simplest form
 - `org.modelingvalue.nelumbo.rationals.GreaterThan` — same strategy, cross-multiply internally
-- `org.modelingvalue.nelumbo.strings.Length` — two-arg predicate that uses `factCI()`/`falsehoodCC()` for specific cases
+- `org.modelingvalue.nelumbo.strings.Length` — two-arg predicate that uses `factCI()` / `falsehoodCC()` for specific cases
 
 ---
 
@@ -225,43 +236,23 @@ MyValue ::= <NUMBER>   @com.example.NMyValue
 
 ```java
 public final class NMyValue extends Node {
-    @Serial private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
+    @NelumboFunctorField
     private static Functor FUNCTOR;
 
-    static {
-        KnowledgeBase.registerFunctorSetter(NMyValue.class, f -> FUNCTOR = f);
+    public static NMyValue of(MyJavaValue val) {
+        return new NMyValue(NodeInfo.of(FUNCTOR), val);
     }
 
     @NelumboConstructor
-    public NMyValue(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, parse((String) args[0]));
-    }
-
-    private NMyValue(Functor functor, List<AstElement> elements, MyJavaValue val) {
-        super(functor, elements, val);
-    }
-
-    public static NMyValue of(MyJavaValue val) {
-        return new NMyValue(FUNCTOR, List.of(), val);
+    public NMyValue(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     private static MyJavaValue parse(String source) {
         return /* parse source into MyJavaValue */ ;
-    }
-
-    private NMyValue(Object[] array, List<AstElement> elements, NMyValue declaration) {
-        super(array, elements, declaration);
-    }
-
-    @Override
-    protected NMyValue struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new NMyValue(array, elements, (NMyValue) declaration);
-    }
-
-    @Override
-    public NMyValue set(int i, Object... a) {
-        return (NMyValue) super.set(i, a);
     }
 
     public MyJavaValue value() {
@@ -270,10 +261,17 @@ public final class NMyValue extends Node {
 
     @Override
     public String toString(TokenType[] previous) {
-        // Return the textual rendering. Use `previous[0]` to decide whether
-        // to insert a leading space to separate adjacent tokens.
-        previous[0] = TokenType.NAME;  // or NUMBER, DECIMAL, etc.
+        previous[0] = TokenType.NAME;  // or NUMBER / DECIMAL, etc.
         return value().toString();
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason)
+            throws ParseException {
+        if (reason == ConstructionReason.parsing && get(0) instanceof String string) {
+            return set(0, parse(string));
+        }
+        return this;
     }
 }
 ```
@@ -281,15 +279,16 @@ public final class NMyValue extends Node {
 ### Key decisions
 
 1. **Extend `Node`, not `Predicate`.** A constant/literal is a value, not a Boolean. `Predicate` is for things that participate in fact/falsehood reasoning.
-2. **Provide a `FUNCTOR` static and a `registerFunctorSetter` block.** This allows other natives (like `Add`) to construct instances of your type at runtime via `NMyValue.of(value)`.
-3. **The `parse` method** turns the raw source text (still the user's literal, e.g. `"36#abc"`) into the internal Java representation. Handle invalid input defensively.
-4. **`toString(TokenType[])`** controls printing of query results. Set `previous[0]` to the token type your literal begins with (usually `NUMBER` for numeric literals, `NAME` for identifier-like values), so adjacent tokens print with appropriate spacing.
+2. **Parse in `init(...)`, not in the constructor.** During parsing, the engine constructs the value with the raw source text as `args[0]`. The `init` callback fires once the construction reason is `parsing`; replace the string with the parsed Java value via `set(0, parsed)` and return the updated node.
+3. **Use `@NelumboFunctorField` for the static `FUNCTOR`.** No static block, no `registerFunctorSetter`. The engine fills the field by reflection.
+4. **The `of(...)` factory** uses `NodeInfo.of(FUNCTOR)` to construct instances at runtime. Other natives (like `Add`) call it to build results.
+5. **`toString(TokenType[])`** controls printing of query results. Set `previous[0]` to the token type your literal ends with (usually `NUMBER` for numeric literals, `NAME` for identifier-like values), so adjacent tokens print with appropriate spacing. Inspect `previous[0]` *on entry* to decide whether to emit a leading space.
 
 ### Study the source
 
 - `org.modelingvalue.nelumbo.integers.NInteger` — clean example, includes base-N parsing
-- `org.modelingvalue.nelumbo.strings.NString` — simplest possible (just strip quotes)
-- `org.modelingvalue.nelumbo.rationals.Rational` — two-value node (numerator, denominator) with `gcd` normalisation
+- `org.modelingvalue.nelumbo.strings.NString` — simplest possible (just strip the surrounding quotes)
+- `org.modelingvalue.nelumbo.rationals.Rational` — two-value node (numerator, denominator) with `gcd` normalisation; parses in `init` and uses `set(nodeInfo().resetDeclaration(), parse(string))` because the parse produces two values
 
 ---
 
@@ -311,50 +310,50 @@ Boolean ::= <Boolean> "nand" <Boolean>  #21  @com.example.Nand
 
 ```java
 public final class Nand extends BinaryPredicate {
-    @Serial private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    @NelumboFunctorField
     private static Functor FUNCTOR;
 
-    static {
-        KnowledgeBase.registerFunctorSetter(Nand.class, f -> FUNCTOR = f);
-    }
-
     @NelumboConstructor
-    public Nand(Functor functor, List<AstElement> elements, Object[] args) {
-        super(functor, elements, args[0], args[1]);
+    public Nand(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
-    private Nand(Object[] args, List<AstElement> elements, Nand declaration) {
-        super(args, elements, declaration);
+    public static Nand of(Predicate p1, Predicate p2) {
+        return new Nand(NodeInfo.of(FUNCTOR), p1, p2);
     }
 
     @Override
-    protected Nand struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new Nand(array, elements, (Nand) declaration);
+    public Nand declaration() {
+        return (Nand) super.declaration();
     }
 
-    // Truth-table short-circuits:
+    // --- truth table after seeing ONE operand ---
 
     @Override
     protected boolean isTrue(InferResult predResult, int i) {
-        // Is NAND definitively TRUE after seeing one operand?
-        // NAND(x, false) = true, NAND(false, x) = true
+        // NAND is definitively TRUE after seeing one operand iff that operand is FALSE.
+        // NAND(false, x) = true; NAND(x, false) = true.
         return predResult.isFalseCC();
     }
 
     @Override
     protected boolean isFalse(InferResult predResult, int i) {
-        // Is NAND definitively FALSE after seeing one operand?
-        // Only when both are true; can't know from one.
+        // NAND is never definitively FALSE from a single operand — needs both.
         return false;
     }
 
     @Override
-    protected boolean isUnknown(InferResult predResult, int i) { return false; }
+    protected boolean isUnknown(InferResult predResult, int i) {
+        return false;
+    }
+
+    // --- truth table after seeing BOTH operands ---
 
     @Override
     protected boolean isTrue(InferResult[] predResult) {
-        // After both operands evaluated.
-        // NAND is true when at least one is false.
         return predResult[0].isFalseCC() || predResult[1].isFalseCC();
     }
 
@@ -362,6 +361,8 @@ public final class Nand extends BinaryPredicate {
     protected boolean isFalse(InferResult[] predResult) {
         return predResult[0].isTrueCC() && predResult[1].isTrueCC();
     }
+
+    // --- reduction (optional optimisations) ---
 
     @Override
     protected boolean isLeft(InferResult[] predResult)  { return false; }
@@ -373,9 +374,10 @@ public final class Nand extends BinaryPredicate {
 
 ### Key decisions
 
-1. **Extend `BinaryPredicate`, not `Predicate`.** The base class does the work of evaluating both sub-predicates, handling stack-overflow markers, and dispatching to the truth-table predicates you override.
-2. **`isLeft`/`isRight`** are reduction optimisations. `And` returns `isLeft` when the right operand is `true` (so `p & true` reduces to `p`); `Or` returns `isLeft` when the right operand is `false` (so `p | false` reduces to `p`). For most connectives these can return `false` and rely on the general case.
-3. **Order matters less than it looks.** `BinaryPredicate.order(...)` reorders operands for evaluation to prefer `NBoolean` literals first. Your `isTrue`/`isFalse` methods see results in *evaluation* order, not source order.
+1. **Extend `BinaryPredicate`, not `Predicate`.** The base class evaluates both sub-predicates, handles stack-overflow markers, and dispatches to the truth-table predicates you override.
+2. **Seven overrides total:** `isTrue` / `isFalse` / `isUnknown` for the *single-operand* case (called after each operand is evaluated; allows short-circuiting), `isTrue` / `isFalse` for the *both-operands* case, and `isLeft` / `isRight` for reduction.
+3. **`isLeft` / `isRight`** are reduction optimisations. `And` returns `isLeft` when the right operand is `true` (so `p & true` reduces to `p`); `Or` returns `isLeft` when the right operand is `false` (so `p | false` reduces to `p`). For most connectives these can return `false` and rely on the general case.
+4. **Use `@NelumboFunctorField`** if you provide an `of(...)` factory (the `And.of(p1, p2)` family). The base class itself does not require it.
 
 ### Study the source
 
@@ -402,16 +404,17 @@ MyContainer<E> ::= < <(> <E> <,> , <)*> >  @com.example.NMyContainer
 
 ```java
 public class NMyContainer extends Node {
-    @Serial private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @NelumboConstructor
-    public NMyContainer(Functor functor, List<AstElement> elements, Object[] args) {
-        // Wrap the elements in your desired internal collection.
-        super(functor, elements, MyInternalColl.of(args));
+    public NMyContainer(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
-    private NMyContainer(Object[] array, List<AstElement> elements, NMyContainer declaration) {
-        super(array, elements, declaration);
+    @Override
+    protected NMyContainer set(NodeInfo nodeInfo, Object[] args) {
+        return new NMyContainer(nodeInfo, args);
     }
 
     public Type elementType() {
@@ -429,11 +432,6 @@ public class NMyContainer extends Node {
     }
 
     @Override
-    protected NMyContainer struct(Object[] array, List<AstElement> elements, Node declaration) {
-        return new NMyContainer(array, elements, (NMyContainer) declaration);
-    }
-
-    @Override
     public NMyContainer set(int i, Object... a) {
         return (NMyContainer) super.set(i, a);
     }
@@ -442,15 +440,27 @@ public class NMyContainer extends Node {
     public String toString(TokenType[] previous) {
         return /* render your collection */ ;
     }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason)
+            throws ParseException {
+        if (reason != ConstructionReason.parsing
+                || (length() > 0 && get(0) instanceof MyInternalColl)) {
+            return this;
+        }
+        // Wrap the children that the parser delivered into the internal collection.
+        return setArgs(new Object[] { MyInternalColl.of(super.args()) });
+    }
 }
 ```
 
 ### Key decisions
 
 1. **Extend `Node`, not `Predicate`.** A container is a value.
-2. **`args()` override** tells the engine what the container's children are for traversal and binding purposes. For `NList`, `args()` returns the list in order. For `NSet`, it returns the set's elements in some canonical order (the shipped implementation uses `asList()`).
-3. **Pick an internal representation** that matches your collection's semantics. The shipped `NSet` uses an immutable `Set` (no duplicates, unordered); `NList` uses an immutable `List`.
-4. **`toString(TokenType[])`** should emit the user-facing syntax (e.g. `{a, b, c}` for a set, `[a, b, c]` for a list).
+2. **Wrap into the internal collection in `init(...)`, not the constructor.** At parse time the engine hands you the children as individual args; `init` is where you collapse them into a single `Set` / `List` and stash it as `args[0]`. After that initial wrapping, subsequent reconstructions (when `length() > 0 && get(0) instanceof MyInternalColl`) leave the node alone.
+3. **Override `set(NodeInfo, Object[])`** if you need to control how the engine rebuilds the node during reasoning. `NSet` does this; the new instance is what the engine uses going forward.
+4. **`args()` override** tells the engine what the container's children are for traversal and binding purposes. For `NList`, `args()` returns the list in order. For `NSet`, it returns the set's elements in some canonical order (the shipped implementation uses `asList()`).
+5. **`toString(TokenType[])`** should emit the user-facing syntax (e.g. `{a, b, c}` for a set, `[a, b, c]` for a list).
 
 ### Study the source
 
@@ -463,13 +473,15 @@ public class NMyContainer extends Node {
 
 Before you consider a new native "done":
 
-- [ ] The class is `final` unless you expect it to be further subclassed.
-- [ ] It has a private constructor `(Object[], List<AstElement>, TheClass)` and a `struct(...)` override calling it. The engine uses this to re-structure predicates during reasoning.
-- [ ] The `@NelumboConstructor` annotation is on the public constructor that takes `(Functor, List<AstElement>, Object[])`.
-- [ ] The `serialVersionUID` is set.
-- [ ] If your native constructs instances of itself at runtime (like `Add` building `NInteger`s), you have a `static { KnowledgeBase.registerFunctorSetter(...) }` block and a public `of(...)` factory.
-- [ ] `infer(int nrOfUnbound, InferContext context)` handles every combination of bound/unbound arguments and returns `unresolvable()` when it cannot proceed.
-- [ ] Closure flags are chosen deliberately. `factCC`/`falsehoodCC` only when the result is fully determined. `factCI`/`falsehoodCI` when you've made a single-point claim but don't know about the other side. `unknown()` when you truly cannot decide.
+- [ ] The class is `final` unless you expect it to be further subclassed (`BinaryPredicate`, `CompoundPredicate`, and `Predicate` itself are non-final because subclasses extend them).
+- [ ] There is exactly one `@NelumboConstructor` and it has signature `(NodeInfo, Object...)`. No other public constructors.
+- [ ] The `serialVersionUID` is set (the engine serialises nodes during deep reasoning).
+- [ ] If your native constructs instances of itself at runtime — e.g., a value type with an `of(...)` factory — there is a `@NelumboFunctorField private static Functor FUNCTOR;`. No static `registerFunctorSetter` block is needed; the engine populates the field by reflection.
+- [ ] For Predicate-style natives: `infer(int nrOfUnbound, InferContext context)` handles every combination of bound/unbound arguments and returns `unresolvable()` when it cannot proceed.
+- [ ] For literal-type natives: `init(KnowledgeBase, ParseContext, ConstructionReason)` parses the raw `String` from `args[0]` exactly once, gated on `reason == ConstructionReason.parsing`. `toString(TokenType[])` is implemented for human-readable result printing.
+- [ ] For container natives: `init(...)` wraps the parsed children into the internal collection, gated on the children not already being wrapped. `args()` is overridden to return the contained elements.
+- [ ] For `BinaryPredicate` subclasses: all seven truth-table / reduction overrides are present (`isTrue`/`isFalse`/`isUnknown` for one operand; `isTrue`/`isFalse` for both; `isLeft`/`isRight` for reduction).
+- [ ] Closure flags are chosen deliberately. `factCC` / `falsehoodCC` only when the result is fully determined. `factCI` / `falsehoodCI` when you've made a single-point claim but don't know about the other side. `unknown()` when you truly cannot decide.
 - [ ] The class is on the classpath of any Nelumbo program that imports a module referencing it via `@`.
 - [ ] You have a stdlib-style test file — similar to `integersTest.nl` — that exercises your native in every direction (all bound, each single-unbound case, pathological inputs).
 
@@ -477,13 +489,19 @@ Before you consider a new native "done":
 
 ## Common pitfalls
 
-**Returning `factCC()` when you shouldn't.** `factCC` asserts both sides are complete — facts side exactly `{this}` and falsehoods side exactly `{}`. If the facts side is really just "this one tuple, but there could be others I haven't enumerated," use `factCI` instead. Getting this wrong makes downstream rules unsound (they'll derive false contradictions).
+**Wrong constructor signature.** The `@NelumboConstructor` constructor must be `(NodeInfo, Object...)`. The older signature `(Functor, List<AstElement>, Object[])` is no longer accepted — the `@NelumboConstructor.Finder` checks the parameter types at class-load time and reports the mismatch.
+
+**Forgetting `@NelumboFunctorField` on the static field.** A bare `private static Functor FUNCTOR;` will remain `null` because the engine looks for the annotation, not for a field named `FUNCTOR`. Calls to your `of(...)` factory will then build a `NodeInfo` with a null functor and fail at runtime.
+
+**Parsing in the constructor instead of in `init(...)`.** During parsing, the constructor receives the raw source `String` as `args[0]`; if you try to cast it to `BigInteger` (or call `parse()` on it inside `super(...)`) you'll either crash or silently corrupt the node when the engine later restructures it during reasoning. Always parse in `init`, gated on `reason == ConstructionReason.parsing`.
+
+**Returning `factCC()` when you shouldn't.** `factCC` asserts both sides are complete — facts side exactly `{this}` and falsehoods side exactly `{}`. If the facts side is really just "this one tuple, but there could be others I haven't enumerated," use `factCI` instead. Getting this wrong makes downstream rules unsound (they will derive false contradictions).
 
 **Forgetting `unresolvable()` for the too-many-unbound case.** Returning anything else (`unknown()`, `factCI()` with garbage, etc.) when multiple arguments are unbound leaks confusion into the reasoner. `unresolvable()` is the honest answer: "come back later."
 
-**Constructing native values without `of(...)`.** Calling a value-type's public constructor directly skips the functor registration and will fail at runtime. Always go through the static `of(...)` factory.
+**Constructing native values without `of(...)`.** Calling a value-type's public constructor directly with `null` for the `NodeInfo` skips the functor wiring and will fail at runtime. Always go through the static `of(...)` factory, which uses `NodeInfo.of(FUNCTOR)`.
 
-**Truth tables that don't handle `unknown`.** In `BinaryPredicate`, all four `isTrue`/`isFalse` overrides should consider what happens when one operand is unknown. For conjunction-like operators, `unknown & false = false` is non-obvious. Test the `unknown` rows of your truth table against a `logicTest.nl`-style file.
+**Truth tables that don't handle `unknown`.** In `BinaryPredicate`, all the `isTrue` / `isFalse` / `isUnknown` overrides should consider what happens when one operand is unknown. For conjunction-like operators, `unknown & false = false` is non-obvious. Test the `unknown` rows of your truth table against a `logicTest.nl`-style file.
 
 **Not mirroring the existing stdlib patterns.** If you are adding `mod` to integers, model it on `Multiply`. If you are adding a new comparison, model it on `GreaterThan`. The stdlib has already worked out the right shapes — follow them.
 

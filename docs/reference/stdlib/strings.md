@@ -1,6 +1,6 @@
 # `nelumbo.strings`
 
-UTF-8 string values, concatenation, length, and integer-string conversion.
+String values, concatenation, length, and integer-string conversion.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl) — 24 lines.
 
@@ -10,7 +10,7 @@ UTF-8 string values, concatenation, length, and integer-string conversion.
 import nelumbo.strings
 ```
 
-`nelumbo.strings` imports `nelumbo.integers` (and thus `logic`), because its length and conversion operations produce or consume `Integer` values.
+`nelumbo.strings` imports `nelumbo.integers` (and so, transitively, `nelumbo.logic`), because its length and conversion operations cross over to `Integer`.
 
 ---
 
@@ -25,99 +25,112 @@ String :: Object
 ## Literals
 
 ```
-String ::= <STRING>   @...NString
+String ::= <STRING>   @nelumbo.strings.NString
 ```
 
-`<STRING>` matches a double-quoted string literal: `""`, `"foo"`, `"Hello, World!"`.
+`<STRING>` is the language-level token defined in [`lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) as `"([^"\\]|\\[\s\S])*"` — a double-quoted literal with backslash escapes. Examples: `""`, `"foo"`, `"Hello, World!"`. The native class `NString` wraps the parsed text as a `String` value.
 
 ---
 
 ## Operations
 
-| Pattern | `#N` | Meaning |
-|---|---|---|
-| `<String> + <String>` | 40 | concatenation |
-| `str(<Integer>)`      | —  | integer to string |
-| `len(<String>)`       | —  | string length (as `Integer`) |
-| `int(<String>)`       | —  | parse string as integer |
-
-All four are defined in Nelumbo over three private native primitives:
-
 ```
-private Boolean ::= string_concat(<String>, <String>, <String>)  @...Concat
-private Boolean ::= string_length(<String>, <Integer>)           @...Length
-private Boolean ::= integer_string(<Integer>, <String>)          @...ToInteger
+String  ::=  <String> + <String>   #40,
+             str(<Integer>)
 
-a + b = c     <=>  string_concat(a, b, c)
-len(a) = x    <=>  string_length(a, x)
-int(a) = x    <=>  integer_string(x, a)
-str(x) = a    <=>  integer_string(x, a)
+Integer ::=  len(<String>),
+             int(<String>)
 ```
 
-Note that `int` and `str` share the same native predicate `integer_string`, wrapping it in two directions: one asking "which string represents integer `x`?" and the other asking "which integer is parsed from string `a`?"
+| Pattern                | `#N` | Result    | Meaning                       |
+|---|---|---|---|
+| `<String> + <String>`  | 40   | `String`  | concatenation                 |
+| `str(<Integer>)`       | —    | `String`  | format an integer as decimal  |
+| `len(<String>)`        | —    | `Integer` | string length                 |
+| `int(<String>)`        | —    | `Integer` | parse a digit string          |
+
+All four reduce to three private native predicates:
+
+```
+private Boolean ::= string_concat(<String>,<String>,<String>)  @nelumbo.strings.Concat,
+                    string_length(<String>,<Integer>)          @nelumbo.strings.Length,
+                    integer_string(<Integer>,<String>)         @nelumbo.strings.ToInteger
+
+String  a, b, c
+Integer x
+
+a + b = c    <=>  string_concat(a, b, c)
+len(a) = x   <=>  string_length(a, x)
+int(a) = x   <=>  integer_string(x, a)
+str(x) = a   <=>  integer_string(x, a)
+```
+
+Note that `int` and `str` share a single native predicate — `integer_string(x, a)` relates the integer `x` to its decimal-string form `a`. The two surface functions are just opposite-direction wrappers around the same relation.
 
 ---
 
-## Bidirectional behaviour
+## Concatenation is relational
 
-As with arithmetic, the concatenation relation works in any direction:
-
-```
-"foo" + "bar" = a      ? [(a="foobar")][..]       // forward
-a + "bar" = "foobar"   ? [(a="foo")][..]          // split: solve for prefix
-"foo" + a = "foobar"   ? [(a="bar")][..]          // split: solve for suffix
-```
-
-For length, the forward direction is supported, but asking "which string has length 3?" produces an unknown result — there are infinitely many:
+From `stringsTest.nl`:
 
 ```
-len("foo") = 3   ? [()][]                         // verified fact
-len("foo") = d   ? [(d=3)][..]                    // compute the length
-len(a)     = 3   ? [..][..]                       // unknown — cannot enumerate
+"foo" + "bar" = "foobar"   ? [()][]
+ a    + "bar" = "foobar"   ? [(a="foo")][..]
+"foo" +  a   = "foobar"    ? [(a="bar")][..]
+"foo" + "bar" =  a         ? [(a="foobar")][..]
 ```
 
----
+Any one of the three operands can be the unknown — `string_concat` splits as well as joins.
+
+## Length
+
+```
+len("foo") = 3   ? [()][]
+len("foo") = d   ? [(d=3)][..]      // d=3 inferred
+len(a)     = 3   ? [..][..]         // unknown — infinitely many strings of length 3
+```
+
+Forward direction is supported. The fully-reverse direction is unknown: there is no enumeration of strings of a given length.
 
 ## Parsing — `int(...)`
 
-`int` expects a digit-only string with no whitespace and no sign prefix in the current module:
+`int` expects a digit-only body; any other character — including whitespace and sign — fails:
 
 ```
-int("123456")           = 123456    ? [()][]
-int("123456")           = d         ? [(d=123456)][..]
-int("0000123456")       = d         ? [(d=123456)][..]
+int("123456")        = 123456   ? [()][]
+int("0000123456")    = d        ? [(d=123456)][..]
 
-int("    123456")       = d         ? [][..]      // leading whitespace
-int("123456    ")       = d         ? [][..]      // trailing whitespace
-int("NaN")              = d         ? [][..]      // not a number
-int("Hello, World!")    = d         ? [][..]      // not a number
+int("    123456")    = d        ? [][..]   // leading whitespace
+int("123456    ")    = d        ? [][..]   // trailing whitespace
+int("NaN")           = d        ? [][..]   // not a digit string
+int("Hello, World!") = d        ? [][..]
 ```
 
-An unparseable input produces a closed-empty facts side with `..` on the falsehoods. The falsehoods side is open because "which `d` is *not* `int("NaN")`?" has no meaningful answer — every integer is a falsehood, and the reasoner declines to enumerate.
-
----
+A failed parse gives an empty facts side with `..` on the falsehoods.
 
 ## Formatting — `str(...)`
 
-`str` produces the canonical decimal form of an integer, with no leading zeros:
+`str` produces the canonical decimal form — no leading zeros:
 
 ```
-str(123456)     = "123456"   ? [()][]
-str(0000123456) = a          ? [(a="123456")][..]
+str(123456)     = "123456"      ? [()][]
+str(0000123456) = a             ? [(a="123456")][..]
 ```
 
-The second example is instructive: `0000123456` is an integer literal that equals `123456`; `str` formats it as `"123456"`, not `"0000123456"`. Leading zeros are a feature of the literal syntax, not the integer value.
+`0000123456` is a literal that equals the integer `123456`; `str` formats the value, not the input syntax.
 
 ---
 
 ## Exports summary
 
-After `import nelumbo.strings`, in addition to everything from `integers` and `logic`:
+Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 
-- Type: `String`
-- Literals: `<STRING>`
-- Operators: `+` on strings
-- Functions: `str(i)`, `len(s)`, `int(s)`
+| Kind     | Names |
+|---|---|
+| Type     | `String`                          |
+| Literal  | `<STRING>`                        |
+| Operator | `+` (string concatenation)        |
+| Functions| `str(i)`, `len(s)`, `int(s)`      |
 
 `string_concat`, `string_length`, and `integer_string` are `private`.
 

@@ -26,8 +26,10 @@ Different readers want different things. Pick the path that matches your goal.
 ### "I want to understand what Nelumbo is and why."
 
 - [Reading a query and test](getting-started/reading-a-test.md) — the language's headline feature, three-valued logic
-- [Architecture — how Nelumbo is layered](explanation/architecture.md) — Java core → stdlib in Nelumbo → user code
+- [Architecture — how Nelumbo is layered](explanation/architecture.md) — Java core → `lang.nl` (syntactic bootstrap) → `logic.nl` (three-valued logic + `<=>`/`fact`/`?`) → numeric/data stdlib → user code
 - [Three-valued logic](reference/three-valued-logic.md) — the semantic foundation, with truth tables
+- [`nelumbo.lang`](reference/stdlib/lang.md) — the `.nl` file that declares the whole syntax, including `::`, `::=`, `::>`, and the pattern meta-grammar
+- [`nelumbo.logic`](reference/stdlib/logic.md) — the `.nl` file that declares `Boolean`, the connectives, equality, and the `fact` / `<=>` / `?` statement forms
 
 ### "I want to write my own DSL using Nelumbo."
 
@@ -46,8 +48,8 @@ Different readers want different things. Pick the path that matches your goal.
 
 ### "I want to read the stdlib to learn idiom."
 
-- [Standard library tour](guides/stdlib-tour.md) — all five modules in dependency order
-- [`stdlib/logic.md`](reference/stdlib/logic.md), [`integers.md`](reference/stdlib/integers.md), [`rationals.md`](reference/stdlib/rationals.md), [`strings.md`](reference/stdlib/strings.md), [`collections.md`](reference/stdlib/collections.md) — per-module reference
+- [Standard library tour](guides/stdlib-tour.md) — all six modules in dependency order
+- [`stdlib/lang.md`](reference/stdlib/lang.md), [`logic.md`](reference/stdlib/logic.md), [`integers.md`](reference/stdlib/integers.md), [`rationals.md`](reference/stdlib/rationals.md), [`strings.md`](reference/stdlib/strings.md), [`collections.md`](reference/stdlib/collections.md) — per-module reference
 
 ### "I need to look something up."
 
@@ -79,6 +81,7 @@ The irreducible facts about the language.
 
 ### Standard library reference
 
+- [`nelumbo.lang`](reference/stdlib/lang.md) — the bootstrap layer: token types, object hierarchy, pattern meta-grammar, top-level statements
 - [`nelumbo.logic`](reference/stdlib/logic.md) — Boolean, connectives, quantifiers, equality
 - [`nelumbo.integers`](reference/stdlib/integers.md) — arbitrary-precision integer arithmetic
 - [`nelumbo.rationals`](reference/stdlib/rationals.md) — exact rationals
@@ -89,7 +92,7 @@ The irreducible facts about the language.
 
 Task-oriented how-tos.
 
-- [Standard library tour](guides/stdlib-tour.md) — reading all five stdlib modules in order
+- [Standard library tour](guides/stdlib-tour.md) — reading all six stdlib modules in order
 - [Writing your own module](guides/writing-your-own-module.md) — packaging a reusable library
 - [Language transformations](guides/language-transformations.md) — the `::>` meta-feature *(under construction)*
 - [Native cookbook](guides/native-cookbook.md) — recipes for writing Java natives

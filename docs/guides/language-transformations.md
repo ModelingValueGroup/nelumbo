@@ -154,7 +154,7 @@ Piet.name := "Piet"
                                                      ->  fact name(Piet, "Piet")
 ```
 
-The outer `::>` delivers **declarations**; the inner `::>` delivers an **action** (asserting a fact) triggered by a specific user syntax. Both are transformations; both happen at load time.
+A nested transformation has **the same semantics as the outer one**: it binds the variables on its left-hand side against user syntax and emits the declarations on its right-hand side. There is no inner-vs-outer distinction in mechanism, and no special "action" mode — `fact name(o, a)` is just another declaration, no different from a `::=` or a `<=>`. Both transformations run at compile time, so nesting them carries no runtime cost.
 
 ---
 
@@ -290,7 +290,7 @@ Since `::>` is under active development, here are some specific points to be awa
 - **Interaction with `private`/`hidden` inside transformations is evolving.** The worked examples use `private FactType ::= ...` inside transformations and it works, but finer-grained visibility controls may be added.
 - **Namespace handling** (see the `{Namespace}` prefix in [`../reference/visibility.md`](../reference/visibility.md)) is the area most likely to see refinement — it is the piece that keeps multiple transformations from colliding.
 - **Syntax of the `::>` operator itself** may tighten over releases. The current form supports both the patterns shown here and the nested form; a consolidated spec is a work in progress.
-- **Performance** of heavy transformation use at load time has not been characterised. For small-to-medium programs this is not a concern; for very large generated programs, expect it to become relevant.
+- **Performance** is not a concern. Transformations — including nested ones — are expanded at compile/load time only, so they contribute nothing to query execution. Heavy transformation use affects load time, not the reasoner's runtime.
 
 Check the [latest examples](../../src/main/resources/org/modelingvalue/nelumbo/examples/) and the release notes for up-to-date behaviour. When this guide lags behind the code, trust the code.
 
