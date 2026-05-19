@@ -241,9 +241,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         s(t("<"), o(a(k("visible"), k("hidden"))), n(Type.TYPE, 100), o(s(t("#"), t(NUMBER))), t(">")),
                         Type.PATTERN, null, NodeTypePattern.class, null).init(this, parseContext, bootstrapping);
 
-                Functor.of(s(t("<"), n(Type.VARIABLE, 100), t(">")), Type.PATTERN, null, TokenTextPattern.class, null)
-                        .init(this, parseContext, bootstrapping);
-
                 Functor.of(s(o(k("private")), n(Type.TYPE, 100), t("::="),
                         r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true, t(","))),
                         Type.ROOT, null, Functor.class, null).init(this, parseContext, bootstrapping);

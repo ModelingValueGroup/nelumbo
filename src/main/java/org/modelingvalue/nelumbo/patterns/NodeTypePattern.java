@@ -42,7 +42,7 @@ public class NodeTypePattern extends Pattern {
     private static final long serialVersionUID = 6828401544789430678L;
 
     public NodeTypePattern(Type type, List<AstElement> elements, Type nodeType, Integer precedence, Boolean visible) {
-        super(NodeInfo.of(type, elements), nodeType, precedence, visible);
+        super(NodeInfo.of(type, elements), visible, nodeType, precedence);
     }
 
     @NelumboConstructor
@@ -56,7 +56,7 @@ public class NodeTypePattern extends Pattern {
     }
 
     public Type nodeType() {
-        return (Type) get(0);
+        return (Type) get(1);
     }
 
     @Override
@@ -73,17 +73,17 @@ public class NodeTypePattern extends Pattern {
     protected NodeTypePattern setBinding(Node declaration, Map<Variable, Object> vars) {
         Variable var = variable();
         if (var != null && vars.get(var) instanceof Type type) {
-            return set(0, nodeType().rewrite(type));
+            return set(1, nodeType().rewrite(type));
         }
         return (NodeTypePattern) super.setBinding(declaration, vars);
     }
 
     public Integer precedence() {
-        return (Integer) get(1);
+        return (Integer) get(2);
     }
 
     public Boolean visible() {
-        return (Boolean) get(2);
+        return (Boolean) get(0);
     }
 
     @Override
