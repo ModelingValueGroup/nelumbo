@@ -138,6 +138,7 @@ public class NelumboEditor {
             { "Library", "rationals/rationals.nl", "nelumbo.rationals" },
             { "Library", "collections/collections.nl", "nelumbo.collections" },
             // Tests
+            { "Tests", "langOnly.nl", "Lang Only Test" }, { "Tests", "langTest.nl", "Lang Test" },
             { "Tests", "logicTest.nl", "Logic Test" }, { "Tests", "integersTest.nl", "Integers Test" },
             { "Tests", "rationalsTest.nl", "Rationals Test" }, { "Tests", "stringsTest.nl", "Strings Test" },
             { "Tests", "collectionsTest.nl", "Collections Test" },

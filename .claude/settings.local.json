@@ -41,7 +41,9 @@
       "Bash(gh api:*)",
       "Bash(gh release view:*)",
       "Bash(java -jar build/libs/nelumbo-0.9.6-cli.jar /tmp/fib.nl /tmp/bad.nl /tmp/fib.nl)",
-      "Bash(echo \"EXIT=$?\")"
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(java -jar build/libs/nelumbo-0.9.6-cli.jar src/main/resources/org/modelingvalue/nelumbo/examples/langOnly.nl)",
+      "Bash(echo \"exit=$?\")"
     ],
     "deny": [],
     "ask": []
