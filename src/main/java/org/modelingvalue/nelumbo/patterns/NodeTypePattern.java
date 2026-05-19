@@ -102,12 +102,12 @@ public class NodeTypePattern extends Pattern {
         if (precedence() != null) {
             return this;
         }
-        return set(1, precedence);
+        return set(2, precedence);
     }
 
     @Override
     public Pattern setTypes(Function<Type, Type> typeFunction) {
-        return set(0, typeFunction.apply(nodeType()));
+        return set(1, typeFunction.apply(nodeType()));
     }
 
     @Override

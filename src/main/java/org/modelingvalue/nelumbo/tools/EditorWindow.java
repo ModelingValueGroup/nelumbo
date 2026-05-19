@@ -1146,7 +1146,9 @@ public class EditorWindow extends WindowAdapter
             ParserResult result = new Parser(tokenizerResult).parseNonThrowing();
 
             // Phase 3: Apply all pre-compute UI updates on EDT
-            runOnEDT(() -> applyUIUpdates(tokenizerResult, result, text, "", new ArrayList<>(0), new ArrayList<>(0)));
+            runOnEDT(() -> applyUIUpdates(tokenizerResult, result, text,
+                    emptyLines(result.getTokenizerResult().lastAll().lastLine()), new ArrayList<>(0),
+                    new ArrayList<>(0)));
 
             // Phase 4: Compute results
             ArrayList<Highlight> textHighlights = new ArrayList<>();
