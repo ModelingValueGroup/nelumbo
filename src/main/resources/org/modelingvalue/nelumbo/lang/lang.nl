@@ -27,13 +27,19 @@
  Namespace     ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace
  RootNamespace ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                        @nelumbo.lang.Namespace
  
- Pattern       ::= <NAME>         @nelumbo.patterns.TokenTextPattern,
-                   <STRING>       @nelumbo.patterns.TokenTextPattern,
-                   <OPERATOR>     @nelumbo.patterns.TokenTextPattern,
-                   <SEMICOLON>    @nelumbo.patterns.TokenTextPattern,
-                   <SINGLEQUOTE>  @nelumbo.patterns.TokenTextPattern,
-                   <COMMA>        @nelumbo.patterns.TokenTextPattern
- 
+ Pattern       ::= <NAME>                 @nelumbo.patterns.TokenTextPattern,
+                   <STRING>               @nelumbo.patterns.TokenTextPattern,
+                   <OPERATOR>             @nelumbo.patterns.TokenTextPattern,
+                   <SEMICOLON>            @nelumbo.patterns.TokenTextPattern,
+                   <SINGLEQUOTE>          @nelumbo.patterns.TokenTextPattern,
+                   <COMMA>                @nelumbo.patterns.TokenTextPattern,
+                   "<" <Variable#100> ">" @nelumbo.patterns.TokenTextPattern,
+                   "<" "(" ">" <(> <(> <Pattern#100> <)+> <,> "<" "|" ">" <)+> "<" ")" ">"                                     @nelumbo.patterns.AlternationPattern,
+                   "<" "(" ">" <(> <Pattern#100> <)+> <(> "<" "," ">" <(> <Pattern#100> <)+> <)?>  "<" ")" <(> * <|> + <)> ">" @nelumbo.patterns.RepetitionPattern,
+                   "<" "(" ">" <(> <Pattern#100> <)+> "<" ")" "?" ">"                                                          @nelumbo.patterns.OptionalPattern,
+                   <LEFT> <(> <Pattern#100> <)+> <RIGHT>                                                                       @nelumbo.patterns.SequencePattern,
+                   "<" <(> <(> "visible" <|> "hidden" <)> <)?> <Type#100> <(> # <NUMBER> <)?> ">"                              @nelumbo.patterns.NodeTypePattern
+
  Root          ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>                                 @nelumbo.lang.Import,
                    <Root#0> ::> <RootNamespace>                                                  @nelumbo.lang.Transform,
                    <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                            @nelumbo.lang.Variable,
