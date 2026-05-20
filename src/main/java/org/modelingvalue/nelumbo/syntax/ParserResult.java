@@ -18,11 +18,9 @@ package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.mutable.MutableList;
-import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
-import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 public class ParserResult implements ParseExceptionHandler {
@@ -40,7 +38,7 @@ public class ParserResult implements ParseExceptionHandler {
     }
 
     public List<Node> roots() {
-        return root instanceof NList listRoot ? listRoot.elementsFlattened() : root != null ? List.of(root) : List.of();
+        return root.derivedFlattened();
     }
 
     public Node root() {
@@ -78,9 +76,7 @@ public class ParserResult implements ParseExceptionHandler {
         if (exceptions.isEmpty()) {
             KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
             for (Node root : roots()) {
-                if (root instanceof Evaluatable eval) {
-                    eval.evaluate(knowledgeBase, this);
-                }
+                root.evaluate(knowledgeBase, this);
             }
         }
     }

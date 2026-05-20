@@ -20,19 +20,17 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.ConstructionReason;
-import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 
-public final class Fact extends Node implements Evaluatable {
+public final class Fact extends Node {
     @Serial
     private static final long serialVersionUID = 6226473785860814115L;
 
@@ -58,13 +56,13 @@ public final class Fact extends Node implements Evaluatable {
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
-            NList facts = new NList(astElements().sublist(0, 1), Type.ROOT);
+            List<Node> facts = List.of();
             for (int i = 0; i < length(); i++) {
                 Predicate pred = getVal(i);
                 Fact fact = new Fact(NodeInfo.of(functor(), List.of(pred)), pred);
-                facts = new NList(List.of(), facts, fact);
+                facts = facts.add(fact);
             }
-            return facts;
+            return new Node(nodeInfo().setFunctorOrType(Type.ROOT).setDerived(facts));
         }
         return this;
     }

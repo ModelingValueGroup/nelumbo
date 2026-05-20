@@ -76,7 +76,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final int                                INITIAL_USAGE_COUNT = Integer
             .getInteger("INITIAL_USAGE_COUNT", 4);
     //
-    private static final Pattern ROOTS = r(s(a(n(Type.ROOT.list()), n(Type.ROOT)), t(NEWLINE)), false, null);
+    private static final Pattern ROOTS = r(s(n(Type.ROOT), t(NEWLINE)), false, null);
     //
     private static final List<TokenType> PATTERN_TOKEN_TYPE_LIST = List.of(NAME, OPERATOR, SEMICOLON, SINGLEQUOTE,
             COMMA, STRING);

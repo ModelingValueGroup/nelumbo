@@ -77,7 +77,6 @@ import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoManager;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Import;
@@ -1185,31 +1184,29 @@ public class EditorWindow extends WindowAdapter
             ParserResult throwing = new ParserResult(null, true);
             int index = 0;
             for (Node root : result.roots()) {
-                if (root instanceof Evaluatable eval) {
-                    ParseException pe = null;
-                    String mess = null;
-                    try {
-                        eval.evaluate(knowledgeBase, throwing);
-                    } catch (ParseException exc) {
-                        pe = exc;
-                        mess = pe.getShortMessage();
+                ParseException pe = null;
+                String mess = null;
+                try {
+                    root.evaluate(knowledgeBase, throwing);
+                } catch (ParseException exc) {
+                    pe = exc;
+                    mess = pe.getShortMessage();
+                }
+                if (root instanceof Query query && query.inferResult() != null) {
+                    mess = query.inferResult().toString();
+                }
+                if (mess != null) {
+                    nextLine = root.lastToken().line();
+                    messages.append(emptyLines(nextLine - prevLine)).append(mess).append("\n");
+                    index += nextLine - prevLine;
+                    if (pe != null && root instanceof Query query && query.inferResult() != null) {
+                        messageHighlights.add(new Highlight(index, mess.length(), pe.getShortMessage()));
                     }
-                    if (eval instanceof Query query && query.inferResult() != null) {
-                        mess = query.inferResult().toString();
+                    if (pe != null) {
+                        textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
                     }
-                    if (mess != null) {
-                        nextLine = eval.lastToken().line();
-                        messages.append(emptyLines(nextLine - prevLine)).append(mess).append("\n");
-                        index += nextLine - prevLine;
-                        if (pe != null && eval instanceof Query query && query.inferResult() != null) {
-                            messageHighlights.add(new Highlight(index, mess.length(), pe.getShortMessage()));
-                        }
-                        if (pe != null) {
-                            textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
-                        }
-                        prevLine = ++nextLine;
-                        index += mess.length() + 1;
-                    }
+                    prevLine = ++nextLine;
+                    index += mess.length() + 1;
                 }
             }
         } else {

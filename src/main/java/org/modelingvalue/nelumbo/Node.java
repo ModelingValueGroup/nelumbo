@@ -40,6 +40,7 @@ import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -76,12 +77,20 @@ public class Node extends StructImpl implements AstElement {
         return nodeInfo.declaration();
     }
 
+    public List<Node> derived() {
+        return nodeInfo.derived();
+    }
+
     public Node setFunctor(Functor functor) {
         return set(nodeInfo.setFunctorOrType(functor), toArray());
     }
 
     public Node setAstElements(List<AstElement> elements) {
         return set(nodeInfo.setElements(elements), toArray());
+    }
+
+    public Node setDerived(List<Node> derived) {
+        return set(nodeInfo.setDerived(derived), toArray());
     }
 
     public Node resetDeclaration() {
@@ -396,7 +405,9 @@ public class Node extends StructImpl implements AstElement {
                 array[i] = bound;
             }
         }
-        return array != null ? set(nodeInfo, array) : this;
+        NodeInfo bindInfo = nodeInfo.setBinding(vars);
+        return array != null ? set(bindInfo, array)
+                : nodeInfo.derived().equals(bindInfo.derived()) ? this : set(bindInfo, toArray());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -563,6 +574,17 @@ public class Node extends StructImpl implements AstElement {
             }
         }
         return rewrite;
+    }
+
+    public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
+    }
+
+    public List<Node> derivedFlattened() {
+        List<Node> result = List.of(this);
+        for (Node d : derived()) {
+            result = result.addAll(d.derivedFlattened());
+        }
+        return result;
     }
 
     public Variable variable() {

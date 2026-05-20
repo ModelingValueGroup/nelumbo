@@ -24,8 +24,8 @@
  Namespace     :: Object          // Local scope type
  RootNamespace :: Root, Namespace
  
- Namespace     ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace
- RootNamespace ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                        @nelumbo.lang.Namespace
+ Namespace     ::= <BEGINOFFILE> <(> <Root> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace
+ RootNamespace ::= { <(> <Root> <NEWLINE> <)*> }                        @nelumbo.lang.Namespace
  
  Pattern       ::= <NAME>                 @nelumbo.patterns.TokenTextPattern,
                    <STRING>               @nelumbo.patterns.TokenTextPattern,

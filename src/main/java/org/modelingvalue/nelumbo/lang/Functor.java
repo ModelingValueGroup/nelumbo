@@ -33,7 +33,6 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.And;
 import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
 import org.modelingvalue.nelumbo.logic.NIs;
@@ -260,7 +259,7 @@ public class Functor extends Node implements FunctorOrType {
             }
             List<AstElement> elements = astElements();
             Type type = (Type) elements.get(start - 2);
-            NList roots = new NList(elements.sublist(0, start), Type.ROOT);
+            List<Node> roots = List.of();
             List<AstElement> pttrn = List.of(), ast = List.of();
             Class<?> clazz = null;
             Integer precedence = null;
@@ -274,9 +273,6 @@ public class Functor extends Node implements FunctorOrType {
                             pattern = pattern.setPresedence(precedence);
                         }
                         roots = createFunctor(type, roots, ast, clazz, pattern, local, precedence, knowledgeBase, ctx);
-                        if (t != null) {
-                            roots = roots.setAstElements(roots.astElements().add(t));
-                        }
                         ast = pttrn = List.of();
                         clazz = null;
                         precedence = null;
@@ -306,7 +302,7 @@ public class Functor extends Node implements FunctorOrType {
                     pttrn = pttrn.add(e);
                 }
             }
-            return roots;
+            return new Node(nodeInfo().setFunctorOrType(Type.ROOT).setDerived(roots));
         }
         Constructor<? extends Node> constructor = constructor();
         List<AstElement> elements = astElements();
@@ -335,7 +331,7 @@ public class Functor extends Node implements FunctorOrType {
         return this;
     }
 
-    private NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
+    private List<Node> createFunctor(Type type, List<Node> roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
             Type local, Integer prec, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
@@ -364,7 +360,7 @@ public class Functor extends Node implements FunctorOrType {
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
         Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : clazz, prec);
         nodFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
-        roots = new NList(List.of(), roots, nodFunctor);
+        roots = roots.add(nodFunctor);
         if (pattern instanceof TokenTextPattern && clazz != null) {
             nodFunctor.construct(List.of(), new Object[0], knowledgeBase, ctx).init(knowledgeBase, ctx,
                     ConstructionReason.parsing);
@@ -373,7 +369,7 @@ public class Functor extends Node implements FunctorOrType {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
             Functor litFunctor = Functor.of(List.of(), litPattern, type, local, clazz, prec);
             litFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
-            roots = new NList(List.of(), roots, litFunctor);
+            roots = roots.add(litFunctor);
             knowledgeBase.addLiteral(nodFunctor, litFunctor);
             // Implied Rule
             Object[] nodVars = new Object[args.size()];
@@ -398,7 +394,7 @@ public class Functor extends Node implements FunctorOrType {
             }
             ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
             Rule rule = new Rule(List.of(), nodCons, exists);
-            roots = new NList(List.of(), roots, rule);
+            roots = roots.add(rule);
         }
         return roots;
     }

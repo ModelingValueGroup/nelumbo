@@ -25,7 +25,6 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Token;
@@ -44,17 +43,14 @@ public final class Import extends Node {
         if (reason == ConstructionReason.parsing) {
             List<AstElement> elements = astElements();
             Functor functor = functor();
-            NList roots = new NList(elements.sublist(0, 1), Type.ROOT);
+            List<Node> roots = List.of();
             StringBuilder sb = new StringBuilder();
             List<AstElement> el = List.of();
             for (int i = 1; i <= elements.size(); i++) {
                 Token t = i < elements.size() ? (Token) elements.get(i) : null;
                 if (t == null || t.text().equals(",")) {
                     Import ip = new Import(NodeInfo.of(functor, el), sb.toString());
-                    roots = new NList(List.of(), roots, ip);
-                    if (t != null) {
-                        roots = roots.setAstElements(roots.astElements().add(t));
-                    }
+                    roots = roots.add(ip);
                     el = List.of();
                     sb = new StringBuilder();
                     knowledgeBase.doImport(ip.name(), ip);
@@ -63,7 +59,7 @@ public final class Import extends Node {
                     el = el.add(t);
                 }
             }
-            return roots;
+            return new Node(nodeInfo().setFunctorOrType(Type.ROOT).setDerived(roots));
         }
         return this;
     }

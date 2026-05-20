@@ -63,11 +63,7 @@ public final class Transform extends Node {
     public List<Node> targetsFlattened() {
         List<Node> result = List.of();
         for (Node e : targets()) {
-            if (e instanceof NList nl) {
-                result = result.addAll(nl.elements());
-            } else {
-                result = result.add(e);
-            }
+            result = result.addAll(e.derivedFlattened());
         }
         return result;
     }
@@ -133,7 +129,7 @@ public final class Transform extends Node {
     }
 
     private static Node add(Node result, Node rewrite) {
-        return result != null ? result.add(rewrite) : null;
+        return result != null ? result.setDerived(result.derived().add(rewrite)) : null;
     }
 
 }

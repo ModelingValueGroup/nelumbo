@@ -81,13 +81,13 @@ public final class NList extends Node {
         return (List<T>) get(0);
     }
 
-    public <T extends Node> List<T> elementsFlattened() {
-        List<T> result = List.of();
-        for (T e : this.<T>elements()) {
+    public List<Node> elementsFlattened() {
+        List<Node> result = List.of();
+        for (Node e : this.<Node>elements()) {
             if (e instanceof NList nl) {
-                result = result.addAll(nl.<T>elementsFlattened());
+                result = result.addAll(nl.elementsFlattened());
             } else {
-                result = result.add(e);
+                result = result.addAll(e.derivedFlattened());
             }
         }
         return result;
@@ -114,5 +114,10 @@ public final class NList extends Node {
             return this;
         }
         return setArgs(new Object[] { Set.of(super.args()) });
+    }
+
+    @Override
+    public List<Node> derivedFlattened() {
+        return elementsFlattened();
     }
 }

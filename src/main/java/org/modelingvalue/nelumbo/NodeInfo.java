@@ -17,15 +17,25 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.lang.Variable;
 
 public interface NodeInfo {
 
     FunctorOrType functorOrType();
 
-    List<AstElement> elements();
+    default List<AstElement> elements() {
+        return List.of();
+    }
 
-    Node declaration();
+    default Node declaration() {
+        return null;
+    }
+
+    default List<Node> derived() {
+        return List.of();
+    }
 
     public static abstract class AbstractNodeInfo implements NodeInfo {
         @Override
@@ -34,10 +44,7 @@ public interface NodeInfo {
         }
     }
 
-    static NodeInfo of(FunctorOrType functorOrType, List<AstElement> elements, Node declaration) {
-        if (elements.isEmpty()) {
-            return of(functorOrType, declaration);
-        }
+    static NodeInfo of(FunctorOrType functorOrType, List<AstElement> elements, Node declaration, List<Node> derived) {
         return new AbstractNodeInfo() {
             @Override
             public FunctorOrType functorOrType() {
@@ -52,14 +59,35 @@ public interface NodeInfo {
             @Override
             public Node declaration() {
                 return declaration;
+            }
+
+            @Override
+            public List<Node> derived() {
+                return derived;
+            }
+        };
+    }
+
+    static NodeInfo of(FunctorOrType functorOrType, List<AstElement> elements, List<Node> derived) {
+        return new AbstractNodeInfo() {
+            @Override
+            public FunctorOrType functorOrType() {
+                return functorOrType;
+            }
+
+            @Override
+            public List<AstElement> elements() {
+                return elements;
+            }
+
+            @Override
+            public List<Node> derived() {
+                return derived;
             }
         };
     }
 
     static NodeInfo of(FunctorOrType functorOrType, List<AstElement> elements) {
-        if (elements.isEmpty()) {
-            return of(functorOrType);
-        }
         return new AbstractNodeInfo() {
             @Override
             public FunctorOrType functorOrType() {
@@ -69,30 +97,6 @@ public interface NodeInfo {
             @Override
             public List<AstElement> elements() {
                 return elements;
-            }
-
-            @Override
-            public Node declaration() {
-                return null;
-            }
-        };
-    }
-
-    static NodeInfo of(FunctorOrType functorOrType, Node declaration) {
-        return new AbstractNodeInfo() {
-            @Override
-            public FunctorOrType functorOrType() {
-                return functorOrType;
-            }
-
-            @Override
-            public List<AstElement> elements() {
-                return List.of();
-            }
-
-            @Override
-            public Node declaration() {
-                return declaration;
             }
         };
     }
@@ -103,33 +107,31 @@ public interface NodeInfo {
             public FunctorOrType functorOrType() {
                 return functorOrType;
             }
-
-            @Override
-            public List<AstElement> elements() {
-                return List.of();
-            }
-
-            @Override
-            public Node declaration() {
-                return null;
-            }
         };
     }
 
     default NodeInfo setFunctorOrType(FunctorOrType functorOrType) {
-        return of(functorOrType, elements(), declaration());
+        return of(functorOrType, elements(), declaration(), derived());
     }
 
     default NodeInfo setElements(List<AstElement> elements) {
-        return of(functorOrType(), elements, declaration());
+        return of(functorOrType(), elements, declaration(), derived());
     }
 
     default NodeInfo setDeclaration(Node declaration) {
-        return of(functorOrType(), elements(), declaration);
+        return of(functorOrType(), elements(), declaration, derived());
+    }
+
+    default NodeInfo setDerived(List<Node> derived) {
+        return of(functorOrType(), elements(), declaration(), derived);
     }
 
     default NodeInfo resetDeclaration() {
-        return of(functorOrType(), elements());
+        return of(functorOrType(), elements(), derived());
+    }
+
+    default NodeInfo setBinding(Map<Variable, Object> vars) {
+        return of(functorOrType(), elements(), declaration(), derived().replaceAll(n -> n.setBinding(vars)));
     }
 
 }

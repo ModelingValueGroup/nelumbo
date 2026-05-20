@@ -25,7 +25,6 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
-import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -35,7 +34,7 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 
-public final class Query extends Node implements Evaluatable {
+public final class Query extends Node {
     @Serial
     private static final long serialVersionUID = -6751904607718047038L;
 

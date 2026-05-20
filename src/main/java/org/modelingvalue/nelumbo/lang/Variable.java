@@ -25,7 +25,6 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.BooleanVariable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -128,19 +127,18 @@ public final class Variable extends Node {
             boolean hidden = get(0) != null;
             List<AstElement> elements = astElements();
             Type type = (Type) get(1);
-            NList roots = new NList(List.of(type), Type.ROOT);
+            List<Node> roots = List.of();
             int start = hidden ? 1 : 0;
             for (int i = start + 1; i < elements.size(); i++) {
                 AstElement e = elements.get(i);
                 if (e instanceof Token t && t.text().equals(",")) {
-                    roots = roots.setAstElements(roots.astElements().add(t));
                     e = elements.get(++i);
                 }
                 Variable var = new Variable(List.of(e), hidden, type, ((Token) e).text());
                 Functor varFun = knowledgeBase.addVariable(var, ctx);
-                roots = new NList(List.of(), roots, varFun);
+                roots = roots.add(varFun);
             }
-            return roots;
+            return new Node(nodeInfo().setFunctorOrType(Type.ROOT).setDerived(roots));
         }
         return this;
     }

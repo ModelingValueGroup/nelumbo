@@ -26,23 +26,20 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
-import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
-import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class Rule extends Node implements Evaluatable {
+public final class Rule extends Node {
     @Serial
     private static final long serialVersionUID = -4602043866952049391L;
 
@@ -105,8 +102,7 @@ public final class Rule extends Node implements Evaluatable {
             knowledgeBase.addException(
                     new ParseException("Rule consequence " + p + " must be a Predicate, not a FactType", p));
         }
-        List<AstElement> elements = astElements();
-        NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
+        List<Node> roots = List.of();
         Node l = p instanceof NIs ? (Node) p.get(0) : p;
         Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e)
                 .resetDeclaration();
@@ -114,7 +110,6 @@ public final class Rule extends Node implements Evaluatable {
         Map<Variable, Object> nodeVars = l == cons ? consVars : l.getBinding();
         Functor nodeFunctor = l.functor();
         Functor literalFunctor = nodeFunctor != null ? knowledgeBase.literal(nodeFunctor) : null;
-        int i = 0;
         for (List<Object> condIf : (List<List<Object>>) get(1)) {
             Predicate cond = (Predicate) condIf.get(0);
             Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
@@ -150,15 +145,9 @@ public final class Rule extends Node implements Evaluatable {
             }
             Rule rule = new Rule(when != null ? List.of(cond, when) : List.of(cond), //
                     cons, when != null ? When.of(when, cond) : cond);
-            roots = new NList(List.of(), roots, rule);
-            for (i++; i < elements.size(); i++) {
-                if (elements.get(i) instanceof Token t && t.text().equals(",")) {
-                    roots = roots.setAstElements(roots.astElements().add(t));
-                    break;
-                }
-            }
+            roots = roots.add(rule);
         }
-        return roots;
+        return new Node(nodeInfo().setFunctorOrType(Type.ROOT).setDerived(roots));
     }
 
     public final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {

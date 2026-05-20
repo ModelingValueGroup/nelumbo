@@ -21,12 +21,10 @@ import static java.lang.System.err;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.google.gson.JsonElement;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
-import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.InferResult;
@@ -39,6 +37,8 @@ import org.modelingvalue.nelumbo.lsp.Workspace;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
 
+import com.google.gson.JsonElement;
+
 public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
 
     public WorkspaceExecuteCommandService(Workspace workspace) {
@@ -48,10 +48,10 @@ public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
     @Override
     public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
         CommandType command = CommandType.of(params.getCommand());
-        //noinspection SwitchStatementWithTooFewBranches
+        // noinspection SwitchStatementWithTooFewBranches
         switch (command) {
-            case EXEC_COMMAND -> execute_EXEC_COMMAND(params.getArguments());
-            default -> err.println("    execute command: " + params.getCommand() + " not implemented");
+        case EXEC_COMMAND -> execute_EXEC_COMMAND(params.getArguments());
+        default           -> err.println("    execute command: " + params.getCommand() + " not implemented");
         }
         return CompletableFuture.completedFuture(null);
     }
@@ -60,50 +60,54 @@ public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
         if (args.size() < 3) {
             return;
         }
-        String   docUri   = asString(args.get(0));
-        int      line     = asInt(args.get(1));
-        int      pos      = asInt(args.get(2));
+        String docUri = asString(args.get(0));
+        int line = asInt(args.get(1));
+        int pos = asInt(args.get(2));
         Position position = new Position(line, pos);
 
-        NlDocumentManager dm       = getWorkspace().getDocumentManager();
-        NlDocument        document = dm.getDocument(docUri);
+        NlDocumentManager dm = getWorkspace().getDocumentManager();
+        NlDocument document = dm.getDocument(docUri);
         if (document == null) {
             Main.client.showMessage(new MessageParams(MessageType.Error, "Document not found: " + docUri));
             return;
         }
         List<Node> nodes = document.nodesAt(position);
         if (nodes.isEmpty()) {
-            Main.client.showMessage(new MessageParams(MessageType.Error, "Nothing found at this position [" + position + "]"));
+            Main.client.showMessage(
+                    new MessageParams(MessageType.Error, "Nothing found at this position [" + position + "]"));
             return;
         }
         Node node = nodes.getLast();
         if (!(node instanceof Query query)) {
-            Main.client.showMessage(new MessageParams(MessageType.Error, "No query found at this position [" + position + "], found " + node.getClass().getSimpleName()));
+            Main.client.showMessage(new MessageParams(MessageType.Error,
+                    "No query found at this position [" + position + "], found " + node.getClass().getSimpleName()));
             return;
         }
 
         err.println("####  " + query + "...");
         KnowledgeBase.BASE.run(() -> {
             KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
-            ParserResult  throwing      = new ParserResult(null, true);
+            ParserResult throwing = new ParserResult(null, true);
             for (Node root : document.parserResult().roots()) {
-                if (root instanceof Evaluatable eval && (!(eval instanceof Query) || eval == query)) {
+                if ((!(root instanceof Query) || root == query)) {
                     try {
-                        err.println("EVAL  " + eval + "...");
-                        eval.evaluate(knowledgeBase, throwing);
-                        if (eval == query) {
-                            err.println("INFER " + eval + "...");
+                        err.println("EVAL  " + root + "...");
+                        root.evaluate(knowledgeBase, throwing);
+                        if (root == query) {
+                            err.println("INFER " + root + "...");
                             InferResult ir = query.inferResult();
                             err.println("INFER => " + ir + "...");
                             if (ir == null) {
-                                Main.client.showMessage(new MessageParams(MessageType.Error, "Infer resulted in nothing"));
+                                Main.client
+                                        .showMessage(new MessageParams(MessageType.Error, "Infer resulted in nothing"));
                             } else {
                                 Main.client.showMessage(new MessageParams(MessageType.Info, ir.toString()));
                             }
                             return;
                         }
                     } catch (ParseException exc) {
-                        Main.client.showMessage(new MessageParams(MessageType.Error, "Problem executing [" + eval.firstToken().line() + "," + eval.firstToken().position() + "]"));
+                        Main.client.showMessage(new MessageParams(MessageType.Error, "Problem executing ["
+                                + root.firstToken().line() + "," + root.firstToken().position() + "]"));
                         return;
                     }
                 }
