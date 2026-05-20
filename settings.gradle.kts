@@ -22,9 +22,11 @@ include("lsp:plugins:eclipse")
 include("lsp:plugins:intellij")
 
 val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-println("Gradle: inEclipse=$inEclipse")
-if (inEclipse != null && inEclipse == "true") {
-    includeBuild("../immutable-collections") {
+val localImmutables = file("../immutable-collections")
+val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
+println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
+if (useLocalImmutables) {
+    includeBuild(localImmutables) {
         dependencySubstitution {
             substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
         }
