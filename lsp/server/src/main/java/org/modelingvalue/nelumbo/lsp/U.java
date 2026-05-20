@@ -391,7 +391,7 @@ public class U {
 
     private static Position endPosition(Token t) {
         assert t != null;
-        return new Position(t.lastLine(), t.lastPosition());
+        return new Position(t.lastLine(), t.positionEnd());
     }
 
     private static Position endPosition(Node n) {
