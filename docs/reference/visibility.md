@@ -127,6 +127,5 @@ Visibility modifiers apply relative to the declaration's scope. A `private` patt
 ## See also
 
 - [`grammar.md`](grammar.md) — where these declarations fit syntactically
-- [`../guides/modules-and-imports.md`](../guides/modules-and-imports.md) — the module system end to end (Phase 4)
 - [`hidden.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) — working hidden-operator example
 - [`scoping.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl) — working scope example

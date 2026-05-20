@@ -19,7 +19,7 @@ The top-level constructs are:
 
 | Form | Meaning | Defined in |
 |---|---|---|
-| `import M` | Import module `M` | [`modules-and-imports.md`](../guides/modules-and-imports.md) |
+| `import M` | Import module `M` | |
 | `T :: S` | Declare type `T` as a subtype of `S` | [Types](#type-declarations) below |
 | `T ::= P` | Declare pattern `P` producing a value of type `T` | [Patterns](#pattern-declarations) below |
 | `T v` | Declare logical variable `v` of type `T` | [Variables](#variable-declarations) below |
