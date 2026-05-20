@@ -205,13 +205,13 @@ Full rules are on [`precedence-and-associativity.md`](precedence-and-associativi
 |---|---|---|
 | `<->`  | 16 | lowest |
 | `->`   | 18 |  |
-| `|`    | 20 |  |
+| `\|`    | 20 |  |
 | `&`    | 22 |  |
 | `!`    | 25 | prefix |
 | `<`, `<=`, `>`, `>=`, `!=` | 30 | comparisons |
 | `+`, `-` (binary) | 40 | integer/rational |
 | `*`, `/` | 50 |  |
 | unary `-` | 80 |  |
-| `|x|` | 35 | absolute value |
+| `\|x\|` | 35 | absolute value |
 
 Higher `#N` binds tighter. See the per-module reference pages for the precedence of arithmetic and string operators.
