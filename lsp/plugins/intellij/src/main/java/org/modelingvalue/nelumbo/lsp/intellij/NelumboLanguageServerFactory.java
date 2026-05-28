@@ -71,6 +71,13 @@ public class NelumboLanguageServerFactory implements LanguageServerFactory {
     }
 
     private void getJarFile(Path dir, Path localJarFile) throws IOException {
+        if (Boolean.getBoolean("idea.plugin.in.sandbox.mode")) {
+            // Sandbox/dev (runIde): always use the freshly built jar bundled in the plugin
+            // resources. Without this the GitHub-released jar wins over our local build, and
+            // server-side code changes never get picked up.
+            extractServerJar(dir, localJarFile);
+            return;
+        }
         downloadLatestServerJar(dir, localJarFile);
         if (!Files.exists(localJarFile)) {
             // Fallback to embedded resource if downloading fails

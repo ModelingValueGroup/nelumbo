@@ -34,6 +34,16 @@
                 extensions="nl"
                 fieldName="INSTANCE"
         />
+        <lang.parserDefinition
+                language="nelumbo"
+                implementationClass="org.modelingvalue.nelumbo.lsp.intellij.lang.NelumboParserDefinition"
+        />
+        <usageTypeProvider
+                implementation="org.modelingvalue.nelumbo.lsp.intellij.lang.NelumboUsageTypeProvider"
+        />
+        <elementDescriptionProvider
+                implementation="org.modelingvalue.nelumbo.lsp.intellij.lang.NelumboElementDescriptionProvider"
+        />
         <statusBarWidgetFactory
                 implementation="org.modelingvalue.nelumbo.lsp.intellij.status.StatusBarItemFactory"
                 id="org.modelingvalue.nelumbo.lsp.intellij.status.StatusBarItemFactory"

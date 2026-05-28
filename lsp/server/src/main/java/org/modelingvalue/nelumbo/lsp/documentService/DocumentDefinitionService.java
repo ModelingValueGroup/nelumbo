@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lsp.BundledFileCache;
 import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
@@ -64,7 +65,17 @@ public class DocumentDefinitionService extends DocumentServiceAdapter {
         if (defToken == null) {
             return CompletableFuture.completedFuture(null);
         }
-        List<Location> l = List.of(new Location(params.getTextDocument().getUri(), U.range(defToken)));
+        // Token.fileName() carries whatever string the Tokenizer was constructed with: an LSP
+        // URI for documents the client opened, or a classpath path (e.g. "/org/.../lang.nl")
+        // for imported library files loaded from inside the server jar. URI-shaped names go
+        // back as-is; classpath paths get materialised to a temp file so the client can
+        // actually navigate to them.
+        String name   = defToken.fileName();
+        String defUri = (name != null && name.contains("://")) ? name : BundledFileCache.classpathToFileUri(name);
+        if (defUri == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        List<Location> l = List.of(new Location(defUri, U.range(defToken)));
         return CompletableFuture.completedFuture(Either.forLeft(l));
     }
 }
