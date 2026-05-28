@@ -21,7 +21,7 @@ defaultTasks("mvgCorrector", "test", "publish", "mvgTagger", "editorJar", "cliJa
 plugins {
     `java-library`
     `maven-publish`
-    id("org.modelingvalue.gradle.mvgplugin") version "2.3.21"
+    id("org.modelingvalue.gradle.mvgplugin") version "2.3.23"
     id("com.gradleup.shadow") version "9.3.2"
     idea
     eclipse
