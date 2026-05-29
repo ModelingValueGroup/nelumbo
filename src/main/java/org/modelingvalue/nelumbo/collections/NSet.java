@@ -20,7 +20,6 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
@@ -40,16 +39,6 @@ public class NSet extends Node {
         super(nodeInfo, args);
     }
 
-    @Override
-    protected NSet set(NodeInfo nodeInfo, Object[] args) {
-        return new NSet(nodeInfo, args);
-    }
-
-    @Override
-    public NSet setAstElements(List<AstElement> elements) {
-        return (NSet) super.setAstElements(elements);
-    }
-
     public Type elementType() {
         return type().element();
     }
@@ -65,11 +54,6 @@ public class NSet extends Node {
     }
 
     @Override
-    public NSet set(int i, Object... a) {
-        return (NSet) super.set(i, a);
-    }
-
-    @Override
     public String toString(TokenType[] previous) {
         String string = elements().toString();
         return "{" + string.substring(4, string.length() - 1) + "}";
@@ -80,6 +64,6 @@ public class NSet extends Node {
         if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof Set)) {
             return this;
         }
-        return setArgs(new Object[] { Set.of(super.args()) });
+        return set(nodeInfo().resetDeclaration(), new Object[] { super.args().asSet() });
     }
 }

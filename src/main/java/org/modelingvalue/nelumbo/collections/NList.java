@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo.collections;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -36,6 +35,11 @@ public final class NList extends Node {
     @Serial
     private static final long serialVersionUID = 2275866157289787141L;
 
+    @NelumboConstructor
+    public NList(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
+    }
+
     public NList(List<AstElement> elements, Type elementType) {
         super(NodeInfo.of(elementType.list(), elements), List.of());
     }
@@ -46,11 +50,6 @@ public final class NList extends Node {
 
     public NList(Functor functor, List<AstElement> elements, List<Node> args) {
         super(NodeInfo.of(functor, elements), args);
-    }
-
-    @NelumboConstructor
-    public NList(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args);
     }
 
     public NList(List<AstElement> elements, NList list, Node last) {
@@ -94,13 +93,9 @@ public final class NList extends Node {
     }
 
     @Override
-    public NList set(int i, Object... a) {
-        return (NList) super.set(i, a);
-    }
-
-    @Override
     public String toString(TokenType[] previous) {
-        return elements().toString().substring(4);
+        String string = elements().toString();
+        return "[" + string.substring(5, string.length() - 1) + "]";
     }
 
     @Override
@@ -113,6 +108,6 @@ public final class NList extends Node {
         if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof List)) {
             return this;
         }
-        return setArgs(new Object[] { Set.of(super.args()) });
+        return set(nodeInfo().resetDeclaration(), new Object[] { super.args() });
     }
 }

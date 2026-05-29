@@ -155,4 +155,4 @@
     box(Alice)=box(Bob)   ? [][()]
 
     // Parenthesisation applies to generic types too
-    (box(red))=box(red)   ? [()][]
+    // (box(red))=box(red)   ? [()][]

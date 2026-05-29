@@ -630,20 +630,18 @@ public class ParseState implements Mergeable<ParseState> {
             }
             Entry<Type, ParseState> ts = argType();
             if (ts != null) {
-                Variable arg = ts.getKey().variable();
-                Type sup = result.getTypeArg(arg);
-                if (sup != null) {
-                    if (sup.isAssignableFrom(type)) {
-                        result.add(node);
-                        return new TokenState(node.nextToken(), ts.getValue());
-                    }
-                    if (sup.isAssignableFrom(type)) {
-                        result.putTypeArg(arg, type);
+                Variable arg = ts.getKey().element().variable();
+                Type found = result.getTypeArg(arg);
+                if (found != null) {
+                    found = ts.getKey().setElement(found);
+                    found = type.common(found);
+                    if (found != null) {
+                        result.putTypeArg(arg, found.element());
                         result.add(node);
                         return new TokenState(node.nextToken(), ts.getValue());
                     }
                 } else {
-                    result.putTypeArg(arg, type);
+                    result.putTypeArg(arg, type.element());
                     result.add(node);
                     return new TokenState(node.nextToken(), ts.getValue());
                 }
@@ -652,11 +650,12 @@ public class ParseState implements Mergeable<ParseState> {
                     "Node " + node + " of unexpected type " + type + ", expected " + expectedTypes(), node));
         }
         return null;
+
     }
 
     private Entry<Type, ParseState> argType() {
         for (Entry<Type, ParseState> e : nodeTypes()) {
-            if (e.getKey().variable() != null) {
+            if (e.getKey().element().variable() != null) {
                 return e;
             }
         }

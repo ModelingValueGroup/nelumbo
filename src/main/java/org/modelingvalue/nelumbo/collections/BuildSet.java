@@ -14,78 +14,84 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.logic;
-
-import static org.modelingvalue.nelumbo.patterns.Pattern.n;
-import static org.modelingvalue.nelumbo.patterns.Pattern.s;
-import static org.modelingvalue.nelumbo.patterns.Pattern.t;
+package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
+import org.modelingvalue.nelumbo.logic.InferContext;
+import org.modelingvalue.nelumbo.logic.InferResult;
+import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.logic.Quantifier;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
-public class NIs extends Predicate {
+public final class BuildSet extends Quantifier {
     @Serial
-    private static final long serialVersionUID = -7316551393714994267L;
+    private static final long serialVersionUID = -4380336025471527061L;
 
     @NelumboFunctorField
     private static Functor FUNCTOR;
 
-    static {
-        try {
-            FUNCTOR = Functor.of(s(n(Type.OBJECT), t("="), n(Type.OBJECT)), Type.BOOLEAN, null, NIs.class, 30);
-        } catch (ParseException e) {
-            throw new IllegalStateException("Cannot create functor for NIs", e);
-        }
-    }
-
-    public NIs(List<AstElement> elements, Node left, Node right) {
-        super(NodeInfo.of(FUNCTOR, elements), left, right);
-    }
-
     @NelumboConstructor
-    public NIs(NodeInfo nodeInfo, Object... args) {
+    public BuildSet(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
     }
 
-    public Node left() {
-        return (Node) get(0);
-    }
-
-    public Node right() {
-        return (Node) get(1);
-    }
-
     @Override
-    public NIs set(int i, Object... a) {
-        return (NIs) super.set(i, a);
-    }
-
-    @Override
+    @SuppressWarnings("unchecked")
     public List<Variable> localVars() {
-        return left().localVars().addAll(right().localVars());
+        return (List<Variable>) get(0);
     }
 
     @Override
-    protected int countNrOfUnbound() {
-        return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
+    protected InferResult resolve(InferContext context, InferResult predResult) {
+        List<Variable> localVars = localVars();
+        Set<Predicate> facts = Set.of(), falsehoods = Set.of();
+        boolean completeFacts = true, completeFalsehoods = true;
+        for (Predicate predFalsehood : predResult.falsehoods()) {
+            Predicate falsehood = setBinding(predFalsehood.getBinding().removeAllKey(localVars));
+            if (falsehood.isFullyBound()) {
+                falsehoods = falsehoods.add(falsehood);
+            } else {
+                completeFalsehoods = false;
+            }
+        }
+        for (Predicate predFact : predResult.facts()) {
+            Predicate fact = setBinding(predFact.getBinding().removeAllKey(localVars));
+            if (!falsehoods.contains(fact)) {
+                if (fact.isFullyBound()) {
+                    facts = facts.add(fact);
+                } else {
+                    completeFacts = false;
+                }
+            }
+        }
+        if (!isFullyBound()) {
+            if (!predResult.completeFacts()) {
+                completeFacts = false;
+            }
+            if (!predResult.completeFalsehoods()) {
+                completeFalsehoods = false;
+            }
+        } else if (falsehoods.isEmpty() && facts.isEmpty()) {
+            facts = facts.add(this);
+        }
+        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }
 
     @Override
-    protected boolean isShallow(int nrOfUnbound, Functor functor) {
-        Node a = getVal(0);
-        Node b = getVal(1);
-        return (b == null && a != null && Type.LITERAL.isAssignableFrom(a.type())) || //
-                (a == null && b != null && Type.LITERAL.isAssignableFrom(b.type()));
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        return set(0, List.of(get(0))).resetDeclaration();
     }
 
 }

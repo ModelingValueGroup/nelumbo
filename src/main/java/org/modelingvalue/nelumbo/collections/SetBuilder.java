@@ -14,78 +14,45 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.logic;
-
-import static org.modelingvalue.nelumbo.patterns.Pattern.n;
-import static org.modelingvalue.nelumbo.patterns.Pattern.s;
-import static org.modelingvalue.nelumbo.patterns.Pattern.t;
+package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
-public class NIs extends Predicate {
+public class SetBuilder extends Node {
     @Serial
-    private static final long serialVersionUID = -7316551393714994267L;
-
-    @NelumboFunctorField
-    private static Functor FUNCTOR;
-
-    static {
-        try {
-            FUNCTOR = Functor.of(s(n(Type.OBJECT), t("="), n(Type.OBJECT)), Type.BOOLEAN, null, NIs.class, 30);
-        } catch (ParseException e) {
-            throw new IllegalStateException("Cannot create functor for NIs", e);
-        }
-    }
-
-    public NIs(List<AstElement> elements, Node left, Node right) {
-        super(NodeInfo.of(FUNCTOR, elements), left, right);
-    }
+    private static final long serialVersionUID = 3276274607786741803L;
 
     @NelumboConstructor
-    public NIs(NodeInfo nodeInfo, Object... args) {
+    public SetBuilder(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
-    }
-
-    public Node left() {
-        return (Node) get(0);
-    }
-
-    public Node right() {
-        return (Node) get(1);
-    }
-
-    @Override
-    public NIs set(int i, Object... a) {
-        return (NIs) super.set(i, a);
     }
 
     @Override
     public List<Variable> localVars() {
-        return left().localVars().addAll(right().localVars());
+        return List.of((Variable) get(0));
     }
 
     @Override
-    protected int countNrOfUnbound() {
-        return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
+    protected boolean doSetBinding(Object varVal, int i) {
+        return i > 0 || varVal instanceof Variable;
     }
 
     @Override
-    protected boolean isShallow(int nrOfUnbound, Functor functor) {
-        Node a = getVal(0);
-        Node b = getVal(1);
-        return (b == null && a != null && Type.LITERAL.isAssignableFrom(a.type())) || //
-                (a == null && b != null && Type.LITERAL.isAssignableFrom(b.type()));
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        Node var = (Node) get(0);
+        if (!(var instanceof Variable)) {
+            knowledgeBase.addException(new ParseException(var + " must be a variable", var));
+        }
+        return this;
     }
-
 }

@@ -175,6 +175,9 @@ public final class Type extends Node implements FunctorOrType {
 
     public Type element() {
         if (isCollection()) {
+            if (isMany()) {
+                return many().filter(Type::isCollection).findFirst().get().element();
+            }
             return (Type) get(3);
         } else {
             return this;
@@ -184,6 +187,9 @@ public final class Type extends Node implements FunctorOrType {
     @Override
     public Type setBinding(Node declaration, Map<Variable, Object> vars) {
         if (isCollection()) {
+            if (isMany()) {
+                return set(0, many().replaceAll(t -> t.isCollection() ? t.setBinding(vars) : t));
+            }
             Variable var = element().variable();
             if (var != null && vars.get(var) instanceof Type elt) {
                 return setElement(elt).setBinding(declaration, vars);
@@ -193,8 +199,19 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type setElement(Type element) {
-        Set<Type> supers = supers().replaceAll(s -> s.isCollection() ? s.setElement(element) : s);
-        return set(3, element).set(1, supers);
+        if (isCollection()) {
+            if (element().equals(element)) {
+                return this;
+            } else {
+                if (isMany()) {
+                    return set(0, many().replaceAll(t -> t.isCollection() ? t.setElement(element) : t));
+                }
+                Set<Type> supers = supers().replaceAll(s -> s.isCollection() ? s.setElement(element) : s);
+                return set(3, element).set(1, supers);
+            }
+        } else {
+            return element;
+        }
     }
 
     public String group() {
@@ -211,6 +228,9 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public boolean isCollection() {
+        if (isMany()) {
+            return many().anyMatch(Type::isCollection);
+        }
         return length() == 4;
     }
 
@@ -331,7 +351,7 @@ public final class Type extends Node implements FunctorOrType {
 
     public String name() {
         String name = rawName();
-        if (isCollection()) {
+        if (length() == 4) {
             return name + "<" + element().name() + ">";
         }
         return name;
@@ -488,6 +508,28 @@ public final class Type extends Node implements FunctorOrType {
             return knowledgeBase.addType(type, ctx);
         }
         return this;
+    }
+
+    public Type common(Type other) {
+        if (!isCollection() && !other.isCollection()) {
+            if (isAssignableFrom(other)) {
+                return this;
+            } else if (other.isAssignableFrom(this)) {
+                return other;
+            }
+        } else if (isCollection() && other.isCollection()) {
+            Type element = element().common(other.element());
+            if (element != null) {
+                Type te = setElement(element);
+                Type oe = other.setElement(element);
+                if (te.isAssignableFrom(oe)) {
+                    return te;
+                } else if (oe.isAssignableFrom(te)) {
+                    return oe;
+                }
+            }
+        }
+        return null;
     }
 
 }

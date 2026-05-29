@@ -29,7 +29,7 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 public class MatchState<E> implements Mergeable<MatchState<E>> {
 
     @SuppressWarnings("rawtypes")
-    public static final MatchState           EMPTY = new MatchState<>();
+    public static final MatchState EMPTY = new MatchState<>();
 
     private final Map<Object, MatchState<E>> transitions;
     private final Set<E>                     elements;
@@ -112,9 +112,9 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
     private MatchState<E> doMatch(Object obj, MutableMap<Variable, Type> typeArgs) {
         MatchState<E> state;
         switch (obj) {
-        case Type type -> state = matchType(type, typeArgs);
+        case Type type    -> state = matchType(type, typeArgs);
         case Variable var -> state = matchType(var.type(), typeArgs);
-        case Node node -> {
+        case Node node    -> {
             Functor functor = node.functor();
             state = functor != null ? transitions().get(functor) : null;
             if (state == null && functor != null) {
@@ -132,8 +132,8 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
                 state = matchType(node.type(), typeArgs);
             }
         }
-        case String text -> state = transitions().get(TokenType.of(text));
-        default -> state = transitions().get(obj.getClass());
+        case String text  -> state = transitions().get(TokenType.of(text));
+        default           -> state = transitions().get(obj.getClass());
         }
         return state;
     }
@@ -146,20 +146,19 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
                 return state;
             }
         }
-        Entry<Object, MatchState<E>> ts = transitions().findAny(e -> e.getKey() instanceof Type t && t.variable() != null).orElse(null);
+        Entry<Object, MatchState<E>> ts = argType();
         if (ts != null) {
-            Variable var = ((Type) ts.getKey()).variable();
-            Type sup = typeArgs.get(var);
-            if (sup != null) {
-                if (sup.isAssignableFrom(type)) {
-                    return ts.getValue();
-                }
-                if (type.isAssignableFrom(sup)) {
-                    typeArgs.put(var, type);
+            Variable var = ((Type) ts.getKey()).element().variable();
+            Type found = typeArgs.get(var);
+            if (found != null) {
+                found = ((Type) ts.getKey()).setElement(found);
+                found = type.common(found);
+                if (found != null) {
+                    typeArgs.put(var, found.element());
                     return ts.getValue();
                 }
             } else {
-                typeArgs.put(var, type);
+                typeArgs.put(var, type.element());
                 return ts.getValue();
             }
         }
@@ -167,7 +166,16 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
         return state;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Entry<Object, MatchState<E>> argType() {
+        for (Entry<Object, MatchState<E>> e : transitions()) {
+            if (e.getKey() instanceof Type t && t.element().variable() != null) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public MatchState<E> merge(MatchState[] branches, int length) {
         MatchState<E> state = this;

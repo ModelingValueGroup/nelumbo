@@ -46,6 +46,6 @@
                    <NAME> <(> < <Type#100> > <)?> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?> @nelumbo.lang.Type,
                    <(> "private" <)?> <Type#100> ::= <(> <(> <Pattern#100> <)+> <(> # <NUMBER> <)?> <(> @ <(> <NAME> <,> . <)+> <)?> <,> , <)+>  @nelumbo.lang.Functor
 
- Type T
+ Type P
  
- T ::= (<T>)       @nelumbo.lang.Parenthesized
+ P ::= (<P>)       @nelumbo.lang.Parenthesized
