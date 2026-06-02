@@ -18,7 +18,9 @@ package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -27,6 +29,7 @@ import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
@@ -53,38 +56,31 @@ public final class BuildSet extends Quantifier {
         return (List<Variable>) get(0);
     }
 
+    public NSet set() {
+        return (NSet) get(2);
+    }
+
     @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
-        List<Variable> localVars = localVars();
+        Variable localVar = localVars().first();
+        Type type = localVar.type().nonVariable();
+        Map<Variable, Object> clearLocal = Map.of(Entry.of(localVar, localVar));
+        boolean completeFacts = predResult.completeFacts(), completeFalsehoods = predResult.completeFalsehoods();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
-        boolean completeFacts = true, completeFalsehoods = true;
-        for (Predicate predFalsehood : predResult.falsehoods()) {
-            Predicate falsehood = setBinding(predFalsehood.getBinding().removeAllKey(localVars));
-            if (falsehood.isFullyBound()) {
-                falsehoods = falsehoods.add(falsehood);
-            } else {
-                completeFalsehoods = false;
-            }
-        }
+        Map<Predicate, Set<Object>> trueMap = Map.of();
         for (Predicate predFact : predResult.facts()) {
-            Predicate fact = setBinding(predFact.getBinding().removeAllKey(localVars));
-            if (!falsehoods.contains(fact)) {
-                if (fact.isFullyBound()) {
-                    facts = facts.add(fact);
-                } else {
-                    completeFacts = false;
-                }
-            }
+            Object val = predFact.getBinding().get(localVar);
+            Predicate fact = predFact.setBinding(clearLocal);
+            Set<Object> set = trueMap.get(fact);
+            trueMap = trueMap.put(fact, set != null ? set.add(val) : Set.of(val));
         }
-        if (!isFullyBound()) {
-            if (!predResult.completeFacts()) {
-                completeFacts = false;
-            }
-            if (!predResult.completeFalsehoods()) {
-                completeFalsehoods = false;
-            }
-        } else if (falsehoods.isEmpty() && facts.isEmpty()) {
-            facts = facts.add(this);
+        for (Entry<Predicate, Set<Object>> e : trueMap) {
+            facts = facts.add(setBinding(e.getKey().getBinding()).set(2, new NSet(type, e.getValue())));
+        }
+        for (Predicate predFalsehood : predResult.falsehoods()) {
+            Object val = predFalsehood.getBinding().get(localVar);
+            Predicate falshood = predFalsehood.setBinding(clearLocal);
+            falsehoods = falsehoods.add(setBinding(falshood.getBinding()).set(2, new NSet(type, Set.of(val))));
         }
         return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }

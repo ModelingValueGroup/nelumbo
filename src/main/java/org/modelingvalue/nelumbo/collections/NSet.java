@@ -39,6 +39,10 @@ public class NSet extends Node {
         super(nodeInfo, args);
     }
 
+    public NSet(Type elementType, Set<?> set) {
+        super(NodeInfo.of(elementType.set()), set);
+    }
+
     public Type elementType() {
         return type().element();
     }
