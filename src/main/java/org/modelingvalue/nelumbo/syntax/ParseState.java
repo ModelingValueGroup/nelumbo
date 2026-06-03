@@ -529,7 +529,7 @@ public class ParseState implements Mergeable<ParseState> {
                 return new TokenState(min.next(), next);
             }
         }
-        if (type == TokenType.OPERATOR) {
+        if (type == TokenType.OPERATOR || type == TokenType.NAME) {
             for (int i = text.length() - 1; i > 0; i--) {
                 String key = text.substring(0, i);
                 next = tokenTexts().get(key);
