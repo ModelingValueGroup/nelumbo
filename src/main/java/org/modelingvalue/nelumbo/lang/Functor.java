@@ -340,6 +340,7 @@ public class Functor extends Node implements FunctorOrType {
 
     private NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
             Type local, Integer prec, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+        ast = ast.prepend(pattern);
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
         Type e = type.hasArgument() ? type.argument() : null;
@@ -365,7 +366,7 @@ public class Functor extends Node implements FunctorOrType {
             }
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
-        Functor nodFunctor = Functor.of(ast.prepend(pattern), pattern, nodType, local, toLiteral ? null : clazz, prec);
+        Functor nodFunctor = Functor.of(ast, pattern, nodType, local, toLiteral ? null : clazz, prec);
         nodFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && clazz != null) {
@@ -374,7 +375,7 @@ public class Functor extends Node implements FunctorOrType {
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
-            Functor litFunctor = Functor.of(ast.prepend(pattern), litPattern, type, local, clazz, prec);
+            Functor litFunctor = Functor.of(ast, litPattern, type, local, clazz, prec);
             litFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
             roots = new NList(List.of(), roots, litFunctor);
             knowledgeBase.addLiteral(nodFunctor, litFunctor);
