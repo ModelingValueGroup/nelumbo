@@ -173,10 +173,10 @@ public final class Type extends Node implements FunctorOrType {
         return (Type) super.setAstElements(elements);
     }
 
-    public Type element() {
-        if (isCollection()) {
+    public Type argument() {
+        if (hasArgument()) {
             if (isMany()) {
-                return many().filter(Type::isCollection).findFirst().get().element();
+                return many().filter(Type::hasArgument).findFirst().get().argument();
             }
             return (Type) get(3);
         } else {
@@ -186,31 +186,31 @@ public final class Type extends Node implements FunctorOrType {
 
     @Override
     public Type setBinding(Node declaration, Map<Variable, Object> vars) {
-        if (isCollection()) {
+        if (hasArgument()) {
             if (isMany()) {
-                return set(0, many().replaceAll(t -> t.isCollection() ? t.setBinding(vars) : t));
+                return set(0, many().replaceAll(t -> t.hasArgument() ? t.setBinding(vars) : t));
             }
-            Variable var = element().variable();
+            Variable var = argument().variable();
             if (var != null && vars.get(var) instanceof Type elt) {
-                return setElement(elt).setBinding(declaration, vars);
+                return setArgument(elt).setBinding(declaration, vars);
             }
         }
         return (Type) super.setBinding(declaration, vars);
     }
 
-    public Type setElement(Type element) {
-        if (isCollection()) {
-            if (element().equals(element)) {
+    public Type setArgument(Type argument) {
+        if (hasArgument()) {
+            if (argument().equals(argument)) {
                 return this;
             } else {
                 if (isMany()) {
-                    return set(0, many().replaceAll(t -> t.isCollection() ? t.setElement(element) : t));
+                    return set(0, many().replaceAll(t -> t.hasArgument() ? t.setArgument(argument) : t));
                 }
-                Set<Type> supers = supers().replaceAll(s -> s.isCollection() ? s.setElement(element) : s);
-                return set(3, element).set(1, supers);
+                Set<Type> supers = supers().replaceAll(s -> s.hasArgument() ? s.setArgument(argument) : s);
+                return set(3, argument).set(1, supers);
             }
         } else {
-            return element;
+            return argument;
         }
     }
 
@@ -227,9 +227,9 @@ public final class Type extends Node implements FunctorOrType {
         return (Set<Type>) get(0);
     }
 
-    public boolean isCollection() {
+    public boolean hasArgument() {
         if (isMany()) {
-            return many().anyMatch(Type::isCollection);
+            return many().anyMatch(Type::hasArgument);
         }
         return length() == 4;
     }
@@ -313,17 +313,17 @@ public final class Type extends Node implements FunctorOrType {
         return VARIABLE.isAssignableFrom(this);
     }
 
-    public Type list() {
-        return list(group());
+    public Type toList() {
+        return toList(group());
     }
 
-    public Type set() {
-        return set(group());
+    public Type toSet() {
+        return toSet(group());
     }
 
-    public Type list(String group) {
+    public Type toList(String group) {
         if (list == null) {
-            list = LIST.setElement(this);
+            list = LIST.setArgument(this);
         }
         if (!group.equals(group())) {
             return list.setGroup(group);
@@ -331,9 +331,9 @@ public final class Type extends Node implements FunctorOrType {
         return list;
     }
 
-    public Type set(String group) {
+    public Type toSet(String group) {
         if (set == null) {
-            set = SET.setElement(this);
+            set = SET.setArgument(this);
         }
         if (!group.equals(group())) {
             return set.setGroup(group);
@@ -352,7 +352,7 @@ public final class Type extends Node implements FunctorOrType {
     public String name() {
         String name = rawName();
         if (length() == 4) {
-            return name + "<" + element().name() + ">";
+            return name + "<" + argument().name() + ">";
         }
         return name;
     }
@@ -452,10 +452,10 @@ public final class Type extends Node implements FunctorOrType {
         for (Type s : type.allSupers()) {
             if (equals(s)) {
                 return true;
-            } else if (isCollection() && s.isCollection() && get(0).equals(s.get(0))) {
-                if (element().isAssignableFrom(s.element())) {
+            } else if (hasArgument() && s.hasArgument() && get(0).equals(s.get(0))) {
+                if (argument().isAssignableFrom(s.argument())) {
                     return true;
-                } else if (element().get(0) instanceof Variable || s.element().get(0) instanceof Variable) {
+                } else if (argument().get(0) instanceof Variable || s.argument().get(0) instanceof Variable) {
                     return true;
                 }
                 return false;
@@ -479,8 +479,8 @@ public final class Type extends Node implements FunctorOrType {
             if (super.functorOrType() instanceof Functor functor
                     && functor.astElements().first() instanceof Type type) {
                 Type result = type.setAstElements(astElements());
-                if (result.isCollection() && get(0) instanceof Type elem) {
-                    result = result.setElement(elem);
+                if (result.hasArgument() && get(0) instanceof Type elem) {
+                    result = result.setArgument(elem);
                 }
                 return result.setFunctor(functor);
             }
@@ -511,17 +511,17 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type common(Type other) {
-        if (!isCollection() && !other.isCollection()) {
+        if (!hasArgument() && !other.hasArgument()) {
             if (isAssignableFrom(other)) {
                 return this;
             } else if (other.isAssignableFrom(this)) {
                 return other;
             }
-        } else if (isCollection() && other.isCollection()) {
-            Type element = element().common(other.element());
+        } else if (hasArgument() && other.hasArgument()) {
+            Type element = argument().common(other.argument());
             if (element != null) {
-                Type te = setElement(element);
-                Type oe = other.setElement(element);
+                Type te = setArgument(element);
+                Type oe = other.setArgument(element);
                 if (te.isAssignableFrom(oe)) {
                     return te;
                 } else if (oe.isAssignableFrom(te)) {

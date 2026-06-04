@@ -516,10 +516,10 @@ public interface InferResult {
     default InferResult add(InferResult other) {
         List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
         List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
-        boolean completFacts = completeFacts() && other.completeFacts();
+        boolean completeFacts = completeFacts() && other.completeFacts();
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(predicate(), facts, completFacts, falsehoods, completeFalsehoods, cycles);
+        return of(predicate(), facts, completeFacts, falsehoods, completeFalsehoods, cycles);
     }
 
     default InferResult flipComplete() {
@@ -531,8 +531,7 @@ public interface InferResult {
     }
 
     default InferResult cast(Predicate to) {
-        return of(predicate(), cast(facts(), to), completeFacts(), cast(falsehoods(), to), completeFalsehoods(),
-                cycles());
+        return of(to, cast(facts(), to), completeFacts(), cast(falsehoods(), to), completeFalsehoods(), cycles());
     }
 
     default InferResult predicate(Predicate predicate) {
@@ -584,7 +583,8 @@ public interface InferResult {
             } else if (!(obj instanceof InferResult other)) {
                 return false;
             } else {
-                return allFacts().equals(other.allFacts()) && completeFacts() == other.completeFacts() && //
+                return predicate().equals(other.predicate()) && allFacts().equals(other.allFacts())
+                        && completeFacts() == other.completeFacts() && //
                         allFalsehoods().equals(other.allFalsehoods())
                         && completeFalsehoods() == other.completeFalsehoods() && //
                         cycles().equals(other.cycles());

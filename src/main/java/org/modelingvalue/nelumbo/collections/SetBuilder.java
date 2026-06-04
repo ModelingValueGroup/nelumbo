@@ -49,9 +49,11 @@ public class SetBuilder extends Node {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        Node var = (Node) get(0);
-        if (!(var instanceof Variable)) {
-            knowledgeBase.addException(new ParseException(var + " must be a variable", var));
+        if (reason == ConstructionReason.parsing) {
+            Node var = (Node) get(0);
+            if (!(var instanceof Variable)) {
+                knowledgeBase.addException(new ParseException(var + " must be a variable", var));
+            }
         }
         return this;
     }

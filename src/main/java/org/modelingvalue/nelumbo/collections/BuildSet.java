@@ -63,7 +63,7 @@ public final class BuildSet extends Quantifier {
     @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
         Variable localVar = localVars().first();
-        Type type = localVar.type().nonVariable();
+        Type type = localVar.type().nonVariable().toLiteral();
         Map<Variable, Object> clearLocal = Map.of(Entry.of(localVar, localVar));
         boolean completeFacts = predResult.completeFacts(), completeFalsehoods = predResult.completeFalsehoods();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();

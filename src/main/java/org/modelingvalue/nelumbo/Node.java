@@ -456,6 +456,10 @@ public class Node extends StructImpl implements AstElement {
         return setBinding(vars);
     }
 
+    public Node setTypes() {
+        return setBinding(getBinding());
+    }
+
     public final Node replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
         Node to = replacer.apply(this);
         if (to != this) {

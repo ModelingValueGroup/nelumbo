@@ -342,7 +342,7 @@ public class Functor extends Node implements FunctorOrType {
             Type local, Integer prec, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
-        Type e = type.isCollection() ? type.element() : null;
+        Type e = type.hasArgument() ? type.argument() : null;
         if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
                 && !Type.PATTERN.isAssignableFrom(type)
                 && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
@@ -357,10 +357,10 @@ public class Functor extends Node implements FunctorOrType {
             if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
                     && !Type.NAMESPACE.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
                     && !Type.COLLECTION.isAssignableFrom(type) //
-                    && args.noneMatch(t -> Type.OBJECT.equals(t.element()) //
-                            || Type.BOOLEAN.isAssignableFrom(t.element()) //
-                            || Type.VARIABLE.isAssignableFrom(t.element()) //
-                            || Type.LITERAL.isAssignableFrom(t.element()))) {
+                    && args.noneMatch(t -> Type.OBJECT.equals(t.argument()) //
+                            || Type.BOOLEAN.isAssignableFrom(t.argument()) //
+                            || Type.VARIABLE.isAssignableFrom(t.argument()) //
+                            || Type.LITERAL.isAssignableFrom(t.argument()))) {
                 toLiteral = true;
             }
         }

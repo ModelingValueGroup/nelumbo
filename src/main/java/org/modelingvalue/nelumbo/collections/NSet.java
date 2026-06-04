@@ -40,11 +40,11 @@ public class NSet extends Node {
     }
 
     public NSet(Type elementType, Set<?> set) {
-        super(NodeInfo.of(elementType.set()), set);
+        super(NodeInfo.of(elementType.toSet().toLiteral()), set);
     }
 
     public Type elementType() {
-        return type().element();
+        return type().argument();
     }
 
     @SuppressWarnings("unchecked")

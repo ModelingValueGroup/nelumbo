@@ -171,15 +171,16 @@ public final class Query extends Node implements Evaluatable {
         }
         inferResult = found;
         if (hasExpected()) {
+            Predicate pred = predicate.setTypes();
             Set<Map<Variable, Object>> trueBindings = facts();
-            Set<Predicate> truePredicates = trueBindings.map(predicate::setBinding).asSet();
+            Set<Predicate> truePredicates = trueBindings.map(pred::setBinding).asSet();
             boolean completeFacts = completeFacts();
             Set<Map<Variable, Object>> falseBindings = falsehoods();
-            Set<Predicate> falsePredicates = falseBindings.map(predicate::setBinding).asSet();
+            Set<Predicate> falsePredicates = falseBindings.map(pred::setBinding).asSet();
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
                     completeFalsehoods, Set.of());
-            if (!found.equals(expected) && !found.toString().equals(expected.toString())) {
+            if (!found.equals(expected)) {
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //
                         astElements.sublist(2, astElements.size()).toArray(AstElement[]::new)));

@@ -148,17 +148,17 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
         }
         Entry<Object, MatchState<E>> ts = argType();
         if (ts != null) {
-            Variable var = ((Type) ts.getKey()).element().variable();
+            Variable var = ((Type) ts.getKey()).argument().variable();
             Type found = typeArgs.get(var);
             if (found != null) {
-                found = ((Type) ts.getKey()).setElement(found);
+                found = ((Type) ts.getKey()).setArgument(found);
                 found = type.common(found);
                 if (found != null) {
-                    typeArgs.put(var, found.element());
+                    typeArgs.put(var, found.argument());
                     return ts.getValue();
                 }
             } else {
-                typeArgs.put(var, type.element());
+                typeArgs.put(var, type.argument());
                 return ts.getValue();
             }
         }
@@ -168,7 +168,7 @@ public class MatchState<E> implements Mergeable<MatchState<E>> {
 
     private Entry<Object, MatchState<E>> argType() {
         for (Entry<Object, MatchState<E>> e : transitions()) {
-            if (e.getKey() instanceof Type t && t.element().variable() != null) {
+            if (e.getKey() instanceof Type t && t.argument().variable() != null) {
                 return e;
             }
         }

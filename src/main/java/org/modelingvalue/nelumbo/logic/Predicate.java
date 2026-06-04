@@ -87,6 +87,11 @@ public class Predicate extends Node {
         return (Predicate) super.setVariables();
     }
 
+    @Override
+    public Predicate setTypes() {
+        return (Predicate) super.setTypes();
+    }
+
     private String superToString(TokenType[] previous) {
         return super.toString(previous);
     }
@@ -153,7 +158,7 @@ public class Predicate extends Node {
     public InferResult infer() {
         KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
         InferContext context = knowledgeBase.context();
-        Predicate predicate = setBinding(getBinding());
+        Predicate predicate = setTypes();
         if (context.trace()) {
             System.out.println(context.prefix() + predicate);
         }
@@ -398,6 +403,15 @@ public class Predicate extends Node {
 
     public boolean isFact() {
         return Type.FACT_TYPE.isAssignableFrom(type());
+    }
+
+    public Predicate replaveVars(Map<String, Variable> map) {
+        try {
+            return (Predicate) replace(from -> (from instanceof Variable || from instanceof BooleanVariable)
+                    && map.get(from.toString()) instanceof Node to ? to : from);
+        } catch (ParseException e) {
+            return null;
+        }
     }
 
 }

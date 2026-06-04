@@ -41,11 +41,11 @@ public final class NList extends Node {
     }
 
     public NList(List<AstElement> elements, Type elementType) {
-        super(NodeInfo.of(elementType.list(), elements), List.of());
+        super(NodeInfo.of(elementType.toList().toLiteral(), elements), List.of());
     }
 
     public NList(Type elementType, List<AstElement> elements, List<Node> args) {
-        super(NodeInfo.of(elementType.list(), elements), args);
+        super(NodeInfo.of(elementType.toList().toLiteral(), elements), args);
     }
 
     public NList(Functor functor, List<AstElement> elements, List<Node> args) {
@@ -72,7 +72,7 @@ public final class NList extends Node {
     }
 
     public Type elementType() {
-        return type().element();
+        return type().argument();
     }
 
     @SuppressWarnings("unchecked")

@@ -529,7 +529,7 @@ public class ParseState implements Mergeable<ParseState> {
                 return new TokenState(min.next(), next);
             }
         }
-        if (type == TokenType.OPERATOR) {
+        if (type == TokenType.OPERATOR || type == TokenType.NAME) {
             for (int i = text.length() - 1; i > 0; i--) {
                 String key = text.substring(0, i);
                 next = tokenTexts().get(key);
@@ -630,18 +630,18 @@ public class ParseState implements Mergeable<ParseState> {
             }
             Entry<Type, ParseState> ts = argType();
             if (ts != null) {
-                Variable arg = ts.getKey().element().variable();
+                Variable arg = ts.getKey().argument().variable();
                 Type found = result.getTypeArg(arg);
                 if (found != null) {
-                    found = ts.getKey().setElement(found);
+                    found = ts.getKey().setArgument(found);
                     found = type.common(found);
                     if (found != null) {
-                        result.putTypeArg(arg, found.element());
+                        result.putTypeArg(arg, found.argument());
                         result.add(node);
                         return new TokenState(node.nextToken(), ts.getValue());
                     }
                 } else {
-                    result.putTypeArg(arg, type.element());
+                    result.putTypeArg(arg, type.argument());
                     result.add(node);
                     return new TokenState(node.nextToken(), ts.getValue());
                 }
@@ -655,7 +655,7 @@ public class ParseState implements Mergeable<ParseState> {
 
     private Entry<Type, ParseState> argType() {
         for (Entry<Type, ParseState> e : nodeTypes()) {
-            if (e.getKey().element().variable() != null) {
+            if (e.getKey().argument().variable() != null) {
                 return e;
             }
         }
