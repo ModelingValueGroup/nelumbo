@@ -73,6 +73,11 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void datetimeTest() {
+        testResource("datetimeTest.nl");
+    }
+
+    @RepeatedTest(10)
     public void friends() {
         testResource("friends.nl");
     }
