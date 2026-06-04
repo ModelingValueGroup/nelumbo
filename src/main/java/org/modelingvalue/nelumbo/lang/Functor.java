@@ -374,7 +374,7 @@ public class Functor extends Node implements FunctorOrType {
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
-            Functor litFunctor = Functor.of(List.of(), litPattern, type, local, clazz, prec);
+            Functor litFunctor = Functor.of(ast.prepend(pattern), litPattern, type, local, clazz, prec);
             litFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
             roots = new NList(List.of(), roots, litFunctor);
             knowledgeBase.addLiteral(nodFunctor, litFunctor);

@@ -1179,49 +1179,64 @@ public class EditorWindow extends WindowAdapter
     private String computeResults(ParserResult result, ArrayList<Highlight> textHighlights,
             ArrayList<Highlight> messageHighlights) {
         List<ParseException> exceptions = result.exceptions();
-        StringBuilder messages = new StringBuilder();
-        int prevLine = 0, nextLine;
-        if (exceptions.isEmpty()) {
-            ParserResult throwing = new ParserResult(null, true);
-            int index = 0;
-            for (Node root : result.roots()) {
-                if (root instanceof Evaluatable eval) {
-                    ParseException pe = null;
-                    String mess = null;
-                    try {
-                        eval.evaluate(knowledgeBase, throwing);
-                    } catch (ParseException exc) {
-                        pe = exc;
-                        mess = pe.getShortMessage();
+        int totalLines = result.getTokenizerResult().lastAll().lastLine() + 1;
+        ArrayList<String> messages = new ArrayList<>(totalLines);
+        for (int i = 0; i < totalLines; i++) {
+            messages.add("");
+        }
+
+        ArrayList<int[]> pendingMessageHighlights = new ArrayList<>();
+        ArrayList<String> pendingMessageHighlightErrors = new ArrayList<>();
+
+        ParserResult throwing = new ParserResult(null, true);
+        for (Node root : result.roots()) {
+            if (root instanceof Evaluatable eval) {
+                ParseException pe = null;
+                String mess = null;
+                try {
+                    eval.evaluate(knowledgeBase, throwing);
+                } catch (ParseException exc) {
+                    pe = exc;
+                    mess = pe.getShortMessage();
+                }
+                if (eval instanceof Query query && query.inferResult() != null) {
+                    mess = query.inferResult().toString();
+                }
+                if (mess != null) {
+                    int line = eval.lastToken().line();
+                    if (line >= 0 && line < totalLines) {
+                        messages.set(line, mess);
                     }
-                    if (eval instanceof Query query && query.inferResult() != null) {
-                        mess = query.inferResult().toString();
-                    }
-                    if (mess != null) {
-                        nextLine = eval.lastToken().line();
-                        messages.append(emptyLines(nextLine - prevLine)).append(mess).append("\n");
-                        index += nextLine - prevLine;
-                        if (pe != null && eval instanceof Query query && query.inferResult() != null) {
-                            messageHighlights.add(new Highlight(index, mess.length(), pe.getShortMessage()));
+                    if (pe != null) {
+                        textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
+                        if (eval instanceof Query query && query.inferResult() != null && line >= 0
+                                && line < totalLines) {
+                            pendingMessageHighlights.add(new int[]{line, mess.length()});
+                            pendingMessageHighlightErrors.add(pe.getShortMessage());
                         }
-                        if (pe != null) {
-                            textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
-                        }
-                        prevLine = ++nextLine;
-                        index += mess.length() + 1;
                     }
                 }
             }
-        } else {
-            for (ParseException pe : exceptions) {
-                nextLine = pe.line();
-                messages.append(emptyLines(nextLine - prevLine)).append(pe.getShortMessage()).append("\n");
-                textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
-                prevLine = ++nextLine;
-            }
         }
-        messages.append(emptyLines(result.getTokenizerResult().lastAll().lastLine() - prevLine));
-        return messages.toString();
+        for (ParseException pe : exceptions) {
+            int line = pe.line();
+            if (line >= 0 && line < totalLines) {
+                messages.set(line, pe.getShortMessage());
+            }
+            textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
+        }
+
+        for (int i = 0; i < pendingMessageHighlights.size(); i++) {
+            int line = pendingMessageHighlights.get(i)[0];
+            int length = pendingMessageHighlights.get(i)[1];
+            int offset = 0;
+            for (int j = 0; j < line; j++) {
+                offset += messages.get(j).length() + 1;
+            }
+            messageHighlights.add(new Highlight(offset, length, pendingMessageHighlightErrors.get(i)));
+        }
+
+        return String.join("\n", messages);
     }
 
     /**

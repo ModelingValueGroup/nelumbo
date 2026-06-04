@@ -37,7 +37,10 @@ import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.lsp.Workspace;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
 
@@ -71,29 +74,37 @@ public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
             Main.client.showMessage(new MessageParams(MessageType.Error, "Document not found: " + docUri));
             return;
         }
-        List<Node> nodes = document.nodesAt(position);
-        if (nodes.isEmpty()) {
-            Main.client.showMessage(new MessageParams(MessageType.Error, "Nothing found at this position [" + position + "]"));
-            return;
-        }
-        Node node = nodes.getLast();
-        if (!(node instanceof Query query)) {
-            Main.client.showMessage(new MessageParams(MessageType.Error, "No query found at this position [" + position + "], found " + node.getClass().getSimpleName()));
-            return;
-        }
 
-        err.println("####  " + query + "...");
         KnowledgeBase.BASE.run(() -> {
             KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
-            ParserResult  throwing      = new ParserResult(null, true);
-            for (Node root : document.parserResult().roots()) {
-                if (root instanceof Evaluatable eval && (!(eval instanceof Query) || eval == query)) {
+            ParserResult  parsed        = new Parser(new Tokenizer(document.content(), document.uri()).tokenize()).parseNonThrowing();
+
+            Query query = null;
+            for (Node root : parsed.roots()) {
+                if (root instanceof Query q) {
+                    Token first = q.firstToken();
+                    if (first != null && first.line() == line && first.position() == pos) {
+                        query = q;
+                        break;
+                    }
+                }
+            }
+            if (query == null) {
+                Main.client.showMessage(new MessageParams(MessageType.Error, "No query found at this position [" + position + "]"));
+                return;
+            }
+            final Query target = query;
+
+            err.println("####  " + target + "...");
+            ParserResult throwing = new ParserResult(null, true);
+            for (Node root : parsed.roots()) {
+                if (root instanceof Evaluatable eval && (!(eval instanceof Query) || eval == target)) {
                     try {
                         err.println("EVAL  " + eval + "...");
                         eval.evaluate(knowledgeBase, throwing);
-                        if (eval == query) {
+                        if (eval == target) {
                             err.println("INFER " + eval + "...");
-                            InferResult ir = query.inferResult();
+                            InferResult ir = target.inferResult();
                             err.println("INFER => " + ir + "...");
                             if (ir == null) {
                                 Main.client.showMessage(new MessageParams(MessageType.Error, "Infer resulted in nothing"));
@@ -103,7 +114,13 @@ public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
                             return;
                         }
                     } catch (ParseException exc) {
-                        Main.client.showMessage(new MessageParams(MessageType.Error, "Problem executing [" + eval.firstToken().line() + "," + eval.firstToken().position() + "]"));
+                        exc.printStackTrace(err);
+                        String shortMsg = exc.getShortMessage();
+                        if (eval == target && shortMsg != null && shortMsg.startsWith("Expected result ")) {
+                            Main.client.showMessage(new MessageParams(MessageType.Warning, "Result differs: expected " + shortMsg.substring("Expected result ".length())));
+                        } else {
+                            Main.client.showMessage(new MessageParams(MessageType.Error, "Problem executing " + eval.getClass().getSimpleName() + ": " + exc.getMessage()));
+                        }
                         return;
                     }
                 }

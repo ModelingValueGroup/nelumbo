@@ -16,7 +16,7 @@
 
 plugins {
     java
-    id("org.jetbrains.intellij.platform") version "2.12.0"
+    id("org.jetbrains.intellij.platform") version "2.16.0"
 }
 
 repositories {
@@ -29,6 +29,14 @@ repositories {
 }
 
 dependencies {
+    // Core nelumbo library: NelumboLexer (the IntelliJ lexer that backs the PSI tree) runs
+    // org.modelingvalue.nelumbo.syntax.Tokenizer so PSI tokens match LSP-side tokenization.
+    implementation(project(":"))
+    // Transitive of the line above (root declares it as implementation, so it isn't on our
+    // compile classpath by default). The includeBuild in settings.gradle.kts substitutes any
+    // requested version with the local checkout, so the version here doesn't matter much.
+    implementation("org.modelingvalue:immutable-collections:6.0.0-BRANCHED")
+
     intellijPlatform {
         intellijIdea("2025.3.2")
         plugin("com.redhat.devtools.lsp4ij:0.19.1")
@@ -50,6 +58,13 @@ tasks {
 
     // Disable building searchable options to avoid starting a full IDE instance during build
     named("buildSearchableOptions") {
+        enabled = false
+    }
+
+    // Disable bytecode instrumentation: we don't use IntelliJ form designer (.form) files or
+    // @NotNull runtime checks. The Javac2 Ant task it relies on also breaks on non-JBR JDKs
+    // (it scans <JAVA_HOME>/Packages, which only exists in a JetBrains Runtime).
+    named("instrumentCode") {
         enabled = false
     }
 
