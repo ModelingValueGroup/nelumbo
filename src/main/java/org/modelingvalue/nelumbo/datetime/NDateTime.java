@@ -16,6 +16,7 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -23,9 +24,7 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 import java.io.Serial;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 
 // DateTime ::= <Date> T <Time#30> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?>
 public final class NDateTime extends Node {
@@ -35,13 +34,22 @@ public final class NDateTime extends Node {
     @NelumboFunctorField
     private static Functor FUNCTOR;
 
+    private static Functor FUNCTOR_LITERAL;
+
     @NelumboConstructor
     public NDateTime(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
+        // TODO: Make it nicer
+        if (FUNCTOR == null) {
+            FUNCTOR = functor();
+        }
+        if (FUNCTOR_LITERAL == null) {
+            FUNCTOR_LITERAL = FUNCTOR.setResultType(FUNCTOR.resultType().toLiteral());
+        }
     }
 
     public static NDateTime of(Object value) {
-        return new NDateTime(NodeInfo.of(FUNCTOR), value);
+        return new NDateTime(NodeInfo.of(FUNCTOR_LITERAL), value);
     }
 
     @Override
@@ -55,10 +63,46 @@ public final class NDateTime extends Node {
         if (reason == ConstructionReason.parsing && get(0) instanceof Node) {
             LocalDate date = getVal(0, 0);
             LocalTime time = getVal(1, 0);
-            return setArgs(new Object[] { LocalDateTime.of(date, time) })
-                    .setFunctor(functor().setResultType(functor().resultType().toLiteral()));
+
+            if (get(2) == null) {
+                return setArgs(new Object[]{LocalDateTime.of(date, time)}).setFunctorOrType(FUNCTOR_LITERAL);
+            }
+
+            try {
+                return setArgs(new Object[]{OffsetDateTime.of(date, time, foldTimezone())}).setFunctorOrType(FUNCTOR_LITERAL);
+            } catch (DateTimeException e) {
+                knowledgeBase.addException(new ParseException("Invalid timezone offset: " + e.getMessage()));
+            }
         }
+
         return this;
     }
 
+    private ZoneOffset foldTimezone() {
+        Object offset = get(2);
+        if (offset instanceof String) {
+            return ZoneOffset.of((String) offset);
+        }
+        if (offset instanceof List<?> list) {
+            StringBuilder sb = new StringBuilder();
+            for (Object part : list) {
+                if (!(part instanceof CharSequence cs)) {
+                    throw new DateTimeException("Unexpected offset element: " + part);
+                }
+                sb.append(cs);
+            }
+            return ZoneOffset.of(sb.toString());
+        }
+        throw new DateTimeException("Unexpected offset value: " + offset);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof NDateTime date && date.getVal(0) instanceof OffsetDateTime odt
+                && getVal(0) instanceof OffsetDateTime val) {
+            return odt.isEqual(val);
+        }
+
+        return super.equals(obj);
+    }
 }

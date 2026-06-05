@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.datetime;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
@@ -24,6 +25,7 @@ import org.modelingvalue.nelumbo.logic.Predicate;
 
 import java.io.Serial;
 import java.time.*;
+import java.time.temporal.Temporal;
 
 public final class Add extends Predicate {
     @Serial
@@ -45,47 +47,74 @@ public final class Add extends Predicate {
         Object b = getVal(2, 0);
 
         if (a != null && d != null) {
-            Object sum = plus(a, d);
+            Temporal sum = plus(a, d);
             if (sum == null) {
                 return unresolvable();
             }
             if (b != null) {
                 return sum.equals(b) ? factCC() : falsehoodCC();
             }
-            return set(2, sum).factCI();
+            return set(2, wrap(sum)).factCI();
         } else if (a != null) {
             IsoDuration between = between(a, b);
-            return between == null ? unresolvable() : set(1, NPeriod.of(between)).factCI();
+            return between == null ? unresolvable() : set(1, wrap(between)).factCI();
         } else if (b != null && d != null) {
-            Object diff = minus(b, d);
-            return diff == null ? unresolvable() : set(0, diff).factCI();
+            Temporal diff = minus(b, d);
+            return diff == null ? unresolvable() : set(0, wrap(diff)).factCI();
         }
 
         return unknown();
     }
 
-    private static Object plus(Object instant, IsoDuration d) {
+    private static Temporal plus(Object instant, IsoDuration d) {
         if (instant instanceof LocalDate date) {
-            return d.duration().isZero() ? NDate.of(date.plus(d.period())) : null;
+            return d.duration().isZero() ? date.plus(d.period()) : null;
         }
         if (instant instanceof LocalTime time) {
-            return d.period().isZero() ? NTime.of(time.plus(d.duration())) : null;
+            return d.period().isZero() ? time.plus(d.duration()) : null;
         }
         if (instant instanceof LocalDateTime ldt) {
-            return NDateTime.of(ldt.plus(d.period()).plus(d.duration()));
+            return ldt.plus(d.period()).plus(d.duration());
         }
+        if (instant instanceof OffsetDateTime odt) {
+            return odt.plus(d.period()).plus(d.duration());
+        }
+
         return null;
     }
 
-    private static Object minus(Object instant, IsoDuration d) {
+    private static Temporal minus(Object instant, IsoDuration d) {
         if (instant instanceof LocalDate date) {
-            return d.duration().isZero() ? NDate.of(date.minus(d.period())) : null;
+            return d.duration().isZero() ? date.minus(d.period()) : null;
         }
         if (instant instanceof LocalTime time) {
-            return d.period().isZero() ? NTime.of(time.minus(d.duration())) : null;
+            return d.period().isZero() ? time.minus(d.duration()) : null;
         }
         if (instant instanceof LocalDateTime ldt) {
-            return NDateTime.of(ldt.minus(d.period()).minus(d.duration()));
+            return ldt.minus(d.period()).minus(d.duration());
+        }
+        if (instant instanceof OffsetDateTime odt) {
+            return odt.minus(d.period()).minus(d.duration());
+        }
+
+        return null;
+    }
+
+    private static Node wrap(Object instant) {
+        if (instant instanceof IsoDuration odt) {
+            return NPeriod.of(odt);
+        }
+        if (instant instanceof LocalDate date) {
+            return NDate.of(date);
+        }
+        if (instant instanceof LocalTime time) {
+            return NTime.of(time);
+        }
+        if (instant instanceof LocalDateTime ldt) {
+            return NDateTime.of(ldt);
+        }
+        if (instant instanceof OffsetDateTime odt) {
+            return NDateTime.of(odt);
         }
         return null;
     }
@@ -100,6 +129,10 @@ public final class Add extends Predicate {
         if (a instanceof LocalDateTime na && b instanceof LocalDateTime nb) {
             return new IsoDuration(Period.ZERO, Duration.between(na, nb));
         }
+        if (a instanceof OffsetDateTime oda && b instanceof OffsetDateTime odb) {
+            return new IsoDuration(Period.ZERO, Duration.between(oda, odb));
+        }
+
         return null;
     }
 
