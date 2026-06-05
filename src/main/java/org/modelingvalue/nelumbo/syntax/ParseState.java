@@ -529,12 +529,35 @@ public class ParseState implements Mergeable<ParseState> {
                 return new TokenState(min.next(), next);
             }
         }
-        if (type == TokenType.OPERATOR || type == TokenType.NAME) {
+        if (type == TokenType.OPERATOR) {
             for (int i = text.length() - 1; i > 0; i--) {
                 String key = text.substring(0, i);
                 next = tokenTexts().get(key);
                 if (next != null && next.visibility() != notVisibility) {
                     Token pre = token.split(i);
+                    if (result != null) {
+                        result.addSplit(token, pre);
+                        result.add(pre);
+                        pre.setTextMatch(next.isKeyword());
+                        pre.setState(next);
+                    }
+                    return new TokenState(pre.next(), next);
+                }
+            }
+        }
+        if (type == TokenType.NAME) {
+            String[] split = text.splitWithDelimiters("\\d+", 0);
+            if (split.length > 1) {
+                next = tokenTexts().get(split[0]);
+                if (next != null && next.visibility() != notVisibility) {
+                    if (split.length > 2) {
+                        Token pre = token.split(split[0].length() + split[1].length());
+                        if (result != null) {
+                            result.addSplit(token, pre);
+                        }
+                        token = pre;
+                    }
+                    Token pre = token.split(split[0].length());
                     if (result != null) {
                         result.addSplit(token, pre);
                         result.add(pre);
