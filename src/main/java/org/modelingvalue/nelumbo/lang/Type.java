@@ -539,9 +539,7 @@ public final class Type extends Node implements FunctorOrType {
 
     @Override
     public Type setTypeArgs(Map<Variable, Type> typeArgs) {
-        Type result = (Type) super.setTypeArgs(typeArgs);
-        System.err.println("!!!!!!!!!! " + typeArgs + " : " + this + " -> " + result);
-        return result;
+        return (Type) super.setTypeArgs(typeArgs);
     }
 
 }
