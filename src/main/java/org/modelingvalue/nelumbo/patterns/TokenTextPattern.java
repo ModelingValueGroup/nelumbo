@@ -79,7 +79,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    protected TokenTextPattern setBinding(Node declaration, Map<Variable, Object> vars) {
+    protected TokenTextPattern setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
         Variable var = variable();
         if (var != null) {
             Object val = vars.get(var);
@@ -91,7 +91,7 @@ public class TokenTextPattern extends Pattern {
                 return set(0, node.toString(), token.isKeyword() || token.isLitteralNode());
             }
         }
-        return (TokenTextPattern) super.setBinding(declaration, vars);
+        return (TokenTextPattern) super.setBinding(declaration, vars, setFunctorOrType);
     }
 
     @Override

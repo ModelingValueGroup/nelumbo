@@ -201,12 +201,12 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @Override
-    public Type setBinding(Node declaration, Map<Variable, Object> vars) {
+    public Type setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
         Variable var = variable();
         if (var != null && vars.get(var) instanceof Type elt) {
             return elt;
         }
-        return (Type) super.setBinding(declaration, vars);
+        return (Type) super.setBinding(declaration(), vars, setFunctorOrType);
     }
 
     public String group() {

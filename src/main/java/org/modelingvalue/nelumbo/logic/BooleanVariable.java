@@ -66,15 +66,17 @@ public class BooleanVariable extends Predicate {
     }
 
     @Override
-    protected BooleanVariable setBinding(Node declaration, Map<Variable, Object> vars) {
+    protected BooleanVariable setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
         Variable var = variable();
         if (var != null && vars.get(var) instanceof Type t && !t.equals(functor().resultType())) {
-            return (BooleanVariable) super.setBinding(declaration, vars).setFunctorOrType(functor().setResultType(t));
+            return (BooleanVariable) super.setBinding(declaration, vars, setFunctorOrType)
+                    .setFunctorOrType(functor().setResultType(t));
         }
         if (var != null && vars.get(var) instanceof Variable v && !v.type().equals(functor().resultType())) {
-            return (BooleanVariable) super.setBinding(declaration, vars).setFunctorOrType(functor().setResultType(v.type()));
+            return (BooleanVariable) super.setBinding(declaration, vars, setFunctorOrType)
+                    .setFunctorOrType(functor().setResultType(v.type()));
         }
-        return (BooleanVariable) super.setBinding(declaration, vars);
+        return (BooleanVariable) super.setBinding(declaration, vars, setFunctorOrType);
     }
 
     @Override

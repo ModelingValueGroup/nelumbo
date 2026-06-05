@@ -23,6 +23,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
@@ -392,14 +393,19 @@ public class Predicate extends Node {
 
     private InferResult inferRules(InferContext context) {
         InferResult result = unknown();
-        Set<Rule> rules = context.knowledgebase().getRules(this);
+        MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
+        Set<Rule> rules = context.knowledgebase().getRules(this, typeArgs);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
             result = rule.biimply(this, context, result);
             if (result.hasStackOverflow()) {
                 return result;
             }
         }
-        return result;
+        if (typeArgs.isEmpty()) {
+            return result;
+        } else {
+            return result.setTypeArgs(typeArgs.get());
+        }
     }
 
     public boolean isFact() {
@@ -413,6 +419,11 @@ public class Predicate extends Node {
         } catch (ParseException e) {
             return null;
         }
+    }
+
+    @Override
+    public Predicate setTypeArgs(Map<Variable, Type> typeArgs) {
+        return (Predicate) super.setTypeArgs(typeArgs);
     }
 
 }

@@ -29,6 +29,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.mutable.MutableSet;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.Pair;
@@ -422,30 +423,24 @@ public class Node extends StructImpl implements AstElement {
     }
 
     protected Node set(Variable var, Object val) {
-        return setBinding(declaration(), Map.of(Entry.of(var, val)));
+        return setBinding(declaration(), Map.of(Entry.of(var, val)), false);
     }
 
     public Node setBinding(Map<Variable, Object> vars) {
-        return setBinding(declaration(), vars);
+        return setBinding(declaration(), vars, false);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Node setTypeArgs(Map<Variable, Type> typeArgs) {
-        Node result = setBinding((Map) typeArgs);
-        FunctorOrType fot = functorOrType();
-        if (fot == this) {
-            result = result.setFunctorOrType((FunctorOrType) result);
-        } else {
-            result = result.setFunctorOrType(fot.setTypeArgs(typeArgs));
-        }
-        return result;
+        return setBinding(declaration(), (Map) typeArgs, true);
     }
 
-    protected Node setBinding(Node declaration, Map<Variable, Object> vars) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected Node setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
-            Object bound = setBinding(declaration.get(i), thisVal, vars, i);
+            Object bound = setBinding(declaration.get(i), thisVal, vars, i, setFunctorOrType);
             if (!Objects.equals(bound, thisVal)) {
                 if (array == null) {
                     array = toArray();
@@ -453,11 +448,17 @@ public class Node extends StructImpl implements AstElement {
                 array[i] = bound;
             }
         }
-        return array != null ? set(nodeInfo, array) : this;
+        if (setFunctorOrType && !(this instanceof Type)) {
+            FunctorOrType fot = functorOrType().setTypeArgs((Map) vars);
+            return array != null ? set(nodeInfo.setFunctorOrType(fot), array) : setFunctorOrType(fot);
+        } else {
+            return array != null ? set(nodeInfo, array) : this;
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    protected final Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i) {
+    protected final Object setBinding(Object declVal, Object thisVal, Map<Variable, Object> vars, int i,
+            boolean setFunctorOrType) {
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
             if (varVal != null && doSetBinding(varVal, i)) {
@@ -474,13 +475,13 @@ public class Node extends StructImpl implements AstElement {
             }
         } else if (declVal instanceof Node declNode && !(declNode instanceof Type) && //
                 thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
-            return thisNode.setBinding(declNode, vars);
+            return thisNode.setBinding(declNode, vars, setFunctorOrType);
         } else if (declVal instanceof ContainingCollection declList && thisVal instanceof ContainingCollection thisList
                 && //
                 declList.size() == thisList.size()) {
             ContainingCollection list = declList.clear();
             for (int ii = 0; ii < declList.size(); ii++) {
-                list = list.add(setBinding(declList.get(ii), thisList.get(ii), vars, i));
+                list = list.add(setBinding(declList.get(ii), thisList.get(ii), vars, i, setFunctorOrType));
             }
             return thisList.equals(list) ? thisList : list;
         } else if (declVal instanceof Type declType && thisVal instanceof Type thisType) {
@@ -493,7 +494,7 @@ public class Node extends StructImpl implements AstElement {
                     return new Type(valVar);
                 }
             } else {
-                return thisType.setBinding(declType, vars);
+                return thisType.setBinding(declType, vars, setFunctorOrType);
             }
         }
         return thisVal;
@@ -619,7 +620,8 @@ public class Node extends StructImpl implements AstElement {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         Node rewrite = this;
         if (reason == ConstructionReason.parsing && Type.ROOT.isAssignableFrom(type())) {
-            for (Transform transform : knowledgeBase.getTransforms(this)) {
+            MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
+            for (Transform transform : knowledgeBase.getTransforms(this, typeArgs)) {
                 rewrite = transform.transform(transform.source(), this, rewrite, knowledgeBase, ctx);
             }
         }

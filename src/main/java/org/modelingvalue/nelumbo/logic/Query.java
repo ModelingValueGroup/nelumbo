@@ -23,6 +23,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Evaluatable;
@@ -181,7 +182,7 @@ public final class Query extends Node implements Evaluatable {
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
                     completeFalsehoods, Set.of());
             if (!found.equals(expected)) {
-                // Set<Pair<Object, Object>> diff = found.diff(expected);
+                Set<Pair<Object, Object>> diff = found.diff(expected);
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //
                         astElements.sublist(2, astElements.size()).toArray(AstElement[]::new)));

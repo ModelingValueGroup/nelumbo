@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import static org.modelingvalue.nelumbo.logic.InferResult.of;
+
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -94,6 +96,8 @@ public interface InferResult {
                 .addAll(Node.diff(completeFalsehoods(), other.completeFalsehoods()))
                 .addAll(Node.diff(cycles(), other.cycles()));
     }
+
+    InferResult setTypeArgs(Map<Variable, Type> typeArgs);
 
     static InferResult of(Predicate predicate, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods,
             boolean completeFalsehoods, Set<Predicate> cycles) {
@@ -599,6 +603,13 @@ public interface InferResult {
                         && completeFalsehoods() == other.completeFalsehoods() && //
                         cycles().equals(other.cycles());
             }
+        }
+
+        @Override
+        public InferResult setTypeArgs(Map<Variable, Type> typeArgs) {
+            return of(predicate().setTypeArgs(typeArgs), facts().replaceAll(f -> f.setTypeArgs(typeArgs)),
+                    completeFacts(), falsehoods().replaceAll(f -> f.setTypeArgs(typeArgs)), completeFalsehoods(),
+                    cycles());
         }
     }
 

@@ -21,7 +21,6 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Mergeable;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -105,8 +104,8 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
         return new MatchState<>(transitions, elements().addAll(state.elements()));
     }
 
-    public Set<E> match(Object obj) {
-        MatchState<E> state = doMatch(obj, MutableMap.of(Map.of()));
+    public Set<E> match(Object obj, MutableMap<Variable, Type> typeArgs) {
+        MatchState<E> state = doMatch(obj, typeArgs);
         return state != null ? state.elements() : Set.of();
     }
 

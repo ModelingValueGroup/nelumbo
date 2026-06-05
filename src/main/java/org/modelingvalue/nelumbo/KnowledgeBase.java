@@ -463,8 +463,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return rule;
     }
 
-    public Set<Rule> getRules(Predicate predicate) {
-        return ruleSignatures.get().match(predicate);
+    public Set<Rule> getRules(Predicate predicate, MutableMap<Variable, Type> typeArgs) {
+        return ruleSignatures.get().match(predicate, typeArgs);
     }
 
     public Transform addTransform(Transform transform) {
@@ -481,8 +481,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return transform;
     }
 
-    public Set<Transform> getTransforms(Node root) {
-        return transformSignatures.get().match(root);
+    public Set<Transform> getTransforms(Node root, MutableMap<Variable, Type> typeArgs) {
+        return transformSignatures.get().match(root, typeArgs);
     }
 
     public void addFact(Predicate fact) {

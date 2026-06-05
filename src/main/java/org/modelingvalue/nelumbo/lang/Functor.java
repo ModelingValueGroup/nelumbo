@@ -436,10 +436,10 @@ public class Functor extends Node implements FunctorOrType {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    protected Functor setBinding(Node declaration, Map<Variable, Object> vars) {
-        Functor functor = (Functor) super.setBinding(declaration, vars);
+    protected Functor setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
+        Functor functor = (Functor) super.setBinding(declaration, vars, setFunctorOrType);
         List<AstElement> from = astElements();
-        List to = (List) setBinding(from, from, vars, -1);
+        List to = (List) setBinding(from, from, vars, -1, setFunctorOrType);
         to = to.replaceAll(e -> e instanceof String s ? Pattern.t(s) : e);
         return from.equals(to) ? functor : functor.setAstElements(to);
     }

@@ -70,12 +70,12 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    protected NodeTypePattern setBinding(Node declaration, Map<Variable, Object> vars) {
+    protected NodeTypePattern setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
         Variable var = variable();
         if (var != null && vars.get(var) instanceof Type type) {
             return set(1, nodeType().rewrite(type));
         }
-        return (NodeTypePattern) super.setBinding(declaration, vars);
+        return (NodeTypePattern) super.setBinding(declaration, vars, setFunctorOrType);
     }
 
     public Integer precedence() {
