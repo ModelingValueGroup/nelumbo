@@ -624,6 +624,9 @@ public class Node extends StructImpl implements AstElement {
             for (Transform transform : knowledgeBase.getTransforms(this, typeArgs)) {
                 rewrite = transform.transform(transform.source(), this, rewrite, knowledgeBase, ctx);
             }
+            if (!typeArgs.isEmpty()) {
+                rewrite = rewrite.setTypeArgs(typeArgs.get());
+            }
         }
         return rewrite;
     }
