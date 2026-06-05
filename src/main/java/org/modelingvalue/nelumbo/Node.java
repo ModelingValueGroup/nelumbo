@@ -578,7 +578,7 @@ public class Node extends StructImpl implements AstElement {
         return first != null ? first.list(lastToken()) : List.of();
     }
 
-    public <E> MatchState<E> state(MatchState<E> state) {
+    public <E extends Node> MatchState<E> state(MatchState<E> state) {
         for (Object arg : args().reverse()) {
             switch (arg) {
             case Type type    -> {
