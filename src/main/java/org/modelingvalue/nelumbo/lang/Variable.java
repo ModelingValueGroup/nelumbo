@@ -51,8 +51,8 @@ public final class Variable extends Node {
     }
 
     @Override
-    public Variable setFunctor(Functor functor) {
-        return (Variable) super.setFunctor(functor);
+    public Variable setFunctorOrType(FunctorOrType functorOrType) {
+        return (Variable) super.setFunctorOrType(functorOrType);
     }
 
     @Override
@@ -122,7 +122,7 @@ public final class Variable extends Node {
                 if (Type.BOOLEAN.isAssignableFrom(var.type())) {
                     return new BooleanVariable(functor, astElements(), var);
                 } else {
-                    return var.setAstElements(astElements()).setFunctor(functor);
+                    return var.setAstElements(astElements()).setFunctorOrType(functor);
                 }
             }
             boolean hidden = get(0) != null;

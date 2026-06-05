@@ -50,12 +50,6 @@ public final class BuildSet extends Quantifier {
         super(nodeInfo, args);
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Variable> localVars() {
-        return (List<Variable>) get(0);
-    }
-
     public NSet set() {
         return (NSet) get(2);
     }

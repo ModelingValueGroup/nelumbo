@@ -29,7 +29,9 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableSet;
 import org.modelingvalue.collections.struct.impl.StructImpl;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
@@ -76,12 +78,12 @@ public class Node extends StructImpl implements AstElement {
         return nodeInfo.declaration();
     }
 
-    public Node setFunctor(Functor functor) {
-        return set(nodeInfo.setFunctorOrType(functor), toArray());
+    public Node setFunctorOrType(FunctorOrType functorOrType) {
+        return functorOrType.equals(functorOrType()) ? this : set(nodeInfo.setFunctorOrType(functorOrType), toArray());
     }
 
     public Node setAstElements(List<AstElement> elements) {
-        return set(nodeInfo.setElements(elements), toArray());
+        return elements.equals(astElements()) ? this : set(nodeInfo.setElements(elements), toArray());
     }
 
     public Node resetDeclaration() {
@@ -115,8 +117,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Type type() {
-        FunctorOrType tf = functorOrType();
-        return tf instanceof Functor ? ((Functor) tf).resultType() : (Type) tf;
+        return functorOrType().resultType();
     }
 
     public Functor functor() {
@@ -177,6 +178,50 @@ public class Node extends StructImpl implements AstElement {
             return false;
         }
         return super.equals(obj);
+    }
+
+    public final Set<Pair<Object, Object>> diff(Node other) {
+        MutableSet<Pair<Object, Object>> diff = MutableSet.of(Set.of());
+        diff(other, diff);
+        return diff.get();
+    }
+
+    public static final Set<Pair<Object, Object>> diff(Object a, Object b) {
+        MutableSet<Pair<Object, Object>> diff = MutableSet.of(Set.of());
+        diff(a, b, diff);
+        return diff.get();
+    }
+
+    private void diff(Node other, MutableSet<Pair<Object, Object>> diff) {
+        Object tfe = typeForEquals(), otfe = other.typeForEquals();
+        if (!Objects.equals(tfe, otfe)) {
+            diff.add(Pair.of(tfe, otfe));
+        } else {
+            Object[] a = toArray(), b = other.toArray();
+            if (a.length != b.length) {
+                diff.add(Pair.of(a, b));
+            } else {
+                for (int i = 0; i < a.length; i++) {
+                    diff(a[i], b[i], diff);
+                }
+            }
+        }
+    }
+
+    private static void diff(Object a, Object b, MutableSet<Pair<Object, Object>> diff) {
+        if (a instanceof Node na && b instanceof Node nb) {
+            na.diff(nb, diff);
+        } else if (a instanceof ContainingCollection ca && b instanceof ContainingCollection cb) {
+            if (ca.size() != cb.size()) {
+                diff.add(Pair.of(ca, cb));
+            } else {
+                for (int i = 0; i < ca.size(); i++) {
+                    diff(ca.get(i), cb.get(i), diff);
+                }
+            }
+        } else if (!Objects.equals(a, b)) {
+            diff.add(Pair.of(a, b));
+        }
     }
 
     protected Object typeForEquals() {
@@ -382,6 +427,18 @@ public class Node extends StructImpl implements AstElement {
 
     public Node setBinding(Map<Variable, Object> vars) {
         return setBinding(declaration(), vars);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public Node setTypeArgs(Map<Variable, Type> typeArgs) {
+        Node result = setBinding((Map) typeArgs);
+        FunctorOrType fot = functorOrType();
+        if (fot == this) {
+            result = result.setFunctorOrType((FunctorOrType) result);
+        } else {
+            result = result.setFunctorOrType(fot.setTypeArgs(typeArgs));
+        }
+        return result;
     }
 
     protected Node setBinding(Node declaration, Map<Variable, Object> vars) {

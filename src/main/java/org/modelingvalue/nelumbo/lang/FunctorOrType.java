@@ -16,6 +16,12 @@
 
 package org.modelingvalue.nelumbo.lang;
 
+import org.modelingvalue.collections.Map;
+
 public interface FunctorOrType {
+
+    Type resultType();
+
+    FunctorOrType setTypeArgs(Map<Variable, Type> typeArgs);
 
 }

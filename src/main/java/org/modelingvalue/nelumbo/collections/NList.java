@@ -62,6 +62,11 @@ public final class NList extends Node {
     }
 
     @Override
+    protected Object typeForEquals() {
+        return type();
+    }
+
+    @Override
     public List<Object> args() {
         return elements();
     }

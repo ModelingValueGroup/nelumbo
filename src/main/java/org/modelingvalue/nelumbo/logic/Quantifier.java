@@ -49,7 +49,7 @@ public abstract class Quantifier extends CompoundPredicate {
 
     @Override
     protected boolean doGetBinding(Object varVal, int i) {
-        return i > 0;
+        return i > 0 || varVal instanceof Variable;
     }
 
     @Override

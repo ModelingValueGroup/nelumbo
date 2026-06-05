@@ -76,7 +76,7 @@ public final class Fact extends Node implements Evaluatable {
             Functor nodeFunctor = predicate.functor();
             Functor literalFunctor = knowledgeBase.literal(nodeFunctor);
             if (literalFunctor != null) {
-                predicate = predicate.setFunctor(literalFunctor);
+                predicate = predicate.setFunctorOrType(literalFunctor);
             }
         }
         if (!predicate.isFact()) {

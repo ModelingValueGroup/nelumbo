@@ -43,6 +43,11 @@ public class NSet extends Node {
         super(NodeInfo.of(elementType.toSet().toLiteral()), set);
     }
 
+    @Override
+    protected Object typeForEquals() {
+        return type();
+    }
+
     public Type elementType() {
         return type().argument();
     }

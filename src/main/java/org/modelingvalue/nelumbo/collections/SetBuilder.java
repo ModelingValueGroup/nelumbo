@@ -43,6 +43,11 @@ public class SetBuilder extends Node {
     }
 
     @Override
+    protected boolean doGetBinding(Object varVal, int i) {
+        return i > 0 || varVal instanceof Variable;
+    }
+
+    @Override
     protected boolean doSetBinding(Object varVal, int i) {
         return i > 0 || varVal instanceof Variable;
     }

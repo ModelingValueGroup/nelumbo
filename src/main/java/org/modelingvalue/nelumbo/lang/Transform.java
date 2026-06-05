@@ -120,7 +120,7 @@ public final class Transform extends Node {
                     if (n.functorOrType() instanceof Functor f) {
                         Functor r = fm.get(f);
                         if (r != null) {
-                            return n.setFunctor(r);
+                            return n.setFunctorOrType(r);
                         }
                     }
                     return n;

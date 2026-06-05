@@ -20,6 +20,8 @@ import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.Pair;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
@@ -83,6 +85,14 @@ public interface InferResult {
     default Set<Map<Variable, Object>> falseBindings() {
         return allFalsehoods().map(p -> p.getBinding(predicate())
                 .removeAll(e -> e.getValue() instanceof Variable || e.getValue() instanceof Type)).asSet();
+    }
+
+    default Set<Pair<Object, Object>> diff(InferResult other) {
+        return Node.diff(predicate(), other.predicate()).addAll(Node.diff(facts(), other.facts()))
+                .addAll(Node.diff(completeFacts(), other.completeFacts()))
+                .addAll(Node.diff(falsehoods(), other.falsehoods()))
+                .addAll(Node.diff(completeFalsehoods(), other.completeFalsehoods()))
+                .addAll(Node.diff(cycles(), other.cycles()));
     }
 
     static InferResult of(Predicate predicate, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods,

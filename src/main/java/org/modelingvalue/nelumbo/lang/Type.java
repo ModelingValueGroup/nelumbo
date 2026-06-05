@@ -164,8 +164,8 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @Override
-    public Type setFunctor(Functor functor) {
-        return (Type) super.setFunctor(functor);
+    public Type setFunctorOrType(FunctorOrType functorOrType) {
+        return (Type) super.setFunctorOrType(functorOrType);
     }
 
     @Override
@@ -482,7 +482,7 @@ public final class Type extends Node implements FunctorOrType {
                 if (result.hasArgument() && get(0) instanceof Type elem) {
                     result = result.setArgument(elem);
                 }
-                return result.setFunctor(functor);
+                return result.setFunctorOrType(functor);
             }
             Set<Type> supers = Set.of();
             for (Type sup : (List<Type>) get(2)) {
@@ -530,6 +530,18 @@ public final class Type extends Node implements FunctorOrType {
             }
         }
         return null;
+    }
+
+    @Override
+    public Type resultType() {
+        return this;
+    }
+
+    @Override
+    public Type setTypeArgs(Map<Variable, Type> typeArgs) {
+        Type result = (Type) super.setTypeArgs(typeArgs);
+        System.err.println("!!!!!!!!!! " + typeArgs + " : " + this + " -> " + result);
+        return result;
     }
 
 }

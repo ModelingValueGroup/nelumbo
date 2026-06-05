@@ -89,6 +89,7 @@ public class Functor extends Node implements FunctorOrType {
         return (Pattern) get(0);
     }
 
+    @Override
     public Type resultType() {
         return (Type) get(1);
     }
@@ -115,6 +116,11 @@ public class Functor extends Node implements FunctorOrType {
     @Override
     public Functor setBinding(Map<Variable, Object> vars) {
         return (Functor) super.setBinding(vars);
+    }
+
+    @Override
+    public Functor setTypeArgs(Map<Variable, Type> typeArgs) {
+        return (Functor) super.setTypeArgs(typeArgs);
     }
 
     @Override
@@ -205,8 +211,8 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    public Functor setFunctor(Functor functor) {
-        return (Functor) super.setFunctor(functor);
+    public Functor setFunctorOrType(FunctorOrType functorOrType) {
+        return (Functor) super.setFunctorOrType(functorOrType);
     }
 
     @Override

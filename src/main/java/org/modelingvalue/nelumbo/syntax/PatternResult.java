@@ -153,7 +153,6 @@ public final class PatternResult implements ParseExceptionHandler {
         elements.removeLast();
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Node postParse() throws ParseException {
         ParseState next = state;
         if (next != null) {
@@ -168,12 +167,12 @@ public final class PatternResult implements ParseExceptionHandler {
                 merge.a().merge(merge.b());
             }
             List<AstElement> elements = elements();
-            Map<Variable, Type> ta = typeArgs.toImmutable();
+            Map<Variable, Type> ta = typeArgs.get();
             Object[] args = functor.args(elements, ta);
-            if (!ta.isEmpty()) {
-                functor = functor.setBinding((Map) ta);
-            }
             Node node = functor.construct(elements, args, this, context);
+            if (!ta.isEmpty()) {
+                node = node.setTypeArgs(ta);
+            }
             for (AstElement e : elements) {
                 if (e instanceof Token token) {
                     token.setNode(node);

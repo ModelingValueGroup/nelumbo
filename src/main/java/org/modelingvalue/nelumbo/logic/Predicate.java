@@ -28,6 +28,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -170,8 +171,8 @@ public class Predicate extends Node {
     }
 
     @Override
-    public Predicate setFunctor(Functor functor) {
-        return (Predicate) super.setFunctor(functor);
+    public Predicate setFunctorOrType(FunctorOrType functorOrType) {
+        return (Predicate) super.setFunctorOrType(functorOrType);
     }
 
     @Override
