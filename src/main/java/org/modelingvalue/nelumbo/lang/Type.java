@@ -184,20 +184,6 @@ public final class Type extends Node implements FunctorOrType {
         }
     }
 
-    @Override
-    public Type setBinding(Node declaration, Map<Variable, Object> vars) {
-        if (hasArgument()) {
-            if (isMany()) {
-                return set(0, many().replaceAll(t -> t.hasArgument() ? t.setBinding(vars) : t));
-            }
-            Variable var = argument().variable();
-            if (var != null && vars.get(var) instanceof Type elt) {
-                return setArgument(elt).setBinding(declaration, vars);
-            }
-        }
-        return (Type) super.setBinding(declaration, vars);
-    }
-
     public Type setArgument(Type argument) {
         if (hasArgument()) {
             if (argument().equals(argument)) {
@@ -212,6 +198,15 @@ public final class Type extends Node implements FunctorOrType {
         } else {
             return argument;
         }
+    }
+
+    @Override
+    public Type setBinding(Node declaration, Map<Variable, Object> vars) {
+        Variable var = variable();
+        if (var != null && vars.get(var) instanceof Type elt) {
+            return elt;
+        }
+        return (Type) super.setBinding(declaration, vars);
     }
 
     public String group() {
