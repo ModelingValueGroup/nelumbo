@@ -68,6 +68,10 @@ public abstract class Pattern extends Node {
         return s(List.of(), elements);
     }
 
+    public static Pattern c(Pattern... elements) {
+        return c(List.of(), elements);
+    }
+
     public static Pattern t(String tokenText) {
         return t(List.of(), tokenText);
     }
@@ -106,7 +110,13 @@ public abstract class Pattern extends Node {
 
     public static Pattern s(List<AstElement> ast, Pattern... elements) {
         return new SequencePattern(Type.PATTERN, ast,
-                List.of(elements).replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e)));
+                List.of(elements).replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e)),
+                false);
+    }
+
+    public static Pattern c(List<AstElement> ast, Pattern... elements) {
+        return new SequencePattern(Type.PATTERN, ast,
+                List.of(elements).replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e)), true);
     }
 
     public static Pattern t(List<AstElement> ast, String tokenText) {
