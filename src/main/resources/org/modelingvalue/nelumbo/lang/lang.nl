@@ -6,7 +6,7 @@
  LEFT          :: NATIVE // [\(\[\{]
  RIGHT         :: NATIVE // [\)\]\}]
  STRING        :: NATIVE // "([^"\\]|\\[\s\S])*"
- NUMBER        :: NATIVE // [0-9]+(#[0-9a-zA-Z]+)?
+ NUMBER        :: NATIVE // [0-9]+
  NAME          :: NATIVE // [a-zA-Z_][0-9a-zA-Z_]*
  OPERATOR      :: NATIVE // (?!//)[~!@#$%^&*=+|:<>.?/-]+
  NEWLINE       :: NATIVE // \R
