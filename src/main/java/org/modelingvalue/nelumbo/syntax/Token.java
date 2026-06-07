@@ -54,6 +54,7 @@ public final class Token implements AstElement {
     private Node       node;
     private boolean    isTextMatch;
     private boolean    isKeyword;
+    private boolean    isConnected;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -229,6 +230,10 @@ public final class Token implements AstElement {
         return isKeyword;
     }
 
+    public boolean isConnected() {
+        return isConnected;
+    }
+
     public boolean contains(int l, int c) {
         if (numLines == 1) {
             // check within one liner:
@@ -378,19 +383,19 @@ public final class Token implements AstElement {
         return node != null && Type.LITERAL.isAssignableFrom(node.type());
     }
 
-    public void setTextMatch(boolean isKeyword) {
+    public void setTextMatch(boolean isKeyword, boolean isConnected) {
         this.isTextMatch = true;
         this.isKeyword = isKeyword;
+        this.isConnected = isConnected;
     }
 
     public TokenType colorType() {
         return (text().equals("<") || text().equals(">")) && isPatternNode() ? TokenType.META_OPERATOR : //
                 isVariableNode() ? TokenType.VARIABLE : //
                         type() == TokenType.NAME && isTypeNode() ? TokenType.TYPE : //
-                                type() == TokenType.NAME && isTextMatch() && (isKeyword() || isLitteralNode())
-                                        ? TokenType.KEYWORD
-                                        : //
-                                        type();
+                                type() == TokenType.NAME && isTextMatch()
+                                        && (isKeyword() || (!isConnected() && isLitteralNode())) ? TokenType.KEYWORD : //
+                                                type();
     }
 
     @Override

@@ -533,7 +533,7 @@ public class ParseState implements Mergeable<ParseState> {
         if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next)) {
             if (result != null) {
                 result.add(token);
-                token.setTextMatch(next.isKeyword());
+                token.setTextMatch(next.isKeyword(), next.isConnected());
                 token.setState(next);
             }
             return new TokenState(token.next(), next);
@@ -547,7 +547,7 @@ public class ParseState implements Mergeable<ParseState> {
                     if (result != null) {
                         result.addSplit(token, pre);
                         result.add(pre);
-                        pre.setTextMatch(next.isKeyword());
+                        pre.setTextMatch(next.isKeyword(), next.isConnected());
                         pre.setState(next);
                     }
                     return new TokenState(pre.next(), next);
@@ -575,7 +575,7 @@ public class ParseState implements Mergeable<ParseState> {
                     if (result != null) {
                         result.addSplit(token, pre);
                         result.add(pre);
-                        pre.setTextMatch(next.isKeyword());
+                        pre.setTextMatch(next.isKeyword(), next.isConnected());
                         pre.setState(next);
                     }
                     return new TokenState(pre.next(), next);
