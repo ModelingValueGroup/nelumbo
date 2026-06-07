@@ -50,6 +50,8 @@ public class ParseState implements Mergeable<ParseState> {
     private final Visibility                 visibility;
     private final boolean                    isConnected;
 
+    private List<String> connected = null;
+
     public ParseState(Functor functor) {
         this(Map.of(), Map.of(), Map.of(), functor, null, null, null, Set.of(), Set.of(), false, Visibility.optional,
                 false);
@@ -140,6 +142,15 @@ public class ParseState implements Mergeable<ParseState> {
 
     public Visibility visibility() {
         return visibility;
+    }
+
+    public List<String> connected() {
+        if (connected == null) {
+            connected = tokenTexts()
+                    .filter(e -> e.getValue().isConnected() && TokenType.of(e.getKey()) == TokenType.NAME)
+                    .map(Entry::getKey).sortedByDesc(String::length).asList();
+        }
+        return connected;
     }
 
     public boolean isTokensEmpty() {
@@ -543,19 +554,24 @@ public class ParseState implements Mergeable<ParseState> {
                 }
             }
         }
-        if (type == TokenType.NAME) {
-            String[] split = text.splitWithDelimiters("\\d+", 0);
-            if (split.length > 1) {
-                next = tokenTexts().get(split[0]);
-                if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next)) {
-                    if (split.length > 2) {
-                        Token pre = token.split(split[0].length() + split[1].length());
-                        if (result != null) {
-                            result.addSplit(token, pre);
+        if (type == TokenType.NAME && text.length() > 1) {
+            for (String conn : connected()) {
+                if (conn.length() < text.length() && text.startsWith(conn)) {
+                    next = tokenTexts().get(conn);
+                    String sub = text.substring(conn.length());
+                    if (TokenType.of(sub) == null) {
+                        for (int end = 1;; end++) {
+                            if (TokenType.of(sub.substring(end)) != null) {
+                                Token pre = token.split(conn.length() + end);
+                                if (result != null) {
+                                    result.addSplit(token, pre);
+                                }
+                                token = pre;
+                                break;
+                            }
                         }
-                        token = pre;
                     }
-                    Token pre = token.split(split[0].length());
+                    Token pre = token.split(conn.length());
                     if (result != null) {
                         result.addSplit(token, pre);
                         result.add(pre);

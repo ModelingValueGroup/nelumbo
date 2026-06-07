@@ -6,22 +6,22 @@ Time 	 :: Object
 Period   :: Object
 
 // TODO: Think about extracting Timezone part? should this be a full literal?
-DateTime ::= <Date> T <Time#50> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?> 	@nelumbo.datetime.NDateTime,
+DateTime ::= <[> <Date> T <Time#50> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?> <]> @nelumbo.datetime.NDateTime,
              <DateTime> + <Period>   #40,
              <DateTime> - <Period>   #40
 
 // TODO: Disallow spaces, limit number length, prefix?
-Date 	::= <NUMBER> - <NUMBER> - <NUMBER> 						                                    @nelumbo.datetime.NDate,
+Date 	::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> 						                                   @nelumbo.datetime.NDate,
              <Date> + <Period>   #40,
              <Date> - <Period>   #40
 
 // TODO: Disallow spaces, or prefix with T, decimal?
-Time	::= <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?>		                        @nelumbo.datetime.NTime,
+Time	::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]>		                       @nelumbo.datetime.NTime,
              <Time> + <Period>   #40,
              <Time> - <Period>   #40
 
 // TODO separate on multiple lines?
-Period 	::= P <(> <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+> <(> T <(> <NUMBER> <(> H <|> M <|> S <)> <)+> <)?> <|> T <(> <NUMBER> <(> H <|> M <|> S <)> <)+> <)> @nelumbo.datetime.NPeriod,
+Period 	::= <[> P <(> <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+> <(> T <(> <NUMBER> <(> H <|> M <|> S <)> <)+> <)?> <|> T <(> <NUMBER> <(> H <|> M <|> S <)> <)+> <)> <]> @nelumbo.datetime.NPeriod,
              <DateTime> - <DateTime> #40,
              <Date> - <Date>         #40,
              <Time> - <Time>         #40,
@@ -35,25 +35,25 @@ private Boolean ::= datetime_add(<DateTime>,<Period>,<DateTime>)    @nelumbo.dat
                     period_add(<Period>,<Period>,<Period>)          @nelumbo.datetime.AddPeriod,
                     period_multiply(<Period>,<Integer>,<Period>)    @nelumbo.datetime.MultiplyPeriod
 
-Boolean ::= <DateTime>  >   <DateTime>   #30 @nelumbo.datetime.GreaterThan,
-           <DateTime>  "<"  <DateTime>   #30,
-           <DateTime>  "<=" <DateTime>   #30,
-           <DateTime>   >=  <DateTime>   #30
+Boolean ::= <DateTime> ">"  <DateTime>   #30 @nelumbo.datetime.GreaterThan,
+            <DateTime> "<"  <DateTime>   #30,
+            <DateTime> "<=" <DateTime>   #30,
+            <DateTime> ">=" <DateTime>   #30
 
-Boolean ::= <Date>  >   <Date>   #30 @nelumbo.datetime.GreaterThan,
-           <Date>  "<"  <Date>   #30,
-           <Date>  "<=" <Date>   #30,
-           <Date>   >=  <Date>   #30
+Boolean ::= <Date> ">"  <Date>   #30 @nelumbo.datetime.GreaterThan,
+            <Date> "<"  <Date>   #30,
+            <Date> "<=" <Date>   #30,
+            <Date> ">=" <Date>   #30
 
-Boolean ::= <Time>  >   <Time>   #30 @nelumbo.datetime.GreaterThan,
-           <Time>  "<"  <Time>   #30,
-           <Time>  "<=" <Time>   #30,
-           <Time>   >=  <Time>   #30
+Boolean ::= <Time> ">"  <Time>   #30 @nelumbo.datetime.GreaterThan,
+            <Time> "<"  <Time>   #30,
+            <Time> "<=" <Time>   #30,
+            <Time> ">=" <Time>   #30
 
-Boolean ::= <Period>  >   <Period>   #30 @nelumbo.datetime.GreaterThan,
-           <Period>  "<"  <Period>   #30,
-           <Period>  "<=" <Period>   #30,
-           <Period>   >=  <Period>   #30
+Boolean ::= <Period> ">"  <Period>   #30 @nelumbo.datetime.GreaterThan,
+            <Period> "<"  <Period>   #30,
+            <Period> "<=" <Period>   #30,
+            <Period> ">=" <Period>   #30
 
 
 DateTime a, b

@@ -58,9 +58,9 @@ Integer  n
 // =========================================================================
 // Period literal parsing / normalization
 // =========================================================================
-P1D T1M = x                 ? [(x=P1D T1M)][..]
+P1DT1M = x                 ? [(x=P1DT1M)][..]
 // 90 minutes normalizes to 1H30M; the year component is kept as-is.
-P1Y T90M = x                ? [(x=P1Y T1H30M)][..]
+P1YT90M = x                ? [(x=P1YT1H30M)][..]
 
 // FLAG (untested): invalid period literals reject at parse time, not as a
 // query falsehood — so they cannot be expressed as queries here.
@@ -74,33 +74,33 @@ P1Y T90M = x                ? [(x=P1Y T1H30M)][..]
 //     instant +/- duration = <literal instant>
 //     instant -  instant   = <literal duration>
 2024-01-15 + P1D = 2024-01-16                            ? [()][]
-2024-01-15T10:00:00Z + P T1H30M = 2024-01-15T11:30:00Z   ? [()][]
-2024-01-16T00:00:00Z - 2024-01-15T00:00:00Z = P T24H     ? [()][]
-20:04 + P T1H = 21:04                                    ? [()][]
+2024-01-15T10:00:00Z + PT1H30M = 2024-01-15T11:30:00Z    ? [()][]
+2024-01-16T00:00:00Z - 2024-01-15T00:00:00Z = PT24H      ? [()][]
+20:04 + PT1H = 21:04                                     ? [()][]
 //
 // forward-compute: solve the resulting instant (offset is preserved)
-2024-01-15T10:00:00Z + P T1H30M = a        ? [(a=2024-01-15T11:30Z)][..]
-2024-01-15T10:00:00+01:00 + P T1H30M = a   ? [(a=2024-01-15T11:30+01:00)][..]
+2024-01-15T10:00:00Z + PT1H30M = a        ? [(a=2024-01-15T11:30Z)][..]
+2024-01-15T10:00:00+01:00 + PT1H30M = a   ? [(a=2024-01-15T11:30+01:00)][..]
 // =========================================================================
 
 // duration +/- duration (AddPeriod predicate — deterministic)
-P T1H + P T30M = P T1H30M                                ? [()][]
-P T1H30M - P T30M = P T1H                                ? [()][]
+PT1H + PT30M = PT1H30M                                 ? [()][]
+PT1H30M - PT30M = PT1H                                 ? [()][]
 
 // reversible solve-forms (Add with one unbound operand — deterministic)
 // solve the duration operand of an instant sum
 2024-01-15 + x = 2024-01-16                                ? [(x=P1D)][..]
 // solve the duration between two datetimes (exact Duration)
-2024-01-16T00:00:00Z - 2024-01-15T00:00:00Z = x            ? [(x=P T24H)][..]
+2024-01-16T00:00:00Z - 2024-01-15T00:00:00Z = x            ? [(x=PT24H)][..]
 // solve the left instant (instant - duration)
 c + P1D = 2024-01-16                                       ? [(c=2024-01-15)][..]
 2024-01-15 - P1D = c                                       ? [(c=2024-01-14)][..]
 // forward: compute the resulting instant
 2024-01-15 + P1D = c                                       ? [(c=2024-01-16)][..]
 
-// scaling: Duration * Integer
-P1D * 3 = P3D                                             ? [()][]
-P T1H * 2 = P T2H                                         ? [()][]
+// scaling: Duration * Integer 
+P1D * 3 = P3D                                              ? [()][]
+PT1H * 2 = PT2H                                            ? [()][]
 
 // =========================================================================
 // Comparison operators >, <, <=, >= (datetime.nl lines 38-56).
@@ -113,9 +113,9 @@ P T1H * 2 = P T2H                                         ? [()][]
 2024-01-16T10:30:00Z > 2024-01-15T10:30:00Z                ? [()][]
 20:05 > 20:04                                              ? [()][]
 20:04 > 20:05                                              ? [][()]
-P2D > P1D                                                ? [()][]
-P1D > P2D                                                ? [][()]
-P T2H >= P T2H                                           ? [()][]
+P2D > P1D                                                  ? [()][]
+P1D > P2D                                                  ? [][()]
+PT2H >= PT2H                                               ? [()][]
 
 // FLAG (untested): comparison operators are only exercised on ground terms.
 // Reverse-solving a comparison (e.g. 2024-01-16 > c) is not covered.
@@ -123,6 +123,6 @@ P T2H >= P T2H                                           ? [()][]
 // =========================================================================
 // Time arithmetic (time_add / date_add); previously untested.
 // =========================================================================
-20:04 + P T1H = e                                          ? [(e=21:04)][..]
-21:04 - P T1H = e                                          ? [(e=20:04)][..]
-e + P T1H = 21:04                                          ? [(e=20:04)][..]
+20:04 + PT1H = e                                          ? [(e=21:04)][..]
+21:04 - PT1H = e                                          ? [(e=20:04)][..]
+e + PT1H = 21:04                                          ? [(e=20:04)][..]
