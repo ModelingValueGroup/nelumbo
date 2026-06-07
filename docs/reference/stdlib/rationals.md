@@ -29,12 +29,12 @@ A `Rational` is an exact rational — integer numerator over integer denominator
 ## Literals
 
 ```
-Rational ::= <DECIMAL>                  @nelumbo.rationals.Rational,
+Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>  @nelumbo.rationals.Rational,
              r(<Integer>),
              r(<Integer>/<Integer>)
 ```
 
-- `<DECIMAL>` — `lang.nl` token `-?[0-9]+\.[0-9]+`, e.g., `0.0`, `1.0`, `-1.5`, `3.14`. The mandatory decimal point distinguishes it from `<NUMBER>`.
+- Decimal-point literal — an optional `-`, then two `<NUMBER>` tokens (`[0-9]+`) joined by a `.`. Examples: `0.0`, `1.0`, `-1.5`, `3.14`. There is no separate `<DECIMAL>` lexer token; the literal is assembled at the pattern level, and the mandatory decimal point is what distinguishes it from an `Integer` literal.
 - `r(<Integer>)` — promote an integer.
 - `r(<Integer>/<Integer>)` — build a rational from numerator/denominator integers.
 
@@ -136,7 +136,7 @@ Added to what `nelumbo.integers` (and `nelumbo.logic`) already export:
 | Kind        | Names |
 |---|---|
 | Type        | `Rational`                                                          |
-| Literals    | `<DECIMAL>`                                                         |
+| Literals    | decimal-point literal `<(> - <)?> <[> <NUMBER> . <NUMBER> <]>`      |
 | Constructors| `r(x)`, `r(x/y)`                                                    |
 | Operators   | `+`, `-` (binary and unary), `*`, `/`, `\|x\|`, `<`, `<=`, `>`, `>=` on `Rational` |
 | Predicate   | `iir(n, d, q)` — integer-pair / rational conversion                  |

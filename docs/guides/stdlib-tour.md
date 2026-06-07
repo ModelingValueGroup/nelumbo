@@ -27,8 +27,8 @@ import nelumbo.lang   // not literally — this is itself nelumbo.lang
 // Token types — produced by the tokenizer
 SINGLEQUOTE :: NATIVE   SEMICOLON :: NATIVE   COMMA  :: NATIVE
 LEFT        :: NATIVE   RIGHT     :: NATIVE   STRING :: NATIVE
-DECIMAL     :: NATIVE   NUMBER    :: NATIVE   NAME   :: NATIVE
-OPERATOR    :: NATIVE   NEWLINE   :: NATIVE
+NUMBER      :: NATIVE   NAME      :: NATIVE   OPERATOR :: NATIVE
+NEWLINE     :: NATIVE
 BEGINOFFILE :: NATIVE   ENDOFFILE :: NATIVE
 
 // Object hierarchy
@@ -274,7 +274,7 @@ Boolean ::= <Rational>  >   <Rational>   #30     @...GreaterThan,
             <Rational>  >=  <Rational>   #30,
             iir(<Integer>,<Integer>,<Rational>)  @...IntegersRational
 
-Rational ::= <DECIMAL>                            @...Rational,
+Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>  @...Rational,
              <Rational> - <Rational>   #40,
              <Rational> + <Rational>   #40,
                         - <Rational>   #80,

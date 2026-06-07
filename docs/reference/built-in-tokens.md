@@ -18,15 +18,16 @@ These holes match a single token produced by the lexer, not an expression built 
 
 ### `<NUMBER>`
 
-Matches an integer literal: one or more decimal digits, possibly in bases other than decimal.
+Matches an unsigned integer token: one or more decimal digits.
 
 ```
-Integer ::= <NUMBER>   @org.modelingvalue.nelumbo.integers.NInteger
+Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <(> <(> <NUMBER> <|> <NAME> <)> <)+> <)?> <]>
+            @org.modelingvalue.nelumbo.integers.NInteger
 ```
 
-Examples that match: `0`, `1`, `42`, `1000000`.
+Examples that match `<NUMBER>` on its own: `0`, `1`, `42`, `1000000`. The leading sign and the optional `#`-prefixed base form are built **at the pattern level**, not by the lexer — the Integer literal above wraps `<NUMBER>` with an optional `-` and an optional `#`-radix tail.
 
-Nelumbo also supports **base-N literals** of the form `N#digits`, where `N` is the base (up to 36) and `digits` are digits in that base. This is how arbitrary-precision integers are printed for readability once they get large:
+Nelumbo's integer literal therefore admits **base-N literals** of the form `N#digits`, where `N` is the base (up to 36) and `digits` are digits in that base. This is how arbitrary-precision integers are printed for readability once they get large:
 
 ```
 36#22r8fozas3n8w3
@@ -35,15 +36,14 @@ Nelumbo also supports **base-N literals** of the form `N#digits`, where `N` is t
 
 Both of the above are base-36 integer literals — the values of `fib(100)` and `fib(1000)` respectively.
 
-### `<DECIMAL>`
-
-Matches a decimal-point literal for rationals:
+Rational literals are likewise built by composing two `<NUMBER>` tokens around a `.`:
 
 ```
-Rational ::= <DECIMAL>   @org.modelingvalue.nelumbo.rationals.Rational
+Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>
+             @org.modelingvalue.nelumbo.rationals.Rational
 ```
 
-Examples that match: `0.0`, `-1.5`, `3.14`.
+Examples that match: `0.0`, `-1.5`, `3.14`. There is no separate `<DECIMAL>` token — the decimal-point form is assembled by the rationals pattern, not by the lexer.
 
 ### `<STRING>`
 

@@ -146,7 +146,7 @@ Shipped natives fall into five structural roles. Reading this classification fir
 
 ### `Rational`
 
-- Backs: `Rational ::= <DECIMAL>`
+- Backs: `Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>`
 - Role: constant
 - Value: two `BigInteger`s — numerator and denominator, stored in reduced form via `gcd`.
 - Notes: `Rational.of(num, den)` normalises. The `toString` method prints a decimal form with two fractional digits.
@@ -248,11 +248,11 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `logic.nl` | `Root ::= "fact" ...` | `nelumbo.logic.Fact` |
 | `logic.nl` | `Root ::= <Boolean> "<=>" ...` | `nelumbo.logic.Rule` |
 | `logic.nl` | `Root ::= <Boolean> ? (Binding Binding)?` | `nelumbo.logic.Query` |
-| `integers.nl` | `<NUMBER>` | `NInteger` |
+| `integers.nl` | `<(> - <)?> <[> <NUMBER> <(> "#" ... <)?> <]>` | `NInteger` |
 | `integers.nl` | `add(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Add` |
 | `integers.nl` | `mult(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Multiply` |
 | `integers.nl` | `<Integer> > <Integer>` | `integers.GreaterThan` |
-| `rationals.nl` | `<DECIMAL>` | `rationals.Rational` |
+| `rationals.nl` | `<(> - <)?> <[> <NUMBER> . <NUMBER> <]>` | `rationals.Rational` |
 | `rationals.nl` | `add(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Add` |
 | `rationals.nl` | `mult(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Multiply` |
 | `rationals.nl` | `<Rational> > <Rational>` | `rationals.GreaterThan` |

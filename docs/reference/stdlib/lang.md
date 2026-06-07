@@ -2,7 +2,7 @@
 
 The bootstrap layer. Every other `.nl` file — including `logic.nl` itself — is written in the syntax that `lang.nl` declares. It is the meta-language for the meta-language.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 52 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 51 lines.
 
 **Import:**
 
@@ -34,8 +34,7 @@ COMMA         :: NATIVE     // ,
 LEFT          :: NATIVE     // [\(\[\{]
 RIGHT         :: NATIVE     // [\)\]\}]
 STRING        :: NATIVE     // "([^"\\]|\\[\s\S])*"
-DECIMAL       :: NATIVE     // -?[0-9]+\.[0-9]+
-NUMBER        :: NATIVE     // -?[0-9]+(#[0-9a-zA-Z]+)?
+NUMBER        :: NATIVE     // [0-9]+
 NAME          :: NATIVE     // [a-zA-Z_][0-9a-zA-Z_]*
 OPERATOR      :: NATIVE     // (?!//)[~!@#$%^&*=+|:<>.?/-]+
 NEWLINE       :: NATIVE     // \R
@@ -53,15 +52,16 @@ Each `:: NATIVE` declares a token type produced by the tokenizer. The comment th
 | `LEFT`        | `(`, `[`, or `{`                                          |
 | `RIGHT`       | `)`, `]`, or `}`                                          |
 | `STRING`      | a double-quoted string with backslash escapes             |
-| `DECIMAL`     | a signed decimal-point number (used by `<Rational>`)      |
-| `NUMBER`      | a signed integer, optionally with a `#`-prefixed base form |
+| `NUMBER`      | one or more decimal digits — an unsigned integer          |
 | `NAME`        | an identifier — letter / underscore, then alphanumerics    |
 | `OPERATOR`    | one or more operator characters (`! @ # $ % ^ & * = + | : < > . ? / -`), but not starting with `//` |
 | `NEWLINE`     | a line terminator                                         |
 | `BEGINOFFILE` | synthetic token at the start of input                     |
 | `ENDOFFILE`   | synthetic token at the end of input                       |
 
-These names are visible to user code wherever a lexical-token hole is expected: `<NUMBER>`, `<DECIMAL>`, `<STRING>`, `<NAME>`, `<OPERATOR>`, `<LEFT>`, `<RIGHT>`, `<COMMA>`, etc. See [`built-in-tokens.md`](../built-in-tokens.md) for how they are used in user-facing pattern declarations.
+These names are visible to user code wherever a lexical-token hole is expected: `<NUMBER>`, `<STRING>`, `<NAME>`, `<OPERATOR>`, `<LEFT>`, `<RIGHT>`, `<COMMA>`, etc. See [`built-in-tokens.md`](../built-in-tokens.md) for how they are used in user-facing pattern declarations.
+
+There is **no `DECIMAL` token**. Both signed integers and the rational decimal-point form (`-1.5`) are assembled at the pattern level by composing an optional `-` and one or two `<NUMBER>` tokens — see [`integers.md`](integers.md) and [`rationals.md`](rationals.md).
 
 ---
 
@@ -207,7 +207,7 @@ After `import nelumbo.lang`, the following are visible:
 
 | Kind             | Names |
 |---|---|
-| Token types      | `SINGLEQUOTE`, `SEMICOLON`, `COMMA`, `LEFT`, `RIGHT`, `STRING`, `DECIMAL`, `NUMBER`, `NAME`, `OPERATOR`, `NEWLINE`, `BEGINOFFILE`, `ENDOFFILE` |
+| Token types      | `SINGLEQUOTE`, `SEMICOLON`, `COMMA`, `LEFT`, `RIGHT`, `STRING`, `NUMBER`, `NAME`, `OPERATOR`, `NEWLINE`, `BEGINOFFILE`, `ENDOFFILE` |
 | Object types     | `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` |
 | File / scope     | `Namespace`, `RootNamespace` (`{ ... }` blocks) |
 | Pattern forms    | literal tokens, `<Variable>`, alternation `<(>...<|>...<)>`, repetition `<(>...<)+>` / `<)*>`, optional `<(>...<)?>`, sequence `<LEFT>...<RIGHT>`, type holes `<T>` / `<hidden T>` / `<T#N>` |

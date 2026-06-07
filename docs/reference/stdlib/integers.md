@@ -27,15 +27,16 @@ A value of type `Integer` is an arbitrary-precision signed integer. There is no 
 ## Literals
 
 ```
-Integer ::= <NUMBER>   @nelumbo.integers.NInteger
+Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <(> <(> <NUMBER> <|> <NAME> <)> <)+> <)?> <]>
+            @nelumbo.integers.NInteger
 ```
 
-`<NUMBER>` is the language-level token defined in [`lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) as `-?[0-9]+(#[0-9a-zA-Z]+)?`. It admits:
+`<NUMBER>` is the language-level token defined in [`lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) as the unsigned digit run `[0-9]+`. The sign and the optional base form are built around it **at the pattern level**, not by the lexer. The literal admits:
 
 - ordinary signed decimals: `0`, `42`, `-1`
-- base-N literals: `<digits>#<digits-in-base>`, where the leading number is the base — e.g., `16#ff`, `36#abc`
+- base-N literals: `<digits>#<digits-in-base>`, where the leading number is the base — e.g., `16#ff`, `36#abc`. The digits-in-base are themselves a repetition of `<NUMBER>` / `<NAME>` tokens, which is why letters like `ff`/`abc` (lexed as `<NAME>`) compose with the leading base.
 
-The native class `NInteger` parses the matched text into a `BigInteger`-backed value.
+The native class `NInteger` reassembles the matched parts, applies the leading sign, and parses the result into a `BigInteger`-backed value.
 
 ---
 

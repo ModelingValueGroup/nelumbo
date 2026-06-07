@@ -230,7 +230,7 @@ MyValue :: Object
 MyValue ::= <NUMBER>   @com.example.NMyValue
 ```
 
-(Or `<STRING>`, `<DECIMAL>`, or a custom lexical token.)
+(Or `<STRING>` or a custom lexical token. Note that there is no `<DECIMAL>` token — `Rational` literals are assembled from two `<NUMBER>` tokens around a `.` at the pattern level.)
 
 ### Java skeleton
 
@@ -261,7 +261,7 @@ public final class NMyValue extends Node {
 
     @Override
     public String toString(TokenType[] previous) {
-        previous[0] = TokenType.NAME;  // or NUMBER / DECIMAL, etc.
+        previous[0] = TokenType.NAME;  // or NUMBER, etc.
         return value().toString();
     }
 

@@ -78,7 +78,7 @@ A pattern is a mix of:
 
 - **Literal tokens** — identifiers, symbols, keywords, quoted operators — that must appear exactly
 - **Holes** of the form `<T>` — placeholders filled by an expression of type `T`
-- **Built-in token holes** like `<NUMBER>`, `<DECIMAL>`, `<STRING>`, `<NAME>` — see [`built-in-tokens.md`](built-in-tokens.md)
+- **Built-in token holes** like `<NUMBER>`, `<STRING>`, `<NAME>` — see [`built-in-tokens.md`](built-in-tokens.md)
 - **Variable holes** `<Variable>` — used by binding forms like quantifiers
 - **Repetition and grouping markers** `<(>`, `<)>`, `<)*>`, `<)+>`, `<)?>`, `<,>`, `<|>` — see [below](#repetition-and-grouping)
 - An optional **precedence annotation** `#N` — see [`precedence-and-associativity.md`](precedence-and-associativity.md)
@@ -255,6 +255,6 @@ See [`test-expression-semantics.md`](test-expression-semantics.md) for the preci
 ## See also
 
 - [`operators.md`](operators.md) — the complete list of operators
-- [`built-in-tokens.md`](built-in-tokens.md) — `<NUMBER>`, `<DECIMAL>`, `<STRING>`, `<NAME>`, `<Variable>`
+- [`built-in-tokens.md`](built-in-tokens.md) — `<NUMBER>`, `<STRING>`, `<NAME>`, `<Variable>`
 - [`precedence-and-associativity.md`](precedence-and-associativity.md) — how `#N` works
 - [`visibility.md`](visibility.md) — `private`, `hidden`, `visible`, and `{ }` scopes

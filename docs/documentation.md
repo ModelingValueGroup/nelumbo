@@ -70,7 +70,7 @@ The irreducible facts about the language.
 
 - [Grammar](reference/grammar.md) — the core syntax of `.nl` files
 - [Operators](reference/operators.md) — complete operator catalogue
-- [Built-in tokens and pattern holes](reference/built-in-tokens.md) — `<NUMBER>`, `<DECIMAL>`, `<STRING>`, `<Variable>`, etc.
+- [Built-in tokens and pattern holes](reference/built-in-tokens.md) — `<NUMBER>`, `<STRING>`, `<Variable>`, etc.
 - [Precedence and associativity](reference/precedence-and-associativity.md) — the `#N` system
 - [Visibility](reference/visibility.md) — `private`, `hidden`, `visible`, and scope blocks
 - [Three-valued logic](reference/three-valued-logic.md) — truth tables and identities
