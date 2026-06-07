@@ -35,8 +35,8 @@ public class TokenTypePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 2405616043878166113L;
 
-    public TokenTypePattern(Type type, List<AstElement> elements, TokenType tokenType) {
-        super(NodeInfo.of(type, elements), tokenType);
+    public TokenTypePattern(Type type, List<AstElement> elements, TokenType tokenType, boolean isConnected) {
+        super(NodeInfo.of(type, elements), tokenType, isConnected);
     }
 
     @NelumboConstructor
@@ -53,6 +53,15 @@ public class TokenTypePattern extends Pattern {
         return (TokenType) get(0);
     }
 
+    public Boolean isConnected() {
+        return (Boolean) get(1);
+    }
+
+    @Override
+    public Pattern setIsConnected() {
+        return set(1, true);
+    }
+
     @Override
     public String toString(TokenType[] previous) {
         return "<" + tokenType() + ">";
@@ -60,6 +69,9 @@ public class TokenTypePattern extends Pattern {
 
     @Override
     public ParseState state(ParseState next) {
+        if (isConnected()) {
+            next = next.setIsConnected();
+        }
         return new ParseState(tokenType(), next);
     }
 

@@ -86,6 +86,11 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
+    public Pattern setIsConnected() {
+        return set(0, repeated().setIsConnected());
+    }
+
+    @Override
     public ParseState state(ParseState next) {
         Pattern repeated = repeated();
         boolean mandatory = mandatory();

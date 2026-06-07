@@ -81,6 +81,11 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
+    public Pattern setIsConnected() {
+        return set(0, optional().setIsConnected());
+    }
+
+    @Override
     public List<Type> argTypes(List<Type> types) {
         return optional().argTypes(types);
     }

@@ -40,12 +40,13 @@ public class TokenTextPattern extends Pattern {
     @Serial
     private static final long serialVersionUID = -7116490422223451839L;
 
-    public TokenTextPattern(Type type, List<AstElement> elements, String text, Boolean isKeyword) {
-        super(NodeInfo.of(type, elements), text, isKeyword);
+    public TokenTextPattern(Type type, List<AstElement> elements, String text, Boolean isKeyword, Boolean isConnected) {
+        super(NodeInfo.of(type, elements), text, isKeyword, isConnected);
     }
 
-    public TokenTextPattern(Type type, List<AstElement> elements, Variable var, Boolean isKeyword) {
-        super(NodeInfo.of(type, elements), var, isKeyword);
+    public TokenTextPattern(Type type, List<AstElement> elements, Variable var, Boolean isKeyword,
+            boolean isConnected) {
+        super(NodeInfo.of(type, elements), var, isKeyword, isConnected);
     }
 
     @NelumboConstructor
@@ -73,6 +74,15 @@ public class TokenTextPattern extends Pattern {
         return (Boolean) get(1);
     }
 
+    public boolean isConnected() {
+        return (Boolean) get(2);
+    }
+
+    @Override
+    public TokenTextPattern setIsConnected() {
+        return set(2, true);
+    }
+
     @Override
     public TokenTextPattern set(int i, Object... a) {
         return (TokenTextPattern) super.set(i, a);
@@ -96,6 +106,9 @@ public class TokenTextPattern extends Pattern {
 
     @Override
     public ParseState state(ParseState next) {
+        if (isConnected()) {
+            next = next.setIsConnected();
+        }
         return new ParseState(tokenText(), isKeyword(), next);
     }
 

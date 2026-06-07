@@ -38,6 +38,7 @@
                    "<" "(" ">" <(> <Pattern#100> <)+> <(> "<" "," ">" <(> <Pattern#100> <)+> <)?>  "<" ")" <(> * <|> + <)> ">" @nelumbo.patterns.RepetitionPattern,
                    "<" "(" ">" <(> <Pattern#100> <)+> "<" ")" "?" ">"                                                          @nelumbo.patterns.OptionalPattern,
                    <LEFT> <(> <Pattern#100> <)+> <RIGHT>                                                                       @nelumbo.patterns.SequencePattern,
+                   "<>" <(> <Pattern#100> <)+> "<>"                                                                            @nelumbo.patterns.SequencePattern,
                    "<" <(> <(> "visible" <|> "hidden" <)> <)?> <Type#100> <(> # <NUMBER> <)?> ">"                              @nelumbo.patterns.NodeTypePattern
 
  Root          ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>                                 @nelumbo.lang.Import,

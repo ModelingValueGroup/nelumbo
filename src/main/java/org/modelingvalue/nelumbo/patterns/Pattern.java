@@ -110,23 +110,23 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern t(List<AstElement> ast, String tokenText) {
-        return new TokenTextPattern(Type.PATTERN, ast, tokenText, false);
+        return new TokenTextPattern(Type.PATTERN, ast, tokenText, false, false);
     }
 
     public static Pattern k(List<AstElement> ast, String tokenText) {
-        return new TokenTextPattern(Type.PATTERN, ast, tokenText, true);
+        return new TokenTextPattern(Type.PATTERN, ast, tokenText, true, false);
     }
 
     public static Pattern t(List<AstElement> ast, Variable var) {
-        return new TokenTextPattern(Type.PATTERN, ast, var, false);
+        return new TokenTextPattern(Type.PATTERN, ast, var, false, false);
     }
 
     public static Pattern k(List<AstElement> ast, Variable var) {
-        return new TokenTextPattern(Type.PATTERN, ast, var, true);
+        return new TokenTextPattern(Type.PATTERN, ast, var, true, false);
     }
 
     public static Pattern t(List<AstElement> ast, TokenType tokenType) {
-        return new TokenTypePattern(Type.PATTERN, ast, tokenType);
+        return new TokenTypePattern(Type.PATTERN, ast, tokenType, false);
     }
 
     protected Pattern(NodeInfo nodeInfo, Object... args) {
@@ -149,6 +149,8 @@ public abstract class Pattern extends Node {
     public Pattern setTypes(Function<Type, Type> typeFunction) {
         return this;
     }
+
+    public abstract Pattern setIsConnected();
 
     @Override
     public Pattern set(int i, Object... a) {

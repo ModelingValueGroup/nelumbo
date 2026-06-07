@@ -101,6 +101,19 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
+    public Pattern setIsConnected() {
+        List<Pattern> elements = elements();
+        for (int i = 0; i < elements.size(); i++) {
+            Pattern pa = elements.get(i);
+            Pattern pb = pa.setIsConnected();
+            if (!pb.equals(pa)) {
+                elements = elements.replace(i, pb);
+            }
+        }
+        return set(0, elements);
+    }
+
+    @Override
     public ParseState state(ParseState state) {
         for (Pattern element : elements().reverse()) {
             state = element.state(state);
@@ -173,7 +186,12 @@ public class SequencePattern extends Pattern {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
             List<AstElement> elements = astElements();
-            return s(elements, pattern(elements));
+            if (elements.first() instanceof Token tl && tl.text().equals("<>") && elements.last() instanceof Token tr
+                    && tr.text().equals("<>")) {
+                return s(elements, pattern(elements.removeFirst().removeLast())).setIsConnected();
+            } else {
+                return s(elements, pattern(elements));
+            }
         }
         return this;
     }

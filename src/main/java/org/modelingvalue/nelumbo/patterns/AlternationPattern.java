@@ -102,6 +102,19 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
+    public Pattern setIsConnected() {
+        List<Pattern> options = options();
+        for (int i = 0; i < options.size(); i++) {
+            Pattern pa = options.get(i);
+            Pattern pb = pa.setIsConnected();
+            if (!pb.equals(pa)) {
+                options = options.replace(i, pb);
+            }
+        }
+        return set(0, options);
+    }
+
+    @Override
     public List<Type> argTypes(List<Type> types) {
         return types.add(Type.$OBJECT);
     }

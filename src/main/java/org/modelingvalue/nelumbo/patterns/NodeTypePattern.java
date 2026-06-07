@@ -116,6 +116,11 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
+    public Pattern setIsConnected() {
+        return this;
+    }
+
+    @Override
     public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
