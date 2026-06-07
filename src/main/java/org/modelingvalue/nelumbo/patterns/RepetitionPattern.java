@@ -77,17 +77,22 @@ public class RepetitionPattern extends Pattern {
 
     @Override
     public Pattern setPresedence(int precedence) {
-        return set(0, repeated().setPresedence(precedence));
+        Pattern separator = separator();
+        return set(0, repeated().setPresedence(precedence), get(1),
+                separator != null ? separator.setPresedence(precedence) : null);
     }
 
     @Override
     public Pattern setTypes(Function<Type, Type> typeFunction) {
-        return set(0, repeated().setTypes(typeFunction));
+        Pattern separator = separator();
+        return set(0, repeated().setTypes(typeFunction), get(1),
+                separator != null ? separator.setTypes(typeFunction) : null);
     }
 
     @Override
     public Pattern setIsConnected() {
-        return set(0, repeated().setIsConnected());
+        Pattern separator = separator();
+        return set(0, repeated().setIsConnected(), get(1), separator != null ? separator.setIsConnected() : null);
     }
 
     @Override

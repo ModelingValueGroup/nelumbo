@@ -619,7 +619,7 @@ public class ParseState implements Mergeable<ParseState> {
             }
         }
         next = tokenTypes().get(type);
-        if (next != null) {
+        if (next != null && isConnectedOk(token, next)) {
             if (result != null) {
                 result.add(token);
                 token.setState(next);
