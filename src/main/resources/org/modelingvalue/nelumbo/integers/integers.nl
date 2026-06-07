@@ -11,7 +11,7 @@
               <Integer> "<=" <Integer>   #30,
               <Integer> ">=" <Integer>   #30
 
-  Integer ::= <(> - <)?> <NUMBER>             @nelumbo.integers.NInteger,
+  Integer ::= <(> - <)?> <[> <NUMBER> <(> "#"  <(> <(> <NUMBER> <|> <NAME> <)> <)+> <)?> <]>  @nelumbo.integers.NInteger,
               <Integer> - <Integer>   #40,
               <Integer> + <Integer>   #40,
                         - <Integer>   #80,

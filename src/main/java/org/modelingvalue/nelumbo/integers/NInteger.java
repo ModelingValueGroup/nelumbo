@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.integers;
 import java.io.Serial;
 import java.math.BigInteger;
 
+import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
@@ -49,15 +50,6 @@ public final class NInteger extends Node {
         super(nodeInfo, args);
     }
 
-    private static BigInteger parse(String string) {
-        int i = string.indexOf('#');
-        if (i > 0) {
-            int radix = Integer.parseInt(string.substring(0, i));
-            return new BigInteger(string.substring(i + 1), radix);
-        }
-        return new BigInteger(string);
-    }
-
     @Override
     public String toString(TokenType[] previous) {
         BigInteger value = getVal(0);
@@ -74,11 +66,18 @@ public final class NInteger extends Node {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (reason == ConstructionReason.parsing && length() == 2 && get(1) instanceof String string) {
-            if ("-".equals(get(0))) {
-                string = "-" + string;
+        if (reason == ConstructionReason.parsing && length() == 3 && get(1) instanceof String string) {
+            List<String> list = getVal(2);
+            BigInteger val;
+            if (list != null) {
+                int radix = Integer.parseInt(string);
+                val = new BigInteger(list.reduce("", (a, b) -> a + b), radix);
+            } else {
+                val = new BigInteger(string);
             }
-            BigInteger val = parse(string);
+            if ("-".equals(get(0))) {
+                val = val.negate();
+            }
             return setArgs(new Object[] { val });
         }
         return this;
