@@ -30,7 +30,6 @@ public final class LspTokenMapping {
         return List.of(//
                 new Mapping(STRING, String), //
                 new Mapping(NUMBER, Number), //
-                new Mapping(DECIMAL, Number), //
                 new Mapping(NAME, Property), //
                 new Mapping(TYPE, Type), //
                 new Mapping(META_OPERATOR, Decorator), //

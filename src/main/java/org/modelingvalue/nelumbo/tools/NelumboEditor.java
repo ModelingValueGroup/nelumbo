@@ -106,7 +106,6 @@ public class NelumboEditor {
      */
     private static final Map<TokenType, ColorScheme> DEFAULT_TOKEN_COLORS = Map.ofEntries(
             Map.entry(TokenType.STRING, new ColorScheme(0x006633, null, false, false, false, false, false)),
-            Map.entry(TokenType.DECIMAL, new ColorScheme(0x000077, null, false, false, false, false, false)),
             Map.entry(TokenType.NUMBER, new ColorScheme(0x000077, null, false, false, false, false, false)),
             Map.entry(TokenType.NAME, new ColorScheme(0x0000ff, null, false, false, false, false, false)),
             Map.entry(TokenType.END_LINE_COMMENT, new ColorScheme(0xcccccc, null, false, false, false, false, false)),

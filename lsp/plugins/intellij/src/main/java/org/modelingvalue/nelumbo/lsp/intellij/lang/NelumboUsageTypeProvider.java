@@ -16,18 +16,20 @@
 
 package org.modelingvalue.nelumbo.lsp.intellij.lang;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.usages.impl.rules.UsageType;
 import com.intellij.usages.impl.rules.UsageTypeProvider;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Maps each nelumbo token under the cursor to a human-readable usage label
- * ("type", "variable", "keyword", ...). IntelliJ uses this in Find Usages and in the
- * Cmd-hover navigation preview, replacing LSP4IJ's generic "LSP Symbol" fallback.
+ * ("type", "variable", "keyword", ...). IntelliJ uses this in Find Usages and
+ * in the Cmd-hover navigation preview, replacing LSP4IJ's generic "LSP Symbol"
+ * fallback.
  */
 public class NelumboUsageTypeProvider implements UsageTypeProvider {
     private static final UsageType TYPE     = new UsageType(() -> "type");
@@ -51,15 +53,15 @@ public class NelumboUsageTypeProvider implements UsageTypeProvider {
             return null;
         }
         return switch (nl) {
-            case TYPE -> TYPE;
-            case VARIABLE -> VARIABLE;
-            case KEYWORD -> KEYWORD;
-            case NAME -> NAME;
-            case NUMBER, DECIMAL -> NUMBER;
-            case STRING -> STRING;
-            case OPERATOR, META_OPERATOR -> OPERATOR;
-            case IN_LINE_COMMENT, END_LINE_COMMENT -> COMMENT;
-            default -> null;
+        case TYPE                              -> TYPE;
+        case VARIABLE                          -> VARIABLE;
+        case KEYWORD                           -> KEYWORD;
+        case NAME                              -> NAME;
+        case NUMBER                            -> NUMBER;
+        case STRING                            -> STRING;
+        case OPERATOR, META_OPERATOR           -> OPERATOR;
+        case IN_LINE_COMMENT, END_LINE_COMMENT -> COMMENT;
+        default                                -> null;
         };
     }
 }

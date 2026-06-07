@@ -16,6 +16,10 @@
 
 package org.modelingvalue.nelumbo.lsp.intellij.lang;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.modelingvalue.nelumbo.lsp.intellij.Constants;
+
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.ElementDescriptionLocation;
@@ -24,23 +28,22 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.usageView.UsageViewTypeLocation;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.modelingvalue.nelumbo.lsp.intellij.Constants;
 
 /**
- * Replaces LSP4IJ's generic "LSP Symbol" label in navigation tooltips and Find Usages
- * titles with a nelumbo-specific token kind ("type", "variable", "keyword", ...).
+ * Replaces LSP4IJ's generic "LSP Symbol" label in navigation tooltips and Find
+ * Usages titles with a nelumbo-specific token kind ("type", "variable",
+ * "keyword", ...).
  * <p>
- * The navigation target is usually LSP4IJ's {@code LSPPsiElement} (a {@code FakePsiElement}
- * with no AST node), so we descend into the containing {@link com.intellij.psi.PsiFile} to
- * find the real leaf element at the LSP-targeted offset and read its element type from
- * there.
+ * The navigation target is usually LSP4IJ's {@code LSPPsiElement} (a
+ * {@code FakePsiElement} with no AST node), so we descend into the containing
+ * {@link com.intellij.psi.PsiFile} to find the real leaf element at the
+ * LSP-targeted offset and read its element type from there.
  */
 public class NelumboElementDescriptionProvider implements ElementDescriptionProvider {
 
     @Override
-    public @Nullable String getElementDescription(@NotNull PsiElement element, @NotNull ElementDescriptionLocation location) {
+    public @Nullable String getElementDescription(@NotNull PsiElement element,
+            @NotNull ElementDescriptionLocation location) {
         if (!(location instanceof UsageViewTypeLocation)) {
             return null;
         }
@@ -57,15 +60,14 @@ public class NelumboElementDescriptionProvider implements ElementDescriptionProv
             return null;
         }
         return switch (nl) {
-            case TYPE -> "type";
-            case VARIABLE -> "variable";
-            case KEYWORD -> "keyword";
-            case NAME -> "name";
-            case NUMBER, DECIMAL -> "number";
-            case STRING -> "string";
-            case OPERATOR, META_OPERATOR -> "operator";
-            case IN_LINE_COMMENT, END_LINE_COMMENT -> "comment";
-            default -> null;
+        case TYPE                              -> "type";
+        case VARIABLE                          -> "variable";
+        case KEYWORD                           -> "keyword";
+        case NAME                              -> "name";
+        case STRING                            -> "string";
+        case OPERATOR, META_OPERATOR           -> "operator";
+        case IN_LINE_COMMENT, END_LINE_COMMENT -> "comment";
+        default                                -> null;
         };
     }
 
@@ -74,7 +76,8 @@ public class NelumboElementDescriptionProvider implements ElementDescriptionProv
         if (node != null) {
             return node.getElementType();
         }
-        // Fall back: find the leaf at the LSP-targeted offset (LSPPsiElement has no AST node).
+        // Fall back: find the leaf at the LSP-targeted offset (LSPPsiElement has no AST
+        // node).
         TextRange range = element.getTextRange();
         if (range == null) {
             return null;

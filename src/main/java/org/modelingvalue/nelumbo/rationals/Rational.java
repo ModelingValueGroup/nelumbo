@@ -73,17 +73,19 @@ public final class Rational extends Node {
         } else {
             string = "0." + string;
         }
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
             previous[0] = TokenType.NUMBER;
             return " " + string;
         }
-        previous[0] = TokenType.DECIMAL;
+        previous[0] = TokenType.NUMBER;
         return string;
     }
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (reason == ConstructionReason.parsing && length() == 2 && get(1) instanceof String string) {
+        if (reason == ConstructionReason.parsing && length() == 3 && get(1) instanceof String string
+                && get(2) instanceof String decimals) {
+            string += "." + decimals;
             if ("-".equals(get(0))) {
                 string = "-" + string;
             }

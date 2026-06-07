@@ -7,13 +7,13 @@
                       mult(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Multiply
 
    
-  Boolean ::=  <Rational>  >   <Rational>   #30     @nelumbo.rationals.GreaterThan,
+  Boolean ::=  <Rational>  >   <Rational>   #30         @nelumbo.rationals.GreaterThan,
                <Rational> "<"  <Rational>   #30,
                <Rational> "<=" <Rational>   #30,
                <Rational>  >=  <Rational>   #30,
-               iir(<Integer>,<Integer>,<Rational>)  @nelumbo.rationals.IntegersRational
+               iir(<Integer>,<Integer>,<Rational>)      @nelumbo.rationals.IntegersRational
 
-  Rational ::= <(> - <)?> <DECIMAL>                 @nelumbo.rationals.Rational,
+  Rational ::= <(> - <)?>  <[> <NUMBER> . <NUMBER> <]>  @nelumbo.rationals.Rational,
                <Rational> - <Rational>   #40,
                <Rational> + <Rational>   #40,
                           - <Rational>   #80,

@@ -89,7 +89,7 @@ public final class Variable extends Node {
 
     @Override
     public String toString(TokenType[] previous) {
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
             previous[0] = TokenType.NAME;
             return " " + name();
         }

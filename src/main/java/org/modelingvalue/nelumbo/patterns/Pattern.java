@@ -181,8 +181,8 @@ public abstract class Pattern extends Node {
 
     protected void addText(StringBuffer sb, TokenType[] previous, String text) {
         TokenType type = TokenType.of(text);
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
-            if (type == TokenType.NAME || type == TokenType.NUMBER || type == TokenType.DECIMAL) {
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
+            if (type == TokenType.NAME || type == TokenType.NUMBER) {
                 sb.append(" ");
             }
         }

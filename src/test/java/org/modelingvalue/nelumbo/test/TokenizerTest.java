@@ -41,36 +41,36 @@ public class TokenizerTest extends NelumboTestBase {
     @Test
     public void tokenizerTest() {
         String example = """
-                         // COMMENT
-                             -abb + bcc *
-                                c - dee // ANOTHER COMMENT
-                             e = 8.9 / 2
-                         """;
+                // COMMENT
+                    -abb + bcc *
+                       c - dee // ANOTHER COMMENT
+                    e = 8.9 / 2
+                """;
 
         TokenizerResult result = new Tokenizer(example, "tokenizerTest").tokenize();
-        List<Token>     tokens = result.list();
-        List<Token>     all    = result.listAll();
+        List<Token> tokens = result.list();
+        List<Token> all = result.listAll();
 
-        String reassembled   = all.map(Token::text).collect(Collectors.joining());
-        String types         = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String expectedTypes = "BEGINOFFILE END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE DECIMAL HSPACE OPERATOR HSPACE NUMBER NEWLINE ENDOFFILE";
+        String reassembled = all.map(Token::text).collect(Collectors.joining());
+        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        String expectedTypes = "BEGINOFFILE END_LINE_COMMENT NEWLINE HSPACE OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE END_LINE_COMMENT NEWLINE HSPACE NAME HSPACE OPERATOR HSPACE NUMBER OPERATOR NUMBER HSPACE OPERATOR HSPACE NUMBER NEWLINE ENDOFFILE";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
 
-        assertEquals(17, tokens.size(), "wrong number of tokens returned by tokenize()");
-        assertEquals(34, all.size(), "wrong number of tokens returned by tokenize(all)");
+        assertEquals(19, tokens.size(), "wrong number of tokens returned by tokenize()");
+        assertEquals(36, all.size(), "wrong number of tokens returned by tokenize(all)");
         assertEquals(example, reassembled, "could not reassemble tokens");
         assertEquals(expectedTypes, types, "unexpected token types in token list");
 
-        //==========================================================================================
+        // ==========================================================================================
         assertEqualsToken(0, 0, all, 1, TokenType.END_LINE_COMMENT);
         assertEqualsToken(0, 10, all, 2, TokenType.NEWLINE);
         assertEqualsToken(1, 0, all, 3, TokenType.HSPACE);
         assertEqualsToken(1, 4, all, 4, TokenType.OPERATOR);
         assertEqualsToken(1, 5, all, 5, TokenType.NAME);
 
-        //==========================================================================================
+        // ==========================================================================================
         assertEqualsToken(1, 4, tokens, 1, TokenType.OPERATOR);
         assertEqualsToken(1, 5, tokens, 2, TokenType.NAME);
         assertEqualsToken(1, 9, tokens, 3, TokenType.OPERATOR);
@@ -83,8 +83,8 @@ public class TokenizerTest extends NelumboTestBase {
         String example = "/* unterminated comment";
 
         TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();
-        List<Token>     tokens = result.list();
-        List<Token>     all    = result.listAll();
+        List<Token> tokens = result.list();
+        List<Token> all = result.listAll();
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
@@ -99,12 +99,12 @@ public class TokenizerTest extends NelumboTestBase {
     public void tokenizerComment2Test() {
         String example = "<a/*a*/>•a";
 
-        TokenizerResult result        = new Tokenizer(example, "tokenizerCommentTest").tokenize();
-        List<Token>     tokens        = result.list();
-        List<Token>     all           = result.listAll();
-        String          reassembled   = all.map(Token::text).collect(Collectors.joining());
-        String          types         = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
-        String          expectedTypes = "BEGINOFFILE OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME ENDOFFILE";
+        TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();
+        List<Token> tokens = result.list();
+        List<Token> all = result.listAll();
+        String reassembled = all.map(Token::text).collect(Collectors.joining());
+        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        String expectedTypes = "BEGINOFFILE OPERATOR NAME IN_LINE_COMMENT OPERATOR ERROR NAME ENDOFFILE";
 
         U.printTokens("tokens", tokens);
         U.printTokens("all", all);
@@ -114,14 +114,14 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals(example, reassembled, "could not reassemble tokens");
         assertEquals(expectedTypes, types, "unexpected token types in token list");
 
-        //==========================================================================================
+        // ==========================================================================================
         assertEqualsToken(0, 0, all, 1, TokenType.OPERATOR);
         assertEqualsToken(0, 1, all, 2, TokenType.NAME);
         assertEqualsToken(0, 2, all, 3, TokenType.IN_LINE_COMMENT);
         assertEqualsToken(0, 7, all, 4, TokenType.OPERATOR);
         assertEqualsToken(0, 8, all, 5, TokenType.ERROR);
 
-        //==========================================================================================
+        // ==========================================================================================
         assertEqualsToken(0, 0, tokens, 1, TokenType.OPERATOR);
         assertEqualsToken(0, 1, tokens, 2, TokenType.NAME);
         assertEqualsToken(0, 7, tokens, 3, TokenType.OPERATOR);
@@ -245,7 +245,8 @@ public class TokenizerTest extends NelumboTestBase {
         return new Tokenizer(input, "test").tokenize().listAll();
     }
 
-    private static void assertEqualsToken(int expectedLine, int expectedPosition, List<Token> tokens, int index, TokenType type) {
+    private static void assertEqualsToken(int expectedLine, int expectedPosition, List<Token> tokens, int index,
+            TokenType type) {
         assertTrue(index < tokens.size(), "token index out of bounds");
         Token token = tokens.get(index);
         assertEquals(type, token.type());

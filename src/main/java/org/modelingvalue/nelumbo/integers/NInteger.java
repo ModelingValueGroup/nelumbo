@@ -64,7 +64,7 @@ public final class NInteger extends Node {
         String string = value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0
                 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX))
                 : value.toString();
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER || previous[0] == TokenType.DECIMAL) {
+        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
             previous[0] = TokenType.NUMBER;
             return " " + string;
         }
