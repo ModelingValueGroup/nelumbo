@@ -83,7 +83,10 @@ public final class Rational extends Node {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (reason == ConstructionReason.parsing && get(0) instanceof String string) {
+        if (reason == ConstructionReason.parsing && length() == 2 && get(1) instanceof String string) {
+            if ("-".equals(get(0))) {
+                string = "-" + string;
+            }
             return set(nodeInfo().resetDeclaration(), parse(string));
         }
         return this;

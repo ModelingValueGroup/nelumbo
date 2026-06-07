@@ -527,20 +527,6 @@ public class ParseState implements Mergeable<ParseState> {
             }
             return new TokenState(token.next(), next);
         }
-        if (isNumeric(type) && text.startsWith("-") && tokenTypes().get(type) == null) {
-            String key = "-";
-            next = tokenTexts().get(key);
-            if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next)) {
-                Token min = token.split(1);
-                if (result != null) {
-                    result.addSplit(token, min);
-                    result.add(min);
-                    min.setTextMatch(next.isKeyword());
-                    min.setState(next);
-                }
-                return new TokenState(min.next(), next);
-            }
-        }
         if (type == TokenType.OPERATOR) {
             for (int i = text.length() - 1; i > 0; i--) {
                 String key = text.substring(0, i);
@@ -633,11 +619,6 @@ public class ParseState implements Mergeable<ParseState> {
         if (token == null || nodeTypes().isEmpty()) {
             return null;
         }
-        Token nextToken = token.next();
-        if (nextToken != null && token.text().equals("-") && isNumeric(nextToken.type())
-                && !nextToken.text().startsWith("-")) {
-            token = result.addMerge(token, nextToken.prepend("-"));
-        }
         ParseContext inner = ParseContext.of(this, token, result.context());
         Node node = result.parser().parseNode(token, inner, outer);
         if (node != null) {
@@ -701,10 +682,6 @@ public class ParseState implements Mergeable<ParseState> {
                 .toKeys() //
                 .map(Object::toString) //
                 .reduce("", (a, b) -> a.isEmpty() ? b : a + " or " + b);
-    }
-
-    private static boolean isNumeric(TokenType type) {
-        return type == TokenType.NUMBER || type == TokenType.DECIMAL;
     }
 
     private Visibility notVisibility(Token token, PatternResult result) {

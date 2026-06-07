@@ -6,12 +6,12 @@
   private Boolean ::= add(<Integer>,<Integer>,<Integer>)   @nelumbo.integers.Add,
                       mult(<Integer>,<Integer>,<Integer>)  @nelumbo.integers.Multiply
    
-  Boolean ::= <Integer>  >   <Integer>   #30  @nelumbo.integers.GreaterThan,
+  Boolean ::= <Integer> ">"  <Integer>   #30  @nelumbo.integers.GreaterThan,
               <Integer> "<"  <Integer>   #30,
               <Integer> "<=" <Integer>   #30,
-              <Integer>  >=  <Integer>   #30
+              <Integer> ">=" <Integer>   #30
 
-  Integer ::= <NUMBER>                @nelumbo.integers.NInteger,
+  Integer ::= <(> - <)?> <NUMBER>             @nelumbo.integers.NInteger,
               <Integer> - <Integer>   #40,
               <Integer> + <Integer>   #40,
                         - <Integer>   #80,

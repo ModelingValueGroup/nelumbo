@@ -13,7 +13,7 @@
                <Rational>  >=  <Rational>   #30,
                iir(<Integer>,<Integer>,<Rational>)  @nelumbo.rationals.IntegersRational
 
-  Rational ::= <DECIMAL>                            @nelumbo.rationals.Rational,
+  Rational ::= <(> - <)?> <DECIMAL>                 @nelumbo.rationals.Rational,
                <Rational> - <Rational>   #40,
                <Rational> + <Rational>   #40,
                           - <Rational>   #80,

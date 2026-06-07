@@ -106,23 +106,23 @@ public class SyntaxTest extends NelumboTestBase {
                 TokenizerResult tr = new Tokenizer(nl, "SyntaxTest.tokenSplitTest").tokenize();
                 // U.printTokens("before-parse", tokens);
                 List<Token> all = tr.listAll();
-                assertEquals(11, all.size(), "wrong number of tokens returned by tokenize()");
-                assertEquals(",-4,=-,(,2,+,2,), ,?,", //
+                assertEquals(12, all.size(), "wrong number of tokens returned by tokenize()");
+                assertEquals(",-,4,=-,(,2,+,2,), ,?,", //
                         all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts before-parse not as expected");
 
                 List<Node> result = new Parser(tr).parseEvaluate().roots();
                 // U.printTokens("after-parse", tokens);
                 all = tr.listAll();
-                assertEquals(12, all.size(), "wrong number of tokens after parse()");
-                assertEquals(",-4,=,-,(,2,+,2,), ,?,", //
+                assertEquals(13, all.size(), "wrong number of tokens after parse()");
+                assertEquals(",-,4,=,-,(,2,+,2,), ,?,", //
                         all.map(Token::text).collect(Collectors.joining(",")), //
                         "token texts after-parse not as expected");
                 assertEquals(1, result.size(), "wrong number of result nodes");
 
-                assertEquals(",-4,=,-,(,2,+,2,),?,", tr.list().map(Token::text).collect(Collectors.joining(",")), //
+                assertEquals(",-,4,=,-,(,2,+,2,),?,", tr.list().map(Token::text).collect(Collectors.joining(",")), //
                         "result tokens text not as expected");
-                assertEquals("NUMBER,OPERATOR,OPERATOR,LEFT,NUMBER,OPERATOR,NUMBER,RIGHT,OPERATOR", //
+                assertEquals("OPERATOR,NUMBER,OPERATOR,OPERATOR,LEFT,NUMBER,OPERATOR,NUMBER,RIGHT,OPERATOR", //
                         result.first().tokens().map(Token::type).map(Enum::toString).collect(Collectors.joining(",")), //
                         "result tokens type not as expected");
 

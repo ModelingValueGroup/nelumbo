@@ -74,8 +74,12 @@ public final class NInteger extends Node {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (reason == ConstructionReason.parsing && get(0) instanceof String string) {
-            return set(0, parse(string));
+        if (reason == ConstructionReason.parsing && length() == 2 && get(1) instanceof String string) {
+            if ("-".equals(get(0))) {
+                string = "-" + string;
+            }
+            BigInteger val = parse(string);
+            return setArgs(new Object[] { val });
         }
         return this;
     }
