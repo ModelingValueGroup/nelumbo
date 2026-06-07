@@ -186,9 +186,12 @@ public class SequencePattern extends Pattern {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
             List<AstElement> elements = astElements();
-            if (elements.first() instanceof Token tl && tl.text().equals("<>") && elements.last() instanceof Token tr
-                    && tr.text().equals("<>")) {
-                return s(elements, pattern(elements.removeFirst().removeLast())).setIsConnected();
+            if (elements.size() >= 6 && elements.first() instanceof Token tl && tl.text().equals("<")
+                    && tl.next().text().equals("[") && tl.next().next().text().equals(">")
+                    && elements.last() instanceof Token tr && tr.text().equals(">") && tr.previous().text().equals("]")
+                    && tr.previous().previous().text().equals("<")) {
+                return c(elements, pattern(
+                        elements.removeFirst().removeFirst().removeFirst().removeLast().removeLast().removeLast()));
             } else {
                 return s(elements, pattern(elements));
             }

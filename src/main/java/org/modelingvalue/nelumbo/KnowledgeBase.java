@@ -158,7 +158,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         if (var != null) {
             pattern = t(List.of(type), var);
         } else if (type.hasArgument()) {
-            pattern = s(List.of(type), t(type.rawName()), t("<"), n(Type.TYPE, Integer.MAX_VALUE), t(">"));
+            pattern = c(List.of(type), t(type.rawName()), t("<"), n(Type.TYPE, Integer.MAX_VALUE), t(">"));
         } else {
             pattern = t(List.of(type), type.rawName());
         }
@@ -204,7 +204,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.NAMESPACE, null, Namespace.class, null)
                         .init(this, parseContext, bootstrapping);
 
-                Functor.of(s(k("import"), r(r(t(NAME), true, t(".")), true, t(","))), Type.ROOT, null, Import.class,
+                Functor.of(s(k("import"), c(r(r(t(NAME), true, t(".")), true, t(",")))), Type.ROOT, null, Import.class,
                         null).init(this, parseContext, bootstrapping);
 
                 Functor.of(s(t(NAME), o(s(t("<"), n(Type.TYPE, 100), t(">"))), t("::"),
@@ -239,8 +239,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(t(LEFT), PATTERNS, t(RIGHT)), Type.PATTERN, null, SequencePattern.class, null).init(this,
                         parseContext, bootstrapping);
 
-                Functor.of(s(t("<>"), PATTERNS, t("<>")), Type.PATTERN, null, SequencePattern.class, null).init(this,
-                        parseContext, bootstrapping);
+                Functor.of(s(t("<"), t("["), t(">"), PATTERNS, t("<"), t("]"), t(">")), Type.PATTERN, null,
+                        SequencePattern.class, null).init(this, parseContext, bootstrapping);
 
                 Functor.of(
                         s(t("<"), o(a(k("visible"), k("hidden"))), n(Type.TYPE, 100), o(s(t("#"), t(NUMBER))), t(">")),

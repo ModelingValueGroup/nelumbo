@@ -41,7 +41,7 @@
                    "<>" <(> <Pattern#100> <)+> "<>"                                                                            @nelumbo.patterns.SequencePattern,
                    "<" <(> <(> "visible" <|> "hidden" <)> <)?> <Type#100> <(> # <NUMBER> <)?> ">"                              @nelumbo.patterns.NodeTypePattern
 
- Root          ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>                                 @nelumbo.lang.Import,
+ Root          ::= "import" <[> <(> <(> <NAME> <,> . <)+> <,> , <)+> <]>                         @nelumbo.lang.Import,
                    <Root#0> ::> <RootNamespace>                                                  @nelumbo.lang.Transform,
                    <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                            @nelumbo.lang.Variable,
                    <NAME> <(> < <Type#100> > <)?> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?> @nelumbo.lang.Type,
