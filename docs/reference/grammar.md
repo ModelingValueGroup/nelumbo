@@ -125,6 +125,7 @@ Inside a pattern, angle-bracketed operators build repeating or optional sub-stru
 | `<(>` ... `<)+>`  | One-or-more with separator |
 | `<,>`             | Separator inside a repetition |
 | `<|>`             | Alternation marker inside a group |
+| `<[>` ... `<]>`   | Connected-token group — adjacent tokens, no whitespace allowed between them |
 
 Examples:
 
@@ -140,6 +141,22 @@ Alternation ::= <(> A <|> B <|> C <)>              // "A", "B", or "C"
 Set<E>  ::= { <(> <E> <,> , <)*> }
 List<E> ::= [ <(> <E> <,> , <)*> ]
 ```
+
+### Connected-token groups: `<[> ... <]>`
+
+By default whitespace between tokens is insignificant, so a pattern like `<NUMBER> - <NUMBER> - <NUMBER>` accepts `2025-01-01` *and* `2025 - 01 - 01`. The `<[>` … `<]>` form switches that off for the tokens it encloses: every token between `<[>` and `<]>` must be **directly adjacent in the source** — no whitespace, no comment, nothing — to the next.
+
+The brackets themselves are pure meta-syntax: like the other `<(>`-style markers, they do not appear in the parsed source.
+
+```
+Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                     @nelumbo.datetime.NDate
+Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>                     @nelumbo.rationals.Rational
+Integer  ::= <(> - <)?> <[> <NUMBER> <(> "#" <(> <(> <NUMBER> <|> <NAME> <)> <)+> <)?> <]>  @nelumbo.integers.NInteger
+```
+
+These accept `2025-01-01`, `3.14`, and `16#FF`, but reject `2025 - 01 - 01`, `3 . 14`, and `16 # FF`. This is what distinguishes a literal form (a date, a decimal, a radix-prefixed integer) from a structural expression that happens to use the same operators (`<Date> - <Period>`, `<Integer> - <Integer>`).
+
+A practical rule of thumb: use `<[>` … `<]>` whenever the absence of whitespace is the *only* thing telling the parser "this is one literal, not an expression."
 
 ---
 
