@@ -207,9 +207,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(k("import"), c(r(r(t(NAME), true, t(".")), true, t(",")))), Type.ROOT, null, Import.class,
                         null).init(this, parseContext, bootstrapping);
 
-                Functor.of(s(t(NAME), o(s(t("<"), n(Type.TYPE, 100), t(">"))), t("::"),
-                        r(n(Type.TYPE, 100), true, t(",")), o(s(t("#"), t(NAME)))), Type.ROOT, null, Type.class, null)
-                        .init(this, parseContext, bootstrapping);
+                Functor.of(
+                        s(c(t(NAME), o(s(t("<"), n(Type.TYPE, 100), t(">")))), t("::"),
+                                r(n(Type.TYPE, 100), true, t(",")), o(s(t("#"), t(NAME)))),
+                        Type.ROOT, null, Type.class, null).init(this, parseContext, bootstrapping);
 
                 for (Type type : Type.predefined()) {
                     addType(type, parseContext);
@@ -225,21 +226,22 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                     addPattern(tokenType, parseContext);
                 }
 
-                Functor.of(
-                        s(t("<"), t("("), t(">"), r(PATTERNS, true, s(t("<"), t("|"), t(">"))), t("<"), t(")"), t(">")),
-                        Type.PATTERN, null, AlternationPattern.class, null).init(this, parseContext, bootstrapping);
-
-                Functor.of(s(t("<"), t("("), t(">"), PATTERNS, o(s(t("<"), t(","), t(">"), PATTERNS)), t("<"), t(")"),
-                        a(t("*"), t("+")), t(">")), Type.PATTERN, null, RepetitionPattern.class, null)
+                Functor.of(s(c(t("<"), t("("), t(">")), r(PATTERNS, true, c(t("<"), t("|"), t(">"))),
+                        c(t("<"), t(")"), t(">"))), Type.PATTERN, null, AlternationPattern.class, null)
                         .init(this, parseContext, bootstrapping);
 
-                Functor.of(s(t("<"), t("("), t(">"), PATTERNS, t("<"), t(")"), t("?"), t(">")), Type.PATTERN, null,
-                        OptionalPattern.class, null).init(this, parseContext, bootstrapping);
+                Functor.of(
+                        s(c(t("<"), t("("), t(">")), PATTERNS, o(s(c(t("<"), t(","), t(">")), PATTERNS)),
+                                c(t("<"), t(")"), a(t("*"), t("+")), t(">"))),
+                        Type.PATTERN, null, RepetitionPattern.class, null).init(this, parseContext, bootstrapping);
+
+                Functor.of(s(c(t("<"), t("("), t(">")), PATTERNS, c(t("<"), t(")"), t("?"), t(">"))), Type.PATTERN,
+                        null, OptionalPattern.class, null).init(this, parseContext, bootstrapping);
 
                 Functor.of(s(t(LEFT), PATTERNS, t(RIGHT)), Type.PATTERN, null, SequencePattern.class, null).init(this,
                         parseContext, bootstrapping);
 
-                Functor.of(s(t("<"), t("["), t(">"), PATTERNS, t("<"), t("]"), t(">")), Type.PATTERN, null,
+                Functor.of(s(c(t("<"), t("["), t(">")), PATTERNS, c(t("<"), t("]"), t(">"))), Type.PATTERN, null,
                         SequencePattern.class, null).init(this, parseContext, bootstrapping);
 
                 Functor.of(

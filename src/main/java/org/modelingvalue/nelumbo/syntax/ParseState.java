@@ -748,7 +748,7 @@ public class ParseState implements Mergeable<ParseState> {
                 endRepetitions().addAll(state.endRepetitions()), //
                 isKeyword() || state.isKeyword(), //
                 elementMerge(visibility(), state.visibility()), //
-                elementMerge(isConnected(), state.isConnected()));
+                isConnected() || state.isConnected());
     }
 
     private Functor functorMerge(ParseState state) {
