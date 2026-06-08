@@ -11,7 +11,7 @@ The files:
 3. [`integers.nl`](#3-nelumbointegers-36-lines) — 36 lines — arithmetic and comparison
 4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
 5. [`strings.nl`](#5-nelumbostrings-24-lines) — 24 lines — string operations
-6. [`collections.nl`](#6-nelumbocollections-11-lines) — 11 lines — generic `Set<E>` and `List<E>`
+6. [`collections.nl`](#6-nelumbocollections-21-lines) — 21 lines — generic `Set<E>` and `List<E>`, plus set-builder notation
 7. [`datetime.nl`](#7-nelumbodatetime-97-lines) — 97 lines — ISO 8601 dates, times, date-times, and durations
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
@@ -380,7 +380,7 @@ All three work from the same rule and the same native. The native `Concat` handl
 
 ---
 
-## 6. `nelumbo.collections` (11 lines)
+## 6. `nelumbo.collections` (21 lines)
 
 The shortest module.
 
@@ -393,8 +393,15 @@ Collection<E> :: Object
 Set<E>        :: Collection<E>
 List<E>       :: Collection<E>
 
-Set<E>  ::= { <(> <E> <,> , <)*> }  @...NSet
-List<E> ::= [ <(> <E> <,> , <)*> ]  @...NList
+private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>) @...BuildSet
+
+Set<E>  ::= { <(> <E> <,> , <)*> }       @...NSet,
+            { [ <E> ] ( <Boolean#0> ) }  @...SetBuilder
+List<E> ::= [ <(> <E> <,> , <)*> ]       @...NList
+
+E e   Boolean c   Set<E> s
+
+{[e](c)} = s  <=>  build(e, c, s)
 ```
 
 That's the whole module.
@@ -403,6 +410,7 @@ That's the whole module.
 
 - **`Type E`** — the declaration that introduces a generic type parameter. `lang.nl` uses the same mechanism for parenthesisation (`Type T; T ::= (<T>)`); this is its first use to define container types.
 - **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype.
+- **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`.
 
 ### How the literal syntax works
 
@@ -415,9 +423,26 @@ The structural markers `<(> <E> <,> , <)*>` decode as:
 
 So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `List<E>` with `[` and `]`.
 
-### What is absent
+### Set-builder notation
 
-Operations — membership, union, length, map, fold — are not in the module as of this writing. The module provides value types and literal syntax; richer behaviour is either in natives not yet shipped, or left to the user's own modules. Check the latest source and tests when you go to use it.
+`Set<E>` has a second form — the comprehension `{[e](c)}`, "the set of all `e` such that `c`". The `[e]` slot must be a bare variable, and `(c)` is any Boolean condition over it. It reduces to one native rule:
+
+```
+{[e](c)} = s  <=>  build(e, c, s)
+```
+
+`build` is backed by `BuildSet`, which — like `E[...]` and `A[...]` — is a **quantifier**: it evaluates the condition under each binding of the local element variable, strips that variable, and gathers the witnessing values into a set. So set construction reuses the same three-valued quantifier machinery as the logic layer:
+
+```
+Integer i
+{[i](|i|=10)} = s  ?  [(s={-10,10})][(s={0}),..]
+```
+
+The two solutions of `|i| = 10` become the fact `s = {-10, 10}`; `i = 0` is a proven non-member, so `{0}` lands on the falsehoods side with `..` for the open remainder.
+
+### What is still absent
+
+Algebraic operations — membership, union, intersection, length, map, fold — are not in the module as of this writing. The module provides value types, literal syntax, and the comprehension constructor; richer behaviour is either in natives not yet shipped, or left to the user's own modules. Check the latest source and tests when you go to use it.
 
 ---
 

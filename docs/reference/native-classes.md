@@ -38,8 +38,8 @@ org.modelingvalue.nelumbo.rationals   exact rational arithmetic
 org.modelingvalue.nelumbo.strings     string operations
     NString, Concat, Length, ToInteger
 
-org.modelingvalue.nelumbo.collections container literals
-    NSet, NList
+org.modelingvalue.nelumbo.collections container literals + set-builder
+    NSet, NList, SetBuilder, BuildSet
 
 org.modelingvalue.nelumbo.datetime    ISO 8601 dates, times, date-times, durations
     NDate, NTime, NDateTime, NPeriod, Add, AddPeriod, MultiplyPeriod,
@@ -60,7 +60,7 @@ Shipped natives fall into five structural roles. Reading this classification fir
 | **Three-arg functional relation** | `Predicate` | Relation with one output and one or more inputs; binds the missing one | `Add`, `Multiply`, `Concat`, `IntegersRational`, `ToInteger` |
 | **Comparison predicate** | `Predicate` | Two-arg relation that decides true/false when both sides are known | `GreaterThan` (integers and rationals), `Equal`, `Length` |
 | **Logical connective** | `BinaryPredicate` / `CompoundPredicate` | Combines sub-predicate results according to a truth table | `And`, `Or`, `Not` |
-| **Quantifier** | `Quantifier` (extends `CompoundPredicate`) | Evaluates a sub-predicate under many bindings and aggregates | `ExistentialQuantifier`, `UniversalQuantifier` |
+| **Quantifier** | `Quantifier` (extends `CompoundPredicate`) | Evaluates a sub-predicate under many bindings and aggregates | `ExistentialQuantifier`, `UniversalQuantifier`, `BuildSet` |
 | **Container** | `Node` | Literal collection of elements | `NSet`, `NList` |
 
 ---
@@ -220,6 +220,18 @@ Shipped natives fall into five structural roles. Reading this classification fir
 - Value: backed by the internal immutable `List<T>` collection type.
 - Notes: `NList` supports an `elementsFlattened()` helper that recursively unwraps nested `NList` values. This is useful when a parse produces a tree of concatenated list fragments that you want to flatten.
 
+### `SetBuilder`
+
+- Backs: `Set<E> ::= { [ <E> ] ( <Boolean#0> ) }` — set-builder (comprehension) notation
+- Role: container constant (parse-time AST node)
+- Strategy: holds the bound element variable and the membership condition. At parse time it enforces that the `[ … ]` slot is a bare `Variable` (otherwise a `ParseException` "… must be a variable"), and declares that variable as a local via `localVars()`. The actual set construction is delegated to the `build` predicate (`BuildSet`) through the rule `{[e](c)} = s <=> build(e, c, s)`.
+
+### `BuildSet`
+
+- Backs: `private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)`
+- Role: quantifier (extends `Quantifier`, like `ExistentialQuantifier`/`UniversalQuantifier`)
+- Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces a singleton `NSet` of its non-member value on the falsehoods side. Completeness flags are inherited from the condition's result, so `{[i](|i|=10)}` yields `[(s={-10,10})][(s={0}),..]` — the two solutions as a fact, `{0}` as a proven non-member, `..` for the open remainder.
+
 ---
 
 ## `org.modelingvalue.nelumbo.datetime`
@@ -307,6 +319,8 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `strings.nl` | `string_length(<String>,<Integer>)` *(private)* | `Length` |
 | `strings.nl` | `integer_string(<Integer>,<String>)` *(private)* | `ToInteger` |
 | `collections.nl` | `Set<E> ::= { ... }` | `NSet` |
+| `collections.nl` | `Set<E> ::= { [ <E> ] ( <Boolean> ) }` | `SetBuilder` |
+| `collections.nl` | `build(<E>,<Boolean>,<Set<E>>)` *(private)* | `BuildSet` |
 | `collections.nl` | `List<E> ::= [ ... ]` | `NList` |
 | `datetime.nl` | `Date ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>` | `datetime.NDate` |
 | `datetime.nl` | `Time ::= <[> <NUMBER> : <NUMBER> ... <]>` | `datetime.NTime` |
