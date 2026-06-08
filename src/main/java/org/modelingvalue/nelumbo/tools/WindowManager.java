@@ -197,10 +197,13 @@ public class WindowManager {
     }
 
     /**
-     * Saves all windows' state (called on quit).
+     * Saves all windows' state and flushes pending file writes (called on quit),
+     * using the same per-window persistence as closing a window.
      */
     public void saveAllWindows() {
-        // Windows save their own state on close, but we save the window list here
+        for (EditorWindow window : getWindowsInOrder()) {
+            window.saveAndFlush();
+        }
         saveWindowList();
     }
 

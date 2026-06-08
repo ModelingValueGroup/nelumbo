@@ -986,12 +986,21 @@ public class EditorWindow extends WindowAdapter
 
     private void closeWindow() {
         if (confirmCloseIfEditable()) {
-            saveTextContent(getDocumentText(textPane));
-            flushFileSaveNow();
-            saveDialogVisibility();
+            saveAndFlush();
             frame.setVisible(false);
             frame.dispose();
         }
+    }
+
+    /**
+     * Persists this window's content and flushes any pending file write. Shared by
+     * the close-window and application-quit paths so neither loses unsaved edits.
+     */
+    void saveAndFlush() {
+        // Content is only persisted for non-example windows; file windows write to disk.
+        saveTextContent(getDocumentText(textPane));
+        flushFileSaveNow();
+        saveDialogVisibility();
     }
 
     /**
@@ -1066,14 +1075,7 @@ public class EditorWindow extends WindowAdapter
 
     @Override
     public synchronized void windowClosing(WindowEvent evt) {
-        if (confirmCloseIfEditable()) {
-            // Save state before closing (content is only saved for non-example windows)
-            saveTextContent(getDocumentText(textPane));
-            flushFileSaveNow();
-            saveDialogVisibility();
-            frame.setVisible(false);
-            frame.dispose();
-        }
+        closeWindow();
     }
 
     @Override
