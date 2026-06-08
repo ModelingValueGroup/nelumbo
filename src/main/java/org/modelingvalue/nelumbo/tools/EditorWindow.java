@@ -1008,16 +1008,22 @@ public class EditorWindow extends WindowAdapter
      * the window should be closed, false to cancel.
      */
     private boolean confirmCloseIfEditable() {
-        if (filePath != null) {
-            return true; // File-backed windows auto-save to disk; closing loses nothing.
+        if (!needsCloseConfirmation()) {
+            return true; // File windows auto-save; read-only windows have nothing to lose.
         }
-        if (textPane.isEditable()) {
-            int result = JOptionPane.showConfirmDialog(frame,
-                    "The contents of this window will be lost. Are you sure you want to close it?", "Close Window",
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            return result == JOptionPane.YES_OPTION;
-        }
-        return true; // Read-only windows can be closed without confirmation
+        int result = JOptionPane.showConfirmDialog(frame,
+                "The contents of this window will be lost. Are you sure you want to close it?", "Close Window",
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        return result == JOptionPane.YES_OPTION;
+    }
+
+    /**
+     * Whether closing this window would discard content the user might want to
+     * keep: an editable, non-file window. File-backed windows auto-save to disk
+     * and read-only windows have nothing to lose, so neither needs confirmation.
+     */
+    boolean needsCloseConfirmation() {
+        return filePath == null && textPane.isEditable();
     }
 
     /**

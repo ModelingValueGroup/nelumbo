@@ -201,9 +201,20 @@ public class NelumboEditor {
     }
 
     /**
-     * Quits the application, saving all windows first.
+     * Quits the application, saving all windows first. If any open windows would
+     * lose content, asks for a single confirmation before quitting.
      */
     public void quit() {
+        int unsaved = windowManager.unsavedWindowCount();
+        if (unsaved > 0) {
+            int result = JOptionPane.showConfirmDialog(null,
+                    "The contents of " + unsaved + " window" + (unsaved == 1 ? "" : "s")
+                            + " will be lost. Are you sure you want to quit?",
+                    "Quit", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (result != JOptionPane.YES_OPTION) {
+                return;
+            }
+        }
         windowManager.saveAllWindows();
         System.exit(0);
     }
