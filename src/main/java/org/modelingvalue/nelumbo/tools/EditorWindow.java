@@ -244,6 +244,10 @@ public class EditorWindow extends WindowAdapter
         JScrollPane messageScroll = new JScrollPane(messagesPane);
         textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
         messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));
+        // The messages pane scrolls in lock-step with the code pane via the shared
+        // model below, so its own scrollbar is redundant. Hide it; the shared model's
+        // change listener still positions the messages viewport.
+        messageScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         messageScroll.getVerticalScrollBar().setModel(textScroll.getVerticalScrollBar().getModel());
 
         // Create split pane with modern styling
