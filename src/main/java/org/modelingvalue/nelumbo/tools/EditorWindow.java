@@ -300,6 +300,37 @@ public class EditorWindow extends WindowAdapter
         frame.addWindowListener(this);
         textPane.getDocument().addDocumentListener(this);
 
+        // Accept dropped files (open each in a new window) while delegating all
+        // other transfers (text paste/drag) to the pane's original handler.
+        final TransferHandler originalTransferHandler = textPane.getTransferHandler();
+        textPane.setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                if (support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) {
+                    return true;
+                }
+                return originalTransferHandler != null && originalTransferHandler.canImport(support);
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public boolean importData(TransferSupport support) {
+                if (support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) {
+                    try {
+                        java.util.List<java.io.File> files = (java.util.List<java.io.File>) support.getTransferable()
+                                .getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor);
+                        for (java.io.File file : files) {
+                            application.getWindowManager().createFileWindow(file);
+                        }
+                        return true;
+                    } catch (Exception ex) {
+                        return false;
+                    }
+                }
+                return originalTransferHandler != null && originalTransferHandler.importData(support);
+            }
+        });
+
         // Setup undo manager with compound edit grouping
         undoManager = new UndoManager();
 
