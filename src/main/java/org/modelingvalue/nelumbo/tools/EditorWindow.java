@@ -177,6 +177,8 @@ public class EditorWindow extends WindowAdapter
         initActions();
         if (isExample && examplePath != null) {
             loadExampleContent();
+        } else if (filePath != null) {
+            loadFileContent();
         } else {
             loadTextContent();
         }
@@ -1449,6 +1451,24 @@ public class EditorWindow extends WindowAdapter
             doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(frame, "Error loading example: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void loadFileContent() {
+        try {
+            String         content = EditorFileIO.read(java.nio.file.Path.of(filePath));
+            StyledDocument doc     = textPane.getStyledDocument();
+            doc.insertString(0, content, null);
+
+            // Apply line spacing
+            SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
+            StyleConstants.setLineSpacing(paragraphStyle, 0.2f);
+            doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
+
+            textPane.setCaretPosition(0);
+        } catch (IOException | BadLocationException e) {
+            JOptionPane.showMessageDialog(frame, "Error loading file: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
