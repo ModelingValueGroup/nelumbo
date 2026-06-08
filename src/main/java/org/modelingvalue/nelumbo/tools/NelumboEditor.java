@@ -124,6 +124,7 @@ public class NelumboEditor {
             { "Examples", "queryOnly.nl", "Query Only" }, { "Examples", "hidden.nl", "Hidden" },
             { "Examples", "max.nl", "Max" }, { "Examples", "deHet.nl", "De Het" },
             { "Examples", "maxFib.nl", "Maximal Fibonacci" }, { "Examples", "scoping.nl", "Scoping" },
+            { "Examples", "koningsdag.nl", "Koningsdag" },
             // Assignments
             { "Assignments", "powerAssignment.nl", "Power Assignment" },
             { "Assignments", "ternaryAssignment.nl", "Ternary Assignment" },
@@ -218,11 +219,7 @@ public class NelumboEditor {
         for (String[] entry : EXAMPLE_RESOURCES) {
             if (entry[2].equals(importName)) {
                 String category = entry[0];
-                String resourcePath = switch (category) {
-                    case "Library" -> NelumboConstants.NELUMBO_LIBRARY + entry[1];
-                    case "Tests" -> NelumboConstants.NELUMBO_TESTS + entry[1];
-                    default -> NelumboConstants.NELUMBO_EXAMPLES + entry[1];
-                };
+                String resourcePath = resourcePath(category, entry[1]);
 
                 return new String[]{importName, resourcePath};
             }
@@ -556,10 +553,6 @@ public class NelumboEditor {
             String fileName = entry[1];
             String displayName = entry[2];
 
-            // Construct full resource path based on category
-            String resourcePath = category.equals("Library") ? NelumboConstants.NELUMBO_LIBRARY + fileName
-                    : NelumboConstants.NELUMBO_EXAMPLES + fileName;
-
             // Get or create submenu for this category
             JMenu submenu = submenus.computeIfAbsent(category, k -> {
                 JMenu m = new JMenu(k);
@@ -568,7 +561,7 @@ public class NelumboEditor {
             });
 
             JMenuItem item = new JMenuItem(displayName);
-            item.addActionListener(e -> openExample(resourcePath, displayName));
+            item.addActionListener(e -> openExample(resourcePath(category, fileName), displayName));
             submenu.add(item);
         }
 
@@ -576,6 +569,14 @@ public class NelumboEditor {
     }
 
     // ==================== Static Utilities ====================
+
+    private static String resourcePath(String category, String fileName) {
+        return switch (category) {
+            case "Library" -> NelumboConstants.NELUMBO_LIBRARY + fileName;
+            case "Tests" -> NelumboConstants.NELUMBO_TESTS + fileName;
+            default -> NelumboConstants.NELUMBO_EXAMPLES + fileName;
+        };
+    }
 
     /**
      * Runs the given runnable on the EDT and waits for completion. Wraps checked

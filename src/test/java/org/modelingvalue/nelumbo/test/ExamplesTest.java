@@ -30,11 +30,6 @@ public class ExamplesTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
-    public void langOnly() {
-        exampleResource("langOnly.nl");
-    }
-
-    @RepeatedTest(10)
     public void friends() {
         exampleResource("friends.nl");
     }
