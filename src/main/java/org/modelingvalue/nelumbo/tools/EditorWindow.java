@@ -823,10 +823,16 @@ public class EditorWindow extends WindowAdapter
     }
 
     private void openFileChooser() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Nelumbo files (*.nl)", "nl"));
-        if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
-            application.getWindowManager().createFileWindow(chooser.getSelectedFile());
+        // Use the AWT FileDialog so the OS-native open panel is shown (Cocoa on macOS).
+        FileDialog dialog = new FileDialog(frame, "Open", FileDialog.LOAD);
+        dialog.setFilenameFilter((dir, name) -> name.endsWith(".nl")); // honored on macOS
+        if (!System.getProperty("os.name").toLowerCase().contains("mac")) {
+            dialog.setFile("*.nl"); // Windows/Linux filter via a glob in the file field
+        }
+        dialog.setVisible(true);
+        String name = dialog.getFile();
+        if (name != null) {
+            application.getWindowManager().createFileWindow(new File(dialog.getDirectory(), name));
         }
     }
 
@@ -981,6 +987,7 @@ public class EditorWindow extends WindowAdapter
     private void closeWindow() {
         if (confirmCloseIfEditable()) {
             saveTextContent(getDocumentText(textPane));
+            flushFileSaveNow();
             saveDialogVisibility();
             frame.setVisible(false);
             frame.dispose();
@@ -992,6 +999,9 @@ public class EditorWindow extends WindowAdapter
      * the window should be closed, false to cancel.
      */
     private boolean confirmCloseIfEditable() {
+        if (filePath != null) {
+            return true; // File-backed windows auto-save to disk; closing loses nothing.
+        }
         if (textPane.isEditable()) {
             int result = JOptionPane.showConfirmDialog(frame,
                     "The contents of this window will be lost. Are you sure you want to close it?", "Close Window",
@@ -1059,6 +1069,7 @@ public class EditorWindow extends WindowAdapter
         if (confirmCloseIfEditable()) {
             // Save state before closing (content is only saved for non-example windows)
             saveTextContent(getDocumentText(textPane));
+            flushFileSaveNow();
             saveDialogVisibility();
             frame.setVisible(false);
             frame.dispose();
@@ -1475,6 +1486,28 @@ public class EditorWindow extends WindowAdapter
                         "Failed to save " + new File(filePath).getName() + ": " + ex.getMessage()));
             }
         }, "EditorFileSave-" + windowId).start();
+    }
+
+    /**
+     * Writes any pending debounced file content immediately and synchronously.
+     * Called on close so edits made within the last debounce window are not lost.
+     */
+    private void flushFileSaveNow() {
+        if (filePath == null) {
+            return;
+        }
+        fileSaveTimer.stop(); // cancel the pending async write; we write synchronously here
+        String text = pendingFileSaveText;
+        if (text == null) {
+            return;
+        }
+        try {
+            EditorFileIO.write(Path.of(filePath), text);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(frame,
+                    "Failed to save " + new File(filePath).getName() + ": " + ex.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void loadTextContent() {
