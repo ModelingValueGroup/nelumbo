@@ -202,6 +202,13 @@ public class EditorWindow extends WindowAdapter
         textPane = new NelumboEditor.NonWrappingJTextPane(!isExample, 0xffffff);
         messagesPane = new NelumboEditor.NonWrappingJTextPane(false, 0xF5F5F5);
 
+        // The messages pane is rebuilt via setText() on every refresh, which leaves
+        // its caret at the end and would scroll it to the bottom. Because both panes
+        // share one vertical scroll model (see below), that drags the code editor to
+        // the bottom too. Never let the messages caret drive scrolling; it only
+        // mirrors the code pane via the shared model.
+        ((DefaultCaret) messagesPane.getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+
         // Add key listener to detect edit attempts on read-only windows
         if (isExample) {
             textPane.addKeyListener(new KeyAdapter() {
