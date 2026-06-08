@@ -702,6 +702,11 @@ public class EditorWindow extends WindowAdapter
         newWindowItem.addActionListener(e -> application.createNewWindow());
         fileMenu.add(newWindowItem);
 
+        JMenuItem openItem = new JMenuItem("Open…");
+        openItem.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        openItem.addActionListener(e -> openFileChooser());
+        fileMenu.add(openItem);
+
         JMenuItem closeWindowItem = new JMenuItem("Close Window");
         closeWindowItem
                 .setAccelerator(KeyStroke.getKeyStroke('W', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
@@ -784,6 +789,14 @@ public class EditorWindow extends WindowAdapter
         application.getWindowManager().addWindowListListener(windowListListener);
 
         return menuBar;
+    }
+
+    private void openFileChooser() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Nelumbo files (*.nl)", "nl"));
+        if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+            application.getWindowManager().createFileWindow(chooser.getSelectedFile());
+        }
     }
 
     /**
