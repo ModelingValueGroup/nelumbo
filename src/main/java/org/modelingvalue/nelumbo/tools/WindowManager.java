@@ -16,6 +16,7 @@
 
 package org.modelingvalue.nelumbo.tools;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -147,6 +148,21 @@ public class WindowManager {
     }
 
     /**
+     * Creates a new editable window backed by a filesystem file.
+     */
+    public synchronized void createFileWindow(File file) {
+        String       windowId     = UUID.randomUUID().toString();
+        int          windowNumber = getNextWindowNumber();
+        EditorWindow window       = new EditorWindow(application, windowId, windowNumber, file.getAbsolutePath());
+        windowNumbers.put(windowId, windowNumber);
+        windowOrder.add(windowId);
+        windows.put(windowId, window);
+        saveWindowList();
+        startWindowInNewThread(window);
+        notifyWindowListChanged();
+    }
+
+    /**
      * Starts the given window in a new thread.
      */
     private void startWindowInNewThread(EditorWindow window) {
@@ -225,10 +241,16 @@ public class WindowManager {
             String  examplePath        = preferences.get("window." + windowId + ".examplePath", null);
             String  exampleDisplayName = preferences.get("window." + windowId + ".exampleDisplayName", null);
             int     savedWindowNumber  = preferences.getInt("window." + windowId + ".windowNumber", -1);
+            String  filePath           = preferences.get("window." + windowId + ".filePath", null);
 
             EditorWindow window;
             if (isExample && examplePath != null) {
                 window = new EditorWindow(application, windowId, true, examplePath, exampleDisplayName);
+            } else if (filePath != null) {
+                // File-backed window: reload from disk
+                int windowNumber = savedWindowNumber > 0 ? savedWindowNumber : getNextWindowNumber();
+                windowNumbers.put(windowId, windowNumber);
+                window = new EditorWindow(application, windowId, windowNumber, filePath);
             } else {
                 // For regular windows, use saved number or get a new one
                 int windowNumber = savedWindowNumber > 0 ? savedWindowNumber : getNextWindowNumber();
