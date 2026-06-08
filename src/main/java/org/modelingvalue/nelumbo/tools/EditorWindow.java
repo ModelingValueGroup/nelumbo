@@ -83,6 +83,8 @@ public class EditorWindow extends WindowAdapter
     private UndoManager                      undoManager;
     private CompoundEdit                     currentCompoundEdit;
     private Timer                            compoundEditTimer;
+    private Timer                            fileSaveTimer;
+    private volatile String                  pendingFileSaveText;
     private WindowManager.WindowListListener windowListListener;
     private volatile boolean                 quit;
     private boolean                          refreshRequested;
@@ -304,6 +306,12 @@ public class EditorWindow extends WindowAdapter
         // Timer to end compound edits after a pause in typing (500ms)
         compoundEditTimer = new Timer(500, e -> endCompoundEdit());
         compoundEditTimer.setRepeats(false);
+
+        // Timer to debounce writing the file after a pause in typing (500ms).
+        // Only file-backed windows schedule it (see saveTextContent), but it is
+        // harmless to create for every window.
+        fileSaveTimer = new Timer(500, e -> flushFileSave());
+        fileSaveTimer.setRepeats(false);
 
         textPane.getDocument().addUndoableEditListener(e -> {
             // Only capture INSERT and REMOVE events, not CHANGE (style) events
@@ -1359,7 +1367,15 @@ public class EditorWindow extends WindowAdapter
         try {
             // Save example info (always needed for window restoration)
             preferences.putBoolean(prefKey("isExample"), isExample);
-            if (isExample) {
+            if (filePath != null) {
+                // File-backed window: the file on disk is the source of truth.
+                // Persist only the path (for restore) and debounce the disk write.
+                preferences.put(prefKey("filePath"), filePath);
+                if (windowNumber > 0) {
+                    preferences.putInt(prefKey("windowNumber"), windowNumber);
+                }
+                scheduleFileSave(text);
+            } else if (isExample) {
                 // For example windows, only save the example path, not the content
                 // The content will be reloaded from the resource file on restore
                 if (examplePath != null) {
@@ -1392,6 +1408,29 @@ public class EditorWindow extends WindowAdapter
         } catch (Exception e) {
             System.err.println("Failed to save window content: " + e.getMessage());
         }
+    }
+
+    private void scheduleFileSave(String text) {
+        pendingFileSaveText = text;
+        fileSaveTimer.restart();
+    }
+
+    private void flushFileSave() {
+        String text = pendingFileSaveText;
+        if (text == null || filePath == null) {
+            return;
+        }
+        // Write off the EDT so disk IO never stalls the UI. The text was captured
+        // on the EDT in scheduleFileSave.
+        new Thread(() -> {
+            try {
+                EditorFileIO.write(Path.of(filePath), text);
+            } catch (IOException ex) {
+                // Fail loud: a swallowed auto-save loses edits. Surface in the messages pane.
+                javax.swing.SwingUtilities.invokeLater(() -> setMessages(
+                        "Failed to save " + new File(filePath).getName() + ": " + ex.getMessage()));
+            }
+        }, "EditorFileSave-" + windowId).start();
     }
 
     private void loadTextContent() {
