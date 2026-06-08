@@ -124,7 +124,7 @@ Inside a pattern, angle-bracketed operators build repeating or optional sub-stru
 | `<(>` ... `<)*>`  | Zero-or-more with separator |
 | `<(>` ... `<)+>`  | One-or-more with separator |
 | `<,>`             | Separator inside a repetition |
-| `<|>`             | Alternation marker inside a group |
+| `<\|>`             | Alternation marker inside a group |
 | `<[>` ... `<]>`   | Connected-token group — adjacent tokens, no whitespace allowed between them |
 
 Examples:
