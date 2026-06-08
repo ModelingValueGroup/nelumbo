@@ -572,15 +572,15 @@ public class ParseState implements Mergeable<ParseState> {
                                 }
                             }
                         }
+                        Token pre = token.split(conn.length());
+                        if (result != null) {
+                            result.addSplit(token, pre);
+                            result.add(pre);
+                            pre.setTextMatch(next.isKeyword(), next.isConnected());
+                            pre.setState(next);
+                        }
+                        return new TokenState(pre.next(), next);
                     }
-                    Token pre = token.split(conn.length());
-                    if (result != null) {
-                        result.addSplit(token, pre);
-                        result.add(pre);
-                        pre.setTextMatch(next.isKeyword(), next.isConnected());
-                        pre.setState(next);
-                    }
-                    return new TokenState(pre.next(), next);
                 }
             }
         }
