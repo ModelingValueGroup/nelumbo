@@ -19,7 +19,7 @@ Integer  n
 
 // FLAG (untested / unsupported): sub-second precision is not parsed.
 2024-01-15T10:30:00.00Z       = a    ?
-2024-01-15T10:30:00.00+01:00  = a    ?
+2024-01-15T10:30:00.30+01:00  = a    ? 
 
 // Timezone information is kept: offset literals compare by instant, so
 // 10:30+01:00 is the same moment as 09:30Z, not 10:30Z.
