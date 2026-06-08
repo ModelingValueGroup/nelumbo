@@ -16,9 +16,6 @@
 
 package org.modelingvalue.nelumbo.test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
@@ -28,6 +25,9 @@ import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SuppressWarnings("unused")
 public class NelumboTestBase {
@@ -58,10 +58,18 @@ public class NelumboTestBase {
         assertEquals(expectedResult, queryResult);
     }
 
+    public void exampleResource(String resource) {
+        resource(resource, NelumboConstants.NELUMBO_EXAMPLES);
+    }
+
     public void testResource(String resource) {
+        resource(resource, NelumboConstants.NELUMBO_TESTS);
+    }
+
+    public void resource(String resource, String base) {
         run(() -> {
             try {
-                U.printResults(Parser.parse(NelumboTestBase.class, NelumboConstants.NELUMBO_EXAMPLES + resource));
+                U.printResults(Parser.parse(NelumboTestBase.class, base + resource));
             } catch (ParseException e) {
                 System.err.println(e.getMessage());
                 fail(e);

@@ -488,7 +488,7 @@ The same rewrites as the numeric modules. Subtraction is `datetime_add` permuted
 - **Periods carry two semantics at once.** They use *field-based* equality (`P1M != P30D`) but a *nominal* magnitude for ordering (months = 30 days, years = 365). The module is a compact case study in modelling domain semantics through the native's `equals`/`compare`, not the grammar.
 - **Validation happens at parse time.** Invalid dates and malformed periods reject with `file:line:col` during parsing, so they never reach the query engine as falsehoods.
 
-See [`../reference/stdlib/datetime.md`](../reference/stdlib/datetime.md) for the full per-operator reference and [`datetimeTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/datetimeTest.nl) for the executable specification.
+See [`../reference/stdlib/datetime.md`](../reference/stdlib/datetime.md) for the full per-operator reference and [`datetimeTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/datetimeTest.nl) for the executable specification.
 
 ---
 

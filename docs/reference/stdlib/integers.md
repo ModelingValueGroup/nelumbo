@@ -173,5 +173,5 @@ Added to what `nelumbo.logic` already exports:
 - [`logic.md`](logic.md) — the module `integers` builds on
 - [`rationals.md`](rationals.md) — the same shape, lifted to exact rationals
 - [`writing-rules.md`](../writing-rules.md) — how the `a-b=c <=> add(c,b,a)` idiom works
-- [`integersTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/integersTest.nl) — executable specification
+- [`integersTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/integersTest.nl) — executable specification
 - [`fibonacci.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl) — non-trivial use of `+`, `-`, and `<=`

@@ -185,4 +185,4 @@ After `import nelumbo.logic`, the following are visible to the importer:
 - [`three-valued-logic.md`](../three-valued-logic.md) — the semantic model these operators live in
 - [`operators.md`](../operators.md) — full operator catalogue
 - [`writing-rules.md`](../writing-rules.md) — `<=>` and `if` semantics
-- [`logicTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/logicTest.nl) — executable specification of every connective and quantifier
+- [`logicTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) — executable specification of every connective and quantifier

@@ -87,7 +87,7 @@ Once you `import nelumbo.logic`, these become available as Boolean-valued operat
 p & q
 ```
 
-`p & q` is a fact when both `p` and `q` are facts. It is a falsehood when at least one of `p` or `q` is a falsehood — **even if the other is unknown**. Proving `q` as a falsehood is enough to conclude `p & q` is false, regardless of `p`. See [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/logicTest.nl) for the full truth table.
+`p & q` is a fact when both `p` and `q` are facts. It is a falsehood when at least one of `p` or `q` is a falsehood — **even if the other is unknown**. Proving `q` as a falsehood is enough to conclude `p & q` is false, regardless of `p`. See [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) for the full truth table.
 
 ### `|` — disjunction (`#20`)
 

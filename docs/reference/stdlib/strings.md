@@ -139,6 +139,6 @@ Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 ## See also
 
 - [`integers.md`](integers.md) — the module `strings` builds on
-- [`stringsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/stringsTest.nl) — executable specification
+- [`stringsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/stringsTest.nl) — executable specification
 - [`deHet.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/deHet.nl) — natural-language DSL using strings
 - [`transformation.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/transformation.nl) — string-typed attributes via `::>` transformation

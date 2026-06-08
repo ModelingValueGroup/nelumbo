@@ -18,7 +18,7 @@ package org.modelingvalue.nelumbo.test;
 
 import org.junit.jupiter.api.RepeatedTest;
 
-public class NelumboTest extends NelumboTestBase {
+public class ExamplesTest extends NelumboTestBase {
 
     static {
         setProp("PARALLEL_COLLECTIONS", "false");
@@ -30,46 +30,68 @@ public class NelumboTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
-    public void initTest() {
-        String example = """
-                // Init only
-                """;
-        testString(example, "NelumboTest.initTest");
+    public void langOnly() {
+        exampleResource("langOnly.nl");
     }
 
     @RepeatedTest(10)
-    public void langTest() {
-        testResource("langTest.nl");
+    public void friends() {
+        exampleResource("friends.nl");
     }
 
     @RepeatedTest(10)
-    public void logicTest() {
-        testResource("logicTest.nl");
+    public void whoIs() {
+        exampleResource("whoIs.nl");
     }
 
     @RepeatedTest(10)
-    public void integersTest() {
-        testResource("integersTest.nl");
+    public void family() {
+        exampleResource("family.nl");
     }
 
     @RepeatedTest(10)
-    public void rationalsTest() {
-        testResource("rationalsTest.nl");
+    public void queryOnly() {
+        exampleResource("queryOnly.nl");
     }
 
     @RepeatedTest(10)
-    public void stringsTest() {
-        testResource("stringsTest.nl");
+    public void belasting() {
+        exampleResource("belasting.nl");
     }
 
     @RepeatedTest(10)
-    public void collectionsTest() {
-        testResource("collectionsTest.nl");
+    public void fibonacci() {
+        exampleResource("fibonacci.nl");
     }
 
     @RepeatedTest(10)
-    public void datetimeTest() {
-        testResource("datetimeTest.nl");
+    public void transformation() {
+        exampleResource("transformation.nl");
+    }
+
+    @RepeatedTest(10)
+    public void max() {
+        exampleResource("max.nl");
+    }
+
+    @RepeatedTest(10)
+    public void deHet() {
+        exampleResource("deHet.nl");
+    }
+
+    @RepeatedTest(10)
+    public void maxFib() {
+        exampleResource("maxFib.nl");
+    }
+
+    @RepeatedTest(10)
+    public void scoping() {
+        exampleResource("scoping.nl");
+    }
+
+    @RepeatedTest(10)
+    public void hidden() {
+        exampleResource("hidden.nl");
     }
 
 }

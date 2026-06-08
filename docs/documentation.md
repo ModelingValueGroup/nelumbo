@@ -118,14 +118,25 @@ The `.nl` files under [`src/main/resources/org/modelingvalue/nelumbo/examples/`]
 | `even.nl` | Simplest useful predicate using an existential quantifier |
 | `max.nl`, `ternary.nl` | Generic types (`Type T`), conditional expressions, user-defined operators |
 | `power.nl`, `maxFib.nl` | Composed recursive definitions |
-| `logicTest.nl` | Executable specification of the three-valued logic truth tables |
-| `integersTest.nl`, `rationalsTest.nl`, `stringsTest.nl`, `collectionsTest.nl` | Per-stdlib-module test suites, useful to skim for corner cases |
 | `belasting.nl` | Natural-language DSL (Dutch tax rules) using multi-word pattern syntax |
 | `transformation.nl`, `deHet.nl` | Language transformations with `::>` — defining new top-level keywords |
 | `scoping.nl`, `hidden.nl` | Scope blocks and hidden-variable patterns |
 | `whoIs.nl` | Importing a user-written module (not just stdlib) |
 | `queryOnly.nl` | Bare queries without `[..][..]` — useful during development |
 | `*Assignment.nl` | "Fill in the rules" exercise versions of the corresponding examples |
+
+---
+
+## Map of the test files
+
+The `*Test.nl` files under [`src/main/resources/org/modelingvalue/nelumbo/tests/`](../src/main/resources/org/modelingvalue/nelumbo/tests/) are executable specifications — useful to skim for corner cases:
+
+| File | What it specifies |
+|---|---|
+| `logicTest.nl` | The three-valued logic truth tables |
+| `integersTest.nl`, `rationalsTest.nl`, `stringsTest.nl`, `collectionsTest.nl` | Per-stdlib-module behaviour for each data type |
+| `datetimeTest.nl` | Every datetime operator and the parse-time edge cases |
+| `langTest.nl` | Smoke test that imports `nelumbo.lang` on its own |
 
 ---
 

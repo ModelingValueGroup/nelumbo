@@ -21,5 +21,6 @@ public interface NelumboConstants {
     String NAME             = "nelumbo";
     String EXTENSION        = "nl";
     String NELUMBO_LIBRARY  = "/org/modelingvalue/nelumbo/";
-    String NELUMBO_EXAMPLES = "/org/modelingvalue/nelumbo/examples/";
+    String NELUMBO_EXAMPLES = NELUMBO_LIBRARY + "examples/";
+    String NELUMBO_TESTS    = NELUMBO_LIBRARY + "tests/";
 }

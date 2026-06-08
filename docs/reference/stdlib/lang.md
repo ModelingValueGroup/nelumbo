@@ -225,4 +225,4 @@ All bindings are native — there is no in-language rule (`<=>`) in this module.
 - [`precedence-and-associativity.md`](../precedence-and-associativity.md) — the `#N` annotation declared by the `Functor` Root form
 - [`visibility.md`](../visibility.md) — the `private` and `hidden` modifiers declared by the `Functor` and `Variable` Root forms
 - [`logic.md`](logic.md) — the next layer up, which adds `Boolean`, `fact`, `<=>`, and `?`
-- [`langTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/langTest.nl) — minimal smoke test that imports `nelumbo.lang` on its own
+- [`langTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/langTest.nl) — minimal smoke test that imports `nelumbo.lang` on its own

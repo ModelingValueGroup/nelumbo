@@ -39,7 +39,7 @@ The price is that every operator has to be defined on three inputs, not two. For
 
 ## The truth tables
 
-All tables below are the ones exercised in [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/logicTest.nl). You can run that file to verify them.
+All tables below are the ones exercised in [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl). You can run that file to verify them.
 
 ### Negation — `!`
 
@@ -149,4 +149,4 @@ This is the tangible payoff of three-valued logic: the laws of classical logic r
 - [`operators.md`](operators.md) — catalogue of logical operators
 - [`test-expression-semantics.md`](test-expression-semantics.md) — formal rules for when a test passes
 - [`writing-rules.md`](writing-rules.md) — how rules interact with the three-valued model
-- [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/logicTest.nl) — the executable specification
+- [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) — the executable specification

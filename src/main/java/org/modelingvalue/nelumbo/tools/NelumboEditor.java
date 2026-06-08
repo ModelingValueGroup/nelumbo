@@ -16,13 +16,14 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.Toolkit;
+import com.formdev.flatlaf.FlatLightLaf;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstants;
+import org.modelingvalue.nelumbo.syntax.TokenType;
+
+import javax.swing.*;
+import javax.swing.text.*;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.io.Serial;
 import java.util.Comparator;
@@ -31,32 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.prefs.Preferences;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
-import javax.swing.UIManager;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.StyledEditorKit;
-import javax.swing.text.ViewFactory;
-
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboConstants;
-import org.modelingvalue.nelumbo.syntax.TokenType;
-
-import com.formdev.flatlaf.FlatLightLaf;
 
 /**
  * Main application controller for the Nelumbo Editor. Manages global settings
@@ -136,11 +111,12 @@ public class NelumboEditor {
             { "Library", "strings/strings.nl", "nelumbo.strings" },
             { "Library", "rationals/rationals.nl", "nelumbo.rationals" },
             { "Library", "collections/collections.nl", "nelumbo.collections" },
+            { "Library", "datetime/datetime.nl", "nelumbo.datetime" },
             // Tests
             { "Tests", "langOnly.nl", "Lang Only Test" }, { "Tests", "langTest.nl", "Lang Test" },
             { "Tests", "logicTest.nl", "Logic Test" }, { "Tests", "integersTest.nl", "Integers Test" },
             { "Tests", "rationalsTest.nl", "Rationals Test" }, { "Tests", "stringsTest.nl", "Strings Test" },
-            { "Tests", "collectionsTest.nl", "Collections Test" },
+            { "Tests", "collectionsTest.nl", "Collections Test" }, { "Tests", "datetimeTest.nl", "Datetime Test" },
             // Examples
             { "Examples", "family.nl", "Family" }, { "Examples", "friends.nl", "Friends" },
             { "Examples", "fibonacci.nl", "Fibonacci" }, { "Examples", "belasting.nl", "Belasting" },
@@ -242,9 +218,13 @@ public class NelumboEditor {
         for (String[] entry : EXAMPLE_RESOURCES) {
             if (entry[2].equals(importName)) {
                 String category = entry[0];
-                String resourcePath = category.equals("Library") ? NelumboConstants.NELUMBO_LIBRARY + entry[1]
-                        : NelumboConstants.NELUMBO_EXAMPLES + entry[1];
-                return new String[] { importName, resourcePath };
+                String resourcePath = switch (category) {
+                    case "Library" -> NelumboConstants.NELUMBO_LIBRARY + entry[1];
+                    case "Tests" -> NelumboConstants.NELUMBO_TESTS + entry[1];
+                    default -> NelumboConstants.NELUMBO_EXAMPLES + entry[1];
+                };
+
+                return new String[]{importName, resourcePath};
             }
         }
         return null;

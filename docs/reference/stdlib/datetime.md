@@ -193,4 +193,4 @@ Added to what `nelumbo.integers` already exports:
 - [`integers.md`](integers.md) — the relational `add`/`>` idiom this module mirrors, lifted to dates and durations
 - [`built-in-tokens.md`](../built-in-tokens.md) — the `<[> … <]>` connected-token groups the literals are built from
 - [`native-classes.md`](../native-classes.md) — catalogue of the `@`-bound classes, including the datetime natives
-- [`datetimeTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/datetimeTest.nl) — executable specification covering every operator and the parse-time edge cases
+- [`datetimeTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/datetimeTest.nl) — executable specification covering every operator and the parse-time edge cases

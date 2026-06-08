@@ -148,4 +148,4 @@ Added to what `nelumbo.integers` (and `nelumbo.logic`) already export:
 ## See also
 
 - [`integers.md`](integers.md) — the module `rationals` builds on, and whose structure it mirrors
-- [`rationalsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/rationalsTest.nl) — executable specification
+- [`rationalsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/rationalsTest.nl) — executable specification

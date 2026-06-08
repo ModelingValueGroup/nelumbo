@@ -134,4 +134,4 @@ Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 - [`built-in-tokens.md`](../built-in-tokens.md#structural-markers--repetition-and-grouping) — the repetition markers `<(>`, `<)*>`, `<,>` used in the literal declarations
 - [`three-valued-logic.md`](../three-valued-logic.md) — the quantifier semantics set-builder notation is built on
 - [`logic.md`](logic.md) — the `E[...]`/`A[...]` quantifiers `{[e](c)}` is a cousin of
-- [`collectionsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/collectionsTest.nl) — executable specification
+- [`collectionsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/collectionsTest.nl) — executable specification

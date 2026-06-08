@@ -131,7 +131,7 @@ import mymodule
 ...tests...
 ```
 
-The stdlib follows this convention. `integers.nl` contains no tests; `examples/integersTest.nl` contains them, importing `nelumbo.integers`.
+The stdlib follows this convention. `integers.nl` contains no tests; `tests/integersTest.nl` contains them, importing `nelumbo.integers`.
 
 ---
 
