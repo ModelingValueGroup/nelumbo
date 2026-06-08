@@ -16,15 +16,25 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
+import java.io.Serial;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
-
-import java.io.Serial;
-import java.time.*;
 
 // DateTime ::= <[> <Date> T <Time#50> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?> <]>
 public final class NDateTime extends Node {
@@ -36,20 +46,20 @@ public final class NDateTime extends Node {
 
     private static Functor FUNCTOR_LITERAL;
 
-    @NelumboConstructor
-    public NDateTime(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args);
-        // TODO: Make it nicer
-        if (FUNCTOR == null) {
-            FUNCTOR = functor();
-        }
+    private static Functor literalFunctor() {
         if (FUNCTOR_LITERAL == null) {
             FUNCTOR_LITERAL = FUNCTOR.setResultType(FUNCTOR.resultType().toLiteral());
         }
+        return FUNCTOR_LITERAL;
+    }
+
+    @NelumboConstructor
+    public NDateTime(NodeInfo nodeInfo, Object... args) {
+        super(nodeInfo, args);
     }
 
     public static NDateTime of(Object value) {
-        return new NDateTime(NodeInfo.of(FUNCTOR_LITERAL), value);
+        return new NDateTime(NodeInfo.of(literalFunctor()), value);
     }
 
     @Override
@@ -65,11 +75,12 @@ public final class NDateTime extends Node {
             LocalTime time = getVal(1, 0);
 
             if (get(2) == null) {
-                return setArgs(new Object[]{LocalDateTime.of(date, time)}).setFunctorOrType(FUNCTOR_LITERAL);
+                return setArgs(new Object[] { LocalDateTime.of(date, time) }).setFunctorOrType(literalFunctor());
             }
 
             try {
-                return setArgs(new Object[]{OffsetDateTime.of(date, time, foldTimezone())}).setFunctorOrType(FUNCTOR_LITERAL);
+                return setArgs(new Object[] { OffsetDateTime.of(date, time, foldTimezone()) })
+                        .setFunctorOrType(literalFunctor());
             } catch (DateTimeException e) {
                 knowledgeBase.addException(new ParseException("Invalid timezone offset: " + e.getMessage()));
             }
