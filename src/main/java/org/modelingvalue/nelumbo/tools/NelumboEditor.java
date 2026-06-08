@@ -164,6 +164,7 @@ public class NelumboEditor {
         initLookAndFeel();
         loadTokenColors();
         windowManager = new WindowManager(this);
+        installQuitHandler();
 
         // Create and register the editor import resolver
         editorImportResolver = new EditorImportResolver(windowManager);
@@ -198,6 +199,24 @@ public class NelumboEditor {
      */
     public void createNewWindow() {
         windowManager.createNewWindow();
+    }
+
+    /**
+     * On macOS the native screen menu bar handles Cmd-Q itself, bypassing the
+     * File &gt; Quit menu action. Route that native quit through {@link #quit()} so
+     * the confirmation prompt and file flush still run.
+     */
+    private void installQuitHandler() {
+        if (!Desktop.isDesktopSupported()) {
+            return;
+        }
+        Desktop desktop = Desktop.getDesktop();
+        if (desktop.isSupported(Desktop.Action.APP_QUIT_HANDLER)) {
+            desktop.setQuitHandler((e, response) -> {
+                quit();                // proceeds to System.exit when confirmed
+                response.cancelQuit(); // only reached when the user cancelled
+            });
+        }
     }
 
     /**
