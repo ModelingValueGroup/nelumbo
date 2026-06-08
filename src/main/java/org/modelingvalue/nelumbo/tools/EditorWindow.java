@@ -68,6 +68,7 @@ public class EditorWindow extends WindowAdapter
     private volatile boolean    isExample;
     private final String        examplePath;
     private final String        exampleDisplayName;
+    private final String        filePath;          // Absolute filesystem path for file-backed windows (null otherwise)
     private final Preferences   preferences;
     private volatile int        windowNumber;      // Window number for regular windows
 
@@ -107,6 +108,7 @@ public class EditorWindow extends WindowAdapter
         this.exampleDisplayName = null;
         this.windowNumber = windowNumber;
         this.preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+        this.filePath = null;
     }
 
     /**
@@ -121,6 +123,23 @@ public class EditorWindow extends WindowAdapter
         this.exampleDisplayName = exampleDisplayName;
         this.windowNumber = -1; // Examples don't have window numbers
         this.preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+        this.filePath = null;
+    }
+
+    /**
+     * Creates a new editable window backed by a filesystem file. Reuses the
+     * regular-window machinery (numbered, importable); the file path drives load,
+     * debounced auto-save, and the window title.
+     */
+    public EditorWindow(NelumboEditor application, String windowId, int windowNumber, String filePath) {
+        this.application = application;
+        this.windowId = windowId != null ? windowId : UUID.randomUUID().toString();
+        this.isExample = false;
+        this.examplePath = null;
+        this.exampleDisplayName = null;
+        this.windowNumber = windowNumber;
+        this.preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+        this.filePath = filePath;
     }
 
     public String getWindowId() {
@@ -183,6 +202,9 @@ public class EditorWindow extends WindowAdapter
         if (isExample && exampleDisplayName != null) {
             // Example/library windows use just the display name
             title = exampleDisplayName;
+        } else if (filePath != null) {
+            // File-backed windows show the file's base name
+            title = new java.io.File(filePath).getName();
         } else {
             // Regular windows use "editor.nelumbo_<n>" format for easy import reference
             title = "editor.nelumbo_" + windowNumber;
