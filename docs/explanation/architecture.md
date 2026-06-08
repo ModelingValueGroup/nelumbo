@@ -73,7 +73,7 @@ What this means in practice:
 - **The language's syntax lives in `lang.nl`.** The hand-coded Java bootstrap exists only to load that file — once `lang.nl` is in place, the same `::=` declarations the user writes are what parse the rest.
 - **The three-valued logic lives in `logic.nl`.** That includes `<=>` itself: rules are a statement form declared in `logic.nl`, not a Java keyword. Without `nelumbo.logic`, a `.nl` file can declare types and patterns but cannot write rules, assert facts, or run queries.
 - Most of what looks like language features — `->`, `<->`, `-` as unary, `|x|`, `<=`, `int(s)`, `str(i)` — is **defined in Nelumbo**, not native. Only a handful of genuinely irreducible primitives (the tokenizer, `add`, `mult`, `>` between integers, string concat, and so on) are implemented in Java.
-- You can study the stdlib to learn idiom. It is around 200 lines of Nelumbo across six files, and it demonstrates almost every feature of the language.
+- You can study the stdlib to learn idiom. It is around 300 lines of Nelumbo across seven files, and it demonstrates almost every feature of the language.
 
 ### User-written libraries
 
@@ -160,7 +160,7 @@ When you are looking for how to do something, ask: **which layer is the right on
 
 - [`../reference/grammar.md`](../reference/grammar.md) — what the core grammar is
 - [`../reference/stdlib/logic.md`](../reference/stdlib/logic.md) — the foundation stdlib module
-- [`../guides/stdlib-tour.md`](../guides/stdlib-tour.md) — guided read-through of all six stdlib modules
+- [`../guides/stdlib-tour.md`](../guides/stdlib-tour.md) — guided read-through of all seven stdlib modules
 - [`../guides/writing-your-own-module.md`](../guides/writing-your-own-module.md) — the in-language extension path
 - [`../guides/native-cookbook.md`](../guides/native-cookbook.md) — the host-language extension path
 - [`../reference/native-classes.md`](../reference/native-classes.md) — catalogue of every shipped native

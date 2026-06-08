@@ -1,8 +1,8 @@
 # Standard library tour
 
-The Nelumbo standard library is around 200 lines of Nelumbo across six files. That is remarkably small — and because it is written in Nelumbo, reading it is one of the best ways to learn how the language is actually used.
+The Nelumbo standard library is around 300 lines of Nelumbo across seven files. That is remarkably small — and because it is written in Nelumbo, reading it is one of the best ways to learn how the language is actually used.
 
-This guide walks through all six modules in dependency order, showing how each builds on the previous ones, what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
+This guide walks through all seven modules in dependency order, showing how each builds on the previous ones, what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
 
 The files:
 
@@ -12,6 +12,7 @@ The files:
 4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
 5. [`strings.nl`](#5-nelumbostrings-24-lines) — 24 lines — string operations
 6. [`collections.nl`](#6-nelumbocollections-11-lines) — 11 lines — generic `Set<E>` and `List<E>`
+7. [`datetime.nl`](#7-nelumbodatetime-97-lines) — 97 lines — ISO 8601 dates, times, date-times, and durations
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
 
@@ -420,11 +421,57 @@ Operations — membership, union, length, map, fold — are not in the module as
 
 ---
 
+## 7. `nelumbo.datetime` (97 lines)
+
+The largest stdlib module, and a good demonstration that the integer idioms scale to a much richer value domain. It imports `nelumbo.integers` (for the `Period * Integer` scaling operator) and adds four independent value types.
+
+```
+import nelumbo.integers
+
+DateTime :: Object    Date :: Object    Time :: Object    Period :: Object
+
+DateTime ::= <[> <Date> T <Time#50> <(> ... offset ... <)?> <]>  @...NDateTime, <DateTime> + <Period> #40, ...
+Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>              @...NDate,     <Date> + <Period> #40, ...
+Time     ::= <[> <NUMBER> : <NUMBER> ... <]>                    @...NTime,     <Time> + <Period> #40, ...
+Period   ::= <[> P ... <]>                                       @...NPeriod,   <Period> + <Period> #40, <Period> * <Integer> #50, ...
+
+private Boolean ::= datetime_add(<DateTime>,<Period>,<DateTime>)  @...Add,
+                    date_add(<Date>,<Period>,<Date>)              @...Add,
+                    time_add(<Time>,<Period>,<Time>)              @...Add,
+                    period_add(<Period>,<Period>,<Period>)        @...AddPeriod,
+                    period_multiply(<Period>,<Integer>,<Period>)  @...MultiplyPeriod
+
+DateTime a, b    Period x, y, z    Integer n
+
+a+x=b  <=>  datetime_add(a,x,b)
+a-x=b  <=>  datetime_add(b,x,a)
+a-b=x  <=>  datetime_add(b,x,a)
+x*n=y  <=>  period_multiply(x,n,y)
+```
+
+### What is native
+
+Nine classes: four literal constructors (`NDate`, `NTime`, `NDateTime`, `NPeriod`), three relations (`Add` — shared by all three instant types, `AddPeriod`, `MultiplyPeriod`), one comparison (`GreaterThan`), and the value record `IsoDuration` that backs `Period`. Every value is a `java.time` type under the hood.
+
+### What is derived
+
+The same rewrites as the numeric modules. Subtraction is `datetime_add` permuted, so "instant + duration", "instant − duration", and "instant − instant" all flow through one native; `<`, `<=`, `>=` derive from `>` and `=` for each of the four types.
+
+### Idioms to notice
+
+- **The literals are connected-token groups.** Each is wrapped in `<[> … <]>`, which forbids whitespace between the inner tokens — that is what makes `2024-01-15` tokenize tightly rather than as three numbers and two minus signs.
+- **Two equality conventions live side by side.** Offset date-times compare *by instant* (`10:30+01:00` equals `09:30Z`), while periods use *field-based* equality (`P1M != P30D`) but a *nominal* magnitude for ordering. The module is a compact case study in modelling domain semantics through the native's `equals`/`compare`, not the grammar.
+- **Validation happens at parse time.** Invalid dates and malformed periods reject with `file:line:col` during parsing, so they never reach the query engine as falsehoods.
+
+See [`../reference/stdlib/datetime.md`](../reference/stdlib/datetime.md) for the full per-operator reference and [`datetimeTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/datetimeTest.nl) for the executable specification.
+
+---
+
 ## The takeaway
 
-Reading all six stdlib modules in order, a few observations crystallise:
+Reading all seven stdlib modules in order, a few observations crystallise:
 
-- **The stdlib is small.** Around 200 lines of Nelumbo total. Not because the language is underpowered — because the language is expressive enough that a little code covers a lot.
+- **The stdlib is small.** Around 300 lines of Nelumbo total. Not because the language is underpowered — because the language is expressive enough that a little code covers a lot.
 - **The syntax itself is in `.nl` files.** `lang.nl` declares the pattern meta-grammar and the `::`, `::=`, `::>`, `import`, variable, type, and functor statement forms. `logic.nl` declares `fact`, `<=>`, and `?`. The Java core only knows enough to load `lang.nl`.
 - **Most of it is not native.** Perhaps a quarter of the pattern declarations have `@` annotations. The rest are defined in Nelumbo using rules.
 - **Layering is strict.** Each module imports the one below it; no module imports sideways. This is a good model for your own libraries.

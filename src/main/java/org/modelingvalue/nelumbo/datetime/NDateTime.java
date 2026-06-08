@@ -26,7 +26,7 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 import java.io.Serial;
 import java.time.*;
 
-// DateTime ::= <Date> T <Time#30> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?>
+// DateTime ::= <[> <Date> T <Time#50> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?> <]>
 public final class NDateTime extends Node {
     @Serial
     private static final long serialVersionUID = 6807816666027178736L;

@@ -40,6 +40,10 @@ org.modelingvalue.nelumbo.strings     string operations
 
 org.modelingvalue.nelumbo.collections container literals
     NSet, NList
+
+org.modelingvalue.nelumbo.datetime    ISO 8601 dates, times, date-times, durations
+    NDate, NTime, NDateTime, NPeriod, Add, AddPeriod, MultiplyPeriod,
+    GreaterThan, IsoDuration
 ```
 
 The `lang` and `patterns` packages are the natives that back the patterns declared in `lang.nl`. They implement the bootstrap layer — without them, the hand-coded parser could read `lang.nl` but no `@`-bound class would exist to handle the patterns it declares.
@@ -218,6 +222,47 @@ Shipped natives fall into five structural roles. Reading this classification fir
 
 ---
 
+## `org.modelingvalue.nelumbo.datetime`
+
+### `NDate`, `NTime`, `NDateTime`, `NPeriod`
+
+- Back: the `Date`, `Time`, `DateTime`, and `Period` literals
+- Role: constant
+- Values: `LocalDate`, `LocalTime`, `LocalDateTime`/`OffsetDateTime`, and `IsoDuration` respectively
+- Notes: each parses its connected-token (`<[> … <]>`) literal at construction time. Invalid input (`2024-13-08`, the period `P1D1Y`, a bad timezone offset) is rejected with a `ParseException` carrying `file:line:col`, so it surfaces during parsing rather than as a query falsehood. `NDateTime` chooses `OffsetDateTime` when a `Z`/`±HH:MM` offset is present and `LocalDateTime` otherwise, and its `equals` compares offset-bearing values by instant (`10:30+01:00` equals `09:30Z`). `NPeriod` normalizes the time part on build (`P1YT90M` → `P1YT1H30M`).
+
+### `IsoDuration`
+
+- Backs: the value behind every `Period` (a `record(Period, Duration)`); not itself `@`-bound
+- Role: value record
+- Notes: pairs a calendar `java.time.Period` (Y/M/W/D) with an exact `Duration` (H/M/S). Equality is **field-based** (`P1M != P30D`, the correct ISO 8601 semantics); `plus`/`minus`/`multipliedBy` operate componentwise; `toString` renders the canonical `P…T…` form.
+
+### `Add`
+
+- Backs: `datetime_add` / `date_add` / `time_add` *(private)* — one class for all three
+- Role: three-arg functional relation
+- Strategy: the canonical relational shape applied to instants. With the two inputs bound it computes the third; with the sum and the duration bound it subtracts; with both instants bound it returns the duration *between* them. `date_add` only accepts a duration whose time part is zero and `time_add` one whose calendar part is zero (otherwise `unresolvable()`); `DateTime` accepts both. The resulting instant preserves any timezone offset.
+
+### `AddPeriod`
+
+- Backs: `period_add` *(private)*
+- Role: three-arg functional relation
+- Strategy: `IsoDuration` addition, reversible — `a + b = c` binds whichever of the three is open via `plus`/`minus`. Deterministic.
+
+### `MultiplyPeriod`
+
+- Backs: `period_multiply` *(private)*
+- Role: three-arg functional relation
+- Strategy: scales an `IsoDuration` by an `Integer` (`P1D * 3 = P3D`).
+
+### `GreaterThan`
+
+- Backs: `>` on `DateTime`, `Date`, `Time`, and `Period`
+- Role: comparison predicate
+- Strategy: when both sides are bound, compares and returns `factCC()`/`falsehoodCC()`; with one side open it records the open falsehood via `set(i, …).falsehoodsII()`, mirroring the integer comparison. `OffsetDateTime` is compared **by instant**; `Period` is compared by a **nominal** magnitude (months = 30 days, years = 365), an explicit convention because `P1M` vs `P30D` has no exact ordering. Mixing offset and offset-less date-times is `unresolvable()`.
+
+---
+
 ## Cross-reference — by `.nl` binding site
 
 This table lets you go from a line in an `.nl` file to the Java class that implements it.
@@ -263,6 +308,14 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `strings.nl` | `integer_string(<Integer>,<String>)` *(private)* | `ToInteger` |
 | `collections.nl` | `Set<E> ::= { ... }` | `NSet` |
 | `collections.nl` | `List<E> ::= [ ... ]` | `NList` |
+| `datetime.nl` | `Date ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>` | `datetime.NDate` |
+| `datetime.nl` | `Time ::= <[> <NUMBER> : <NUMBER> ... <]>` | `datetime.NTime` |
+| `datetime.nl` | `DateTime ::= <[> <Date> T <Time#50> ... <]>` | `datetime.NDateTime` |
+| `datetime.nl` | `Period ::= <[> P ... <]>` | `datetime.NPeriod` |
+| `datetime.nl` | `datetime_add/date_add/time_add(...)` *(private)* | `datetime.Add` |
+| `datetime.nl` | `period_add(<Period>,<Period>,<Period>)` *(private)* | `datetime.AddPeriod` |
+| `datetime.nl` | `period_multiply(<Period>,<Integer>,<Period>)` *(private)* | `datetime.MultiplyPeriod` |
+| `datetime.nl` | `<DateTime\|Date\|Time\|Period> > <...>` | `datetime.GreaterThan` |
 
 The natives back roughly twice as many language-level patterns once you count the Nelumbo-defined derivations (`<`, `<=`, `>=`, `-` unary, `-` binary, `/`, `|x|`, `->`, `<->`, `!=`, `str`, `int`, `len`, `r`).
 

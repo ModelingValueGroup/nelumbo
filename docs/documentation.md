@@ -48,8 +48,8 @@ Different readers want different things. Pick the path that matches your goal.
 
 ### "I want to read the stdlib to learn idiom."
 
-- [Standard library tour](guides/stdlib-tour.md) — all six modules in dependency order
-- [`stdlib/lang.md`](reference/stdlib/lang.md), [`logic.md`](reference/stdlib/logic.md), [`integers.md`](reference/stdlib/integers.md), [`rationals.md`](reference/stdlib/rationals.md), [`strings.md`](reference/stdlib/strings.md), [`collections.md`](reference/stdlib/collections.md) — per-module reference
+- [Standard library tour](guides/stdlib-tour.md) — all seven modules in dependency order
+- [`stdlib/lang.md`](reference/stdlib/lang.md), [`logic.md`](reference/stdlib/logic.md), [`integers.md`](reference/stdlib/integers.md), [`rationals.md`](reference/stdlib/rationals.md), [`strings.md`](reference/stdlib/strings.md), [`collections.md`](reference/stdlib/collections.md), [`datetime.md`](reference/stdlib/datetime.md) — per-module reference
 
 ### "I need to look something up."
 
@@ -87,12 +87,13 @@ The irreducible facts about the language.
 - [`nelumbo.rationals`](reference/stdlib/rationals.md) — exact rationals
 - [`nelumbo.strings`](reference/stdlib/strings.md) — strings, concatenation, conversion
 - [`nelumbo.collections`](reference/stdlib/collections.md) — generic `Set<E>` and `List<E>`
+- [`nelumbo.datetime`](reference/stdlib/datetime.md) — ISO 8601 dates, times, date-times, and durations
 
 ### Guides
 
 Task-oriented how-tos.
 
-- [Standard library tour](guides/stdlib-tour.md) — reading all six stdlib modules in order
+- [Standard library tour](guides/stdlib-tour.md) — reading all seven stdlib modules in order
 - [Writing your own module](guides/writing-your-own-module.md) — packaging a reusable library
 - [Language transformations](guides/language-transformations.md) — the `::>` meta-feature *(under construction)*
 - [Native cookbook](guides/native-cookbook.md) — recipes for writing Java natives
