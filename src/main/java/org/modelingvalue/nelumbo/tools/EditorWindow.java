@@ -16,30 +16,26 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import static org.modelingvalue.nelumbo.tools.NelumboEditor.callOnEDT;
-import static org.modelingvalue.nelumbo.tools.NelumboEditor.runOnEDT;
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.Evaluatable;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lang.Import;
+import org.modelingvalue.nelumbo.logic.Query;
+import org.modelingvalue.nelumbo.syntax.*;
+import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Taskbar;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Serial;
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
+import javax.swing.text.*;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.undo.CompoundEdit;
+import javax.swing.undo.UndoManager;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -49,45 +45,8 @@ import java.util.UUID;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextPane;
-import javax.swing.KeyStroke;
-import javax.swing.Timer;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.TextAction;
-import javax.swing.undo.CompoundEdit;
-import javax.swing.undo.UndoManager;
-
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Evaluatable;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Import;
-import org.modelingvalue.nelumbo.logic.Query;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
-import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.Tokenizer;
-import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
+import static org.modelingvalue.nelumbo.tools.NelumboEditor.callOnEDT;
+import static org.modelingvalue.nelumbo.tools.NelumboEditor.runOnEDT;
 
 /**
  * Represents an individual editor window in the multi-window architecture. Each
@@ -274,6 +233,7 @@ public class EditorWindow extends WindowAdapter
 
         // Create scroll panes with borders
         JScrollPane textScroll = new JScrollPane(textPane);
+        textScroll.setRowHeaderView(new NelumboEditor.LineNumberView(textPane));
         JScrollPane messageScroll = new JScrollPane(messagesPane);
         textScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 5));
         messageScroll.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 10));

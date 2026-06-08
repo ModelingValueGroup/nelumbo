@@ -22,9 +22,14 @@ import org.modelingvalue.nelumbo.NelumboConstants;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.Serial;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -667,6 +672,108 @@ public class NelumboEditor {
                 d.width = getParent().getSize().width;
             }
             super.setSize(d);
+        }
+    }
+
+    /**
+     * Row-header component that paints line numbers aligned with a text
+     * component. Each number's vertical position is taken from the text's own
+     * layout ({@code modelToView2D}) so it stays aligned through font changes,
+     * margins, and line spacing. Intended for use as a {@link JScrollPane} row
+     * header view of a {@link NonWrappingJTextPane} (one logical line per row).
+     */
+    public static class LineNumberView extends JComponent implements DocumentListener, PropertyChangeListener {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private static final int HORIZONTAL_PADDING = 8;
+
+        private final JTextComponent text;
+
+        public LineNumberView(JTextComponent text) {
+            this.text = text;
+            setFont(text.getFont());
+            setBackground(new Color(0xF5F5F5));
+            setForeground(new Color(0x999999));
+            text.getDocument().addDocumentListener(this);
+            text.addPropertyChangeListener("font", this);
+        }
+
+        private int lineCount() {
+            return text.getDocument().getDefaultRootElement().getElementCount();
+        }
+
+        private int width() {
+            int digits = Math.max(2, Integer.toString(lineCount()).length());
+            int charWidth = getFontMetrics(text.getFont()).charWidth('0');
+            return digits * charWidth + 2 * HORIZONTAL_PADDING;
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            // Match the text component's height so the row header scrolls in sync.
+            return new Dimension(width(), text.getPreferredSize().height);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Rectangle clip = g.getClipBounds();
+            g.setColor(getBackground());
+            g.fillRect(clip.x, clip.y, clip.width, clip.height);
+
+            Font font = text.getFont();
+            g.setFont(font);
+            g.setColor(getForeground());
+            FontMetrics metrics = g.getFontMetrics();
+            int ascent = metrics.getAscent();
+            int rightEdge = getWidth() - HORIZONTAL_PADDING;
+
+            Element root = text.getDocument().getDefaultRootElement();
+            int lineCount = root.getElementCount();
+            for (int line = 0; line < lineCount; line++) {
+                try {
+                    Rectangle2D r = text.modelToView2D(root.getElement(line).getStartOffset());
+                    if (r == null) {
+                        continue;
+                    }
+                    int y = (int) r.getY();
+                    if (y + r.getHeight() < clip.y || y > clip.y + clip.height) {
+                        continue; // outside the repaint region
+                    }
+                    String number = Integer.toString(line + 1);
+                    int x = rightEdge - metrics.stringWidth(number);
+                    g.drawString(number, x, y + ascent);
+                } catch (BadLocationException ignored) {
+                    // Skip lines that can't be located (transient during edits).
+                }
+            }
+        }
+
+        private void refresh() {
+            revalidate();
+            repaint();
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            refresh();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            refresh();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            refresh();
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            setFont(text.getFont());
+            refresh();
         }
     }
 
