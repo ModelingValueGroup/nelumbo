@@ -124,7 +124,7 @@ Inside a pattern, special angle-bracketed operators build repeating and optional
 | `<(>` ... `<)*>`  | Zero-or-more, separator-delimited |
 | `<(>` ... `<)+>`  | One-or-more, separator-delimited |
 | `<,>`             | Separator placeholder inside a repetition |
-| `<|>`             | Alternation inside a group |
+| `<\|>`             | Alternation inside a group |
 
 ### Examples
 

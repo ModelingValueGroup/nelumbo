@@ -22,11 +22,11 @@ The full precedence ladder of the standard arithmetic and logical operators:
 |---|---|---|
 | `<->`               | 16 | `logic.nl` |
 | `->`                | 18 | `logic.nl` |
-| `|`                 | 20 | `logic.nl` |
+| `\|`                 | 20 | `logic.nl` |
 | `&`                 | 22 | `logic.nl` |
 | `!`                 | 25 | `logic.nl` |
 | `<`, `<=`, `>`, `>=`, `!=` | 30 | `logic.nl` and `integers.nl` |
-| `|x|` (absolute)    | 35 | `integers.nl` |
+| `\|x\|` (absolute)    | 35 | `integers.nl` |
 | `+`, `-` (binary)   | 40 | `integers.nl` |
 | `*`, `/`            | 50 | `integers.nl` |
 | unary `-`           | 80 | `integers.nl` |

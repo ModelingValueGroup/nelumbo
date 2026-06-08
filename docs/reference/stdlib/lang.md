@@ -54,7 +54,7 @@ Each `:: NATIVE` declares a token type produced by the tokenizer. The comment th
 | `STRING`      | a double-quoted string with backslash escapes             |
 | `NUMBER`      | one or more decimal digits — an unsigned integer          |
 | `NAME`        | an identifier — letter / underscore, then alphanumerics    |
-| `OPERATOR`    | one or more operator characters (`! @ # $ % ^ & * = + | : < > . ? / -`), but not starting with `//` |
+| `OPERATOR`    | one or more operator characters (`! @ # $ % ^ & * = + \| : < > . ? / -`), but not starting with `//` |
 | `NEWLINE`     | a line terminator                                         |
 | `BEGINOFFILE` | synthetic token at the start of input                     |
 | `ENDOFFILE`   | synthetic token at the end of input                       |
@@ -210,7 +210,7 @@ After `import nelumbo.lang`, the following are visible:
 | Token types      | `SINGLEQUOTE`, `SEMICOLON`, `COMMA`, `LEFT`, `RIGHT`, `STRING`, `NUMBER`, `NAME`, `OPERATOR`, `NEWLINE`, `BEGINOFFILE`, `ENDOFFILE` |
 | Object types     | `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` |
 | File / scope     | `Namespace`, `RootNamespace` (`{ ... }` blocks) |
-| Pattern forms    | literal tokens, `<Variable>`, alternation `<(>...<|>...<)>`, repetition `<(>...<)+>` / `<)*>`, optional `<(>...<)?>`, sequence `<LEFT>...<RIGHT>`, type holes `<T>` / `<hidden T>` / `<T#N>` |
+| Pattern forms    | literal tokens, `<Variable>`, alternation `<(>...<\|>...<)>`, repetition `<(>...<)+>` / `<)*>`, optional `<(>...<)?>`, sequence `<LEFT>...<RIGHT>`, type holes `<T>` / `<hidden T>` / `<T#N>` |
 | Top-level forms  | `import`, `::>`, variable declaration, `::` (type), `::=` (pattern) |
 | Generic          | `Type T`, parenthesisation `(T)` |
 
