@@ -208,20 +208,6 @@ public class WindowManager {
     }
 
     /**
-     * Number of open windows whose content would be lost on close (editable,
-     * non-file windows). Used to decide whether quitting needs confirmation.
-     */
-    public int unsavedWindowCount() {
-        int count = 0;
-        for (EditorWindow window : getWindowsInOrder()) {
-            if (window.needsCloseConfirmation()) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    /**
      * Returns a list of all windows in order.
      */
     public List<EditorWindow> getWindowsInOrder() {

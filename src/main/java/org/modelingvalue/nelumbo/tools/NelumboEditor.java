@@ -204,7 +204,7 @@ public class NelumboEditor {
     /**
      * On macOS the native screen menu bar handles Cmd-Q itself, bypassing the
      * File &gt; Quit menu action. Route that native quit through {@link #quit()} so
-     * the confirmation prompt and file flush still run.
+     * the per-window file flush still runs before the app exits.
      */
     private void installQuitHandler() {
         if (!Desktop.isDesktopSupported()) {
@@ -212,28 +212,16 @@ public class NelumboEditor {
         }
         Desktop desktop = Desktop.getDesktop();
         if (desktop.isSupported(Desktop.Action.APP_QUIT_HANDLER)) {
-            desktop.setQuitHandler((e, response) -> {
-                quit();                // proceeds to System.exit when confirmed
-                response.cancelQuit(); // only reached when the user cancelled
-            });
+            desktop.setQuitHandler((e, response) -> quit()); // quit() saves, flushes, and exits
         }
     }
 
     /**
-     * Quits the application, saving all windows first. If any open windows would
-     * lose content, asks for a single confirmation before quitting.
+     * Quits the application, saving and flushing all windows first. Quitting
+     * preserves every window (regular windows restore from preferences, file
+     * windows from disk), so it needs no confirmation.
      */
     public void quit() {
-        int unsaved = windowManager.unsavedWindowCount();
-        if (unsaved > 0) {
-            int result = JOptionPane.showConfirmDialog(null,
-                    "The contents of " + unsaved + " window" + (unsaved == 1 ? "" : "s")
-                            + " will be lost. Are you sure you want to quit?",
-                    "Quit", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result != JOptionPane.YES_OPTION) {
-                return;
-            }
-        }
         windowManager.saveAllWindows();
         System.exit(0);
     }
