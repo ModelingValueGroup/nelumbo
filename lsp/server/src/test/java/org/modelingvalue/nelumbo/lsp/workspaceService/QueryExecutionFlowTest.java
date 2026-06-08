@@ -20,11 +20,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.Query;
+import org.modelingvalue.nelumbo.lsp.QueryEvaluator;
+import org.modelingvalue.nelumbo.lsp.QueryResult;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
@@ -107,5 +111,43 @@ public class QueryExecutionFlowTest {
         });
 
         assertEquals("[][()]", resultHolder[0]);
+    }
+
+    private static final String TWO_QUERIES = KONINGSDAG + """
+            Koningsdag 2025 is op 27 april  ? [()][]
+            """;
+
+    /**
+     * The inline inlay hints and mismatch underlines are driven by {@link QueryEvaluator#evaluate},
+     * which must evaluate *every* query in one inference KB (not just one) and report each query's
+     * outcome. Both queries here are the same predicate that infers to "definitely false": the first
+     * asserts exactly that ("[][()]", so it MATCHES and is rendered as a checkmark), the second claims
+     * it is true ("[()][]", so it MISMATCHES — its inline label must show the calculated result and it
+     * must carry a source range to underline). If the evaluator only ran one query, or reported the
+     * wrong outcome, the inline text and underline users see would be wrong.
+     */
+    @Test
+    void evaluatesEveryQueryAndReportsOutcomePerQuery() {
+        Map<Query, QueryResult> results = QueryEvaluator.evaluate(TWO_QUERIES, "test");
+
+        assertEquals(2, results.size(), "both queries must be evaluated in one pass");
+
+        QueryResult match    = null;
+        QueryResult mismatch = null;
+        for (QueryResult r : results.values()) {
+            switch (r.kind()) {
+                case MATCH -> match = r;
+                case MISMATCH -> mismatch = r;
+                case RESULT, ERROR -> fail("unexpected result kind " + r.kind() + ": " + r.inferred());
+            }
+        }
+
+        assertNotNull(match, "the query with the correct expected clause must match");
+        assertEquals("✓", match.inlineLabel(), "a correct expectation is rendered as a checkmark");
+
+        assertNotNull(mismatch, "the query with the wrong expected clause must be a mismatch");
+        assertEquals("[][()]", mismatch.inferred(), "mismatch must carry the calculated result");
+        assertEquals("[][()]", mismatch.inlineLabel(), "inline label shows the calculated result at the end of the line");
+        assertNotNull(mismatch.expectedRange(), "mismatch must carry the source range of the expected clause to underline");
     }
 }

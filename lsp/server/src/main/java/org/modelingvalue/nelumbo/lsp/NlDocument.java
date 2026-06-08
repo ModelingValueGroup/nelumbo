@@ -87,6 +87,11 @@ public record NlDocument(Workspace workspace,
     }
 
     private static void publishDiagnosticsAsync(String uri, TokenizerResult tokenizerResult, ParserResult parserResult) {
+        publishDiagnostics(uri, baseDiagnostics(tokenizerResult, parserResult));
+    }
+
+    /** Syntax/parse diagnostics for the document; query-result diagnostics are added on top by {@link QueryResultCache}. */
+    public static List<Diagnostic> baseDiagnostics(TokenizerResult tokenizerResult, ParserResult parserResult) {
         List<Diagnostic> diagnostics = new ArrayList<>();
         diagnostics.addAll(tokenizerResult.listAll()//
                                           .filter(t -> t.type() == TokenType.ERROR)//
@@ -95,6 +100,10 @@ public record NlDocument(Workspace workspace,
         diagnostics.addAll(parserResult.exceptions() //
                                        .map(e -> new Diagnostic(new Range(new Position(e.line(), e.position()), new Position(e.line(), e.position())), e.getMessage(), DiagnosticSeverity.Error, "nelumbo"))//
                                        .toList());
+        return diagnostics;
+    }
+
+    public static void publishDiagnostics(String uri, List<Diagnostic> diagnostics) {
         if (Main.debugging() && !diagnostics.isEmpty()) {
             U.DEBUG("    #errors    : %4d", diagnostics.size());
         }

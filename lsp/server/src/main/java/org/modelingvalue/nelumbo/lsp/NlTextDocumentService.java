@@ -21,8 +21,6 @@ import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
@@ -39,6 +37,8 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.SelectionRange;
@@ -51,12 +51,12 @@ import org.eclipse.lsp4j.TypeDefinitionParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentCodeActionService;
-import org.modelingvalue.nelumbo.lsp.documentService.DocumentCodeLensService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentCompletionService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentDefinitionService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentFoldingRangeService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentFormattingService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentHoverService;
+import org.modelingvalue.nelumbo.lsp.documentService.DocumentInlayHintService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentSemanticTokensFullService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentSymbolService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentSyncService;
@@ -72,10 +72,10 @@ public class NlTextDocumentService implements TextDocumentService {
     private final DocumentFormattingService         documentFormattingService;
     private final DocumentHoverService              documentHoverService;
     private final DocumentDefinitionService         documentDefinitionService;
-    private final DocumentCodeLensService           documentCodeLensService;
     private final DocumentCodeActionService         documentCodeActionService;
     private final DocumentTypeDefinitionService     documentTypeDefinitionService;
     private final SelectionRangeService             selectionRangeService;
+    private final DocumentInlayHintService          documentInlayHintService;
 
     public NlTextDocumentService(Workspace workspace) {
         NlDocumentManager documentManager = workspace.getDocumentManager();
@@ -87,10 +87,10 @@ public class NlTextDocumentService implements TextDocumentService {
         this.documentFormattingService         = new DocumentFormattingService(documentManager);
         this.documentHoverService              = new DocumentHoverService(documentManager);
         this.documentDefinitionService         = new DocumentDefinitionService(documentManager);
-        this.documentCodeLensService           = new DocumentCodeLensService(documentManager);
         this.documentCodeActionService         = new DocumentCodeActionService(documentManager);
         this.documentTypeDefinitionService     = new DocumentTypeDefinitionService(documentManager);
         this.selectionRangeService             = new SelectionRangeService(documentManager);
+        this.documentInlayHintService          = new DocumentInlayHintService(documentManager);
     }
 
     @Override
@@ -160,18 +160,6 @@ public class NlTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-        System.err.println("~~~ codeLens          : " + params.getTextDocument().getUri());
-        return documentCodeLensService.codeLens(params);
-    }
-
-    @Override
-    public CompletableFuture<CodeLens> resolveCodeLens(CodeLens params) {
-        System.err.println("~~~ resolveCodeLens   : " + params.getCommand().getCommand());
-        return documentCodeLensService.resolveCodeLens(params);
-    }
-
-    @Override
     public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
         System.err.println("~~~ codeAction        : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getRange()));
         return documentCodeActionService.codeAction(params);
@@ -187,5 +175,11 @@ public class NlTextDocumentService implements TextDocumentService {
     public CompletableFuture<List<SelectionRange>> selectionRange(SelectionRangeParams params) {
         System.err.println("~~~ selectionRange    : " + params.getTextDocument().getUri() + "\n    " + params.getPositions().stream().map(U::render).toList());
         return selectionRangeService.selectionRange(params);
+    }
+
+    @Override
+    public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
+        System.err.println("~~~ inlayHint         : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getRange()));
+        return documentInlayHintService.inlayHint(params);
     }
 }

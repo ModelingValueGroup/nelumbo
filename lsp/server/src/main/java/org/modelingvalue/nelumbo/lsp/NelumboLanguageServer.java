@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.ClientCapabilities;
-import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.InlayHintRegistrationOptions;
 import org.eclipse.lsp4j.CompletionItemOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DocumentSymbolOptions;
@@ -75,10 +75,10 @@ public class NelumboLanguageServer implements LanguageServer {
         serverCapabilities.setHoverProvider(true);
         serverCapabilities.setDefinitionProvider(true);
         serverCapabilities.setWorkspaceSymbolProvider(true);
-        serverCapabilities.setCodeLensProvider(makeCodeLensCapabilities());
         serverCapabilities.setCodeActionProvider(true);
         serverCapabilities.setTypeDefinitionProvider(true);
         serverCapabilities.setSelectionRangeProvider(true);
+        serverCapabilities.setInlayHintProvider(makeInlayHintCapabilities());
 
         return CompletableFuture.completedFuture(new InitializeResult(serverCapabilities));
     }
@@ -129,8 +129,10 @@ public class NelumboLanguageServer implements LanguageServer {
         return new DocumentSymbolOptions(NelumboConstants.NAME);
     }
 
-    private static CodeLensOptions makeCodeLensCapabilities() {
-        return new CodeLensOptions(false);
+    private static InlayHintRegistrationOptions makeInlayHintCapabilities() {
+        InlayHintRegistrationOptions options = new InlayHintRegistrationOptions();
+        options.setResolveProvider(false);
+        return options;
     }
 
     //==========================================================================================================================================================

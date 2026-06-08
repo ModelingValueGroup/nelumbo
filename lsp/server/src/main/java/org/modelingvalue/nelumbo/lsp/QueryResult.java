@@ -16,49 +16,50 @@
 
 package org.modelingvalue.nelumbo.lsp;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.List;
+import org.eclipse.lsp4j.Range;
 
-public class NlDocumentManager {
-    private final Workspace                             workspace;
-    private final ConcurrentHashMap<String, NlDocument> documentCache    = new ConcurrentHashMap<>();
-    private final QueryResultCache                      queryResultCache = new QueryResultCache(this);
+/**
+ * The outcome of evaluating a single {@code Query}.
+ * <ul>
+ *   <li>{@code RESULT}   — query without an expected clause; {@code inferred} is the inference result.</li>
+ *   <li>{@code MATCH}    — query whose expected clause matches; rendered as just a checkmark.</li>
+ *   <li>{@code MISMATCH} — query whose expected clause differs; {@code inferred} is the calculated result
+ *       (shown inline), {@code message} describes the difference, {@code expectedRange} is the source span of
+ *       the expected clause to underline.</li>
+ *   <li>{@code ERROR}    — evaluation failed; {@code inferred} holds the error message.</li>
+ * </ul>
+ */
+public record QueryResult(Kind kind, String inferred, String message, Range expectedRange) {
 
-    public NlDocumentManager(Workspace workspace) {
-        this.workspace = workspace;
+    public enum Kind {
+        RESULT,
+        MATCH,
+        MISMATCH,
+        ERROR,
     }
 
-    public Workspace workspace() {
-        return workspace;
+    public static QueryResult result(String inferred) {
+        return new QueryResult(Kind.RESULT, inferred, null, null);
     }
 
-    public QueryResultCache queryResultCache() {
-        return queryResultCache;
+    public static QueryResult match(String inferred) {
+        return new QueryResult(Kind.MATCH, inferred, null, null);
     }
 
-    public void addDocument(String uri, String content, int version) {
-        documentCache.put(uri, NlDocument.of(workspace, content, version, uri));
-        queryResultCache.schedule(uri);
+    public static QueryResult mismatch(String inferred, String message, Range expectedRange) {
+        return new QueryResult(Kind.MISMATCH, inferred, message, expectedRange);
     }
 
-    public void updateDocument(String uri, String content) {
-        NlDocument document = getDocument(uri);
-        if (document != null) {
-            documentCache.put(uri, NlDocument.of(document, content));
-            queryResultCache.schedule(uri);
-        }
+    public static QueryResult error(String message) {
+        return new QueryResult(Kind.ERROR, message, message, null);
     }
 
-    public NlDocument getDocument(String uri) {
-        return documentCache.get(uri);
-    }
-
-    public void closeDocument(String uri) {
-        documentCache.remove(uri);
-        queryResultCache.remove(uri);
-    }
-
-    public List<String> uris() {
-        return documentCache.keySet().stream().toList();
+    /** Short label used for the end-of-line inlay hint. */
+    public String inlineLabel() {
+        return switch (kind) {
+            case RESULT, MISMATCH -> inferred;
+            case MATCH -> "✓";
+            case ERROR -> "⚠ " + inferred;
+        };
     }
 }

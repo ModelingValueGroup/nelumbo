@@ -16,55 +16,41 @@
 
 package org.modelingvalue.nelumbo.lsp.documentService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.CodeLensParams;
-import org.eclipse.lsp4j.Command;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.logic.Query;
-import org.modelingvalue.nelumbo.lsp.CommandType;
-import org.modelingvalue.nelumbo.lsp.NlDocument;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
-import org.modelingvalue.nelumbo.lsp.U;
-import org.modelingvalue.nelumbo.syntax.Token;
 
-public class DocumentCodeLensService extends DocumentServiceAdapter {
+/**
+ * Serves the inline query-result inlay hints. Results are computed (debounced) by
+ * {@code QueryResultCache} after edits; this just hands back the cached hints inside the
+ * requested range.
+ */
+public class DocumentInlayHintService extends DocumentServiceAdapter {
 
-    public DocumentCodeLensService(NlDocumentManager documentManager) {
+    public DocumentInlayHintService(NlDocumentManager documentManager) {
         super(documentManager);
     }
 
     @Override
-    public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-        String     docUri   = params.getTextDocument().getUri();
-        NlDocument document = documentManager.getDocument(docUri);
-        if (document == null) {
-            return CompletableFuture.completedFuture(null);
-        }
-        List<CodeLens> codeLenses = new ArrayList<>();
-        for (Node node : document.parserResult().roots()) {
-            if (node instanceof Query) {
-                Token first = node.firstToken();
-                if (first != null) {
-                    CodeLens cl = new CodeLens();
-                    cl.setRange(U.range(first));
-                    Command command = new Command();
-                    command.setCommand(CommandType.EXEC_COMMAND.commandId());
-                    command.setTitle("Query");
-                    command.setArguments(List.of(docUri, first.line(), first.position()));
-                    cl.setCommand(command);
-                    codeLenses.add(cl);
-                }
-            }
-        }
-        return CompletableFuture.completedFuture(codeLenses);
+    public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
+        String          uri   = params.getTextDocument().getUri();
+        Range           range = params.getRange();
+        List<InlayHint> hints = documentManager.queryResultCache().hints(uri).stream()//
+                                               .filter(h -> within(h.getPosition(), range))//
+                                               .toList();
+        return CompletableFuture.completedFuture(hints);
     }
 
-    @Override
-    public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
-        return super.resolveCodeLens(unresolved);
+    private static boolean within(Position p, Range range) {
+        return range == null || (!before(p, range.getStart()) && !before(range.getEnd(), p));
+    }
+
+    private static boolean before(Position a, Position b) {
+        return a.getLine() < b.getLine() || (a.getLine() == b.getLine() && a.getCharacter() < b.getCharacter());
     }
 }
