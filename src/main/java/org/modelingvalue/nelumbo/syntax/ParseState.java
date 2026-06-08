@@ -558,16 +558,18 @@ public class ParseState implements Mergeable<ParseState> {
             for (String conn : connected()) {
                 if (conn.length() < text.length() && text.startsWith(conn)) {
                     next = tokenTexts().get(conn);
-                    String sub = text.substring(conn.length());
-                    if (TokenType.of(sub) == null) {
-                        for (int end = 1;; end++) {
-                            if (TokenType.of(sub.substring(end)) != null) {
-                                Token pre = token.split(conn.length() + end);
-                                if (result != null) {
-                                    result.addSplit(token, pre);
+                    if (isConnectedOk(token, next)) {
+                        String sub = text.substring(conn.length());
+                        if (TokenType.of(sub) == null) {
+                            for (int end = 1;; end++) {
+                                if (TokenType.of(sub.substring(end)) != null) {
+                                    Token pre = token.split(conn.length() + end);
+                                    if (result != null) {
+                                        result.addSplit(token, pre);
+                                    }
+                                    token = pre;
+                                    break;
                                 }
-                                token = pre;
-                                break;
                             }
                         }
                     }
