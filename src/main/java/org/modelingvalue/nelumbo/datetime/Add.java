@@ -76,9 +76,6 @@ public final class Add extends Predicate {
         if (instant instanceof LocalDateTime ldt) {
             return ldt.plus(d.period()).plus(d.duration());
         }
-        if (instant instanceof OffsetDateTime odt) {
-            return odt.plus(d.period()).plus(d.duration());
-        }
 
         return null;
     }
@@ -92,9 +89,6 @@ public final class Add extends Predicate {
         }
         if (instant instanceof LocalDateTime ldt) {
             return ldt.minus(d.period()).minus(d.duration());
-        }
-        if (instant instanceof OffsetDateTime odt) {
-            return odt.minus(d.period()).minus(d.duration());
         }
 
         return null;
@@ -113,9 +107,7 @@ public final class Add extends Predicate {
         if (instant instanceof LocalDateTime ldt) {
             return NDateTime.of(ldt);
         }
-        if (instant instanceof OffsetDateTime odt) {
-            return NDateTime.of(odt);
-        }
+
         return null;
     }
 
@@ -128,9 +120,6 @@ public final class Add extends Predicate {
         }
         if (a instanceof LocalDateTime na && b instanceof LocalDateTime nb) {
             return new IsoDuration(Period.ZERO, Duration.between(na, nb));
-        }
-        if (a instanceof OffsetDateTime oda && b instanceof OffsetDateTime odb) {
-            return new IsoDuration(Period.ZERO, Duration.between(oda, odb));
         }
 
         return null;

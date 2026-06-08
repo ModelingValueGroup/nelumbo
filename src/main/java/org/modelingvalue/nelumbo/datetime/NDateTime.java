@@ -16,27 +16,18 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
-import java.io.Serial;
-import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.ConstructionReason;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-// DateTime ::= <[> <Date> T <Time#50> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?> <]>
+import java.io.Serial;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+// DateTime ::= <[> <Date> T <Time#50> <]>
 public final class NDateTime extends Node {
     @Serial
     private static final long serialVersionUID = 6807816666027178736L;
@@ -74,46 +65,9 @@ public final class NDateTime extends Node {
             LocalDate date = getVal(0, 0);
             LocalTime time = getVal(1, 0);
 
-            if (get(2) == null) {
-                return setArgs(new Object[] { LocalDateTime.of(date, time) }).setFunctorOrType(literalFunctor());
-            }
-
-            try {
-                return setArgs(new Object[] { OffsetDateTime.of(date, time, foldTimezone()) })
-                        .setFunctorOrType(literalFunctor());
-            } catch (DateTimeException e) {
-                knowledgeBase.addException(new ParseException("Invalid timezone offset: " + e.getMessage()));
-            }
+            return setArgs(new Object[]{LocalDateTime.of(date, time)}).setFunctorOrType(literalFunctor());
         }
 
         return this;
-    }
-
-    private ZoneOffset foldTimezone() {
-        Object offset = get(2);
-        if (offset instanceof String) {
-            return ZoneOffset.of((String) offset);
-        }
-        if (offset instanceof List<?> list) {
-            StringBuilder sb = new StringBuilder();
-            for (Object part : list) {
-                if (!(part instanceof CharSequence cs)) {
-                    throw new DateTimeException("Unexpected offset element: " + part);
-                }
-                sb.append(cs);
-            }
-            return ZoneOffset.of(sb.toString());
-        }
-        throw new DateTimeException("Unexpected offset value: " + offset);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof NDateTime date && date.getVal(0) instanceof OffsetDateTime odt
-                && getVal(0) instanceof OffsetDateTime val) {
-            return odt.isEqual(val);
-        }
-
-        return super.equals(obj);
     }
 }

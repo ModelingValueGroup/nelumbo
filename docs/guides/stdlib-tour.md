@@ -12,7 +12,7 @@ The files:
 4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
 5. [`strings.nl`](#5-nelumbostrings-24-lines) — 24 lines — string operations
 6. [`collections.nl`](#6-nelumbocollections-21-lines) — 21 lines — generic `Set<E>` and `List<E>`, plus set-builder notation
-7. [`datetime.nl`](#7-nelumbodatetime-97-lines) — 97 lines — ISO 8601 dates, times, date-times, and durations
+7. [`datetime.nl`](#7-nelumbodatetime-96-lines) — 96 lines — ISO 8601 dates, times, date-times, and durations
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
 
@@ -446,7 +446,7 @@ Algebraic operations — membership, union, intersection, length, map, fold — 
 
 ---
 
-## 7. `nelumbo.datetime` (97 lines)
+## 7. `nelumbo.datetime` (96 lines)
 
 The largest stdlib module, and a good demonstration that the integer idioms scale to a much richer value domain. It imports `nelumbo.integers` (for the `Period * Integer` scaling operator) and adds four independent value types.
 
@@ -455,7 +455,7 @@ import nelumbo.integers
 
 DateTime :: Object    Date :: Object    Time :: Object    Period :: Object
 
-DateTime ::= <[> <Date> T <Time#50> <(> ... offset ... <)?> <]>  @...NDateTime, <DateTime> + <Period> #40, ...
+DateTime ::= <[> <Date> T <Time#50> <]>                          @...NDateTime, <DateTime> + <Period> #40, ...
 Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>              @...NDate,     <Date> + <Period> #40, ...
 Time     ::= <[> <NUMBER> : <NUMBER> ... <]>                    @...NTime,     <Time> + <Period> #40, ...
 Period   ::= <[> P ... <]>                                       @...NPeriod,   <Period> + <Period> #40, <Period> * <Integer> #50, ...
@@ -485,7 +485,7 @@ The same rewrites as the numeric modules. Subtraction is `datetime_add` permuted
 ### Idioms to notice
 
 - **The literals are connected-token groups.** Each is wrapped in `<[> … <]>`, which forbids whitespace between the inner tokens — that is what makes `2024-01-15` tokenize tightly rather than as three numbers and two minus signs.
-- **Two equality conventions live side by side.** Offset date-times compare *by instant* (`10:30+01:00` equals `09:30Z`), while periods use *field-based* equality (`P1M != P30D`) but a *nominal* magnitude for ordering. The module is a compact case study in modelling domain semantics through the native's `equals`/`compare`, not the grammar.
+- **Periods carry two semantics at once.** They use *field-based* equality (`P1M != P30D`) but a *nominal* magnitude for ordering (months = 30 days, years = 365). The module is a compact case study in modelling domain semantics through the native's `equals`/`compare`, not the grammar.
 - **Validation happens at parse time.** Invalid dates and malformed periods reject with `file:line:col` during parsing, so they never reach the query engine as falsehoods.
 
 See [`../reference/stdlib/datetime.md`](../reference/stdlib/datetime.md) for the full per-operator reference and [`datetimeTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/datetimeTest.nl) for the executable specification.

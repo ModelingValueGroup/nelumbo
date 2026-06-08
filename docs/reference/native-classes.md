@@ -240,8 +240,8 @@ Shipped natives fall into five structural roles. Reading this classification fir
 
 - Back: the `Date`, `Time`, `DateTime`, and `Period` literals
 - Role: constant
-- Values: `LocalDate`, `LocalTime`, `LocalDateTime`/`OffsetDateTime`, and `IsoDuration` respectively
-- Notes: each parses its connected-token (`<[> … <]>`) literal at construction time. Invalid input (`2024-13-08`, the period `P1D1Y`, a bad timezone offset) is rejected with a `ParseException` carrying `file:line:col`, so it surfaces during parsing rather than as a query falsehood. `NDateTime` chooses `OffsetDateTime` when a `Z`/`±HH:MM` offset is present and `LocalDateTime` otherwise, and its `equals` compares offset-bearing values by instant (`10:30+01:00` equals `09:30Z`). `NPeriod` normalizes the time part on build (`P1YT90M` → `P1YT1H30M`).
+- Values: `LocalDate`, `LocalTime`, `LocalDateTime`, and `IsoDuration` respectively
+- Notes: each parses its connected-token (`<[> … <]>`) literal at construction time. Invalid input (`2024-13-08`, the period `P1D1Y`) is rejected with a `ParseException` carrying `file:line:col`, so it surfaces during parsing rather than as a query falsehood. `NDateTime` builds a zone-less `LocalDateTime`. `NPeriod` normalizes the time part on build (`P1YT90M` → `P1YT1H30M`).
 
 ### `IsoDuration`
 
@@ -253,7 +253,7 @@ Shipped natives fall into five structural roles. Reading this classification fir
 
 - Backs: `datetime_add` / `date_add` / `time_add` *(private)* — one class for all three
 - Role: three-arg functional relation
-- Strategy: the canonical relational shape applied to instants. With the two inputs bound it computes the third; with the sum and the duration bound it subtracts; with both instants bound it returns the duration *between* them. `date_add` only accepts a duration whose time part is zero and `time_add` one whose calendar part is zero (otherwise `unresolvable()`); `DateTime` accepts both. The resulting instant preserves any timezone offset.
+- Strategy: the canonical relational shape applied to instants. With the two inputs bound it computes the third; with the sum and the duration bound it subtracts; with both instants bound it returns the duration *between* them. `date_add` only accepts a duration whose time part is zero and `time_add` one whose calendar part is zero (otherwise `unresolvable()`); `DateTime` accepts both.
 
 ### `AddPeriod`
 
@@ -271,7 +271,7 @@ Shipped natives fall into five structural roles. Reading this classification fir
 
 - Backs: `>` on `DateTime`, `Date`, `Time`, and `Period`
 - Role: comparison predicate
-- Strategy: when both sides are bound, compares and returns `factCC()`/`falsehoodCC()`; with one side open it records the open falsehood via `set(i, …).falsehoodsII()`, mirroring the integer comparison. `OffsetDateTime` is compared **by instant**; `Period` is compared by a **nominal** magnitude (months = 30 days, years = 365), an explicit convention because `P1M` vs `P30D` has no exact ordering. Mixing offset and offset-less date-times is `unresolvable()`.
+- Strategy: when both sides are bound, compares and returns `factCC()`/`falsehoodCC()`; with one side open it records the open falsehood via `set(i, …).falsehoodsII()`, mirroring the integer comparison. `Period` is compared by a **nominal** magnitude (months = 30 days, years = 365), an explicit convention because `P1M` vs `P30D` has no exact ordering.
 
 ---
 

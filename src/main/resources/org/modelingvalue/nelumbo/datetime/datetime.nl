@@ -5,8 +5,7 @@ Date 	 :: Object
 Time 	 :: Object
 Period   :: Object
 
-// TODO: Think about extracting Timezone part? should this be a full literal?
-DateTime ::= <[> <Date> T <Time#50> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?> <]> @nelumbo.datetime.NDateTime,
+DateTime ::= <[> <Date> T <Time#50> <]> @nelumbo.datetime.NDateTime,
              <DateTime> + <Period>   #40,
              <DateTime> - <Period>   #40
 

@@ -23,7 +23,6 @@ import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
 import java.io.Serial;
-import java.time.OffsetDateTime;
 
 public final class GreaterThan extends Predicate {
     @Serial
@@ -61,12 +60,7 @@ public final class GreaterThan extends Predicate {
         if (left instanceof IsoDuration a && right instanceof IsoDuration b) {
             return Long.compare(nominalSeconds(a), nominalSeconds(b));
         }
-        // OffsetDateTime compares by instant: the same moment in different offsets is equal,
-        // unlike OffsetDateTime.compareTo which adds local date-time as a secondary key.
-        if (left instanceof OffsetDateTime a && right instanceof OffsetDateTime b) {
-            return a.toInstant().compareTo(b.toInstant());
-        }
-        // Other Comparable java.time values must share an exact runtime type.
+        // java.time values must share an exact runtime type.
         if (left instanceof Comparable && left.getClass() == right.getClass()) {
             return ((Comparable) left).compareTo(right);
         }

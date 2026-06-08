@@ -1,8 +1,8 @@
 # `nelumbo.datetime`
 
-ISO 8601 dates, times, date-times, and durations, with instant-aware comparison and reversible arithmetic.
+ISO 8601 dates, times, date-times, and durations, with chronological comparison and reversible arithmetic.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 97 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 96 lines.
 
 **Import:**
 
@@ -29,7 +29,7 @@ Four independent value types. Each is backed by a `java.time` value:
 |---|---|---|
 | `Date`     | `LocalDate`                                            | `2024-01-15`           |
 | `Time`     | `LocalTime`                                            | `20:04`                |
-| `DateTime` | `LocalDateTime` (no offset) or `OffsetDateTime` (`Z`/`±HH:MM`) | `2024-01-15T10:30Z`    |
+| `DateTime` | `LocalDateTime`                                        | `2024-01-15T10:30`     |
 | `Period`   | `IsoDuration` — a calendar `Period` (Y/M/W/D) plus an exact `Duration` (H/M/S) | `P1DT1H30M` |
 
 They are **not** in a subtype relationship with one another, and there is no implicit conversion between them: a `Date` plus a `Time` does not silently become a `DateTime`, and a `Period` never converts to an `Integer`.
@@ -43,25 +43,24 @@ All four literals are written inside a **connected-token group** (`<[> … <]>`)
 ```
 Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                              @nelumbo.datetime.NDate
 Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]> @nelumbo.datetime.NTime
-DateTime ::= <[> <Date> T <Time#50> <(> <(> Z <|> <(> <(> + <|> - <)> <NUMBER> : <NUMBER> <)> <)> <)?> <]>
-                                                                                 @nelumbo.datetime.NDateTime
+DateTime ::= <[> <Date> T <Time#50> <]>                                          @nelumbo.datetime.NDateTime
 Period   ::= <[> P … <]>                                                         @nelumbo.datetime.NPeriod
 ```
 
 - **`Date`** — `YYYY-MM-DD`. Parsed into a `LocalDate`; out-of-range values (e.g. month 13) are rejected **at parse time** with a `file:line:col` error, not as a query falsehood.
-- **`Time`** — `HH:MM`, optionally `:SS` and `.fff`. Backed by `LocalTime`. A `:00` seconds field is dropped on display (`20:04:00` prints as `20:04`).
-- **`DateTime`** — a `Date`, a literal `T`, a `Time`, and an optional timezone: either `Z` or a signed `±HH:MM` offset. With an offset (or `Z`) it is an `OffsetDateTime` and **timezone information is kept**; without one it is a zone-less `LocalDateTime`.
+- **`Time`** — `HH:MM`, optionally `:SS` and a `.fff` sub-second fraction. Backed by `LocalTime`. A `:00` seconds field — and a zero fraction — is dropped on display (`20:04:00.00` prints as `20:04`, `20:04:00.30` as `20:04:00.300`).
+- **`DateTime`** — a `Date`, a literal `T`, and a `Time`. Backed by a zone-less `LocalDateTime`; there is no timezone or offset component.
 - **`Period`** — an ISO 8601 duration: `P` followed by date units `Y`/`M`/`W`/`D` and/or a `T`-introduced time section with `H`/`M`/`S` (`M` is months before the `T`, minutes after it). Units must appear in canonical order without repeats — `P1D1Y` and `P1D1D` are parse errors. The value normalizes the time part on construction, so `P1YT90M` becomes `P1YT1H30M` (the calendar part is left as written).
 
 ```
-2024-01-15T10:30Z          = a    ? [(a=2024-01-15T10:30Z)][..]
-2024-01-15T10:30:00+01:00  = a    ? [(a=2024-01-15T10:30+01:00)][..]
-2024-01-15                 = c    ? [(c=2024-01-15)][..]
-20:04:00                   = e    ? [(e=20:04)][..]
-P1YT90M                    = x    ? [(x=P1YT1H30M)][..]
+2024-01-15T10:30          = a    ? [(a=2024-01-15T10:30)][..]
+2024-01-15T10:30:00.30    = a    ? [(a=2024-01-15T10:30:00.300)][..]
+2024-01-15                = c    ? [(c=2024-01-15)][..]
+20:04:00                  = e    ? [(e=20:04)][..]
+P1YT90M                   = x    ? [(x=P1YT1H30M)][..]
 ```
 
-> **Known limitation:** sub-second precision (`10:30:00.00`) and bare time-only `T`-prefixed literals are not parsed as of this writing — see the `FLAG` notes in `datetimeTest.nl`.
+> **Known limitation:** bare time-only `T`-prefixed literals are not parsed as of this writing — see the `FLAG` notes in `datetimeTest.nl`.
 
 ---
 
@@ -112,16 +111,16 @@ This is the same relational rewrite idiom as [`integers`](integers.md): subtract
 2024-01-15 + P1D = c                                       ? [(c=2024-01-16)][..]   // compute result
 c + P1D = 2024-01-16                                       ? [(c=2024-01-15)][..]   // solve left instant
 2024-01-15 + x = 2024-01-16                                ? [(x=P1D)][..]          // solve duration
-2024-01-16T00:00:00Z - 2024-01-15T00:00:00Z = x            ? [(x=PT24H)][..]        // duration between
+2024-01-16T00:00:00 - 2024-01-15T00:00:00 = x              ? [(x=PT24H)][..]        // duration between
 P1D * 3 = P3D                                              ? [()][]
 PT1H + PT30M = PT1H30M                                     ? [()][]
 ```
 
-**Type-matched durations.** `date_add` only accepts a `Period` whose *time* part is zero, and `time_add` only one whose *calendar* part is zero — adding `PT1H30M` to a bare `Date`, or `P1D` to a bare `Time`, has no result. `DateTime` (and its offset form) accepts both parts. The forward instant keeps any offset it started with:
+**Type-matched durations.** `date_add` only accepts a `Period` whose *time* part is zero, and `time_add` only one whose *calendar* part is zero — adding `PT1H30M` to a bare `Date`, or `P1D` to a bare `Time`, has no result. `DateTime` accepts both parts:
 
 ```
-2024-01-15T10:00:00+01:00 + PT1H30M = a   ? [(a=2024-01-15T11:30+01:00)][..]
-20:04 + PT1H = 21:04                       ? [()][]
+2024-01-15T10:00:00 + PT1H30M = a   ? [(a=2024-01-15T11:30)][..]
+20:04 + PT1H = 21:04                 ? [()][]
 ```
 
 ---
@@ -142,21 +141,14 @@ a<b   <=>  b>a              a<=b  <=>  a<b | a=b              a>=b  <=>  a>b | a
 ```
 
 ```
-2024-01-16 > 2024-01-15                       ? [()][]
-20:04 > 20:05                                 ? [][()]
-P2D > P1D                                     ? [()][]
-PT2H >= PT2H                                  ? [()][]
-2024-01-16T10:30:00Z > 2024-01-15T10:30:00Z   ? [()][]
+2024-01-16 > 2024-01-15                     ? [()][]
+20:04 > 20:05                               ? [][()]
+P2D > P1D                                   ? [()][]
+PT2H >= PT2H                                ? [()][]
+2024-01-16T10:30:00 > 2024-01-15T10:30:00   ? [()][]
 ```
 
-Two comparison conventions are worth knowing:
-
-- **Instants compare by the actual moment.** `OffsetDateTime` values are compared by their instant, so `10:30+01:00` equals `09:30Z` (the same moment), not `10:30Z`. Equality (`=`) on `DateTime` is instant-based for the same reason.
-
-  ```
-  2024-01-15T10:30:00+01:00 = 2024-01-15T09:30:00Z   ? [()][]    // same instant
-  2024-01-15T10:30:00+01:00 = 2024-01-15T10:30:00Z   ? [][()]    // different instant
-  ```
+One comparison convention is worth knowing:
 
 - **Periods compare by a *nominal* magnitude** — months count as 30 days, years as 365 — because `P1M` versus `P30D` has no exact answer. This is an explicit ordering convention used only by `>`/`<`/`<=`/`>=`. Period **equality**, by contrast, is field-based, so `P1M` and `P30D` are *not* equal.
 
@@ -170,7 +162,7 @@ Two comparison conventions are worth knowing:
 |---|---|---|
 | `NDate`           | the `Date` literal                            | constant (`LocalDate`)        |
 | `NTime`           | the `Time` literal                            | constant (`LocalTime`)        |
-| `NDateTime`       | the `DateTime` literal                        | constant (`LocalDateTime` / `OffsetDateTime`) |
+| `NDateTime`       | the `DateTime` literal                        | constant (`LocalDateTime`)    |
 | `NPeriod`         | the `Period` literal                          | constant (`IsoDuration`)      |
 | `Add`             | `datetime_add` / `date_add` / `time_add`      | three-arg relation (instant ± duration, instant − instant) |
 | `AddPeriod`       | `period_add`                                  | three-arg relation (duration ± duration) |
@@ -189,7 +181,7 @@ Added to what `nelumbo.integers` already exports:
 | Kind      | Names |
 |---|---|
 | Types     | `DateTime`, `Date`, `Time`, `Period`                                             |
-| Literals  | ISO date `YYYY-MM-DD`, time `HH:MM[:SS]`, date-time `…T…[Z/±HH:MM]`, period `P…` |
+| Literals  | ISO date `YYYY-MM-DD`, time `HH:MM[:SS]`, date-time `YYYY-MM-DDTHH:MM[:SS]`, period `P…` |
 | Operators | `+`, `-` on instants and periods, `-` between instants, `*` (period × integer), `<`, `<=`, `>`, `>=` on each type |
 
 `datetime_add`, `date_add`, `time_add`, `period_add`, and `period_multiply` are `private` and are not visible to importers.
@@ -201,4 +193,4 @@ Added to what `nelumbo.integers` already exports:
 - [`integers.md`](integers.md) — the relational `add`/`>` idiom this module mirrors, lifted to dates and durations
 - [`built-in-tokens.md`](../built-in-tokens.md) — the `<[> … <]>` connected-token groups the literals are built from
 - [`native-classes.md`](../native-classes.md) — catalogue of the `@`-bound classes, including the datetime natives
-- [`datetimeTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/datetimeTest.nl) — executable specification covering every operator and the parse-time/instant-comparison edge cases
+- [`datetimeTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/datetimeTest.nl) — executable specification covering every operator and the parse-time edge cases
