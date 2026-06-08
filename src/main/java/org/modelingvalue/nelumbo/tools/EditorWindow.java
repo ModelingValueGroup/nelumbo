@@ -38,6 +38,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -1457,7 +1458,7 @@ public class EditorWindow extends WindowAdapter
 
     private void loadFileContent() {
         try {
-            String         content = EditorFileIO.read(java.nio.file.Path.of(filePath));
+            String         content = EditorFileIO.read(Path.of(filePath));
             StyledDocument doc     = textPane.getStyledDocument();
             doc.insertString(0, content, null);
 
