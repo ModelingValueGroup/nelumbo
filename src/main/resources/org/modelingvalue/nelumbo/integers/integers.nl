@@ -10,8 +10,10 @@
               <Integer> "<"  <Integer>   #30,
               <Integer> "<=" <Integer>   #30,
               <Integer> ">=" <Integer>   #30
+              
+  pattern RADIX_NUMBER ::= <(> <(> <NUMBER> <|> <NAME> <)> <)+> 
 
-  Integer ::= <(> - <)?> <[> <NUMBER> <(> "#"  <(> <(> <NUMBER> <|> <NAME> <)> <)+> <)?> <]>  @nelumbo.integers.NInteger,
+  Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>  @nelumbo.integers.NInteger,
               <Integer> - <Integer>   #40,
               <Integer> + <Integer>   #40,
                         - <Integer>   #80,
