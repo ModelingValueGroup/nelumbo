@@ -17,9 +17,10 @@ Time	::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]>		  
              <Time> + <Period>   #40,
              <Time> - <Period>   #40
 
-pattern TIME_PERIOD  ::=  T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>
+pattern YMWD_PERIOD  ::= <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+>
+pattern TIME_PERIOD  ::= T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>
 
-Period 	::= <[> P <(> <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]> @nelumbo.datetime.NPeriod,
+Period 	::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]> @nelumbo.datetime.NPeriod,
              <DateTime> - <DateTime> #40,
              <Date> - <Date>         #40,
              <Time> - <Time>         #40,
