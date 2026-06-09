@@ -89,4 +89,19 @@ public class ExamplesTest extends NelumboTestBase {
         exampleResource("hidden.nl");
     }
 
+    @RepeatedTest(10)
+    public void power() {
+        exampleResource("power.nl");
+    }
+
+    @RepeatedTest(10)
+    public void even() {
+        exampleResource("even.nl");
+    }
+
+    @RepeatedTest(10)
+    public void ternary() {
+        exampleResource("ternary.nl");
+    }
+
 }
