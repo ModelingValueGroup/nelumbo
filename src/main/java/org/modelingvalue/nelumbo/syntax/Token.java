@@ -23,6 +23,7 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.PatternPart;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
@@ -372,7 +373,7 @@ public final class Token implements AstElement {
     }
 
     public boolean isTypeNode() {
-        return node instanceof Type;
+        return node instanceof Type || node instanceof PatternPart;
     }
 
     public boolean isPatternNode() {
@@ -390,12 +391,20 @@ public final class Token implements AstElement {
     }
 
     public TokenType colorType() {
-        return (text().equals("<") || text().equals(">")) && isPatternNode() ? TokenType.META_OPERATOR : //
-                isVariableNode() ? TokenType.VARIABLE : //
-                        type() == TokenType.NAME && isTypeNode() ? TokenType.TYPE : //
-                                type() == TokenType.NAME && isTextMatch()
-                                        && (isKeyword() || (!isConnected() && isLitteralNode())) ? TokenType.KEYWORD : //
-                                                type();
+        if (type() == TokenType.NAME) {
+            if (isTextMatch() && (isKeyword() || (!isConnected() && isLitteralNode()))) {
+                return TokenType.KEYWORD;
+            }
+            if (isVariableNode()) {
+                return TokenType.VARIABLE;
+            }
+            if (isTypeNode()) {
+                return TokenType.TYPE;
+            }
+        } else if ((text().equals("<") || text().equals(">")) && isPatternNode()) {
+            return TokenType.META_OPERATOR;
+        }
+        return type();
     }
 
     @Override
