@@ -9,18 +9,17 @@ DateTime ::= <[> <Date> T <Time#50> <]> @nelumbo.datetime.NDateTime,
              <DateTime> + <Period>   #40,
              <DateTime> - <Period>   #40
 
-// TODO: Disallow spaces, limit number length, prefix?
 Date 	::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> 						                                   @nelumbo.datetime.NDate,
              <Date> + <Period>   #40,
              <Date> - <Period>   #40
 
-// TODO: Disallow spaces, or prefix with T, decimal?
 Time	::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]>		                       @nelumbo.datetime.NTime,
              <Time> + <Period>   #40,
              <Time> - <Period>   #40
 
-// TODO separate on multiple lines?
-Period 	::= <[> P <(> <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+> <(> T <(> <NUMBER> <(> H <|> M <|> S <)> <)+> <)?> <|> T <(> <NUMBER> <(> H <|> M <|> S <)> <)+> <)> <]> @nelumbo.datetime.NPeriod,
+pattern TIME_PERIOD  ::=  T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>
+
+Period 	::= <[> P <(> <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]> @nelumbo.datetime.NPeriod,
              <DateTime> - <DateTime> #40,
              <Date> - <Date>         #40,
              <Time> - <Time>         #40,

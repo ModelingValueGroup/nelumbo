@@ -31,6 +31,7 @@ import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.FoldingRange;
@@ -145,6 +146,12 @@ public class NlTextDocumentService implements TextDocumentService {
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
         System.err.println("~~~ formatting        : " + params.getTextDocument().getUri() + "\n    " + params.getOptions());
         return documentFormattingService.formatting(params);
+    }
+
+    @Override
+    public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
+        System.err.println("~~~ rangeFormatting   : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getRange()));
+        return documentFormattingService.rangeFormatting(params);
     }
 
     @Override
