@@ -27,6 +27,7 @@ import org.modelingvalue.nelumbo.lang.PatternPart;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
+import org.modelingvalue.nelumbo.patterns.PatternPartPattern;
 
 @SuppressWarnings({ "unused" })
 public final class Token implements AstElement {
@@ -377,7 +378,7 @@ public final class Token implements AstElement {
     }
 
     public boolean isPatternNode() {
-        return node instanceof Pattern;
+        return node instanceof Pattern || node instanceof PatternPartPattern;
     }
 
     public boolean isLitteralNode() {
