@@ -72,6 +72,7 @@ public class NelumboLanguageServer implements LanguageServer {
         serverCapabilities.setCompletionProvider(makeCompletionCapabilities());
         serverCapabilities.setDocumentSymbolProvider(makeDocSymbolCapabilities());
         serverCapabilities.setDocumentFormattingProvider(true);
+        serverCapabilities.setDocumentRangeFormattingProvider(true);
         serverCapabilities.setHoverProvider(true);
         serverCapabilities.setDefinitionProvider(true);
         serverCapabilities.setWorkspaceSymbolProvider(true);
