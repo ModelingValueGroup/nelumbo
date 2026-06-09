@@ -393,11 +393,11 @@ public final class Token implements AstElement {
 
     public TokenType colorType() {
         if (type() == TokenType.NAME) {
-            if (isTextMatch() && (isKeyword() || (!isConnected() && isLitteralNode()))) {
-                return TokenType.KEYWORD;
-            }
             if (isVariableNode()) {
                 return TokenType.VARIABLE;
+            }
+            if (isTextMatch() && (isKeyword() || (!isConnected() && isLitteralNode()))) {
+                return TokenType.KEYWORD;
             }
             if (isTypeNode()) {
                 return TokenType.TYPE;
