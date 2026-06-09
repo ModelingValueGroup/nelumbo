@@ -124,10 +124,10 @@ Integer division truncates toward zero. A query with a non-exact dividend gets a
 ## Comparison
 
 ```
-Boolean ::= <Integer>  >   <Integer>   #30  @nelumbo.integers.GreaterThan,
+Boolean ::= <Integer> ">"  <Integer>   #30  @nelumbo.integers.GreaterThan,
             <Integer> "<"  <Integer>   #30,
             <Integer> "<=" <Integer>   #30,
-            <Integer>  >=  <Integer>   #30
+            <Integer> ">=" <Integer>   #30
 ```
 
 | Pattern                  | `#N` | Native / definition          |
@@ -152,7 +152,7 @@ a >  0   ? [..][(a=0),..]    // (a=0) is a proven falsehood of a>0
 a >= 0   ? [(a=0),..][..]    // (a=0) is a proven fact of a>=0
 ```
 
-The angle-bracketed forms `"<"` and `"<="` in the source are quoted because `<` is also the syntax marker for pattern holes (`<Integer>`); the quotes tell the tokenizer to treat `<` and `<=` as ordinary operator text.
+All four comparison operators are quoted in the source (`">"`, `"<"`, `"<="`, `">="`) because `<` and `>` are also the syntax markers that open and close pattern holes (`<Integer>`); the quotes tell the tokenizer to treat them as ordinary operator text.
 
 ---
 

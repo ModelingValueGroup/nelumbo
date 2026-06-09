@@ -113,7 +113,7 @@ The middle query returns the exact result `2.1`. The third asserts the wrong ans
 ## Comparison
 
 ```
-Boolean ::= <Rational>  >   <Rational>   #30   @nelumbo.rationals.GreaterThan,
+Boolean ::= <Rational> ">"  <Rational>   #30   @nelumbo.rationals.GreaterThan,
             <Rational> "<"  <Rational>   #30,
             <Rational> "<=" <Rational>   #30,
             <Rational>  >=  <Rational>   #30

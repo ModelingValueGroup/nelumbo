@@ -293,7 +293,7 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `lang.nl` | `Root ::= (hidden)? <Type> <NAME>, ...` | `nelumbo.lang.Variable` |
 | `lang.nl` | `Root ::= <NAME> ... :: <Type>, ...` | `nelumbo.lang.Type` |
 | `lang.nl` | `Root ::= (private)? <Type> ::= <Pattern>+, ...` | `nelumbo.lang.Functor` |
-| `lang.nl` | `T ::= (<T>)` (generic parenthesisation) | `nelumbo.lang.Parenthesized` |
+| `lang.nl` | `P ::= (<P>)` (generic parenthesisation) | `nelumbo.lang.Parenthesized` |
 | `logic.nl` | `true`, `false`, `unknown` | `NBoolean` |
 | `logic.nl` | `!<Boolean>` | `Not` |
 | `logic.nl` | `<Boolean> & <Boolean>` | `And` |

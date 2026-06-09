@@ -24,7 +24,7 @@ Set<E>         :: Collection<E>
 List<E>        :: Collection<E>
 ```
 
-- `Type E` introduces `E` as a generic type parameter — the same mechanism is available in user code (see also `Type T` in `lang.nl` for the generic parenthesization rule `T ::= (<T>)`).
+- `Type E` introduces `E` as a generic type parameter — the same mechanism is available in user code (see also `Type P` in `lang.nl` for the generic parenthesization rule `P ::= (<P>)`).
 - `Collection<E>` is the common supertype.
 - `Set<E>` and `List<E>` are both subtypes of `Collection<E>`. A variable of type `Collection<E>` can hold either.
 

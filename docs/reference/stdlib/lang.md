@@ -224,14 +224,14 @@ The `::>` transformation (Transform) takes any `<Root>` shape on the left and a 
 ## Generic parenthesisation
 
 ```
-Type T
+Type P
 
-T ::= (<T>)   @nelumbo.lang.Parenthesized
+P ::= (<P>)   @nelumbo.lang.Parenthesized
 ```
 
-The last two lines of `lang.nl` declare a single generic type parameter `T` and a single generic pattern: parenthesisation. Because `T` is a type variable, this one declaration instantiates for every concrete type that arises later — `(Integer)`, `(Boolean)`, `(Person)`, `(Set<Integer>)`, all of them.
+The last two lines of `lang.nl` declare a single generic type parameter `P` and a single generic pattern: parenthesisation. Because `P` is a type variable, this one declaration instantiates for every concrete type that arises later — `(Integer)`, `(Boolean)`, `(Person)`, `(Set<Integer>)`, all of them.
 
-This is also the canonical demonstration of `Type T` (the generic type parameter mechanism), which `collections.nl` reuses to declare `Set<E>` and `List<E>`.
+This is also the canonical demonstration of `Type P` (the generic type parameter mechanism), which `collections.nl` reuses to declare `Set<E>` and `List<E>`.
 
 ---
 
@@ -247,7 +247,7 @@ After `import nelumbo.lang`, the following are visible:
 | Pattern forms    | literal tokens, `<Variable>`, alternation `<(>...<\|>...<)>`, repetition `<(>...<)+>` / `<)*>`, optional `<(>...<)?>`, sequence `<LEFT>...<RIGHT>` / `<[>...<]>`, type holes `<T>` / `<hidden T>` / `<T#N>`, named-pattern references `<NAME>` |
 | Named patterns   | `PATTERNS`, `QNAME` (declared with `pattern N ::= …`) |
 | Top-level forms  | `import`, `::>`, variable declaration, `::` (type), `::=` (pattern), `pattern` (named pattern) |
-| Generic          | `Type T`, parenthesisation `(T)` |
+| Generic          | `Type P`, parenthesisation `(P)` |
 
 All bindings are native — there is no in-language rule (`<=>`) in this module.
 

@@ -61,8 +61,8 @@ Root ::= "import" ...                                                @nelumbo.la
          (private)? <Type#100> ::= <Pattern#100>+ (#NUMBER)? (@...)?  @nelumbo.lang.Functor
 
 // Generic parenthesisation — one rule, applies to every type
-Type T
-T ::= (<T>)   @nelumbo.lang.Parenthesized
+Type P
+P ::= (<P>)   @nelumbo.lang.Parenthesized
 ```
 
 ### What is unique about this file
@@ -74,7 +74,7 @@ T ::= (<T>)   @nelumbo.lang.Parenthesized
 ### Idioms to notice
 
 - The `Pattern` block is the densest part of the file: it uses quoted operator characters (`"<"`, `"("`, `"|"`, `","`, `")"`, …) to talk about the very `<...>` syntax those characters have meaning in. This is the meta-syntax describing itself.
-- The `Type T` / `T ::= (<T>)` pair at the end is the canonical demonstration of generics. `collections.nl` uses the same mechanism for `Set<E>` and `List<E>`.
+- The `Type P` / `P ::= (<P>)` pair at the end is the canonical demonstration of generics. `collections.nl` uses the same mechanism for `Set<E>` and `List<E>`.
 
 See [`../reference/stdlib/lang.md`](../reference/stdlib/lang.md) for the full annotated walk-through.
 
@@ -107,13 +107,12 @@ Boolean ::= true                                            @nelumbo.logic.NBool
             <Boolean> -> <Boolean>                  #18,
             <Boolean> "<->" <Boolean>               #16
 
-Binding :: Object #BINDING
-Binding ::= [ ... ]
+pattern BINDING ::= [ ... ]
 
 // Top-level statement forms — declared here, not in the Java core
 Root ::= "fact" <Boolean#0>, ...                                       @nelumbo.logic.Fact,
          <Boolean#0> "<=>" (<Boolean#0> ("if" <Boolean#0>)?), ...      @nelumbo.logic.Rule,
-         <Boolean#0> ? (<Binding> <Binding>)?                          @nelumbo.logic.Query
+         <Boolean#0> ? (<BINDING> <BINDING>)?                          @nelumbo.logic.Query
 
 Boolean p1, p2
 p1 -> p2  <=> !p1 | p2
@@ -166,10 +165,10 @@ Integer :: Object
 private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @...Add,
                     mult(<Integer>, <Integer>, <Integer>)  @...Multiply
 
-Boolean ::= <Integer>  >   <Integer>   #30  @...GreaterThan,
+Boolean ::= <Integer> ">"  <Integer>   #30  @...GreaterThan,
             <Integer> "<"  <Integer>   #30,
             <Integer> "<=" <Integer>   #30,
-            <Integer>  >=  <Integer>   #30
+            <Integer> ">=" <Integer>   #30
 
 Integer ::= <NUMBER>                @...NInteger,
             <Integer> - <Integer>   #40,
@@ -269,7 +268,7 @@ private Boolean ::= add(<Rational>, <Rational>, <Rational>)   @...Add,
                     mult(<Rational>, <Rational>, <Rational>)  @...Multiply
 
 
-Boolean ::= <Rational>  >   <Rational>   #30     @...GreaterThan,
+Boolean ::= <Rational> ">"  <Rational>   #30     @...GreaterThan,
             <Rational> "<"  <Rational>   #30,
             <Rational> "<=" <Rational>   #30,
             <Rational>  >=  <Rational>   #30,
@@ -408,7 +407,7 @@ That's the whole module.
 
 ### What it introduces
 
-- **`Type E`** — the declaration that introduces a generic type parameter. `lang.nl` uses the same mechanism for parenthesisation (`Type T; T ::= (<T>)`); this is its first use to define container types.
+- **`Type E`** — the declaration that introduces a generic type parameter. `lang.nl` uses the same mechanism for parenthesisation (`Type P; P ::= (<P>)`); this is its first use to define container types.
 - **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype.
 - **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`.
 
