@@ -177,8 +177,8 @@ public class Predicate extends Node {
     }
 
     @Override
-    public Predicate setArgs(Object[] array) {
-        return (Predicate) super.setArgs(array);
+    public Predicate setArgs(Object... args) {
+        return (Predicate) super.setArgs(args);
     }
 
     @Override

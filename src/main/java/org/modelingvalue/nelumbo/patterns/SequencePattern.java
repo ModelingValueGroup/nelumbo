@@ -41,8 +41,8 @@ public class SequencePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 1477171023667359130L;
 
-    public SequencePattern(Type type, List<AstElement> elements, List<Pattern> patterns, boolean isConnected) {
-        super(NodeInfo.of(type, elements), isConnected ? patterns.replaceAll(Pattern::setIsConnected) : patterns);
+    public SequencePattern(Type type, List<AstElement> elements, List<Pattern> patterns) {
+        super(NodeInfo.of(type, elements), patterns);
     }
 
     @NelumboConstructor

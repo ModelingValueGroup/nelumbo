@@ -39,6 +39,7 @@ import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Import;
 import org.modelingvalue.nelumbo.lang.Namespace;
+import org.modelingvalue.nelumbo.lang.PatternPart;
 import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -50,6 +51,7 @@ import org.modelingvalue.nelumbo.patterns.AlternationPattern;
 import org.modelingvalue.nelumbo.patterns.NodeTypePattern;
 import org.modelingvalue.nelumbo.patterns.OptionalPattern;
 import org.modelingvalue.nelumbo.patterns.Pattern;
+import org.modelingvalue.nelumbo.patterns.PatternPartPattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
 import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
@@ -82,6 +84,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             COMMA, STRING);
     //
     private static final Pattern PATTERNS = r(n(Type.PATTERN, 100), true, null);
+    private static final Pattern QNAME    = c(r(t(NAME), true, t(".")));
     //
     public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
 
@@ -204,8 +207,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.NAMESPACE, null, Namespace.class, null)
                         .init(this, parseContext, bootstrapping);
 
-                Functor.of(s(k("import"), c(r(r(t(NAME), true, t(".")), true, t(",")))), Type.ROOT, null, Import.class,
-                        null).init(this, parseContext, bootstrapping);
+                Functor.of(s(k("import"), r(QNAME, true, t(","))), Type.ROOT, null, Import.class, null).init(this,
+                        parseContext, bootstrapping);
 
                 Functor.of(
                         s(c(t(NAME), o(s(t("<"), n(Type.TYPE, 100), t(">")))), t("::"),
@@ -248,9 +251,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         s(t("<"), o(a(k("visible"), k("hidden"))), n(Type.TYPE, 100), o(s(t("#"), t(NUMBER))), t(">")),
                         Type.PATTERN, null, NodeTypePattern.class, null).init(this, parseContext, bootstrapping);
 
-                Functor.of(s(o(k("private")), n(Type.TYPE, 100), t("::="),
-                        r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), r(t(NAME), true, t("."))))), true, t(","))),
+                Functor.of(s(t("<"), n(Type.PATTERN_PART, 100), t(">")), Type.PATTERN, null, PatternPartPattern.class,
+                        null).init(this, parseContext, bootstrapping);
+
+                Functor.of(
+                        s(o(k("private")), n(Type.TYPE, 100), t("::="),
+                                r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), QNAME))), true, t(","))),
                         Type.ROOT, null, Functor.class, null).init(this, parseContext, bootstrapping);
+
+                Functor.of(s(k("pattern"), t(TokenType.NAME), t("::="), PATTERNS), Type.PATTERN_PART, null,
+                        PatternPart.class, null).init(this, parseContext, bootstrapping);
 
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
@@ -315,7 +325,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, TRACE_NELUMBO);
-        parseContext = ParseContext.of(prePatterns, postPatterns, hiddenVariables);
+        parseContext = ParseContext.of(Type.DEFAULT_GROUP, prePatterns, postPatterns, hiddenVariables);
         init();
     }
 

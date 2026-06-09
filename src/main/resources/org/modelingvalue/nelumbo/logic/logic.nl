@@ -21,15 +21,12 @@
               <Boolean> -> <Boolean>                  #18,
               <Boolean> "<->" <Boolean>               #16
               
-  Binding :: Object #BINDING
-  
-  Binding ::=  [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
+  pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
               
   Root    ::= "fact" <(> <Boolean#0> <,> , <)+>                                         @nelumbo.logic.Fact,
               <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>    @nelumbo.logic.Rule,
-              <Boolean#0> ? <(> <Binding> <Binding> <)?>                                @nelumbo.logic.Query
+              <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                                @nelumbo.logic.Query
    
-
   Boolean p1, p2
     
   p1->p2  <=> !p1|p2

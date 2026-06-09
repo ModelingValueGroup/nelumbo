@@ -313,7 +313,7 @@ public class Node extends StructImpl implements AstElement {
         return setArgs(array);
     }
 
-    public Node setArgs(Object[] args) {
+    public Node setArgs(Object... args) {
         return set(nodeInfo, args);
     }
 

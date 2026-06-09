@@ -19,13 +19,12 @@ package org.modelingvalue.nelumbo.syntax;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.U;
 
-@SuppressWarnings("ClassCanBeRecord")
 public class Tokenizer {
 
     private static final int FIRST = 0, FIRST_ALL = 1, LAST = 2, LAST_ALL = 3;
 
-    private final String     input;
-    private final String     fileName;
+    private final String input;
+    private final String fileName;
 
     public Tokenizer(String input, String fileName) {
         this.input = input;
@@ -78,7 +77,7 @@ public class Tokenizer {
             // ignore newlines after a token that can be continued
             if (tokens[LAST] == null || tokens[LAST].type() == TokenType.BEGINOFFILE) {
                 return;
-            } else if (tokens[LAST].type().isContinuesOnNextLine() && !tokens[LAST].text().equals(">")) {
+            } else if (tokens[LAST].type().isContinuesOnNextLine() && !tokens[LAST].text().endsWith(">")) {
                 return;
             }
         }
@@ -111,7 +110,6 @@ public class Tokenizer {
             return tokens[FIRST];
         }
 
-        @SuppressWarnings("unused")
         public Token lastAll() {
             return tokens[LAST_ALL];
         }
@@ -152,7 +150,8 @@ public class Tokenizer {
             assert (token.fileName().equals(fileName));
             assert (input.substring(token.index(), token.indexEnd()).equals(token.text()));
             if (token.type() != TokenType.IN_LINE_COMMENT) {
-                assert (lines[token.line()].substring(token.position(), token.position() + token.text().length()).equals(token.text()));
+                assert (lines[token.line()].substring(token.position(), token.position() + token.text().length())
+                        .equals(token.text()));
             }
         }
 

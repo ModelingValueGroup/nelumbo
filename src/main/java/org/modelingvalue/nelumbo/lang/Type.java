@@ -67,7 +67,8 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type  FACT_TYPE    = new Type("FactType", BOOLEAN);
     public static final Type  VARIABLE     = new Type("Variable", OBJECT);
     public static final Type  FUNCTOR      = new Type("Functor", ROOT);
-    public static final Type  PATTERN      = new Type("Pattern", PATTERN_GROUP, Type.OBJECT);
+    public static final Type  PATTERN_PART = new Type("PatternPart", ROOT);
+    public static final Type  PATTERN      = new Type("Pattern", PATTERN_GROUP, OBJECT);
     private static final Type TYPE_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
     public static final Type  COLLECTION   = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type  SET          = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
@@ -87,6 +88,7 @@ public final class Type extends Node implements FunctorOrType {
                 FACT_TYPE, //
                 VARIABLE, //
                 FUNCTOR, //
+                PATTERN_PART, //
                 PATTERN, //
                 COLLECTION, //
                 SET, //

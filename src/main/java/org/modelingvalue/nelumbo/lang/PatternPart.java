@@ -14,60 +14,58 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.datetime;
+package org.modelingvalue.nelumbo.lang;
+
+import static org.modelingvalue.nelumbo.ConstructionReason.transforming;
+import static org.modelingvalue.nelumbo.patterns.Pattern.t;
 
 import java.io.Serial;
-import java.time.DateTimeException;
-import java.time.LocalDate;
 
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
-// Date 	::= <NUMBER> - <NUMBER> - <NUMBER>
-public final class NDate extends Node {
+public final class PatternPart extends Node {
     @Serial
-    private static final long serialVersionUID = 4471816666027178737L;
-
-    @NelumboFunctorField
-    private static Functor FUNCTOR;
+    private static final long serialVersionUID = 7203022330680664829L;
 
     @NelumboConstructor
-    public NDate(NodeInfo nodeInfo, Object... args) {
+    public PatternPart(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
-    }
-
-    public static NDate of(Object value) {
-        return new NDate(NodeInfo.of(FUNCTOR), value);
-    }
-
-    @Override
-    public String toString(TokenType[] previous) {
-        Object value = getVal(0);
-        return String.valueOf(value);
     }
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (reason == ConstructionReason.parsing && get(0) instanceof String) {
-            try {
-                return setArgs(LocalDate.of(intAt(0), intAt(1), intAt(2)));
-            } catch (DateTimeException | NumberFormatException e) {
-                knowledgeBase.addException(new ParseException("Invalid ISO 8601 date: " + e.getMessage(), this));
+        if (reason == ConstructionReason.parsing) {
+            if (length() == 0) {
+                PatternPart patternPart = (PatternPart) functor().astElements().get(0);
+                return patternPart.setAstElements(astElements());
             }
+            String name = name();
+            List<AstElement> pttrn = getVal(1);
+            Pattern pattern = Pattern.pattern(pttrn);
+            Node self = setArgs(name, pattern);
+            Functor functor = Functor.of(List.of(self), t(name), Type.PATTERN_PART, Type.NAMESPACE, PatternPart.class,
+                    null);
+            functor.init(knowledgeBase, ctx, transforming);
+            return self;
         }
         return this;
     }
 
-    private int intAt(int i) {
-        return Integer.parseInt((String) get(i));
+    public String name() {
+        return (String) get(0);
+    }
+
+    public Pattern pattern() {
+        return (Pattern) get(1);
     }
 
 }

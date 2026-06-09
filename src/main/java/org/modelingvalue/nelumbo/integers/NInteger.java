@@ -78,7 +78,7 @@ public final class NInteger extends Node {
             if ("-".equals(get(0))) {
                 val = val.negate();
             }
-            return setArgs(new Object[] { val });
+            return setArgs(val);
         }
         return this;
     }

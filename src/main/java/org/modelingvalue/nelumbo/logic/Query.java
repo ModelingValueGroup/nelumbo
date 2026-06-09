@@ -51,14 +51,14 @@ public final class Query extends Node implements Evaluatable {
         if (reason == ConstructionReason.parsing) {
             Predicate nodePred = predicate();
             Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
-            List<Node> expected = getVal(1);
+            List<List<Object>> expected = getVal(1);
             if (expected == null) {
                 Object[] array = new Object[1];
                 array[0] = predicate;
                 return setArgs(array);
             } else {
-                List<Object> facts = expected.get(0).args();
-                List<Object> falsehoods = expected.get(1).args();
+                List<Object> facts = expected.get(0);
+                List<Object> falsehoods = expected.get(1);
                 Object[] array = new Object[5];
                 array[0] = predicate;
                 array[1] = bindings(facts.filter(List.class).asList());

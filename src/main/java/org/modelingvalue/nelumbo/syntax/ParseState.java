@@ -248,10 +248,10 @@ public class ParseState implements Mergeable<ParseState> {
                     next = tokenTypeNext(token, ctx, result);
                 }
                 if (dirState.direction == Direction.tokenText) {
-                    next = tokenTextNext(token, result);
+                    next = tokenTextNext(token, ctx, result);
                 }
             } else {
-                next = tokenTextNext(token, result);
+                next = tokenTextNext(token, ctx, result);
                 if (next == null) {
                     next = tokenTypeNext(token, ctx, result);
                 }
@@ -374,7 +374,7 @@ public class ParseState implements Mergeable<ParseState> {
 
     private void tokenTextStates(Token token, ParseContext ctx, MutableMap<DirectionContext, Set<TokenState>> dirStates)
             throws ParseException {
-        TokenState next = tokenTextNext(token, null);
+        TokenState next = tokenTextNext(token, ctx, null);
         if (next != null) {
             DirectionContext key = new DirectionContext(Direction.tokenText, ctx);
             dirStates.put(key, Set.of(next));
@@ -515,14 +515,14 @@ public class ParseState implements Mergeable<ParseState> {
     }
 
     private TokenState[] tokenNext(Token token, ParseContext ctx) throws ParseException {
-        TokenState next1 = tokenTextNext(token, null);
+        TokenState next1 = tokenTextNext(token, ctx, null);
         TokenState next2 = tokenTypeNext(token, ctx, null);
         return next1 != null && next2 != null ? new TokenState[] { next1, next2 }
                 : next1 != null ? new TokenState[] { next1 }
                         : next2 != null ? new TokenState[] { next2 } : new TokenState[0];
     }
 
-    private TokenState tokenTextNext(Token token, PatternResult result) {
+    private TokenState tokenTextNext(Token token, ParseContext ctx, PatternResult result) {
         if (token == null || tokenTexts().isEmpty()) {
             return null;
         }
@@ -530,7 +530,7 @@ public class ParseState implements Mergeable<ParseState> {
         TokenType type = token.type();
         String text = token.text();
         ParseState next = tokenTexts().get(text);
-        if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next)) {
+        if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next, ctx)) {
             if (result != null) {
                 result.add(token);
                 token.setTextMatch(next.isKeyword(), next.isConnected());
@@ -542,7 +542,7 @@ public class ParseState implements Mergeable<ParseState> {
             for (int i = text.length() - 1; i > 0; i--) {
                 String key = text.substring(0, i);
                 next = tokenTexts().get(key);
-                if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next)) {
+                if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next, ctx)) {
                     Token pre = token.split(i);
                     if (result != null) {
                         result.addSplit(token, pre);
@@ -558,7 +558,7 @@ public class ParseState implements Mergeable<ParseState> {
             for (String conn : connected()) {
                 if (conn.length() < text.length() && text.startsWith(conn)) {
                     next = tokenTexts().get(conn);
-                    if (next.visibility() != notVisibility && isConnectedOk(token, next)) {
+                    if (next.visibility() != notVisibility && isConnectedOk(token, next, ctx)) {
                         String sub = text.substring(conn.length());
                         if (TokenType.of(sub) == null) {
                             for (int end = 1;; end++) {
@@ -613,7 +613,8 @@ public class ParseState implements Mergeable<ParseState> {
             if (var != null) {
                 TokenType tt = var.type().tokenType();
                 next = tt != null ? tokenTypes().get(tt) : null;
-                if (next != null && next.visibility() != notVisibility(token, result) && isConnectedOk(token, next)) {
+                if (next != null && next.visibility() != notVisibility(token, result)
+                        && isConnectedOk(token, next, ctx)) {
                     if (result != null) {
                         result.add(var.setAstElements(List.of(token)));
                         token.setState(next);
@@ -623,7 +624,7 @@ public class ParseState implements Mergeable<ParseState> {
             }
         }
         next = tokenTypes().get(type);
-        if (next != null && isConnectedOk(token, next)) {
+        if (next != null && isConnectedOk(token, next, ctx)) {
             if (result != null) {
                 result.add(token);
                 token.setState(next);
@@ -711,7 +712,7 @@ public class ParseState implements Mergeable<ParseState> {
         return left instanceof Variable var ? var.hidden() && var.lastToken() != token.previous() : false;
     }
 
-    private boolean isConnectedOk(Token token, ParseState next) {
+    private boolean isConnectedOk(Token token, ParseState next, ParseContext ctx) {
         return !isConnected || !next.isConnected || token.previous() == token.previousAll();
     }
 

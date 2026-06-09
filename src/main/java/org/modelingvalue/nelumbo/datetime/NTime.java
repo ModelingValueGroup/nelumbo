@@ -16,18 +16,23 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
-import org.modelingvalue.nelumbo.*;
-import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
-
 import java.io.Serial;
 import java.time.DateTimeException;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 // Time	::= <NUMBER> : <NUMBER> <(> : <NUMBER> <)?>
 public final class NTime extends Node {
@@ -56,7 +61,7 @@ public final class NTime extends Node {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing && get(0) instanceof String) {
             try {
-                return setArgs(new Object[] { build() });
+                return setArgs(build());
             } catch (DateTimeException | NumberFormatException e) {
                 knowledgeBase.addException(new ParseException("Invalid ISO 8601 time: " + e.getMessage(), this));
             }
@@ -69,17 +74,18 @@ public final class NTime extends Node {
         for (int i = 0; i < length(); i++) {
             flatten(get(i), parts);
         }
-        int hour   = Integer.parseInt(parts.get(0));
+        int hour = Integer.parseInt(parts.get(0));
         int minute = Integer.parseInt(parts.get(1));
         int second = parts.size() > 2 ? Integer.parseInt(parts.get(2)) : 0;
-        int nano   = parts.size() > 3 ? nanosOf(parts.get(3)) : 0;
+        int nano = parts.size() > 3 ? nanosOf(parts.get(3)) : 0;
         return LocalTime.of(hour, minute, second, nano);
     }
 
-    // ".500" captures the digit string "500"; its value scales by the number of digits: 3 digits -> *10^6.
+    // ".500" captures the digit string "500"; its value scales by the number of
+    // digits: 3 digits -> *10^6.
     private static int nanosOf(String fraction) {
         long value = Long.parseLong(fraction);
-        int  scale = 9 - fraction.length();
+        int scale = 9 - fraction.length();
         for (; scale > 0; scale--) {
             value *= 10;
         }

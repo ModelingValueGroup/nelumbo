@@ -68,16 +68,6 @@ public final class Import extends Node {
         return this;
     }
 
-    @Override
-    protected Import set(NodeInfo nodeInfo, Object[] args) {
-        return new Import(nodeInfo, args);
-    }
-
-    @Override
-    public Import set(int i, Object... a) {
-        return (Import) super.set(i, a);
-    }
-
     public String name() {
         return (String) get(0);
     }

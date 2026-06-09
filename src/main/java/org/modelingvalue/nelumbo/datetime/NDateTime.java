@@ -16,16 +16,21 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
-import org.modelingvalue.nelumbo.*;
-import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
-
 import java.io.Serial;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 // DateTime ::= <[> <Date> T <Time#50> <]>
 public final class NDateTime extends Node {
@@ -65,7 +70,7 @@ public final class NDateTime extends Node {
             LocalDate date = getVal(0, 0);
             LocalTime time = getVal(1, 0);
 
-            return setArgs(new Object[]{LocalDateTime.of(date, time)}).setFunctorOrType(literalFunctor());
+            return setArgs(LocalDateTime.of(date, time)).setFunctorOrType(literalFunctor());
         }
 
         return this;

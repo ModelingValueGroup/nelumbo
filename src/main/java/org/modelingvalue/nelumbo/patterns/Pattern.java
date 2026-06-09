@@ -109,14 +109,17 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern s(List<AstElement> ast, Pattern... elements) {
-        return new SequencePattern(Type.PATTERN, ast,
-                List.of(elements).replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e)),
-                false);
+        List<Pattern> flat = List.of(elements)
+                .replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e));
+        if (flat.size() != 1) {
+            return new SequencePattern(Type.PATTERN, ast, flat);
+        } else {
+            return flat.first().setAstElements(ast);
+        }
     }
 
     public static Pattern c(List<AstElement> ast, Pattern... elements) {
-        return new SequencePattern(Type.PATTERN, ast,
-                List.of(elements).replaceAllAll(e -> e instanceof SequencePattern s ? s.elements() : List.of(e)), true);
+        return s(ast, elements).setIsConnected();
     }
 
     public static Pattern t(List<AstElement> ast, String tokenText) {
@@ -213,6 +216,11 @@ public abstract class Pattern extends Node {
             }
         }
         return patterns.size() > 1 ? s(elements, patterns.toArray(Pattern[]::new)) : patterns.first();
+    }
+
+    @Override
+    public Pattern setAstElements(List<AstElement> elements) {
+        return (Pattern) super.setAstElements(elements);
     }
 
 }
