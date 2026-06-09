@@ -2,7 +2,7 @@
 
 The bootstrap layer. Every other `.nl` file — including `logic.nl` itself — is written in the syntax that `lang.nl` declares. It is the meta-language for the meta-language.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 51 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 57 lines.
 
 **Import:**
 
@@ -70,6 +70,7 @@ There is **no `DECIMAL` token**. Both signed integers and the rational decimal-p
 ```
 Object        :: NATIVE
 Type          :: Object
+PatternPart   :: Root                // a reusable named pattern fragment (`pattern N ::= …`)
 Variable      :: Object
 Root          :: Object             // top of the statement hierarchy
 Functor       :: Root                // language pattern with a type, e.g. a function or operator
@@ -78,12 +79,13 @@ Namespace     :: Object              // local scope
 RootNamespace :: Root, Namespace
 ```
 
-The seven core types of the object model:
+The core types of the object model:
 
 | Type            | Role                                                                                            |
 |---|---|
 | `Object`        | Native root of the type hierarchy. Everything is an `Object`.                                    |
 | `Type`          | A type itself. Used wherever the meta-language needs to talk about types — e.g., `Type T`.       |
+| `PatternPart`   | A **named pattern fragment** declared with `pattern N ::= …`. Subtype of `Root` because the declaration is a top-level form. See [Named patterns](#named-patterns) below. |
 | `Variable`      | A logical variable binding site. Quantifiers and rules use `<Variable>` holes.                   |
 | `Root`          | A top-level statement of a `.nl` file — an `import`, a `::=` declaration, a `fact`, a query, …  |
 | `Functor`       | A `::=`-declared pattern with a type. Subtype of `Root` because `::=` is itself a top-level form. |
@@ -92,6 +94,31 @@ The seven core types of the object model:
 | `RootNamespace` | A `Root` that is also a `Namespace`. The scope-block top-level form `{ ... }` belongs here.      |
 
 The hierarchy is what gives the rest of the language a place to hang. A user-declared type like `Integer :: Object` slots in under the same `Object` declared here; `Boolean :: Object` (from `logic.nl`) does the same.
+
+---
+
+## Named patterns
+
+A **named pattern** factors a recurring fragment of pattern syntax out into a reusable name, so it can be written once and referenced as `<NAME>` wherever it is needed. It is declared with the `pattern` keyword and used by `lang.nl` itself:
+
+```
+pattern PATTERNS ::= <(> <Pattern#100> <)+>
+pattern QNAME    ::= <[> <(> <NAME> <,> . <)+> <]>
+```
+
+- `PATTERNS` abbreviates "one or more patterns in a row" — the body of any `::=` declaration.
+- `QNAME` abbreviates a dotted qualified name like `a.b.c` (a connected run of `<NAME>` tokens joined by `.`), used by `import` and the `@`-binding.
+
+Unlike a `::=` declaration, a named pattern produces **no value** and adds **no new syntax** to the language. It is pure abbreviation: every `<PATTERNS>` reference expands to its body before parsing. The mechanism is itself bootstrapped by a `Root` form and a `Pattern` alternative:
+
+```
+PatternPart ::= "pattern" <NAME> ::= <PATTERNS>   @nelumbo.lang.PatternPart   // declares one
+Pattern     ::= "<" <PatternPart#100> ">"         @nelumbo.patterns.PatternPartPattern   // references one
+```
+
+`PatternPart` is declared as a subtype of `Root` (so the `pattern N ::= …` declaration is a legal top-level statement), and the `PatternPartPattern` alternative of `Pattern` is what lets a named pattern appear as `<NAME>` inside another pattern.
+
+Named patterns are used throughout the standard library to keep dense declarations readable — for example `RADIX_NUMBER` in [`integers.nl`](integers.md), `YMWD_PERIOD` / `TIME_PERIOD` in [`datetime.nl`](datetime.md), and `BINDING` in [`logic.nl`](logic.md).
 
 ---
 
@@ -125,16 +152,18 @@ Pattern ::= <NAME>                                                          @nel
             <SINGLEQUOTE>                                                   @nelumbo.patterns.TokenTextPattern,
             <COMMA>                                                         @nelumbo.patterns.TokenTextPattern,
             "<" <Variable#100> ">"                                          @nelumbo.patterns.TokenTextPattern,
-            "<" "(" ">" <(> <(> <Pattern#100> <)+> <,> "<" "|" ">" <)+>
-                "<" ")" ">"                                                 @nelumbo.patterns.AlternationPattern,
-            "<" "(" ">" <(> <Pattern#100> <)+>
-                <(> "<" "," ">" <(> <Pattern#100> <)+> <)?>
-                "<" ")" <(> * <|> + <)> ">"                                 @nelumbo.patterns.RepetitionPattern,
-            "<" "(" ">" <(> <Pattern#100> <)+> "<" ")" "?" ">"              @nelumbo.patterns.OptionalPattern,
-            <LEFT> <(> <Pattern#100> <)+> <RIGHT>                           @nelumbo.patterns.SequencePattern,
-            "<" <(> <(> "visible" <|> "hidden" <)> <)?> <Type#100>
-                <(> # <NUMBER> <)?> ">"                                     @nelumbo.patterns.NodeTypePattern
+            "<(" <(> <PATTERNS> <,> "<|>" <)+> "<)>"                        @nelumbo.patterns.AlternationPattern,
+            "<(" <PATTERNS> <(> "<,>" <PATTERNS> <)?> "<)" (*|+) ">"        @nelumbo.patterns.RepetitionPattern,
+            "<(" <PATTERNS> "<)?>"                                          @nelumbo.patterns.OptionalPattern,
+            <LEFT> <PATTERNS> <RIGHT>                                       @nelumbo.patterns.SequencePattern,
+            "<[" <PATTERNS> "<]>"                                           @nelumbo.patterns.SequencePattern,
+            "<" (visible|hidden)? <Type#100> (# <NUMBER>)? ">"             @nelumbo.patterns.NodeTypePattern,
+            "<" <PatternPart#100> ">"                                       @nelumbo.patterns.PatternPartPattern
 ```
+
+> The block above is lightly de-escaped for readability — in the real source every meta-character (`<`, `(`, `|`, `,`, `)`, `?`, `[`, `]`, `>`, `+`, `*`) is quoted or wrapped in a `<[> … <]>` connected-token group, because each has meaning *inside* a pattern. See [`lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) lines 34–47 for the exact spelling.
+
+Note that the inner pattern body is now factored through the `PATTERNS` [named pattern](#named-patterns) (`<(> <Pattern#100> <)+>`) rather than spelled out at every site.
 
 Reading these alternatives in order:
 
@@ -146,7 +175,9 @@ Reading these alternatives in order:
 | `"<(" ... "<,>" ... ")>" + or *`                             | `RepetitionPattern`     | A repetition group, with optional separator: `<(> P <,> , <)+>` or `... <)*>`. |
 | `"<(" ... ")?>"`                                             | `OptionalPattern`       | An optional group: `<(> super <)?>`.            |
 | `<LEFT> ... <RIGHT>`                                         | `SequencePattern`       | A bracketed sequence — any of `(...)`, `[...]`, `{...}`. |
+| `"<[" ... "<]>"`                                             | `SequencePattern`       | A [connected-token group](../grammar.md#connected-token-groups---) — adjacent tokens, no whitespace between them. |
 | `"<" (visible\|hidden)? <Type#100> (# <NUMBER>)? ">"`        | `NodeTypePattern`       | A type hole `<T>`, optionally with visibility (`<hidden T>`) and precedence (`<T#5>`). |
+| `"<" <PatternPart#100> ">"`                                  | `PatternPartPattern`    | A reference to a [named pattern](#named-patterns): `<PATTERNS>`, `<QNAME>`, `<RADIX_NUMBER>`, … |
 
 The escaping is delicate: `"<"`, `"("`, `"|"`, `","`, `")"`, `"?"`, `">"`, `"+"`, `"*"` all have meaning *inside* a pattern, so when this file wants to write them as literal text it quotes them. This is the meta-syntax describing itself.
 
@@ -157,17 +188,19 @@ Note also the `#100` precedence on the inner `<Pattern#100>` and `<Variable#100>
 ## Root grammar — top-level statements
 
 ```
-Root ::= "import" <(> <(> <NAME> <,> . <)+> <,> , <)+>                                     @nelumbo.lang.Import,
+Root ::= "import" <(> <QNAME> <,> , <)+>                                                    @nelumbo.lang.Import,
          <Root#0> ::> <RootNamespace>                                                       @nelumbo.lang.Transform,
          <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                 @nelumbo.lang.Variable,
-         <NAME> <(> < <Type#100> > <)?> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?>      @nelumbo.lang.Type,
-         <(> "private" <)?> <Type#100> ::= <(> <(> <Pattern#100> <)+>
+         <[> <NAME> <(> < <Type#100> > <)?> <]> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?>  @nelumbo.lang.Type,
+         <(> "private" <)?> <Type#100> ::= <(> <PATTERNS>
              <(> # <NUMBER> <)?>
-             <(> @ <(> <NAME> <,> . <)+> <)?>
+             <(> @ <QNAME> <)?>
              <,> , <)+>                                                                     @nelumbo.lang.Functor
 ```
 
-Five top-level statement forms:
+(`PatternPart ::= "pattern" <NAME> ::= <PATTERNS>` — the named-pattern declaration — is a sixth `Root` form, covered in [Named patterns](#named-patterns) above.)
+
+Five top-level statement forms here, plus `PatternPart`:
 
 | Statement                                                              | Native class           |
 |---|---|
@@ -176,10 +209,11 @@ Five top-level statement forms:
 | `(hidden)? T v`, `T v1, v2, v3` — variable declaration                 | `nelumbo.lang.Variable` |
 | `T<P>? :: S1, S2 (#tag)?` — type declaration                           | `nelumbo.lang.Type`     |
 | `(private)? T ::= P1 (#N)? (@class)?, P2, ...` — pattern declaration   | `nelumbo.lang.Functor`  |
+| `pattern N ::= P` — named pattern declaration                          | `nelumbo.lang.PatternPart` |
 
 The `Functor` alternative is the dense one: it carries the optional `private` modifier, the optional `#N` precedence annotation, the optional `@`-bound native class, and the comma-separated list of patterns — all in a single declaration. This is the syntax every other stdlib file uses to declare anything.
 
-The `import` alternative permits both comma-separated lists (`import M1, M2`) and dotted module paths (`import a.b.c`).
+The `import` and `@`-binding forms now share the `QNAME` [named pattern](#named-patterns) for the dotted qualified name; the `import` alternative still permits both comma-separated lists (`import M1, M2`) and dotted module paths (`import a.b.c`). The type-declaration head (`<[> <NAME> … <]>`) is a connected-token group, so `Set<E>` must be written tightly.
 
 The `::>` transformation (Transform) takes any `<Root>` shape on the left and a `RootNamespace` (a `{ ... }` block of declarations) on the right. See [`language-transformations.md`](../guides/language-transformations.md). It is declared here, but the mechanism is only useful in conjunction with the rest of the language.
 
@@ -208,10 +242,11 @@ After `import nelumbo.lang`, the following are visible:
 | Kind             | Names |
 |---|---|
 | Token types      | `SINGLEQUOTE`, `SEMICOLON`, `COMMA`, `LEFT`, `RIGHT`, `STRING`, `NUMBER`, `NAME`, `OPERATOR`, `NEWLINE`, `BEGINOFFILE`, `ENDOFFILE` |
-| Object types     | `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` |
+| Object types     | `Object`, `Type`, `PatternPart`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` |
 | File / scope     | `Namespace`, `RootNamespace` (`{ ... }` blocks) |
-| Pattern forms    | literal tokens, `<Variable>`, alternation `<(>...<\|>...<)>`, repetition `<(>...<)+>` / `<)*>`, optional `<(>...<)?>`, sequence `<LEFT>...<RIGHT>`, type holes `<T>` / `<hidden T>` / `<T#N>` |
-| Top-level forms  | `import`, `::>`, variable declaration, `::` (type), `::=` (pattern) |
+| Pattern forms    | literal tokens, `<Variable>`, alternation `<(>...<\|>...<)>`, repetition `<(>...<)+>` / `<)*>`, optional `<(>...<)?>`, sequence `<LEFT>...<RIGHT>` / `<[>...<]>`, type holes `<T>` / `<hidden T>` / `<T#N>`, named-pattern references `<NAME>` |
+| Named patterns   | `PATTERNS`, `QNAME` (declared with `pattern N ::= …`) |
+| Top-level forms  | `import`, `::>`, variable declaration, `::` (type), `::=` (pattern), `pattern` (named pattern) |
 | Generic          | `Type T`, parenthesisation `(T)` |
 
 All bindings are native — there is no in-language rule (`<=>`) in this module.

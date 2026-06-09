@@ -22,6 +22,7 @@ The top-level constructs are:
 | `import M` | Import module `M` | |
 | `T :: S` | Declare type `T` as a subtype of `S` | [Types](#type-declarations) below |
 | `T ::= P` | Declare pattern `P` producing a value of type `T` | [Patterns](#pattern-declarations) below |
+| `pattern N ::= P` | Declare a reusable **named pattern** `N` | [Named patterns](#named-patterns) below |
 | `T v` | Declare logical variable `v` of type `T` | [Variables](#variable-declarations) below |
 | `L <=> R` | Rule: `L` bi-implies `R` | [`writing-rules.md`](writing-rules.md) |
 | `fact E` | Assert ground-truth fact `E` | [Facts](#facts) below |
@@ -151,12 +152,39 @@ The brackets themselves are pure meta-syntax: like the other `<(>`-style markers
 ```
 Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                     @nelumbo.datetime.NDate
 Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>                     @nelumbo.rationals.Rational
-Integer  ::= <(> - <)?> <[> <NUMBER> <(> "#" <(> <(> <NUMBER> <|> <NAME> <)> <)+> <)?> <]>  @nelumbo.integers.NInteger
+Integer  ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>    @nelumbo.integers.NInteger
 ```
 
 These accept `2025-01-01`, `3.14`, and `16#FF`, but reject `2025 - 01 - 01`, `3 . 14`, and `16 # FF`. This is what distinguishes a literal form (a date, a decimal, a radix-prefixed integer) from a structural expression that happens to use the same operators (`<Date> - <Period>`, `<Integer> - <Integer>`).
 
 A practical rule of thumb: use `<[>` … `<]>` whenever the absence of whitespace is the *only* thing telling the parser "this is one literal, not an expression."
+
+(`<RADIX_NUMBER>` in the `Integer` form above is a **named pattern** — see [below](#named-patterns).)
+
+---
+
+## Named patterns
+
+A recurring fragment of pattern syntax can be given a name and reused, instead of being spelled out at every site. Declare one with the `pattern` keyword:
+
+```
+pattern N ::= P
+```
+
+The name `N` is then written `<N>` inside any later pattern, exactly where its body `P` would otherwise appear. A named pattern is **pure abbreviation**: it declares no type and produces no value — `<N>` expands to `P` before parsing. This is unlike a `T ::= P` declaration, which adds a new way to build a value of type `T`.
+
+The standard library uses named patterns to keep dense declarations legible:
+
+```
+pattern RADIX_NUMBER ::= <(> <(> <NUMBER> <|> <NAME> <)> <)+>          // integers.nl — the base-N digit run
+Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>    @nelumbo.integers.NInteger
+
+pattern YMWD_PERIOD ::= <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+>  // datetime.nl — the Y/M/W/D part
+pattern TIME_PERIOD ::= T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>      //            — the T-introduced time part
+Period  ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]>  @nelumbo.datetime.NPeriod
+```
+
+Even `lang.nl` and `logic.nl` define their own (`PATTERNS`, `QNAME`, `BINDING`) — see [`lang.md`](stdlib/lang.md#named-patterns). A named pattern must be declared before it is referenced, like any other name.
 
 ---
 

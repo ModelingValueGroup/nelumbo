@@ -2,7 +2,7 @@
 
 ISO 8601 dates, times, date-times, and durations, with chronological comparison and reversible arithmetic.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 96 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 95 lines.
 
 **Import:**
 
@@ -50,7 +50,7 @@ Period   ::= <[> P … <]>                                                      
 - **`Date`** — `YYYY-MM-DD`. Parsed into a `LocalDate`; out-of-range values (e.g. month 13) are rejected **at parse time** with a `file:line:col` error, not as a query falsehood.
 - **`Time`** — `HH:MM`, optionally `:SS` and a `.fff` sub-second fraction. Backed by `LocalTime`. A `:00` seconds field — and a zero fraction — is dropped on display (`20:04:00.00` prints as `20:04`, `20:04:00.30` as `20:04:00.300`).
 - **`DateTime`** — a `Date`, a literal `T`, and a `Time`. Backed by a zone-less `LocalDateTime`; there is no timezone or offset component.
-- **`Period`** — an ISO 8601 duration: `P` followed by date units `Y`/`M`/`W`/`D` and/or a `T`-introduced time section with `H`/`M`/`S` (`M` is months before the `T`, minutes after it). Units must appear in canonical order without repeats — `P1D1Y` and `P1D1D` are parse errors. The value normalizes the time part on construction, so `P1YT90M` becomes `P1YT1H30M` (the calendar part is left as written).
+- **`Period`** — an ISO 8601 duration: `P` followed by date units `Y`/`M`/`W`/`D` and/or a `T`-introduced time section with `H`/`M`/`S` (`M` is months before the `T`, minutes after it). The two halves are factored into the [named patterns](lang.md#named-patterns) `YMWD_PERIOD` and `TIME_PERIOD`, so the literal grammar reads `<[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]>`. Units must appear in canonical order without repeats — `P1D1Y` and `P1D1D` are parse errors. The value normalizes the time part on construction, so `P1YT90M` becomes `P1YT1H30M` (the calendar part is left as written).
 
 ```
 2024-01-15T10:30          = a    ? [(a=2024-01-15T10:30)][..]

@@ -2,7 +2,7 @@
 
 Arbitrary-precision integer arithmetic and comparison.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl) — 36 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl) — 38 lines.
 
 **Import:**
 
@@ -27,14 +27,16 @@ A value of type `Integer` is an arbitrary-precision signed integer. There is no 
 ## Literals
 
 ```
-Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <(> <(> <NUMBER> <|> <NAME> <)> <)+> <)?> <]>
+pattern RADIX_NUMBER ::= <(> <(> <NUMBER> <|> <NAME> <)> <)+>
+
+Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>
             @nelumbo.integers.NInteger
 ```
 
-`<NUMBER>` is the language-level token defined in [`lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) as the unsigned digit run `[0-9]+`. The sign and the optional base form are built around it **at the pattern level**, not by the lexer. The literal admits:
+`<NUMBER>` is the language-level token defined in [`lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) as the unsigned digit run `[0-9]+`. The sign and the optional base form are built around it **at the pattern level**, not by the lexer. `RADIX_NUMBER` is a [named pattern](lang.md#named-patterns) — a reusable abbreviation for the base-N digit run, kept separate so the `Integer` literal reads cleanly. The literal admits:
 
 - ordinary signed decimals: `0`, `42`, `-1`
-- base-N literals: `<digits>#<digits-in-base>`, where the leading number is the base — e.g., `16#ff`, `36#abc`. The digits-in-base are themselves a repetition of `<NUMBER>` / `<NAME>` tokens, which is why letters like `ff`/`abc` (lexed as `<NAME>`) compose with the leading base.
+- base-N literals: `<digits>#<digits-in-base>`, where the leading number is the base — e.g., `16#ff`, `36#abc`. The digits-in-base (`RADIX_NUMBER`) are themselves a repetition of `<NUMBER>` / `<NAME>` tokens, which is why letters like `ff`/`abc` (lexed as `<NAME>`) compose with the leading base.
 
 The native class `NInteger` reassembles the matched parts, applies the leading sign, and parses the result into a `BigInteger`-backed value.
 

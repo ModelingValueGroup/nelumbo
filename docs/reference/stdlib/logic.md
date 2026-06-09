@@ -2,7 +2,7 @@
 
 The foundation module. Every other Nelumbo program imports this — either directly, or transitively through one of the other stdlib modules. It declares the `Boolean` type, the three Boolean values, the connectives, the quantifiers, equality, and the three top-level forms (`fact`, `<=>`, `?`).
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl) — 45 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl) — 41 lines.
 
 **Import:**
 
@@ -143,7 +143,7 @@ The middle rule (`l1 = f1 <=> f1 = l1`) swaps a literal-equals-function query in
 ```
 Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                        @nelumbo.logic.Fact,
          <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>   @nelumbo.logic.Rule,
-         <Boolean#0> ? <(> <Binding> <Binding> <)?>                               @nelumbo.logic.Query
+         <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                               @nelumbo.logic.Query
 ```
 
 | Form  | Shape                                                | Native             |
@@ -152,14 +152,13 @@ Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                      
 | Rule  | `<Boolean> <=> <Boolean> if <Boolean>`, `if` optional | `Rule`             |
 | Query | `<Boolean> ?`, optionally followed by `[..][..]`      | `Query`            |
 
-In test files the `fact` keyword is often elided — a bare predicate at top level (such as `pc(Hendrik, Juliana)` in `family.nl`) is sugar for `fact pc(Hendrik, Juliana)`. The `Binding` type that follows `?` is also declared here:
+In test files the `fact` keyword is often elided — a bare predicate at top level (such as `pc(Hendrik, Juliana)` in `family.nl`) is sugar for `fact pc(Hendrik, Juliana)`. The `BINDING` fragment that follows `?` is a [named pattern](lang.md#named-patterns), declared here:
 
 ```
-Binding :: Object #BINDING
-Binding ::= [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
+pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
 ```
 
-That is the grammar of `[(a=T1), (a=T2)]`, `[..]`, `[]`, and combinations such as `[(a=0),..]`. See [`test-expression-semantics.md`](../test-expression-semantics.md) for how a `?` test is judged to pass or fail.
+That is the grammar of `[(a=T1), (a=T2)]`, `[..]`, `[]`, and combinations such as `[(a=0),..]`. (It was previously a stand-alone `Binding :: Object` type; it is now a named pattern, so it adds no type — it is pure syntax for the query suffix.) See [`test-expression-semantics.md`](../test-expression-semantics.md) for how a `?` test is judged to pass or fail.
 
 ---
 
