@@ -7,7 +7,7 @@
                       mult(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Multiply
 
    
-  Boolean ::=  <Rational>  >   <Rational>   #30         @nelumbo.rationals.GreaterThan,
+  Boolean ::=  <Rational> ">"  <Rational>   #30         @nelumbo.rationals.GreaterThan,
                <Rational> "<"  <Rational>   #30,
                <Rational> "<=" <Rational>   #30,
                <Rational>  >=  <Rational>   #30,
