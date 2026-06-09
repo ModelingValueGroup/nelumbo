@@ -21,7 +21,7 @@
                <Rational> / <Rational>   #50,
                           | <Rational> | #35,
                r(<Integer>),
-               r(<Integer>/<Integer>)
+               r(<Integer> / <Integer>)
 
   Rational a, b, c
     
