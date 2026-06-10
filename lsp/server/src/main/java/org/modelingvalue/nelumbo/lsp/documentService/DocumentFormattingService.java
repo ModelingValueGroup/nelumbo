@@ -560,7 +560,11 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         return null;
     }
 
-    /** Width of the {@code #N} run ({@code #} + its NUMBER) on a line whose precedence marker is {@code hash}. */
+    /**
+     * Width of the {@code #N} run ({@code #} + its NUMBER) on a line whose precedence marker is {@code hash}.
+     * Expects a token returned by {@link #precedenceMarker} — i.e. a {@code #} immediately followed by a
+     * same-line NUMBER token. Do not pass arbitrary {@code #} tokens.
+     */
     private static int hashWidth(Token hash, NlDocument document) {
         Token number = document.next(hash);
         return hash.text().length() + (number != null && number.type() == TokenType.NUMBER ? number.text().length() : 0);
@@ -577,16 +581,11 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         Token    before = document.prev(marker);
         Position start  = U.range(marker).getStart();
         boolean  spaced = before != null && before.type() == TokenType.HSPACE && before.line() == marker.line();
-        int      width  = Math.max(1, targetColumn - precedingEnd);
-        Range    range  = spaced ? U.range(before) : new Range(start, start);
-        // Idempotency: if the before-run already has exactly `width` spaces and the marker is already at target, skip.
-        if (spaced && U.range(before).getStart().getCharacter() + width == start.getCharacter()
-                && start.getCharacter() == targetColumn) {
-            return;
+        if (start.getCharacter() == targetColumn) {
+            return; // already at the target column
         }
-        if (!spaced && targetColumn == start.getCharacter()) {
-            return;
-        }
+        int   width = Math.max(1, targetColumn - precedingEnd);
+        Range range = spaced ? U.range(before) : new Range(start, start);
         edits.add(new TextEdit(range, " ".repeat(width)));
     }
 
@@ -613,7 +612,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                     hashByLine.put(line, h);
                 }
             }
-            int cHash = alignBodyMarkerColumn(document, hashes, significant, operatorColumn, firstOnLine, edits);
+            int hashColumn = alignBodyMarkerColumn(document, hashes, significant, operatorColumn, firstOnLine, edits);
 
             // Collect @ markers.
             List<Token> ats = new ArrayList<>();
@@ -630,17 +629,18 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                     int line = a.line();
                     Token h  = hashByLine.get(line);
                     int pe;
-                    if (h != null && cHash >= 0) {
-                        pe = cHash + hashWidth(h, document);
+                    if (h != null && hashColumn >= 0) {
+                        pe = hashColumn + hashWidth(h, document);
                     } else {
+                        // no #N on this line: @'s preceding content is its own pattern; post-format left-edge = anchor + content width
                         pe = bodyLineIndent(line, significant, operatorColumn, firstOnLine)
                            + (leftEnd(document, a) - indentOf(line, firstOnLine));
                     }
                     precedingEnd.put(a, pe);
                 }
-                int cAt = precedingEnd.values().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
+                int annotationColumn = precedingEnd.values().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
                 for (Token a : ats) {
-                    placeMarkerAt(document, a, cAt, precedingEnd.get(a), edits);
+                    placeMarkerAt(document, a, annotationColumn, precedingEnd.get(a), edits);
                 }
             }
         }
