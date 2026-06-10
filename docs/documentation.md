@@ -78,6 +78,7 @@ The irreducible facts about the language.
 - [Writing rules](reference/writing-rules.md) — `<=>`, guards, merging, contradictions
 - [Native API](reference/native-api.md) — implementing predicates in Java
 - [Native classes catalogue](reference/native-classes.md) — every shipped `@`-bound class
+- [Formatting](reference/formatting.md) — the canonical whitespace layout the LSP formatter produces
 
 ### Standard library reference
 

@@ -34,6 +34,7 @@ occur.
 * Define and run tests
 * Easily extensible
 * Easily integrable
+* IDE integration via LSP, including auto-formatting
 * Written in Java
 
 ## Documentation

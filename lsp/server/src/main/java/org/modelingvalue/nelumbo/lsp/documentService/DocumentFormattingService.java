@@ -36,6 +36,19 @@ import org.modelingvalue.nelumbo.lsp.U;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
+/**
+ * Formats a {@code .nl} document by emitting whitespace-only {@link TextEdit}s against the original document.
+ * Every pass is idempotent and the edits it emits never overlap, so applying the formatter to its own output is
+ * a no-op. {@code computeEdits} runs the passes in order: strip leading indent to column 0; align the query
+ * {@code ?} and the declaration operators ({@code ::}/{@code ::=}/{@code <=>}) into columns; align
+ * variable-declaration names; hang continuation lines under the first item; align the in-body columns
+ * ({@code #N} precedence, {@code @}-annotations, {@code if} guards); align trailing {@code //} comments; collapse
+ * redundant blank lines; and strip trailing whitespace.
+ *
+ * <p>Columns are computed in indent-relative coordinates (so they survive the indent strip), and in-body markers
+ * are placed in post-format coordinates anchored at the statement's first item (so the operator's own alignment
+ * shift is absorbed). See {@code docs/reference/formatting.md} for the user-facing description of the layout.
+ */
 @SuppressWarnings("DuplicatedCode")
 public class DocumentFormattingService extends DocumentServiceAdapter {
     public DocumentFormattingService(NlDocumentManager documentManager) {
