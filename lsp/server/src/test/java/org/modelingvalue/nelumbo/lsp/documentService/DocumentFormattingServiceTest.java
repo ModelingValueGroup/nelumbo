@@ -523,6 +523,32 @@ public class DocumentFormattingServiceTest {
         assertEquals(out, format(out), "must be idempotent");
     }
 
+    /** Two or more consecutive blank lines collapse to a single blank line. */
+    @Test
+    void collapsesMultipleBlankLines() throws Exception {
+        assertEquals("a :: Object\n\nb :: Object\n", format("a :: Object\n\n\n\nb :: Object\n"));
+    }
+
+    /** Blank lines at end of file are removed (the final statement keeps its single trailing newline). */
+    @Test
+    void trimsTrailingBlankLinesAtEof() throws Exception {
+        assertEquals("a :: Object\n", format("a :: Object\n\n\n"));
+    }
+
+    /** A single blank line between statements is preserved (does not collapse to zero). */
+    @Test
+    void keepsSingleBlankLine() throws Exception {
+        assertEquals("a :: Object\n\nb :: Object\n", format("a :: Object\n\nb :: Object\n"));
+    }
+
+    /** Blank-line normalisation is idempotent. */
+    @Test
+    void blankLineCollapseIsIdempotent() throws Exception {
+        String once = format("a :: Object\n\n\nb :: Object\n\n");
+        assertEquals(once, format(once));
+        assertEquals("a :: Object\n\nb :: Object\n", once);
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');

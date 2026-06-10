@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.lsp.documentService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -97,6 +98,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         alignContinuations(tokens, operatorColumn, firstOnLine, edits);
         alignBodyColumns(document, tokens, operatorColumn, firstOnLine, edits);
         alignComments(document, tokens, operatorColumn, firstOnLine, edits);
+        collapseBlankLines(tokens, edits);
         removeTrailingWhitespace(tokens, edits);
         return edits;
     }
@@ -738,6 +740,44 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                 }
             }
             alignBodyMarkerColumn(document, comments, significant, operatorColumn, firstOnLine, edits, COMMENT_GAP);
+        }
+    }
+
+    /**
+     * Collapse runs of two or more consecutive blank lines into a single blank line, and remove blank lines
+     * at end-of-file. A blank line carries no meaningful token and no comment, so a comment-only line (e.g. a
+     * license-header line) is content and is preserved.
+     * <p>
+     * A blank line is deleted by removing its NEWLINE token range, which the tokenizer spans as
+     * {@code (L, col)..(L+1, 0)} — exactly the line terminator — so line {@code L} merges into line
+     * {@code L+1}. Combined with {@link #removeTrailingWhitespace}, which strips any HSPACE on the blank line
+     * (a distinct, earlier range), the whole blank line disappears. A blank line is deleted when it is a
+     * trailing blank ({@code L > lastContentLine}) or the second-or-later blank in an internal run (its
+     * predecessor is also blank); the first blank in an internal run is kept.
+     */
+    private static void collapseBlankLines(List<Token> tokens, List<TextEdit> edits) {
+        Set<Integer>        contentLines = new HashSet<>();
+        Map<Integer, Token> newlineOf    = new HashMap<>();
+        for (Token t : tokens) {
+            int line = U.range(t).getStart().getLine();
+            if (isMeaningful(t) || t.type() == TokenType.END_LINE_COMMENT || t.type() == TokenType.IN_LINE_COMMENT) {
+                contentLines.add(line);
+            }
+            if (t.type() == TokenType.NEWLINE) {
+                newlineOf.put(line, t);
+            }
+        }
+        int lastContentLine = contentLines.stream().mapToInt(Integer::intValue).max().orElse(-1);
+        for (Map.Entry<Integer, Token> e : newlineOf.entrySet()) {
+            int line = e.getKey();
+            if (contentLines.contains(line)) {
+                continue; // not a blank line
+            }
+            boolean trailing      = line > lastContentLine;
+            boolean prevAlsoBlank = line - 1 >= 0 && !contentLines.contains(line - 1);
+            if (trailing || prevAlsoBlank) {
+                edits.add(new TextEdit(U.range(e.getValue()), ""));
+            }
         }
     }
 
