@@ -283,6 +283,13 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
+    /** A declaration operator as the first token on an indented line: no overlapping edits, indent stripped. */
+    @Test
+    void handlesAlignedMarkerAsFirstTokenOnIndentedLine() throws Exception {
+        // ':: Object' with leading indent must not produce overlapping edits; indent is stripped to col 0.
+        assertEquals(":: Object\n", format("    :: Object\n"));
+    }
+
     /** Indent stripping is idempotent and leaves blank lines to the trailing-whitespace pass. */
     @Test
     void indentStripIsIdempotent() throws Exception {

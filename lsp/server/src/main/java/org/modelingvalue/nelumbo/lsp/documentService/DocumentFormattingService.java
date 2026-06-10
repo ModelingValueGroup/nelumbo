@@ -255,7 +255,12 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         int      gap        = targetColumn - relLeftEnd;
         // current gap in original document
         int      curGap     = mStart.getCharacter() - leftEnd;
-        if (curGap != gap) {
+        // Guard: if the before-HSPACE token IS the line's leading indent token, stripBaseIndent already
+        // owns that range — emitting another edit over the same range would produce overlapping LSP edits
+        // (undefined behaviour). Skip the before-alignment edit; stripBaseIndent will strip to col 0,
+        // which places the marker at the correct absolute column after stripping.
+        boolean beforeIsLeadingIndent = spaced && before == firstOnLine.get(marker.line());
+        if (!beforeIsLeadingIndent && curGap != gap) {
             Range range = spaced ? U.range(before) : new Range(mStart, mStart);
             edits.add(new TextEdit(range, " ".repeat(gap)));
         }
@@ -307,7 +312,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                 anchor = firstItemColumn(significant.get(line), operatorColumn, firstOnLine); // head line of a run
             }
             if (continues && anchor >= 0) {
-                indentContinuation(line, anchor, significant.get(line).getFirst(), firstOnLine.get(line), edits);
+                indentContinuation(line, anchor, significant.get(line).getFirst(), firstOnLine.get(line), firstOnLine, edits);
             }
         }
     }
@@ -321,7 +326,8 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             Map<Integer, Token> firstOnLine) {
         for (Token t : lineTokens) {
             if (t.type() == TokenType.OPERATOR && DECLARATION_OPERATORS.contains(t.text())) {
-                int column = operatorColumn.getOrDefault(t, U.range(t).getStart().getCharacter());
+                int column = operatorColumn.getOrDefault(t,
+                        U.range(t).getStart().getCharacter() - indentOf(t.line(), firstOnLine));
                 return column + t.text().length() + spaceAfter(t); // operator is followed by spaceAfter spaces
             }
         }
@@ -331,9 +337,10 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /** Re-indent a continuation line so its first token starts at {@code anchor}. */
-    private static void indentContinuation(int line, int anchor, Token firstItem, Token leading, List<TextEdit> edits) {
-        if (U.range(firstItem).getStart().getCharacter() == anchor) {
-            return; // already aligned
+    private static void indentContinuation(int line, int anchor, Token firstItem, Token leading,
+            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+        if (U.range(firstItem).getStart().getCharacter() - indentOf(line, firstOnLine) == anchor) {
+            return; // already aligned (indent-relative check)
         }
         Range range = leading != null && leading.type() == TokenType.HSPACE //
                 ? U.range(leading) //
