@@ -380,16 +380,33 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      */
     private static int firstItemColumn(List<Token> lineTokens, Map<Token, Integer> operatorColumn,
             Map<Integer, Token> firstOnLine) {
-        for (Token t : lineTokens) {
+        for (int i = 0; i < lineTokens.size(); i++) {
+            Token t = lineTokens.get(i);
             if (t.type() == TokenType.OPERATOR && DECLARATION_OPERATORS.contains(t.text())) {
                 int column = operatorColumn.getOrDefault(t,
                         U.range(t).getStart().getCharacter() - indentOf(t.line(), firstOnLine));
                 return column + t.text().length() + spaceAfter(t); // operator is followed by spaceAfter spaces
             }
         }
-        Token item   = lineTokens.size() >= 2 ? lineTokens.get(1) : lineTokens.getFirst();
+        Token item   = firstItemToken(lineTokens);
         int   indent = indentOf(U.range(item).getStart().getLine(), firstOnLine);
         return U.range(item).getStart().getCharacter() - indent;
+    }
+
+    /**
+     * The significant token whose post-format column {@link #firstItemColumn} reports: the FIRST item after a
+     * declaration operator ({@code ::}/{@code ::=}/{@code <=>}), else the second significant token after a
+     * leading keyword (e.g. the first list item after {@code fact}). Kept in lock-step with
+     * {@link #firstItemColumn} so head-line body markers can be measured from this item's ORIGINAL column.
+     */
+    private static Token firstItemToken(List<Token> lineTokens) {
+        for (int i = 0; i < lineTokens.size(); i++) {
+            Token t = lineTokens.get(i);
+            if (t.type() == TokenType.OPERATOR && DECLARATION_OPERATORS.contains(t.text())) {
+                return i + 1 < lineTokens.size() ? lineTokens.get(i + 1) : t;
+            }
+        }
+        return lineTokens.size() >= 2 ? lineTokens.get(1) : lineTokens.getFirst();
     }
 
     /** Re-indent a continuation line so its first token starts at {@code anchor}. */
@@ -498,32 +515,50 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         };
     }
 
-    /**
-     * Expected post-formatting indent of the line containing {@code marker}: 0 for a head line (not a
-     * continuation), or the anchor column for a continuation line.  The anchor is the same value that
-     * {@link #alignContinuations} computes for this block — both call {@link #firstItemColumn} on the head
-     * line's significant tokens with the same {@code operatorColumn} and {@code firstOnLine} maps.
-     */
-    private static int bodyLineIndent(int line, Map<Integer, List<Token>> significant,
-            Map<Token, Integer> operatorColumn, Map<Integer, Token> firstOnLine) {
-        if (endsWithContinuation(significant.get(line - 1))) {
-            // continuation line: find the head of this run to get its anchor
-            int headLine = line - 1;
-            while (endsWithContinuation(significant.get(headLine - 1))) {
-                headLine--;
-            }
-            return firstItemColumn(significant.get(headLine), operatorColumn, firstOnLine);
+    /** The head line of the body block that {@code line} belongs to (the first non-continuation line at or above it). */
+    private static int headLineOf(int line, Map<Integer, List<Token>> significant) {
+        int headLine = line;
+        while (endsWithContinuation(significant.get(headLine - 1))) {
+            headLine--;
         }
-        return 0; // head line: will be stripped to column 0
+        return headLine;
+    }
+
+    /**
+     * Post-format effective content-end of a body marker, measured against the shared anchor its block hangs
+     * under. The anchor ({@code firstItemColumn} of the head line) is the column where the first item / every
+     * continuation line begins post-format; a marker keeps its ORIGINAL offset from that block's content
+     * region:
+     * <pre>effEnd = anchor + (leftEnd(marker) - regionStart)</pre>
+     * where {@code regionStart} is the ORIGINAL absolute column where the line's logical content region begins:
+     * the first item after the operator/keyword on the HEAD line (because the head's fixed pre-operator part is
+     * not part of the aligned region and the operator may shift), or the leading indent on a continuation line.
+     * This makes head and continuation markers share one coordinate frame even when the head-line declaration
+     * operator's position or trailing spacing changes during formatting.
+     */
+    private static int bodyMarkerEffEnd(NlDocument document, Token marker, Map<Integer, List<Token>> significant,
+            Map<Token, Integer> operatorColumn, Map<Integer, Token> firstOnLine) {
+        int         line     = marker.line();
+        int         headLine = headLineOf(line, significant);
+        List<Token> head     = significant.get(headLine);
+        int         anchor   = firstItemColumn(head, operatorColumn, firstOnLine);
+        int         regionStart;
+        if (line == headLine) {
+            Token item = firstItemToken(head);
+            regionStart = U.range(item).getStart().getCharacter(); // original absolute column of the first item
+        } else {
+            regionStart = indentOf(line, firstOnLine); // continuation line: content starts at the leading indent
+        }
+        return anchor + (leftEnd(document, marker) - regionStart);
     }
 
     /**
      * Align a set of body-block marker tokens (one per line, in document order) to a single absolute column.
-     * Each marker's "effective" content-end is measured in post-alignment coordinates: a head line ends up at
-     * column 0, a continuation line at {@code anchor}. So we measure {@code (originalLeftEnd - originalIndent)}
-     * and add the line's expected post-format indent, take the max + 1 as the shared absolute column, then pad
-     * each marker with that column minus its own expected indent (because {@code padBefore} re-adds the
-     * original indent).
+     * Each marker's post-format effective content-end is computed by {@link #bodyMarkerEffEnd} (head and
+     * continuation lines share one coordinate frame anchored at the block's first-item column). The shared
+     * target column is {@code max(effEnd) + 1}; every marker is then placed there via {@link #placeMarkerAt},
+     * sizing its before-gap from its KNOWN final preceding-end (its own {@code effEnd}) so the head-line
+     * operator shift is accounted for.
      *
      * @return the absolute target column that was computed (and all markers placed at), or {@code -1} when
      *         there are fewer than two markers and alignment was skipped.
@@ -534,15 +569,13 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         if (markers.size() < 2) {
             return -1;
         }
-        Map<Token, Integer> expectedIndent = new HashMap<>();
+        Map<Token, Integer> effEnd = new HashMap<>();
         for (Token m : markers) {
-            expectedIndent.put(m, bodyLineIndent(m.line(), significant, operatorColumn, firstOnLine));
+            effEnd.put(m, bodyMarkerEffEnd(document, m, significant, operatorColumn, firstOnLine));
         }
-        int targetAbs = markers.stream()
-                .mapToInt(m -> (leftEnd(document, m) - indentOf(m.line(), firstOnLine)) + expectedIndent.get(m))
-                .max().orElse(0) + 1;
+        int targetAbs = effEnd.values().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
         for (Token m : markers) {
-            padBefore(document, m, targetAbs - expectedIndent.get(m), firstOnLine, edits);
+            placeMarkerAt(document, m, targetAbs, effEnd.get(m), edits);
         }
         return targetAbs;
     }
@@ -663,9 +696,9 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                     if (h != null && hashColumn >= 0) {
                         pe = hashColumn + hashWidth(h, document);
                     } else {
-                        // no #N on this line: @'s preceding content is its own pattern; post-format left-edge = anchor + content width
-                        pe = bodyLineIndent(line, significant, operatorColumn, firstOnLine)
-                           + (leftEnd(document, a) - indentOf(line, firstOnLine));
+                        // no #N on this line: @'s preceding content is its own pattern; post-format left-edge
+                        // = anchor + the @'s original offset from this line's content region.
+                        pe = bodyMarkerEffEnd(document, a, significant, operatorColumn, firstOnLine);
                     }
                     precedingEnd.put(a, pe);
                 }

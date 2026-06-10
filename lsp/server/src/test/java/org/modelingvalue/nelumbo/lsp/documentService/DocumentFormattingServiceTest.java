@@ -466,6 +466,33 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
+    /** Head-line operator-shift: `<=>` with ONE space in the source still aligns the `if` guards after formatting. */
+    @Test
+    void alignsIfGuardsWhenRuleArrowSpacingIsCorrected() throws Exception {
+        String out = format("""
+                fib(n)=f <=> f=n if n>=0 & n<=1,
+                             f=fib(n-1)+fib(n-2) if n>1
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals(ls[0].indexOf(" if "), ls[1].indexOf(" if "),
+            "head-line if must align with continuation if even though <=> spacing was corrected from 1 to 2");
+        assertEquals(out, format(out), "must be idempotent");
+    }
+
+    /** Same hardening for the #N column: a head line whose operator spacing changes keeps #N aligned. */
+    @Test
+    void alignsPrecedenceWhenHeadOperatorSpacingChanges() throws Exception {
+        // ::= with extra spaces in source gets normalized to one; head-line #N must still align with continuations.
+        String out = format("""
+                Integer ::=    <Integer> + <Integer> #40,
+                            <Integer> * <Integer> #50
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals(ls[0].lastIndexOf('#'), ls[1].lastIndexOf('#'),
+            "head-line #N must align with continuation #N after operator spacing normalization");
+        assertEquals(out, format(out), "must be idempotent");
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');
