@@ -69,16 +69,21 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     private List<TextEdit> computeEdits(NlDocument document) {
-        List<Token>        tokens          = document.tokens();
-        List<TextEdit>     edits           = new ArrayList<>();
+        List<Token>         tokens         = document.tokens();
+        List<TextEdit>      edits          = new ArrayList<>();
         Map<Token, Integer> operatorColumn = new HashMap<>();
+        Map<Integer, Token> firstOnLine    = new HashMap<>();
+        for (Token t : tokens) {
+            if (t.type() == TokenType.BEGINOFFILE || t.type() == TokenType.ENDOFFILE) {
+                continue;
+            }
+            firstOnLine.putIfAbsent(U.range(t).getStart().getLine(), t);
+        }
 
-        // queries align on their own; the declaration operators all share one column.
         alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null);
         alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn);
-        alignContinuations(tokens, operatorColumn, edits);
+        alignContinuations(tokens, operatorColumn, firstOnLine, edits);
         removeTrailingWhitespace(tokens, edits);
-
         return edits;
     }
 
@@ -167,6 +172,31 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         return U.range(marker).getStart().getCharacter();
     }
 
+    /** Leading horizontal-whitespace width of {@code line}, i.e. the indent of its first token (0 if it starts at the margin). */
+    private static int indentOf(int line, Map<Integer, Token> firstOnLine) {
+        Token first = firstOnLine.get(line);
+        return first != null && first.type() == TokenType.HSPACE && first.line() == line
+                ? U.range(first).getEnd().getCharacter()
+                : 0;
+    }
+
+    /**
+     * Pad the whitespace run immediately before {@code token} so {@code token} starts at {@code targetColumn},
+     * touching nothing after it. Used for trailing columns (variable names, {@code #N}, {@code @}, {@code if},
+     * comments) whose following text is content that must not move. Idempotent: emits no edit when already aligned.
+     */
+    private static void padBefore(NlDocument document, Token token, int targetColumn, List<TextEdit> edits) {
+        Token    before  = document.prev(token);
+        Position start   = U.range(token).getStart();
+        boolean  spaced  = before != null && before.type() == TokenType.HSPACE && before.line() == token.line();
+        int      leftEnd = spaced ? U.range(before).getStart().getCharacter() : start.getCharacter();
+        if (start.getCharacter() == targetColumn) {
+            return; // already on the column
+        }
+        Range range = spaced ? U.range(before) : new Range(start, start);
+        edits.add(new TextEdit(range, " ".repeat(Math.max(1, targetColumn - leftEnd))));
+    }
+
     /**
      * Align {@code marker} to {@code targetColumn} (so every marker in a block lines up) and put a single
      * space between it and whatever follows on the line. Ranges are computed against the original document
@@ -209,17 +239,15 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * next line), the lines that continue it are indented to line up under the first item of the head line
      * (the token after {@code ::}/{@code ::=}/{@code <=>}, or after the leading keyword such as {@code fact}).
      */
-    private static void alignContinuations(List<Token> tokens, Map<Token, Integer> operatorColumn, List<TextEdit> edits) {
-        Map<Integer, List<Token>> significant  = new HashMap<>(); // line -> meaningful tokens, in order
-        Map<Integer, Token>       firstOnLine  = new HashMap<>(); // line -> leftmost token (incl. indent whitespace)
+    private static void alignContinuations(List<Token> tokens, Map<Token, Integer> operatorColumn,
+            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+        Map<Integer, List<Token>> significant = new HashMap<>(); // line -> meaningful tokens, in order
         for (Token t : tokens) {
             if (t.type() == TokenType.BEGINOFFILE || t.type() == TokenType.ENDOFFILE) {
                 continue;
             }
-            int line = U.range(t).getStart().getLine();
-            firstOnLine.putIfAbsent(line, t);
             if (isMeaningful(t)) {
-                significant.computeIfAbsent(line, k -> new ArrayList<>()).add(t);
+                significant.computeIfAbsent(U.range(t).getStart().getLine(), k -> new ArrayList<>()).add(t);
             }
         }
 
