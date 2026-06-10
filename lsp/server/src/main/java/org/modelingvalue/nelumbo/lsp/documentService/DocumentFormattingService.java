@@ -92,6 +92,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine);
         alignVarDeclNames(document, tokens, firstOnLine, edits);
         alignContinuations(tokens, operatorColumn, firstOnLine, edits);
+        alignBodyColumns(document, tokens, operatorColumn, firstOnLine, edits);
         removeTrailingWhitespace(tokens, edits);
         return edits;
     }
@@ -413,6 +414,86 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             case HSPACE, NEWLINE, BEGINOFFILE, ENDOFFILE, END_LINE_COMMENT, IN_LINE_COMMENT -> false;
             default -> true;
         };
+    }
+
+    /**
+     * Runs of lines forming one multi-line statement: a head line plus every line that continues the previous one.
+     * {@code endsWithContinuation(null)} returns false, so a line whose predecessor is blank/absent starts a new block.
+     */
+    private static List<List<Integer>> bodyBlocks(Map<Integer, List<Token>> significant) {
+        List<List<Integer>> blocks  = new ArrayList<>();
+        List<Integer>       current = null;
+        for (int line : significant.keySet().stream().sorted().toList()) {
+            boolean continues = endsWithContinuation(significant.get(line - 1));
+            if (!continues || current == null) {
+                current = new ArrayList<>();
+                blocks.add(current);
+            }
+            current.add(line);
+        }
+        return blocks;
+    }
+
+    /** The {@code #} of a {@code #N} precedence marker on a line (OPERATOR "#" immediately followed by a NUMBER), or null. */
+    private static Token precedenceMarker(List<Token> lineTokens, NlDocument document) {
+        for (Token t : lineTokens) {
+            if (t.type() == TokenType.OPERATOR && t.text().equals("#")) {
+                Token next = document.next(t);
+                if (next != null && next.type() == TokenType.NUMBER) {
+                    return t;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Align the {@code #N} precedence markers of each body block's alternatives to one absolute column.
+     * <p>
+     * The "effective" content-end of each line accounts for the fact that {@code stripBaseIndent} and
+     * {@code alignContinuations} will (or already did) move content: head lines end up at indent 0, and
+     * continuation lines end up at the block's anchor column. This pass therefore measures positions in
+     * "post-other-pass" coordinates so that all {@code #} markers land at the same visual column even when
+     * the head line's original indent differs from the continuation lines'.
+     */
+    private static void alignBodyColumns(NlDocument document, List<Token> tokens,
+            Map<Token, Integer> operatorColumn, Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+        Map<Integer, List<Token>> significant = significantByLine(tokens);
+        for (List<Integer> block : bodyBlocks(significant)) {
+            // Determine the anchor (expected indent of continuation lines) from the head line.
+            int headLine = block.getFirst();
+            int anchor   = firstItemColumn(significant.get(headLine), operatorColumn, firstOnLine);
+
+            List<Token> hashes = new ArrayList<>();
+            for (int line : block) {
+                Token h = precedenceMarker(significant.get(line), document);
+                if (h != null) {
+                    hashes.add(h);
+                }
+            }
+            if (hashes.size() < 2) {
+                continue; // nothing to align against
+            }
+            // Effective content-end = indent-relative leftEnd + expected post-edit indent.
+            // Head line: expected_indent = 0 (stripBaseIndent strips it); continuation: expected_indent = anchor.
+            int targetAbs = hashes.stream().mapToInt(h -> {
+                boolean isContinuation = endsWithContinuation(significant.get(h.line() - 1));
+                int     expectedIndent = isContinuation ? anchor : 0;
+                int     relLeftEnd     = leftEnd(document, h) - indentOf(h.line(), firstOnLine);
+                return relLeftEnd + expectedIndent;
+            }).max().orElse(0) + 1;
+
+            for (Token h : hashes) {
+                boolean isContinuation = endsWithContinuation(significant.get(h.line() - 1));
+                int     expectedIndent = isContinuation ? anchor : 0;
+                // padBefore places token at absolute = originalIndent + targetRel.
+                // After other passes, indent will be expectedIndent.
+                // Both edits apply to original doc; final abs col = expectedIndent + targetRel.
+                // We want final abs col = targetAbs, so targetRel = targetAbs - expectedIndent.
+                int targetRel = targetAbs - expectedIndent;
+                padBefore(document, h, targetRel, firstOnLine, edits);
+            }
+        }
     }
 
     /** Drop any horizontal whitespace that sits at the end of a line (immediately before a newline or EOF). */

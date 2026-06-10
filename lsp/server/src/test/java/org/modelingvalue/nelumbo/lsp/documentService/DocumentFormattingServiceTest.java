@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.lsp.documentService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -342,6 +343,36 @@ public class DocumentFormattingServiceTest {
     @Test
     void variableNameAlignmentIsIdempotent() throws Exception {
         String once = format("Literal  l1, l2\nFunction f1, f2\n");
+        assertEquals(once, format(once));
+    }
+
+    /** The `#N` precedence markers across the alternatives of one `::=` body align into a single column. */
+    @Test
+    void alignsPrecedenceMarkersInBody() throws Exception {
+        String formatted = format("""
+                Integer ::= <Integer> ">"  <Integer> #30,
+                            <Integer> "<=" <Integer>   #30,
+                                      - <Integer> #80
+                """);
+        // All three `#` markers must share the same absolute column index.
+        String[] lines = formatted.split("\n", -1);
+        int col0 = lines[0].indexOf('#');
+        int col1 = lines[1].indexOf('#');
+        int col2 = lines[2].indexOf('#');
+        assertEquals(col0, col1, "line 0 and line 1 # must share a column");
+        assertEquals(col0, col2, "line 0 and line 2 # must share a column");
+        // The double space inside the pattern on line 0 must be preserved.
+        assertTrue(lines[0].contains("\">\"  <Integer>"), "double space inside pattern must survive");
+        // Idempotency: re-formatting aligned output must be a no-op.
+        assertEquals(formatted, format(formatted));
+    }
+
+    @Test
+    void precedenceAlignmentIsIdempotent() throws Exception {
+        String once = format("""
+                Integer ::= <Integer> + <Integer> #40,
+                            <Integer> * <Integer> #50
+                """);
         assertEquals(once, format(once));
     }
 
