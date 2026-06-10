@@ -717,13 +717,12 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
 
     /** The trailing line comment on a line (an END_LINE_COMMENT token), or null. */
     private static Token trailingComment(List<Token> tokens, int line) {
-        Token last = null;
         for (Token t : tokens) {
             if (t.type() == TokenType.END_LINE_COMMENT && U.range(t).getStart().getLine() == line) {
-                last = t;
+                return t;
             }
         }
-        return last;
+        return null;
     }
 
     /** Align trailing {@code //} comments of each body block to a shared column, {@link #COMMENT_GAP} past the longest content. */
@@ -733,9 +732,6 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         for (List<Integer> block : bodyBlocks(significant)) {
             List<Token> comments = new ArrayList<>();
             for (int line : block) {
-                if (significant.get(line) == null) {
-                    continue; // comment-only line: not a trailing comment
-                }
                 Token c = trailingComment(tokens, line);
                 if (c != null) {
                     comments.add(c);
