@@ -211,8 +211,8 @@ public class DocumentFormattingServiceTest {
     @Test
     void commaFollowedByCommentStillContinues() throws Exception {
         assertEquals("""
-                Person ::= p(<Person>),   // parent
-                           c(<Person>)    // child
+                Person ::= p(<Person>),  // parent
+                           c(<Person>)   // child
                 """, format("""
                 Person ::= p(<Person>),   // parent
                       c(<Person>)    // child
@@ -477,6 +477,36 @@ public class DocumentFormattingServiceTest {
         org.junit.jupiter.api.Assertions.assertEquals(ls[0].indexOf(" if "), ls[1].indexOf(" if "),
             "head-line if must align with continuation if even though <=> spacing was corrected from 1 to 2");
         assertEquals(out, format(out), "must be idempotent");
+    }
+
+    /** Trailing `//` comments across one body block align into a column two spaces past the longest line. */
+    @Test
+    void alignsTrailingComments() throws Exception {
+        assertEquals("""
+                Person ::= p(<Person>),  // parent
+                           c(<Person>),  // child
+                           d(<Person>)   // descendant
+                """, format("""
+                Person ::= p(<Person>),   // parent
+                           c(<Person>), // child
+                           d(<Person>)    // descendant
+                """));
+    }
+
+    @Test
+    void commentAlignmentIsIdempotent() throws Exception {
+        String once = format("""
+                fact pc(a, b),  // first
+                     pc(c, d)   // second
+                """);
+        assertEquals(once, format(once));
+    }
+
+    /** A single trailing comment (block of one) is left alone; a comment-only line is never a column. */
+    @Test
+    void leavesLoneAndStandaloneCommentsAlone() throws Exception {
+        assertEquals("a :: Object  // note\n", format("a :: Object  // note\n"));
+        assertEquals("// just a comment\n", format("// just a comment\n"));
     }
 
     /** Same hardening for the #N column: a head line whose operator spacing changes keeps #N aligned. */

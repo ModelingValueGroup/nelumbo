@@ -47,6 +47,9 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     /** Spaces emitted after an aligned marker. {@code <=>} takes two (corpus convention); everything else one. */
     private static final Map<String, Integer> SPACE_AFTER = Map.of("<=>", 2);
 
+    /** Spaces between the longest content and the aligned trailing {@code //} comment column. */
+    private static final int COMMENT_GAP = 2;
+
     private static int spaceAfter(Token marker) {
         return SPACE_AFTER.getOrDefault(marker.text(), 1);
     }
@@ -93,6 +96,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         alignVarDeclNames(document, tokens, firstOnLine, edits);
         alignContinuations(tokens, operatorColumn, firstOnLine, edits);
         alignBodyColumns(document, tokens, operatorColumn, firstOnLine, edits);
+        alignComments(document, tokens, operatorColumn, firstOnLine, edits);
         removeTrailingWhitespace(tokens, edits);
         return edits;
     }
@@ -556,16 +560,17 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * Align a set of body-block marker tokens (one per line, in document order) to a single absolute column.
      * Each marker's post-format effective content-end is computed by {@link #bodyMarkerEffEnd} (head and
      * continuation lines share one coordinate frame anchored at the block's first-item column). The shared
-     * target column is {@code max(effEnd) + 1}; every marker is then placed there via {@link #placeMarkerAt},
+     * target column is {@code max(effEnd) + gap}; every marker is then placed there via {@link #placeMarkerAt},
      * sizing its before-gap from its KNOWN final preceding-end (its own {@code effEnd}) so the head-line
      * operator shift is accounted for.
      *
+     * @param gap spaces between the longest preceding content and the marker column (1 for operators, 2 for comments)
      * @return the absolute target column that was computed (and all markers placed at), or {@code -1} when
      *         there are fewer than two markers and alignment was skipped.
      */
     private static int alignBodyMarkerColumn(NlDocument document, List<Token> markers,
             Map<Integer, List<Token>> significant, Map<Token, Integer> operatorColumn,
-            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+            Map<Integer, Token> firstOnLine, List<TextEdit> edits, int gap) {
         if (markers.size() < 2) {
             return -1;
         }
@@ -573,7 +578,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         for (Token m : markers) {
             effEnd.put(m, bodyMarkerEffEnd(document, m, significant, operatorColumn, firstOnLine));
         }
-        int targetAbs = effEnd.values().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
+        int targetAbs = effEnd.values().stream().mapToInt(Integer::intValue).max().orElse(0) + gap;
         for (Token m : markers) {
             placeMarkerAt(document, m, targetAbs, effEnd.get(m), edits);
         }
@@ -663,7 +668,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                         ifs.add(ifToken);
                     }
                 }
-                alignBodyMarkerColumn(document, ifs, significant, operatorColumn, firstOnLine, edits);
+                alignBodyMarkerColumn(document, ifs, significant, operatorColumn, firstOnLine, edits, 1);
             }
 
             // Collect #N markers and build a line->hash map.
@@ -676,7 +681,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                     hashByLine.put(line, h);
                 }
             }
-            int hashColumn = alignBodyMarkerColumn(document, hashes, significant, operatorColumn, firstOnLine, edits);
+            int hashColumn = alignBodyMarkerColumn(document, hashes, significant, operatorColumn, firstOnLine, edits, 1);
 
             // Collect @ markers.
             List<Token> ats = new ArrayList<>();
@@ -707,6 +712,36 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                     placeMarkerAt(document, a, annotationColumn, precedingEnd.get(a), edits);
                 }
             }
+        }
+    }
+
+    /** The trailing line comment on a line (an END_LINE_COMMENT token), or null. */
+    private static Token trailingComment(List<Token> tokens, int line) {
+        Token last = null;
+        for (Token t : tokens) {
+            if (t.type() == TokenType.END_LINE_COMMENT && U.range(t).getStart().getLine() == line) {
+                last = t;
+            }
+        }
+        return last;
+    }
+
+    /** Align trailing {@code //} comments of each body block to a shared column, {@link #COMMENT_GAP} past the longest content. */
+    private static void alignComments(NlDocument document, List<Token> tokens,
+            Map<Token, Integer> operatorColumn, Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+        Map<Integer, List<Token>> significant = significantByLine(tokens);
+        for (List<Integer> block : bodyBlocks(significant)) {
+            List<Token> comments = new ArrayList<>();
+            for (int line : block) {
+                if (significant.get(line) == null) {
+                    continue; // comment-only line: not a trailing comment
+                }
+                Token c = trailingComment(tokens, line);
+                if (c != null) {
+                    comments.add(c);
+                }
+            }
+            alignBodyMarkerColumn(document, comments, significant, operatorColumn, firstOnLine, edits, COMMENT_GAP);
         }
     }
 
