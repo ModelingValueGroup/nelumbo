@@ -524,12 +524,15 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * and add the line's expected post-format indent, take the max + 1 as the shared absolute column, then pad
      * each marker with that column minus its own expected indent (because {@code padBefore} re-adds the
      * original indent).
+     *
+     * @return the absolute target column that was computed (and all markers placed at), or {@code -1} when
+     *         there are fewer than two markers and alignment was skipped.
      */
-    private static void alignBodyMarkerColumn(NlDocument document, List<Token> markers,
+    private static int alignBodyMarkerColumn(NlDocument document, List<Token> markers,
             Map<Integer, List<Token>> significant, Map<Token, Integer> operatorColumn,
             Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
         if (markers.size() < 2) {
-            return;
+            return -1;
         }
         Map<Token, Integer> expectedIndent = new HashMap<>();
         for (Token m : markers) {
@@ -541,29 +544,105 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         for (Token m : markers) {
             padBefore(document, m, targetAbs - expectedIndent.get(m), firstOnLine, edits);
         }
+        return targetAbs;
+    }
+
+    /** The {@code @} of an annotation on a line (OPERATOR whose text starts with '@'), or null. */
+    private static Token annotationMarker(List<Token> lineTokens) {
+        if (lineTokens == null) {
+            return null;
+        }
+        for (Token t : lineTokens) {
+            if (t.type() == TokenType.OPERATOR && t.text().startsWith("@")) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+    /** Width of the {@code #N} run ({@code #} + its NUMBER) on a line whose precedence marker is {@code hash}. */
+    private static int hashWidth(Token hash, NlDocument document) {
+        Token number = document.next(hash);
+        return hash.text().length() + (number != null && number.type() == TokenType.NUMBER ? number.text().length() : 0);
     }
 
     /**
-     * Align the {@code #N} precedence markers of each body block's alternatives to one absolute column.
+     * Replace the whitespace run immediately before {@code marker} so the marker starts at absolute column
+     * {@code targetColumn}, given that the content preceding it ends at {@code precedingEnd} in the final
+     * (post-format) document. Used for cumulative columns where the preceding field was itself realigned and so
+     * its FINAL position — not its original one — determines the gap. Idempotent: no edit when already placed.
+     */
+    private static void placeMarkerAt(NlDocument document, Token marker, int targetColumn, int precedingEnd,
+            List<TextEdit> edits) {
+        Token    before = document.prev(marker);
+        Position start  = U.range(marker).getStart();
+        boolean  spaced = before != null && before.type() == TokenType.HSPACE && before.line() == marker.line();
+        int      width  = Math.max(1, targetColumn - precedingEnd);
+        Range    range  = spaced ? U.range(before) : new Range(start, start);
+        // Idempotency: if the before-run already has exactly `width` spaces and the marker is already at target, skip.
+        if (spaced && U.range(before).getStart().getCharacter() + width == start.getCharacter()
+                && start.getCharacter() == targetColumn) {
+            return;
+        }
+        if (!spaced && targetColumn == start.getCharacter()) {
+            return;
+        }
+        edits.add(new TextEdit(range, " ".repeat(width)));
+    }
+
+    /**
+     * Align the {@code #N} precedence markers and {@code @} annotation markers of each body block's
+     * alternatives to their own absolute columns.
      * <p>
-     * The "effective" content-end of each line accounts for the fact that {@code stripBaseIndent} and
-     * {@code alignContinuations} will (or already did) move content: head lines end up at indent 0, and
-     * continuation lines end up at the block's anchor column. This pass therefore measures positions in
-     * "post-other-pass" coordinates so that all {@code #} markers land at the same visual column even when
-     * the head line's original indent differs from the continuation lines'.
+     * {@code #N} markers are aligned first via {@link #alignBodyMarkerColumn}. The {@code @} column is then
+     * computed in post-{@code #N}-alignment coordinates: for a line that also has a {@code #N}, the
+     * preceding-content-end of {@code @} is {@code C_hash + hashWidth}, where {@code C_hash} is the shared
+     * absolute column the {@code #N} markers were placed at.
      */
     private static void alignBodyColumns(NlDocument document, List<Token> tokens,
             Map<Token, Integer> operatorColumn, Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
         Map<Integer, List<Token>> significant = significantByLine(tokens);
         for (List<Integer> block : bodyBlocks(significant)) {
-            List<Token> hashes = new ArrayList<>();
+            // Collect #N markers and build a line->hash map.
+            List<Token>          hashes    = new ArrayList<>();
+            Map<Integer, Token>  hashByLine = new HashMap<>();
             for (int line : block) {
                 Token h = precedenceMarker(significant.get(line), document);
                 if (h != null) {
                     hashes.add(h);
+                    hashByLine.put(line, h);
                 }
             }
-            alignBodyMarkerColumn(document, hashes, significant, operatorColumn, firstOnLine, edits);
+            int cHash = alignBodyMarkerColumn(document, hashes, significant, operatorColumn, firstOnLine, edits);
+
+            // Collect @ markers.
+            List<Token> ats = new ArrayList<>();
+            for (int line : block) {
+                Token a = annotationMarker(significant.get(line));
+                if (a != null) {
+                    ats.add(a);
+                }
+            }
+            if (ats.size() >= 2) {
+                // Compute preceding-content-end for each @ in final (post-format) coordinates.
+                Map<Token, Integer> precedingEnd = new HashMap<>();
+                for (Token a : ats) {
+                    int line = a.line();
+                    Token h  = hashByLine.get(line);
+                    int pe;
+                    if (h != null && cHash >= 0) {
+                        pe = cHash + hashWidth(h, document);
+                    } else {
+                        pe = bodyLineIndent(line, significant, operatorColumn, firstOnLine)
+                           + (leftEnd(document, a) - indentOf(line, firstOnLine));
+                    }
+                    precedingEnd.put(a, pe);
+                }
+                int cAt = precedingEnd.values().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
+                for (Token a : ats) {
+                    placeMarkerAt(document, a, cAt, precedingEnd.get(a), edits);
+                }
+            }
         }
     }
 

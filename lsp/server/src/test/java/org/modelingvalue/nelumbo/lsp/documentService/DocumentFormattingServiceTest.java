@@ -392,6 +392,52 @@ public class DocumentFormattingServiceTest {
         org.junit.jupiter.api.Assertions.assertEquals(ls[0].lastIndexOf('#'), ls[1].lastIndexOf('#'), "trailing # aligned");
     }
 
+    /** `@` annotations align into a column; when `#N` also appears, `@` sits in the next column to its right. */
+    @Test
+    void alignsAnnotationsAfterPrecedence() throws Exception {
+        assertEquals("""
+                Boolean ::= true                  @nelumbo.logic.NBoolean,
+                            <Boolean> & <Boolean> @nelumbo.logic.And,
+                            <Boolean> -> <Boolean>
+                """, format("""
+                Boolean ::= true   @nelumbo.logic.NBoolean,
+                            <Boolean> & <Boolean>   @nelumbo.logic.And,
+                            <Boolean> -> <Boolean>
+                """));
+    }
+
+    /** With #N AND @ on the same lines, the @ column lands right of the aligned #N column (post-#N coordinates). */
+    @Test
+    void alignsAnnotationsRightOfPrecedenceColumn() throws Exception {
+        String out = format("""
+                Boolean ::= <Integer> ">"  <Integer> #30   @nelumbo.integers.GreaterThan,
+                            <Integer> "<=" <Integer> #30 @nelumbo.integers.LessEqual
+                """);
+        String[] ls = out.split("\n", -1);
+        // both # align, both @ align, and every @ is to the right of its #:
+        org.junit.jupiter.api.Assertions.assertEquals(ls[0].indexOf(" #"), ls[1].indexOf(" #"), "# aligned");
+        org.junit.jupiter.api.Assertions.assertEquals(ls[0].indexOf('@'), ls[1].indexOf('@'), "@ aligned");
+        org.junit.jupiter.api.Assertions.assertTrue(ls[0].indexOf('@') > ls[0].indexOf('#'), "@ right of #");
+    }
+
+    @Test
+    void annotationAlignmentIsIdempotent() throws Exception {
+        String once = format("""
+                Boolean ::= true                  @nelumbo.logic.NBoolean,
+                            <Boolean> & <Boolean> @nelumbo.logic.And
+                """);
+        assertEquals(once, format(once));
+    }
+
+    @Test
+    void annotationAndPrecedenceAlignmentIsIdempotent() throws Exception {
+        String once = format("""
+                Boolean ::= <Integer> ">"  <Integer> #30   @nelumbo.integers.GreaterThan,
+                            <Integer> "<=" <Integer> #30 @nelumbo.integers.LessEqual
+                """);
+        assertEquals(once, format(once));
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');
