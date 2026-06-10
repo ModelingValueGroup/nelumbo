@@ -241,6 +241,16 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once), "formatting its own output must not change it");
     }
 
+    /** The two-space rule after {@code <=>} must be a fixed point: formatting its own output changes nothing. */
+    @Test
+    void ruleArrowSpacingIsIdempotent() throws Exception {
+        String once = format("""
+                fib(n)=f <=> f=n,
+                         f=fib(n-1)+fib(n-2)
+                """);
+        assertEquals(once, format(once), "formatting its own output must not change it");
+    }
+
     /**
      * Regression: the parser splits a glued operator run to match a pattern, so {@code <)?>} becomes the
      * tokens {@code <} {@code )} {@code ?} {@code >}. That pattern {@code ?} is not whitespace-delimited and

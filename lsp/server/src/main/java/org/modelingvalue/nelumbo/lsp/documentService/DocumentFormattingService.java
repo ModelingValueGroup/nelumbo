@@ -205,10 +205,11 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /**
-     * Align {@code marker} to {@code targetColumn} (so every marker in a block lines up) and put a single
-     * space between it and whatever follows on the line. Ranges are computed against the original document
-     * and never overlap, so the before/after edits apply together. Edits are only emitted when the
-     * whitespace is actually wrong, which keeps the result idempotent.
+     * Align {@code marker} to {@code targetColumn} (so every marker in a block lines up) and emit
+     * {@code spaceAfter(marker)} spaces between it and whatever follows on the line (one for most operators,
+     * two for {@code <=>}). Ranges are computed against the original document and never overlap, so the
+     * before/after edits apply together. Edits are only emitted when the whitespace is actually wrong, which
+     * keeps the result idempotent.
      */
     private static void addEdits(NlDocument document, Token marker, int targetColumn, List<TextEdit> edits) {
         // ---- align the marker: exactly (targetColumn - leftEnd) spaces before it ----
