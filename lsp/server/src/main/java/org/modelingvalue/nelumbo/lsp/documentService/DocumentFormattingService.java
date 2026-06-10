@@ -434,17 +434,113 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         return blocks;
     }
 
-    /** The {@code #} of a {@code #N} precedence marker on a line (OPERATOR "#" immediately followed by a NUMBER), or null. */
+    /**
+     * The {@code #} of a TRAILING {@code #N} precedence marker on a line, or null.
+     * <p>
+     * A trailing alternative-precedence {@code #N} differs from an EMBEDDED one (e.g. {@code <Time#50>}) in
+     * two reliable ways:
+     * <ol>
+     *   <li>It is preceded by whitespace ({@code document.prev} returns HSPACE/NEWLINE/BEGINOFFILE), whereas
+     *       an embedded {@code #} is glued directly to the type name ({@code <Time#50>} → prev is NAME).</li>
+     *   <li>After its NUMBER the next non-HSPACE token is end-of-line (null/NEWLINE/ENDOFFILE), a COMMA, a
+     *       comment, or an {@code @}-annotation — NOT a closing bracket or more pattern content.</li>
+     * </ol>
+     * Returns the LAST qualifying token on the line (if multiple, which should not normally occur).
+     */
     private static Token precedenceMarker(List<Token> lineTokens, NlDocument document) {
+        Token result = null;
         for (Token t : lineTokens) {
-            if (t.type() == TokenType.OPERATOR && t.text().equals("#")) {
-                Token next = document.next(t);
-                if (next != null && next.type() == TokenType.NUMBER) {
-                    return t;
-                }
+            if (t.type() != TokenType.OPERATOR || !t.text().equals("#")) {
+                continue;
             }
+            // Condition (a): # must be whitespace-delimited on the left.
+            Token prev = document.prev(t);
+            if (!whitespaceBefore(prev)) {
+                continue; // glued to previous content (e.g. inside <Time#50>)
+            }
+            // Condition (b): immediately followed by a NUMBER.
+            Token number = document.next(t);
+            if (number == null || number.type() != TokenType.NUMBER) {
+                continue;
+            }
+            // Condition (b): after the NUMBER (skipping HSPACE), must be end-of-line, COMMA, comment, or @-annotation.
+            Token afterNumber = document.next(number);
+            // skip any trailing horizontal space
+            if (afterNumber != null && afterNumber.type() == TokenType.HSPACE) {
+                afterNumber = document.next(afterNumber);
+            }
+            if (!isTrailingPrecedenceFollower(afterNumber)) {
+                continue; // followed by pattern content (e.g. > in <Boolean#0>) — embedded, not trailing
+            }
+            result = t; // keep searching; return the LAST qualifying one
         }
-        return null;
+        return result;
+    }
+
+    /**
+     * Returns true when the token after a candidate {@code #N} number confirms that the {@code #N} is a
+     * trailing alternative-precedence marker rather than an embedded type-reference precedence.
+     * <p>
+     * Allowed followers: end-of-line (null/NEWLINE/ENDOFFILE), COMMA, end-line or inline comment,
+     * or an OPERATOR whose text starts with {@code @} (annotation).  Everything else (brackets, NAME,
+     * NUMBER, other operators) means the {@code #} is embedded inside pattern content.
+     */
+    private static boolean isTrailingPrecedenceFollower(Token t) {
+        if (t == null) {
+            return true;
+        }
+        return switch (t.type()) {
+            case NEWLINE, ENDOFFILE -> true;
+            case COMMA              -> true;
+            case END_LINE_COMMENT, IN_LINE_COMMENT -> true;
+            case OPERATOR           -> t.text().startsWith("@");
+            default                 -> false;
+        };
+    }
+
+    /**
+     * Expected post-formatting indent of the line containing {@code marker}: 0 for a head line (not a
+     * continuation), or the anchor column for a continuation line.  The anchor is the same value that
+     * {@link #alignContinuations} computes for this block — both call {@link #firstItemColumn} on the head
+     * line's significant tokens with the same {@code operatorColumn} and {@code firstOnLine} maps.
+     */
+    private static int bodyLineIndent(int line, Map<Integer, List<Token>> significant,
+            Map<Token, Integer> operatorColumn, Map<Integer, Token> firstOnLine) {
+        if (endsWithContinuation(significant.get(line - 1))) {
+            // continuation line: find the head of this run to get its anchor
+            int headLine = line - 1;
+            while (endsWithContinuation(significant.get(headLine - 1))) {
+                headLine--;
+            }
+            return firstItemColumn(significant.get(headLine), operatorColumn, firstOnLine);
+        }
+        return 0; // head line: will be stripped to column 0
+    }
+
+    /**
+     * Align a set of body-block marker tokens (one per line, in document order) to a single absolute column.
+     * Each marker's "effective" content-end is measured in post-alignment coordinates: a head line ends up at
+     * column 0, a continuation line at {@code anchor}. So we measure {@code (originalLeftEnd - originalIndent)}
+     * and add the line's expected post-format indent, take the max + 1 as the shared absolute column, then pad
+     * each marker with that column minus its own expected indent (because {@code padBefore} re-adds the
+     * original indent).
+     */
+    private static void alignBodyMarkerColumn(NlDocument document, List<Token> markers,
+            Map<Integer, List<Token>> significant, Map<Token, Integer> operatorColumn,
+            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+        if (markers.size() < 2) {
+            return;
+        }
+        Map<Token, Integer> expectedIndent = new HashMap<>();
+        for (Token m : markers) {
+            expectedIndent.put(m, bodyLineIndent(m.line(), significant, operatorColumn, firstOnLine));
+        }
+        int targetAbs = markers.stream()
+                .mapToInt(m -> (leftEnd(document, m) - indentOf(m.line(), firstOnLine)) + expectedIndent.get(m))
+                .max().orElse(0) + 1;
+        for (Token m : markers) {
+            padBefore(document, m, targetAbs - expectedIndent.get(m), firstOnLine, edits);
+        }
     }
 
     /**
@@ -460,10 +556,6 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             Map<Token, Integer> operatorColumn, Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
         Map<Integer, List<Token>> significant = significantByLine(tokens);
         for (List<Integer> block : bodyBlocks(significant)) {
-            // Determine the anchor (expected indent of continuation lines) from the head line.
-            int headLine = block.getFirst();
-            int anchor   = firstItemColumn(significant.get(headLine), operatorColumn, firstOnLine);
-
             List<Token> hashes = new ArrayList<>();
             for (int line : block) {
                 Token h = precedenceMarker(significant.get(line), document);
@@ -471,28 +563,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                     hashes.add(h);
                 }
             }
-            if (hashes.size() < 2) {
-                continue; // nothing to align against
-            }
-            // Effective content-end = indent-relative leftEnd + expected post-edit indent.
-            // Head line: expected_indent = 0 (stripBaseIndent strips it); continuation: expected_indent = anchor.
-            int targetAbs = hashes.stream().mapToInt(h -> {
-                boolean isContinuation = endsWithContinuation(significant.get(h.line() - 1));
-                int     expectedIndent = isContinuation ? anchor : 0;
-                int     relLeftEnd     = leftEnd(document, h) - indentOf(h.line(), firstOnLine);
-                return relLeftEnd + expectedIndent;
-            }).max().orElse(0) + 1;
-
-            for (Token h : hashes) {
-                boolean isContinuation = endsWithContinuation(significant.get(h.line() - 1));
-                int     expectedIndent = isContinuation ? anchor : 0;
-                // padBefore places token at absolute = originalIndent + targetRel.
-                // After other passes, indent will be expectedIndent.
-                // Both edits apply to original doc; final abs col = expectedIndent + targetRel.
-                // We want final abs col = targetAbs, so targetRel = targetAbs - expectedIndent.
-                int targetRel = targetAbs - expectedIndent;
-                padBefore(document, h, targetRel, firstOnLine, edits);
-            }
+            alignBodyMarkerColumn(document, hashes, significant, operatorColumn, firstOnLine, edits);
         }
     }
 

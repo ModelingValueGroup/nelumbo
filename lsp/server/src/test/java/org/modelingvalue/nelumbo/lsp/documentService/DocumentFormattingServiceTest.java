@@ -376,6 +376,22 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
+    /** Embedded precedence inside a pattern type-reference (e.g. <Boolean#0>) must NOT be treated as an alignable #N. */
+    @Test
+    void doesNotAlignPrecedenceEmbeddedInPattern() throws Exception {
+        String src = """
+                Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>) #20,
+                            <Boolean> & <Boolean>                         #22
+                """;
+        String out = format(src);
+        // the embedded #100 / #0 inside <...> must be byte-for-byte preserved:
+        org.junit.jupiter.api.Assertions.assertTrue(out.contains("<Variable#100>"), "embedded #100 must be untouched");
+        org.junit.jupiter.api.Assertions.assertTrue(out.contains("<Boolean#0>"), "embedded #0 must be untouched");
+        // and the two trailing #20 / #22 must align to one column:
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals(ls[0].lastIndexOf('#'), ls[1].lastIndexOf('#'), "trailing # aligned");
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');
