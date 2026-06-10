@@ -87,8 +87,9 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             firstOnLine.putIfAbsent(U.range(t).getStart().getLine(), t);
         }
 
-        alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null);
-        alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn);
+        stripBaseIndent(tokens, firstOnLine, edits);
+        alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine);
+        alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine);
         alignContinuations(tokens, operatorColumn, firstOnLine, edits);
         removeTrailingWhitespace(tokens, edits);
         return edits;
@@ -137,18 +138,48 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /**
+     * Force every non-blank, non-continuation line to start at column 0 (decision #7). Continuation lines
+     * are left for {@link #alignContinuations} to indent. Blank/whitespace-only lines are left to the
+     * trailing-whitespace pass.
+     */
+    private static void stripBaseIndent(List<Token> tokens, Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+        Map<Integer, List<Token>> significant = significantByLine(tokens);
+        for (Map.Entry<Integer, Token> e : firstOnLine.entrySet()) {
+            int   line  = e.getKey();
+            Token first = e.getValue();
+            if (first.type() != TokenType.HSPACE) {
+                continue; // already at the margin
+            }
+            if (significant.get(line) == null) {
+                continue; // blank / whitespace-only line: trailing-whitespace pass handles it
+            }
+            if (endsWithContinuation(significant.get(line - 1))) {
+                continue; // a continuation line keeps its hanging indent
+            }
+            edits.add(new TextEdit(U.range(first), "")); // remove the leading indent
+        }
+    }
+
+    /**
      * Within each run of adjacent marker lines, pad every marker to a shared column and follow it with one
      * space. When {@code finalColumn} is non-null, the column each marker ends up at is recorded there (used
      * by the comma-continuation indent to anchor under the first list item).
+     * <p>
+     * The target column is computed in indent-relative coordinates (absolute column − line indent), so that
+     * after leading-indent stripping every marker lands at the same absolute column on the (now-unindented)
+     * output line.
      */
-    private static void alignMarkers(NlDocument document, List<Token> markers, List<TextEdit> edits, Map<Token, Integer> finalColumn) {
+    private static void alignMarkers(NlDocument document, List<Token> markers, List<TextEdit> edits,
+            Map<Token, Integer> finalColumn, Map<Integer, Token> firstOnLine) {
         for (List<Token> block : consecutiveBlocks(markers)) {
-            int targetColumn = block.stream().mapToInt(m -> leftEnd(document, m)).max().orElse(0) + 1;
+            int targetColumn = block.stream()
+                    .mapToInt(m -> leftEnd(document, m) - indentOf(m.line(), firstOnLine))
+                    .max().orElse(0) + 1;
             for (Token m : block) {
                 if (finalColumn != null) {
                     finalColumn.put(m, targetColumn);
                 }
-                addEdits(document, m, targetColumn, edits);
+                addEdits(document, m, targetColumn, firstOnLine, edits);
             }
         }
     }
@@ -205,20 +236,26 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /**
-     * Align {@code marker} to {@code targetColumn} (so every marker in a block lines up) and emit
-     * {@code spaceAfter(marker)} spaces between it and whatever follows on the line (one for most operators,
-     * two for {@code <=>}). Ranges are computed against the original document and never overlap, so the
-     * before/after edits apply together. Edits are only emitted when the whitespace is actually wrong, which
-     * keeps the result idempotent.
+     * Align {@code marker} to {@code targetColumn} (indent-relative: absolute column on the stripped line)
+     * and emit {@code spaceAfter(marker)} spaces between it and whatever follows on the line (one for most
+     * operators, two for {@code <=>}). Ranges are computed against the original document and never overlap,
+     * so the before/after edits apply together. Edits are only emitted when the whitespace is actually
+     * wrong, which keeps the result idempotent.
      */
-    private static void addEdits(NlDocument document, Token marker, int targetColumn, List<TextEdit> edits) {
-        // ---- align the marker: exactly (targetColumn - leftEnd) spaces before it ----
-        Token    before  = document.prev(marker);
-        Position mStart  = U.range(marker).getStart();
-        boolean  spaced  = before != null && before.type() == TokenType.HSPACE && before.line() == marker.line();
-        int      leftEnd = spaced ? U.range(before).getStart().getCharacter() : mStart.getCharacter();
-        int      gap     = targetColumn - leftEnd;
-        if (mStart.getCharacter() - leftEnd != gap) {
+    private static void addEdits(NlDocument document, Token marker, int targetColumn,
+            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+        // ---- align the marker: (targetColumn - relLeftEnd) spaces in the before-run ----
+        // relLeftEnd is the left-end position relative to the (stripped) line start, i.e. absolute - indent.
+        Token    before     = document.prev(marker);
+        Position mStart     = U.range(marker).getStart();
+        int      indent     = indentOf(marker.line(), firstOnLine);
+        boolean  spaced     = before != null && before.type() == TokenType.HSPACE && before.line() == marker.line();
+        int      leftEnd    = spaced ? U.range(before).getStart().getCharacter() : mStart.getCharacter();
+        int      relLeftEnd = leftEnd - indent;
+        int      gap        = targetColumn - relLeftEnd;
+        // current gap in original document
+        int      curGap     = mStart.getCharacter() - leftEnd;
+        if (curGap != gap) {
             Range range = spaced ? U.range(before) : new Range(mStart, mStart);
             edits.add(new TextEdit(range, " ".repeat(gap)));
         }
@@ -242,6 +279,17 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         }
     }
 
+    /** Map of line -&gt; meaningful tokens in order (no layout, no comments). */
+    private static Map<Integer, List<Token>> significantByLine(List<Token> tokens) {
+        Map<Integer, List<Token>> significant = new HashMap<>();
+        for (Token t : tokens) {
+            if (isMeaningful(t)) {
+                significant.computeIfAbsent(U.range(t).getStart().getLine(), k -> new ArrayList<>()).add(t);
+            }
+        }
+        return significant;
+    }
+
     /**
      * Hanging indent for continued statements: when a line's last meaningful token is a continuation token
      * (a {@code ,}, an operator such as {@code |}, an opening bracket — anything the parser carries onto the
@@ -250,21 +298,13 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      */
     private static void alignContinuations(List<Token> tokens, Map<Token, Integer> operatorColumn,
             Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
-        Map<Integer, List<Token>> significant = new HashMap<>(); // line -> meaningful tokens, in order
-        for (Token t : tokens) {
-            if (t.type() == TokenType.BEGINOFFILE || t.type() == TokenType.ENDOFFILE) {
-                continue;
-            }
-            if (isMeaningful(t)) {
-                significant.computeIfAbsent(U.range(t).getStart().getLine(), k -> new ArrayList<>()).add(t);
-            }
-        }
+        Map<Integer, List<Token>> significant = significantByLine(tokens);
 
         int anchor = -1;
         for (int line : significant.keySet().stream().sorted().toList()) {
             boolean continues = endsWithContinuation(significant.get(line - 1));
             if (endsWithContinuation(significant.get(line)) && !continues) {
-                anchor = firstItemColumn(significant.get(line), operatorColumn); // head line of a run
+                anchor = firstItemColumn(significant.get(line), operatorColumn, firstOnLine); // head line of a run
             }
             if (continues && anchor >= 0) {
                 indentContinuation(line, anchor, significant.get(line).getFirst(), firstOnLine.get(line), edits);
@@ -272,16 +312,22 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         }
     }
 
-    /** Column of the first list item on a head line: after the declaration operator, else after the leading keyword. */
-    private static int firstItemColumn(List<Token> lineTokens, Map<Token, Integer> operatorColumn) {
+    /**
+     * Column (indent-relative) of the first list item on a head line: after the declaration operator, else
+     * after the leading keyword. Indent-relative means the column as it appears on the stripped output line
+     * (absolute column in the original − line indent).
+     */
+    private static int firstItemColumn(List<Token> lineTokens, Map<Token, Integer> operatorColumn,
+            Map<Integer, Token> firstOnLine) {
         for (Token t : lineTokens) {
             if (t.type() == TokenType.OPERATOR && DECLARATION_OPERATORS.contains(t.text())) {
                 int column = operatorColumn.getOrDefault(t, U.range(t).getStart().getCharacter());
                 return column + t.text().length() + spaceAfter(t); // operator is followed by spaceAfter spaces
             }
         }
-        Token item = lineTokens.size() >= 2 ? lineTokens.get(1) : lineTokens.getFirst();
-        return U.range(item).getStart().getCharacter();
+        Token item   = lineTokens.size() >= 2 ? lineTokens.get(1) : lineTokens.getFirst();
+        int   indent = indentOf(U.range(item).getStart().getLine(), firstOnLine);
+        return U.range(item).getStart().getCharacter() - indent;
     }
 
     /** Re-indent a continuation line so its first token starts at {@code anchor}. */

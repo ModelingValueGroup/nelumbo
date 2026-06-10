@@ -265,6 +265,32 @@ public class DocumentFormattingServiceTest {
         assertEquals(src, format(src), "a ? glued inside a pattern must be left untouched");
     }
 
+    /** Decision #7: leading indentation on top-level statements is stripped to column 0. */
+    @Test
+    void stripsLeadingIndentOnTopLevelStatements() throws Exception {
+        assertEquals("Integer :: Object\nInteger a, b\n", format("    Integer :: Object\n  Integer a, b\n"));
+    }
+
+    /** Continuation lines are NOT stripped to 0 — they keep the hanging indent under the first item. */
+    @Test
+    void doesNotStripContinuationLineIndent() throws Exception {
+        assertEquals("""
+                Person ::= p(<Person>),
+                           c(<Person>)
+                """, format("""
+                  Person ::= p(<Person>),
+                     c(<Person>)
+                """));
+    }
+
+    /** Indent stripping is idempotent and leaves blank lines to the trailing-whitespace pass. */
+    @Test
+    void indentStripIsIdempotent() throws Exception {
+        String once = format("   a :: Object\n   b :: Object\n");
+        assertEquals(once, format(once));
+        assertEquals("a :: Object\nb :: Object\n", once);
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');
