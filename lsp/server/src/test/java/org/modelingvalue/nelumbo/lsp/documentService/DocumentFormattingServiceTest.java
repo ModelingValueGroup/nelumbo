@@ -103,19 +103,35 @@ public class DocumentFormattingServiceTest {
 
     /**
      * {@code ::}, {@code ::=} and {@code <=>} on adjacent lines form one block whose operators all line up
-     * to a single column (longest left-hand side + one space), each followed by exactly one space.
+     * to a single column (longest left-hand side + one space), each followed by exactly one space —
+     * except {@code <=>} which gets two spaces (corpus convention).
      */
     @Test
     void alignsDeclarationOperatorsAsOneCombinedBlock() throws Exception {
         assertEquals("""
                 Person     :: Object
                 LongAnimal ::= legs(<Integer>)
-                fib(n)=f   <=> f=n
+                fib(n)=f   <=>  f=n
                 """, format("""
                 Person :: Object
                 LongAnimal ::= legs(<Integer>)
                 fib(n)=f <=> f=n
                 """));
+    }
+
+    /** Decision #8: the corpus consistently writes two spaces after {@code <=>}; declarations and queries keep one. */
+    @Test
+    void usesTwoSpacesAfterRuleArrowButOneElsewhere() throws Exception {
+        assertEquals("""
+                a<b <=>  b>a
+                x   :: Object
+                y   ::= leaf
+                """, format("""
+                a<b <=> b>a
+                x :: Object
+                y ::= leaf
+                """));
+        assertEquals("n=5 ? [..]\n", format("n=5 ? [..]\n"));
     }
 
     /** Declaration alignment is its own block; an adjacent query line does not pull into it (? stays separate). */
@@ -206,8 +222,8 @@ public class DocumentFormattingServiceTest {
     @Test
     void indentsOperatorContinuationUnderFirstItemAfterOperator() throws Exception {
         assertEquals("""
-                d(a)=c <=> c(a)=c |
-                           E[b](d(a)=b & c(b)=c)
+                d(a)=c <=>  c(a)=c |
+                            E[b](d(a)=b & c(b)=c)
                 """, format("""
                 d(a)=c <=> c(a)=c |
                              E[b](d(a)=b & c(b)=c)

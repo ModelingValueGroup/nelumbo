@@ -44,6 +44,13 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     /** Declaration/definition operators that are aligned together as one column. The query {@code ?} is aligned separately. */
     private static final Set<String> DECLARATION_OPERATORS = Set.of("::", "::=", "<=>");
 
+    /** Spaces emitted after an aligned marker. {@code <=>} takes two (corpus convention); everything else one. */
+    private static final Map<String, Integer> SPACE_AFTER = Map.of("<=>", 2);
+
+    private static int spaceAfter(Token marker) {
+        return SPACE_AFTER.getOrDefault(marker.text(), 1);
+    }
+
     @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
         NlDocument document = documentManager.getDocument(params.getTextDocument().getUri());
@@ -215,21 +222,22 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             edits.add(new TextEdit(range, " ".repeat(gap)));
         }
 
-        // ---- a single space between the marker and what follows (if anything follows on this line) ----
+        // ---- spacing between the marker and what follows (if anything follows on this line) ----
         Token next = document.next(marker);
         if (endsLine(next)) {
             return; // marker ends the line: nothing follows
         }
-        Position mEnd = U.range(marker).getEnd();
+        int      after = spaceAfter(marker);
+        Position mEnd  = U.range(marker).getEnd();
         if (next.type() == TokenType.HSPACE) {
             if (endsLine(document.next(next))) {
                 return; // only trailing whitespace after the marker (handled by the trim pass)
             }
-            if (U.range(next).getEnd().getCharacter() - mEnd.getCharacter() != 1) {
-                edits.add(new TextEdit(U.range(next), " "));
+            if (U.range(next).getEnd().getCharacter() - mEnd.getCharacter() != after) {
+                edits.add(new TextEdit(U.range(next), " ".repeat(after)));
             }
         } else {
-            edits.add(new TextEdit(new Range(mEnd, mEnd), " ")); // content touches the marker: insert one space
+            edits.add(new TextEdit(new Range(mEnd, mEnd), " ".repeat(after))); // content touches the marker
         }
     }
 
@@ -268,7 +276,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         for (Token t : lineTokens) {
             if (t.type() == TokenType.OPERATOR && DECLARATION_OPERATORS.contains(t.text())) {
                 int column = operatorColumn.getOrDefault(t, U.range(t).getStart().getCharacter());
-                return column + t.text().length() + 1; // operator is followed by exactly one space
+                return column + t.text().length() + spaceAfter(t); // operator is followed by spaceAfter spaces
             }
         }
         Token item = lineTokens.size() >= 2 ? lineTokens.get(1) : lineTokens.getFirst();
