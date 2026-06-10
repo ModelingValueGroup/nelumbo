@@ -438,6 +438,34 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
+    /** The `if` guards of a rule's clauses align into one column (only inside a `<=>` body). */
+    @Test
+    void alignsIfGuardsInRuleBody() throws Exception {
+        assertEquals("""
+                fib(n)=f <=>  f=n                 if n>=0 & n<=1,
+                              f=fib(n-1)+fib(n-2) if n>1
+                """, format("""
+                fib(n)=f <=>  f=n if n>=0 & n<=1,
+                              f=fib(n-1)+fib(n-2) if n>1
+                """));
+    }
+
+    /** A bare `if` outside a `<=>` body (e.g. a name in a fact) is never aligned/touched. */
+    @Test
+    void doesNotAlignIfOutsideRuleBody() throws Exception {
+        String src = "fact thenElse(if, then)\n";
+        assertEquals(src, format(src));
+    }
+
+    @Test
+    void ifGuardAlignmentIsIdempotent() throws Exception {
+        String once = format("""
+                |a|=b <=>  b=a  if a>=0,
+                           b=-a if a<0
+                """);
+        assertEquals(once, format(once));
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');

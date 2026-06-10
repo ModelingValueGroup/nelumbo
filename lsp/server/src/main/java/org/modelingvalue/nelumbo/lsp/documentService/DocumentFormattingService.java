@@ -547,6 +547,25 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         return targetAbs;
     }
 
+    /** True if this body block is a rule body (its head line contains the {@code <=>} operator). */
+    private static boolean isRuleBody(List<Integer> block, Map<Integer, List<Token>> significant) {
+        List<Token> head = significant.get(block.getFirst());
+        return head != null && head.stream().anyMatch(t -> t.type() == TokenType.OPERATOR && t.text().equals("<=>"));
+    }
+
+    /** The {@code if} guard keyword on a line (a NAME whose text is exactly {@code "if"}), or null. */
+    private static Token ifMarker(List<Token> lineTokens) {
+        if (lineTokens == null) {
+            return null;
+        }
+        for (Token t : lineTokens) {
+            if (t.type() == TokenType.NAME && t.text().equals("if")) {
+                return t;
+            }
+        }
+        return null;
+    }
+
     /** The {@code @} of an annotation on a line (OPERATOR whose text starts with '@'), or null. */
     private static Token annotationMarker(List<Token> lineTokens) {
         if (lineTokens == null) {
@@ -602,6 +621,18 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             Map<Token, Integer> operatorColumn, Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
         Map<Integer, List<Token>> significant = significantByLine(tokens);
         for (List<Integer> block : bodyBlocks(significant)) {
+            // Align `if` guards in rule bodies (<=> blocks).
+            if (isRuleBody(block, significant)) {
+                List<Token> ifs = new ArrayList<>();
+                for (int line : block) {
+                    Token ifToken = ifMarker(significant.get(line));
+                    if (ifToken != null) {
+                        ifs.add(ifToken);
+                    }
+                }
+                alignBodyMarkerColumn(document, ifs, significant, operatorColumn, firstOnLine, edits);
+            }
+
             // Collect #N markers and build a line->hash map.
             List<Token>          hashes    = new ArrayList<>();
             Map<Integer, Token>  hashByLine = new HashMap<>();
