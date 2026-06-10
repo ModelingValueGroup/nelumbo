@@ -753,11 +753,15 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * {@code L+1}. Combined with {@link #removeTrailingWhitespace}, which strips any HSPACE on the blank line
      * (a distinct, earlier range), the whole blank line disappears. A blank line is deleted when it is a
      * trailing blank ({@code L > lastContentLine}) or the second-or-later blank in an internal run (its
-     * predecessor is also blank); the first blank in an internal run is kept.
+     * predecessor is also blank); the first blank in an internal run is kept. Leading blank lines (those
+     * before the first content line) are collapsed exactly like any interior run — the first is kept — so a
+     * single leading blank survives while a run of 2+ collapses to one.
      */
     private static void collapseBlankLines(List<Token> tokens, List<TextEdit> edits) {
         Set<Integer>        contentLines = new HashSet<>();
         Map<Integer, Token> newlineOf    = new HashMap<>();
+        // A multi-line block comment (/* ... */) is a single token whose interior newlines are consumed by
+        // the token, so its interior lines have no NEWLINE token in newlineOf and can never be deleted here.
         for (Token t : tokens) {
             int line = U.range(t).getStart().getLine();
             if (isMeaningful(t) || t.type() == TokenType.END_LINE_COMMENT || t.type() == TokenType.IN_LINE_COMMENT) {

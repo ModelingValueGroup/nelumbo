@@ -549,6 +549,31 @@ public class DocumentFormattingServiceTest {
         assertEquals("a :: Object\n\nb :: Object\n", once);
     }
 
+    /** A hand-aligned sample touching every pass must be a fixed point: formatting it changes nothing. */
+    @Test
+    void fullyFormattedSampleIsFixedPoint() throws Exception {
+        String sample = """
+                Integer :: Object
+
+                Boolean ::= <Integer> ">" <Integer> #30 @nelumbo.integers.GreaterThan,
+                            <Integer> "<" <Integer> #30 @nelumbo.integers.LessThan
+
+                Integer a, b
+                Object  n
+
+                fib(n)=f <=>  f=n                 if n>=0 & n<=1,
+                              f=fib(n-1)+fib(n-2) if n>1
+                """;
+        assertEquals(sample, format(sample), "a hand-aligned file must survive formatting unchanged");
+    }
+
+    /** Leading blank lines collapse like any interior run: 2+ become one; a single leading blank survives. */
+    @Test
+    void collapsesLeadingBlankLines() throws Exception {
+        assertEquals("\na :: Object\n", format("\n\n\na :: Object\n"));
+        assertEquals("\na :: Object\n", format("\na :: Object\n"));
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');
