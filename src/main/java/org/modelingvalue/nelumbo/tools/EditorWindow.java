@@ -38,6 +38,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -68,6 +69,7 @@ public class EditorWindow extends WindowAdapter
     private volatile boolean    isExample;
     private final String        examplePath;
     private final String        exampleDisplayName;
+    private final String        filePath;          // Absolute filesystem path for file-backed windows (null otherwise)
     private final Preferences   preferences;
     private volatile int        windowNumber;      // Window number for regular windows
 
@@ -81,6 +83,8 @@ public class EditorWindow extends WindowAdapter
     private UndoManager                      undoManager;
     private CompoundEdit                     currentCompoundEdit;
     private Timer                            compoundEditTimer;
+    private Timer                            fileSaveTimer;
+    private volatile String                  pendingFileSaveText;
     private WindowManager.WindowListListener windowListListener;
     private volatile boolean                 quit;
     private boolean                          refreshRequested;
@@ -107,6 +111,7 @@ public class EditorWindow extends WindowAdapter
         this.exampleDisplayName = null;
         this.windowNumber = windowNumber;
         this.preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+        this.filePath = null;
     }
 
     /**
@@ -121,6 +126,23 @@ public class EditorWindow extends WindowAdapter
         this.exampleDisplayName = exampleDisplayName;
         this.windowNumber = -1; // Examples don't have window numbers
         this.preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+        this.filePath = null;
+    }
+
+    /**
+     * Creates a new editable window backed by a filesystem file. Reuses the
+     * regular-window machinery (numbered, importable); the file path drives load,
+     * debounced auto-save, and the window title.
+     */
+    public EditorWindow(NelumboEditor application, String windowId, int windowNumber, String filePath) {
+        this.application = application;
+        this.windowId = windowId != null ? windowId : UUID.randomUUID().toString();
+        this.isExample = false;
+        this.examplePath = null;
+        this.exampleDisplayName = null;
+        this.windowNumber = windowNumber;
+        this.preferences = Preferences.userNodeForPackage(NelumboEditor.class);
+        this.filePath = filePath;
     }
 
     public String getWindowId() {
@@ -158,6 +180,8 @@ public class EditorWindow extends WindowAdapter
         initActions();
         if (isExample && examplePath != null) {
             loadExampleContent();
+        } else if (filePath != null) {
+            loadFileContent();
         } else {
             loadTextContent();
         }
@@ -183,6 +207,9 @@ public class EditorWindow extends WindowAdapter
         if (isExample && exampleDisplayName != null) {
             // Example/library windows use just the display name
             title = exampleDisplayName;
+        } else if (filePath != null) {
+            // File-backed windows show the file's base name
+            title = new java.io.File(filePath).getName();
         } else {
             // Regular windows use "editor.nelumbo_<n>" format for easy import reference
             title = "editor.nelumbo_" + windowNumber;
@@ -273,12 +300,49 @@ public class EditorWindow extends WindowAdapter
         frame.addWindowListener(this);
         textPane.getDocument().addDocumentListener(this);
 
+        // Accept dropped files (open each in a new window) while delegating all
+        // other transfers (text paste/drag) to the pane's original handler.
+        final TransferHandler originalTransferHandler = textPane.getTransferHandler();
+        textPane.setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                if (support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) {
+                    return true;
+                }
+                return originalTransferHandler != null && originalTransferHandler.canImport(support);
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public boolean importData(TransferSupport support) {
+                if (support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) {
+                    try {
+                        java.util.List<java.io.File> files = (java.util.List<java.io.File>) support.getTransferable()
+                                .getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor);
+                        for (java.io.File file : files) {
+                            application.getWindowManager().createFileWindow(file);
+                        }
+                        return true;
+                    } catch (Exception ex) {
+                        return false;
+                    }
+                }
+                return originalTransferHandler != null && originalTransferHandler.importData(support);
+            }
+        });
+
         // Setup undo manager with compound edit grouping
         undoManager = new UndoManager();
 
         // Timer to end compound edits after a pause in typing (500ms)
         compoundEditTimer = new Timer(500, e -> endCompoundEdit());
         compoundEditTimer.setRepeats(false);
+
+        // Timer to debounce writing the file after a pause in typing (500ms).
+        // Only file-backed windows schedule it (see saveTextContent), but it is
+        // harmless to create for every window.
+        fileSaveTimer = new Timer(500, e -> flushFileSave());
+        fileSaveTimer.setRepeats(false);
 
         textPane.getDocument().addUndoableEditListener(e -> {
             // Only capture INSERT and REMOVE events, not CHANGE (style) events
@@ -669,6 +733,11 @@ public class EditorWindow extends WindowAdapter
         newWindowItem.addActionListener(e -> application.createNewWindow());
         fileMenu.add(newWindowItem);
 
+        JMenuItem openItem = new JMenuItem("Open…");
+        openItem.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        openItem.addActionListener(e -> openFileChooser());
+        fileMenu.add(openItem);
+
         JMenuItem closeWindowItem = new JMenuItem("Close Window");
         closeWindowItem
                 .setAccelerator(KeyStroke.getKeyStroke('W', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
@@ -751,6 +820,20 @@ public class EditorWindow extends WindowAdapter
         application.getWindowManager().addWindowListListener(windowListListener);
 
         return menuBar;
+    }
+
+    private void openFileChooser() {
+        // Use the AWT FileDialog so the OS-native open panel is shown (Cocoa on macOS).
+        FileDialog dialog = new FileDialog(frame, "Open", FileDialog.LOAD);
+        dialog.setFilenameFilter((dir, name) -> name.endsWith(".nl")); // honored on macOS
+        if (!System.getProperty("os.name").toLowerCase().contains("mac")) {
+            dialog.setFile("*.nl"); // Windows/Linux filter via a glob in the file field
+        }
+        dialog.setVisible(true);
+        String name = dialog.getFile();
+        if (name != null) {
+            application.getWindowManager().createFileWindow(new File(dialog.getDirectory(), name));
+        }
     }
 
     /**
@@ -903,11 +986,21 @@ public class EditorWindow extends WindowAdapter
 
     private void closeWindow() {
         if (confirmCloseIfEditable()) {
-            saveTextContent(getDocumentText(textPane));
-            saveDialogVisibility();
+            saveAndFlush();
             frame.setVisible(false);
             frame.dispose();
         }
+    }
+
+    /**
+     * Persists this window's content and flushes any pending file write. Shared by
+     * the close-window and application-quit paths so neither loses unsaved edits.
+     */
+    void saveAndFlush() {
+        // Content is only persisted for non-example windows; file windows write to disk.
+        saveTextContent(getDocumentText(textPane));
+        flushFileSaveNow();
+        saveDialogVisibility();
     }
 
     /**
@@ -915,13 +1008,22 @@ public class EditorWindow extends WindowAdapter
      * the window should be closed, false to cancel.
      */
     private boolean confirmCloseIfEditable() {
-        if (textPane.isEditable()) {
-            int result = JOptionPane.showConfirmDialog(frame,
-                    "The contents of this window will be lost. Are you sure you want to close it?", "Close Window",
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            return result == JOptionPane.YES_OPTION;
+        if (!needsCloseConfirmation()) {
+            return true; // File windows auto-save; read-only windows have nothing to lose.
         }
-        return true; // Read-only windows can be closed without confirmation
+        int result = JOptionPane.showConfirmDialog(frame,
+                "The contents of this window will be lost. Are you sure you want to close it?", "Close Window",
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        return result == JOptionPane.YES_OPTION;
+    }
+
+    /**
+     * Whether closing this window would discard content the user might want to
+     * keep: an editable, non-file window. File-backed windows auto-save to disk
+     * and read-only windows have nothing to lose, so neither needs confirmation.
+     */
+    boolean needsCloseConfirmation() {
+        return filePath == null && textPane.isEditable();
     }
 
     /**
@@ -979,13 +1081,7 @@ public class EditorWindow extends WindowAdapter
 
     @Override
     public synchronized void windowClosing(WindowEvent evt) {
-        if (confirmCloseIfEditable()) {
-            // Save state before closing (content is only saved for non-example windows)
-            saveTextContent(getDocumentText(textPane));
-            saveDialogVisibility();
-            frame.setVisible(false);
-            frame.dispose();
-        }
+        closeWindow();
     }
 
     @Override
@@ -1334,7 +1430,15 @@ public class EditorWindow extends WindowAdapter
         try {
             // Save example info (always needed for window restoration)
             preferences.putBoolean(prefKey("isExample"), isExample);
-            if (isExample) {
+            if (filePath != null) {
+                // File-backed window: the file on disk is the source of truth.
+                // Persist only the path (for restore) and debounce the disk write.
+                preferences.put(prefKey("filePath"), filePath);
+                if (windowNumber > 0) {
+                    preferences.putInt(prefKey("windowNumber"), windowNumber);
+                }
+                scheduleFileSave(text);
+            } else if (isExample) {
                 // For example windows, only save the example path, not the content
                 // The content will be reloaded from the resource file on restore
                 if (examplePath != null) {
@@ -1366,6 +1470,51 @@ public class EditorWindow extends WindowAdapter
             preferences.flush();
         } catch (Exception e) {
             System.err.println("Failed to save window content: " + e.getMessage());
+        }
+    }
+
+    private void scheduleFileSave(String text) {
+        pendingFileSaveText = text;
+        fileSaveTimer.restart();
+    }
+
+    private void flushFileSave() {
+        String text = pendingFileSaveText;
+        if (text == null || filePath == null) {
+            return;
+        }
+        // Write off the EDT so disk IO never stalls the UI. The text was captured
+        // on the EDT in scheduleFileSave.
+        new Thread(() -> {
+            try {
+                EditorFileIO.write(Path.of(filePath), text);
+            } catch (IOException ex) {
+                // Fail loud: a swallowed auto-save loses edits. Surface in the messages pane.
+                javax.swing.SwingUtilities.invokeLater(() -> setMessages(
+                        "Failed to save " + new File(filePath).getName() + ": " + ex.getMessage()));
+            }
+        }, "EditorFileSave-" + windowId).start();
+    }
+
+    /**
+     * Writes any pending debounced file content immediately and synchronously.
+     * Called on close so edits made within the last debounce window are not lost.
+     */
+    private void flushFileSaveNow() {
+        if (filePath == null) {
+            return;
+        }
+        fileSaveTimer.stop(); // cancel the pending async write; we write synchronously here
+        String text = pendingFileSaveText;
+        if (text == null) {
+            return;
+        }
+        try {
+            EditorFileIO.write(Path.of(filePath), text);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(frame,
+                    "Failed to save " + new File(filePath).getName() + ": " + ex.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1427,6 +1576,24 @@ public class EditorWindow extends WindowAdapter
             doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(frame, "Error loading example: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void loadFileContent() {
+        try {
+            String         content = EditorFileIO.read(Path.of(filePath));
+            StyledDocument doc     = textPane.getStyledDocument();
+            doc.insertString(0, content, null);
+
+            // Apply line spacing
+            SimpleAttributeSet paragraphStyle = new SimpleAttributeSet();
+            StyleConstants.setLineSpacing(paragraphStyle, 0.2f);
+            doc.setParagraphAttributes(0, doc.getLength(), paragraphStyle, false);
+
+            textPane.setCaretPosition(0);
+        } catch (IOException | BadLocationException e) {
+            JOptionPane.showMessageDialog(frame, "Error loading file: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
     }

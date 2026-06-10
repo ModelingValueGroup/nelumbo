@@ -164,6 +164,7 @@ public class NelumboEditor {
         initLookAndFeel();
         loadTokenColors();
         windowManager = new WindowManager(this);
+        installQuitHandler();
 
         // Create and register the editor import resolver
         editorImportResolver = new EditorImportResolver(windowManager);
@@ -201,7 +202,24 @@ public class NelumboEditor {
     }
 
     /**
-     * Quits the application, saving all windows first.
+     * On macOS the native screen menu bar handles Cmd-Q itself, bypassing the
+     * File &gt; Quit menu action. Route that native quit through {@link #quit()} so
+     * the per-window file flush still runs before the app exits.
+     */
+    private void installQuitHandler() {
+        if (!Desktop.isDesktopSupported()) {
+            return;
+        }
+        Desktop desktop = Desktop.getDesktop();
+        if (desktop.isSupported(Desktop.Action.APP_QUIT_HANDLER)) {
+            desktop.setQuitHandler((e, response) -> quit()); // quit() saves, flushes, and exits
+        }
+    }
+
+    /**
+     * Quits the application, saving and flushing all windows first. Quitting
+     * preserves every window (regular windows restore from preferences, file
+     * windows from disk), so it needs no confirmation.
      */
     public void quit() {
         windowManager.saveAllWindows();
