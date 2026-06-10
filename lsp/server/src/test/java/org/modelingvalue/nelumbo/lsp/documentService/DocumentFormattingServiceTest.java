@@ -312,6 +312,20 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
+    /** Variable-name alignment works on indented input: indent is stripped AND names align at column 0-relative. */
+    @Test
+    void alignsVariableDeclarationNamesOnIndentedInput() throws Exception {
+        assertEquals("""
+                Literal  l1, l2
+                Function f1, f2
+                Object   n1, n2
+                """, format("""
+                    Literal l1, l2
+                    Function f1, f2
+                    Object n1, n2
+                """));
+    }
+
     /** A non-declaration line (one containing an operator) breaks the block; names are not pulled in. */
     @Test
     void variableNameAlignmentStopsAtNonDeclarations() throws Exception {

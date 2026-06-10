@@ -220,20 +220,29 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /**
-     * Pad the whitespace run immediately before {@code token} so {@code token} starts at {@code targetColumn},
-     * touching nothing after it. Used for trailing columns (variable names, {@code #N}, {@code @}, {@code if},
-     * comments) whose following text is content that must not move. Idempotent: emits no edit when already aligned.
+     * Pad the whitespace run immediately before {@code token} so {@code token} starts at {@code targetColumn}
+     * (indent-relative: absolute column on the stripped line), touching nothing after it. Used for trailing
+     * columns (variable names, {@code #N}, {@code @}, {@code if}, comments) whose following text is content
+     * that must not move. Idempotent: emits no edit when already aligned.
      */
-    private static void padBefore(NlDocument document, Token token, int targetColumn, List<TextEdit> edits) {
+    private static void padBefore(NlDocument document, Token token, int targetColumn,
+            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
         Token    before  = document.prev(token);
         Position start   = U.range(token).getStart();
         boolean  spaced  = before != null && before.type() == TokenType.HSPACE && before.line() == token.line();
-        int      leftEnd = spaced ? U.range(before).getStart().getCharacter() : start.getCharacter();
-        if (start.getCharacter() == targetColumn) {
-            return; // already on the column
+        // Guard: if the before-HSPACE token IS the line's leading indent token, stripBaseIndent already
+        // owns that range — emitting another edit over it would produce overlapping LSP edits.
+        boolean beforeIsLeadingIndent = spaced && before == firstOnLine.get(token.line());
+        if (beforeIsLeadingIndent) {
+            return; // stripBaseIndent handles stripping to col 0; no additional before-edit needed
+        }
+        int indent  = indentOf(token.line(), firstOnLine);
+        int leftEnd = spaced ? U.range(before).getStart().getCharacter() : start.getCharacter();
+        if (start.getCharacter() - indent == targetColumn) {
+            return; // already on the (indent-relative) column
         }
         Range range = spaced ? U.range(before) : new Range(start, start);
-        edits.add(new TextEdit(range, " ".repeat(Math.max(1, targetColumn - leftEnd))));
+        edits.add(new TextEdit(range, " ".repeat(Math.max(1, targetColumn - (leftEnd - indent)))));
     }
 
     /**
@@ -305,19 +314,16 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         if (line == null || line.size() < 2) {
             return false;
         }
-        // index 0: type name; index 1: first variable name; then alternating COMMA, NAME
-        for (int i = 0; i < line.size(); i++) {
-            TokenType expected;
-            if (i <= 1) {
-                expected = TokenType.NAME;
-            } else {
-                expected = (i % 2 == 0) ? TokenType.COMMA : TokenType.NAME;
-            }
+        if (line.get(0).type() != TokenType.NAME) {
+            return false; // leading type name
+        }
+        for (int i = 1; i < line.size(); i++) {
+            TokenType expected = (i % 2 == 1) ? TokenType.NAME : TokenType.COMMA; // i=1 NAME, i=2 COMMA, ...
             if (line.get(i).type() != expected) {
                 return false;
             }
         }
-        return line.getLast().type() == TokenType.NAME; // ends on a name (not a trailing comma)
+        return true;
     }
 
     /**
@@ -339,7 +345,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                               .mapToInt(m -> leftEnd(document, m) - indentOf(m.line(), firstOnLine))
                               .max().orElse(0) + 1;
             for (Token m : block) {
-                padBefore(document, m, target, edits);
+                padBefore(document, m, target, firstOnLine, edits);
             }
         }
     }
