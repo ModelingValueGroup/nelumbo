@@ -298,6 +298,39 @@ public class DocumentFormattingServiceTest {
         assertEquals("a :: Object\nb :: Object\n", once);
     }
 
+    /** A run of {@code Type names...} declarations aligns the variable-name column under the longest type. */
+    @Test
+    void alignsVariableDeclarationNames() throws Exception {
+        assertEquals("""
+                Literal  l1, l2
+                Function f1, f2
+                Object   n1, n2
+                """, format("""
+                Literal l1, l2
+                Function f1, f2
+                Object n1, n2
+                """));
+    }
+
+    /** A non-declaration line (one containing an operator) breaks the block; names are not pulled in. */
+    @Test
+    void variableNameAlignmentStopsAtNonDeclarations() throws Exception {
+        assertEquals("""
+                Integer n, f
+                fib(n)=f <=>  f=n
+                """, format("""
+                Integer n, f
+                fib(n)=f <=> f=n
+                """));
+    }
+
+    /** Variable-name alignment is idempotent: re-formatting already aligned output changes nothing. */
+    @Test
+    void variableNameAlignmentIsIdempotent() throws Exception {
+        String once = format("Literal  l1, l2\nFunction f1, f2\n");
+        assertEquals(once, format(once));
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');

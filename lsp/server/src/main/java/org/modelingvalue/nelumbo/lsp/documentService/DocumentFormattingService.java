@@ -90,6 +90,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         stripBaseIndent(tokens, firstOnLine, edits);
         alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine);
         alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine);
+        alignVarDeclNames(document, tokens, firstOnLine, edits);
         alignContinuations(tokens, operatorColumn, firstOnLine, edits);
         removeTrailingWhitespace(tokens, edits);
         return edits;
@@ -293,6 +294,54 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             }
         }
         return significant;
+    }
+
+    /**
+     * True if {@code line}'s meaningful tokens are exactly NAME NAME (COMMA NAME)* — a {@code Type a, b}
+     * variable declaration. The first NAME is the type; the remaining NAMEs (at least one) are variables
+     * separated by commas.
+     */
+    private static boolean isVariableDeclaration(List<Token> line) {
+        if (line == null || line.size() < 2) {
+            return false;
+        }
+        // index 0: type name; index 1: first variable name; then alternating COMMA, NAME
+        for (int i = 0; i < line.size(); i++) {
+            TokenType expected;
+            if (i <= 1) {
+                expected = TokenType.NAME;
+            } else {
+                expected = (i % 2 == 0) ? TokenType.COMMA : TokenType.NAME;
+            }
+            if (line.get(i).type() != expected) {
+                return false;
+            }
+        }
+        return line.getLast().type() == TokenType.NAME; // ends on a name (not a trailing comma)
+    }
+
+    /**
+     * Align the first variable name of each declaration in a consecutive block to a shared
+     * (indent-relative) column. Blocks are split on non-declaration lines (or gaps in line numbers).
+     */
+    private static void alignVarDeclNames(NlDocument document, List<Token> tokens,
+            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+        Map<Integer, List<Token>> significant = significantByLine(tokens);
+        List<Token> nameMarkers = new ArrayList<>();
+        for (int line : significant.keySet().stream().sorted().toList()) {
+            List<Token> l = significant.get(line);
+            if (isVariableDeclaration(l)) {
+                nameMarkers.add(l.get(1)); // the first variable name
+            }
+        }
+        for (List<Token> block : consecutiveBlocks(nameMarkers)) {
+            int target = block.stream()
+                              .mapToInt(m -> leftEnd(document, m) - indentOf(m.line(), firstOnLine))
+                              .max().orElse(0) + 1;
+            for (Token m : block) {
+                padBefore(document, m, target, edits);
+            }
+        }
     }
 
     /**
