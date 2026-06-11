@@ -43,7 +43,7 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
  * {@code ?} and the declaration operators ({@code ::}/{@code ::=}/{@code <=>}) into columns; align
  * variable-declaration names; hang continuation lines under the first item; align the in-body columns
  * ({@code #N} precedence, {@code @}-annotations, {@code if} guards); align trailing {@code //} comments; trim
- * trailing blank lines at end-of-file; and strip trailing whitespace.
+ * leading/trailing blank lines at the file edges and ensure a single final newline; and strip trailing whitespace.
  *
  * <p>Columns are computed in indent-relative coordinates (so they survive the indent strip), and in-body markers
  * are placed in post-format coordinates anchored at the statement's first item (so the operator's own alignment
@@ -112,7 +112,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         alignContinuations(tokens, operatorColumn, firstOnLine, edits);
         alignBodyColumns(document, tokens, operatorColumn, firstOnLine, edits);
         alignComments(document, tokens, operatorColumn, firstOnLine, edits);
-        trimTrailingBlankLines(tokens, edits);
+        trimEdgeBlankLines(tokens, edits);
         removeTrailingWhitespace(tokens, edits);
         return edits;
     }
@@ -783,32 +783,55 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /**
-     * Remove blank lines at end-of-file only; all internal blank-line runs are left exactly as written. A
-     * blank line carries no meaningful token and no comment, so a comment-only line (e.g. a license-header
-     * line) is content and is preserved.
+     * Normalise the file edges like vim: remove blank lines before the first content line and after the last
+     * content line, and guarantee the file ends with exactly one newline. All internal blank-line runs are
+     * left exactly as written. A blank line carries no meaningful token and no comment, so a comment-only line
+     * (e.g. a license-header line) is content and is preserved.
      * <p>
-     * A trailing blank line is deleted by removing its NEWLINE token range, which the tokenizer spans as
-     * {@code (L, col)..(L+1, 0)} — exactly the line terminator — so line {@code L} merges into line
+     * A leading/trailing blank line is deleted by removing its NEWLINE token range, which the tokenizer spans
+     * as {@code (L, col)..(L+1, 0)} — exactly the line terminator — so line {@code L} merges into line
      * {@code L+1}. Combined with {@link #removeTrailingWhitespace}, which strips any HSPACE on the blank line
      * (a distinct, earlier range), the whole blank line disappears. A blank line's NEWLINE is deleted only
-     * when it is a trailing blank ({@code L > lastContentLine}); internal blanks are never touched.
+     * when it is a leading blank ({@code L < firstContentLine}) or trailing blank ({@code L > lastContentLine});
+     * internal blanks are never touched.
+     * <p>
+     * The single-trailing-newline guarantee: if the last content line carries no NEWLINE token (the file did
+     * not end with a newline), a {@code \n} is inserted at the ENDOFFILE token's zero-width position — which
+     * the tokenizer places immediately after the last consumed character. An empty / all-blank file (no content
+     * lines at all) is left empty: every NEWLINE is deleted and no newline is inserted.
      */
-    private static void trimTrailingBlankLines(List<Token> tokens, List<TextEdit> edits) {
+    private static void trimEdgeBlankLines(List<Token> tokens, List<TextEdit> edits) {
         Set<Integer>        contentLines = contentLines(tokens);
         Map<Integer, Token> newlineOf    = new HashMap<>();
+        Token               endOfFile    = null;
         // A multi-line block comment (/* ... */) is a single token whose interior newlines are consumed by
         // the token, so its interior lines have no NEWLINE token in newlineOf and can never be deleted here.
         for (Token t : tokens) {
             if (t.type() == TokenType.NEWLINE) {
                 newlineOf.put(U.range(t).getStart().getLine(), t);
+            } else if (t.type() == TokenType.ENDOFFILE) {
+                endOfFile = t;
             }
         }
-        int lastContentLine = contentLines.stream().mapToInt(Integer::intValue).max().orElse(-1);
+        int firstContentLine = contentLines.stream().mapToInt(Integer::intValue).min().orElse(-1);
+        int lastContentLine  = contentLines.stream().mapToInt(Integer::intValue).max().orElse(-1);
+        if (lastContentLine < 0) {
+            // empty / all-blank file: delete every newline, add nothing.
+            for (Token nl : newlineOf.values()) {
+                edits.add(new TextEdit(U.range(nl), ""));
+            }
+            return;
+        }
         for (Map.Entry<Integer, Token> e : newlineOf.entrySet()) {
             int line = e.getKey();
-            if (line > lastContentLine) { // trailing blank line: drop its newline
+            if (line < firstContentLine || line > lastContentLine) { // leading/trailing blank line: drop its newline
                 edits.add(new TextEdit(U.range(e.getValue()), ""));
             }
+        }
+        // Ensure a single trailing newline: when the last content line has no NEWLINE token, the file did not
+        // end with a newline, so insert one at the ENDOFFILE position (a zero-width range after the last char).
+        if (!newlineOf.containsKey(lastContentLine) && endOfFile != null) {
+            edits.add(new TextEdit(U.range(endOfFile), "\n"));
         }
     }
 

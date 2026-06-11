@@ -206,10 +206,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** Trailing horizontal whitespace is stripped, including on otherwise-blank lines and the final line. */
+    /** Trailing horizontal whitespace is stripped, including on otherwise-blank lines and the final line; the file ends with one newline. */
     @Test
     void stripsTrailingWhitespace() throws Exception {
-        assertEquals("a :: Object\n\nb :: Object", format("a :: Object   \n   \nb :: Object\t"));
+        assertEquals("a :: Object\n\nb :: Object\n", format("a :: Object   \n   \nb :: Object\t"));
     }
 
     /**
@@ -627,11 +627,31 @@ public class DocumentFormattingServiceTest {
         assertEquals(sample, format(sample), "a hand-aligned file must survive formatting unchanged");
     }
 
-    /** Leading blank lines are internal (not trailing), so they are preserved verbatim. */
+    /** Leading blank lines at the top of the file are removed (vim edge-trim behaviour). */
     @Test
-    void preservesLeadingBlankLines() throws Exception {
-        assertEquals("\n\n\na :: Object\n", format("\n\n\na :: Object\n"));
-        assertEquals("\na :: Object\n", format("\na :: Object\n"));
+    void removesLeadingBlankLines() throws Exception {
+        assertEquals("a :: Object\n", format("\n\n\na :: Object\n"));
+        assertEquals("a :: Object\n", format("\na :: Object\n"));
+    }
+
+    /** Vim behaviour: a file with no final newline gains exactly one. */
+    @Test
+    void ensuresSingleTrailingNewline() throws Exception {
+        assertEquals("a :: Object\n", format("a :: Object"));
+    }
+
+    /** Leading and trailing blank lines are both removed; an interior blank run is preserved. */
+    @Test
+    void trimsLeadingAndTrailingButKeepsInterior() throws Exception {
+        assertEquals("a :: Object\n\nb :: Object\n", format("\n\na :: Object\n\nb :: Object\n\n\n"));
+    }
+
+    /** Edge trimming is idempotent. */
+    @Test
+    void edgeTrimIsIdempotent() throws Exception {
+        String once = format("\n\n\na :: Object\n\n\nb :: Object\n\n");
+        assertEquals(once, format(once));
+        assertEquals("a :: Object\n\n\nb :: Object\n", once);
     }
 
     private static int indexOfQuestion(String text, int lineIndex) {
