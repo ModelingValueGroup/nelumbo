@@ -799,6 +799,34 @@ public class DocumentFormattingServiceTest {
             "a scope block between two declarations breaks their alignment run");
     }
 
+    /** A marker line that also opens a block ({ at end of line) must not align its marker with the in-block line below. */
+    @Test
+    void alignmentDoesNotCrossBraceFromBlockOpener() throws Exception {
+        String out = format("""
+                x ? ::> {
+                y ?
+                }
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals("y ?", ls[1].trim(),
+            "inner query keeps a single space; it must not align to the outer ? across the brace (got '" + ls[1] + "')");
+        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    "), "inner query indented one level: " + ls[1]);
+        assertEquals(out, format(out), "idempotent");
+    }
+
+    /** Like above but with a long outer LHS so cross-brace alignment would visibly pad the inner marker. */
+    @Test
+    void alignmentDoesNotCrossBraceFromBlockOpenerLongLhs() throws Exception {
+        String out = format("""
+                muchLongerQuery here ? ::> {
+                y ?
+                }
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals("y ?", ls[1].trim(),
+            "inner query keeps a single space; it must not align to the outer ? across the brace (got '" + ls[1] + "')");
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');

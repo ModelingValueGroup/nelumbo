@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
@@ -112,9 +113,9 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         }
 
         indentBaseLines(tokens, firstOnLine, braceDepth, edits);
-        alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine, significant, contentLines);
-        alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine, significant, contentLines);
-        alignVarDeclNames(document, tokens, firstOnLine, edits, significant, contentLines);
+        alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine, significant, contentLines, braceDepth);
+        alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine, significant, contentLines, braceDepth);
+        alignVarDeclNames(document, tokens, firstOnLine, edits, significant, contentLines, braceDepth);
         alignContinuations(tokens, operatorColumn, firstOnLine, braceDepth, edits);
         alignBodyColumns(document, tokens, operatorColumn, firstOnLine, edits);
         alignComments(document, tokens, operatorColumn, firstOnLine, edits);
@@ -207,8 +208,8 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      */
     private static void alignMarkers(NlDocument document, List<Token> markers, List<TextEdit> edits,
             Map<Token, Integer> finalColumn, Map<Integer, Token> firstOnLine,
-            Map<Integer, List<Token>> significant, Set<Integer> contentLines) {
-        for (List<Token> block : consecutiveBlocks(markers, significant, contentLines)) {
+            Map<Integer, List<Token>> significant, Set<Integer> contentLines, Map<Integer, Integer> braceDepth) {
+        for (List<Token> block : consecutiveBlocks(markers, significant, contentLines, braceDepth)) {
             int targetColumn = block.stream()
                     .mapToInt(m -> leftEnd(document, m) - indentOf(m.line(), firstOnLine))
                     .max().orElse(0) + 1;
@@ -226,13 +227,14 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * on adjacent lines, or are two lines apart with a single BLANK line between them; a gap of two or more
      * blank lines, or an intervening content/comment line, starts a new block.
      */
-    private static List<List<Token>> consecutiveBlocks(List<Token> markers, Map<Integer, List<Token>> significant, Set<Integer> contentLines) {
+    private static List<List<Token>> consecutiveBlocks(List<Token> markers, Map<Integer, List<Token>> significant,
+            Set<Integer> contentLines, Map<Integer, Integer> braceDepth) {
         List<List<Token>> blocks       = new ArrayList<>();
         List<Token>       current      = null;
         int               previousLine = Integer.MIN_VALUE;
         for (Token m : markers) {
             int line = U.range(m).getStart().getLine();
-            if (current == null || !sameAlignmentBlock(previousLine, line, significant, contentLines)) {
+            if (current == null || !sameAlignmentBlock(previousLine, line, significant, contentLines, braceDepth)) {
                 current = new ArrayList<>();
                 blocks.add(current);
             }
@@ -247,8 +249,14 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * immediately follows {@code prevHead}'s statement — the head plus all the continuation lines it carries onto the
      * next line — optionally across a single blank line. An independent statement, or two or more blank lines, between
      * them breaks the block. (A continuation line belongs to the previous statement, so it is transparent here.)
+     * The two head lines must also be at the same brace depth, so an alignment block never crosses a {@code { }}
+     * scope boundary — including when a marker line itself opens a block with a trailing {@code {}.
      */
-    private static boolean sameAlignmentBlock(int prevHead, int curHead, Map<Integer, List<Token>> significant, Set<Integer> contentLines) {
+    private static boolean sameAlignmentBlock(int prevHead, int curHead, Map<Integer, List<Token>> significant,
+            Set<Integer> contentLines, Map<Integer, Integer> braceDepth) {
+        if (!Objects.equals(braceDepth.get(prevHead), braceDepth.get(curHead))) {
+            return false; // different scope depth: never one alignment block
+        }
         int end = prevHead;
         while (endsWithContinuation(significant.get(end))) {
             end++;
@@ -458,7 +466,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      */
     private static void alignVarDeclNames(NlDocument document, List<Token> tokens,
             Map<Integer, Token> firstOnLine, List<TextEdit> edits,
-            Map<Integer, List<Token>> significant, Set<Integer> contentLines) {
+            Map<Integer, List<Token>> significant, Set<Integer> contentLines, Map<Integer, Integer> braceDepth) {
         List<Token> nameMarkers = new ArrayList<>();
         for (int line : significant.keySet().stream().sorted().toList()) {
             List<Token> l         = significant.get(line);
@@ -467,7 +475,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                 nameMarkers.add(firstName); // the first variable name
             }
         }
-        for (List<Token> block : consecutiveBlocks(nameMarkers, significant, contentLines)) {
+        for (List<Token> block : consecutiveBlocks(nameMarkers, significant, contentLines, braceDepth)) {
             int target = block.stream()
                               .mapToInt(m -> leftEnd(document, m) - indentOf(m.line(), firstOnLine))
                               .max().orElse(0) + 1;
