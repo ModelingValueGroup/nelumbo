@@ -554,7 +554,8 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
 
     /**
      * A trailing token that genuinely continues the statement onto the next line — but a closing-angle
-     * operator ({@code >}, {@code >>}) that ends a generic type does NOT (it terminates the line). Real
+     * operator ({@code >}, {@code >>}) that ends a generic type, or a trailing query {@code ?} with no
+     * expected-result clause, does NOT (it terminates the line). Real
      * continuation operators ({@code ,}, {@code |}, {@code &}, {@code ->}, {@code <=>}, opening brackets
      * {@code ([{}) are not all-{@code >}, so they still continue.
      */
@@ -565,7 +566,9 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         if (last.type() == TokenType.LEFT && last.text().equals("{")) {
             return false; // a trailing `{` opens a scope block; its contents are their own head statements
         }
-        return !(last.type() == TokenType.OPERATOR && !last.text().isEmpty() && last.text().chars().allMatch(c -> c == '>'));
+        return !(last.type() == TokenType.OPERATOR && !last.text().isEmpty()
+                && (last.text().equals("?") || last.text().chars().allMatch(c -> c == '>')));
+        // a trailing query `?` or a closing-angle `>`/`>>` terminates the line
     }
 
     /** A meaningful token is anything that is not layout (whitespace/newline/sentinels) or a comment. */

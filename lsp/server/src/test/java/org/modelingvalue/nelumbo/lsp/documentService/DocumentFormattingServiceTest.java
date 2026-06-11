@@ -178,6 +178,20 @@ public class DocumentFormattingServiceTest {
         assertEquals("n = 5 ?\n", format("n = 5 ?\n"));
     }
 
+    /** A trailing query `?` (no expected-result clause) terminates the statement; the next query is not hung-indented. */
+    @Test
+    void trailingQueryMarkerDoesNotContinueLine() throws Exception {
+        String out = format("""
+                22+11=a ?
+                22+11!=a ?
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals(0, ls[1].indexOf("22+11!=a"), "second query must start at column 0, not be hung-indented");
+        // both `?` align (single-block):
+        org.junit.jupiter.api.Assertions.assertEquals(ls[0].indexOf('?'), ls[1].indexOf('?'), "the two ? align");
+        assertEquals(out, format(out), "idempotent");
+    }
+
     /**
      * {@code ::}, {@code ::=} and {@code <=>} on adjacent lines form one block whose operators all line up
      * to a single column (longest left-hand side + one space), each followed by exactly one space —
