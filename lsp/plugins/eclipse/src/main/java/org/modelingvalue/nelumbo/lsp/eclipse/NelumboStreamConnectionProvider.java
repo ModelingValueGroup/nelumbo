@@ -18,7 +18,9 @@ package org.modelingvalue.nelumbo.lsp.eclipse;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
@@ -33,15 +35,47 @@ public class NelumboStreamConnectionProvider extends ProcessStreamConnectionProv
 
         var localJarFile = dir.resolve("server.jar");
 
-        try (var inputStream = getClass().getClassLoader().getResourceAsStream("server.jar")) {
+        syncServerJar(localJarFile);
+
+        setCommands(List.of("java", "-cp", localJarFile.toFile().getAbsolutePath(), "org.modelingvalue.nelumbo.lsp.Main"));
+    }
+
+    /**
+     * Make {@code localJarFile} match the {@code server.jar} bundled in this plugin.
+     * <p>
+     * Eclipse re-creates this provider every time the language server starts, including on restart while an
+     * {@code .nl} file is still open. On Windows the JVM that ran the previous server keeps {@code server.jar}
+     * locked for the lifetime of its process, so blindly deleting/overwriting it fails with "The process cannot
+     * access the file because it is being used by another process". We therefore:
+     * <ol>
+     *   <li>skip the copy entirely when the on-disk jar already has the same content (the common restart case), and</li>
+     *   <li>only attempt to replace it when the content differs, tolerating a lock by reusing the existing jar.</li>
+     * </ol>
+     */
+    private static void syncServerJar(Path localJarFile) throws IOException {
+        var tmpFile = localJarFile.resolveSibling("server.jar.tmp");
+        try (var inputStream = NelumboStreamConnectionProvider.class.getClassLoader().getResourceAsStream("server.jar")) {
             if (inputStream == null) {
                 throw new IOException("server.jar not found in plugin bundle");
             }
-            if (Files.exists(localJarFile)) {
-                Files.delete(localJarFile);
+            Files.copy(inputStream, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+
+            // Already up to date: leave the (possibly locked) running jar untouched.
+            if (Files.exists(localJarFile) && Files.mismatch(tmpFile, localJarFile) == -1L) {
+                return;
             }
-            Files.copy(inputStream, localJarFile);
+
+            try {
+                Files.move(tmpFile, localJarFile, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                // The current jar is locked by a still-running server (Windows). If we have any usable jar
+                // on disk, carry on with it rather than failing language-server startup outright.
+                if (!Files.exists(localJarFile)) {
+                    throw e;
+                }
+            }
+        } finally {
+            Files.deleteIfExists(tmpFile);
         }
-        setCommands(List.of("java", "-cp", localJarFile.toFile().getAbsolutePath(), "org.modelingvalue.nelumbo.lsp.Main"));
     }
 }
