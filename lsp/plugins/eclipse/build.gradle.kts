@@ -36,7 +36,12 @@ val serverProject = project(":lsp:server")
 val generateManifest = tasks.register("generateManifest") {
     val manifestFile = layout.buildDirectory.file("osgi/MANIFEST.MF")
     outputs.file(manifestFile)
+    // Always regenerate: the Bundle-Version qualifier below must change every build so a freshly
+    // built bundle strictly supersedes any previously installed one (Eclipse's dropins/OSGi cache
+    // keeps the old bundle when the version is unchanged).
+    outputs.upToDateWhen { false }
     doLast {
+        val qualifier = System.currentTimeMillis().toString()
         manifestFile.get().asFile.parentFile.mkdirs()
         manifestFile.get().asFile.writeText(
             """
@@ -45,16 +50,19 @@ val generateManifest = tasks.register("generateManifest") {
             |Bundle-Name: Nelumbo LSP Eclipse Plugin
             |Bundle-SymbolicName: org.modelingvalue.nelumbo.lsp.eclipse;
             | singleton:=true
-            |Bundle-Version: $version
+            |Bundle-Version: $version.$qualifier
             |Bundle-Vendor: Modeling Value Group
             |Bundle-RequiredExecutionEnvironment: JavaSE-21
             |Bundle-ActivationPolicy: lazy
             |Require-Bundle: org.eclipse.ui,
             | org.eclipse.ui.genericeditor,
+            | org.eclipse.ui.workbench.texteditor,
             | org.eclipse.lsp4e,
             | org.eclipse.lsp4j,
             | org.eclipse.lsp4j.jsonrpc,
+            | org.eclipse.jface,
             | org.eclipse.jface.text,
+            | org.eclipse.core.commands,
             | org.eclipse.core.contenttype
             |
             """.trimMargin()
@@ -65,6 +73,8 @@ val generateManifest = tasks.register("generateManifest") {
 tasks.jar {
     archiveBaseName.set("eclipse-nelumbo-plugin")
     dependsOn(generateManifest)
+    // Repackage every build so the changing Bundle-Version qualifier always reaches the jar.
+    outputs.upToDateWhen { false }
 
     // Include the LSP server JAR as a resource (uses serverJar task, not jar)
     val serverJarTask = serverProject.tasks.named("serverJar")

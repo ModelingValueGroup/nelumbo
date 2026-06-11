@@ -43,11 +43,15 @@ All compile dependencies are in the `libs/` directory, copied from the target Ec
 - `org.eclipse.lsp4e_*.jar`
 - `org.eclipse.lsp4j_*.jar`
 - `org.eclipse.lsp4j.jsonrpc_*.jar`
+- `org.eclipse.jface_*.jar`
 - `org.eclipse.jface.text_*.jar`
 - `org.eclipse.text_*.jar`
 - `org.eclipse.swt.*.jar` (any platform variant — only used for compilation)
 - `org.eclipse.equinox.common_*.jar`
 - `org.eclipse.core.resources_*.jar`
+- `org.eclipse.core.commands_*.jar`
+- `org.eclipse.ui.workbench_*.jar`
+- `org.eclipse.ui.workbench.texteditor_*.jar`
 
 ## Installation
 
@@ -76,9 +80,18 @@ After installation, open or create a file with the `.nl` extension. The Nelumbo 
 - Hover documentation
 - Go to definition
 - Document symbols
-- Code formatting
+- Code formatting (right-click → **Source → Format**, or `Ctrl+Shift+F`)
+- Format on save (see below)
 - Code folding
 - Code actions
+
+### Format on save
+
+`.nl` files are formatted automatically when you save them. Toggle this under
+**Window → Preferences → Nelumbo → "Format Nelumbo (.nl) files on save"** (on by default).
+It reuses the same LSP formatter as the **Source → Format** command, applying the edits to the
+document just before it is written. Eclipse/LSP4E has no built-in format-on-save for the Generic
+Editor, so this is provided by the plugin itself.
 
 ## Uninstallation
 

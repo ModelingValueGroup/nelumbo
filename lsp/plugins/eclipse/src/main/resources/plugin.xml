@@ -33,4 +33,13 @@
             class="org.modelingvalue.nelumbo.lsp.eclipse.NelumboReconciler"
             contentType="org.modelingvalue.nelumbo.lsp.eclipse.nelumbo"/>
    </extension>
+   <extension point="org.eclipse.ui.startup">
+      <startup class="org.modelingvalue.nelumbo.lsp.eclipse.NelumboStartup"/>
+   </extension>
+   <extension point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.modelingvalue.nelumbo.lsp.eclipse.NelumboPreferencePage"
+            id="org.modelingvalue.nelumbo.lsp.eclipse.preferences"
+            name="Nelumbo"/>
+   </extension>
 </plugin>
