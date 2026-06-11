@@ -7,13 +7,15 @@
   Set<E>         :: Collection<E>
   List<E>        :: Collection<E>
   
-  private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)                      @nelumbo.collections.BuildSet,
-                      size(<Collection<E>>, <Integer>)                       @nelumbo.collections.CollectionSize,
-                      indexOf(<List<E>>, <E>, <Integer>)                     @nelumbo.collections.IndexOf,
-                      elementOf(<Set<E>>, <E>)                               @nelumbo.collections.ElementOf,
-                      binarySet(<String>, <Set<E>>, <Set<E>>)                @nelumbo.collections.BinarySet,
-                      ternarySet(<String>, <Set<E>>, <Set<E>>, <Set<E>>)     @nelumbo.collections.TernarySet,
-                      ternaryList(<String>, <List<E>>, <List<E>>, <List<E>>) @nelumbo.collections.TernaryList
+  private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)          @nelumbo.collections.BuildSet,
+                      size(<Collection<E>>, <Integer>)           @nelumbo.collections.Collections,
+                      indexOf(<List<E>>, <E>, <Integer>)         @nelumbo.collections.Collections,
+                      elementOf(<Set<E>>, <E>)                   @nelumbo.collections.Collections,
+                      subset(<Set<E>>, <Set<E>>)                 @nelumbo.collections.Collections,
+                      intersection(<Set<E>>, <Set<E>>, <Set<E>>) @nelumbo.collections.Collections,
+                      union(<Set<E>>, <Set<E>>, <Set<E>>)        @nelumbo.collections.Collections,
+                      diff(<Set<E>>, <Set<E>>, <Set<E>>)         @nelumbo.collections.Collections,
+                      concat(<List<E>>, <List<E>>, <List<E>>)    @nelumbo.collections.Collections
                       
   Boolean ::= <Set<E>> "<"  <Set<E>> #30,
               <Set<E>> ">"  <Set<E>> #30,
@@ -42,17 +44,18 @@
   
   |c|=i        <=>  size(c,i)
   
-  {[e](b)}=s   <=>  build(e,b,s)
-  e in s       <=>  elementOf(s,e)
-  s1 < s2      <=>  binarySet("<", s1, s2)
-  s1 > s2      <=>  binarySet("<", s2, s1)
-  s1 <= s2     <=>  s1 < s2 | s1 = s2
-  s1 >= s2     <=>  s1 > s2 | s1 = s2
-  s1 & s2 = s3 <=>  ternarySet("&", s1, s2, s3)
-  s1 | s2 = s3 <=>  ternarySet("|", s1, s2, s3)
-  s1 - s2 = s3 <=>  ternarySet("-", s1, s2, s3)
+  {[e](b)}=s   <=>  build(e, b, s)
+  e in s       <=>  elementOf(s, e)
+  s1 < s2      <=>  subset(s1, s2)
+  s1 > s2      <=>  subset(s2, s1)
+  s1 & s2 = s3 <=>  intersection(s1, s2, s3)
+  s1 | s2 = s3 <=>  union(s1, s2, s3)
+  s1 - s2 = s3 <=>  diff(s1, s2, s3)
   
   e pos l = i  <=>  indexOf(l, e, i)
-  l1 + l2 = l3 <=>  ternaryList("+", l1, l2, l3)
+  l1 + l2 = l3 <=>  concat(l1, l2, l3)
+  
+  s1 <= s2     <=>  s1 < s2 | s1 = s2
+  s1 >= s2     <=>  s1 > s2 | s1 = s2
   e in l       <=>  E[i](e pos l = i)
  

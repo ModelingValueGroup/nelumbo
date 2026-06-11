@@ -24,12 +24,12 @@ import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
-public class TernaryList extends Predicate {
+public class Collections extends Predicate {
     @Serial
-    private static final long serialVersionUID = 2570515042609422427L;
+    private static final long serialVersionUID = -2609193511212262794L;
 
     @NelumboConstructor
-    public TernaryList(NodeInfo nodeInfo, Object... args) {
+    public Collections(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
     }
 
@@ -37,4 +37,5 @@ public class TernaryList extends Predicate {
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         return unknown();
     }
+
 }
