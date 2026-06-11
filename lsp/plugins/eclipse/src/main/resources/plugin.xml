@@ -28,6 +28,11 @@
             languageId="nelumbo">
       </contentTypeMapping>
    </extension>
+   <extension point="org.eclipse.ui.genericeditor.icons">
+      <icon
+            contentType="org.modelingvalue.nelumbo.lsp.eclipse.nelumbo"
+            icon="icons/logo.svg"/>
+   </extension>
    <extension point="org.eclipse.ui.genericeditor.presentationReconcilers">
       <presentationReconciler
             class="org.modelingvalue.nelumbo.lsp.eclipse.NelumboReconciler"
