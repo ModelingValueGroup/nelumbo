@@ -341,24 +341,69 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /**
-     * True if {@code line}'s meaningful tokens are exactly NAME NAME (COMMA NAME)* — a {@code Type a, b}
-     * variable declaration. The first NAME is the type; the remaining NAMEs (at least one) are variables
-     * separated by commas.
+     * Index where the variable names begin, after a leading type {@code NAME} with an optional balanced
+     * {@code <...>} generic; or -1 if the leading tokens are not a well-formed type. Inside the generic,
+     * NAME/COMMA and angle operators are all part of the type; balance is tracked over angle operators
+     * (+1 per {@code <} char, -1 per {@code >} char in each OPERATOR token's text).
      */
-    private static boolean isVariableDeclaration(List<Token> line) {
-        if (line == null || line.size() < 2) {
-            return false;
+    private static int typeEnd(List<Token> line) {
+        if (line == null || line.isEmpty() || line.get(0).type() != TokenType.NAME) {
+            return -1;
         }
-        if (line.get(0).type() != TokenType.NAME) {
-            return false; // leading type name
-        }
-        for (int i = 1; i < line.size(); i++) {
-            TokenType expected = (i % 2 == 1) ? TokenType.NAME : TokenType.COMMA; // i=1 NAME, i=2 COMMA, ...
-            if (line.get(i).type() != expected) {
-                return false;
+        int i = 1;
+        if (i < line.size() && line.get(i).type() == TokenType.OPERATOR && line.get(i).text().indexOf('<') >= 0) {
+            int depth = 0;
+            for (; i < line.size(); i++) {
+                Token t = line.get(i);
+                if (t.type() == TokenType.OPERATOR) {
+                    for (char c : t.text().toCharArray()) {
+                        if (c == '<') {
+                            depth++;
+                        } else if (c == '>') {
+                            depth--;
+                        } else {
+                            return -1; // a non-angle char inside the generic: not a plain type
+                        }
+                    }
+                } else if (t.type() != TokenType.NAME && t.type() != TokenType.COMMA) {
+                    return -1; // unexpected token inside the generic
+                }
+                if (depth == 0) {
+                    i++;
+                    break;
+                }
+            }
+            if (depth != 0) {
+                return -1; // unbalanced
             }
         }
-        return true;
+        return i;
+    }
+
+    /**
+     * The first variable name of a {@code Type name, name, …} declaration, or null if the line isn't one.
+     * The type is a leading {@code NAME} with an optional balanced generic; the remainder must be
+     * {@code NAME (COMMA NAME)*} with at least one variable name.
+     */
+    private static Token firstVariableName(List<Token> line) {
+        int i = typeEnd(line);
+        if (i < 0 || i >= line.size()) {
+            return null; // not a type, or a bare type with no variable names
+        }
+        Token first = line.get(i);
+        // remainder must be NAME (COMMA NAME)*
+        boolean expectName = true;
+        for (int j = i; j < line.size(); j++) {
+            TokenType expected = expectName ? TokenType.NAME : TokenType.COMMA;
+            if (line.get(j).type() != expected) {
+                return null;
+            }
+            expectName = !expectName;
+        }
+        if (expectName) {
+            return null; // ended on a COMMA (trailing comma)
+        }
+        return first;
     }
 
     /**
@@ -370,9 +415,10 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         Map<Integer, List<Token>> significant = significantByLine(tokens);
         List<Token> nameMarkers = new ArrayList<>();
         for (int line : significant.keySet().stream().sorted().toList()) {
-            List<Token> l = significant.get(line);
-            if (isVariableDeclaration(l)) {
-                nameMarkers.add(l.get(1)); // the first variable name
+            List<Token> l         = significant.get(line);
+            Token       firstName = firstVariableName(l);
+            if (firstName != null) {
+                nameMarkers.add(firstName); // the first variable name
             }
         }
         for (List<Token> block : consecutiveBlocks(nameMarkers, contentLines)) {
@@ -456,7 +502,20 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     private static boolean endsWithContinuation(List<Token> lineTokens) {
-        return lineTokens != null && !lineTokens.isEmpty() && lineTokens.getLast().type().isContinuesOnNextLine();
+        return lineTokens != null && !lineTokens.isEmpty() && continuesOntoNextLine(lineTokens.getLast());
+    }
+
+    /**
+     * A trailing token that genuinely continues the statement onto the next line — but a closing-angle
+     * operator ({@code >}, {@code >>}) that ends a generic type does NOT (it terminates the line). Real
+     * continuation operators ({@code ,}, {@code |}, {@code &}, {@code ->}, {@code <=>}, opening brackets
+     * {@code ([{}) are not all-{@code >}, so they still continue.
+     */
+    private static boolean continuesOntoNextLine(Token last) {
+        if (!last.type().isContinuesOnNextLine()) {
+            return false;
+        }
+        return !(last.type() == TokenType.OPERATOR && !last.text().isEmpty() && last.text().chars().allMatch(c -> c == '>'));
     }
 
     /** A meaningful token is anything that is not layout (whitespace/newline/sentinels) or a comment. */

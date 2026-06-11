@@ -654,6 +654,49 @@ public class DocumentFormattingServiceTest {
         assertEquals("a :: Object\n\n\nb :: Object\n", once);
     }
 
+    /** Bug 1: a closing generic `>` does not start a continuation; type declarations stay at column 0 and their `::` align. */
+    @Test
+    void alignsTypeDeclarationsWithGenericTypes() throws Exception {
+        assertEquals("""
+                Collection<E> :: Object
+                Set<E>        :: Collection<E>
+                List<E>       :: Collection<E>
+                """, format("""
+                Collection<E>  :: Object
+                Set<E>         :: Collection<E>
+                List<E>        :: Collection<E>
+                """));
+    }
+
+    /** Bug 1 (minimal): a line ending in a closing generic `>` must not hang-indent the next line. */
+    @Test
+    void closingGenericDoesNotContinueLine() throws Exception {
+        String out = format("Set<E> :: Collection<E>\nList<E> :: Object\n");
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals(0, ls[1].indexOf("List"), "second line must start at column 0, not be hung-indented");
+    }
+
+    /** Bug 2: a variable declaration whose type has a generic parameter is aligned with its plain-type siblings. */
+    @Test
+    void alignsVariableDeclarationsWithGenericTypes() throws Exception {
+        assertEquals("""
+                E       e
+                Boolean c
+                Set<E>  s
+                """, format("""
+                E e
+                Boolean c
+                Set<E> s
+                """));
+    }
+
+    /** Both fixes are idempotent. */
+    @Test
+    void genericTypeFormattingIsIdempotent() throws Exception {
+        String once = format("Collection<E>  :: Object\nSet<E> :: Collection<E>\n\nE e\nSet<E> s\n");
+        assertEquals(once, format(once));
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');
