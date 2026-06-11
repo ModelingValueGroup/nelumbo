@@ -115,7 +115,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         indentBaseLines(tokens, firstOnLine, braceDepth, contentLines, edits);
         alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine, significant, contentLines, braceDepth);
         alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine, significant, contentLines, braceDepth);
-        alignVarDeclNames(document, tokens, firstOnLine, edits, significant, contentLines, braceDepth);
+        alignVarDeclNames(document, firstOnLine, edits, significant, contentLines, braceDepth);
         alignContinuations(tokens, operatorColumn, firstOnLine, braceDepth, edits);
         alignBodyColumns(document, tokens, operatorColumn, firstOnLine, edits);
         alignComments(document, tokens, operatorColumn, firstOnLine, edits);
@@ -405,7 +405,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * (+1 per {@code <} char, -1 per {@code >} char in each OPERATOR token's text).
      */
     private static int typeEnd(List<Token> line) {
-        if (line == null || line.isEmpty() || line.get(0).type() != TokenType.NAME) {
+        if (line == null || line.isEmpty() || line.getFirst().type() != TokenType.NAME) {
             return -1;
         }
         int i = 1;
@@ -468,7 +468,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * Align the first variable name of each declaration in a consecutive block to a shared
      * (indent-relative) column. Blocks are split on non-declaration lines (or gaps in line numbers).
      */
-    private static void alignVarDeclNames(NlDocument document, List<Token> tokens,
+    private static void alignVarDeclNames(NlDocument document,
             Map<Integer, Token> firstOnLine, List<TextEdit> edits,
             Map<Integer, List<Token>> significant, Set<Integer> contentLines, Map<Integer, Integer> braceDepth) {
         List<Token> nameMarkers = new ArrayList<>();
@@ -519,8 +519,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      */
     private static int firstItemColumn(List<Token> lineTokens, Map<Token, Integer> operatorColumn,
             Map<Integer, Token> firstOnLine) {
-        for (int i = 0; i < lineTokens.size(); i++) {
-            Token t = lineTokens.get(i);
+        for (Token t : lineTokens) {
             if (t.type() == TokenType.OPERATOR && DECLARATION_OPERATORS.contains(t.text())) {
                 int column = operatorColumn.getOrDefault(t,
                         U.range(t).getStart().getCharacter() - indentOf(t.line(), firstOnLine));
@@ -665,11 +664,9 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             return true;
         }
         return switch (t.type()) {
-            case NEWLINE, ENDOFFILE -> true;
-            case COMMA              -> true;
-            case END_LINE_COMMENT, IN_LINE_COMMENT -> true;
-            case OPERATOR           -> t.text().startsWith("@");
-            default                 -> false;
+            case NEWLINE, ENDOFFILE, COMMA, END_LINE_COMMENT, IN_LINE_COMMENT -> true;
+            case OPERATOR -> t.text().startsWith("@");
+            default -> false;
         };
     }
 
