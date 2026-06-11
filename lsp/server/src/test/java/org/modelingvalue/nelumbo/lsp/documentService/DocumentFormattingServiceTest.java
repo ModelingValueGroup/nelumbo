@@ -714,6 +714,77 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
+    /** A `{ }` scope block indents its contents one level; `{`/`}` stay at the enclosing level; alignment happens within the block. */
+    @Test
+    void indentsScopeBlockContents() throws Exception {
+        String out = format("""
+                {
+                Aa :: Object
+                private Aa ::= XXX
+                Aa x
+                }
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals("{", ls[0]);
+        org.junit.jupiter.api.Assertions.assertEquals("}", ls[4]);
+        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    ") && !ls[1].startsWith("     "), "contents indented one level (4): " + ls[1]);
+        org.junit.jupiter.api.Assertions.assertTrue(ls[2].startsWith("    "), "contents indented: " + ls[2]);
+        // :: and ::= align within the block:
+        org.junit.jupiter.api.Assertions.assertEquals(ls[1].indexOf("::"), ls[2].indexOf("::"));
+        org.junit.jupiter.api.Assertions.assertEquals(out, format(out), "idempotent");
+    }
+
+    /** A `{` at the end of a line opens a block; the next line is indented (not treated as a continuation). */
+    @Test
+    void opensBlockOnTrailingBrace() throws Exception {
+        String out = format("""
+                foo ::> {
+                bar
+                }
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals(0, ls[0].indexOf("foo"), "opener at column 0");
+        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    bar"), "block content indented, not a continuation: " + ls[1]);
+        org.junit.jupiter.api.Assertions.assertEquals("}", ls[2]);
+        org.junit.jupiter.api.Assertions.assertEquals(out, format(out), "idempotent");
+    }
+
+    /** Nested blocks indent by depth. */
+    @Test
+    void indentsNestedBlocks() throws Exception {
+        String out = format("""
+                {
+                a :: X
+                {
+                b :: Y
+                }
+                }
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    a") , "depth1: " + ls[1]);     // 4
+        org.junit.jupiter.api.Assertions.assertTrue(ls[2].startsWith("    {") , "inner { at depth1: " + ls[2]);
+        org.junit.jupiter.api.Assertions.assertTrue(ls[3].startsWith("        b"), "depth2: " + ls[3]);  // 8
+        org.junit.jupiter.api.Assertions.assertTrue(ls[4].equals("    }"), "inner } back to depth1: " + ls[4]);
+        org.junit.jupiter.api.Assertions.assertEquals("}", ls[5], "outer } at depth0");
+        org.junit.jupiter.api.Assertions.assertEquals(out, format(out), "idempotent");
+    }
+
+    /** A declaration before a `{` block and one after `}` are NOT aligned together (the block breaks the run). */
+    @Test
+    void scopeBlockBreaksAlignmentRun() throws Exception {
+        String out = format("""
+                shortLHS :: A
+                {
+                x :: B
+                }
+                muchLongerLHS :: C
+                """);
+        String[] ls = out.split("\n", -1);
+        // the two outer decls must NOT share a column (block between them breaks the run):
+        org.junit.jupiter.api.Assertions.assertNotEquals(ls[0].indexOf("::"), ls[4].indexOf("::"),
+            "a scope block between two declarations breaks their alignment run");
+    }
+
     private static int indexOfQuestion(String text, int lineIndex) {
         String line = text.split("\n", -1)[lineIndex];
         return line.indexOf('?');

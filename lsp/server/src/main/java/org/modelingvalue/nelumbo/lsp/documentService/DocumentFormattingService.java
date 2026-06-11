@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
@@ -64,6 +65,9 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     /** Spaces between the longest content and the aligned trailing {@code //} comment column. */
     private static final int COMMENT_GAP = 2;
 
+    /** Spaces of indentation per {@code { }} scope-block nesting level. */
+    private static final int INDENT_UNIT = 4;
+
     private static int spaceAfter(Token marker) {
         return SPACE_AFTER.getOrDefault(marker.text(), 1);
     }
@@ -99,6 +103,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         Map<Integer, Token> firstOnLine    = new HashMap<>();
         Set<Integer>        contentLines   = contentLines(tokens);
         Map<Integer, List<Token>> significant = significantByLine(tokens);
+        Map<Integer, Integer>     braceDepth  = braceDepth(tokens);
         for (Token t : tokens) {
             if (t.type() == TokenType.BEGINOFFILE || t.type() == TokenType.ENDOFFILE) {
                 continue;
@@ -106,11 +111,11 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             firstOnLine.putIfAbsent(U.range(t).getStart().getLine(), t);
         }
 
-        stripBaseIndent(tokens, firstOnLine, edits);
+        indentBaseLines(tokens, firstOnLine, braceDepth, edits);
         alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine, significant, contentLines);
         alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine, significant, contentLines);
         alignVarDeclNames(document, tokens, firstOnLine, edits, significant, contentLines);
-        alignContinuations(tokens, operatorColumn, firstOnLine, edits);
+        alignContinuations(tokens, operatorColumn, firstOnLine, braceDepth, edits);
         alignBodyColumns(document, tokens, operatorColumn, firstOnLine, edits);
         alignComments(document, tokens, operatorColumn, firstOnLine, edits);
         trimEdgeBlankLines(tokens, edits);
@@ -161,25 +166,33 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /**
-     * Force every non-blank, non-continuation line to start at column 0 (decision #7). Continuation lines
-     * are left for {@link #alignContinuations} to indent. Blank/whitespace-only lines are left to the
-     * trailing-whitespace pass.
+     * Indent every non-blank, non-continuation (head) line to its scope-block base (depth ×
+     * {@link #INDENT_UNIT} spaces). Continuation lines are left for {@link #alignContinuations} to indent.
+     * Blank/whitespace-only lines are left to the trailing-whitespace pass. At depth 0 this strips the
+     * leading indent to column 0 (the previous behaviour); deeper lines are set/inserted to the base indent.
      */
-    private static void stripBaseIndent(List<Token> tokens, Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+    private static void indentBaseLines(List<Token> tokens, Map<Integer, Token> firstOnLine,
+            Map<Integer, Integer> braceDepth, List<TextEdit> edits) {
         Map<Integer, List<Token>> significant = significantByLine(tokens);
         for (Map.Entry<Integer, Token> e : firstOnLine.entrySet()) {
             int   line  = e.getKey();
             Token first = e.getValue();
-            if (first.type() != TokenType.HSPACE) {
-                continue; // already at the margin
-            }
             if (significant.get(line) == null) {
                 continue; // blank / whitespace-only line: trailing-whitespace pass handles it
             }
             if (endsWithContinuation(significant.get(line - 1))) {
                 continue; // a continuation line keeps its hanging indent
             }
-            edits.add(new TextEdit(U.range(first), "")); // remove the leading indent
+            int base = braceDepth.getOrDefault(line, 0) * INDENT_UNIT;
+            if (first.type() == TokenType.HSPACE) {
+                int current = U.range(first).getEnd().getCharacter() - U.range(first).getStart().getCharacter();
+                if (current != base) {
+                    edits.add(new TextEdit(U.range(first), " ".repeat(base))); // set the leading indent to base
+                }
+            } else if (base > 0) {
+                Position start = U.range(first).getStart();
+                edits.add(new TextEdit(new Range(start, start), " ".repeat(base))); // insert the base indent
+            }
         }
     }
 
@@ -336,6 +349,32 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         }
     }
 
+    /** Indent depth (in {@code {}} nesting levels) for each line: a line starting with `}` is at its closing
+     *  level; the depth otherwise reflects the number of unclosed `{` before the line. */
+    private static Map<Integer, Integer> braceDepth(List<Token> tokens) {
+        Map<Integer, List<Token>> byLine = new TreeMap<>();
+        for (Token t : tokens) {
+            if (t.type() == TokenType.BEGINOFFILE || t.type() == TokenType.ENDOFFILE) continue;
+            byLine.computeIfAbsent(U.range(t).getStart().getLine(), k -> new ArrayList<>()).add(t);
+        }
+        Map<Integer, Integer> depth = new HashMap<>();
+        int d = 0;
+        for (Map.Entry<Integer, List<Token>> e : byLine.entrySet()) {
+            int opens = 0, closes = 0, leadingClose = 0;
+            boolean started = false;
+            for (Token t : e.getValue()) {
+                boolean isOpen  = t.type() == TokenType.LEFT  && t.text().equals("{");
+                boolean isClose = t.type() == TokenType.RIGHT && t.text().equals("}");
+                if (isClose) { closes++; if (!started) leadingClose++; }
+                if (isOpen)  { opens++; }
+                if (isMeaningful(t)) started = true; // a comment/layout token does not end the leading-} run
+            }
+            depth.put(e.getKey(), Math.max(0, d - leadingClose));
+            d += opens - closes;
+        }
+        return depth;
+    }
+
     /** Map of line -&gt; meaningful tokens in order (no layout, no comments). */
     private static Map<Integer, List<Token>> significantByLine(List<Token> tokens) {
         Map<Integer, List<Token>> significant = new HashMap<>();
@@ -445,7 +484,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * (the token after {@code ::}/{@code ::=}/{@code <=>}, or after the leading keyword such as {@code fact}).
      */
     private static void alignContinuations(List<Token> tokens, Map<Token, Integer> operatorColumn,
-            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+            Map<Integer, Token> firstOnLine, Map<Integer, Integer> braceDepth, List<TextEdit> edits) {
         Map<Integer, List<Token>> significant = significantByLine(tokens);
 
         int anchor = -1;
@@ -455,7 +494,8 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                 anchor = firstItemColumn(significant.get(line), operatorColumn, firstOnLine); // head line of a run
             }
             if (continues && anchor >= 0) {
-                indentContinuation(line, anchor, significant.get(line).getFirst(), firstOnLine.get(line), firstOnLine, edits);
+                int base = braceDepth.getOrDefault(line, 0) * INDENT_UNIT;
+                indentContinuation(line, base + anchor, significant.get(line).getFirst(), firstOnLine.get(line), firstOnLine, edits);
             }
         }
     }
@@ -521,6 +561,9 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     private static boolean continuesOntoNextLine(Token last) {
         if (!last.type().isContinuesOnNextLine()) {
             return false;
+        }
+        if (last.type() == TokenType.LEFT && last.text().equals("{")) {
+            return false; // a trailing `{` opens a scope block; its contents are their own head statements
         }
         return !(last.type() == TokenType.OPERATOR && !last.text().isEmpty() && last.text().chars().allMatch(c -> c == '>'));
     }
