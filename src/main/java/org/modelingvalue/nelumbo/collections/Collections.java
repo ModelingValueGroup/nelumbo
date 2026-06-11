@@ -17,10 +17,12 @@
 package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
+import java.math.BigInteger;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.logic.InferContext;
+import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
@@ -33,9 +35,19 @@ public class Collections extends Predicate {
         super(nodeInfo, args);
     }
 
-    @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        return unknown();
+    @NelumboMethod
+    protected InferResult size(NCollection collection, NInteger size) {
+        if (collection == null && size == null) {
+            return unresolvable();
+        }
+        if (collection == null) {
+            return unknown();
+        }
+        BigInteger found = BigInteger.valueOf(collection.size());
+        if (size == null) {
+            return set(1, NInteger.of(found)).factCI();
+        }
+        return size.value().equals(found) ? factCC() : falsehoodCC();
     }
 
 }

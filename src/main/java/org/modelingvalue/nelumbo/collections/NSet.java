@@ -30,7 +30,7 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class NSet extends Node {
+public class NSet extends NCollection {
     @Serial
     private static final long serialVersionUID = 840888260991475386L;
 
@@ -52,19 +52,20 @@ public class NSet extends Node {
         return type().argument();
     }
 
+    @Override
     @SuppressWarnings("unchecked")
-    public <T> Set<T> elements() {
+    public <T> Set<T> collection() {
         return (Set<T>) get(0);
     }
 
     @Override
     public List<Object> args() {
-        return elements().asList();
+        return collection().asList();
     }
 
     @Override
     public String toString(TokenType[] previous) {
-        String string = elements().toString();
+        String string = collection().toString();
         return "{" + string.substring(4, string.length() - 1) + "}";
     }
 

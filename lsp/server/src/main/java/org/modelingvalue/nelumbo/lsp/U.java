@@ -52,17 +52,18 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public class U {
     /**
      * Escape a string so it is safe to embed inside Markdown (for LSP hover, etc.).
-     * - Converts HTML-sensitive characters to entities: &amp;, &lt;, &gt;
-     * - Backslash-escapes common Markdown meta characters: *_`#[](){}!|
+     * - Converts HTML-sensitive characters to entities: &amp;, &lt;, &gt; -
+     * Backslash-escapes common Markdown meta characters: *_`#[](){}!|
      */
     public static String escapeMarkdown(String s) {
         if (s == null || s.isEmpty()) {
             return "";
         }
-        // First escape HTML special chars to avoid HTML interpretation in Markdown renderers
-        String        htmlSafe = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-        StringBuilder out      = new StringBuilder(htmlSafe.length() * 2);
-        String        toEscape = "*_`#[](){}!|";
+        // First escape HTML special chars to avoid HTML interpretation in Markdown
+        // renderers
+        String htmlSafe = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        StringBuilder out = new StringBuilder(htmlSafe.length() * 2);
+        String toEscape = "*_`#[](){}!|";
         for (int i = 0; i < htmlSafe.length(); i++) {
             char c = htmlSafe.charAt(i);
             if (toEscape.indexOf(c) >= 0) {
@@ -73,20 +74,20 @@ public class U {
         return out.toString();
     }
 
-    private static final List<String> CLASSPATH_DIRS          = Arrays.asList(//
-            "out/server/classes/java/main",//
-            "out/server/classes/java/test" //
-                                                                             );
-    private static final List<String> NO_CLASS_PATH_DIR_NAMES = Arrays.asList(//
-            "node_modules", //
-            "src"//
-                                                                             );
-    private static final List<String> PROJECT_INDICATORS      = Arrays.asList(//
-            "build.gradle.kts",//
-            "build.gradle", //
-            "pom.xml", //
-            ".git"//
-                                                                             );
+    private static final List<String> CLASSPATH_DIRS          = Arrays.asList(   //
+            "out/server/classes/java/main",                                      //
+            "out/server/classes/java/test"                                       //
+    );
+    private static final List<String> NO_CLASS_PATH_DIR_NAMES = Arrays.asList(   //
+            "node_modules",                                                      //
+            "src"                                                                //
+    );
+    private static final List<String> PROJECT_INDICATORS      = Arrays.asList(   //
+            "build.gradle.kts",                                                  //
+            "build.gradle",                                                      //
+            "pom.xml",                                                           //
+            ".git"                                                               //
+    );
 
     @SuppressWarnings("unused")
     public static List<Path> findClasspath(Path path) {
@@ -114,21 +115,22 @@ public class U {
 
         for (File file : files) {
             Path filePath = file.toPath();
-            if (!Files.isDirectory(filePath) || filePath.getFileName().toString().startsWith(".") || NO_CLASS_PATH_DIR_NAMES.contains(filePath.getFileName().toString())) {
+            if (!Files.isDirectory(filePath) || filePath.getFileName().toString().startsWith(".")
+                    || NO_CLASS_PATH_DIR_NAMES.contains(filePath.getFileName().toString())) {
                 continue;
             }
 
             boolean ok = false;
             for (String classpathDir : CLASSPATH_DIRS) {
-                String[]     splitClasspath = classpathDir.split("/");
-                List<String> reversedSplit  = new ArrayList<>();
+                String[] splitClasspath = classpathDir.split("/");
+                List<String> reversedSplit = new ArrayList<>();
                 for (int i = splitClasspath.length - 1; i >= 0; i--) {
                     reversedSplit.add(splitClasspath[i]);
                 }
 
                 if (reversedSplit.getFirst().equals(filePath.getFileName().toString())) {
-                    Path parent  = filePath.getParent();
-                    int  okCount = 0;
+                    Path parent = filePath.getParent();
+                    int okCount = 0;
                     for (int i = 1; i < reversedSplit.size(); i++) {
                         if (parent != null && parent.getFileName().toString().equals(reversedSplit.get(i))) {
                             parent = parent.getParent();
@@ -185,15 +187,19 @@ public class U {
 
             if (Files.isDirectory(cp)) {
                 try (Stream<Path> walk = Files.walk(cp)) {
-                    walk.filter(path -> path.toString().endsWith(".class") && !path.getFileName().toString().contains("$")).forEach(classFile -> {
-                        try {
-                            Path   relativePath = cp.relativize(classFile);
-                            String name         = relativePath.toString().substring(0, relativePath.toString().lastIndexOf(".")).replace(File.separator, ".");
-                            classNames.add(name);
-                        } catch (Exception e) {
-                            // Handle path resolution errors
-                        }
-                    });
+                    walk.filter(
+                            path -> path.toString().endsWith(".class") && !path.getFileName().toString().contains("$"))
+                            .forEach(classFile -> {
+                                try {
+                                    Path relativePath = cp.relativize(classFile);
+                                    String name = relativePath.toString()
+                                            .substring(0, relativePath.toString().lastIndexOf("."))
+                                            .replace(File.separator, ".");
+                                    classNames.add(name);
+                                } catch (Exception e) {
+                                    // Handle path resolution errors
+                                }
+                            });
                 } catch (IOException e) {
                     System.err.println("Error walking directory " + cp + ": " + e.getMessage());
                 }
@@ -206,8 +212,10 @@ public class U {
                             continue;
                         }
 
-                        if (entry.getName().endsWith(".class") && Stream.of("META-INF", "module-info.class", "$").noneMatch(exclude -> entry.getName().contains(exclude))) {
-                            String name = entry.getName().substring(0, entry.getName().lastIndexOf(".")).replace("/", ".");
+                        if (entry.getName().endsWith(".class") && Stream.of("META-INF", "module-info.class", "$")
+                                .noneMatch(exclude -> entry.getName().contains(exclude))) {
+                            String name = entry.getName().substring(0, entry.getName().lastIndexOf(".")).replace("/",
+                                    ".");
                             classNames.add(name);
                         }
                     }
@@ -228,13 +236,13 @@ public class U {
         if (s == null || s.isEmpty()) {
             return s;
         }
-        String[]      parts = s.toLowerCase().split("_");
-        StringBuilder out   = new StringBuilder(parts[0]);
+        String[] parts = s.toLowerCase().split("_");
+        StringBuilder out = new StringBuilder(parts[0]);
         for (int i = 1; i < parts.length; i++) {
             String p = parts[i];
             if (!p.isEmpty()) {
                 out.append(Character.toUpperCase(p.charAt(0)))//
-                   .append(p.substring(1));
+                        .append(p.substring(1));
             }
         }
         return out.toString();
@@ -344,9 +352,9 @@ public class U {
             return null;
         }
         return tl.stream()//
-                 .filter(t -> contains(p, t))//
-                 .findFirst()//
-                 .orElse(null);
+                .filter(t -> contains(p, t))//
+                .findFirst()//
+                .orElse(null);
     }
 
     public static Node findNode(Position p, List<Node> nl) {
@@ -354,9 +362,9 @@ public class U {
             return null;
         }
         return nl.stream()//
-                 .filter(n -> contains(p, n))//
-                 .findFirst()//
-                 .orElse(null);
+                .filter(n -> contains(p, n))//
+                .findFirst()//
+                .orElse(null);
     }
 
     public static Range range(Token t) {
@@ -418,9 +426,9 @@ public class U {
 
     public static SelectionRange makeSelectionRange(NlDocument document, Position p) {
         DEBUG("    SelectionRange at %10s:", U.render(p));
-        Node           root  = document.parserResult().root();
-        List<Node>     nodes = document.nodesAt(p).reversed();
-        SelectionRange sr    = new SelectionRange(range(root), null);
+        Node root = document.parserResult().root();
+        List<Node> nodes = document.nodesAt(p).reversed();
+        SelectionRange sr = new SelectionRange(range(root), null);
         DEBUG("        - %10s (file root)", U.render(sr));
         for (Node node : nodes) {
             Range range = range(node);
@@ -439,7 +447,7 @@ public class U {
     public static void DEBUG(String format, Object... args) {
         if (Main.debugging()) {
             synchronized (System.err) {
-                //noinspection RedundantStringFormatCall
+                // noinspection RedundantStringFormatCall
                 System.err.println(String.format(format, args));
             }
         }
@@ -448,25 +456,30 @@ public class U {
     public static void DEBUG_NODE(AstElement node, String indent) {
         if (Main.debugging()) {
             switch (node) {
-                case Token t -> DEBUG("    %-20s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
-                case NList l -> {
-                    Node   declaration = l.declaration();
-                    String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
-                    DEBUG("    %-20s%sL[%d]:%-16s  '%s'  => %s", renderSpan(l), indent, l.elements().size(), l.type(), l, decl);
-                    l.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
-                }
-                case Node n -> {
-                    Node   declaration = n.declaration();
-                    String decl        = declaration == null ? "<none>" : declaration.firstToken() == null ? "" + declaration : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
-                    DEBUG("    %-20s%sN:%-16s  '%s'  => %s", renderSpan(n), indent, n.type(), n, decl);
-                    n.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
-                }
-                case null -> {
-                    DEBUG("                    %-20s%s<null>", "???", indent);
-                }
-                default -> {
-                    DEBUG("                    %-20s%s????? %s   %s", "???", indent, node.getClass().getSimpleName(), node);
-                }
+            case Token t -> DEBUG("    %-20s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
+            case NList l -> {
+                Node declaration = l.declaration();
+                String decl = declaration == null ? "<none>"
+                        : declaration.firstToken() == null ? "" + declaration
+                                : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
+                DEBUG("    %-20s%sL[%d]:%-16s  '%s'  => %s", renderSpan(l), indent, l.collection().size(), l.type(), l,
+                        decl);
+                l.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
+            }
+            case Node n  -> {
+                Node declaration = n.declaration();
+                String decl = declaration == null ? "<none>"
+                        : declaration.firstToken() == null ? "" + declaration
+                                : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
+                DEBUG("    %-20s%sN:%-16s  '%s'  => %s", renderSpan(n), indent, n.type(), n, decl);
+                n.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
+            }
+            case null    -> {
+                DEBUG("                    %-20s%s<null>", "???", indent);
+            }
+            default      -> {
+                DEBUG("                    %-20s%s????? %s   %s", "???", indent, node.getClass().getSimpleName(), node);
+            }
             }
         }
     }

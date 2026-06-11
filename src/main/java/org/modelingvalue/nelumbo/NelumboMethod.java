@@ -21,64 +21,67 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 /**
- * Marks a field that is set through introspection (reflection) and therefore
+ * Marks a method that is through introspection (reflection) and therefore
  * appears unused in static code analysis. This annotation serves as
- * documentation that the field is intentionally present for reflective setting.
+ * documentation that the field is intentionally present for reflective usage.
  * <p>
- * Fields marked with this annotation have the signature: static Functor FUNCTOR
+ * Methods marked with this annotation have the signature that corresponds with
+ * the Functor declaration in Nelumbo files.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface NelumboFunctorField {
+@Target(ElementType.METHOD)
+public @interface NelumboMethod {
     public class Finder {
 
-        private static final Map<Class<?>, Object> CACHE = new ConcurrentHashMap<>();
-        private static final Object                NULL  = new Object();
+        private static final Map<Pair<Class<?>, String>, Object> CACHE          = new ConcurrentHashMap<>();
+        private static final Pattern                             METHOD_PATTERN = Pattern
+                .compile("[a-zA-Z_][0-9a-zA-Z_]*\\(\\,*\\)");
+        private static final Object                              NULL           = new Object();
 
-        public static Field find(Class<?> clazz, KnowledgeBase kb, List<AstElement> list) throws ParseException {
-            Object val = CACHE.get(clazz);
-            if (val != null) {
-                return val instanceof Field field ? field : null;
+        public static Method find(Class<?> clazz, String signature, KnowledgeBase kb, List<AstElement> list)
+                throws ParseException {
+            if (!METHOD_PATTERN.matcher(signature).matches()) {
+                return null;
             }
-            Field field = null;
+            Pair<Class<?>, String> key = Pair.of(clazz, signature);
+            Object val = CACHE.get(key);
+            if (val != null) {
+                return val instanceof Method method ? method : null;
+            }
+            Method method = null;
             try {
-                field = find(clazz);
-                if (field != null) {
-                    field.setAccessible(true);
-                    CACHE.put(clazz, field);
+                method = find(clazz, signature);
+                if (method != null) {
+                    method.setAccessible(true);
+                    CACHE.put(key, method);
                 } else {
-                    CACHE.put(clazz, NULL);
+                    CACHE.put(key, NULL);
                 }
-            } catch (SecurityException | NoSuchFieldException ex) {
+            } catch (SecurityException | NoSuchMethodException ex) {
                 kb.addException(
                         new ParseException(ex, ex + " during finding FUNCTOR field in " + clazz.getName(), list));
             }
-            return field;
+            return method;
         }
 
-        private static Field find(Class<?> clazz) throws NoSuchFieldException {
-            for (Field field : clazz.getDeclaredFields()) {
-                if (field.isAnnotationPresent(NelumboFunctorField.class)) {
-                    if (!Functor.class.isAssignableFrom(field.getType())) {
-                        throw new NoSuchFieldException("@NelumboFunctorField on " + field.getDeclaringClass().getName()
-                                + " is invalid: the type of the field must be " + Functor.class.getSimpleName());
-                    }
-                    if (!Modifier.isStatic(field.getModifiers())) {
-                        throw new NoSuchFieldException("@NelumboFunctorField on " + field.getDeclaringClass().getName()
-                                + " is invalid: it must be a static field");
-                    }
-                    return field;
+        private static Method find(Class<?> clazz, String signature) throws NoSuchMethodException {
+            String name = signature.substring(0, signature.indexOf('('));
+            int nrOfArgs = signature.split(",", 0).length;
+            for (Method method : clazz.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(NelumboMethod.class) && method.getName().equals(name)
+                        && method.getParameterCount() == nrOfArgs) {
+                    return method;
                 }
             }
             return null;

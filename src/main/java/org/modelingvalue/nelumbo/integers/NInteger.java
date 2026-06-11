@@ -50,6 +50,10 @@ public final class NInteger extends Node {
         super(nodeInfo, args);
     }
 
+    public BigInteger value() {
+        return (BigInteger) get(0);
+    }
+
     @Override
     public String toString(TokenType[] previous) {
         BigInteger value = getVal(0);

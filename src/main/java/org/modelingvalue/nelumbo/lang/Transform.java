@@ -57,14 +57,14 @@ public final class Transform extends Node {
     }
 
     public List<Node> targets() {
-        return ((NList) get(1)).<Node>elements();
+        return ((NList) get(1)).<Node>collection();
     }
 
     public List<Node> targetsFlattened() {
         List<Node> result = List.of();
         for (Node e : targets()) {
             if (e instanceof NList nl) {
-                result = result.addAll(nl.elements());
+                result = result.addAll(nl.collection());
             } else {
                 result = result.add(e);
             }

@@ -21,6 +21,7 @@ import static org.modelingvalue.nelumbo.syntax.TokenType.NAME;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -31,6 +32,7 @@ import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
+import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
@@ -62,7 +64,9 @@ public class Functor extends Node implements FunctorOrType {
             Integer leftPrecedence) throws ParseException {
         return new Functor(elements, pattern, result, local,
                 clazz != null ? NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()) : null,
-                leftPrecedence);
+                leftPrecedence,
+                clazz != null ? NelumboMethod.Finder.find(clazz, pattern.name(), KnowledgeBase.CURRENT.get(), List.of())
+                        : null);
     }
 
     private String     name;
@@ -98,6 +102,20 @@ public class Functor extends Node implements FunctorOrType {
         return (Type) get(2);
     }
 
+    @SuppressWarnings("unchecked")
+    public Constructor<? extends Node> constructor() {
+        Object val = get(3);
+        return val instanceof Constructor ? (Constructor<? extends Node>) val : null;
+    }
+
+    public Integer leftPrecedence() {
+        return (Integer) get(4);
+    }
+
+    public Method method() {
+        return (Method) get(5);
+    }
+
     @Override
     public Variable variable() {
         return constructedVariable();
@@ -126,16 +144,6 @@ public class Functor extends Node implements FunctorOrType {
     @Override
     public Functor resetDeclaration() {
         return (Functor) super.resetDeclaration();
-    }
-
-    @SuppressWarnings("unchecked")
-    public Constructor<? extends Node> constructor() {
-        Object val = get(3);
-        return val instanceof Constructor ? (Constructor<? extends Node>) val : null;
-    }
-
-    public Integer leftPrecedence() {
-        return (Integer) get(4);
     }
 
     @Override

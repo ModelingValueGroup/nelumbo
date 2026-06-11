@@ -17,6 +17,8 @@
 package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
@@ -303,7 +305,10 @@ public class Predicate extends Node {
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         Functor functor = functor();
-        if (nrOfUnbound > 1 || //
+        Method method = functor.method();
+        if (method != null) {
+            return callMethod(method);
+        } else if (nrOfUnbound > 1 || //
                 (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
                 (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
             return unresolvable();
@@ -336,6 +341,20 @@ public class Predicate extends Node {
             }
             knowledgebase.memoization(this, result);
             return result;
+        }
+    }
+
+    private InferResult callMethod(Method method) {
+        try {
+            Object[] args = toArray();
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] instanceof Type) {
+                    args[i] = null;
+                }
+            }
+            return (InferResult) method.invoke(this, args);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 

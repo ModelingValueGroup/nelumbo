@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public final class NList extends Node {
+public final class NList extends NCollection {
     @Serial
     private static final long serialVersionUID = 2275866157289787141L;
 
@@ -53,7 +53,7 @@ public final class NList extends Node {
     }
 
     public NList(List<AstElement> elements, NList list, Node last) {
-        super(NodeInfo.of(list.type(), list.astElements().addAll(elements).add(last)), list.elements().add(last));
+        super(NodeInfo.of(list.type(), list.astElements().addAll(elements).add(last)), list.collection().add(last));
     }
 
     @Override
@@ -68,7 +68,7 @@ public final class NList extends Node {
 
     @Override
     public List<Object> args() {
-        return elements();
+        return collection();
     }
 
     @Override
@@ -80,14 +80,15 @@ public final class NList extends Node {
         return type().argument();
     }
 
+    @Override
     @SuppressWarnings("unchecked")
-    public <T> List<T> elements() {
+    public <T> List<T> collection() {
         return (List<T>) get(0);
     }
 
     public <T extends Node> List<T> elementsFlattened() {
         List<T> result = List.of();
-        for (T e : this.<T>elements()) {
+        for (T e : this.<T>collection()) {
             if (e instanceof NList nl) {
                 result = result.addAll(nl.<T>elementsFlattened());
             } else {
@@ -99,7 +100,7 @@ public final class NList extends Node {
 
     @Override
     public String toString(TokenType[] previous) {
-        String string = elements().toString();
+        String string = collection().toString();
         return "[" + string.substring(5, string.length() - 1) + "]";
     }
 
