@@ -81,19 +81,78 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once), "formatting its own output must not change it");
     }
 
-    /** A blank line ends a block, so queries on either side of it are aligned independently, not to each other. */
+    /** A single blank line keeps the two {@code ?} aligned to one shared column (single-gap = same block). */
     @Test
-    void blankLineSeparatesAlignmentBlocks() throws Exception {
+    void singleBlankLineKeepsQueriesAligned() throws Exception {
         String formatted = format("""
                 fib(50)=f          ? [..]
+
+                maxFib(1000000)=f          ? [..]
+                """);
+        String[] ls = formatted.split("\n", -1);
+        assertEquals(ls[0].indexOf('?'), ls[2].indexOf('?'), "a single blank line must not split the query alignment block");
+        assertEquals(formatted, format(formatted), "idempotent");
+    }
+
+    /** A double (2+) blank line separates the query alignment block: each side aligns independently. */
+    @Test
+    void doubleBlankLineSeparatesQueries() throws Exception {
+        String formatted = format("""
+                fib(50)=f          ? [..]
+
 
                 maxFib(1000000)=f          ? [..]
                 """);
         assertEquals("""
                 fib(50)=f ? [..]
 
+
                 maxFib(1000000)=f ? [..]
                 """, formatted);
+    }
+
+    /** A single blank-line gap keeps declaration operators in ONE alignment column (the user's integers.nl case). */
+    @Test
+    void alignsDeclarationOperatorsAcrossSingleBlankLine() throws Exception {
+        String out = format("""
+                a<b   <=> b>a
+
+                a+b=c <=> add(a,b,c)
+                """);
+        String[] ls = out.split("\n", -1);
+        // both <=> share a column even though a blank line separates the two groups:
+        assertEquals(ls[0].indexOf("<=>"), ls[2].indexOf("<=>"), "single blank line must not split the alignment block");
+        assertEquals(out, format(out), "idempotent");
+    }
+
+    /** A double (2+) blank-line gap is a hard separator: each group aligns independently. */
+    @Test
+    void doubleBlankLineSeparatesAlignmentBlocks() throws Exception {
+        String out = format("""
+                a<b   <=> b>a
+
+
+                longLHS=x <=> y
+                """);
+        String[] ls = out.split("\n", -1);
+        // the short group's <=> is NOT pulled out to the long group's column:
+        org.junit.jupiter.api.Assertions.assertTrue(ls[0].indexOf("<=>") < ls[3].indexOf("<=>"),
+            "2+ blank lines separate alignment blocks");
+        assertEquals(out, format(out), "idempotent");
+    }
+
+    /** A content (non-blank) line between two marker lines also separates the alignment block. */
+    @Test
+    void contentLineBetweenSeparatesAlignmentBlocks() throws Exception {
+        // 'Integer a' is a content line between the two rules; the <=> must not align across it.
+        String out = format("""
+                a<b   <=> b>a
+                Integer a
+                longLHS=x <=> y
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertTrue(ls[0].indexOf("<=>") < ls[2].indexOf("<=>"),
+            "a content line between separates alignment blocks");
     }
 
     /** A {@code ?} that ends the line has no expected clause, so nothing is added after it. */
@@ -523,10 +582,11 @@ public class DocumentFormattingServiceTest {
         assertEquals(out, format(out), "must be idempotent");
     }
 
-    /** Two or more consecutive blank lines collapse to a single blank line. */
+    /** Internal blank-line runs are preserved verbatim (no collapsing); only trailing blanks are trimmed. */
     @Test
-    void collapsesMultipleBlankLines() throws Exception {
-        assertEquals("a :: Object\n\nb :: Object\n", format("a :: Object\n\n\n\nb :: Object\n"));
+    void preservesInternalBlankLinesTrimsTrailing() throws Exception {
+        assertEquals("a :: Object\n\n\n\nb :: Object\n", format("a :: Object\n\n\n\nb :: Object\n"));
+        assertEquals("a :: Object\n", format("a :: Object\n\n\n"));
     }
 
     /** Blank lines at end of file are removed (the final statement keeps its single trailing newline). */
@@ -541,12 +601,12 @@ public class DocumentFormattingServiceTest {
         assertEquals("a :: Object\n\nb :: Object\n", format("a :: Object\n\nb :: Object\n"));
     }
 
-    /** Blank-line normalisation is idempotent. */
+    /** Blank-line normalisation is idempotent; internal double blank preserved, trailing blank trimmed. */
     @Test
     void blankLineCollapseIsIdempotent() throws Exception {
         String once = format("a :: Object\n\n\nb :: Object\n\n");
         assertEquals(once, format(once));
-        assertEquals("a :: Object\n\nb :: Object\n", once);
+        assertEquals("a :: Object\n\n\nb :: Object\n", once);
     }
 
     /** A hand-aligned sample touching every pass must be a fixed point: formatting it changes nothing. */
@@ -567,10 +627,10 @@ public class DocumentFormattingServiceTest {
         assertEquals(sample, format(sample), "a hand-aligned file must survive formatting unchanged");
     }
 
-    /** Leading blank lines collapse like any interior run: 2+ become one; a single leading blank survives. */
+    /** Leading blank lines are internal (not trailing), so they are preserved verbatim. */
     @Test
-    void collapsesLeadingBlankLines() throws Exception {
-        assertEquals("\na :: Object\n", format("\n\n\na :: Object\n"));
+    void preservesLeadingBlankLines() throws Exception {
+        assertEquals("\n\n\na :: Object\n", format("\n\n\na :: Object\n"));
         assertEquals("\na :: Object\n", format("\na :: Object\n"));
     }
 

@@ -42,8 +42,8 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
  * a no-op. {@code computeEdits} runs the passes in order: strip leading indent to column 0; align the query
  * {@code ?} and the declaration operators ({@code ::}/{@code ::=}/{@code <=>}) into columns; align
  * variable-declaration names; hang continuation lines under the first item; align the in-body columns
- * ({@code #N} precedence, {@code @}-annotations, {@code if} guards); align trailing {@code //} comments; collapse
- * redundant blank lines; and strip trailing whitespace.
+ * ({@code #N} precedence, {@code @}-annotations, {@code if} guards); align trailing {@code //} comments; trim
+ * trailing blank lines at end-of-file; and strip trailing whitespace.
  *
  * <p>Columns are computed in indent-relative coordinates (so they survive the indent strip), and in-body markers
  * are placed in post-format coordinates anchored at the statement's first item (so the operator's own alignment
@@ -97,6 +97,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         List<TextEdit>      edits          = new ArrayList<>();
         Map<Token, Integer> operatorColumn = new HashMap<>();
         Map<Integer, Token> firstOnLine    = new HashMap<>();
+        Set<Integer>        contentLines   = contentLines(tokens);
         for (Token t : tokens) {
             if (t.type() == TokenType.BEGINOFFILE || t.type() == TokenType.ENDOFFILE) {
                 continue;
@@ -105,13 +106,13 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         }
 
         stripBaseIndent(tokens, firstOnLine, edits);
-        alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine);
-        alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine);
-        alignVarDeclNames(document, tokens, firstOnLine, edits);
+        alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine, contentLines);
+        alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine, contentLines);
+        alignVarDeclNames(document, tokens, firstOnLine, edits, contentLines);
         alignContinuations(tokens, operatorColumn, firstOnLine, edits);
         alignBodyColumns(document, tokens, operatorColumn, firstOnLine, edits);
         alignComments(document, tokens, operatorColumn, firstOnLine, edits);
-        collapseBlankLines(tokens, edits);
+        trimTrailingBlankLines(tokens, edits);
         removeTrailingWhitespace(tokens, edits);
         return edits;
     }
@@ -191,8 +192,8 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * output line.
      */
     private static void alignMarkers(NlDocument document, List<Token> markers, List<TextEdit> edits,
-            Map<Token, Integer> finalColumn, Map<Integer, Token> firstOnLine) {
-        for (List<Token> block : consecutiveBlocks(markers)) {
+            Map<Token, Integer> finalColumn, Map<Integer, Token> firstOnLine, Set<Integer> contentLines) {
+        for (List<Token> block : consecutiveBlocks(markers, contentLines)) {
             int targetColumn = block.stream()
                     .mapToInt(m -> leftEnd(document, m) - indentOf(m.line(), firstOnLine))
                     .max().orElse(0) + 1;
@@ -205,14 +206,18 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         }
     }
 
-    /** Split the markers into runs of adjacent lines; a blank or non-marker line ends a run. */
-    private static List<List<Token>> consecutiveBlocks(List<Token> markers) {
+    /**
+     * Split the markers into alignment blocks. Two consecutive markers stay in the same block when they are
+     * on adjacent lines, or are two lines apart with a single BLANK line between them; a gap of two or more
+     * blank lines, or an intervening content/comment line, starts a new block.
+     */
+    private static List<List<Token>> consecutiveBlocks(List<Token> markers, Set<Integer> contentLines) {
         List<List<Token>> blocks       = new ArrayList<>();
         List<Token>       current      = null;
         int               previousLine = Integer.MIN_VALUE;
         for (Token m : markers) {
             int line = U.range(m).getStart().getLine();
-            if (current == null || line - previousLine > 1) {
+            if (current == null || !sameAlignmentBlock(previousLine, line, contentLines)) {
                 current = new ArrayList<>();
                 blocks.add(current);
             }
@@ -220,6 +225,16 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             previousLine = line;
         }
         return blocks;
+    }
+
+    /**
+     * Whether markers at lines {@code prev} &lt; {@code cur} belong to the same alignment block: adjacent
+     * lines ({@code cur - prev == 1}), or separated by exactly one BLANK line ({@code cur - prev == 2} and
+     * line {@code prev + 1} is not a content line). Any larger gap, or a content/comment line between them,
+     * starts a new block.
+     */
+    private static boolean sameAlignmentBlock(int prev, int cur, Set<Integer> content) {
+        return cur - prev == 1 || (cur - prev == 2 && !content.contains(prev + 1));
     }
 
     /** Column right after the last non-whitespace character before {@code marker} on its line. */
@@ -351,7 +366,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * (indent-relative) column. Blocks are split on non-declaration lines (or gaps in line numbers).
      */
     private static void alignVarDeclNames(NlDocument document, List<Token> tokens,
-            Map<Integer, Token> firstOnLine, List<TextEdit> edits) {
+            Map<Integer, Token> firstOnLine, List<TextEdit> edits, Set<Integer> contentLines) {
         Map<Integer, List<Token>> significant = significantByLine(tokens);
         List<Token> nameMarkers = new ArrayList<>();
         for (int line : significant.keySet().stream().sorted().toList()) {
@@ -360,7 +375,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
                 nameMarkers.add(l.get(1)); // the first variable name
             }
         }
-        for (List<Token> block : consecutiveBlocks(nameMarkers)) {
+        for (List<Token> block : consecutiveBlocks(nameMarkers, contentLines)) {
             int target = block.stream()
                               .mapToInt(m -> leftEnd(document, m) - indentOf(m.line(), firstOnLine))
                               .max().orElse(0) + 1;
@@ -756,43 +771,42 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         }
     }
 
+    /** Every line carrying a meaningful token or a comment token — the document's "content lines". */
+    private static Set<Integer> contentLines(List<Token> tokens) {
+        Set<Integer> contentLines = new HashSet<>();
+        for (Token t : tokens) {
+            if (isMeaningful(t) || t.type() == TokenType.END_LINE_COMMENT || t.type() == TokenType.IN_LINE_COMMENT) {
+                contentLines.add(U.range(t).getStart().getLine());
+            }
+        }
+        return contentLines;
+    }
+
     /**
-     * Collapse runs of two or more consecutive blank lines into a single blank line, and remove blank lines
-     * at end-of-file. A blank line carries no meaningful token and no comment, so a comment-only line (e.g. a
-     * license-header line) is content and is preserved.
+     * Remove blank lines at end-of-file only; all internal blank-line runs are left exactly as written. A
+     * blank line carries no meaningful token and no comment, so a comment-only line (e.g. a license-header
+     * line) is content and is preserved.
      * <p>
-     * A blank line is deleted by removing its NEWLINE token range, which the tokenizer spans as
+     * A trailing blank line is deleted by removing its NEWLINE token range, which the tokenizer spans as
      * {@code (L, col)..(L+1, 0)} — exactly the line terminator — so line {@code L} merges into line
      * {@code L+1}. Combined with {@link #removeTrailingWhitespace}, which strips any HSPACE on the blank line
-     * (a distinct, earlier range), the whole blank line disappears. A blank line is deleted when it is a
-     * trailing blank ({@code L > lastContentLine}) or the second-or-later blank in an internal run (its
-     * predecessor is also blank); the first blank in an internal run is kept. Leading blank lines (those
-     * before the first content line) are collapsed exactly like any interior run — the first is kept — so a
-     * single leading blank survives while a run of 2+ collapses to one.
+     * (a distinct, earlier range), the whole blank line disappears. A blank line's NEWLINE is deleted only
+     * when it is a trailing blank ({@code L > lastContentLine}); internal blanks are never touched.
      */
-    private static void collapseBlankLines(List<Token> tokens, List<TextEdit> edits) {
-        Set<Integer>        contentLines = new HashSet<>();
+    private static void trimTrailingBlankLines(List<Token> tokens, List<TextEdit> edits) {
+        Set<Integer>        contentLines = contentLines(tokens);
         Map<Integer, Token> newlineOf    = new HashMap<>();
         // A multi-line block comment (/* ... */) is a single token whose interior newlines are consumed by
         // the token, so its interior lines have no NEWLINE token in newlineOf and can never be deleted here.
         for (Token t : tokens) {
-            int line = U.range(t).getStart().getLine();
-            if (isMeaningful(t) || t.type() == TokenType.END_LINE_COMMENT || t.type() == TokenType.IN_LINE_COMMENT) {
-                contentLines.add(line);
-            }
             if (t.type() == TokenType.NEWLINE) {
-                newlineOf.put(line, t);
+                newlineOf.put(U.range(t).getStart().getLine(), t);
             }
         }
         int lastContentLine = contentLines.stream().mapToInt(Integer::intValue).max().orElse(-1);
         for (Map.Entry<Integer, Token> e : newlineOf.entrySet()) {
             int line = e.getKey();
-            if (contentLines.contains(line)) {
-                continue; // not a blank line
-            }
-            boolean trailing      = line > lastContentLine;
-            boolean prevAlsoBlank = line - 1 >= 0 && !contentLines.contains(line - 1);
-            if (trailing || prevAlsoBlank) {
+            if (line > lastContentLine) { // trailing blank line: drop its newline
                 edits.add(new TextEdit(U.range(e.getValue()), ""));
             }
         }
