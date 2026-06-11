@@ -61,9 +61,13 @@ fib(5)=f    ? [(f=5)][..]
 
 ## Column alignment
 
-Within a run of adjacent lines, the formatter pads whitespace so related markers line up
-into a column. A blank line (or a line without the marker) ends a run, so groups separated
-by a blank line are aligned independently.
+Within a run of lines, the formatter pads whitespace so related markers line up into a
+column. A run continues across a **single** blank line, so adjacent groups separated by one
+blank line share the same column — for example, every `<=>` in a section of related rules
+lines up even when blank lines group the rules visually. A run is broken by **two or more**
+blank lines, or by an intervening line that is not part of the run (a statement of a
+different kind, or a comment line). Use a double blank line to keep two groups aligned
+independently.
 
 | What aligns | Where | Notes |
 |---|---|---|
@@ -86,8 +90,10 @@ pattern, not a statement-level precedence marker, and is left untouched.
 
 ## Blank lines and trailing whitespace
 
-- Runs of two or more consecutive blank lines collapse to a single blank line.
-- Blank lines at the end of the file are removed.
+- Blank lines at the **start** and **end** of the file are removed.
+- The file always ends with exactly one newline (added if missing).
+- Blank lines **between** statements are left as written — a single blank keeps the
+  surrounding statements in one alignment run, a double blank separates them (see above).
 - Trailing whitespace is stripped from every line.
 
 ## Range formatting
