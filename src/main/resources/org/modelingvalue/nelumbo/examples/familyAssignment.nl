@@ -1,21 +1,21 @@
 import      nelumbo.logic
 
-Person    :: Object
-Male      :: Person
-Female    :: Person
+Person   :: Object
+Male     :: Person
+Female   :: Person
 
-FactType  ::= pc(<Person>,<Person>)   // parent-child
+FactType ::= pc(<Person>,<Person>)   // parent-child
 
-Person    ::= p(<Person>),   // parent
-              c(<Person>),   // child
-              a(<Person>),   // ancestor
-              d(<Person>),   // descendant
-              m(<Person>),   // mother
-              f(<Person>)    // father
-              
-              
+Person   ::= p(<Person>),  // parent
+             c(<Person>),  // child
+             a(<Person>),  // ancestor
+             d(<Person>),  // descendant
+             m(<Person>),  // mother
+             f(<Person>)   // father
+
+
 Person a
-              
+
 // Rules here
 
 Male   ::= Hendrik, Bernhard, Claus, Willem
@@ -30,11 +30,11 @@ fact pc(Hendrik, Juliana),
      pc(Willem, Amalia),
      pc(Maxima, Amalia)
 
-    
-a(Amalia)=a         ? [(a=Beatrix),(a=Maxima),(a=Hendrik),(a=Bernhard),(a=Juliana),(a=Claus),(a=Willem),(a=Wilhelmina)][..]
-    
-m(Amalia)=Maxima    ? [()][]
-m(Amalia)=Willem    ? [][()]
-m(Amalia)=a         ? [(a=Maxima)][..]
-f(Amalia)=a         ? [(a=Willem)][..]
-f(m(f(Amalia)))=a   ? [(a=Bernhard)][..]
+
+a(Amalia)=a       ? [(a=Beatrix),(a=Maxima),(a=Hendrik),(a=Bernhard),(a=Juliana),(a=Claus),(a=Willem),(a=Wilhelmina)][..]
+
+m(Amalia)=Maxima  ? [()][]
+m(Amalia)=Willem  ? [][()]
+m(Amalia)=a       ? [(a=Maxima)][..]
+f(Amalia)=a       ? [(a=Willem)][..]
+f(m(f(Amalia)))=a ? [(a=Bernhard)][..]

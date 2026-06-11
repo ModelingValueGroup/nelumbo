@@ -1,24 +1,23 @@
-
 import nelumbo.strings
 
 // Language
 
 Root ::= attr <Type> <NAME> <Type> #100
 
-Type OT, AT 
+Type OT, AT
 NAME AN
 
-attr OT AN AT  ::> { 
-    AT       ::= <OT>.AN
-    Root     ::= <OT>.AN := <AT>
-    private FactType ::= AN(<OT>,<AT>) 
+attr OT AN AT  ::> {
+    AT               ::= <OT>.AN
+    Root             ::= <OT>.AN := <AT>
+    private FactType ::= AN(<OT>,<AT>)
     OT o
     AT a
-    o.AN=a  <=>  AN(o,a)
+    o.AN=a <=>  AN(o,a)
     o.AN := a ::> {
-       fact AN(o,a)
+        fact AN(o,a)
     }
-} 
+}
 
 // Model
 
@@ -30,7 +29,7 @@ attr Person friend Person
 
 // Example
 
-Person ::= Piet, Jan 
+Person ::= Piet, Jan
 
 Piet.name    := "Piet"
 Piet.address := "Kalverstraat"

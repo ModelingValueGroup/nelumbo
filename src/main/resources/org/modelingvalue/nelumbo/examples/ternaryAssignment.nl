@@ -1,7 +1,7 @@
 import nelumbo.logic
 
 Type T
-T ::= <Boolean#5> ? <T> : <T>  
+T ::= <Boolean#5> ? <T> : <T>
 
 // Rules here
 

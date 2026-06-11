@@ -1,12 +1,12 @@
 import nelumbo.logic
 
 Type T
-T ::= <Boolean#5> ? <T> : <T>  
-T t,f,r
+T ::= <Boolean#5> ? <T> : <T>
+T       t,f,r
 Boolean b
 
-(b?t:f)=r <=> t=r if  b,
-              f=r if !b
+(b?t:f)=r <=>  t=r if  b,
+               f=r if !b
 
 import nelumbo.strings
 
