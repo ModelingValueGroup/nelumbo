@@ -141,6 +141,23 @@ public class DocumentFormattingServiceTest {
         assertEquals(out, format(out), "idempotent");
     }
 
+    /** A continuation line does not break the alignment run: a statement with a continuation still aligns with the
+     *  following statement's operator (collections.nl: Set<E> ::= …(cont) then List<E> ::= … line up). */
+    @Test
+    void continuationLineDoesNotBreakAlignmentRun() throws Exception {
+        String out = format("""
+                Set<E> ::= { a },
+                           { b }
+                List<E> ::= [ c ]
+                """);
+        String[] ls = out.split("\n", -1);
+        int setOp  = ls[0].indexOf("::=");
+        int listOp = ls[2].indexOf("::=");
+        org.junit.jupiter.api.Assertions.assertTrue(setOp > 0 && setOp == listOp,
+            "Set<E> ::= and List<E> ::= must share a column across the continuation line (got " + setOp + " vs " + listOp + ")");
+        assertEquals(out, format(out), "idempotent");
+    }
+
     /** A content (non-blank) line between two marker lines also separates the alignment block. */
     @Test
     void contentLineBetweenSeparatesAlignmentBlocks() throws Exception {
