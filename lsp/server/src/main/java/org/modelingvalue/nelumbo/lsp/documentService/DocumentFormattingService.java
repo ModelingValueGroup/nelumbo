@@ -112,7 +112,7 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
             firstOnLine.putIfAbsent(U.range(t).getStart().getLine(), t);
         }
 
-        indentBaseLines(tokens, firstOnLine, braceDepth, edits);
+        indentBaseLines(tokens, firstOnLine, braceDepth, contentLines, edits);
         alignMarkers(document, markers(tokens, t -> t.text().equals("?")), edits, null, firstOnLine, significant, contentLines, braceDepth);
         alignMarkers(document, markers(tokens, t -> DECLARATION_OPERATORS.contains(t.text())), edits, operatorColumn, firstOnLine, significant, contentLines, braceDepth);
         alignVarDeclNames(document, tokens, firstOnLine, edits, significant, contentLines, braceDepth);
@@ -171,15 +171,19 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
      * {@link #INDENT_UNIT} spaces). Continuation lines are left for {@link #alignContinuations} to indent.
      * Blank/whitespace-only lines are left to the trailing-whitespace pass. At depth 0 this strips the
      * leading indent to column 0 (the previous behaviour); deeper lines are set/inserted to the base indent.
+     * <p>
+     * A comment-only line (no meaningful token but a {@code //} comment) is in {@code contentLines}, so it is
+     * re-indented to the surrounding brace depth like a code head line rather than left at its original indent.
+     * A genuinely blank line is not in {@code contentLines} and is skipped.
      */
     private static void indentBaseLines(List<Token> tokens, Map<Integer, Token> firstOnLine,
-            Map<Integer, Integer> braceDepth, List<TextEdit> edits) {
+            Map<Integer, Integer> braceDepth, Set<Integer> contentLines, List<TextEdit> edits) {
         Map<Integer, List<Token>> significant = significantByLine(tokens);
         for (Map.Entry<Integer, Token> e : firstOnLine.entrySet()) {
             int   line  = e.getKey();
             Token first = e.getValue();
-            if (significant.get(line) == null) {
-                continue; // blank / whitespace-only line: trailing-whitespace pass handles it
+            if (!contentLines.contains(line)) {
+                continue; // genuinely blank / whitespace-only line: trailing-whitespace pass handles it
             }
             if (endsWithContinuation(significant.get(line - 1))) {
                 continue; // a continuation line keeps its hanging indent

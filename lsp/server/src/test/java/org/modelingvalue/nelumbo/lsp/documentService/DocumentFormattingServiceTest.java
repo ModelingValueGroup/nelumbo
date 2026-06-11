@@ -599,6 +599,26 @@ public class DocumentFormattingServiceTest {
         assertEquals("// just a comment\n", format("// just a comment\n"));
     }
 
+    /** Comment-only lines are indented to the surrounding brace depth, not left at their original indent. */
+    @Test
+    void indentsCommentOnlyLinesToBraceDepth() throws Exception {
+        String out = format("""
+                    // top comment
+                a :: Object
+                {
+                    // inner comment
+                b :: Object
+                }
+                """);
+        String[] ls = out.split("\n", -1);
+        org.junit.jupiter.api.Assertions.assertEquals("// top comment", ls[0], "top-level comment to column 0");
+        org.junit.jupiter.api.Assertions.assertEquals("a :: Object", ls[1]);
+        org.junit.jupiter.api.Assertions.assertEquals("{", ls[2]);
+        org.junit.jupiter.api.Assertions.assertEquals("    // inner comment", ls[3], "in-block comment indented one level");
+        org.junit.jupiter.api.Assertions.assertEquals("    b :: Object", ls[4]);
+        assertEquals(out, format(out), "idempotent");
+    }
+
     /** Same hardening for the #N column: a head line whose operator spacing changes keeps #N aligned. */
     @Test
     void alignsPrecedenceWhenHeadOperatorSpacingChanges() throws Exception {
