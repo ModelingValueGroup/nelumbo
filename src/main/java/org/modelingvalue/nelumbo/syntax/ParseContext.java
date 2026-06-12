@@ -211,11 +211,15 @@ public interface ParseContext {
             Map<Type, ParseState> states = postStates(group);
             if (states != null) {
                 for (ParseState state : states.toValues()) {
-                    for (Type sup : left.type().allSupers()) {
+                    Type type = left.type();
+                    for (Type sup : type.allSupers().add(Type.DUMMY)) {
                         ParseState found = state.nodeTypes().get(sup);
                         if (found != null) {
                             result.clear();
                             result.left(left);
+                            for (Variable var : found.typeArgs()) {
+                                result.putTypeArg(var, type.argument());
+                            }
                             return found.parse(token, result, Map.of(), true);
                         }
                     }

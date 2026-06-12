@@ -73,6 +73,8 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type  COLLECTION   = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type  SET          = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
     public static final Type  LIST         = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    //
+    public static final Type DUMMY = new Type("$DUMMY", "$DUMMY");
 
     public static List<Type> predefined() {
         return List.of(//

@@ -89,7 +89,20 @@ public class NodeTypePattern extends Pattern {
     @Override
     public ParseState state(ParseState next) {
         Boolean visible = visible();
-        return new ParseState(nodeType(), precedence(), visible != null ? next.setVisibility(visible) : next);
+        if (visible != null) {
+            next = next.setVisibility(visible);
+        }
+        Type nodeType = nodeType();
+        Variable typeArg = nodeType.argument().variable();
+        if (typeArg != null) {
+            next = next.addTypeArg(typeArg);
+            if (nodeType.variable() == typeArg) {
+                nodeType = Type.DUMMY.setGroup(nodeType.group());
+            } else {
+                nodeType = nodeType.setArgument(Type.DUMMY.setGroup(nodeType.group()));
+            }
+        }
+        return new ParseState(nodeType, precedence(), next);
     }
 
     @Override
