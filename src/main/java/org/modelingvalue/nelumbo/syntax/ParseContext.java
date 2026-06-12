@@ -210,13 +210,26 @@ public interface ParseContext {
         if (left != null) {
             Map<Type, ParseState> states = postStates(group);
             if (states != null) {
+                Type type = left.type();
                 for (ParseState state : states.toValues()) {
-                    for (Type sup : left.type().allSupers()) {
-                        ParseState found = state.nodeTypes().get(sup);
+                    ParseState found = null;
+                    for (Type sup : type.allSupers()) {
+                        found = state.nodeTypes().get(sup);
                         if (found != null) {
                             result.clear();
                             result.left(left);
-                            return found.parse(token, result, Map.of(), true);
+                            if (found.parse(token, result, Map.of(), true)) {
+                                return true;
+                            }
+                            break;
+                        }
+                    }
+                    result.clear();
+                    found = state.generics(result, type);
+                    if (found != null) {
+                        result.left(left);
+                        if (found.parse(token, result, Map.of(), true)) {
+                            return true;
                         }
                     }
                 }

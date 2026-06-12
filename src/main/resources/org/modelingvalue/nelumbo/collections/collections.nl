@@ -24,9 +24,9 @@ Boolean         ::= <Set<E>> "<"  <Set<E>>        #30,
 
 Set<E>          ::= { <(> <E> <,> , <)*> }      @nelumbo.collections.NSet,
                     { [ <E> ] ( <Boolean#0> ) } @nelumbo.collections.SetBuilder,
-                    <Set<E>> & <Set<E>> #60,
-                    <Set<E>> | <Set<E>> #60,
-                    <Set<E>> - <Set<E>> #50
+                    <Set<E>> && <Set<E>> #60,
+                    <Set<E>> || <Set<E>> #60,
+                    <Set<E>> - <Set<E>>  #50
 
 Integer         ::= | <Collection<E>> | #35,
                     <E> "pos" <List<E>> #40
@@ -41,19 +41,19 @@ Collection<E> c
 Set<E>        s, s1, s2, s3
 List<E>       l, l1, l2, l3
 
-|c|=i        <=>  size(c,i)
+|c|=i         <=>  size(c,i)
 
-{[e](b)}=s   <=>  build(e, b, s)
-e in s       <=>  elementOf(s, e)
-s1 < s2      <=>  subset(s1, s2)
-s1 > s2      <=>  subset(s2, s1)
-s1 & s2 = s3 <=>  intersection(s1, s2, s3)
-s1 | s2 = s3 <=>  union(s1, s2, s3)
-s1 - s2 = s3 <=>  diff(s1, s2, s3)
+{[e](b)}=s    <=>  build(e, b, s)
+e in s        <=>  elementOf(s, e)
+s1 < s2       <=>  subset(s1, s2)
+s1 > s2       <=>  subset(s2, s1)
+s1 && s2 = s3 <=>  intersection(s1, s2, s3)
+s1 || s2 = s3 <=>  union(s1, s2, s3)
+s1 - s2 = s3  <=>  diff(s1, s2, s3)
 
-e pos l = i  <=>  indexOf(l, e, i)
-l1 + l2 = l3 <=>  concat(l1, l2, l3)
+e pos l = i   <=>  indexOf(l, e, i)
+l1 + l2 = l3  <=>  concat(l1, l2, l3)
 
-s1 <= s2     <=>  s1 < s2 | s1 = s2
-s1 >= s2     <=>  s1 > s2 | s1 = s2
-e in l       <=>  E[i](e pos l = i)
+s1 <= s2      <=>  s1 < s2 | s1 = s2
+s1 >= s2      <=>  s1 > s2 | s1 = s2
+e in l        <=>  E[i](e pos l = i)

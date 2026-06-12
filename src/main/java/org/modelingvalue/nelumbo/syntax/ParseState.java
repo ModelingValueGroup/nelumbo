@@ -674,7 +674,7 @@ public class ParseState implements Mergeable<ParseState> {
 
     }
 
-    private ParseState generics(PatternResult result, Type type) {
+    public ParseState generics(PatternResult result, Type type) {
         for (Entry<Type, ParseState> ts : nodeTypes()) {
             Variable arg = ts.getKey().argument().variable();
             if (arg != null) {
