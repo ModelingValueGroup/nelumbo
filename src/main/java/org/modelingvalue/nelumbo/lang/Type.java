@@ -118,15 +118,15 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type(Class<?> clss, Type... supers) {
-        super(NodeInfo.of(TYPE), clss, supers.length == 0 ? Set.of() : Set.of(supers), group(supers));
+        super(NodeInfo.of(TYPE), clss, Set.of(supers), group(supers));
     }
 
     public Type(String name, String group, Type... supers) {
-        super(NodeInfo.of(TYPE), name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group);
+        super(NodeInfo.of(TYPE), name, Set.of(supers), group);
     }
 
     public Type(String name, Type... supers) {
-        super(NodeInfo.of(TYPE), name, supers.length == 0 ? Set.of(OBJECT) : Set.of(supers), group(supers));
+        super(NodeInfo.of(TYPE), name, Set.of(supers), group(supers));
     }
 
     public Type(TokenType type) {
@@ -134,11 +134,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type(Variable var) {
-        this(List.of(var), var, DEFAULT_GROUP);
-    }
-
-    public Type(List<AstElement> elements, Variable var, String group) {
-        super(NodeInfo.of(TYPE, elements), var, Set.of(OBJECT), group);
+        super(NodeInfo.of(TYPE, List.of(var)), var, Set.of(OBJECT), DEFAULT_GROUP);
         assert Type.TYPE.equals(var.type());
     }
 
@@ -146,19 +142,19 @@ public final class Type extends Node implements FunctorOrType {
         super(NodeInfo.of(TYPE, elements), name, supers.asSet(), group);
     }
 
-    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, Type element) {
-        super(NodeInfo.of(TYPE, elements), name, supers.asSet(), group, element);
+    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, Type arg) {
+        super(NodeInfo.of(TYPE, elements), name, supers.asSet(), group, arg);
     }
 
-    private Type(String name, Type sup, Type element, String group) {
-        this(List.of(), name, Set.of(sup), group, element);
+    private Type(String name, Type sup, Type arg, String group) {
+        this(List.of(), name, Set.of(sup), group, arg);
     }
 
     public Type(Type super1, Type super2) {
-        super(NodeInfo.of(TYPE), Set.of(super1, super2), Set.of(super1, super2) //
-                .addAll(super1.supers().remove(OBJECT).replaceAll(s1 -> new Type(s1, super2))) //
-                .addAll(super2.supers().remove(OBJECT).replaceAll(s2 -> new Type(super1, s2))) //
-                , super1.group());
+        super(NodeInfo.of(TYPE), Set.of(super1, super2), Set.of(super1, super2)//
+                .addAll(super1.supers().replaceAll(s1 -> new Type(s1, super2))) //
+                .addAll(super2.supers().replaceAll(s2 -> new Type(super1, s2))) //
+                , group(new Type[] { super1, super2 }));
     }
 
     private static Object group(Type... supers) {
@@ -166,19 +162,40 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @Override
-    public Type setFunctorOrType(FunctorOrType functorOrType) {
-        return (Type) super.setFunctorOrType(functorOrType);
-    }
-
-    @Override
     public Type setAstElements(List<AstElement> elements) {
         return (Type) super.setAstElements(elements);
+    }
+
+    public boolean isMany() {
+        return get(0) instanceof Set;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Set<Type> many() {
+        return (Set<Type>) get(0);
+    }
+
+    public boolean hasArgument() {
+        if (isMany()) {
+            for (Type m : many()) {
+                if (m.hasArgument()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return length() == 4;
     }
 
     public Type argument() {
         if (hasArgument()) {
             if (isMany()) {
-                return many().filter(Type::hasArgument).findFirst().get().argument();
+                for (Type m : many()) {
+                    if (m.hasArgument()) {
+                        return m.argument();
+                    }
+                }
+                return this;
             }
             return (Type) get(3);
         } else {
@@ -203,12 +220,18 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @Override
-    public Type setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
-        Variable var = variable();
-        if (var != null && vars.get(var) instanceof Type elt) {
-            return elt;
+    public Variable variable() {
+        if (isMany()) {
+            for (Type m : many()) {
+                Variable var = m.variable();
+                if (var != null) {
+                    return var;
+                }
+            }
+            return null;
         }
-        return (Type) super.setBinding(declaration(), vars, setFunctorOrType);
+        Object type = get(0);
+        return type instanceof Variable var ? var : null;
     }
 
     public String group() {
@@ -219,27 +242,20 @@ public final class Type extends Node implements FunctorOrType {
         return set(2, group);
     }
 
-    @SuppressWarnings("unchecked")
-    public Set<Type> many() {
-        return (Set<Type>) get(0);
-    }
-
-    public boolean hasArgument() {
-        if (isMany()) {
-            return many().anyMatch(Type::hasArgument);
+    @Override
+    public Type setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
+        Variable var = variable();
+        if (var != null && vars.get(var) instanceof Type elt) {
+            return elt;
         }
-        return length() == 4;
-    }
-
-    public boolean isMany() {
-        return get(0) instanceof Set;
+        return (Type) super.setBinding(declaration(), vars, setFunctorOrType);
     }
 
     public Type toFunction() {
         if (isFunction()) {
             return this;
         } else if (function == null) {
-            return function = equals(OBJECT) ? FUNCTION : new Type(this, FUNCTION);
+            return function = equals(OBJECT) ? FUNCTION : new Type(nonLiteral(), FUNCTION);
         }
         return function;
     }
@@ -276,7 +292,7 @@ public final class Type extends Node implements FunctorOrType {
         if (isLiteral()) {
             return this;
         } else if (literal == null) {
-            return literal = equals(OBJECT) ? LITERAL : new Type(this, LITERAL);
+            return literal = equals(OBJECT) ? LITERAL : new Type(nonFunction(), LITERAL);
         }
         return literal;
     }
@@ -376,21 +392,6 @@ public final class Type extends Node implements FunctorOrType {
         return type instanceof Class<?> clss ? (Class<? extends Node>) clss : null;
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public Variable variable() {
-        Object type = length() > 0 ? get(0) : null;
-        if (type instanceof Set<?> s) {
-            for (Type t : (Set<Type>) s) {
-                Variable var = t.variable();
-                if (var != null) {
-                    return var;
-                }
-            }
-        }
-        return type instanceof Variable var ? var : null;
-    }
-
     public Type rewrite(Type type) {
         if (isLiteral()) {
             return type.toLiteral();
@@ -445,67 +446,25 @@ public final class Type extends Node implements FunctorOrType {
 
     public boolean isAssignableFrom(Type type) {
         if (isMany()) {
-            return many().allMatch(s -> s.isAssignableFrom(type));
+            for (Type m : many()) {
+                if (!m.isAssignableFrom(type)) {
+                    return false;
+                }
+            }
+            return true;
         }
         for (Type s : type.allSupers()) {
             if (equals(s)) {
                 return true;
-            } else if (hasArgument() && s.hasArgument() && get(0).equals(s.get(0))) {
+            } else if (get(0).equals(s.get(0)) && hasArgument() && s.hasArgument()) {
                 if (argument().isAssignableFrom(s.argument())) {
                     return true;
                 } else if (argument().get(0) instanceof Variable || s.argument().get(0) instanceof Variable) {
                     return true;
                 }
-                return false;
             }
         }
         return false;
-    }
-
-    public boolean isAssignableFrom(Class<?> type) {
-        Class<?> clss = clss();
-        return clss != null && clss.isAssignableFrom(type);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (reason == ConstructionReason.parsing) {
-            if (length() > 2 && get(2) instanceof String) {
-                return this;
-            }
-            if (super.functorOrType() instanceof Functor functor
-                    && functor.astElements().first() instanceof Type type) {
-                Type result = type.setAstElements(astElements());
-                if (result.hasArgument() && get(0) instanceof Type elem) {
-                    result = result.setArgument(elem);
-                }
-                return result.setFunctorOrType(functor);
-            }
-            Set<Type> supers = Set.of();
-            for (Type sup : (List<Type>) get(2)) {
-                supers = supers.add(sup);
-            }
-            String group = (String) get(3);
-            if (group == null) {
-                group = DEFAULT_GROUP;
-            }
-            Type type;
-            String name = (String) get(0);
-            Type arg = (Type) get(1);
-            if (arg != null) {
-                Variable var = arg.variable();
-                if (var == null || !Type.TYPE.equals(var.type())) {
-                    knowledgeBase.addException(
-                            new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
-                }
-                type = new Type(astElements(), name, supers, group, arg);
-            } else {
-                type = new Type(astElements(), name, supers, group);
-            }
-            return knowledgeBase.addType(type, ctx);
-        }
-        return this;
     }
 
     public Type common(Type other) {
@@ -528,6 +487,49 @@ public final class Type extends Node implements FunctorOrType {
             }
         }
         return null;
+    }
+
+    public boolean isAssignableFrom(Class<?> type) {
+        Class<?> clss = clss();
+        return clss != null && clss.isAssignableFrom(type);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing) {
+            if (length() > 2 && get(2) instanceof String) {
+                return this;
+            }
+            if (super.functorOrType() instanceof Functor functor
+                    && functor.astElements().first() instanceof Type type) {
+                Type result = type.setAstElements(astElements());
+                if (result.hasArgument() && get(0) instanceof Type elem) {
+                    result = result.setArgument(elem);
+                }
+                return result.setFunctorOrType(functor);
+            }
+            List<Type> supers = (List<Type>) get(2);
+            String group = (String) get(3);
+            if (group == null) {
+                group = DEFAULT_GROUP;
+            }
+            Type type;
+            String name = (String) get(0);
+            Type arg = (Type) get(1);
+            if (arg != null) {
+                Variable var = arg.variable();
+                if (var == null || !Type.TYPE.equals(var.type())) {
+                    knowledgeBase.addException(
+                            new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
+                }
+                type = new Type(astElements(), name, supers, group, arg);
+            } else {
+                type = new Type(astElements(), name, supers, group);
+            }
+            return knowledgeBase.addType(type, ctx);
+        }
+        return this;
     }
 
     @Override

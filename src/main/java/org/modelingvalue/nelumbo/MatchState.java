@@ -146,30 +146,30 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
                 return state;
             }
         }
-        Entry<Object, MatchState<E>> ts = argType();
-        if (ts != null) {
-            Variable var = ((Type) ts.getKey()).argument().variable();
-            Type found = typeArgs.get(var);
-            if (found != null) {
-                found = ((Type) ts.getKey()).setArgument(found);
-                found = type.common(found);
-                if (found != null) {
-                    typeArgs.put(var, found.argument());
-                    return ts.getValue();
-                }
-            } else {
-                typeArgs.put(var, type.argument());
-                return ts.getValue();
-            }
+        state = generics(typeArgs, type);
+        if (state != null) {
+            return state;
         }
         state = transitions().get(Type.TYPE);
         return state;
     }
 
-    private Entry<Object, MatchState<E>> argType() {
+    private MatchState<E> generics(MutableMap<Variable, Type> typeArgs, Type type) {
         for (Entry<Object, MatchState<E>> e : transitions()) {
-            if (e.getKey() instanceof Type t && t.argument().variable() != null) {
-                return e;
+            if (e.getKey() instanceof Type t) {
+                Variable arg = t.argument().variable();
+                if (arg != null) {
+                    Type found = typeArgs.get(arg);
+                    if (found == null) {
+                        found = type.argument();
+                    }
+                    found = t.setArgument(found);
+                    found = type.common(found);
+                    if (found != null) {
+                        typeArgs.put(arg, found.argument());
+                        return e.getValue();
+                    }
+                }
             }
         }
         return null;

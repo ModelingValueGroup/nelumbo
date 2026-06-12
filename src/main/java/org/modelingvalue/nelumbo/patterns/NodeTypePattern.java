@@ -154,19 +154,20 @@ public class NodeTypePattern extends Pattern {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
                 Type type = nodeType();
+                Variable var = type.argument().variable();
+                if (var != null) {
+                    Type arg = typeArgs.get(var);
+                    if (arg != null) {
+                        type = type.setArgument(arg);
+                    }
+                }
                 if (type.isAssignableFrom(n.type())) {
                     args.add(n);
                     return i + 1;
-                } else if (Type.VARIABLE.equals(type) && n instanceof Variable) {
+                }
+                if (Type.VARIABLE.equals(type) && n instanceof Variable) {
                     args.add(n);
                     return i + 1;
-                } else {
-                    Variable var = type.variable();
-                    type = var != null ? typeArgs.get(var) : null;
-                    if (type != null && type.isAssignableFrom(n.type())) {
-                        args.add(n);
-                        return i + 1;
-                    }
                 }
             }
         }

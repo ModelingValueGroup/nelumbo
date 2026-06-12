@@ -173,23 +173,30 @@ public final class PatternResult implements ParseExceptionHandler {
             if (!ta.isEmpty()) {
                 node = node.setTypeArgs(ta);
             }
-            for (AstElement e : elements) {
-                if (e instanceof Token token) {
-                    token.setNode(node);
-                }
-            }
             if (hasLeft && args.length == 1 && args[0] instanceof Node arg) {
                 if (node.functor().equals(arg.functor())) {
                     addException(new ParseException("Circular object construction, caused by " + functor, elements));
                     return null;
                 }
             }
+            setNodes(elements, node);
             Type type = node.type();
             node = node.init(parser.knowledgeBase(), context, ConstructionReason.parsing);
+            if (node.type().equals(type)) {
+                setNodes(elements, node);
+            }
             context.finish(type);
             return node;
         }
         return null;
+    }
+
+    private void setNodes(List<AstElement> elements, Node node) {
+        for (AstElement e : elements) {
+            if (e instanceof Token token) {
+                token.setNode(node);
+            }
+        }
     }
 
     @Override

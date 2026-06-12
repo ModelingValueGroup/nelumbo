@@ -141,16 +141,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    public static Set<Type> generalizations(Type type, Type top) {
-        Set<Type> result = Set.of();
-        for (Type g : type.supers()) {
-            if (top.isAssignableFrom(g)) {
-                result = result.add(g);
-            }
-        }
-        return result;
-    }
-
     public KnowledgeBase run(Runnable runnable) {
         return POOL.invoke(new LogicTask(runnable, this));
     }
@@ -527,6 +517,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         return map;
+    }
+
+    private static Set<Type> generalizations(Type type, Type top) {
+        Set<Type> result = Set.of();
+        for (Type g : type.supers()) {
+            if (top.isAssignableFrom(g)) {
+                result = result.add(g);
+            }
+        }
+        return result;
     }
 
     public InferResult getFacts(Predicate predicate, InferContext context) {
