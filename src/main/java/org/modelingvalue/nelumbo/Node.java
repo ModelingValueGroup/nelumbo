@@ -654,4 +654,8 @@ public class Node extends StructImpl implements AstElement {
         return new NList(Type.ROOT, List.of(this, added), List.of(this, added));
     }
 
+    public Node setType(Type type) {
+        return type.equals(type()) ? this : setFunctorOrType(type);
+    }
+
 }
