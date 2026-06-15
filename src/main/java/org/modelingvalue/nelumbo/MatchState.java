@@ -89,7 +89,7 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
         Map<Object, MatchState<E>> transitions = transitions().addAll(state.transitions(), MatchState::merge);
         for (Object key : transitions.toKeys()) {
             if (key instanceof Type subType) {
-                for (Type superType : subType.allSupers()) {
+                for (Type superType : subType.allSupersList()) {
                     if (!superType.equals(subType)) {
                         MatchState<E> superState = transitions.get(superType);
                         if (superState != null) {
@@ -140,7 +140,7 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
 
     private MatchState<E> matchType(Type type, MutableMap<Variable, Type> typeArgs) {
         MatchState<E> state;
-        for (Type sup : type.allSupers()) {
+        for (Type sup : type.allSupersList()) {
             state = transitions().get(sup);
             if (state != null) {
                 return state;

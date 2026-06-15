@@ -64,7 +64,7 @@ public class DocumentSymbolService extends DocumentServiceAdapter {
                 docSym.setName(type.name());
                 docSym.setKind(SymbolKind.Class);
                 StringBuilder detail = new StringBuilder();
-                for (Type sup : type.supers()) {
+                for (Type sup : type.supersDeclaration()) {
                     if (!detail.isEmpty()) detail.append(", ");
                     detail.append(sup.name());
                 }

@@ -403,7 +403,7 @@ public class ParseState implements Mergeable<ParseState> {
                             if (next1.state.functor() != null) {
                                 TokenState next2 = null;
                                 Type type = next1.state.functor().resultType();
-                                for (Type sup : type.allSupers()) {
+                                for (Type sup : type.allSupersList()) {
                                     ParseState state = nodeTypes().get(sup);
                                     if (state != null) {
                                         next2 = new TokenState(next1.token, state);
@@ -471,7 +471,7 @@ public class ParseState implements Mergeable<ParseState> {
             Set<TokenState> states = Set.of();
             for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
                 if (pc.outer() != null && pc.state() != null && !pc.state().isNodesEmpty()) {
-                    for (Type sup : type.allSupers()) {
+                    for (Type sup : type.allSupersList()) {
                         ParseState state = pc.state().nodeTypes().get(sup);
                         if (state != null) {
                             for (TokenState next : state.tokenNext(token, ctx)) {
@@ -500,7 +500,7 @@ public class ParseState implements Mergeable<ParseState> {
         Map<Type, ParseState> posts = ctx.postStates(group);
         if (posts != null) {
             for (ParseState post : posts.toValues()) {
-                for (Type sup : type.allSupers()) {
+                for (Type sup : type.allSupersList()) {
                     ParseState found = post.nodeTypes().get(sup);
                     if (found != null) {
                         for (TokenState next : found.tokenNext(token, ctx)) {
@@ -647,7 +647,7 @@ public class ParseState implements Mergeable<ParseState> {
                 result.addException(new ParseException(exc.getMessage(), node));
             }
             Type type = node.type();
-            for (Type sup : type.allSupers()) {
+            for (Type sup : type.allSupersList()) {
                 ParseState next = nodeTypes().get(sup);
                 if (next != null) {
                     result.add(node);
@@ -723,7 +723,7 @@ public class ParseState implements Mergeable<ParseState> {
         Map<TokenType, ParseState> tokenTypes = tokenTypes().addAll(state.tokenTypes(), ParseState::merge);
         Map<Type, ParseState> nodeTypes = nodeTypes().addAll(state.nodeTypes(), ParseState::merge);
         for (Type subType : nodeTypes.toKeys()) {
-            for (Type superType : subType.allSupers()) {
+            for (Type superType : subType.allSupersList()) {
                 if (!superType.equals(subType)) {
                     ParseState superState = nodeTypes.get(superType);
                     if (superState != null) {

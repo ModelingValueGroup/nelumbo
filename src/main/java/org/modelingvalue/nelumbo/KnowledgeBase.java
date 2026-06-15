@@ -78,14 +78,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final int                                INITIAL_USAGE_COUNT = Integer
             .getInteger("INITIAL_USAGE_COUNT", 4);
     //
-    private static final Pattern ROOTS = r(s(a(n(Type.ROOT.toList()), n(Type.ROOT)), t(NEWLINE)), false, null);
-    //
-    private static final List<TokenType> PATTERN_TOKEN_TYPE_LIST = List.of(NAME, OPERATOR, SEMICOLON, SINGLEQUOTE,
-            COMMA, STRING);
-    //
-    private static final Pattern PATTERNS = r(n(Type.PATTERN, 100), true, null);
-    private static final Pattern QNAME    = c(r(t(NAME), true, t(".")));
-    //
     public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
 
     private static class Inference extends Struct2Impl<Predicate, InferResult> {
@@ -155,7 +147,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else {
             pattern = t(List.of(type), type.rawName());
         }
-        if (type.supers().contains(Type.NATIVE)) {
+        if (type.supersDeclaration().contains(Type.NATIVE)) {
             Type nat = parseContext().type(type.name());
             if (nat == null) {
                 addException(new ParseException("Native type " + type.name() + " is not defined in bootstrap.", type));
@@ -193,6 +185,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private KnowledgeBase initBase() {
         CURRENT.run(this, () -> {
             try {
+
+                Pattern ROOTS = r(s(a(n(Type.ROOT.toList()), n(Type.ROOT)), t(NEWLINE)), false, null);
+                List<TokenType> PATTERN_TOKEN_TYPE_LIST = List.of(NAME, OPERATOR, SEMICOLON, SINGLEQUOTE, COMMA,
+                        STRING);
+                Pattern PATTERNS = r(n(Type.PATTERN, 100), true, null);
+                Pattern QNAME = c(r(t(NAME), true, t(".")));
 
                 Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.NAMESPACE, null, Namespace.class, null)
                         .init(this, parseContext, bootstrapping);
@@ -287,6 +285,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         IMPORT_RESOLVERS.updateAndGet(l -> l.remove(resolver));
     }
 
+    private final AtomicReference<Set<Type>>                                types             = new AtomicReference<>();
     private final AtomicReference<Set<Functor>>                             functors          = new AtomicReference<>();
     private final AtomicReference<Map<Predicate, InferResult>>              facts             = new AtomicReference<>();
     private final AtomicReference<Set<Rule>>                                rules             = new AtomicReference<>();
@@ -321,6 +320,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     @SuppressWarnings("unchecked")
     public void init() {
+        types.set(init != null ? init.types.get() : Set.of());
         functors.set(init != null ? init.functors.get() : Set.of());
         facts.set(init != null ? init.facts.get() : Map.of());
         rules.set(init != null ? init.rules.get() : Set.of());
@@ -338,6 +338,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public void merge(KnowledgeBase kb, AstElement element) throws ParseException {
         try {
+            types.updateAndGet(s -> s.addAll(kb.types.get()));
             functors.updateAndGet(s -> s.addAll(kb.functors.get()));
             facts.updateAndGet(s -> s.addAll(kb.facts.get()));
             rules.updateAndGet(s -> s.addAll(kb.rules.get()));
@@ -397,6 +398,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         return null;
+    }
+
+    public Set<Type> types() {
+        return types.get();
     }
 
     public Set<Functor> functors() {
@@ -604,6 +609,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         if (functor.local() == null) {
             functors.accumulateAndGet(Set.of(functor), Set::addAll);
         }
+    }
+
+    public void register(Type type) {
+        types.accumulateAndGet(Set.of(type), Set::addAll);
+    }
+
+    public Type getType(Type type) {
+        return types.get().get(type);
     }
 
     public KnowledgeBase knowledgeBase(String name, Import imp) throws ParseException {

@@ -78,7 +78,7 @@ public class DocumentHoverService extends DocumentServiceAdapter {
                 if (node instanceof Type type) {
                     text.append("**type** `").append(U.escapeMarkdown(type.name())).append("`");
                     StringBuilder supersStr = new StringBuilder();
-                    for (Type sup : type.supers()) {
+                    for (Type sup : type.supersDeclaration()) {
                         if (!supersStr.isEmpty()) supersStr.append(", ");
                         supersStr.append("`").append(U.escapeMarkdown(sup.name())).append("`");
                     }

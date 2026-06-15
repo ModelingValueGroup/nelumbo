@@ -422,7 +422,7 @@ public class KnowledgeBaseViewerDialog extends JDialog {
             org.modelingvalue.nelumbo.lang.Type resultType = f.resultType();
             if (resultType != null) {
                 allTypes.add(resultType);
-                Set<org.modelingvalue.nelumbo.lang.Type> supers = resultType.supers();
+                Set<org.modelingvalue.nelumbo.lang.Type> supers = resultType.supersDeclaration();
                 if (supers != null) {
                     supersMap.put(resultType, supers);
                     for (org.modelingvalue.nelumbo.lang.Type sup : supers) {

@@ -213,7 +213,7 @@ public interface ParseContext {
                 Type type = left.type();
                 for (ParseState state : states.toValues()) {
                     ParseState found = null;
-                    for (Type sup : type.allSupers()) {
+                    for (Type sup : type.allSupersList()) {
                         found = state.nodeTypes().get(sup);
                         if (found != null) {
                             result.clear();
