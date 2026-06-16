@@ -327,8 +327,12 @@ public final class Type extends Node implements FunctorOrType {
         return typeInfo.allSupersSet;
     }
 
+    public boolean isFunction() {
+        return FUNCTION.isAssignableFrom(this);
+    }
+
     public Type toFunction() {
-        return equals(OBJECT) ? FUNCTION : new Type(Set.of(nonLiteral(), FUNCTION), group());
+        return equals(OBJECT) ? FUNCTION : isFunction() ? this : new Type(Set.of(nonLiteral(), FUNCTION), group());
     }
 
     public Type nonFunction() {
@@ -342,8 +346,12 @@ public final class Type extends Node implements FunctorOrType {
         }
     }
 
-    public boolean isFunction() {
-        return FUNCTION.isAssignableFrom(this);
+    public boolean isLiteral() {
+        return LITERAL.isAssignableFrom(this);
+    }
+
+    public Type toLiteral() {
+        return equals(OBJECT) ? LITERAL : isLiteral() ? this : new Type(Set.of(nonFunction(), LITERAL), group());
     }
 
     public Type nonLiteral() {
@@ -357,12 +365,12 @@ public final class Type extends Node implements FunctorOrType {
         }
     }
 
-    public Type toLiteral() {
-        return equals(OBJECT) ? LITERAL : new Type(Set.of(nonFunction(), LITERAL), group());
+    public boolean isVariable() {
+        return VARIABLE.isAssignableFrom(this);
     }
 
-    public boolean isLiteral() {
-        return LITERAL.isAssignableFrom(this);
+    public Type toVariable() {
+        return equals(OBJECT) ? VARIABLE : isVariable() ? this : new Type(Set.of(this, VARIABLE), group());
     }
 
     public Type nonVariable() {
@@ -374,14 +382,6 @@ public final class Type extends Node implements FunctorOrType {
         } else {
             return this;
         }
-    }
-
-    public Type toVariable() {
-        return equals(OBJECT) ? VARIABLE : new Type(Set.of(this, VARIABLE), group());
-    }
-
-    public boolean isVariable() {
-        return VARIABLE.isAssignableFrom(this);
     }
 
     public Type toList() {
