@@ -587,12 +587,7 @@ public class Node extends StructImpl implements AstElement {
                 if (tt != null) {
                     state = new MatchState<>(tt, state);
                 } else {
-                    Variable var = type.variable();
-                    if (var != null) {
-                        state = new MatchState<>(var.type(), state);
-                    } else {
-                        state = new MatchState<>(type, state);
-                    }
+                    state = new MatchState<>(type, state);
                 }
                 break;
             }
