@@ -111,13 +111,13 @@ public class Predicate extends Node {
     public Predicate setVariables(KnowledgeBase kb, Map<Variable, Object> vars, ParseContext ctx)
             throws ParseException {
         Predicate predicate = setBinding(vars);
-        if (predicate == this) {
-            return this;
-        }
         predicate = (Predicate) predicate.replace(n -> {
             Functor functor = n.functor();
             if (functor != null) {
                 Functor lit = kb.literal(functor);
+                if (lit == null) {
+                    lit = kb.literal(functor.declaration());
+                }
                 if (lit != null) {
                     List<Object> args = n.args();
                     if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {

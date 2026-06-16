@@ -226,7 +226,8 @@ public class Node extends StructImpl implements AstElement {
     }
 
     protected Object typeForEquals() {
-        return functorOrType();
+        FunctorOrType fot = functorOrType();
+        return fot instanceof Functor functor ? functor.declaration() : fot;
     }
 
     public List<Variable> localVars() {
@@ -519,23 +520,18 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public final Node replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
-        Node to = replacer.apply(this);
-        if (to != this) {
-            return to;
-        } else {
-            Object[] array = null;
-            for (int i = 0; i < length(); i++) {
-                Object fromVal = get(i);
-                Object toVal = replace(fromVal, replacer);
-                if (toVal != fromVal) {
-                    if (array == null) {
-                        array = toArray();
-                    }
-                    array[i] = toVal;
+        Object[] array = null;
+        for (int i = 0; i < length(); i++) {
+            Object fromVal = get(i);
+            Object toVal = replace(fromVal, replacer);
+            if (toVal != fromVal) {
+                if (array == null) {
+                    array = toArray();
                 }
+                array[i] = toVal;
             }
-            return array != null ? setArgs(array) : this;
         }
+        return replacer.apply(array != null ? setArgs(array) : this);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

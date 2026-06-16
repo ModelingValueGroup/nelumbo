@@ -82,4 +82,23 @@ public class Collections extends Predicate {
         return unknown();
     }
 
+    @NelumboMethod
+    protected InferResult elementOf(NSet set, Object element) {
+        if (set == null && element == null) {
+            return unresolvable();
+        }
+        if (set == null) {
+            return unknown();
+        }
+        Set<?> coll = set.collection();
+        if (element != null) {
+            return coll.contains(element) ? factCC() : falsehoodCC();
+        }
+        Set<Predicate> facts = Set.of();
+        for (Object e : coll) {
+            facts = facts.add(set(1, e));
+        }
+        return InferResult.factsCI(this, facts);
+    }
+
 }
