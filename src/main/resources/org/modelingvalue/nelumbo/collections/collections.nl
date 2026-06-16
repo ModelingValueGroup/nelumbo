@@ -1,4 +1,4 @@
-import    nelumbo.strings
+import    nelumbo.integers
 
 Type E
 
