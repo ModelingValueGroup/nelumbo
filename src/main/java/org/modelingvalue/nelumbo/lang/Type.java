@@ -521,6 +521,8 @@ public final class Type extends Node implements FunctorOrType {
             }
         } else if (variable() == null && other.variable() != null) {
             return this;
+        } else if (variable() != null && other.variable() == null) {
+            return other;
         }
         return null;
     }
