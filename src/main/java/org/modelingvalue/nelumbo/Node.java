@@ -594,6 +594,7 @@ public class Node extends StructImpl implements AstElement {
                         state = new MatchState<>(type, state);
                     }
                 }
+                break;
             }
             case Variable var -> {
                 Type type = var.type();
@@ -603,9 +604,11 @@ public class Node extends StructImpl implements AstElement {
                 } else {
                     state = new MatchState<>(type, state);
                 }
+                break;
             }
             case Node node    -> {
                 state = node.state(state);
+                break;
             }
             default           -> {
                 state = new MatchState<>(arg.getClass(), state);

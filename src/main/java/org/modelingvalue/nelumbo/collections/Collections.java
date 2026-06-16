@@ -19,6 +19,8 @@ package org.modelingvalue.nelumbo.collections;
 import java.io.Serial;
 import java.math.BigInteger;
 
+import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
@@ -48,6 +50,36 @@ public class Collections extends Predicate {
             return set(1, NInteger.of(found)).factCI();
         }
         return size.value().equals(found) ? factCC() : falsehoodCC();
+    }
+
+    @NelumboMethod
+    protected InferResult indexOf(NList list, Object element, NInteger index) {
+        if (list == null && element == null && index == null) {
+            return unresolvable();
+        }
+        if (list == null) {
+            return unknown();
+        }
+        List<?> coll = list.collection();
+        if (index != null) {
+            Object e = coll.get(index.value().intValue());
+            if (element != null) {
+                return element.equals(e) ? factCC() : falsehoodCC();
+            }
+            return e != null ? set(1, e).factCI() : falsehoodCI();
+        }
+        if (element != null) {
+            Set<NInteger> indexes = Set.of();
+            for (int i : coll.indexesOf(element)) {
+                indexes = indexes.add(NInteger.of(BigInteger.valueOf(i)));
+            }
+            Set<Predicate> facts = Set.of();
+            for (NInteger i : indexes) {
+                facts = facts.add(set(2, i));
+            }
+            return InferResult.factsCI(this, facts);
+        }
+        return unknown();
     }
 
 }
