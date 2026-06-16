@@ -50,7 +50,8 @@
       "Bash(cd *)",
       "Bash(rm -f src/main/java/org/modelingvalue/nelumbo/lsp/eclipse/NelumboPreferenceInitializer.java)",
       "Bash(rm -f libs/org.osgi.service.prefs_1.1.2.202109301733.jar libs/org.eclipse.equinox.preferences_3.12.100.v20251111-0704.jar libs/org.eclipse.core.runtime_3.34.200.v20251220-0953.jar)",
-      "Read(//c/c/Users/wimba/git/nelumbo/lsp/plugins/eclipse/**)"
+      "Read(//c/c/Users/wimba/git/nelumbo/lsp/plugins/eclipse/**)",
+      "Bash(Select-Object -Last 30)"
     ],
     "deny": [],
     "ask": []

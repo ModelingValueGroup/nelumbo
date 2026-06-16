@@ -329,6 +329,28 @@ public class EditorWindow extends WindowAdapter
                 }
                 return originalTransferHandler != null && originalTransferHandler.importData(support);
             }
+
+            // Delegate the export (copy/cut) side to the original handler. The base
+            // TransferHandler reports NONE source actions and a null Transferable, so
+            // without this copy/cut would silently produce nothing.
+            @Override
+            public int getSourceActions(JComponent c) {
+                return originalTransferHandler != null ? originalTransferHandler.getSourceActions(c) : NONE;
+            }
+
+            @Override
+            public void exportToClipboard(JComponent c, java.awt.datatransfer.Clipboard clip, int action) {
+                if (originalTransferHandler != null) {
+                    originalTransferHandler.exportToClipboard(c, clip, action);
+                }
+            }
+
+            @Override
+            public void exportAsDrag(JComponent c, InputEvent e, int action) {
+                if (originalTransferHandler != null) {
+                    originalTransferHandler.exportAsDrag(c, e, action);
+                }
+            }
         });
 
         // Setup undo manager with compound edit grouping
