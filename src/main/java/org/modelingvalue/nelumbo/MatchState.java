@@ -112,8 +112,14 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
     private MatchState<E> doMatch(Object obj, MutableMap<Variable, Type> typeArgs) {
         MatchState<E> state;
         switch (obj) {
-        case Type type    -> state = matchType(type, typeArgs);
-        case Variable var -> state = matchType(var.type(), typeArgs);
+        case Type type    -> {
+            state = matchType(type, typeArgs);
+            break;
+        }
+        case Variable var -> {
+            state = matchType(var.type(), typeArgs);
+            break;
+        }
         case Node node    -> {
             Functor functor = node.functor();
             state = functor != null ? transitions().get(functor) : null;
@@ -131,9 +137,16 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
             if (state == null) {
                 state = matchType(node.type(), typeArgs);
             }
+            break;
         }
-        case String text  -> state = transitions().get(TokenType.of(text));
-        default           -> state = transitions().get(obj.getClass());
+        case String text  -> {
+            state = transitions().get(TokenType.of(text));
+            break;
+        }
+        default           -> {
+            state = transitions().get(obj.getClass());
+            break;
+        }
         }
         return state;
     }
