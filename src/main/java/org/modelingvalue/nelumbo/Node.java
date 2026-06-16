@@ -397,7 +397,7 @@ public class Node extends StructImpl implements AstElement {
                 }
                 if (thisVal != null && doGetBinding(thisVal, i)) {
                     vars = vars.put(declVar, thisVal);
-                    if (thisVal instanceof Node thisNode) {
+                    if (thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
                         vars = vars.putAll(thisNode.getBinding().replaceAll(e -> {
                             Variable nodeVar = e.getKey();
                             return Entry.of(nodeVar.rename("$" + nodeVar.name()), e.getValue());
