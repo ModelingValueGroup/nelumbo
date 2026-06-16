@@ -159,15 +159,10 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
                 return state;
             }
         }
-        state = generics(typeArgs, type);
-        if (state != null) {
-            return state;
-        }
-        state = transitions().get(Type.TYPE);
-        return state;
+        return generics(type, typeArgs);
     }
 
-    private MatchState<E> generics(MutableMap<Variable, Type> typeArgs, Type type) {
+    private MatchState<E> generics(Type type, MutableMap<Variable, Type> typeArgs) {
         for (Entry<Object, MatchState<E>> e : transitions()) {
             if (e.getKey() instanceof Type t) {
                 Variable arg = t.argument().variable();
