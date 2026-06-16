@@ -50,7 +50,7 @@ public final class Query extends Node implements Evaluatable {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
             Predicate nodePred = predicate();
-            Predicate predicate = nodePred.setVariables(Predicate.literals(nodePred.getBinding()), ctx);
+            Predicate predicate = nodePred.setVariables(knowledgeBase, Predicate.literals(nodePred.getBinding()), ctx);
             List<List<Object>> expected = getVal(1);
             if (expected == null) {
                 Object[] array = new Object[1];

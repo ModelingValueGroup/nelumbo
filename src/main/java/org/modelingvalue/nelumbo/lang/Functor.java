@@ -452,4 +452,9 @@ public class Functor extends Node implements FunctorOrType {
         return from.equals(to) ? functor : functor.setAstElements(to);
     }
 
+    @Override
+    public Functor declaration() {
+        return (Functor) super.declaration();
+    }
+
 }

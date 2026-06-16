@@ -136,16 +136,16 @@ public final class Rule extends Node implements Evaluatable {
             }
             if (literalFunctor != null) {
                 Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(nonConsVars));
-                cons = cons.setVariables(litVars, ctx);
-                cond = cond.setVariables(litVars, ctx);
+                cons = cons.setVariables(knowledgeBase, litVars, ctx);
+                cond = cond.setVariables(knowledgeBase, litVars, ctx);
                 if (when != null) {
-                    when = when.setVariables(litVars, ctx);
+                    when = when.setVariables(knowledgeBase, litVars, ctx);
                 }
             } else if (!nonConsVars.isEmpty()) {
                 Map<Variable, Object> litVars = Predicate.literals(nonConsVars);
-                cond = cond.setVariables(litVars, ctx);
+                cond = cond.setVariables(knowledgeBase, litVars, ctx);
                 if (when != null) {
-                    when = when.setVariables(litVars, ctx);
+                    when = when.setVariables(knowledgeBase, litVars, ctx);
                 }
             }
             Rule rule = new Rule(when != null ? List.of(cond, when) : List.of(cond), //
