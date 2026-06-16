@@ -497,28 +497,30 @@ public final class Type extends Node implements FunctorOrType {
         return null;
     }
 
-    public Type eq(Type other) {
-        if (!hasArgument() && !other.hasArgument()) {
-            if (isAssignableFrom(other)) {
-                return other;
-            } else if (other.isAssignableFrom(this)) {
-                return this;
-            } else if (variable() != null && other.variable() == null) {
-                return other;
-            } else if (variable() == null && other.variable() != null) {
-                return this;
-            }
-        } else if (hasArgument() && other.hasArgument()) {
-            Type element = argument().eq(other.argument());
+    public Node getAssigned(Node other) {
+        Type otherType = other.type();
+        if (isAssignableFrom(otherType)) {
+            return other;
+        }
+        Type assigned = getAssignedType(otherType);
+        if (assigned != null) {
+            return other.setType(assigned);
+        }
+        return null;
+    }
+
+    private Type getAssignedType(Type other) {
+        if (hasArgument() && other.hasArgument()) {
+            Type element = argument().getAssignedType(other.argument());
             if (element != null) {
                 Type te = setArgument(element);
                 Type oe = other.setArgument(element);
                 if (te.isAssignableFrom(oe)) {
                     return oe;
-                } else if (oe.isAssignableFrom(te)) {
-                    return te;
                 }
             }
+        } else if (variable() == null && other.variable() != null) {
+            return this;
         }
         return null;
     }

@@ -59,19 +59,17 @@ public class Equal extends Predicate {
     }
 
     private static Node eq(Node left, Node right, boolean[] complete) {
-        if (left.equals(right)) {
-            return left;
-        } else if (!(left instanceof Type) && right instanceof Type) {
-            complete[0] = false;
-            Type eqType = ((Type) right).eq(left.type());
-            return eqType != null ? left.setType(eqType) : null;
-        } else if (left instanceof Type && !(right instanceof Type)) {
-            complete[0] = false;
-            Type eqType = ((Type) left).eq(right.type());
-            return eqType != null ? right.setType(eqType) : null;
-        } else if (left instanceof Type && right instanceof Type) { // right always a Type here!
+        if (left instanceof Type && right instanceof Type) {
             complete[0] = false;
             return Objects.equals(left, right) ? left : null;
+        } else if (right instanceof Type type) {
+            complete[0] = false;
+            return type.getAssigned(left);
+        } else if (left instanceof Type type) {
+            complete[0] = false;
+            return type.getAssigned(right);
+        } else if (left.equals(right)) {
+            return left;
         } else if (!left.functorOrType().equals(right.functorOrType())) {
             return null;
         } else if (left.length() != right.length()) {
