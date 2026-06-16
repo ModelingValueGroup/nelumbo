@@ -108,12 +108,12 @@ public class Predicate extends Node {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal().rename(rename.apply(e.getKey().name()))));
     }
 
-    public Predicate setVariables(Map<Variable, Object> vars, ParseContext ctx) throws ParseException {
+    public Predicate setVariables(KnowledgeBase kb, Map<Variable, Object> vars, ParseContext ctx)
+            throws ParseException {
         Predicate predicate = setBinding(vars);
         if (predicate == this) {
             return this;
         }
-        KnowledgeBase kb = KnowledgeBase.CURRENT.get();
         predicate = (Predicate) predicate.replace(n -> {
             Functor functor = n.functor();
             if (functor != null) {
