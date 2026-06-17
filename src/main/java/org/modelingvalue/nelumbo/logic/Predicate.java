@@ -285,7 +285,7 @@ public class Predicate extends Node {
     }
 
     public InferResult resolve(InferContext context) {
-        return infer(nrOfUnbound(), context);
+        return doInfer(nrOfUnbound(), context);
     }
 
     protected InferResult infer(InferContext context) {
@@ -296,18 +296,16 @@ public class Predicate extends Node {
         if (nrOfUnbound == 0 && !context.reduce()) {
             return unresolvable();
         }
-        InferResult result;
-        Functor functor = functor();
-        Method method = functor.method();
-        if (method != null) {
-            result = callMethod(method);
-        } else {
-            result = infer(nrOfUnbound, context);
-        }
+        InferResult result = doInfer(nrOfUnbound, context);
         if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
             System.out.println(context.prefix() + "  " + this + " " + result.predicate(setVariables()));
         }
         return result;
+    }
+
+    private InferResult doInfer(int nrOfUnbound, InferContext context) {
+        Method method = functor().method();
+        return method != null ? callMethod(method) : infer(nrOfUnbound, context);
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
