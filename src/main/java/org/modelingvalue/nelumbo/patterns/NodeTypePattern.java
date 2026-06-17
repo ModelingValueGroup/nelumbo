@@ -154,6 +154,10 @@ public class NodeTypePattern extends Pattern {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
                 Type type = nodeType();
+                if (type.isAssignableFrom(n.type())) {
+                    args.add(n);
+                    return i + 1;
+                }
                 Variable var = type.argument().variable();
                 if (var != null) {
                     Type arg = typeArgs.get(var);
