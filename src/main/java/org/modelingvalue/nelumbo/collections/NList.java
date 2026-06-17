@@ -44,11 +44,15 @@ public final class NList extends NCollection {
         super(NodeInfo.of(elementType.toList().toLiteral(), elements), List.of());
     }
 
-    public NList(Type elementType, List<AstElement> elements, List<Node> args) {
+    public NList(Type elementType, List<?> list) {
+        super(NodeInfo.of(elementType.toList().toLiteral()), list);
+    }
+
+    public NList(Type elementType, List<AstElement> elements, List<?> args) {
         super(NodeInfo.of(elementType.toList().toLiteral(), elements), args);
     }
 
-    public NList(Functor functor, List<AstElement> elements, List<Node> args) {
+    public NList(Functor functor, List<AstElement> elements, List<?> args) {
         super(NodeInfo.of(functor, elements), args);
     }
 

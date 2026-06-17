@@ -79,16 +79,18 @@ public class Collections extends Predicate {
             }
             return InferResult.factsCI(this, facts);
         }
-        return unknown();
+        Set<Predicate> facts = Set.of();
+        for (int i = 0; i < coll.size(); i++) {
+            Object e = coll.get(i);
+            facts = facts.add(set(1, e,    NInteger.of(BigInteger.valueOf(i))));
+        }
+        return InferResult.factsCI(this, facts);
     }
 
     @NelumboMethod
     protected InferResult elementOf(NSet set, Object element) {
-        if (set == null && element == null) {
-            return unresolvable();
-        }
         if (set == null) {
-            return unknown();
+            return unresolvable();
         }
         Set<?> coll = set.collection();
         if (element != null) {
@@ -99,6 +101,62 @@ public class Collections extends Predicate {
             facts = facts.add(set(1, e));
         }
         return InferResult.factsCI(this, facts);
+    }
+
+    @NelumboMethod
+    protected InferResult subset(NSet a, NSet b) {
+        if (a == null || b == null) {
+            return unresolvable();
+        }
+        return b.collection().containsAll(a.collection()) ? factCC() : falsehoodCC();
+    }
+
+    @NelumboMethod
+    protected InferResult intersection(NSet a, NSet b, NSet i) {
+        if (a == null || b == null) {
+            return unresolvable();
+        }
+        NSet intersection = new NSet(a.elementType(), a.collection().retainAll(b.collection()));
+        if (i != null) {
+            return intersection.equals(i) ? factCC() : falsehoodCC();
+        }
+        return set(2, intersection).factCI();
+    }
+
+    @NelumboMethod
+    protected InferResult union(NSet a, NSet b, NSet u) {
+        if (a == null || b == null) {
+            return unresolvable();
+        }
+        NSet union = new NSet(a.elementType(), a.collection().addAll(b.collection()));
+        if (u != null) {
+            return union.equals(u) ? factCC() : falsehoodCC();
+        }
+        return set(2, union).factCI();
+    }
+
+    @NelumboMethod
+    protected InferResult diff(NSet a, NSet b, NSet d) {
+        if (a == null || b == null) {
+            return unresolvable();
+        }
+        NSet diff = new NSet(a.elementType(), a.collection().removeAll(b.collection()));
+        if (d != null) {
+            return diff.equals(d) ? factCC() : falsehoodCC();
+        }
+        return set(2, diff).factCI();
+    }
+
+    @NelumboMethod
+    protected InferResult concat(NList a, NList b, NList c) {
+        if (a == null || b == null) {
+            return unresolvable();
+        }
+        NList concat = new NList(a.elementType(), a.collection().addAll(b.collection()));
+        if (c != null) {
+            return concat.equals(c) ? factCC() : falsehoodCC();
+        }
+        return set(2, concat).factCI();
     }
 
 }
