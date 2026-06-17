@@ -16,23 +16,18 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
+import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.TokenType;
+
 import java.io.Serial;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.modelingvalue.nelumbo.ConstructionReason;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 // Period 	::= P <(> <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+> <(> T <(> <NUMBER> <(> H <|> M <|> S <)> <)+> <)?> <|> T <(> <NUMBER> <(> H <|> M <|> S <)> <)+> <)>
 public final class NPeriod extends Node {
@@ -49,6 +44,10 @@ public final class NPeriod extends Node {
 
     public static NPeriod of(IsoDuration val) {
         return new NPeriod(NodeInfo.of(FUNCTOR), val);
+    }
+
+    public IsoDuration value() {
+        return getVal(0);
     }
 
     @Override

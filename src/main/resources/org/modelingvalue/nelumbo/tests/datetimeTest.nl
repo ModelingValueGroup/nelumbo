@@ -93,10 +93,10 @@ P1M != P30D ? [()][]
 2024-01-15T10:00:00 + PT1H30M = a ? [(a=2024-01-15T11:30)][..]
 // =========================================================================
 
-// duration +/- duration (AddPeriod predicate — deterministic)
+// duration +/- duration (period_add predicate — deterministic)
 PT1H + PT30M = PT1H30M ? [()][]
 PT1H30M - PT30M = PT1H ? [()][]
-// solve either addend of a duration sum (AddPeriod with one unbound)
+// solve either addend of a duration sum (period_add with one unbound)
 PT1H + y = PT1H30M  ? [(y=PT30M)][..]
 x + PT30M = PT1H30M ? [(x=PT1H)][..]
 
@@ -117,7 +117,7 @@ c + P1D = 2024-01-16 ? [(c=2024-01-15)][..]
 // scaling: Duration * Integer
 P1D * 3 = P3D   ? [()][]
 PT1H * 2 = PT2H ? [()][]
-// forward-compute the scaled duration (MultiplyPeriod with result unbound)
+// forward-compute the scaled duration (period_multiply with result unbound)
 P1D * 3 = y ? [(y=P3D)][..]
 
 // =========================================================================

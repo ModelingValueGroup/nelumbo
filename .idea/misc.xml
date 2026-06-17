@@ -5,6 +5,14 @@
     <option name="numChars" value="15" />
     <option name="caseSensitive" value="false" />
   </component>
+  <component name="EntryPointsManager">
+    <list size="1">
+      <item index="0" class="java.lang.String" itemvalue="org.modelingvalue.nelumbo.NelumboMethod" />
+    </list>
+    <writeAnnotations>
+      <writeAnnotation name="org.modelingvalue.nelumbo.NelumboFunctorField" />
+    </writeAnnotations>
+  </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="web" url="file://$PROJECT_DIR$/../immutable-collections" />

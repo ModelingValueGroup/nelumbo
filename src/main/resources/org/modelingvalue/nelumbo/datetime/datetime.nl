@@ -26,13 +26,14 @@ Period              ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME
                         <Time> - <Time>         #40,
                         <Period> + <Period>     #40,
                         <Period> - <Period>     #40,
-                        <Period> * <Integer>    #50
+                        <Period> * <Integer>    #50,
+                        <Integer> * <Period>    #50
 
 private Boolean     ::= datetime_add(<DateTime>,<Period>,<DateTime>) @nelumbo.datetime.Add,
                         date_add(<Date>,<Period>,<Date>)             @nelumbo.datetime.Add,
                         time_add(<Time>,<Period>,<Time>)             @nelumbo.datetime.Add,
-                        period_add(<Period>,<Period>,<Period>)       @nelumbo.datetime.AddPeriod,
-                        period_multiply(<Period>,<Integer>,<Period>) @nelumbo.datetime.MultiplyPeriod
+                        period_add(<Period>,<Period>,<Period>)       @nelumbo.datetime.Add,
+                        period_multiply(<Period>,<Integer>,<Period>) @nelumbo.datetime.Multiply
 
 Boolean             ::= <DateTime> ">"  <DateTime> #30 @nelumbo.datetime.GreaterThan,
                         <DateTime> "<"  <DateTime> #30,
@@ -93,3 +94,4 @@ x>=y  <=>  x>y | x=y
 x+y=z <=>  period_add(x,y,z)
 x-y=z <=>  period_add(z,y,x)
 x*n=y <=>  period_multiply(x,n,y)
+n*x=y <=>  period_multiply(x,n,y)
