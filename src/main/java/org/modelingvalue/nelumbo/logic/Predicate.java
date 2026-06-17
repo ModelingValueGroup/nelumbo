@@ -16,11 +16,6 @@
 
 package org.modelingvalue.nelumbo.logic;
 
-import java.io.Serial;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.function.Function;
-
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -37,6 +32,11 @@ import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
+
+import java.io.Serial;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.function.Function;
 
 public class Predicate extends Node {
     @Serial
@@ -296,7 +296,18 @@ public class Predicate extends Node {
         if (nrOfUnbound == 0 && !context.reduce()) {
             return unresolvable();
         }
-        InferResult result = infer(nrOfUnbound, context);
+        InferResult result;
+        Functor functor = functor();
+        Method method = functor.method();
+        if (method != null) {
+            result = callMethod(method);
+        } else if (nrOfUnbound > 1 || //
+                (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
+                (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
+            result = unresolvable();
+        } else {
+            result = infer(nrOfUnbound, context);
+        }
         if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
             System.out.println(context.prefix() + "  " + this + " " + result.predicate(setVariables()));
         }
@@ -304,15 +315,6 @@ public class Predicate extends Node {
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        Functor functor = functor();
-        Method method = functor.method();
-        if (method != null) {
-            return callMethod(method);
-        } else if (nrOfUnbound > 1 || //
-                (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
-                (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
-            return unresolvable();
-        }
         KnowledgeBase knowledgebase = context.knowledgebase();
         if (isFact()) {
             return knowledgebase.getFacts(this, context);

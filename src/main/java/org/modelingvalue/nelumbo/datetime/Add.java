@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.datetime;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.logic.InferContext;
@@ -61,6 +62,30 @@ public final class Add extends Predicate {
         } else if (b != null && d != null) {
             Temporal diff = minus(b, d);
             return diff == null ? unresolvable() : set(0, wrap(diff)).factCI();
+        }
+
+        return unknown();
+    }
+
+    @NelumboMethod
+    public InferResult period_add(NPeriod a, NPeriod b, NPeriod c) {
+        if (nrOfUnbound() > 1) {
+            return unresolvable();
+        }
+
+        IsoDuration av = a == null ? null : a.value();
+        IsoDuration bv = b == null ? null : b.value();
+        IsoDuration cv = c == null ? null : c.value();
+        if (av != null && bv != null) {
+            IsoDuration sum = av.plus(bv);
+            if (cv != null) {
+                return sum.equals(cv) ? factCC() : falsehoodCC();
+            }
+            return set(2, wrap(sum)).factCI();
+        } else if (av != null && cv != null) {
+            return set(1, wrap(cv.minus(av))).factCI();
+        } else if (bv != null && cv != null) {
+            return set(0, wrap(cv.minus(bv))).factCI();
         }
 
         return unknown();

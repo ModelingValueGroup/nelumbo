@@ -17,45 +17,43 @@
 package org.modelingvalue.nelumbo.datetime;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.logic.InferContext;
+import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
 import java.io.Serial;
+import java.math.BigInteger;
 
-public final class AddPeriod extends Predicate {
+public final class Multiply extends Predicate {
     @Serial
-    private static final long serialVersionUID = 6914905661027178737L;
+    private static final long serialVersionUID = 1284905661027178738L;
 
     @NelumboConstructor
-    public AddPeriod(NodeInfo nodeInfo, Object... args) {
+    public Multiply(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
     }
 
-    @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
+    @NelumboMethod
+    public InferResult period_multiply(NPeriod d, NInteger n, NPeriod e) {
+        if (nrOfUnbound() > 1) {
             return unresolvable();
         }
 
-        IsoDuration a = getVal(0, 0);
-        IsoDuration b = getVal(1, 0);
-        IsoDuration c = getVal(2, 0);
+        IsoDuration dv = d == null ? null : d.value();
+        BigInteger  nv = n == null ? null : n.value();
+        IsoDuration ev = e == null ? null : e.value();
 
-        if (a != null && b != null) {
-            IsoDuration sum = a.plus(b);
-            if (c != null) {
-                return sum.equals(c) ? factCC() : falsehoodCC();
+        if (dv != null && nv != null) {
+            IsoDuration scaled = dv.multipliedBy(nv.intValueExact());
+            if (ev != null) {
+                return scaled.equals(ev) ? factCC() : falsehoodCC();
             }
-            return set(2, NPeriod.of(sum)).factCI();
-        } else if (a != null && c != null) {
-            return set(1, NPeriod.of(c.minus(a))).factCI();
-        } else if (b != null && c != null) {
-            return set(0, NPeriod.of(c.minus(b))).factCI();
+            return set(2, NPeriod.of(scaled)).factCI();
         }
 
-        return unknown();
+        return unresolvable();
     }
 
 }
