@@ -16,6 +16,11 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import java.io.Serial;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.function.Function;
+
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -32,11 +37,6 @@ import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
-
-import java.io.Serial;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.function.Function;
 
 public class Predicate extends Node {
     @Serial
@@ -301,10 +301,6 @@ public class Predicate extends Node {
         Method method = functor.method();
         if (method != null) {
             result = callMethod(method);
-        } else if (nrOfUnbound > 1 || //
-                (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
-                (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
-            result = unresolvable();
         } else {
             result = infer(nrOfUnbound, context);
         }
@@ -315,6 +311,12 @@ public class Predicate extends Node {
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
+        Functor functor = functor();
+        if (nrOfUnbound > 1 || //
+                (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
+                (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
+            return unresolvable();
+        }
         KnowledgeBase knowledgebase = context.knowledgebase();
         if (isFact()) {
             return knowledgebase.getFacts(this, context);
