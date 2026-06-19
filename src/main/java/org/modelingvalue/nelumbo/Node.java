@@ -575,15 +575,15 @@ public class Node extends StructImpl implements AstElement {
         return first != null ? first.list(lastToken()) : List.of();
     }
 
-    public <E extends Node> MatchState<E> state(MatchState<E> state) {
+    public <E extends Node> MatchState<E> state(MatchState<E> next) {
         for (Object arg : args().reverse()) {
             switch (arg) {
             case Type type    -> {
                 TokenType tt = type.tokenType();
                 if (tt != null) {
-                    state = new MatchState<>(tt, state);
+                    next = new MatchState<>(tt, next);
                 } else {
-                    state = new MatchState<>(type, state);
+                    next = typeMatcher(type, next);
                 }
                 break;
             }
@@ -591,24 +591,32 @@ public class Node extends StructImpl implements AstElement {
                 Type type = var.type();
                 TokenType tt = type.tokenType();
                 if (tt != null) {
-                    state = new MatchState<>(tt, state);
+                    next = new MatchState<>(tt, next);
                 } else {
-                    state = new MatchState<>(type, state);
+                    next = typeMatcher(type, next);
                 }
                 break;
             }
             case Node node    -> {
-                state = node.state(state);
+                next = node.state(next);
                 break;
             }
             default           -> {
-                state = new MatchState<>(arg.getClass(), state);
+                next = new MatchState<>(arg.getClass(), next);
             }
             }
         }
         Functor functor = functor();
         assert functor != null;
-        return new MatchState<>(functor, state);
+        return new MatchState<>(functor, next);
+    }
+
+    private <E extends Node> MatchState<E> typeMatcher(Type type, MatchState<E> next) {
+        if (type.hasArgument()) {
+            next = typeMatcher(type.argument(), next);
+            type = type.setArgument(Type.OBJECT);
+        }
+        return new MatchState<>(type, next);
     }
 
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {

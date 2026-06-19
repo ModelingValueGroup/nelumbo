@@ -168,7 +168,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         if (Type.TYPE.equals(var.type())) {
             return addType(new Type(var), ctx);
         } else {
-            Type type = Type.BOOLEAN.isAssignableFrom(var.type()) ? var.type() : var.type().toVariable();
+            Type type = var.type().toVariable();
             Functor functor = Functor.of(List.of(var), t(List.of(var), var), type, Type.NAMESPACE, Variable.class,
                     null);
             functor.init(this, ctx, bootstrapping);

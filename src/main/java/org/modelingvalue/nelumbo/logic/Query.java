@@ -77,7 +77,7 @@ public final class Query extends Node implements Evaluatable {
         for (List<List<Object>> listList : (List<List<List<Object>>>) listListList) {
             Map<Variable, Object> map = Map.of();
             for (List<Object> list : listList) {
-                map = map.put(((Variable) list.get(0)).literal(), list.get(1));
+                map = map.put(((Node) list.get(0)).variable().literal(), list.get(1));
             }
             set = set.add(map);
         }

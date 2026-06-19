@@ -340,9 +340,7 @@ public class Functor extends Node implements FunctorOrType {
             }
         }
         Type type = resultType();
-        String group = Type.VARIABLE.isAssignableFrom(type) ? //
-                construct(List.of(), new Object[0], knowledgeBase, ctx).type().group() : //
-                type.group();
+        String group = type.group();
         Type local = local();
         if (local != null) {
             ctx.register(knowledgeBase, group, local, this);

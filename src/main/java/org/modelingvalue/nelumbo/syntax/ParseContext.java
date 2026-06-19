@@ -212,25 +212,14 @@ public interface ParseContext {
             if (states != null) {
                 Type type = left.type();
                 for (ParseState state : states.toValues()) {
-                    ParseState found = null;
-                    for (Type sup : type.allSupersList()) {
-                        found = state.nodeTypes().get(sup);
-                        if (found != null) {
-                            result.clear();
-                            result.left(left);
-                            if (found.parse(token, result, Map.of(), true)) {
-                                return true;
-                            }
-                            break;
-                        }
-                    }
                     result.clear();
-                    found = state.generics(result, type);
+                    ParseState found = state.matchType(type, result.typeArgs());
                     if (found != null) {
                         result.left(left);
                         if (found.parse(token, result, Map.of(), true)) {
                             return true;
                         }
+                        break;
                     }
                 }
             }

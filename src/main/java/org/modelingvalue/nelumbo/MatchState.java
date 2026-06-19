@@ -26,7 +26,7 @@ import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
+public class MatchState<E extends Node> extends AbstractState<MatchState<E>> implements Mergeable<MatchState<E>> {
 
     @SuppressWarnings("rawtypes")
     public static final MatchState EMPTY = new MatchState<>();
@@ -70,6 +70,11 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
     }
 
     public Map<Object, MatchState<E>> transitions() {
+        return transitions;
+    }
+
+    @Override
+    protected Map<Object, MatchState<E>> typeTransitions() {
         return transitions;
     }
 
@@ -149,38 +154,6 @@ public class MatchState<E extends Node> implements Mergeable<MatchState<E>> {
         }
         }
         return state;
-    }
-
-    private MatchState<E> matchType(Type type, MutableMap<Variable, Type> typeArgs) {
-        MatchState<E> state;
-        for (Type sup : type.allSupersList()) {
-            state = transitions().get(sup);
-            if (state != null) {
-                return state;
-            }
-        }
-        return generics(type, typeArgs);
-    }
-
-    private MatchState<E> generics(Type type, MutableMap<Variable, Type> typeArgs) {
-        for (Entry<Object, MatchState<E>> e : transitions()) {
-            if (e.getKey() instanceof Type t) {
-                Variable arg = t.argument().variable();
-                if (arg != null) {
-                    Type found = typeArgs.get(arg);
-                    if (found == null) {
-                        found = type.argument();
-                    }
-                    found = t.setArgument(found);
-                    found = type.common(found);
-                    if (found != null) {
-                        typeArgs.put(arg, found.argument());
-                        return e.getValue();
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

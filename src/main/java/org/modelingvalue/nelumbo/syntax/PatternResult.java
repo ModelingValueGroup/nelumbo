@@ -214,12 +214,8 @@ public final class PatternResult implements ParseExceptionHandler {
         return parser.exceptions();
     }
 
-    public void putTypeArg(Variable arg, Type val) {
-        typeArgs.put(arg, val);
-    }
-
-    public Type getTypeArg(Variable arg) {
-        return typeArgs.get(arg);
+    public MutableMap<Variable, Type> typeArgs() {
+        return typeArgs;
     }
 
     public boolean isEmpty() {

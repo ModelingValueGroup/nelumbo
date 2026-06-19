@@ -102,6 +102,7 @@ public final class Variable extends Node {
         return Type.VARIABLE;
     }
 
+    @Override
     public Variable setType(Type type) {
         return set(1, type);
     }

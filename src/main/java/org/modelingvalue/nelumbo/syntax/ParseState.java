@@ -26,6 +26,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.collections.util.NotMergeableException;
+import org.modelingvalue.nelumbo.AbstractState;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
@@ -33,7 +34,7 @@ import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
-public class ParseState implements Mergeable<ParseState> {
+public class ParseState extends AbstractState<ParseState> implements Mergeable<ParseState> {
     public static final ParseState EMPTY = new ParseState(Map.of(), Map.of(), Map.of(), null, null, null, null,
             Set.of(), Set.of(), false, Visibility.optional, false);
 
@@ -106,6 +107,12 @@ public class ParseState implements Mergeable<ParseState> {
 
     public Map<Type, ParseState> nodeTypes() {
         return nodeTypes;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    protected Map<Object, ParseState> typeTransitions() {
+        return (Map) nodeTypes;
     }
 
     public Functor functor() {
@@ -403,21 +410,11 @@ public class ParseState implements Mergeable<ParseState> {
                             if (next1.state.functor() != null) {
                                 TokenState next2 = null;
                                 Type type = next1.state.functor().resultType();
-                                for (Type sup : type.allSupersList()) {
-                                    ParseState state = nodeTypes().get(sup);
-                                    if (state != null) {
-                                        next2 = new TokenState(next1.token, state);
-                                        break;
-                                    }
-                                }
-                                if (next2 == null) {
-                                    ParseState state = generics(null, type);
-                                    if (state != null) {
-                                        next2 = new TokenState(next1.token, state);
-                                    }
-                                }
-                                if (next2 != null) {
+                                ParseState state = matchType(type, MutableMap.of(Map.of()));
+                                if (state != null) {
+                                    next2 = new TokenState(next1.token, state);
                                     states = states.add(next2);
+                                    break;
                                 }
                             }
                         }
@@ -647,52 +644,23 @@ public class ParseState implements Mergeable<ParseState> {
                 result.addException(new ParseException(exc.getMessage(), node));
             }
             Type type = node.type();
-            for (Type sup : type.allSupersList()) {
-                ParseState next = nodeTypes().get(sup);
-                if (next != null) {
-                    result.add(node);
-                    return new TokenState(node.nextToken(), next);
-                }
+            ParseState next = matchType(type, result.typeArgs());
+            if (next != null) {
+                result.add(node);
+                return new TokenState(node.nextToken(), next);
             }
-            Variable var = node.variable();
-            if (var != null) {
-                ParseState next = nodeTypes().get(Type.VARIABLE);
+            if (node instanceof Variable var) {
+                next = nodeTypes().get(Type.VARIABLE);
                 if (next != null) {
                     result.add(var);
                     return new TokenState(node.nextToken(), next);
                 }
-            }
-            ParseState next = generics(result, type);
-            if (next != null) {
-                result.add(node);
-                return new TokenState(node.nextToken(), next);
             }
             result.addException(new ParseException(
                     "Node " + node + " of unexpected type " + type + ", expected " + expectedTypes(), node));
         }
         return null;
 
-    }
-
-    public ParseState generics(PatternResult result, Type type) {
-        for (Entry<Type, ParseState> ts : nodeTypes()) {
-            Variable arg = ts.getKey().argument().variable();
-            if (arg != null) {
-                Type found = result != null ? result.getTypeArg(arg) : null;
-                if (found == null) {
-                    found = type.argument();
-                }
-                found = ts.getKey().setArgument(found);
-                found = type.common(found);
-                if (found != null) {
-                    if (result != null) {
-                        result.putTypeArg(arg, found.argument());
-                    }
-                    return ts.getValue();
-                }
-            }
-        }
-        return null;
     }
 
     private String expectedTypes() { //

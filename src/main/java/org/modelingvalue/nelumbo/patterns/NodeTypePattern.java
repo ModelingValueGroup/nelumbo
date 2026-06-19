@@ -89,7 +89,15 @@ public class NodeTypePattern extends Pattern {
     @Override
     public ParseState state(ParseState next) {
         Boolean visible = visible();
-        return new ParseState(nodeType(), precedence(), visible != null ? next.setVisibility(visible) : next);
+        return typeState(nodeType(), visible != null ? next.setVisibility(visible) : next, precedence());
+    }
+
+    private ParseState typeState(Type type, ParseState next, Integer precedence) {
+        if (type.hasArgument()) {
+            next = typeState(type.argument(), next, precedence);
+            type = type.setArgument(Type.OBJECT);
+        }
+        return new ParseState(type, precedence, next);
     }
 
     @Override
@@ -153,23 +161,21 @@ public class NodeTypePattern extends Pattern {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
-                Type type = nodeType();
-                if (type.isAssignableFrom(n.type())) {
-                    args.add(n);
-                    return i + 1;
-                }
-                Variable var = type.argument().variable();
+                Type sub = nodeType();
+                Type sup = n.type();
+                Variable var = sub.argument().variable();
                 if (var != null) {
                     Type arg = typeArgs.get(var);
                     if (arg != null) {
-                        type = type.setArgument(arg);
+                        sub = sub.setArgument(arg);
+                        sup = sup.setArgument(arg);
                     }
                 }
-                if (type.isAssignableFrom(n.type())) {
+                if (sub.isAssignableFrom(sup)) {
                     args.add(n);
                     return i + 1;
                 }
-                if (Type.VARIABLE.equals(type) && n instanceof Variable) {
+                if (Type.VARIABLE.equals(sub) && n instanceof Variable) {
                     args.add(n);
                     return i + 1;
                 }
