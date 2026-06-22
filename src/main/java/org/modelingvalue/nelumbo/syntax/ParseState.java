@@ -28,6 +28,7 @@ import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AbstractState;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.TypeMatcher;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -35,8 +36,8 @@ import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public class ParseState extends AbstractState<ParseState> implements Mergeable<ParseState> {
-    public static final ParseState EMPTY = new ParseState(Map.of(), Map.of(), Map.of(), null, null, null, null,
-            Set.of(), Set.of(), false, Visibility.optional, false);
+    public static final ParseState EMPTY = new ParseState(TypeMatcher.EMPTY, Map.of(), Map.of(), Map.of(), null, null,
+            null, null, Set.of(), Set.of(), false, Visibility.optional, false);
 
     private final Map<String, ParseState>    tokenTexts;
     private final Map<TokenType, ParseState> tokenTypes;
@@ -54,35 +55,36 @@ public class ParseState extends AbstractState<ParseState> implements Mergeable<P
     private List<String> connected = null;
 
     public ParseState(Functor functor) {
-        this(Map.of(), Map.of(), Map.of(), functor, null, null, null, Set.of(), Set.of(), false, Visibility.optional,
-                false);
+        this(TypeMatcher.EMPTY, Map.of(), Map.of(), Map.of(), functor, null, null, null, Set.of(), Set.of(), false,
+                Visibility.optional, false);
     }
 
     public ParseState(Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions) {
-        this(Map.of(), Map.of(), Map.of(), null, null, null, null, startRepetitions, endRepetitions, false,
-                Visibility.optional, false);
+        this(TypeMatcher.EMPTY, Map.of(), Map.of(), Map.of(), null, null, null, null, startRepetitions, endRepetitions,
+                false, Visibility.optional, false);
     }
 
     public ParseState(String text, boolean isKeyword, ParseState next) {
-        this(Map.of(Entry.of(text, isKeyword ? next.setIsKeyword() : next)), Map.of(), Map.of(), null, null, null, null,
-                Set.of(), Set.of(), false, Visibility.optional, false);
+        this(TypeMatcher.EMPTY, Map.of(Entry.of(text, isKeyword ? next.setIsKeyword() : next)), Map.of(), Map.of(),
+                null, null, null, null, Set.of(), Set.of(), false, Visibility.optional, false);
     }
 
     public ParseState(TokenType tokenType, ParseState next) {
-        this(Map.of(), Map.of(Entry.of(tokenType, next)), Map.of(), null, null, null, null, Set.of(), Set.of(), false,
-                Visibility.optional, false);
+        this(TypeMatcher.EMPTY, Map.of(), Map.of(Entry.of(tokenType, next)), Map.of(), null, null, null, null, Set.of(),
+                Set.of(), false, Visibility.optional, false);
     }
 
     public ParseState(Type nodeType, Integer innerPrecedence, ParseState next) {
-        this(Map.of(), Map.of(), Map.of(Entry.of(nodeType, next)), null, null, innerPrecedence, nodeType.group(),
-                Set.of(), Set.of(), false, Visibility.optional, false);
+        this(nodeType.typeMatcher(), Map.of(), Map.of(), Map.of(Entry.of(nodeType, next)), null, null, innerPrecedence,
+                nodeType.group(), Set.of(), Set.of(), false, Visibility.optional, false);
     }
 
-    private ParseState(Map<String, ParseState> tokenTexts, Map<TokenType, ParseState> tokenTypes,
-            Map<Type, ParseState> nodeTypes, //
+    private ParseState(TypeMatcher typeMatcher, Map<String, ParseState> tokenTexts,
+            Map<TokenType, ParseState> tokenTypes, Map<Type, ParseState> nodeTypes, //
             Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, //
             Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, boolean isKeyword,
             Visibility visibility, boolean isConnected) {
+        super(typeMatcher);
         this.tokenTexts = tokenTexts;
         this.tokenTypes = tokenTypes;
         this.nodeTypes = nodeTypes;
@@ -172,16 +174,16 @@ public class ParseState extends AbstractState<ParseState> implements Mergeable<P
         if (isTokensEmpty()) {
             return null;
         }
-        return new ParseState(tokenTexts, tokenTypes, Map.of(), functor, null, null, group, startRepetitions,
-                endRepetitions, isKeyword, visibility, isConnected);
+        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, Map.of(), functor, null, null, group,
+                startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
     }
 
     public ParseState post() {
         if (isNodesEmpty()) {
             return null;
         }
-        return new ParseState(Map.of(), Map.of(), nodeTypes, functor, innerPrecedence, null, group, startRepetitions,
-                endRepetitions, isKeyword, visibility, isConnected);
+        return new ParseState(typeMatcher(), Map.of(), Map.of(), nodeTypes, functor, innerPrecedence, null, group,
+                startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
     }
 
     public ParseState setLeftPrecedence(Integer leftPrecedence) {
@@ -191,7 +193,7 @@ public class ParseState extends AbstractState<ParseState> implements Mergeable<P
                 .replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
         Map<Type, ParseState> c = nodeTypes
                 .replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
-        return new ParseState(a, b, c, functor, leftPrecedence, innerPrecedence, group, startRepetitions,
+        return new ParseState(typeMatcher(), a, b, c, functor, leftPrecedence, innerPrecedence, group, startRepetitions,
                 endRepetitions, isKeyword, visibility, isConnected);
     }
 
@@ -200,23 +202,23 @@ public class ParseState extends AbstractState<ParseState> implements Mergeable<P
         Map<String, ParseState> a = tokenTexts.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setVisibility(v)));
         Map<TokenType, ParseState> b = tokenTypes.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setVisibility(v)));
         Map<Type, ParseState> c = nodeTypes.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setVisibility(v)));
-        return new ParseState(a, b, c, functor, leftPrecedence, innerPrecedence, group, startRepetitions,
+        return new ParseState(typeMatcher(), a, b, c, functor, leftPrecedence, innerPrecedence, group, startRepetitions,
                 endRepetitions, isKeyword, visibility, isConnected);
     }
 
     private ParseState setVisibility(Visibility visibility) {
-        return new ParseState(tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence, innerPrecedence, group,
-                startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
+        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence,
+                innerPrecedence, group, startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
     }
 
     public ParseState setIsKeyword() {
-        return new ParseState(tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence, innerPrecedence, group,
-                startRepetitions, endRepetitions, true, visibility, isConnected);
+        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence,
+                innerPrecedence, group, startRepetitions, endRepetitions, true, visibility, isConnected);
     }
 
     public ParseState setIsConnected() {
-        return new ParseState(tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence, innerPrecedence, group,
-                startRepetitions, endRepetitions, isKeyword, visibility, true);
+        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence,
+                innerPrecedence, group, startRepetitions, endRepetitions, isKeyword, visibility, true);
     }
 
     public boolean parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions,
@@ -683,35 +685,25 @@ public class ParseState extends AbstractState<ParseState> implements Mergeable<P
         return !isConnected || !next.isConnected || token.previous() == token.previousAll();
     }
 
-    public ParseState merge(ParseState state) {
-        if (state == null) {
+    @Override
+    public ParseState merge(ParseState merged) {
+        if (merged == null) {
             return this;
         }
-        Map<String, ParseState> tokenTexts = tokenTexts().addAll(state.tokenTexts(), ParseState::merge);
-        Map<TokenType, ParseState> tokenTypes = tokenTypes().addAll(state.tokenTypes(), ParseState::merge);
-        Map<Type, ParseState> nodeTypes = nodeTypes().addAll(state.nodeTypes(), ParseState::merge);
-        for (Type subType : nodeTypes.toKeys()) {
-            for (Type superType : subType.allSupersList()) {
-                if (!superType.equals(subType)) {
-                    ParseState superState = nodeTypes.get(superType);
-                    if (superState != null) {
-                        ParseState subState = nodeTypes.get(subType);
-                        ParseState mergedState = subState.merge(superState);
-                        nodeTypes = nodeTypes.put(subType, mergedState);
-                    }
-                }
-            }
-        }
-        return new ParseState(tokenTexts, tokenTypes, nodeTypes, //
-                functorMerge(state), //
-                leftPrecedenceMerge(state), //
-                elementMerge(innerPrecedence(), state.innerPrecedence()), //
-                elementMerge(group(), state.group()), //
-                startRepetitions().addAll(state.startRepetitions()), //
-                endRepetitions().addAll(state.endRepetitions()), //
-                isKeyword() || state.isKeyword(), //
-                elementMerge(visibility(), state.visibility()), //
-                isConnected() || state.isConnected());
+        TypeMatcher typeMatcher = typeMatcher().merge(merged.typeMatcher());
+        Map<String, ParseState> tokenTexts = tokenTexts().addAll(merged.tokenTexts(), ParseState::merge);
+        Map<TokenType, ParseState> tokenTypes = tokenTypes().addAll(merged.tokenTypes(), ParseState::merge);
+        Map<Type, ParseState> nodeTypes = nodeTypes().addAll(merged.nodeTypes(), ParseState::merge);
+        return new ParseState(typeMatcher, tokenTexts, tokenTypes, inherit(nodeTypes), //
+                functorMerge(merged), //
+                leftPrecedenceMerge(merged), //
+                elementMerge(innerPrecedence(), merged.innerPrecedence()), //
+                elementMerge(group(), merged.group()), //
+                startRepetitions().addAll(merged.startRepetitions()), //
+                endRepetitions().addAll(merged.endRepetitions()), //
+                isKeyword() || merged.isKeyword(), //
+                elementMerge(visibility(), merged.visibility()), //
+                isConnected() || merged.isConnected());
     }
 
     private Functor functorMerge(ParseState state) {

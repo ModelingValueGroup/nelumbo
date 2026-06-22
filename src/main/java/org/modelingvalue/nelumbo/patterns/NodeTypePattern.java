@@ -89,15 +89,7 @@ public class NodeTypePattern extends Pattern {
     @Override
     public ParseState state(ParseState next) {
         Boolean visible = visible();
-        return typeState(nodeType(), visible != null ? next.setVisibility(visible) : next, precedence());
-    }
-
-    private ParseState typeState(Type type, ParseState next, Integer precedence) {
-        if (type.hasArgument()) {
-            next = typeState(type.argument(), next, precedence);
-            type = type.setArgument(Type.OBJECT);
-        }
-        return new ParseState(type, precedence, next);
+        return new ParseState(nodeType(), precedence(), visible != null ? next.setVisibility(visible) : next);
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.lang;
 import java.io.Serial;
 
 import org.modelingvalue.collections.Collection;
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
@@ -28,6 +29,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.TypeMatcher;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -264,13 +266,15 @@ public final class Type extends Node implements FunctorOrType {
         return (Type) super.setBinding(declaration(), vars, setFunctorOrType);
     }
 
-    private static record TypeInfo(Set<Type> supers, List<Type> allSupersList, Set<Type> allSupersSet) {
+    private static record TypeInfo(Set<Type> supers, List<Type> allSupersList, Set<Type> allSupersSet,
+            TypeMatcher typeMatcher) {
     }
 
     private TypeInfo initTypeInfo() {
         Set<Type> supersSet = initSupersSet();
         List<Type> allSupersList = initSupersList(supersSet);
-        return new TypeInfo(supersSet, allSupersList, allSupersList.asSet());
+        TypeMatcher typeMatcher = initTypeMatcher();
+        return new TypeInfo(supersSet, allSupersList, allSupersList.asSet(), typeMatcher);
     }
 
     private Set<Type> initSupersSet() {
@@ -315,6 +319,18 @@ public final class Type extends Node implements FunctorOrType {
         return post;
     }
 
+    private TypeMatcher initTypeMatcher() {
+        return typeMatcher(this, new TypeMatcher(Map.of(), this));
+    }
+
+    private static TypeMatcher typeMatcher(Type type, TypeMatcher next) {
+        if (type.hasArgument()) {
+            next = typeMatcher(type.argument(), next);
+            type = type.setArgument($OBJECT);
+        }
+        return new TypeMatcher(Map.of(Entry.of(type, next)), null);
+    }
+
     public Set<Type> supers() {
         return typeInfo.supers;
     }
@@ -325,6 +341,10 @@ public final class Type extends Node implements FunctorOrType {
 
     public Set<Type> allSupersSet() {
         return typeInfo.allSupersSet;
+    }
+
+    public TypeMatcher typeMatcher() {
+        return typeInfo.typeMatcher;
     }
 
     public boolean isFunction() {

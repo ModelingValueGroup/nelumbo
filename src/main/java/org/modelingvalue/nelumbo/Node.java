@@ -583,7 +583,7 @@ public class Node extends StructImpl implements AstElement {
                 if (tt != null) {
                     next = new MatchState<>(tt, next);
                 } else {
-                    next = typeMatcher(type, next);
+                    next = new MatchState<>(type, next);
                 }
                 break;
             }
@@ -593,7 +593,7 @@ public class Node extends StructImpl implements AstElement {
                 if (tt != null) {
                     next = new MatchState<>(tt, next);
                 } else {
-                    next = typeMatcher(type, next);
+                    next = new MatchState<>(type, next);
                 }
                 break;
             }
@@ -609,14 +609,6 @@ public class Node extends StructImpl implements AstElement {
         Functor functor = functor();
         assert functor != null;
         return new MatchState<>(functor, next);
-    }
-
-    private <E extends Node> MatchState<E> typeMatcher(Type type, MatchState<E> next) {
-        if (type.hasArgument()) {
-            next = typeMatcher(type.argument(), next);
-            type = type.setArgument(Type.OBJECT);
-        }
-        return new MatchState<>(type, next);
     }
 
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {

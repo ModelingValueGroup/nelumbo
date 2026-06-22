@@ -35,36 +35,43 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> imp
     private final Set<E>                     elements;
 
     private MatchState() {
+        super(TypeMatcher.EMPTY);
         this.transitions = Map.of();
         this.elements = Set.of();
     }
 
     public MatchState(E element) {
+        super(TypeMatcher.EMPTY);
         this.transitions = Map.of();
         this.elements = element != null ? Set.of(element) : Set.of();
     }
 
     public MatchState(Functor functor, MatchState<E> to) {
+        super(TypeMatcher.EMPTY);
         this.transitions = Map.of(Entry.of(functor, to));
         this.elements = Set.of();
     }
 
     public MatchState(Type type, MatchState<E> to) {
+        super(type.typeMatcher());
         this.transitions = Map.of(Entry.of(type, to));
         this.elements = Set.of();
     }
 
     public MatchState(TokenType tokenType, MatchState<E> to) {
+        super(TypeMatcher.EMPTY);
         this.transitions = Map.of(Entry.of(tokenType, to));
         this.elements = Set.of();
     }
 
     public MatchState(Class<?> clss, MatchState<E> to) {
+        super(TypeMatcher.EMPTY);
         this.transitions = Map.of(Entry.of(clss, to));
         this.elements = Set.of();
     }
 
-    private MatchState(Map<Object, MatchState<E>> transitions, Set<E> elements) {
+    private MatchState(TypeMatcher typeMatcher, Map<Object, MatchState<E>> transitions, Set<E> elements) {
+        super(typeMatcher);
         this.transitions = transitions;
         this.elements = elements;
     }
@@ -87,26 +94,14 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> imp
         return transitions().toKeys().asSet().toString().substring(3);
     }
 
-    public MatchState<E> merge(MatchState<E> state) {
-        if (state == null) {
+    @Override
+    public MatchState<E> merge(MatchState<E> merged) {
+        if (merged == null) {
             return this;
         }
-        Map<Object, MatchState<E>> transitions = transitions().addAll(state.transitions(), MatchState::merge);
-        for (Object key : transitions.toKeys()) {
-            if (key instanceof Type subType) {
-                for (Type superType : subType.allSupersList()) {
-                    if (!superType.equals(subType)) {
-                        MatchState<E> superState = transitions.get(superType);
-                        if (superState != null) {
-                            MatchState<E> subState = transitions.get(subType);
-                            MatchState<E> mergedState = subState.merge(superState);
-                            transitions = transitions.put(subType, mergedState);
-                        }
-                    }
-                }
-            }
-        }
-        return new MatchState<>(transitions, elements().addAll(state.elements()));
+        TypeMatcher typeMatcher = typeMatcher().merge(merged.typeMatcher());
+        Map<Object, MatchState<E>> transitions = transitions().addAll(merged.transitions(), MatchState::merge);
+        return new MatchState<>(typeMatcher, inherit(transitions), elements().addAll(merged.elements()));
     }
 
     public Set<E> match(Object obj, MutableMap<Variable, Type> typeArgs) {
