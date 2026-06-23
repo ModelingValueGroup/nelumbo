@@ -24,7 +24,7 @@ Integer              ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>
 Integer a, b, c
 
 a>b   <=>  gt(a,b)
-a<b   <=>  b>a
+a<b   <=>  gt(b,a)
 a<=b  <=>  a<b | a=b
 a>=b  <=>  a>b | a=b
 

@@ -26,7 +26,7 @@ Rational ::= <(> - <)?>  <[> <NUMBER> . <NUMBER> <]>  @nelumbo.rationals.Rationa
 Rational a, b, c
 
 a>b   <=>  gt(a,b)
-a<b   <=>  b>a
+a<b   <=>  gt(b,a)
 a<=b  <=>  a<b | a=b
 a>=b  <=>  a>b | a=b
 
