@@ -48,6 +48,14 @@ public final class Rational extends Node {
         return new Rational(NodeInfo.of(FUNCTOR), normalize(numerator, denominator));
     }
 
+    public BigInteger numerator() {
+        return getVal(0);
+    }
+
+    public BigInteger denominator() {
+        return getVal(1);
+    }
+
     private static Object[] parse(String string) {
         while (string.charAt(string.length() - 1) == '0') {
             string = string.substring(0, string.length() - 1);

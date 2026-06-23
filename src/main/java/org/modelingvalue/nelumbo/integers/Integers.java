@@ -20,46 +20,78 @@ import java.io.Serial;
 import java.math.BigInteger;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
-public final class Multiply extends Predicate {
+public final class Integers extends Predicate {
     @Serial
-    private static final long serialVersionUID = 2630128775301942610L;
+    private static final long serialVersionUID = 2384355866476367685L;
 
     @NelumboConstructor
-    public Multiply(NodeInfo nodeInfo, Object... args) {
+    public Integers(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
     }
 
-    @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
+    @NelumboMethod
+    protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
+        if (nrOfUnbound() > 1) {
             return unresolvable();
         }
-
-        BigInteger factor1 = getVal(0, 0);
-        BigInteger factor2 = getVal(1, 0);
-        BigInteger product = getVal(2, 0);
-        if (factor1 != null && factor2 != null) {
-            BigInteger p = factor1.multiply(factor2);
-            if (product != null) {
-                boolean eq = p.equals(product);
-                return eq ? factCC() : falsehoodCC();
-            } else {
-                return set(2, NInteger.of(p)).factCI();
+        BigInteger a1 = addend1 == null ? null : addend1.value();
+        BigInteger a2 = addend2 == null ? null : addend2.value();
+        BigInteger s = sum == null ? null : sum.value();
+        if (a1 != null && a2 != null) {
+            BigInteger r = a1.add(a2);
+            if (s != null) {
+                return r.equals(s) ? factCC() : falsehoodCC();
             }
-        } else if (factor1 != null && product != null) {
-            BigInteger[] dr = product.divideAndRemainder(factor1);
+            return set(2, NInteger.of(r)).factCI();
+        } else if (a1 != null && s != null) {
+            return set(1, NInteger.of(s.subtract(a1))).factCI();
+        } else if (a2 != null && s != null) {
+            return set(0, NInteger.of(s.subtract(a2))).factCI();
+        }
+        return unknown();
+    }
+
+    @NelumboMethod
+    protected InferResult mult(NInteger factor1, NInteger factor2, NInteger product) {
+        if (nrOfUnbound() > 1) {
+            return unresolvable();
+        }
+        BigInteger f1 = factor1 == null ? null : factor1.value();
+        BigInteger f2 = factor2 == null ? null : factor2.value();
+        BigInteger p = product == null ? null : product.value();
+        if (f1 != null && f2 != null) {
+            BigInteger r = f1.multiply(f2);
+            if (p != null) {
+                return r.equals(p) ? factCC() : falsehoodCC();
+            }
+            return set(2, NInteger.of(r)).factCI();
+        } else if (f1 != null && p != null) {
+            BigInteger[] dr = p.divideAndRemainder(f1);
             return dr[1].equals(BigInteger.ZERO) ? set(1, NInteger.of(dr[0])).factCI() : falsehoodCI();
-        } else if (factor2 != null && product != null) {
-            BigInteger[] dr = product.divideAndRemainder(factor2);
+        } else if (f2 != null && p != null) {
+            BigInteger[] dr = p.divideAndRemainder(f2);
             return dr[1].equals(BigInteger.ZERO) ? set(0, NInteger.of(dr[0])).factCI() : falsehoodCI();
         }
-
         return unknown();
+    }
+
+    @NelumboMethod
+    protected InferResult gt(NInteger left, NInteger right) {
+        if (nrOfUnbound() > 1) {
+            return unresolvable();
+        }
+        if (left == null) {
+            return set(0, get(1)).falsehoodsII();
+        }
+        if (right == null) {
+            return set(1, get(0)).falsehoodsII();
+        }
+        return left.value().compareTo(right.value()) > 0 ? factCC() : falsehoodCC();
     }
 
 }

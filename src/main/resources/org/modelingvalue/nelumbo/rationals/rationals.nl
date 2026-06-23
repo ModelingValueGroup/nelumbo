@@ -2,15 +2,16 @@ import    nelumbo.integers
 
 Rational        :: Object
 
-private Boolean ::= add(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Add,
-                    mult(<Rational>,<Rational>,<Rational>) @nelumbo.rationals.Multiply
+private Boolean ::= add(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Rationals,
+                    mult(<Rational>,<Rational>,<Rational>) @nelumbo.rationals.Rationals,
+                    gt(<Rational>,<Rational>)              @nelumbo.rationals.Rationals,
+                    iir(<Integer>,<Integer>,<Rational>)    @nelumbo.rationals.Rationals
 
 
-Boolean  ::= <Rational> ">"  <Rational> #30      @nelumbo.rationals.GreaterThan,
+Boolean  ::= <Rational> ">"  <Rational> #30,
              <Rational> "<"  <Rational> #30,
              <Rational> "<=" <Rational> #30,
-             <Rational>  >=  <Rational> #30,
-             iir(<Integer>,<Integer>,<Rational>) @nelumbo.rationals.IntegersRational
+             <Rational>  >=  <Rational> #30
 
 Rational ::= <(> - <)?>  <[> <NUMBER> . <NUMBER> <]>  @nelumbo.rationals.Rational,
              <Rational> - <Rational> #40,
@@ -24,6 +25,7 @@ Rational ::= <(> - <)?>  <[> <NUMBER> . <NUMBER> <]>  @nelumbo.rationals.Rationa
 
 Rational a, b, c
 
+a>b   <=>  gt(a,b)
 a<b   <=>  b>a
 a<=b  <=>  a<b | a=b
 a>=b  <=>  a>b | a=b

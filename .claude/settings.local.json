@@ -52,7 +52,10 @@
       "Bash(rm -f libs/org.osgi.service.prefs_1.1.2.202109301733.jar libs/org.eclipse.equinox.preferences_3.12.100.v20251111-0704.jar libs/org.eclipse.core.runtime_3.34.200.v20251220-0953.jar)",
       "Read(//c/c/Users/wimba/git/nelumbo/lsp/plugins/eclipse/**)",
       "Bash(Select-Object -Last 30)",
-      "Bash(java -jar build/libs/nelumbo-0.9.6-cli.jar src/main/resources/org/modelingvalue/nelumbo/tests/collectionsTest.nl)"
+      "Bash(java -jar build/libs/nelumbo-0.9.6-cli.jar src/main/resources/org/modelingvalue/nelumbo/tests/collectionsTest.nl)",
+      "PowerShell(.\\\\gradlew cliJar -q 2>&1 | Select-Object -Last 30)",
+      "PowerShell(.\\\\gradlew test --rerun-tasks; \"GRADLE_EXIT=$LASTEXITCODE\")",
+      "PowerShell(.\\\\gradlew test --rerun-tasks 2>&1 | Select-String \"BUILD|FAIL|test FAILED|> Task :test|> Task :lsp:server:test\"; \"GRADLE_EXIT=$LASTEXITCODE\")"
     ],
     "deny": [],
     "ask": []

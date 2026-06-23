@@ -2,10 +2,11 @@ import    nelumbo.logic
 
 Integer              :: Object
 
-private Boolean      ::= add(<Integer>,<Integer>,<Integer>)  @nelumbo.integers.Add,
-                         mult(<Integer>,<Integer>,<Integer>) @nelumbo.integers.Multiply
+private Boolean      ::= add(<Integer>,<Integer>,<Integer>)  @nelumbo.integers.Integers,
+                         mult(<Integer>,<Integer>,<Integer>) @nelumbo.integers.Integers,
+                         gt(<Integer>,<Integer>)             @nelumbo.integers.Integers
 
-Boolean              ::= <Integer> ">"  <Integer> #30  @nelumbo.integers.GreaterThan,
+Boolean              ::= <Integer> ">"  <Integer> #30,
                          <Integer> "<"  <Integer> #30,
                          <Integer> "<=" <Integer> #30,
                          <Integer> ">=" <Integer> #30
@@ -22,6 +23,7 @@ Integer              ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>
 
 Integer a, b, c
 
+a>b   <=>  gt(a,b)
 a<b   <=>  b>a
 a<=b  <=>  a<b | a=b
 a>=b  <=>  a>b | a=b
