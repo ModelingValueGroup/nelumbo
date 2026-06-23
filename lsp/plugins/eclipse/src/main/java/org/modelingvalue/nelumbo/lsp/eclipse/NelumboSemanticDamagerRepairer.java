@@ -176,6 +176,15 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
                 if (doc == null) {
                     return;
                 }
+                // The cached tokens describe the revision captured when the request was sent. If the
+                // user has typed since then, those offsets no longer line up with the current text.
+                // Applying them now would either shift styling around the edit point or — since
+                // createPresentation bails out for stale tokens — wipe all coloring to default while
+                // typing. Skip entirely and leave the existing presentation, which SWT shifts along
+                // with the edit; the fetch triggered by that later edit delivers matching tokens.
+                if (cachedStamp != modificationStamp(doc)) {
+                    return;
+                }
                 TextPresentation presentation = new TextPresentation(new Region(0, doc.getLength()), 100);
                 createPresentation(presentation, null);
                 if (!viewer.getTextWidget().isDisposed()) {
@@ -210,12 +219,21 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
             return;
         }
 
+        int docLength = doc.getLength();
+
+        // Span the whole document with a default (unstyled) range so the presentation's coverage
+        // equals the full document, not just up to the last token. changeTextPresentation derives
+        // the StyledText.setStyleRanges region from getCoverage(); without this it would stop at the
+        // last token and leave the trailing characters carrying stale StyleRanges from an earlier
+        // revision — which renders as clipped/missing characters at the end of a line after an edit
+        // or a format-on-save that shifted the tail of the document.
+        presentation.setDefaultStyleRange(new StyleRange(0, docLength, null, null));
+
         List<Integer> data = tokens.getData();
         if (data == null || data.isEmpty()) {
             return;
         }
 
-        int          docLength  = doc.getLength();
         List<String> tokenTypes = legend.getTokenTypes();
         int          line       = 0;
         int          character  = 0;
