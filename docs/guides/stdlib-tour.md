@@ -379,9 +379,9 @@ All three work from the same rule and the same native. The native `Concat` handl
 
 ---
 
-## 6. `nelumbo.collections` (21 lines)
+## 6. `nelumbo.collections` (60 lines)
 
-The shortest module.
+The only module that uses generic-type parameters.
 
 ```
 import nelumbo.integers
@@ -392,24 +392,34 @@ Collection<E> :: Object
 Set<E>        :: Collection<E>
 List<E>       :: Collection<E>
 
-private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>) @...BuildSet
+private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)  @...BuildSet,
+                    size(...), indexOf(...), elementOf(...), subset(...),
+                    intersection(...), union(...), diff(...), concat(...)  @...Collections
 
 Set<E>  ::= { <(> <E> <,> , <)*> }       @...NSet,
-            { [ <E> ] ( <Boolean#0> ) }  @...SetBuilder
-List<E> ::= [ <(> <E> <,> , <)*> ]       @...NList
+            { [ <E> ] ( <Boolean#0> ) }  @...SetBuilder,
+            <Set<E>> && <Set<E>>,        ▸ intersection
+            <Set<E>> || <Set<E>>,        ▸ union
+            <Set<E>> -  <Set<E>>         ▸ difference
+List<E> ::= [ <(> <E> <,> , <)*> ]       @...NList,
+            <List<E>> + <List<E>>        ▸ concatenation
+Integer ::= | <Collection<E>> |,         ▸ cardinality
+            <E> "pos" <List<E>>          ▸ 0-based index
+Boolean ::= <Set<E>> "<" <Set<E>>, ...,  ▸ subset / superset
+            <E> "in" <Collection<E>>     ▸ membership
 
 E e   Boolean c   Set<E> s
 
 {[e](c)} = s  <=>  build(e, c, s)
+... operator rules wiring each operator to its predicate ...
 ```
-
-That's the whole module.
 
 ### What it introduces
 
 - **`Type E`** — the declaration that introduces a generic type parameter. `lang.nl` uses the same mechanism for parenthesisation (`Type P; P ::= (<P>)`); this is its first use to define container types.
 - **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype.
 - **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`.
+- **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `< > <= >=`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing `e pos l`. Each is a relation backed by the `Collections` native class and runs in both directions. See [`reference/stdlib/collections.md`](../reference/stdlib/collections.md#operations) for the full table.
 
 ### How the literal syntax works
 

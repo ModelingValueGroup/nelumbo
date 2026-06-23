@@ -38,8 +38,8 @@ org.modelingvalue.nelumbo.rationals   exact rational arithmetic
 org.modelingvalue.nelumbo.strings     string operations
     NString, Concat, Length, ToInteger
 
-org.modelingvalue.nelumbo.collections container literals + set-builder
-    NSet, NList, SetBuilder, BuildSet
+org.modelingvalue.nelumbo.collections container literals + set-builder + operations
+    NSet, NList, SetBuilder, BuildSet, Collections
 
 org.modelingvalue.nelumbo.datetime    ISO 8601 dates, times, date-times, durations
     NDate, NTime, NDateTime, NPeriod, Add, AddPeriod, MultiplyPeriod,
@@ -231,6 +231,12 @@ Shipped natives fall into five structural roles. Reading this classification fir
 - Backs: `private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)`
 - Role: quantifier (extends `Quantifier`, like `ExistentialQuantifier`/`UniversalQuantifier`)
 - Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces a singleton `NSet` of its non-member value on the falsehoods side. Completeness flags are inherited from the condition's result, so `{[i](|i|=10)}` yields `[(s={-10,10})][(s={0}),..]` — the two solutions as a fact, `{0}` as a proven non-member, `..` for the open remainder.
+
+### `Collections`
+
+- Backs: the algebraic operations — `size` (`|c|`), `indexOf` (`e pos l`), `elementOf` (`e in s`), `subset` (`< > <= >=`), `intersection` (`&&`), `union` (`||`), `diff` (`-`), and `concat` (`+`).
+- Role: predicate (one `@NelumboMethod` per operation)
+- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound, the method returns `unresolvable()`; when a collection itself is unbound it returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). See [`reference/stdlib/collections.md`](stdlib/collections.md#operations).
 
 ---
 

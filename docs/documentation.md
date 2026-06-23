@@ -87,7 +87,7 @@ The irreducible facts about the language.
 - [`nelumbo.integers`](reference/stdlib/integers.md) — arbitrary-precision integer arithmetic
 - [`nelumbo.rationals`](reference/stdlib/rationals.md) — exact rationals
 - [`nelumbo.strings`](reference/stdlib/strings.md) — strings, concatenation, conversion
-- [`nelumbo.collections`](reference/stdlib/collections.md) — generic `Set<E>` and `List<E>`, plus set-builder notation
+- [`nelumbo.collections`](reference/stdlib/collections.md) — generic `Set<E>` and `List<E>`, set-builder notation, and operations (cardinality, membership, subset, union/intersection/difference, concatenation, indexing)
 - [`nelumbo.datetime`](reference/stdlib/datetime.md) — ISO 8601 dates, times, date-times, and durations
 
 ### Guides

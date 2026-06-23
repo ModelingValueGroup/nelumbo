@@ -2,7 +2,7 @@
 
 Generic sets and lists. The smallest stdlib module — and the only one that uses Nelumbo's generic-type parameter mechanism.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 21 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 60 lines.
 
 **Import:**
 
@@ -83,9 +83,97 @@ Because it is built on the three-valued quantifier machinery, set-builder notati
 
 ---
 
+## Operations
+
+The module exposes a set of operations as infix/prefix operators. Every one is a relation, so it works in both directions: you can supply the result and check it, or leave it as a variable and have it computed. The native worker for all of them is the `Collections` class; the operator syntax is the public surface, wired to `private` predicates.
+
+### Cardinality — `|c|`
+
+```
+Integer ::= | <Collection<E>> | #35
+```
+
+`|c| = n` is the number of elements in any `Collection<E>` (set *or* list). Computes the count from the collection, or checks a given count.
+
+```
+|{1,2,3}| = i   ?   [(i=3)][..]      ▸ i = 3
+|[1,2,3]| = 1   ?   [][()]           ▸ false: the list has 3 elements
+```
+
+### Membership — `e in c`
+
+```
+Boolean ::= <E> "in" <Collection<E>> #30
+```
+
+`e in c` holds when `e` is an element of the collection (a member of a set, or an element at any index of a list). With an unbound element it **enumerates** the members:
+
+```
+1 in {1,2,3}    ?   [()][]                       ▸ true
+i in {1,2,3}    ?   [(i=1),(i=2),(i=3)][..]      ▸ enumerates members
+1 in [1,2,3]    ?   [()][]                       ▸ true for lists too
+```
+
+### Subset / superset — `<` `>` `<=` `>=`
+
+```
+Boolean ::= <Set<E>> "<"  <Set<E>> #30,
+            <Set<E>> ">"  <Set<E>> #30,
+            <Set<E>> "<=" <Set<E>> #30,
+            <Set<E>> ">=" <Set<E>> #30
+```
+
+`s1 < s2` holds when every element of `s1` is in `s2` — i.e. `s1 ⊆ s2`. Note this is the **non-strict** subset (it is backed by `containsAll`, so a set is a subset of itself); `s1 <= s2` is defined as `s1 < s2 | s1 = s2` and denotes the same relation, kept for symmetry with the integer comparison operators. `>`/`>=` are the mirror (superset).
+
+```
+{1,2}   < {1,2,3}   ?   [()][]      ▸ true
+{}      < {1,2,3}   ?   [()][]      ▸ the empty set is a subset of anything
+{1,2,3} < {}        ?   [][()]      ▸ false
+```
+
+### Set algebra — `&&` `||` `-`
+
+```
+Set<E> ::= <Set<E>> && <Set<E>> #60,   ▸ intersection
+           <Set<E>> || <Set<E>> #60,   ▸ union
+           <Set<E>> -  <Set<E>> #50    ▸ difference
+```
+
+```
+{3,4,5} && {1,2,3} = s   ?   [(s={3})][..]
+{3,4,5} || {1,2,3} = s   ?   [(s={1,2,3,4,5})][..]
+{3,4,5} -  {1,2,3} = s   ?   [(s={4,5})][..]
+```
+
+### List concatenation — `+`
+
+```
+List<E> ::= <List<E>> + <List<E>> #50
+```
+
+```
+[1,2,3] + [4,5] = l   ?   [(l=[1,2,3,4,5])][..]
+[1,2,3] + []    = l   ?   [(l=[1,2,3])][..]
+```
+
+### List index — `e pos l`
+
+```
+Integer ::= <E> "pos" <List<E>> #40
+```
+
+`e pos l = i` relates an element `e` to its **0-based** index `i` in list `l`. It runs either way — find the index of an element, or find the element at an index — and a duplicated element yields one solution per occurrence:
+
+```
+2 pos [1,2,3] = i   ?   [(i=1)][..]      ▸ 2 sits at index 1
+i pos [1,2,3] = 2   ?   [(i=3)][..]      ▸ index 2 holds the element 3
+```
+
+---
+
 ## Usage
 
-The whole of `collectionsTest.nl`:
+A representative slice of `collectionsTest.nl`:
 
 ```
 import nelumbo.collections
@@ -93,11 +181,21 @@ import nelumbo.collections
 List<Integer>       l
 Set<Integer>        s
 Collection<Integer> c
-Integer             i
+Integer             i, v
 
-s = {1,2,3}         ?   [(s={1,2,3})][..]
-s = {}              ?   [(s={})][..]
-{[i](|i|=10)} = s   ?   [(s={-10,10})][(s={0}),..]
+s = {1,2,3}                     ?   [(s={1,2,3})][..]
+{[i](|i|=10)} = s               ?   [(s={-10,10})][(s={0}),..]
+
+|{1,2,3}| = i                   ?   [(i=3)][..]
+i in {1,2,3}                    ?   [(i=1),(i=2),(i=3)][..]
+{1,2} < {1,2,3}                 ?   [()][]
+
+{3,4,5} && {1,2,3} = s          ?   [(s={3})][..]
+{3,4,5} || {1,2,3} = s          ?   [(s={1,2,3,4,5})][..]
+{3,4,5} -  {1,2,3} = s          ?   [(s={4,5})][..]
+
+[1,2,3] + [4,5] = l             ?   [(l=[1,2,3,4,5])][..]
+2 pos [1,2,3] = i               ?   [(i=1)][..]
 ```
 
 Collection values print back in their literal form on the facts side.
@@ -106,7 +204,7 @@ Collection values print back in their literal form on the facts side.
 
 ## Status
 
-`collections` provides type declarations, literal constructors, and set-builder comprehension. There are still no algebraic operations in the module itself — no union, intersection, length, map, or fold — but `{[e](c)}` gives a way to *construct* a set from a predicate. The native classes are `NSet` and `NList` (literals) plus `SetBuilder`/`BuildSet` (the comprehension form).
+`collections` provides type declarations, literal constructors, set-builder comprehension, and a working set of algebraic operations: cardinality (`|c|`), membership (`in`), subset/superset (`<` `>` `<=` `>=`), set intersection/union/difference (`&&` `||` `-`), list concatenation (`+`), and list indexing (`pos`). Still absent are higher-order operations such as `map` or `fold`. The native classes are `NSet` and `NList` (literals), `SetBuilder`/`BuildSet` (the comprehension form), and `Collections` (every operation listed above).
 
 This is also the only stdlib module that demonstrates generic-type parameters in action. The mechanism is general: a user module can declare `Type T` and parameterise its own types and patterns the same way.
 
@@ -116,13 +214,18 @@ This is also the only stdlib module that demonstrates generic-type parameters in
 
 Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 
-| Kind          | Names                                |
+| Kind          | Names                                                                   |
 |---|---|
-| Types         | `Collection<E>`, `Set<E>`, `List<E>` |
-| Literals      | `{...}` for sets, `[...]` for lists  |
-| Comprehension | `{[e](c)}` — set-builder notation    |
+| Types         | `Collection<E>`, `Set<E>`, `List<E>`                                     |
+| Literals      | `{...}` for sets, `[...]` for lists                                      |
+| Comprehension | `{[e](c)}` — set-builder notation                                       |
+| Cardinality   | `\|c\|` — element count of any collection                               |
+| Membership    | `e in c`                                                                 |
+| Set relations | `<` `>` `<=` `>=` — subset / superset                                    |
+| Set algebra   | `&&` intersection, `\|\|` union, `-` difference                         |
+| List ops      | `+` concatenation, `e pos l` — 0-based index                            |
 
-(`build` is `private` and is not visible to importers; the set-builder syntax `{[e](c)}` is its public surface.)
+(The native predicates `build`, `size`, `indexOf`, `elementOf`, `subset`, `intersection`, `union`, `diff`, and `concat` are all `private`; the operator syntax above is their public surface.)
 
 (The `Type E` declaration introduces the parameter binding inside `collections.nl`; the *mechanism* of generic-type parameters is supplied by `nelumbo.lang` and is available to importers regardless of `collections`.)
 
