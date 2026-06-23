@@ -62,11 +62,12 @@ Integer ::= <Integer> - <Integer>   #40,
 | `- <Integer>`           | 80 | unary negation    |
 | `\| <Integer> \|`       | 35 | absolute value    |
 
-Six patterns, **two** native primitives. The four binary operators reduce to `add` or `mult`:
+Six patterns, **two** native arithmetic primitives. The four binary operators reduce to `add` or `mult` — both `@NelumboMethod`s on the single `nelumbo.integers.Integers` class (which also carries the `gt` comparison primitive below):
 
 ```
-private Boolean ::= add(<Integer>,<Integer>,<Integer>)   @nelumbo.integers.Add,
-                    mult(<Integer>,<Integer>,<Integer>)  @nelumbo.integers.Multiply
+private Boolean ::= add(<Integer>,<Integer>,<Integer>)   @nelumbo.integers.Integers,
+                    mult(<Integer>,<Integer>,<Integer>)  @nelumbo.integers.Integers,
+                    gt(<Integer>,<Integer>)              @nelumbo.integers.Integers
 
 Integer a, b, c
 
@@ -124,7 +125,7 @@ Integer division truncates toward zero. A query with a non-exact dividend gets a
 ## Comparison
 
 ```
-Boolean ::= <Integer> ">"  <Integer>   #30  @nelumbo.integers.GreaterThan,
+Boolean ::= <Integer> ">"  <Integer>   #30,
             <Integer> "<"  <Integer>   #30,
             <Integer> "<=" <Integer>   #30,
             <Integer> ">=" <Integer>   #30
@@ -132,18 +133,21 @@ Boolean ::= <Integer> ">"  <Integer>   #30  @nelumbo.integers.GreaterThan,
 
 | Pattern                  | `#N` | Native / definition          |
 |---|---|---|
-| `<Integer> > <Integer>`  | 30   | `nelumbo.integers.GreaterThan` |
+| `<Integer> > <Integer>`  | 30   | reduces to `gt` (native)     |
 | `<Integer> < <Integer>`  | 30   | defined in `integers.nl`     |
 | `<Integer> <= <Integer>` | 30   | defined in `integers.nl`     |
 | `<Integer> >= <Integer>` | 30   | defined in `integers.nl`     |
 
-Only `>` is native. The other three reduce to `>` and `=`:
+The comparison operators themselves carry no `@` binding — the single native comparison is the private helper `gt`, and the operators reduce to it and to `=`:
 
 ```
-a <  b  <=>  b > a
+a >  b  <=>  gt(a, b)
+a <  b  <=>  gt(b, a)
 a <= b  <=>  a < b | a = b
 a >= b  <=>  a > b | a = b
 ```
+
+`gt` is native (rather than binding `>` directly) because an operator functor's name cannot bind a `@NelumboMethod`; routing through a named helper keeps the logic in a method. See [`native-cookbook.md`](../../guides/native-cookbook.md#recipe-2--comparison-predicate).
 
 Comparisons participate in three-valued classification. Asking `a > 0` with `a` unbound does not enumerate the positive integers, but it does place `a = 0` on the correct side:
 
@@ -166,7 +170,7 @@ Added to what `nelumbo.logic` already exports:
 | Literal  | `<NUMBER>`                                                      |
 | Operators| `+`, `-` (binary and unary), `*`, `/`, `\|x\|`, `<`, `<=`, `>`, `>=` |
 
-`add` and `mult` are `private` and are not visible to importers.
+`add`, `mult`, and `gt` are `private` and are not visible to importers.
 
 ---
 

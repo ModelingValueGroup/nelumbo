@@ -3,7 +3,7 @@
 Some patterns in Nelumbo cannot be expressed purely in the language — the basic arithmetic primitives, string concatenation, rational construction. These are implemented in Java and bound to a pattern declaration using the `@` annotation:
 
 ```
-Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Add
+private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Integers
 ```
 
 This page describes how such bindings are written. It is the reference for anyone extending Nelumbo with new primitives — either to add capabilities to the standard library or to integrate Nelumbo with a Java application.
@@ -24,11 +24,11 @@ The Java class named by `@` must:
 
 1. Extend an appropriate base class — typically `org.modelingvalue.nelumbo.logic.Predicate`.
 2. Provide a single public constructor annotated with `@NelumboConstructor`, with the signature `(NodeInfo, Object...)`. The engine instantiates the class through this constructor by reflection.
-3. Override `infer(int, InferContext)` to perform the native reasoning (Predicate subclasses) — or one of the other base-class hooks (`init(...)` for parsed literals, the `isTrue` / `isFalse` family for `BinaryPredicate` subclasses, etc.).
+3. Implement the native reasoning. **The preferred way is a `@NelumboMethod`** — a method whose name and parameter count match the functor; the engine binds it by reflection and one class can host a method per relation. Override `infer(int, InferContext)` instead when the functor is an operator (its name is not a Java identifier) or when the logic needs the `InferContext`. (Other base-class hooks exist too: `init(...)` for parsed literals, the `isTrue` / `isFalse` family for `BinaryPredicate` subclasses.) The trade-off is spelled out in [`../guides/native-cookbook.md`](../guides/native-cookbook.md#implementing-the-logic-prefer-nelumbomethod-over-overriding-infer); everything below about `InferResult` applies equally to both.
 
 That is the entire required surface. There is no `struct(...)` override and no private re-structuring constructor; the base classes handle re-structuring automatically.
 
-If the native needs to construct instances of itself at runtime (a typical literal-type concern — e.g., `Add` building `NInteger`s from `BigInteger` results), declare a static `Functor FUNCTOR` field marked with `@NelumboFunctorField`. The engine populates it by reflection during parsing, and your `of(...)` factory can then build instances via `NodeInfo.of(FUNCTOR)`. There is no static block, no `registerFunctorSetter` call.
+If the native needs to construct instances of itself at runtime (a typical literal-type concern — e.g., `Integers` building `NInteger`s from `BigInteger` results), declare a static `Functor FUNCTOR` field marked with `@NelumboFunctorField`. The engine populates it by reflection during parsing, and your `of(...)` factory can then build instances via `NodeInfo.of(FUNCTOR)`. There is no static block, no `registerFunctorSetter` call.
 
 ```java
 @NelumboFunctorField
@@ -43,20 +43,28 @@ public static NMyValue of(MyJavaValue val) {
 
 ---
 
-## The `infer` method
+## Where the logic goes: `@NelumboMethod` and `infer`
 
-`infer` is the heart of a native predicate. It returns an **`InferResult`** — the same fact/falsehood/completeness structure described in [`test-expression-semantics.md`](test-expression-semantics.md), but at the Java level.
+The reasoning of a native predicate returns an **`InferResult`** — the same fact/falsehood/completeness structure described in [`test-expression-semantics.md`](test-expression-semantics.md), but at the Java level. It lives in one of two places.
 
-Its signature:
+**A `@NelumboMethod` (preferred).** The method name equals the functor's name and the parameter count equals its argument count; the engine binds it by reflection. Each bound argument arrives as its typed node and each unbound argument as `null`:
+
+```java
+@NelumboMethod
+protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum);
+```
+
+**An `infer` override.** Used for operator functors and for natives that need the reasoning context:
 
 ```java
 protected InferResult infer(int nrOfUnbound, InferContext context);
 ```
 
-- `nrOfUnbound` is the number of the predicate's arguments that are still unbound variables at the call site
+- `nrOfUnbound` is the number of the predicate's arguments that are still unbound variables at the call site (in a `@NelumboMethod`, call the `nrOfUnbound()` accessor instead)
 - `context` provides access to the current reasoning context (used rarely)
+- read arguments with `getVal(i, 0)` (returns `null` when argument `i` is unbound), since there are no typed parameters
 
-A typical implementation inspects the currently bound arguments, decides what result it can justify, and returns the appropriate `InferResult`.
+Either way, a typical implementation inspects the currently bound arguments, decides what result it can justify, and returns the appropriate `InferResult`. The rest of this page applies to both forms.
 
 ---
 
@@ -80,53 +88,38 @@ The `set(i, v)` family of helpers constructs a new predicate with argument `i` s
 
 ---
 
-## Worked example — `Add`
+## Worked example — `add`
 
-The integer addition primitive, bound to the pattern `add(<Integer>, <Integer>, <Integer>)`. This is the complete source of `org.modelingvalue.nelumbo.integers.Add`:
+The integer addition primitive, bound to the pattern `add(<Integer>, <Integer>, <Integer>)`. This is the `add` `@NelumboMethod` on `org.modelingvalue.nelumbo.integers.Integers` (which also hosts `mult` and `gt`):
 
 ```java
-public final class Add extends Predicate {
-    @Serial
-    private static final long serialVersionUID = 2384355866476367685L;
-
-    @NelumboConstructor
-    public Add(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args);
+@NelumboMethod
+protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
+    if (nrOfUnbound() > 1) {
+        return unresolvable();
     }
-
-    @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
-            return unresolvable();
+    BigInteger a1 = addend1 == null ? null : addend1.value();
+    BigInteger a2 = addend2 == null ? null : addend2.value();
+    BigInteger s  = sum     == null ? null : sum.value();
+    if (a1 != null && a2 != null) {
+        BigInteger r = a1.add(a2);
+        if (s != null) {
+            return r.equals(s) ? factCC() : falsehoodCC();
         }
-
-        BigInteger addend1 = getVal(0, 0);
-        BigInteger addend2 = getVal(1, 0);
-        BigInteger sum     = getVal(2, 0);
-
-        if (addend1 != null && addend2 != null) {
-            BigInteger s = addend1.add(addend2);
-            if (sum != null) {
-                boolean eq = s.equals(sum);
-                return eq ? factCC() : falsehoodCC();
-            } else {
-                return set(2, NInteger.of(s)).factCI();
-            }
-        } else if (addend1 != null && sum != null) {
-            return set(1, NInteger.of(sum.subtract(addend1))).factCI();
-        } else if (addend2 != null && sum != null) {
-            return set(0, NInteger.of(sum.subtract(addend2))).factCI();
-        }
-
-        return unknown();
+        return set(2, NInteger.of(r)).factCI();
+    } else if (a1 != null && s != null) {
+        return set(1, NInteger.of(s.subtract(a1))).factCI();
+    } else if (a2 != null && s != null) {
+        return set(0, NInteger.of(s.subtract(a2))).factCI();
     }
+    return unknown();
 }
 ```
 
 Reading this:
 
-- The whole class is the annotated constructor (one line of real work) plus `infer`. No functor field is needed because `Add` itself never constructs an `Add` instance — only `NInteger`s, which carry their own `@NelumboFunctorField`.
-- `getVal(i, 0)` reads the current value of argument `i` as a `BigInteger`, or `null` if unbound.
+- The method name `add` and its three parameters match the functor `add(<Integer>,<Integer>,<Integer>)`. No functor field is needed because `Integers` never constructs an `Integers` instance — only `NInteger`s, which carry their own `@NelumboFunctorField`.
+- Each bound argument is its typed `NInteger`; each unbound argument is `null`. `addend.value()` reads the underlying `BigInteger`.
 - If at least two arguments are unbound, the predicate cannot do anything useful — it returns `unresolvable()` so the engine can retry once more bindings are known.
 - If all three are bound, the predicate checks whether the sum is correct and returns `factCC()` (proven true, closed on both sides) or `falsehoodCC()` (proven false, closed on both sides).
 - If two are bound and one is not, the predicate computes the missing value and returns `set(i, computedValue).factCI()` — the facts side contains the completed tuple, closed; the falsehoods side is left open because the native is not claiming any particular falsehoods.
@@ -135,40 +128,29 @@ This is what lets `add(a, b, c)` be used relationally: the same Java method answ
 
 ---
 
-## Worked example — `GreaterThan`
+## Worked example — `gt` (comparison)
 
-A comparison primitive showing the "enumerate falsehoods" pattern. Full source of `org.modelingvalue.nelumbo.integers.GreaterThan`:
+A comparison primitive showing the "enumerate falsehoods" pattern. This is the `gt` `@NelumboMethod` on `org.modelingvalue.nelumbo.integers.Integers`. Because `>` is an operator (its functor name is not an identifier), `integers.nl` exposes the comparison through a named helper functor and a rule — `gt(<Integer>,<Integer>) @…Integers` together with `a>b <=> gt(a,b)` — which lets the logic stay in a method:
 
 ```java
-public final class GreaterThan extends Predicate {
-    @Serial
-    private static final long serialVersionUID = 5338681256251602011L;
-
-    @NelumboConstructor
-    public GreaterThan(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args);
+@NelumboMethod
+protected InferResult gt(NInteger left, NInteger right) {
+    if (nrOfUnbound() > 1) {
+        return unresolvable();
     }
-
-    @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
-            return unresolvable();
-        }
-
-        BigInteger l = getVal(0, 0);
-        BigInteger r = getVal(1, 0);
-        if (l == null) {
-            return set(0, get(1)).falsehoodsII();
-        }
-        if (r == null) {
-            return set(1, get(0)).falsehoodsII();
-        }
-        return l.compareTo(r) > 0 ? factCC() : falsehoodCC();
+    if (left == null) {
+        return set(0, get(1)).falsehoodsII();
     }
+    if (right == null) {
+        return set(1, get(0)).falsehoodsII();
+    }
+    return left.value().compareTo(right.value()) > 0 ? factCC() : falsehoodCC();
 }
 ```
 
 When both sides are bound, the comparison is decisive — `factCC()` or `falsehoodCC()`. When one side is unbound, the native contributes a specific falsehood (`l > l` is false for any `l`, so setting the unbound side to the other side's value yields a falsehood) but leaves both sides open (`II`) — there are many more facts and falsehoods, and the native does not enumerate them. The engine uses this partial information as one building block alongside others.
+
+The alternative is to bind a class straight to the `>` operator and override `infer` — `org.modelingvalue.nelumbo.datetime.GreaterThan` does exactly that, with the same body shape but reading arguments via `getVal(i, 0)`.
 
 ---
 
@@ -184,9 +166,9 @@ For most new predicates, extend `Predicate`. For patterns whose result is an `In
 
 Study the stdlib implementations for patterns close to what you want:
 
-- `Predicate` subclasses in `integers/`: `Add`, `Multiply`, `GreaterThan`
-- `Function` subclasses in `integers/`: `NInteger` (literal)
-- Similar families in `rationals/`, `strings/`, and `collections/`
+- `Predicate` subclass in `integers/`: `Integers` (the `add`, `mult`, `gt` `@NelumboMethod`s)
+- Value type in `integers/`: `NInteger` (literal)
+- Similar families in `rationals/` (`Rationals`, `Rational`), `strings/` (`Concat`, `Length`, `ToInteger` — `infer` overrides), and `collections/` (`Collections`)
 
 ---
 

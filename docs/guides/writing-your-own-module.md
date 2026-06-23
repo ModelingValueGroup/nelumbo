@@ -88,11 +88,12 @@ import nelumbo.logic                          // 1. imports
 
 Integer :: Object                             // 2. types
 
-private Boolean ::= add(...)  @...Add,        // 3. private natives
-                    mult(...) @...Multiply
+private Boolean ::= add(...)  @...Integers,   // 3. private natives (one class,
+                    mult(...) @...Integers,   //    one @NelumboMethod per functor)
+                    gt(...)   @...Integers
 
-Boolean ::= <Integer> > <Integer>  @...GT,    // 4. public patterns
-            ...
+Boolean ::= <Integer> > <Integer>  #30,       // 4. public patterns (operators
+            ...                               //    reduce to gt/add/mult by rule)
 
 Integer ::= <NUMBER> @...NInteger,
             <Integer> + <Integer>   #40,

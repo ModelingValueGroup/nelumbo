@@ -55,7 +55,8 @@
       "Bash(java -jar build/libs/nelumbo-0.9.6-cli.jar src/main/resources/org/modelingvalue/nelumbo/tests/collectionsTest.nl)",
       "PowerShell(.\\\\gradlew cliJar -q 2>&1 | Select-Object -Last 30)",
       "PowerShell(.\\\\gradlew test --rerun-tasks; \"GRADLE_EXIT=$LASTEXITCODE\")",
-      "PowerShell(.\\\\gradlew test --rerun-tasks 2>&1 | Select-String \"BUILD|FAIL|test FAILED|> Task :test|> Task :lsp:server:test\"; \"GRADLE_EXIT=$LASTEXITCODE\")"
+      "PowerShell(.\\\\gradlew test --rerun-tasks 2>&1 | Select-String \"BUILD|FAIL|test FAILED|> Task :test|> Task :lsp:server:test\"; \"GRADLE_EXIT=$LASTEXITCODE\")",
+      "Bash(echo \"--- exit $? \\(1 = no matches = clean\\) ---\")"
     ],
     "deny": [],
     "ask": []

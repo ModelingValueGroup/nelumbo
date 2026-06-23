@@ -16,8 +16,8 @@ by hand in the same style the tool produces.
 ```
 Integer :: Object
 
-Boolean ::= <Integer> ">" <Integer> #30 @nelumbo.integers.GreaterThan,
-            <Integer> "<" <Integer> #30 @nelumbo.integers.LessThan
+Boolean ::= <Integer> ">" <Integer> #30 @com.example.GreaterThan,
+            <Integer> "<" <Integer> #30 @com.example.LessThan
 
 Integer a, b
 Object  n

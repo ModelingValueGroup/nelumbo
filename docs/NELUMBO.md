@@ -110,32 +110,34 @@
 ### Declaration
 
 ```text
-  Boolean ::= add(<Integer>,<Integer>,<Integer>)
-              @org.modelingvalue.nelumbo.integers.Add
+  private Boolean ::= add(<Integer>,<Integer>,<Integer>)
+                      @org.modelingvalue.nelumbo.integers.Integers
 ```
 
 ### Java Code
 
+The logic is a `@NelumboMethod` whose name and parameter count match the functor (the preferred style; see `docs/guides/native-cookbook.md`). Each bound argument arrives as its typed `NInteger`, each unbound one as `null`:
+
 ```text
- protected InferResult infer(int nrOfUnbound, InferContext context) {
-    if (nrOfUnbound > 1) {
-        return unknown();
+ @NelumboMethod
+ protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
+    if (nrOfUnbound() > 1) {
+        return unresolvable();
     }
-    BigInteger addend1 = getVal(0, 0);
-    BigInteger addend2 = getVal(1, 0);
-    BigInteger sum = getVal(2, 0);
-    if (addend1 != null && addend2 != null) {
-        BigInteger s = addend1.add(addend2);
-        if (sum != null) {
-            boolean eq = s.equals(sum);
-            return eq ? factCC() : falsehoodCC();
+    BigInteger a1 = addend1 == null ? null : addend1.value();
+    BigInteger a2 = addend2 == null ? null : addend2.value();
+    BigInteger s  = sum     == null ? null : sum.value();
+    if (a1 != null && a2 != null) {
+        BigInteger r = a1.add(a2);
+        if (s != null) {
+            return r.equals(s) ? factCC() : falsehoodCC();
         } else {
-            return set(2, Integer.of(s)).factCI();
+            return set(2, NInteger.of(r)).factCI();
         }
-    } else if (addend1 != null && sum != null) {
-        return set(1, Integer.of(sum.subtract(addend1))).factCI();
-    } else if (addend2 != null && sum != null) {
-        return set(0, Integer.of(sum.subtract(addend2))).factCI();
+    } else if (a1 != null && s != null) {
+        return set(1, NInteger.of(s.subtract(a1))).factCI();
+    } else if (a2 != null && s != null) {
+        return set(0, NInteger.of(s.subtract(a2))).factCI();
     } else {
         return unknown();
     }

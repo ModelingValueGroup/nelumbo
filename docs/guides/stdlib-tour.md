@@ -162,10 +162,11 @@ import nelumbo.logic
 
 Integer :: Object
 
-private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @...Add,
-                    mult(<Integer>, <Integer>, <Integer>)  @...Multiply
+private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @...Integers,
+                    mult(<Integer>, <Integer>, <Integer>)  @...Integers,
+                    gt(<Integer>, <Integer>)               @...Integers
 
-Boolean ::= <Integer> ">"  <Integer>   #30  @...GreaterThan,
+Boolean ::= <Integer> ">"  <Integer>   #30,
             <Integer> "<"  <Integer>   #30,
             <Integer> "<=" <Integer>   #30,
             <Integer> ">=" <Integer>   #30
@@ -180,7 +181,8 @@ Integer ::= <NUMBER>                @...NInteger,
 
 Integer a, b, c
 
-a<b    <=>  b>a
+a>b    <=>  gt(a,b)
+a<b    <=>  gt(b,a)
 a<=b   <=>  a<b | a=b
 a>=b   <=>  a>b | a=b
 
@@ -197,7 +199,7 @@ a/b=c  <=>  mult(c,b,a)
 
 ### What is native
 
-Four classes: `Add`, `Multiply`, `GreaterThan`, `NInteger`. That's it — **all of integer arithmetic** in Java.
+Two classes: `Integers` (the `add`, `mult`, `gt` `@NelumboMethod`s) and the `NInteger` literal. That's it — **all of integer arithmetic** in Java.
 
 ### What is derived from those four
 
@@ -212,13 +214,16 @@ a / b = c  <=>  mult(c, b, a)
 
 Subtraction is not a separate operation — it's addition with the arguments permuted. Division is multiplication permuted. Because `add` and `mult` are three-argument *relations* (not two-argument functions), any of the three arguments can be the "output" — the native computes whichever one is missing.
 
-Similarly, `<`, `<=`, `>=` all derive from `>`:
+Similarly, the comparison operators all derive from the single native helper `gt`:
 
 ```
-a < b   <=>  b > a
+a > b   <=>  gt(a, b)
+a < b   <=>  gt(b, a)
 a <= b  <=>  a < b | a = b
 a >= b  <=>  a > b | a = b
 ```
+
+`gt` (rather than the `>` operator) is the native because an operator functor's name cannot bind a `@NelumboMethod` — the named helper keeps the comparison logic in a method like `add` and `mult`.
 
 Unary minus is a one-liner:
 
@@ -235,8 +240,8 @@ And absolute value uses the guard pattern with mutually exclusive conditions:
 
 ### Idioms to notice
 
-- The rewrite-with-permutation idiom makes the native count small. Rather than writing `Subtract` and `Divide` Java classes, the module reuses `Add` and `Multiply` in inverted roles. This is only possible because the natives are relational.
-- `private` is used on `add` and `mult` because they are implementation details. Callers should use `+`, `-`, `*`, `/`, not the underlying private relations.
+- The rewrite-with-permutation idiom makes the native count small. Rather than writing separate subtraction and division natives, the module reuses the `add` and `mult` methods in inverted roles. This is only possible because the natives are relational.
+- `private` is used on `add`, `mult`, and `gt` because they are implementation details. Callers should use `+`, `-`, `*`, `/`, and the comparison operators, not the underlying private relations.
 - Two-clause absolute-value rule with mutually exclusive guards — the canonical way to define a piecewise function without risking contradictions.
 
 ### `integersTest.nl` as specification
@@ -264,15 +269,16 @@ import nelumbo.integers
 
 Rational :: Object
 
-private Boolean ::= add(<Rational>, <Rational>, <Rational>)   @...Add,
-                    mult(<Rational>, <Rational>, <Rational>)  @...Multiply
+private Boolean ::= add(<Rational>, <Rational>, <Rational>)   @...Rationals,
+                    mult(<Rational>, <Rational>, <Rational>)  @...Rationals,
+                    gt(<Rational>, <Rational>)                @...Rationals,
+                    iir(<Integer>,<Integer>,<Rational>)       @...Rationals
 
 
-Boolean ::= <Rational> ">"  <Rational>   #30     @...GreaterThan,
+Boolean ::= <Rational> ">"  <Rational>   #30,
             <Rational> "<"  <Rational>   #30,
             <Rational> "<=" <Rational>   #30,
-            <Rational>  >=  <Rational>   #30,
-            iir(<Integer>,<Integer>,<Rational>)  @...IntegersRational
+            <Rational>  >=  <Rational>   #30
 
 Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>  @...Rational,
              <Rational> - <Rational>   #40,
@@ -286,7 +292,8 @@ Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>  @...Rational,
 
 Rational a, b, c
 
-a<b    <=>  b>a
+a>b    <=>  gt(a,b)
+a<b    <=>  gt(b,a)
 a<=b   <=>  a<b | a=b
 a>=b   <=>  a>b | a=b
 
@@ -308,7 +315,7 @@ r(x/y)=a  <=> iir(x,y,a)
 
 ### What's new relative to integers
 
-**`IntegersRational` (`iir`)** — a three-argument relation that converts between `(Integer, Integer)` and `Rational`. Two Nelumbo rules wrap it:
+**`iir`** — a three-argument relation (a `@NelumboMethod` on `Rationals`) that converts between `(Integer, Integer)` and `Rational`. Two Nelumbo rules wrap it:
 
 ```
 r(x)   = a  <=>  iir(x, 1, a)

@@ -11,9 +11,9 @@ And before reaching for a native at all, confirm you are not on the wrong extens
 
 ---
 
-## The two annotations
+## The annotations
 
-Two annotations wire a Java class to the Nelumbo engine. Both exist because reflection-driven code looks unused to static analysers — the annotations document that the constructor or field is intentional and let the engine find them deterministically.
+Three annotations wire a Java class to the Nelumbo engine. They all exist because reflection-driven code looks unused to static analysers — the annotations document that the constructor, field, or method is intentional and let the engine find them deterministically. `@NelumboConstructor` and `@NelumboFunctorField` are about *construction*; `@NelumboMethod` is about *implementing the logic* and is covered in its own section below.
 
 ### `@NelumboConstructor`
 
@@ -41,14 +41,59 @@ public static MyValue of(MyJavaValue val) {
 }
 ```
 
-Predicate natives like `Add`, `Multiply`, `GreaterThan`, `Concat`, `Length`, and `ToInteger` do **not** need `@NelumboFunctorField` — they never build instances of themselves; they only build instances of the value types they yield (`NInteger`, `NString`).
+Predicate natives like `Integers`, `Rationals`, `Collections`, `Concat`, `Length`, and `ToInteger` do **not** need `@NelumboFunctorField` — they never build instances of themselves; they only build instances of the value types they yield (`NInteger`, `NString`).
+
+### `@NelumboMethod`
+
+Marks a method that implements the logic of **one functor**. The engine binds it by reflection: the **method name must equal the functor's name**, and the **parameter count must equal the functor's argument count**.
+
+```java
+// for:  private Boolean ::= add(<Integer>,<Integer>,<Integer>)  @nelumbo.integers.Integers
+@NelumboMethod
+protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
+    ...
+}
+```
+
+Each **bound** argument arrives as its typed node (`NInteger`, `Rational`, `NSet`, …, or `Object` for a generic element); each **unbound** argument arrives as `null`. The method returns an `InferResult` and has the full `Predicate` helper family in scope (`factCC`, `set`, `get`, `nrOfUnbound()`, `unresolvable`, …) exactly as `infer` would.
+
+One class can host **many** `@NelumboMethod`s — `integers.Integers` carries `add`, `mult`, and `gt`; `collections.Collections` carries eight. This is how a whole module's relations collapse into a single Java class. See the next section for when to use it.
+
+---
+
+## Implementing the logic: prefer `@NelumboMethod` over overriding `infer`
+
+A Predicate native computes its result in one of two ways: a `@NelumboMethod`, or an override of `infer(int nrOfUnbound, InferContext context)`. **Reach for `@NelumboMethod` first** — it is what the `integers`, `rationals`, and `collections` modules now use. But it does not fit every case, so this section gives the decision rule.
+
+|                                        | `@NelumboMethod`                         | override `infer`                  |
+| -------------------------------------- | ---------------------------------------- | --------------------------------- |
+| Arguments                              | typed parameters; unbound = `null`       | manual `getVal(i, j)`; unbound = `null` |
+| Relations per class                    | many (one method each)                   | one per class                     |
+| Access to `InferContext`               | none                                     | yes, receives it                  |
+| Binds to operator functors (`>`, `+`)  | no — the name must be an identifier       | yes                               |
+
+### Why it is preferred
+
+- **Typed parameters instead of `getVal` unpacking.** `add(NInteger a, NInteger b, NInteger c)` is self-documenting and type-safe; `getVal(0,0)` / `getVal(1,0)` / `getVal(2,0)` is neither.
+- **One class per module instead of one per operation.** The old `integers.Add`, `integers.Multiply`, and `integers.GreaterThan` classes are now a single `integers.Integers` with `add` / `mult` / `gt` methods — the same shape `collections.Collections` has always had.
+- **Less boilerplate.** No `InferContext` parameter to thread through, no per-class `@NelumboConstructor` × N.
+
+### When to still override `infer` ("but not always")
+
+1. **The functor is an operator.** Method dispatch matches the functor's *name*, and that name must be a Java-style identifier (`add`, `gt`, `iir`). An operator pattern such as `<Integer> ">" <Integer>` has the name `">"`, which can never match a method — the engine silently falls back to `infer`. Two ways out:
+   - override `infer` on the class bound to the operator (this is what `datetime.GreaterThan` does); **or**
+   - declare a named private helper functor and route the operator to it with a rule, so the *helper* is a `@NelumboMethod`. `integers.nl` declares `gt(<Integer>,<Integer>) @…Integers` and adds `a>b <=> gt(a,b)`; `collections.nl` does the same, routing `<` through `subset`. This is the preferred path when you want to keep all logic in methods.
+2. **You need the `InferContext`.** A `@NelumboMethod` receives only the arguments. If the native must consult the knowledge base, cycle results, or `context.reduce()` / `context.shallow()`, override `infer`.
+3. **`BinaryPredicate` connectives.** `And` / `Or`-style natives override the truth-table methods instead (Recipe 4) — neither `@NelumboMethod` nor `infer` applies.
+
+> A single class may mix both: `datetime.Add` exposes `period_add` as a `@NelumboMethod` while still overriding `infer` for the date/time/datetime operator functors bound to the same class.
 
 ---
 
 ## Table of recipes
 
-1. [Three-arg functional relation](#recipe-1-three-arg-functional-relation) — `Add`, `Multiply`, `Concat`, `IntegersRational`, `ToInteger`
-2. [Comparison predicate](#recipe-2-comparison-predicate) — `GreaterThan`, `Length`
+1. [Three-arg functional relation](#recipe-1-three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Concat`, `ToInteger`
+2. [Comparison predicate](#recipe-2-comparison-predicate) — `Integers#gt`, `datetime.GreaterThan`, `Length`
 3. [Constant / literal type](#recipe-3-constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
 4. [Binary logical connective](#recipe-4-binary-logical-connective) — `And`, `Or`
 5. [Container / collection literal](#recipe-5-container--collection-literal) — `NSet`, `NList`
@@ -61,13 +106,15 @@ Each recipe includes: when to use it, the skeleton class, the key decisions you 
 
 **Use when** you have a three-argument relation where, given any *N−1* of the arguments, the native can compute or verify the missing one. This is the workhorse shape; it covers addition, multiplication, concatenation, conversion.
 
-The stdlib uses this shape for `Add`, `Multiply` (in both `integers` and `rationals`), `Concat`, `IntegersRational`, and `ToInteger`.
+The stdlib uses this shape for `add`, `mult`, and `iir` (the `@NelumboMethod`s on `integers.Integers` and `rationals.Rationals`), and for `Concat` and `ToInteger` (which still override `infer`).
 
 ### Nelumbo-side declaration
 
 ```
 private Boolean ::= myop(<T1>, <T2>, <T3>)  @com.example.MyOp
 ```
+
+Because the functor name `myop` is an identifier, implement the logic as a `@NelumboMethod` (see [the preference rule](#implementing-the-logic-prefer-nelumbomethod-over-overriding-infer)). Group several such relations into one class — that is exactly what `Integers` and `Rationals` do.
 
 Declaring `myop` as `private` is idiomatic — the native predicate is usually wrapped by user-facing operators in the same module:
 
@@ -80,7 +127,7 @@ a + b = c  <=>  myop(a, b, c)
 a - b = c  <=>  myop(c, b, a)
 ```
 
-### Java skeleton
+### Java skeleton (`@NelumboMethod` — preferred)
 
 ```java
 package com.example;
@@ -88,8 +135,8 @@ package com.example;
 import java.io.Serial;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
@@ -102,35 +149,32 @@ public final class MyOp extends Predicate {
         super(nodeInfo, args);
     }
 
-    @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
+    // Method name + arg count match the functor `myop(<T1>,<T2>,<T3>)`.
+    // Each bound argument is its typed node; each unbound argument is null.
+    @NelumboMethod
+    protected InferResult myop(MyT1 a, MyT2 b, MyT3 c) {
+        if (nrOfUnbound() > 1) {
             return unresolvable();
         }
-
-        // getVal(i, j) reads sub-value j of argument i; for simple scalars j=0.
-        MyT1Value a = getVal(0, 0);   // null if unbound
-        MyT2Value b = getVal(1, 0);
-        MyT3Value c = getVal(2, 0);
 
         if (a != null && b != null) {
             // Both inputs bound — compute the expected output.
             MyT3Value computed = /* compute a op b */ ;
             if (c != null) {
                 // Output also bound — verify.
-                return c.equals(computed) ? factCC() : falsehoodCC();
+                return c.value().equals(computed) ? factCC() : falsehoodCC();
             } else {
                 // Bind the output.
-                return set(2, MyT3Native.of(computed)).factCI();
+                return set(2, MyT3.of(computed)).factCI();
             }
         } else if (a != null && c != null) {
             // Compute b from a and c, if possible.
             MyT2Value computedB = /* compute inverse */ ;
-            return set(1, MyT2Native.of(computedB)).factCI();
+            return set(1, MyT2.of(computedB)).factCI();
             // Or, if no b works: return falsehoodCI();
         } else if (b != null && c != null) {
             MyT1Value computedA = /* compute inverse */ ;
-            return set(0, MyT1Native.of(computedA)).factCI();
+            return set(0, MyT1.of(computedA)).factCI();
         }
 
         return unknown();
@@ -138,18 +182,21 @@ public final class MyOp extends Predicate {
 }
 ```
 
+> **`infer` variant.** If the functor were an operator (or you needed the `InferContext`), the same body goes in `protected InferResult infer(int nrOfUnbound, InferContext context)` instead, reading arguments with `getVal(i, 0)` (which returns `null` when argument `i` is unbound) rather than typed parameters. See `strings.Concat` for a live example.
+
 ### Key decisions
 
-1. **What does "bound" mean for each argument?** `getVal(i, 0)` returns `null` if argument `i` is unbound. Use `null` checks to drive the branch structure.
-2. **Is the relation total in every direction?** `Add` is (every inverse exists). `Multiply` is not — division by zero or a non-divisor produces `falsehoodCI()`.
+1. **What does "bound" mean for each argument?** A `@NelumboMethod` parameter is `null` when its argument is unbound (`getVal(i, 0)` returns `null` in the `infer` variant). Use `null` checks to drive the branch structure.
+2. **Is the relation total in every direction?** Integer `add` is (every inverse exists). `mult` is not — division by zero or a non-divisor produces `falsehoodCI()`. `iir` shows a four-way split where some inverses need a divisibility check.
 3. **Which closure flags should you use?** Most three-way natives use `factCI()` on a successful computation (the facts side is closed on the computed tuple, but we make no claim about falsehoods). They use `factCC()` / `falsehoodCC()` only when *all three* are bound — then the result is fully determined.
-4. **What if multiple arguments are unbound?** Return `unresolvable()`. The engine will retry once other parts of the reasoning have bound more variables.
+4. **What if multiple arguments are unbound?** Return `unresolvable()`. The engine will retry once other parts of the reasoning have bound more variables. Note you call `nrOfUnbound()` (the accessor) in a method, versus reading the `nrOfUnbound` parameter in an `infer` override.
 
 ### Study the source
 
-- `org.modelingvalue.nelumbo.integers.Add` — cleanest example, ~15 lines of real code
-- `org.modelingvalue.nelumbo.integers.Multiply` — shows the "falsehood when no answer exists" pattern (division remainder ≠ 0)
-- `org.modelingvalue.nelumbo.strings.Concat` — shows "infer an operand via suffix/prefix matching"
+- `org.modelingvalue.nelumbo.integers.Integers#add` — cleanest example, `@NelumboMethod` with typed `NInteger` parameters
+- `org.modelingvalue.nelumbo.integers.Integers#mult` — the "falsehood when no answer exists" pattern (division remainder ≠ 0)
+- `org.modelingvalue.nelumbo.rationals.Rationals#iir` — a four-direction relation with divisibility checks on the inverses
+- `org.modelingvalue.nelumbo.strings.Concat` — the `infer`-override form, inferring an operand via suffix/prefix matching
 
 ---
 
@@ -157,15 +204,31 @@ public final class MyOp extends Predicate {
 
 **Use when** you have a two-argument Boolean relation that, when both sides are bound, produces `true` or `false`, but cannot always bind a missing side.
 
-The stdlib uses this shape for `GreaterThan` (integers and rationals) and `Length`. `Equal` and `NIs` are richer variants for equality.
+The stdlib uses this shape for greater-than (integers, rationals, datetime) and `Length`. `Equal` and `NIs` are richer variants for equality.
 
-### Nelumbo-side declaration
+### Nelumbo-side declaration — mind the operator caveat
+
+A comparison is almost always spelled as an **operator** (`>`), and an operator functor's name is *not* a Java identifier, so it **cannot** bind to a `@NelumboMethod` (see [the preference rule](#implementing-the-logic-prefer-nelumbomethod-over-overriding-infer)). You therefore pick one of two paths:
+
+**Path A — named helper functor + rule (preferred, all logic stays in a method).** This is what `integers` and `rationals` do today:
+
+```
+private Boolean ::= gt(<T>, <T>)  @com.example.MyMod    // a @NelumboMethod named `gt`
+
+Boolean ::= <T> ">" <T>  #30
+T a, b
+a > b  <=>  gt(a, b)
+```
+
+**Path B — bind the operator directly and override `infer`.** Use this when a named helper is awkward; it is what `datetime.GreaterThan` does:
 
 ```
 Boolean ::= <T> ">" <T>  #30  @com.example.MyCompare
 ```
 
 ### Java skeleton
+
+The body is identical either way; only the wrapper differs — a `@NelumboMethod gt(MyT, MyT)` (Path A) or an `@Override infer` (Path B, shown below):
 
 ```java
 public final class MyCompare extends Predicate {
@@ -210,8 +273,9 @@ public final class MyCompare extends Predicate {
 
 ### Study the source
 
-- `org.modelingvalue.nelumbo.integers.GreaterThan` — simplest form
-- `org.modelingvalue.nelumbo.rationals.GreaterThan` — same strategy, cross-multiply internally
+- `org.modelingvalue.nelumbo.integers.Integers#gt` — Path A: a `@NelumboMethod` reached via the `a>b <=> gt(a,b)` rule
+- `org.modelingvalue.nelumbo.rationals.Rationals#gt` — same strategy, cross-multiply internally
+- `org.modelingvalue.nelumbo.datetime.GreaterThan` — Path B: `infer` overridden on a class bound straight to the `>` operator
 - `org.modelingvalue.nelumbo.strings.Length` — two-arg predicate that uses `factCI()` / `falsehoodCC()` for specific cases
 
 ---
@@ -477,7 +541,7 @@ Before you consider a new native "done":
 - [ ] There is exactly one `@NelumboConstructor` and it has signature `(NodeInfo, Object...)`. No other public constructors.
 - [ ] The `serialVersionUID` is set (the engine serialises nodes during deep reasoning).
 - [ ] If your native constructs instances of itself at runtime — e.g., a value type with an `of(...)` factory — there is a `@NelumboFunctorField private static Functor FUNCTOR;`. No static `registerFunctorSetter` block is needed; the engine populates the field by reflection.
-- [ ] For Predicate-style natives: `infer(int nrOfUnbound, InferContext context)` handles every combination of bound/unbound arguments and returns `unresolvable()` when it cannot proceed.
+- [ ] For Predicate-style natives: the logic lives in a `@NelumboMethod` (preferred — method name and arg count match the functor) unless the functor is an operator or needs the `InferContext`, in which case `infer(int nrOfUnbound, InferContext context)` is overridden. Either way it handles every combination of bound/unbound arguments and returns `unresolvable()` when it cannot proceed.
 - [ ] For literal-type natives: `init(KnowledgeBase, ParseContext, ConstructionReason)` parses the raw `String` from `args[0]` exactly once, gated on `reason == ConstructionReason.parsing`. `toString(TokenType[])` is implemented for human-readable result printing.
 - [ ] For container natives: `init(...)` wraps the parsed children into the internal collection, gated on the children not already being wrapped. `args()` is overridden to return the contained elements.
 - [ ] For `BinaryPredicate` subclasses: all seven truth-table / reduction overrides are present (`isTrue`/`isFalse`/`isUnknown` for one operand; `isTrue`/`isFalse` for both; `isLeft`/`isRight` for reduction).
@@ -503,7 +567,11 @@ Before you consider a new native "done":
 
 **Truth tables that don't handle `unknown`.** In `BinaryPredicate`, all the `isTrue` / `isFalse` / `isUnknown` overrides should consider what happens when one operand is unknown. For conjunction-like operators, `unknown & false = false` is non-obvious. Test the `unknown` rows of your truth table against a `logicTest.nl`-style file.
 
-**Not mirroring the existing stdlib patterns.** If you are adding `mod` to integers, model it on `Multiply`. If you are adding a new comparison, model it on `GreaterThan`. The stdlib has already worked out the right shapes — follow them.
+**Reaching for `infer` when a `@NelumboMethod` would do.** If your functor has an identifier name (not an operator) and does not need the `InferContext`, write a `@NelumboMethod` — it is shorter and type-safe. Override `infer` only for the operator / context cases called out in [the preference rule](#implementing-the-logic-prefer-nelumbomethod-over-overriding-infer).
+
+**Method that never fires.** A `@NelumboMethod` whose name or parameter count does not exactly match the functor (or which is bound to an operator functor) is silently ignored — the engine finds no method and falls back to rule inference, so your native "does nothing." Double-check the name and arity against the `@`-annotated declaration.
+
+**Not mirroring the existing stdlib patterns.** If you are adding `mod` to integers, model it on `Integers#mult`. If you are adding a new comparison, model it on `Integers#gt`. The stdlib has already worked out the right shapes — follow them.
 
 ---
 

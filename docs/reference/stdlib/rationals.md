@@ -38,11 +38,11 @@ Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>  @nelumbo.rationals.Rational
 - `r(<Integer>)` — promote an integer.
 - `r(<Integer>/<Integer>)` — build a rational from numerator/denominator integers.
 
-The two `r(...)` forms reduce to a public native predicate `iir`:
+The two `r(...)` forms reduce to a private native predicate `iir` — a `@NelumboMethod` on `nelumbo.rationals.Rationals` (the same class that carries `add`, `mult`, and `gt`):
 
 ```
-Boolean ::= ...,
-            iir(<Integer>,<Integer>,<Rational>)  @nelumbo.rationals.IntegersRational
+private Boolean ::= ...,
+                    iir(<Integer>,<Integer>,<Rational>)  @nelumbo.rationals.Rationals
 
 Integer x, y
 Rational a
@@ -51,7 +51,7 @@ r(x)   = a   <=>  iir(x, 1, a)
 r(x/y) = a   <=>  iir(x, y, a)
 ```
 
-`iir(n, d, q)` holds when `q` is the rational `n/d`. Like the other relational primitives, it is bidirectional: if the rational is known you can solve for compatible integer numerator/denominator pairs (subject to the usual three-valued constraints).
+`iir(n, d, q)` holds when `q` is the rational `n/d`. Like the other relational primitives, it is bidirectional: with both integers bound it builds (or verifies) the rational; with the rational bound and both integers free it yields the reduced `n/d`; and with one integer plus the rational bound it solves the other integer via the cross-multiplication `n*qd == qn*d` (subject to the usual three-valued constraints).
 
 ---
 
@@ -78,8 +78,8 @@ Rational ::= <Rational> - <Rational>   #40,
 Defined exactly like the integer counterparts, in terms of two private natives:
 
 ```
-private Boolean ::= add(<Rational>,<Rational>,<Rational>)   @nelumbo.rationals.Add,
-                    mult(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Multiply
+private Boolean ::= add(<Rational>,<Rational>,<Rational>)   @nelumbo.rationals.Rationals,
+                    mult(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Rationals
 
 Rational a, b, c
 
@@ -113,16 +113,17 @@ The middle query returns the exact result `2.1`. The third asserts the wrong ans
 ## Comparison
 
 ```
-Boolean ::= <Rational> ">"  <Rational>   #30   @nelumbo.rationals.GreaterThan,
+Boolean ::= <Rational> ">"  <Rational>   #30,
             <Rational> "<"  <Rational>   #30,
             <Rational> "<=" <Rational>   #30,
             <Rational>  >=  <Rational>   #30
 ```
 
-Same arrangement as `integers`: only `>` is native, the rest are defined in Nelumbo.
+Same arrangement as `integers`: the operators carry no `@` binding — the single native comparison is the private `gt` helper, and the rest are defined in Nelumbo.
 
 ```
-a <  b  <=>  b > a
+a >  b  <=>  gt(a, b)
+a <  b  <=>  gt(b, a)
 a <= b  <=>  a < b | a = b
 a >= b  <=>  a > b | a = b
 ```
@@ -139,9 +140,9 @@ Added to what `nelumbo.integers` (and `nelumbo.logic`) already export:
 | Literals    | decimal-point literal `<(> - <)?> <[> <NUMBER> . <NUMBER> <]>`      |
 | Constructors| `r(x)`, `r(x/y)`                                                    |
 | Operators   | `+`, `-` (binary and unary), `*`, `/`, `\|x\|`, `<`, `<=`, `>`, `>=` on `Rational` |
-| Predicate   | `iir(n, d, q)` — integer-pair / rational conversion                  |
+| Constructors| `r(x)`, `r(x/y)` — integer-pair / rational conversion                |
 
-`add` and `mult` are `private`. `iir` is **public**, so user rules can call it directly when the `r(...)` constructors aren't quite the shape needed.
+`add`, `mult`, `gt`, and `iir` are all `private`; the public surface is the operators and the `r(...)` constructors.
 
 ---
 

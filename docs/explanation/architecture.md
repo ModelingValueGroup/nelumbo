@@ -65,14 +65,14 @@ Six `.nl` files under `src/main/resources/org/modelingvalue/nelumbo/` collective
 These files are ordinary Nelumbo. They use `import`, `::`, `::=`, `<=>`, `::>`, and `private` exactly the way your code does. What sets them apart is that they bind certain patterns to Java classes using `@`:
 
 ```
-private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Add
+private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Integers
 ```
 
 What this means in practice:
 
 - **The language's syntax lives in `lang.nl`.** The hand-coded Java bootstrap exists only to load that file — once `lang.nl` is in place, the same `::=` declarations the user writes are what parse the rest.
 - **The three-valued logic lives in `logic.nl`.** That includes `<=>` itself: rules are a statement form declared in `logic.nl`, not a Java keyword. Without `nelumbo.logic`, a `.nl` file can declare types and patterns but cannot write rules, assert facts, or run queries.
-- Most of what looks like language features — `->`, `<->`, `-` as unary, `|x|`, `<=`, `int(s)`, `str(i)` — is **defined in Nelumbo**, not native. Only a handful of genuinely irreducible primitives (the tokenizer, `add`, `mult`, `>` between integers, string concat, and so on) are implemented in Java.
+- Most of what looks like language features — `->`, `<->`, `-` as unary, `|x|`, `<=`, `int(s)`, `str(i)` — is **defined in Nelumbo**, not native. Only a handful of genuinely irreducible primitives (the tokenizer, `add`, `mult`, integer comparison `gt`, string concat, and so on) are implemented in Java.
 - You can study the stdlib to learn idiom. It is around 300 lines of Nelumbo across seven files, and it demonstrates almost every feature of the language.
 
 ### User-written libraries

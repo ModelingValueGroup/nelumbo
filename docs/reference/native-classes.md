@@ -30,10 +30,10 @@ org.modelingvalue.nelumbo.logic       Boolean, connectives, quantifiers, equalit
     UniversalQuantifier, Fact, Rule, Query
 
 org.modelingvalue.nelumbo.integers    integer arithmetic
-    NInteger, Add, Multiply, GreaterThan
+    NInteger, Integers
 
 org.modelingvalue.nelumbo.rationals   exact rational arithmetic
-    Rational, Add, Multiply, GreaterThan, IntegersRational
+    Rational, Rationals
 
 org.modelingvalue.nelumbo.strings     string operations
     NString, Concat, Length, ToInteger
@@ -57,8 +57,8 @@ Shipped natives fall into five structural roles. Reading this classification fir
 | Role | Base class | What it does | Example |
 |---|---|---|---|
 | **Constant / literal** | `Node` (or `Predicate` for `NBoolean`) | Parses a source literal into a value object | `NInteger`, `NString`, `Rational`, `NBoolean` |
-| **Three-arg functional relation** | `Predicate` | Relation with one output and one or more inputs; binds the missing one | `Add`, `Multiply`, `Concat`, `IntegersRational`, `ToInteger` |
-| **Comparison predicate** | `Predicate` | Two-arg relation that decides true/false when both sides are known | `GreaterThan` (integers and rationals), `Equal`, `Length` |
+| **Three-arg functional relation** | `Predicate` | Relation with one output and one or more inputs; binds the missing one | `Integers#add`/`#mult`, `Rationals#iir`, `Concat`, `ToInteger` |
+| **Comparison predicate** | `Predicate` | Two-arg relation that decides true/false when both sides are known | `Integers#gt` / `Rationals#gt`, `datetime.GreaterThan`, `Equal`, `Length` |
 | **Logical connective** | `BinaryPredicate` / `CompoundPredicate` | Combines sub-predicate results according to a truth table | `And`, `Or`, `Not` |
 | **Quantifier** | `Quantifier` (extends `CompoundPredicate`) | Evaluates a sub-predicate under many bindings and aggregates | `ExistentialQuantifier`, `UniversalQuantifier`, `BuildSet` |
 | **Container** | `Node` | Literal collection of elements | `NSet`, `NList` |
@@ -125,24 +125,13 @@ Shipped natives fall into five structural roles. Reading this classification fir
 - Value: `BigInteger`
 - Notes: parses decimal (`123`) and base-N (`36#xyz`) literals via the `#` separator. Values large enough to exceed `Long` range print in base 36.
 
-### `Add`
+### `Integers`
 
-- Backs: `private Boolean ::= add(<Integer>, <Integer>, <Integer>)`
-- Role: three-arg functional relation
-- Strategy: the canonical three-way relation pattern. If all three are bound, verify and return `factCC`/`falsehoodCC`. If two are bound, compute and return `set(i, computed).factCI()`. If more than one is unbound, return `unresolvable()`.
-- The stdlib uses this single class for both addition and subtraction by the rule rewrite `a - b = c <=> add(c, b, a)`.
+One class hosts all three integer primitives as `@NelumboMethod`s: `add`, `mult`, and `gt`.
 
-### `Multiply`
-
-- Backs: `private Boolean ::= mult(<Integer>, <Integer>, <Integer>)`
-- Role: three-arg functional relation
-- Strategy: as `Add`, with one extra subtlety for division. When the product is bound and a factor is bound, use `divideAndRemainder`: if the remainder is zero, return `set(other, quotient).factCI()`; otherwise return `falsehoodCI()` (no integer completes the equation). This is how `21 / 10 = a` yields `[]` on the facts side.
-
-### `GreaterThan`
-
-- Backs: `Boolean ::= <Integer> > <Integer>` (only `>`; `<`, `<=`, `>=` are in `integers.nl`)
-- Role: comparison predicate
-- Strategy: when both sides are bound, compare and return `factCC()` or `falsehoodCC()`. When only one side is bound, use `set(i, get(1-i)).falsehoodsII()` — which records the specific falsehood "`x > x`" with both sides open, contributing partial information without overclaiming.
+- **`add`** — backs `private Boolean ::= add(<Integer>, <Integer>, <Integer>)`. Three-arg functional relation: if all three are bound, verify and return `factCC`/`falsehoodCC`; if two are bound, compute and return `set(i, computed).factCI()`; if more than one is unbound, return `unresolvable()`. The stdlib uses this single method for both addition and subtraction by the rule rewrite `a - b = c <=> add(c, b, a)`.
+- **`mult`** — backs `private Boolean ::= mult(<Integer>, <Integer>, <Integer>)`. As `add`, with one extra subtlety for division. When the product is bound and a factor is bound, use `divideAndRemainder`: if the remainder is zero, return `set(other, quotient).factCI()`; otherwise return `falsehoodCI()` (no integer completes the equation). This is how `21 / 10 = a` yields `[]` on the facts side.
+- **`gt`** — backs the private helper functor `gt(<Integer>, <Integer>)`, reached from the `>` operator via the rule `a>b <=> gt(a,b)` (`<`, `<=`, `>=` derive from it in `integers.nl`). Comparison predicate: when both sides are bound, compare and return `factCC()` or `falsehoodCC()`; when only one side is bound, use `set(i, get(1-i)).falsehoodsII()` — which records the specific falsehood "`x > x`" with both sides open, contributing partial information without overclaiming. (The named-helper indirection is what lets the comparison be a `@NelumboMethod`; an operator functor's name cannot bind one.)
 
 ---
 
@@ -155,24 +144,13 @@ Shipped natives fall into five structural roles. Reading this classification fir
 - Value: two `BigInteger`s — numerator and denominator, stored in reduced form via `gcd`.
 - Notes: `Rational.of(num, den)` normalises. The `toString` method prints a decimal form with two fractional digits.
 
-### `Add`, `Multiply`
+### `Rationals`
 
-- Back: `private Boolean ::= add(...)` and `mult(...)` over `Rational`
-- Role: three-arg functional relation
-- Strategy: same three-way pattern as the integer versions, but the arithmetic goes via numerator-denominator crossed-multiplication. Both operators construct results with `Rational.of(num, den)` (which normalises).
+One class hosts the rational primitives as `@NelumboMethod`s: `add`, `mult`, `gt`, and `iir`.
 
-### `GreaterThan`
-
-- Backs: `Boolean ::= <Rational> > <Rational>`
-- Role: comparison predicate
-- Strategy: cross-multiply before comparing: `ln*rd > rn*ld` iff `l > r` when both are positive-denominator rationals. Same `set(i, ...).falsehoodsII()` partial-falsehood strategy as the integer comparison.
-
-### `IntegersRational`
-
-- Backs: `private Boolean ::= iir(<Integer>, <Integer>, <Rational>)`
-- Role: three-arg functional relation (with an unusual signature: takes two integers and a rational)
-- Strategy: when both integers are bound, construct the rational and either verify or bind the output. When the rational is bound and both integers are unbound, split the rational into numerator and denominator — this is how `r(x/y) = 0.5` could bind `x, y`. When exactly one integer is bound, declare `unresolvable()`.
-- This is the conversion bridge between integers and rationals, used by `r(x)` and `r(x/y)` at the language level.
+- **`add`, `mult`** — back `private Boolean ::= add(...)` and `mult(...)` over `Rational`. Same three-way pattern as the integer versions, but the arithmetic goes via numerator-denominator crossed-multiplication. Both construct results with `Rational.of(num, den)` (which normalises).
+- **`gt`** — backs the private helper `gt(<Rational>, <Rational>)`, reached from `>` via `a>b <=> gt(a,b)`. Cross-multiply before comparing: `ln*rd > rn*ld` iff `l > r` when both are positive-denominator rationals. Same `set(i, ...).falsehoodsII()` partial-falsehood strategy as the integer comparison.
+- **`iir`** — backs `private Boolean ::= iir(<Integer>, <Integer>, <Rational>)`. The conversion bridge between integers and rationals (an unusual signature: two integers and a rational), used by `r(x)` and `r(x/y)` at the language level. When both integers are bound, construct the rational and either verify or bind the output. When the rational is bound and both integers are unbound, split it into numerator and denominator (this is how `r(x/y) = 0.5` binds `x, y`). When exactly one integer and the rational are bound, solve the missing integer by the cross-multiplication `in*rd == rn*id` (with a divisibility check — `falsehoodCI()` when no integer fits).
 
 ---
 
@@ -312,14 +290,14 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `logic.nl` | `Root ::= <Boolean> "<=>" ...` | `nelumbo.logic.Rule` |
 | `logic.nl` | `Root ::= <Boolean> ? (Binding Binding)?` | `nelumbo.logic.Query` |
 | `integers.nl` | `<(> - <)?> <[> <NUMBER> <(> "#" ... <)?> <]>` | `NInteger` |
-| `integers.nl` | `add(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Add` |
-| `integers.nl` | `mult(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Multiply` |
-| `integers.nl` | `<Integer> > <Integer>` | `integers.GreaterThan` |
+| `integers.nl` | `add(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Integers` (`add`) |
+| `integers.nl` | `mult(<Integer>,<Integer>,<Integer>)` *(private)* | `integers.Integers` (`mult`) |
+| `integers.nl` | `gt(<Integer>,<Integer>)` *(private)* | `integers.Integers` (`gt`) |
 | `rationals.nl` | `<(> - <)?> <[> <NUMBER> . <NUMBER> <]>` | `rationals.Rational` |
-| `rationals.nl` | `add(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Add` |
-| `rationals.nl` | `mult(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Multiply` |
-| `rationals.nl` | `<Rational> > <Rational>` | `rationals.GreaterThan` |
-| `rationals.nl` | `iir(<Integer>,<Integer>,<Rational>)` | `IntegersRational` |
+| `rationals.nl` | `add(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Rationals` (`add`) |
+| `rationals.nl` | `mult(<Rational>,<Rational>,<Rational>)` *(private)* | `rationals.Rationals` (`mult`) |
+| `rationals.nl` | `gt(<Rational>,<Rational>)` *(private)* | `rationals.Rationals` (`gt`) |
+| `rationals.nl` | `iir(<Integer>,<Integer>,<Rational>)` *(private)* | `rationals.Rationals` (`iir`) |
 | `strings.nl` | `<STRING>` | `NString` |
 | `strings.nl` | `string_concat(<String>,<String>,<String>)` *(private)* | `Concat` |
 | `strings.nl` | `string_length(<String>,<Integer>)` *(private)* | `Length` |
