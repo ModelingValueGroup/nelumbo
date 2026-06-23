@@ -54,11 +54,11 @@ public class Collections extends Predicate {
 
     @NelumboMethod
     protected InferResult indexOf(NList list, Object element, NInteger index) {
-        if (list == null && element == null && index == null) {
+        if (list == null) {
             return unresolvable();
         }
-        if (list == null) {
-            return unknown();
+        if (element == null && index == null) {
+            return unresolvable();
         }
         List<?> coll = list.collection();
         if (index != null) {
@@ -68,21 +68,13 @@ public class Collections extends Predicate {
             }
             return e != null ? set(1, e).factCI() : falsehoodCI();
         }
-        if (element != null) {
-            Set<NInteger> indexes = Set.of();
-            for (int i : coll.indexesOf(element)) {
-                indexes = indexes.add(NInteger.of(BigInteger.valueOf(i)));
-            }
-            Set<Predicate> facts = Set.of();
-            for (NInteger i : indexes) {
-                facts = facts.add(set(2, i));
-            }
-            return InferResult.factsCI(this, facts);
+        Set<NInteger> indexes = Set.of();
+        for (int i : coll.indexesOf(element)) {
+            indexes = indexes.add(NInteger.of(BigInteger.valueOf(i)));
         }
         Set<Predicate> facts = Set.of();
-        for (int i = 0; i < coll.size(); i++) {
-            Object e = coll.get(i);
-            facts = facts.add(set(1, e,    NInteger.of(BigInteger.valueOf(i))));
+        for (NInteger i : indexes) {
+            facts = facts.add(set(2, i));
         }
         return InferResult.factsCI(this, facts);
     }

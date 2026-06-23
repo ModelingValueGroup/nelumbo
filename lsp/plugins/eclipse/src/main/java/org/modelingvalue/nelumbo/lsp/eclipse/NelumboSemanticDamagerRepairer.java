@@ -25,6 +25,7 @@ import java.util.concurrent.Future;
 
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IDocumentExtension4;
 import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
@@ -72,6 +73,10 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
     private          IDocument            document;
     private          SemanticTokens       cachedTokens;
     private          SemanticTokensLegend cachedLegend;
+    // Modification stamp of the document revision cachedTokens were computed for, so we never
+    // paint stale token offsets onto an already-edited document (the cause of the garbled styling
+    // at the spot being typed). UNKNOWN_MODIFICATION_STAMP means "no version info" (fallback).
+    private volatile long                 cachedStamp = IDocumentExtension4.UNKNOWN_MODIFICATION_STAMP;
     private volatile Future<?>            pendingRequest;
 
     private final IDocumentListener documentListener = new IDocumentListener() {
@@ -141,13 +146,20 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
     }
 
     private void requestTokens(LanguageServerWrapper wrapper, SemanticTokensParams params) {
+        // Snapshot the revision we are about to ask about; the response describes this revision.
+        long stamp = modificationStamp(this.document);
         wrapper.execute(server -> server.getTextDocumentService().semanticTokensFull(params)).thenAccept(tokens -> {
             cachedTokens = tokens;
+            cachedStamp  = stamp;
             applyPresentation();
         }).exceptionally(e -> {
             e.printStackTrace(System.err);
             return null;
         });
+    }
+
+    private static long modificationStamp(IDocument doc) {
+        return doc instanceof IDocumentExtension4 ext ? ext.getModificationStamp() : IDocumentExtension4.UNKNOWN_MODIFICATION_STAMP;
     }
 
     private void applyPresentation() {
@@ -190,11 +202,20 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
             return;
         }
 
+        // The cached tokens describe an older revision of the document; their offsets/lengths no
+        // longer line up with the current text, so painting them would shift styling around the
+        // edit point. Leave the existing presentation (which SWT shifts with the edit) and wait for
+        // the fetch already triggered by the document change to deliver tokens for this revision.
+        if (cachedStamp != modificationStamp(doc)) {
+            return;
+        }
+
         List<Integer> data = tokens.getData();
         if (data == null || data.isEmpty()) {
             return;
         }
 
+        int          docLength  = doc.getLength();
         List<String> tokenTypes = legend.getTokenTypes();
         int          line       = 0;
         int          character  = 0;
@@ -224,7 +245,11 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
             }
 
             try {
-                int   offset = doc.getLineOffset(line) + character;
+                int offset = doc.getLineOffset(line) + character;
+                if (offset < 0 || length < 0 || offset + length > docLength) {
+                    // token falls outside the current document — skip rather than paint at a wrong spot
+                    continue;
+                }
                 Color color  = new Color(Display.getCurrent(), rgb[0], rgb[1], rgb[2]);
                 int   style  = TOKEN_STYLES.getOrDefault(typeName, SWT.NORMAL);
 

@@ -308,6 +308,20 @@ public class Predicate extends Node {
         return method != null ? callMethod(method) : infer(nrOfUnbound, context);
     }
 
+    private InferResult callMethod(Method method) {
+        try {
+            Object[] args = toArray();
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] instanceof Type) {
+                    args[i] = null;
+                }
+            }
+            return (InferResult) method.invoke(this, args);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         Functor functor = functor();
         if (nrOfUnbound > 1 || //
@@ -343,20 +357,6 @@ public class Predicate extends Node {
             }
             knowledgebase.memoization(this, result);
             return result;
-        }
-    }
-
-    private InferResult callMethod(Method method) {
-        try {
-            Object[] args = toArray();
-            for (int i = 0; i < args.length; i++) {
-                if (args[i] instanceof Type) {
-                    args[i] = null;
-                }
-            }
-            return (InferResult) method.invoke(this, args);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new IllegalArgumentException(e);
         }
     }
 
