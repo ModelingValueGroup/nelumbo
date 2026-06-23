@@ -47,6 +47,10 @@ public final class NString extends Node {
         return new NString(NodeInfo.of(FUNCTOR), val);
     }
 
+    public String value() {
+        return getVal(0);
+    }
+
     private static String strip(String val) {
         return val.substring(1, val.length() - 1);
     }

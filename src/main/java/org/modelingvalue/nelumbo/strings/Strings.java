@@ -20,45 +20,76 @@ import java.io.Serial;
 import java.math.BigInteger;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.logic.InferContext;
+import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
-public final class ToInteger extends Predicate {
+public final class Strings extends Predicate {
     @Serial
-    private static final long serialVersionUID = -2874326869672600959L;
+    private static final long serialVersionUID = -317279750710781401L;
 
     @NelumboConstructor
-    public ToInteger(NodeInfo nodeInfo, Object... args) {
+    public Strings(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
     }
 
-    @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
-        if (nrOfUnbound > 1) {
+    @NelumboMethod
+    protected InferResult string_concat(NString addend1, NString addend2, NString sum) {
+        if (nrOfUnbound() > 1) {
             return unresolvable();
         }
+        String a1 = addend1 == null ? null : addend1.value();
+        String a2 = addend2 == null ? null : addend2.value();
+        String s  = sum     == null ? null : sum.value();
+        if (a1 != null && a2 != null) {
+            String r = a1 + a2;
+            if (s != null) {
+                return r.equals(s) ? factCC() : falsehoodCC();
+            }
+            return set(2, NString.of(r)).factCI();
+        } else if (a1 != null && s != null) {
+            return s.startsWith(a1) ? set(1, NString.of(s.substring(a1.length()))).factCI() : falsehoodCI();
+        } else if (a2 != null && s != null) {
+            return s.endsWith(a2) ? set(0, NString.of(s.substring(0, a2.length()))).factCI() : falsehoodCI();
+        }
+        return unknown();
+    }
 
-        BigInteger integer = getVal(0, 0);
-        String string = getVal(1, 0);
+    @NelumboMethod
+    protected InferResult string_length(NString string, NInteger length) {
+        if (nrOfUnbound() > 1) {
+            return unresolvable();
+        }
+        if (string != null) {
+            BigInteger actual = BigInteger.valueOf(string.value().length());
+            if (length != null) {
+                return length.value().equals(actual) ? factCC() : falsehoodCC();
+            }
+            return set(1, NInteger.of(actual)).factCI();
+        }
+        return unknown();
+    }
+
+    @NelumboMethod
+    protected InferResult integer_string(NInteger integer, NString string) {
+        if (nrOfUnbound() > 1) {
+            return unresolvable();
+        }
         if (string != null) {
             try {
-                BigInteger parsed = BigInteger.valueOf(Integer.parseInt(string));
+                BigInteger parsed = BigInteger.valueOf(Integer.parseInt(string.value()));
                 if (integer != null) {
-                    boolean eq = integer.equals(parsed);
-                    return eq ? factCC() : falsehoodCC();
-                } else {
-                    return set(0, org.modelingvalue.nelumbo.integers.NInteger.of(parsed)).factCI();
+                    return integer.value().equals(parsed) ? factCC() : falsehoodCC();
                 }
+                return set(0, NInteger.of(parsed)).factCI();
             } catch (NumberFormatException e) {
                 return integer != null ? falsehoodCC() : falsehoodCI();
             }
         } else if (integer != null) {
-            String s = integer.toString();
-            return set(1, org.modelingvalue.nelumbo.strings.NString.of(s)).factCI();
+            return set(1, NString.of(integer.value().toString())).factCI();
         }
-
         return unknown();
     }
 

@@ -41,7 +41,7 @@ public static MyValue of(MyJavaValue val) {
 }
 ```
 
-Predicate natives like `Integers`, `Rationals`, `Collections`, `Concat`, `Length`, and `ToInteger` do **not** need `@NelumboFunctorField` — they never build instances of themselves; they only build instances of the value types they yield (`NInteger`, `NString`).
+Predicate natives like `Integers`, `Rationals`, `Collections`, and `Strings` do **not** need `@NelumboFunctorField` — they never build instances of themselves; they only build instances of the value types they yield (`NInteger`, `NString`).
 
 ### `@NelumboMethod`
 
@@ -92,8 +92,8 @@ A Predicate native computes its result in one of two ways: a `@NelumboMethod`, o
 
 ## Table of recipes
 
-1. [Three-arg functional relation](#recipe-1-three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Concat`, `ToInteger`
-2. [Comparison predicate](#recipe-2-comparison-predicate) — `Integers#gt`, `datetime.GreaterThan`, `Length`
+1. [Three-arg functional relation](#recipe-1-three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`, `datetime.Add` (`infer`)
+2. [Comparison predicate](#recipe-2-comparison-predicate) — `Integers#gt`, `Strings#string_length`, `datetime.GreaterThan` (`infer`)
 3. [Constant / literal type](#recipe-3-constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
 4. [Binary logical connective](#recipe-4-binary-logical-connective) — `And`, `Or`
 5. [Container / collection literal](#recipe-5-container--collection-literal) — `NSet`, `NList`
@@ -106,7 +106,7 @@ Each recipe includes: when to use it, the skeleton class, the key decisions you 
 
 **Use when** you have a three-argument relation where, given any *N−1* of the arguments, the native can compute or verify the missing one. This is the workhorse shape; it covers addition, multiplication, concatenation, conversion.
 
-The stdlib uses this shape for `add`, `mult`, and `iir` (the `@NelumboMethod`s on `integers.Integers` and `rationals.Rationals`), and for `Concat` and `ToInteger` (which still override `infer`).
+The stdlib uses this shape for `add`, `mult`, `iir`, and the string relations `string_concat` / `integer_string` (`@NelumboMethod`s on `integers.Integers`, `rationals.Rationals`, and `strings.Strings`). The `infer`-override form of the same shape survives in `datetime.Add`, which shares one body across `datetime_add` / `date_add` / `time_add` by branching on the runtime instant type.
 
 ### Nelumbo-side declaration
 
@@ -182,7 +182,7 @@ public final class MyOp extends Predicate {
 }
 ```
 
-> **`infer` variant.** If the functor were an operator (or you needed the `InferContext`), the same body goes in `protected InferResult infer(int nrOfUnbound, InferContext context)` instead, reading arguments with `getVal(i, 0)` (which returns `null` when argument `i` is unbound) rather than typed parameters. See `strings.Concat` for a live example.
+> **`infer` variant.** If the functor were an operator (or you needed the `InferContext`), the same body goes in `protected InferResult infer(int nrOfUnbound, InferContext context)` instead, reading arguments with `getVal(i, 0)` (which returns `null` when argument `i` is unbound) rather than typed parameters. See `datetime.Add` for a live example.
 
 ### Key decisions
 
