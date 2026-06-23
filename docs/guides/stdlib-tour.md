@@ -479,8 +479,8 @@ Period   ::= <[> P ... <]>                                       @...NPeriod,   
 private Boolean ::= datetime_add(<DateTime>,<Period>,<DateTime>)  @...Add,
                     date_add(<Date>,<Period>,<Date>)              @...Add,
                     time_add(<Time>,<Period>,<Time>)              @...Add,
-                    period_add(<Period>,<Period>,<Period>)        @...AddPeriod,
-                    period_multiply(<Period>,<Integer>,<Period>)  @...MultiplyPeriod
+                    period_add(<Period>,<Period>,<Period>)        @...Add,
+                    period_multiply(<Period>,<Integer>,<Period>)  @...Multiply
 
 DateTime a, b    Period x, y, z    Integer n
 
@@ -492,7 +492,7 @@ x*n=y  <=>  period_multiply(x,n,y)
 
 ### What is native
 
-Nine classes: four literal constructors (`NDate`, `NTime`, `NDateTime`, `NPeriod`), three relations (`Add` — shared by all three instant types, `AddPeriod`, `MultiplyPeriod`), one comparison (`GreaterThan`), and the value record `IsoDuration` that backs `Period`. Every value is a `java.time` type under the hood.
+Eight classes: four literal constructors (`NDate`, `NTime`, `NDateTime`, `NPeriod`), two relation classes (`Add` — shared by all three instant types plus `period_add`, and `Multiply` for `period_multiply`), one comparison (`GreaterThan`), and the value record `IsoDuration` that backs `Period`. Every value is a `java.time` type under the hood.
 
 ### What is derived
 

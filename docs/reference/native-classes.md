@@ -42,7 +42,7 @@ org.modelingvalue.nelumbo.collections container literals + set-builder + operati
     NSet, NList, SetBuilder, BuildSet, Collections
 
 org.modelingvalue.nelumbo.datetime    ISO 8601 dates, times, date-times, durations
-    NDate, NTime, NDateTime, NPeriod, Add, AddPeriod, MultiplyPeriod,
+    NDate, NTime, NDateTime, NPeriod, Add, Multiply,
     GreaterThan, IsoDuration
 ```
 
@@ -235,19 +235,14 @@ One class hosts the rational primitives as `@NelumboMethod`s: `add`, `mult`, `gt
 
 ### `Add`
 
-- Backs: `datetime_add` / `date_add` / `time_add` *(private)* — one class for all three
+- Backs: `datetime_add` / `date_add` / `time_add` (via an `infer` override) **and** `period_add` (a `@NelumboMethod`) — all *(private)*, one class for all four
 - Role: three-arg functional relation
-- Strategy: the canonical relational shape applied to instants. With the two inputs bound it computes the third; with the sum and the duration bound it subtracts; with both instants bound it returns the duration *between* them. `date_add` only accepts a duration whose time part is zero and `time_add` one whose calendar part is zero (otherwise `unresolvable()`); `DateTime` accepts both.
+- Strategy: the canonical relational shape applied to instants. With the two inputs bound it computes the third; with the sum and the duration bound it subtracts; with both instants bound it returns the duration *between* them. `date_add` only accepts a duration whose time part is zero and `time_add` one whose calendar part is zero (otherwise `unresolvable()`); `DateTime` accepts both. The `period_add` method adds two `IsoDuration`s, reversible — `a + b = c` binds whichever of the three is open via `plus`/`minus`.
+- This class is the example of *mixing both styles*: the `datetime_add` / `date_add` / `time_add` functors share a single `infer` override (the body branches on the runtime instant type), while `period_add` is a standalone `@NelumboMethod` on the same class.
 
-### `AddPeriod`
+### `Multiply`
 
-- Backs: `period_add` *(private)*
-- Role: three-arg functional relation
-- Strategy: `IsoDuration` addition, reversible — `a + b = c` binds whichever of the three is open via `plus`/`minus`. Deterministic.
-
-### `MultiplyPeriod`
-
-- Backs: `period_multiply` *(private)*
+- Backs: `period_multiply` *(private)*, a `@NelumboMethod`
 - Role: three-arg functional relation
 - Strategy: scales an `IsoDuration` by an `Integer` (`P1D * 3 = P3D`).
 
@@ -310,9 +305,9 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `datetime.nl` | `Time ::= <[> <NUMBER> : <NUMBER> ... <]>` | `datetime.NTime` |
 | `datetime.nl` | `DateTime ::= <[> <Date> T <Time#50> ... <]>` | `datetime.NDateTime` |
 | `datetime.nl` | `Period ::= <[> P ... <]>` | `datetime.NPeriod` |
-| `datetime.nl` | `datetime_add/date_add/time_add(...)` *(private)* | `datetime.Add` |
-| `datetime.nl` | `period_add(<Period>,<Period>,<Period>)` *(private)* | `datetime.AddPeriod` |
-| `datetime.nl` | `period_multiply(<Period>,<Integer>,<Period>)` *(private)* | `datetime.MultiplyPeriod` |
+| `datetime.nl` | `datetime_add/date_add/time_add(...)` *(private)* | `datetime.Add` (`infer`) |
+| `datetime.nl` | `period_add(<Period>,<Period>,<Period>)` *(private)* | `datetime.Add` (`period_add`) |
+| `datetime.nl` | `period_multiply(<Period>,<Integer>,<Period>)` *(private)* | `datetime.Multiply` (`period_multiply`) |
 | `datetime.nl` | `<DateTime\|Date\|Time\|Period> > <...>` | `datetime.GreaterThan` |
 
 The natives back roughly twice as many language-level patterns once you count the Nelumbo-defined derivations (`<`, `<=`, `>=`, `-` unary, `-` binary, `/`, `|x|`, `->`, `<->`, `!=`, `str`, `int`, `len`, `r`).

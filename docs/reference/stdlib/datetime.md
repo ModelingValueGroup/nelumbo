@@ -90,8 +90,8 @@ Period   ::= <DateTime> - <DateTime> #40,   <Date> - <Date> #40,   <Time> - <Tim
 private Boolean ::= datetime_add(<DateTime>,<Period>,<DateTime>)  @nelumbo.datetime.Add,
                     date_add(<Date>,<Period>,<Date>)              @nelumbo.datetime.Add,
                     time_add(<Time>,<Period>,<Time>)              @nelumbo.datetime.Add,
-                    period_add(<Period>,<Period>,<Period>)        @nelumbo.datetime.AddPeriod,
-                    period_multiply(<Period>,<Integer>,<Period>)  @nelumbo.datetime.MultiplyPeriod
+                    period_add(<Period>,<Period>,<Period>)        @nelumbo.datetime.Add,
+                    period_multiply(<Period>,<Integer>,<Period>)  @nelumbo.datetime.Multiply
 
 DateTime a, b    Date c, d    Time e, f    Period x, y, z    Integer n
 
@@ -164,9 +164,8 @@ One comparison convention is worth knowing:
 | `NTime`           | the `Time` literal                            | constant (`LocalTime`)        |
 | `NDateTime`       | the `DateTime` literal                        | constant (`LocalDateTime`)    |
 | `NPeriod`         | the `Period` literal                          | constant (`IsoDuration`)      |
-| `Add`             | `datetime_add` / `date_add` / `time_add`      | three-arg relation (instant ± duration, instant − instant) |
-| `AddPeriod`       | `period_add`                                  | three-arg relation (duration ± duration) |
-| `MultiplyPeriod`  | `period_multiply`                             | three-arg relation (duration × integer) |
+| `Add`             | `datetime_add` / `date_add` / `time_add` (`infer`) plus `period_add` (`@NelumboMethod`) | three-arg relation (instant ± duration, instant − instant, duration ± duration) |
+| `Multiply`        | `period_multiply` (`@NelumboMethod`)          | three-arg relation (duration × integer) |
 | `GreaterThan`     | `>` on all four types                         | comparison predicate          |
 | `IsoDuration`     | —                                             | the immutable value record behind `Period` (not `@`-bound) |
 
