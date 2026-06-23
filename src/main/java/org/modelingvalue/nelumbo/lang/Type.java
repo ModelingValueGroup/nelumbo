@@ -53,6 +53,7 @@ public final class Type extends Node implements FunctorOrType {
         }
     };
     //
+    public static final Type $NONE   = new Type("$NONE");
     public static final Type $OBJECT = new Type(Object.class);
     public static final Type $STRING = new Type(String.class, $OBJECT);
     //
@@ -232,6 +233,21 @@ public final class Type extends Node implements FunctorOrType {
         } else {
             return argument;
         }
+    }
+
+    public Set<Variable> typeVariables() {
+        if (isMany()) {
+            Set<Variable> tv = Set.of();
+            for (Type m : many()) {
+                tv = tv.addAll(m.typeVariables());
+            }
+            return tv;
+        }
+        if (hasArgument()) {
+            return argument().typeVariables();
+        }
+        Object type = get(0);
+        return type instanceof Variable var ? Set.of(var) : Set.of();
     }
 
     @Override
@@ -496,25 +512,13 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type common(Type other) {
-        if (!hasArgument() && !other.hasArgument()) {
-            if (isAssignableFrom(other)) {
-                return this;
-            } else if (other.isAssignableFrom(this)) {
-                return other;
-            }
-        } else if (hasArgument() && other.hasArgument()) {
-            Type element = argument().common(other.argument());
-            if (element != null) {
-                Type te = setArgument(element);
-                Type oe = other.setArgument(element);
-                if (te.isAssignableFrom(oe)) {
-                    return te;
-                } else if (oe.isAssignableFrom(te)) {
-                    return oe;
-                }
-            }
+        if (isAssignableFrom(other)) {
+            return this;
+        } else if (other.isAssignableFrom(this)) {
+            return other;
+        } else {
+            return null;
         }
-        return null;
     }
 
     public Node getAssigned(Node other) {

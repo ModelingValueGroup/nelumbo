@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AstElement;
@@ -69,11 +70,12 @@ public class Functor extends Node implements FunctorOrType {
                         : null);
     }
 
-    private String     name;
-    private List<Type> argTypes;
-    private ParseState start;
-    private ParseState startPre;
-    private ParseState startPost;
+    private String        name;
+    private List<Type>    argTypes;
+    private Set<Variable> typeVariables;
+    private ParseState    start;
+    private ParseState    startPre;
+    private ParseState    startPost;
 
     private Functor(List<AstElement> elements, Object... args) {
         super(NodeInfo.of(Type.FUNCTOR, elements), args);
@@ -163,6 +165,13 @@ public class Functor extends Node implements FunctorOrType {
             argTypes = pattern().argTypes(List.of());
         }
         return argTypes;
+    }
+
+    public Set<Variable> typeVariables() {
+        if (typeVariables == null) {
+            typeVariables = argTypes().flatMap(Type::typeVariables).asSet();
+        }
+        return typeVariables;
     }
 
     @Override

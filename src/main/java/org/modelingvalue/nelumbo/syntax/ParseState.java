@@ -24,7 +24,6 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
-import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AbstractState;
 import org.modelingvalue.nelumbo.Node;
@@ -35,7 +34,7 @@ import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
-public class ParseState extends AbstractState<ParseState> implements Mergeable<ParseState> {
+public class ParseState extends AbstractState<ParseState> {
     public static final ParseState EMPTY = new ParseState(TypeMatcher.EMPTY, Map.of(), Map.of(), Map.of(), null, null,
             null, null, Set.of(), Set.of(), false, Visibility.optional, false);
 

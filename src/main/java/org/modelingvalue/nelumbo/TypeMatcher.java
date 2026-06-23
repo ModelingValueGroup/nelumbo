@@ -2,6 +2,7 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.lang.Type;
@@ -41,30 +42,34 @@ public class TypeMatcher {
         return typeArgs;
     }
 
-    public TypeMatcher match(Type type, MutableMap<Variable, Type> typeArgs) {
+    public Set<Type> match(Type type, MutableMap<Variable, Type> typeArgs) {
+        Set<Type> result = Set.of();
         for (Type sup : type.allSupersList()) {
             TypeMatcher state = transitions.get(sup);
             if (state != null) {
-                return sup.hasArgument() ? state.match(type.argument(), typeArgs) : state;
+                result = sup.hasArgument() ? result.addAll(state.match(type.argument(), typeArgs))
+                        : result.add(state.type);
+                break;
             }
         }
-        return generics(type, typeArgs);
-    }
-
-    private TypeMatcher generics(Type type, MutableMap<Variable, Type> typeArgs) {
-        for (Entry<Variable, TypeMatcher> e : typeArgs()) {
-            Type found = typeArgs.get(e.getKey());
-            if (found == null) {
-                typeArgs.put(e.getKey(), type);
-                return e.getValue();
-            }
-            found = type.common(found);
-            if (found != null) {
-                typeArgs.put(e.getKey(), found);
-                return e.getValue();
+        if (!type.hasArgument() && (result.isEmpty() || type.variable() == null)) {
+            for (Entry<Variable, TypeMatcher> e : typeArgs()) {
+                Type found = typeArgs.get(e.getKey());
+                if (found == null) {
+                    typeArgs.put(e.getKey(), type);
+                    result = result.add(e.getValue().type);
+                } else {
+                    found = type.common(found);
+                    if (found != null) {
+                        typeArgs.put(e.getKey(), found);
+                        result = result.add(e.getValue().type);
+                    } else {
+                        typeArgs.put(e.getKey(), Type.$NONE);
+                    }
+                }
             }
         }
-        return null;
+        return result;
     }
 
     public TypeMatcher merge(TypeMatcher merged) {
@@ -77,6 +82,11 @@ public class TypeMatcher {
             throw new NotMergeableException("Non deterministic pattern merge " + t1 + " <> " + t2);
         }
         return t1 == null ? t2 : t1;
+    }
+
+    @Override
+    public String toString() {
+        return transitions.toKeys().asSet().toString().substring(3);
     }
 
 }

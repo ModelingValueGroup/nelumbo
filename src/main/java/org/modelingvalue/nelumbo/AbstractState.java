@@ -2,11 +2,12 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableMap;
+import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
 @SuppressWarnings("rawtypes")
-public abstract class AbstractState<S extends AbstractState> {
+public abstract class AbstractState<S extends AbstractState> implements Mergeable<S> {
 
     private final TypeMatcher typeMatcher;
 
@@ -18,9 +19,17 @@ public abstract class AbstractState<S extends AbstractState> {
         return typeMatcher;
     }
 
+    @SuppressWarnings("unchecked")
     public S matchType(Type type, MutableMap<Variable, Type> typeArgs) {
-        TypeMatcher match = typeMatcher().match(type, typeArgs);
-        return match != null ? typeTransitions().get(match.type()) : null;
+        S s = null;
+        for (Type m : typeMatcher().match(type, typeArgs)) {
+            if (s == null) {
+                s = typeTransitions().get(m);
+            } else {
+                s = (S) s.merge(typeTransitions().get(m));
+            }
+        }
+        return s;
     }
 
     protected abstract Map<Object, S> typeTransitions();

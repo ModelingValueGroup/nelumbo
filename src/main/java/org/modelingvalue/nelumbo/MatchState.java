@@ -20,13 +20,12 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
-import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
-public class MatchState<E extends Node> extends AbstractState<MatchState<E>> implements Mergeable<MatchState<E>> {
+public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
 
     @SuppressWarnings("rawtypes")
     public static final MatchState EMPTY = new MatchState<>();

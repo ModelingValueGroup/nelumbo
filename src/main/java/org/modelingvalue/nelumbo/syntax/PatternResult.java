@@ -166,8 +166,9 @@ public final class PatternResult implements ParseExceptionHandler {
             for (Pair<Token, Token> merge : merged) {
                 merge.a().merge(merge.b());
             }
+            Set<Variable> tv = functor.typeVariables();
+            Map<Variable, Type> ta = typeArgs.get().retainAll(e -> tv.contains(e.getKey()));
             List<AstElement> elements = elements();
-            Map<Variable, Type> ta = typeArgs.get();
             Object[] args = functor.args(elements, ta);
             Node node = functor.construct(elements, args, this, context);
             if (!ta.isEmpty()) {
