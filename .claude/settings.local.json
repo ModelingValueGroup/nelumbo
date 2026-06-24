@@ -59,7 +59,8 @@
       "Bash(echo \"--- exit $? \\(1 = no matches = clean\\) ---\")",
       "Bash(echo \"--- exit $? \\(1 = clean\\) ---\")",
       "Bash(echo \"\\(exit $?\\)\")",
-      "PowerShell(.\\\\gradlew test --rerun-tasks 2>&1 | Select-String \"BUILD|FAILED|> Task :test|> Task :lsp:server:test\"; \"GRADLE_EXIT=$LASTEXITCODE\")"
+      "PowerShell(.\\\\gradlew test --rerun-tasks 2>&1 | Select-String \"BUILD|FAILED|> Task :test|> Task :lsp:server:test\"; \"GRADLE_EXIT=$LASTEXITCODE\")",
+      "PowerShell(./gradlew test --console=plain -q 2>&1 | Select-Object -Last 30)"
     ],
     "deny": [],
     "ask": []

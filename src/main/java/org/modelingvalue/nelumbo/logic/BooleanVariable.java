@@ -92,10 +92,7 @@ public class BooleanVariable extends Predicate {
         if (get(0) instanceof Predicate pred) {
             return pred.infer(context);
         }
-        if (context != null && context.reduce()) {
-            return unknown();
-        }
-        if (context != null && context.shallow()) {
+        if (context != null && !context.deep()) {
             return unknown();
         }
         if (result == null) {

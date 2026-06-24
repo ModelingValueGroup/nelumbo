@@ -39,9 +39,6 @@ public class Collections extends Predicate {
 
     @NelumboMethod
     protected InferResult size(NCollection collection, NInteger size) {
-        if (collection == null && size == null) {
-            return unknown();
-        }
         if (collection == null) {
             return unknown();
         }
