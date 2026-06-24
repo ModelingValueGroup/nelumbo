@@ -286,10 +286,7 @@ public class Predicate extends Node {
 
     protected InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
-        if (nrOfUnbound > 0 && context.reduce()) {
-            return unknown();
-        }
-        if (nrOfUnbound == 0 && !context.reduce()) {
+        if (nrOfUnbound > 0 == context.reduce()) {
             return unknown();
         }
         InferResult result = doInfer(nrOfUnbound, context);
