@@ -81,8 +81,7 @@ Either way, a typical implementation inspects the currently bound arguments, dec
 | `falsehoodCI()` | `{}` complete    | `{this}` incomplete | falsehood with open falsehoods side |
 | `falsehoodIC()` | `{}` incomplete  | `{this}` complete   | falsehood with open facts side |
 | `falsehoodsII()` | `{}` incomplete | `{this}` incomplete | a falsehood observed; both sides open |
-| `unknown()`     | `{}` incomplete  | `{}` incomplete  | no claim either way |
-| `unresolvable()` |  —  |  —  | cannot resolve with current bindings; engine should retry later |
+| `unknown()`     | `{}` incomplete  | `{}` incomplete  | no claim either way; when two or more arguments are still unbound, the engine treats this as "retry once more are bound" |
 
 The `set(i, v)` family of helpers constructs a new predicate with argument `i` set to value `v`. This is how a native predicate can **bind a variable** — the result carries the completed tuple.
 
@@ -96,7 +95,7 @@ The integer addition primitive, bound to the pattern `add(<Integer>, <Integer>, 
 @NelumboMethod
 protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
     if (nrOfUnbound() > 1) {
-        return unresolvable();
+        return unknown();
     }
     BigInteger a1 = addend1 == null ? null : addend1.value();
     BigInteger a2 = addend2 == null ? null : addend2.value();
@@ -120,7 +119,7 @@ Reading this:
 
 - The method name `add` and its three parameters match the functor `add(<Integer>,<Integer>,<Integer>)`. No functor field is needed because `Integers` never constructs an `Integers` instance — only `NInteger`s, which carry their own `@NelumboFunctorField`.
 - Each bound argument is its typed `NInteger`; each unbound argument is `null`. `addend.value()` reads the underlying `BigInteger`.
-- If at least two arguments are unbound, the predicate cannot do anything useful — it returns `unresolvable()` so the engine can retry once more bindings are known.
+- If at least two arguments are unbound, the predicate cannot do anything useful — it returns `unknown()` so the engine can retry once more bindings are known. (There is no longer a separate `unresolvable()`; the engine distinguishes a genuine "no claim" from a "retry later" by the number of still-unbound arguments — see `InferResult.isUnknown()` / `CompoundPredicate.isResolved`.)
 - If all three are bound, the predicate checks whether the sum is correct and returns `factCC()` (proven true, closed on both sides) or `falsehoodCC()` (proven false, closed on both sides).
 - If two are bound and one is not, the predicate computes the missing value and returns `set(i, computedValue).factCI()` — the facts side contains the completed tuple, closed; the falsehoods side is left open because the native is not claiming any particular falsehoods.
 
@@ -136,7 +135,7 @@ A comparison primitive showing the "enumerate falsehoods" pattern. This is the `
 @NelumboMethod
 protected InferResult gt(NInteger left, NInteger right) {
     if (nrOfUnbound() > 1) {
-        return unresolvable();
+        return unknown();
     }
     if (left == null) {
         return set(0, get(1)).falsehoodsII();

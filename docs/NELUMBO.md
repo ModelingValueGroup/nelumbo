@@ -122,7 +122,7 @@ The logic is a `@NelumboMethod` whose name and parameter count match the functor
  @NelumboMethod
  protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
     if (nrOfUnbound() > 1) {
-        return unresolvable();
+        return unknown();
     }
     BigInteger a1 = addend1 == null ? null : addend1.value();
     BigInteger a2 = addend2 == null ? null : addend2.value();

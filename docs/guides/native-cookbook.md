@@ -55,7 +55,7 @@ protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
 }
 ```
 
-Each **bound** argument arrives as its typed node (`NInteger`, `Rational`, `NSet`, …, or `Object` for a generic element); each **unbound** argument arrives as `null`. The method returns an `InferResult` and has the full `Predicate` helper family in scope (`factCC`, `set`, `get`, `nrOfUnbound()`, `unresolvable`, …) exactly as `infer` would.
+Each **bound** argument arrives as its typed node (`NInteger`, `Rational`, `NSet`, …, or `Object` for a generic element); each **unbound** argument arrives as `null`. The method returns an `InferResult` and has the full `Predicate` helper family in scope (`factCC`, `set`, `get`, `nrOfUnbound()`, `unknown`, …) exactly as `infer` would.
 
 One class can host **many** `@NelumboMethod`s — `integers.Integers` carries `add`, `mult`, and `gt`; `collections.Collections` carries eight. This is how a whole module's relations collapse into a single Java class. See the next section for when to use it.
 
@@ -154,7 +154,7 @@ public final class MyOp extends Predicate {
     @NelumboMethod
     protected InferResult myop(MyT1 a, MyT2 b, MyT3 c) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
 
         if (a != null && b != null) {
@@ -189,7 +189,7 @@ public final class MyOp extends Predicate {
 1. **What does "bound" mean for each argument?** A `@NelumboMethod` parameter is `null` when its argument is unbound (`getVal(i, 0)` returns `null` in the `infer` variant). Use `null` checks to drive the branch structure.
 2. **Is the relation total in every direction?** Integer `add` is (every inverse exists). `mult` is not — division by zero or a non-divisor produces `falsehoodCI()`. `iir` shows a four-way split where some inverses need a divisibility check.
 3. **Which closure flags should you use?** Most three-way natives use `factCI()` on a successful computation (the facts side is closed on the computed tuple, but we make no claim about falsehoods). They use `factCC()` / `falsehoodCC()` only when *all three* are bound — then the result is fully determined.
-4. **What if multiple arguments are unbound?** Return `unresolvable()`. The engine will retry once other parts of the reasoning have bound more variables. Note you call `nrOfUnbound()` (the accessor) in a method, versus reading the `nrOfUnbound` parameter in an `infer` override.
+4. **What if multiple arguments are unbound?** Return `unknown()`. The engine will retry once other parts of the reasoning have bound more variables — it tells a genuine "no claim" apart from a "retry later" by the number of still-unbound arguments (`InferResult.isUnknown()` / `CompoundPredicate.isResolved`), so you no longer signal it with a dedicated return value. Note you call `nrOfUnbound()` (the accessor) in a method, versus reading the `nrOfUnbound` parameter in an `infer` override.
 
 ### Study the source
 
@@ -243,7 +243,7 @@ public final class MyCompare extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unresolvable();
+            return unknown();
         }
 
         MyT left  = getVal(0, 0);
@@ -541,7 +541,7 @@ Before you consider a new native "done":
 - [ ] There is exactly one `@NelumboConstructor` and it has signature `(NodeInfo, Object...)`. No other public constructors.
 - [ ] The `serialVersionUID` is set (the engine serialises nodes during deep reasoning).
 - [ ] If your native constructs instances of itself at runtime — e.g., a value type with an `of(...)` factory — there is a `@NelumboFunctorField private static Functor FUNCTOR;`. No static `registerFunctorSetter` block is needed; the engine populates the field by reflection.
-- [ ] For Predicate-style natives: the logic lives in a `@NelumboMethod` (preferred — method name and arg count match the functor) unless the functor is an operator or needs the `InferContext`, in which case `infer(int nrOfUnbound, InferContext context)` is overridden. Either way it handles every combination of bound/unbound arguments and returns `unresolvable()` when it cannot proceed.
+- [ ] For Predicate-style natives: the logic lives in a `@NelumboMethod` (preferred — method name and arg count match the functor) unless the functor is an operator or needs the `InferContext`, in which case `infer(int nrOfUnbound, InferContext context)` is overridden. Either way it handles every combination of bound/unbound arguments and returns `unknown()` when it cannot proceed.
 - [ ] For literal-type natives: `init(KnowledgeBase, ParseContext, ConstructionReason)` parses the raw `String` from `args[0]` exactly once, gated on `reason == ConstructionReason.parsing`. `toString(TokenType[])` is implemented for human-readable result printing.
 - [ ] For container natives: `init(...)` wraps the parsed children into the internal collection, gated on the children not already being wrapped. `args()` is overridden to return the contained elements.
 - [ ] For `BinaryPredicate` subclasses: all seven truth-table / reduction overrides are present (`isTrue`/`isFalse`/`isUnknown` for one operand; `isTrue`/`isFalse` for both; `isLeft`/`isRight` for reduction).
@@ -561,7 +561,7 @@ Before you consider a new native "done":
 
 **Returning `factCC()` when you shouldn't.** `factCC` asserts both sides are complete — facts side exactly `{this}` and falsehoods side exactly `{}`. If the facts side is really just "this one tuple, but there could be others I haven't enumerated," use `factCI` instead. Getting this wrong makes downstream rules unsound (they will derive false contradictions).
 
-**Forgetting `unresolvable()` for the too-many-unbound case.** Returning anything else (`unknown()`, `factCI()` with garbage, etc.) when multiple arguments are unbound leaks confusion into the reasoner. `unresolvable()` is the honest answer: "come back later."
+**Returning a guess for the too-many-unbound case.** When two or more arguments are unbound the native cannot compute anything — return `unknown()` (an empty result with both sides open). Returning a `factCI()` with a half-computed tuple, or any falsehood, leaks confusion into the reasoner. `unknown()` is the honest answer: "come back later" — the engine recognises the too-many-unbound case from the argument count and retries once more are bound.
 
 **Constructing native values without `of(...)`.** Calling a value-type's public constructor directly with `null` for the `NodeInfo` skips the functor wiring and will fail at runtime. Always go through the static `of(...)` factory, which uses `NodeInfo.of(FUNCTOR)`.
 
