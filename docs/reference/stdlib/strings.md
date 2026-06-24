@@ -52,9 +52,9 @@ Integer ::=  len(<String>),
 All four reduce to three private native predicates:
 
 ```
-private Boolean ::= string_concat(<String>,<String>,<String>)  @nelumbo.strings.Concat,
-                    string_length(<String>,<Integer>)          @nelumbo.strings.Length,
-                    integer_string(<Integer>,<String>)         @nelumbo.strings.ToInteger
+private Boolean ::= string_concat(<String>,<String>,<String>)  @nelumbo.strings.Strings,
+                    string_length(<String>,<Integer>)          @nelumbo.strings.Strings,
+                    integer_string(<Integer>,<String>)         @nelumbo.strings.Strings
 
 String  a, b, c
 Integer x

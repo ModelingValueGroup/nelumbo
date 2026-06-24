@@ -36,7 +36,7 @@ org.modelingvalue.nelumbo.rationals   exact rational arithmetic
     Rational, Rationals
 
 org.modelingvalue.nelumbo.strings     string operations
-    NString, Concat, Length, ToInteger
+    NString, Strings
 
 org.modelingvalue.nelumbo.collections container literals + set-builder + operations
     NSet, NList, SetBuilder, BuildSet, Collections
@@ -57,8 +57,8 @@ Shipped natives fall into five structural roles. Reading this classification fir
 | Role | Base class | What it does | Example |
 |---|---|---|---|
 | **Constant / literal** | `Node` (or `Predicate` for `NBoolean`) | Parses a source literal into a value object | `NInteger`, `NString`, `Rational`, `NBoolean` |
-| **Three-arg functional relation** | `Predicate` | Relation with one output and one or more inputs; binds the missing one | `Integers#add`/`#mult`, `Rationals#iir`, `Concat`, `ToInteger` |
-| **Comparison predicate** | `Predicate` | Two-arg relation that decides true/false when both sides are known | `Integers#gt` / `Rationals#gt`, `datetime.GreaterThan`, `Equal`, `Length` |
+| **Three-arg functional relation** | `Predicate` | Relation with one output and one or more inputs; binds the missing one | `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`/`#integer_string` |
+| **Comparison predicate** | `Predicate` | Two-arg relation that decides true/false when both sides are known | `Integers#gt` / `Rationals#gt`, `datetime.GreaterThan`, `Equal`, `Strings#string_length` |
 | **Logical connective** | `BinaryPredicate` / `CompoundPredicate` | Combines sub-predicate results according to a truth table | `And`, `Or`, `Not` |
 | **Quantifier** | `Quantifier` (extends `CompoundPredicate`) | Evaluates a sub-predicate under many bindings and aggregates | `ExistentialQuantifier`, `UniversalQuantifier`, `BuildSet` |
 | **Container** | `Node` | Literal collection of elements | `NSet`, `NList` |
@@ -162,24 +162,13 @@ One class hosts the rational primitives as `@NelumboMethod`s: `add`, `mult`, `gt
 - Role: constant
 - Value: Java `String`, with surrounding double quotes stripped on parse and re-added on print.
 
-### `Concat`
+### `Strings`
 
-- Backs: `private Boolean ::= string_concat(<String>, <String>, <String>)`
-- Role: three-arg functional relation
-- Strategy: the three-way pattern applied to strings. All three bound: verify. Two bound, sum unbound: concatenate and return `set(2, ...).factCI()`. The clever cases are when the **sum and one addend** are bound: use `startsWith` / `endsWith` to compute the missing addend, or return `falsehoodCI()` if no addend completes the equation.
-- This is what makes `a + "bar" = "foobar"` produce `(a="foo")` — the native splits "foobar" at the known suffix.
+One class hosts all three string primitives as `@NelumboMethod`s: `string_concat`, `string_length`, and `integer_string`.
 
-### `Length`
-
-- Backs: `private Boolean ::= string_length(<String>, <Integer>)`
-- Role: comparison / functional relation (two-arg; output is the integer length)
-- Strategy: when the string is bound, compute its length and either verify the supplied integer or bind it. When only the integer is bound, return `unknown()` — the relation cannot enumerate all strings of a given length.
-
-### `ToInteger`
-
-- Backs: `private Boolean ::= integer_string(<Integer>, <String>)`
-- Role: three-arg functional relation (two-arg in practice: the conversion is `Integer <-> String`)
-- Strategy: parses the string as a `BigInteger` via `Integer.parseInt` (note: the current implementation uses the fixed-width `int` parser, which limits the range on the parse side). Handles `NumberFormatException` by returning `falsehoodCC()` (if the integer was also supplied) or `falsehoodCI()` (if not). The reverse direction formats an integer with `BigInteger.toString()` into the canonical decimal form.
+- **`string_concat`** — backs `private Boolean ::= string_concat(<String>, <String>, <String>)`. Three-arg functional relation: all three bound, verify; two bound with the sum unbound, concatenate and return `set(2, ...).factCI()`. The clever cases are when the **sum and one addend** are bound: use `startsWith` / `endsWith` to compute the missing addend, or return `falsehoodCI()` if no addend completes the equation. This is what makes `a + "bar" = "foobar"` produce `(a="foo")` — the native splits "foobar" at the known suffix.
+- **`string_length`** — backs `private Boolean ::= string_length(<String>, <Integer>)`. Two-arg relation whose output is the integer length: when the string is bound, compute its length and either verify the supplied integer or bind it. When only the integer is bound, return `unknown()` — the relation cannot enumerate all strings of a given length.
+- **`integer_string`** — backs `private Boolean ::= integer_string(<Integer>, <String>)`. The `Integer <-> String` conversion bridge, used by both `int(...)` and `str(...)`. Parses the string as a `BigInteger` via `Integer.parseInt` (note: the current implementation uses the fixed-width `int` parser, which limits the range on the parse side). Handles `NumberFormatException` by returning `falsehoodCC()` (if the integer was also supplied) or `falsehoodCI()` (if not). The reverse direction formats an integer with `BigInteger.toString()` into the canonical decimal form.
 
 ---
 
@@ -294,9 +283,9 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `rationals.nl` | `gt(<Rational>,<Rational>)` *(private)* | `rationals.Rationals` (`gt`) |
 | `rationals.nl` | `iir(<Integer>,<Integer>,<Rational>)` *(private)* | `rationals.Rationals` (`iir`) |
 | `strings.nl` | `<STRING>` | `NString` |
-| `strings.nl` | `string_concat(<String>,<String>,<String>)` *(private)* | `Concat` |
-| `strings.nl` | `string_length(<String>,<Integer>)` *(private)* | `Length` |
-| `strings.nl` | `integer_string(<Integer>,<String>)` *(private)* | `ToInteger` |
+| `strings.nl` | `string_concat(<String>,<String>,<String>)` *(private)* | `strings.Strings` (`string_concat`) |
+| `strings.nl` | `string_length(<String>,<Integer>)` *(private)* | `strings.Strings` (`string_length`) |
+| `strings.nl` | `integer_string(<Integer>,<String>)` *(private)* | `strings.Strings` (`integer_string`) |
 | `collections.nl` | `Set<E> ::= { ... }` | `NSet` |
 | `collections.nl` | `Set<E> ::= { [ <E> ] ( <Boolean> ) }` | `SetBuilder` |
 | `collections.nl` | `build(<E>,<Boolean>,<Set<E>>)` *(private)* | `BuildSet` |

@@ -57,24 +57,24 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type $OBJECT = new Type(Object.class);
     public static final Type $STRING = new Type(String.class, $OBJECT);
     //
-    public static final Type  NATIVE       = new Type("NATIVE");
-    public static final Type  OBJECT       = new Type("Object", $OBJECT);
-    public static final Type  TYPE         = new Type("Type", OBJECT);
-    public static final Type  WORLD        = new Type("World", OBJECT);
-    public static final Type  NAMESPACE    = new Type("Namespace", OBJECT);
-    public static final Type  FUNCTION     = new Type("Function", OBJECT);
-    public static final Type  LITERAL      = new Type("Literal", OBJECT);
-    public static final Type  ROOT         = new Type("Root", OBJECT);
-    public static final Type  BOOLEAN      = new Type("Boolean", OBJECT);
-    public static final Type  FACT_TYPE    = new Type("FactType", BOOLEAN);
-    public static final Type  VARIABLE     = new Type("Variable", OBJECT);
-    public static final Type  FUNCTOR      = new Type("Functor", ROOT);
-    public static final Type  PATTERN_PART = new Type("PatternPart", ROOT);
-    public static final Type  PATTERN      = new Type("Pattern", PATTERN_GROUP, OBJECT);
-    private static final Type TYPE_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
-    public static final Type  COLLECTION   = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type  SET          = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type  LIST         = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type NATIVE       = new Type("NATIVE");
+    public static final Type OBJECT       = new Type("Object", $OBJECT);
+    public static final Type TYPE         = new Type("Type", OBJECT);
+    public static final Type WORLD        = new Type("World", OBJECT);
+    public static final Type NAMESPACE    = new Type("Namespace", OBJECT);
+    public static final Type FUNCTION     = new Type("Function", OBJECT);
+    public static final Type LITERAL      = new Type("Literal", OBJECT);
+    public static final Type ROOT         = new Type("Root", OBJECT);
+    public static final Type BOOLEAN      = new Type("Boolean", OBJECT);
+    public static final Type FACT_TYPE    = new Type("FactType", BOOLEAN);
+    public static final Type VARIABLE     = new Type("Variable", OBJECT);
+    public static final Type FUNCTOR      = new Type("Functor", ROOT);
+    public static final Type PATTERN_PART = new Type("PatternPart", ROOT);
+    public static final Type PATTERN      = new Type("Pattern", PATTERN_GROUP, OBJECT);
+    public static final Type TYPE_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
+    public static final Type COLLECTION   = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type SET          = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type LIST         = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
 
     public static List<Type> predefined() {
         return List.of(//
@@ -107,6 +107,11 @@ public final class Type extends Node implements FunctorOrType {
     @Override
     protected Object typeForEquals() {
         return EQUALS_TYPE;
+    }
+
+    @Override
+    public Type declaration() {
+        return (Type) super.declaration();
     }
 
     @NelumboConstructor

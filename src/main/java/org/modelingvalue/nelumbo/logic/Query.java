@@ -181,6 +181,7 @@ public final class Query extends Node implements Evaluatable {
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
                     completeFalsehoods, Set.of());
             if (!found.equals(expected)) {
+                System.err.println("!!!!!!!!!!!! " + found.diff(expected));
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //
                         astElements.sublist(2, astElements.size()).toArray(AstElement[]::new)));

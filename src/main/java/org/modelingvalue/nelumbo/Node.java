@@ -226,8 +226,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     protected Object typeForEquals() {
-        FunctorOrType fot = functorOrType();
-        return fot instanceof Functor functor ? functor.declaration() : fot;
+        return functorOrType().declaration();
     }
 
     public List<Variable> localVars() {

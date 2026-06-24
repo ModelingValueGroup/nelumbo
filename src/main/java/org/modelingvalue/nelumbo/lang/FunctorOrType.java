@@ -24,4 +24,6 @@ public interface FunctorOrType {
 
     FunctorOrType setTypeArgs(Map<Variable, Type> typeArgs);
 
+    FunctorOrType declaration();
+
 }

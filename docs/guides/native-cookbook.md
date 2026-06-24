@@ -75,7 +75,7 @@ A Predicate native computes its result in one of two ways: a `@NelumboMethod`, o
 ### Why it is preferred
 
 - **Typed parameters instead of `getVal` unpacking.** `add(NInteger a, NInteger b, NInteger c)` is self-documenting and type-safe; `getVal(0,0)` / `getVal(1,0)` / `getVal(2,0)` is neither.
-- **One class per module instead of one per operation.** The old `integers.Add`, `integers.Multiply`, and `integers.GreaterThan` classes are now a single `integers.Integers` with `add` / `mult` / `gt` methods — the same shape `collections.Collections` has always had.
+- **One class per module instead of one per operation.** The old `integers.Add`, `integers.Multiply`, and `integers.GreaterThan` classes are now a single `integers.Integers` with `add` / `mult` / `gt` methods — the same shape `collections.Collections` has always had. `rationals` and `strings` were consolidated the same way: `rationals.Rationals` (`add` / `mult` / `gt` / `iir`) and `strings.Strings` (`string_concat` / `string_length` / `integer_string`).
 - **Less boilerplate.** No `InferContext` parameter to thread through, no per-class `@NelumboConstructor` × N.
 
 ### When to still override `infer` ("but not always")
@@ -196,7 +196,7 @@ public final class MyOp extends Predicate {
 - `org.modelingvalue.nelumbo.integers.Integers#add` — cleanest example, `@NelumboMethod` with typed `NInteger` parameters
 - `org.modelingvalue.nelumbo.integers.Integers#mult` — the "falsehood when no answer exists" pattern (division remainder ≠ 0)
 - `org.modelingvalue.nelumbo.rationals.Rationals#iir` — a four-direction relation with divisibility checks on the inverses
-- `org.modelingvalue.nelumbo.strings.Concat` — the `infer`-override form, inferring an operand via suffix/prefix matching
+- `org.modelingvalue.nelumbo.strings.Strings#string_concat` — `@NelumboMethod` inferring an operand via suffix/prefix matching
 
 ---
 
@@ -204,7 +204,7 @@ public final class MyOp extends Predicate {
 
 **Use when** you have a two-argument Boolean relation that, when both sides are bound, produces `true` or `false`, but cannot always bind a missing side.
 
-The stdlib uses this shape for greater-than (integers, rationals, datetime) and `Length`. `Equal` and `NIs` are richer variants for equality.
+The stdlib uses this shape for greater-than (integers, rationals, datetime) and `Strings#string_length`. `Equal` and `NIs` are richer variants for equality.
 
 ### Nelumbo-side declaration — mind the operator caveat
 
@@ -276,7 +276,7 @@ public final class MyCompare extends Predicate {
 - `org.modelingvalue.nelumbo.integers.Integers#gt` — Path A: a `@NelumboMethod` reached via the `a>b <=> gt(a,b)` rule
 - `org.modelingvalue.nelumbo.rationals.Rationals#gt` — same strategy, cross-multiply internally
 - `org.modelingvalue.nelumbo.datetime.GreaterThan` — Path B: `infer` overridden on a class bound straight to the `>` operator
-- `org.modelingvalue.nelumbo.strings.Length` — two-arg predicate that uses `factCI()` / `falsehoodCC()` for specific cases
+- `org.modelingvalue.nelumbo.strings.Strings#string_length` — two-arg predicate that uses `factCI()` / `falsehoodCC()` for specific cases
 
 ---
 

@@ -343,9 +343,9 @@ String :: Object
 
 String ::= <STRING>  @...NString
 
-private Boolean ::= string_concat(<String>, <String>, <String>)  @...Concat,
-                    string_length(<String>, <Integer>)            @...Length,
-                    integer_string(<Integer>, <String>)           @...ToInteger
+private Boolean ::= string_concat(<String>, <String>, <String>)  @...Strings,
+                    string_length(<String>, <Integer>)            @...Strings,
+                    integer_string(<Integer>, <String>)           @...Strings
 
 String  ::= <String> + <String>  #40,
             str(<Integer>)
@@ -364,11 +364,11 @@ str(x)  = a   <=>  integer_string(x, a)
 
 ### What's native
 
-Four natives: `NString` (the literal), `Concat` (three-way concatenation), `Length` (two-way length), `ToInteger` (bidirectional integer/string conversion).
+Two natives: `NString` (the literal) and `Strings`, which hosts all three primitives as `@NelumboMethod`s — `string_concat` (three-way concatenation), `string_length` (two-way length), and `integer_string` (bidirectional integer/string conversion).
 
 ### What's derived
 
-The surface operations — `+` on strings, `str(i)`, `len(s)`, `int(s)` — are all Nelumbo wrappers around those four natives.
+The surface operations — `+` on strings, `str(i)`, `len(s)`, `int(s)` — are all Nelumbo wrappers around those three primitives.
 
 The nicest trick here is that `int(a) = x` and `str(x) = a` share the same native `integer_string`, just wrapped in two directions. Two user-facing operations, one native primitive.
 
@@ -382,7 +382,7 @@ a + "bar"     = "foobar" ? [(a="foo")][..]     // solve for prefix
 "foo" + a     = "foobar" ? [(a="bar")][..]     // solve for suffix
 ```
 
-All three work from the same rule and the same native. The native `Concat` handles the three combinations internally — see [`native-classes.md`](../reference/native-classes.md#concat) for how.
+All three work from the same rule and the same native. The `Strings#string_concat` method handles the three combinations internally — see [`native-classes.md`](../reference/native-classes.md#strings) for how.
 
 ---
 

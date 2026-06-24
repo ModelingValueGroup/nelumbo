@@ -168,7 +168,7 @@ Study the stdlib implementations for patterns close to what you want:
 
 - `Predicate` subclass in `integers/`: `Integers` (the `add`, `mult`, `gt` `@NelumboMethod`s)
 - Value type in `integers/`: `NInteger` (literal)
-- Similar families in `rationals/` (`Rationals`, `Rational`), `strings/` (`Concat`, `Length`, `ToInteger` — `infer` overrides), and `collections/` (`Collections`)
+- Similar families in `rationals/` (`Rationals`, `Rational`), `strings/` (`Strings` — the `string_concat`, `string_length`, `integer_string` `@NelumboMethod`s; `NString`), and `collections/` (`Collections`)
 
 ---
 
