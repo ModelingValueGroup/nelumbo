@@ -38,7 +38,7 @@ public final class Rationals extends Predicate {
     @NelumboMethod
     protected InferResult add(Rational addend1, Rational addend2, Rational sum) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         if (addend1 != null && addend2 != null) {
             BigInteger sn = addend1.numerator().multiply(addend2.denominator())
@@ -66,7 +66,7 @@ public final class Rationals extends Predicate {
     @NelumboMethod
     protected InferResult mult(Rational factor1, Rational factor2, Rational product) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         if (factor1 != null && factor2 != null) {
             BigInteger pn = factor1.numerator().multiply(factor2.numerator());
@@ -91,7 +91,7 @@ public final class Rationals extends Predicate {
     @NelumboMethod
     protected InferResult gt(Rational left, Rational right) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         if (left == null) {
             return set(0, get(1)).falsehoodsII();
@@ -106,7 +106,7 @@ public final class Rationals extends Predicate {
     @NelumboMethod
     protected InferResult iir(NInteger numerator, NInteger denominator, Rational rational) {
         if (nrOfUnbound() > 2) {
-            return unresolvable();
+            return unknown();
         }
         BigInteger in = numerator == null ? null : numerator.value();
         BigInteger id = denominator == null ? null : denominator.value();
@@ -134,7 +134,7 @@ public final class Rationals extends Predicate {
             BigInteger[] dr = in.multiply(rd).divideAndRemainder(rn);
             return dr[1].equals(BigInteger.ZERO) ? set(1, NInteger.of(dr[0])).factCI() : falsehoodCI();
         }
-        return unresolvable();
+        return unknown();
     }
 
 }

@@ -16,15 +16,15 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
+import java.io.Serial;
+import java.math.BigInteger;
+
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
-
-import java.io.Serial;
-import java.math.BigInteger;
 
 public final class Multiply extends Predicate {
     @Serial
@@ -38,11 +38,11 @@ public final class Multiply extends Predicate {
     @NelumboMethod
     public InferResult period_multiply(NPeriod d, NInteger n, NPeriod e) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
 
         IsoDuration dv = d == null ? null : d.value();
-        BigInteger  nv = n == null ? null : n.value();
+        BigInteger nv = n == null ? null : n.value();
         IsoDuration ev = e == null ? null : e.value();
 
         if (dv != null && nv != null) {
@@ -53,7 +53,7 @@ public final class Multiply extends Predicate {
             return set(2, NPeriod.of(scaled)).factCI();
         }
 
-        return unresolvable();
+        return unknown();
     }
 
 }

@@ -16,13 +16,13 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
+import java.io.Serial;
+
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
-
-import java.io.Serial;
 
 public final class GreaterThan extends Predicate {
     @Serial
@@ -36,7 +36,7 @@ public final class GreaterThan extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unresolvable();
+            return unknown();
         }
         Object left = getVal(0, 0);
         Object right = getVal(1, 0);
@@ -48,14 +48,15 @@ public final class GreaterThan extends Predicate {
         }
         Integer comparison = compare(left, right);
         if (comparison == null) {
-            return unresolvable(); // not comparable (e.g. mixing offset and offset-less datetimes)
+            return unknown(); // not comparable (e.g. mixing offset and offset-less datetimes)
         }
         return comparison > 0 ? factCC() : falsehoodCC();
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static Integer compare(Object left, Object right) {
-        // Periods compare by a nominal magnitude: months are 30 days, years 365 (P1M vs P30D has no
+        // Periods compare by a nominal magnitude: months are 30 days, years 365 (P1M vs
+        // P30D has no
         // exact answer, so this is an explicit convention, not an exact ordering).
         if (left instanceof IsoDuration a && right instanceof IsoDuration b) {
             return Long.compare(nominalSeconds(a), nominalSeconds(b));

@@ -85,7 +85,7 @@ public final class NBoolean extends Predicate {
     @Override
     protected InferResult infer(InferContext context) {
         if (context != null && context.shallow()) {
-            return unresolvable();
+            return unknown();
         }
         if (result == null) {
             result = isTrue() ? factCC() : isFalse() ? falsehoodCC() : unknown();

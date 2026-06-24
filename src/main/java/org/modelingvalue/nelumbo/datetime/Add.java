@@ -16,6 +16,14 @@
 
 package org.modelingvalue.nelumbo.datetime;
 
+import java.io.Serial;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
+import java.time.temporal.Temporal;
+
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.Node;
@@ -23,10 +31,6 @@ import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
-
-import java.io.Serial;
-import java.time.*;
-import java.time.temporal.Temporal;
 
 public final class Add extends Predicate {
     @Serial
@@ -40,7 +44,7 @@ public final class Add extends Predicate {
     @Override
     protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
-            return unresolvable();
+            return unknown();
         }
 
         Object a = getVal(0, 0);
@@ -50,7 +54,7 @@ public final class Add extends Predicate {
         if (a != null && d != null) {
             Temporal sum = plus(a, d);
             if (sum == null) {
-                return unresolvable();
+                return falsehoodCI();
             }
             if (b != null) {
                 return sum.equals(b) ? factCC() : falsehoodCC();
@@ -58,10 +62,10 @@ public final class Add extends Predicate {
             return set(2, wrap(sum)).factCI();
         } else if (a != null) {
             IsoDuration between = between(a, b);
-            return between == null ? unresolvable() : set(1, wrap(between)).factCI();
+            return between == null ? unknown() : set(1, wrap(between)).factCI();
         } else if (b != null && d != null) {
             Temporal diff = minus(b, d);
-            return diff == null ? unresolvable() : set(0, wrap(diff)).factCI();
+            return diff == null ? unknown() : set(0, wrap(diff)).factCI();
         }
 
         return unknown();
@@ -70,7 +74,7 @@ public final class Add extends Predicate {
     @NelumboMethod
     public InferResult period_add(NPeriod a, NPeriod b, NPeriod c) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
 
         IsoDuration av = a == null ? null : a.value();

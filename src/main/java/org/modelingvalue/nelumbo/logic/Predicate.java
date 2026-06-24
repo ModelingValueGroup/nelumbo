@@ -236,10 +236,6 @@ public class Predicate extends Node {
         return InferResult.unknown(this);
     }
 
-    public final InferResult unresolvable() {
-        return InferResult.unresolvable(this);
-    }
-
     public final InferResult factCC() {
         return InferResult.factsCC(this, singleton());
     }
@@ -294,7 +290,7 @@ public class Predicate extends Node {
             return unknown();
         }
         if (nrOfUnbound == 0 && !context.reduce()) {
-            return unresolvable();
+            return unknown();
         }
         InferResult result = doInfer(nrOfUnbound, context);
         if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
@@ -327,7 +323,7 @@ public class Predicate extends Node {
         if (nrOfUnbound > 1 || //
                 (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
                 (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
-            return unresolvable();
+            return unknown();
         }
         KnowledgeBase knowledgebase = context.knowledgebase();
         if (isFact()) {

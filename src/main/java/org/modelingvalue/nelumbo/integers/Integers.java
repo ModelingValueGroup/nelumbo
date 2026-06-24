@@ -37,7 +37,7 @@ public final class Integers extends Predicate {
     @NelumboMethod
     protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         BigInteger a1 = addend1 == null ? null : addend1.value();
         BigInteger a2 = addend2 == null ? null : addend2.value();
@@ -59,7 +59,7 @@ public final class Integers extends Predicate {
     @NelumboMethod
     protected InferResult mult(NInteger factor1, NInteger factor2, NInteger product) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         BigInteger f1 = factor1 == null ? null : factor1.value();
         BigInteger f2 = factor2 == null ? null : factor2.value();
@@ -83,7 +83,7 @@ public final class Integers extends Predicate {
     @NelumboMethod
     protected InferResult gt(NInteger left, NInteger right) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         if (left == null) {
             return set(0, get(1)).falsehoodsII();

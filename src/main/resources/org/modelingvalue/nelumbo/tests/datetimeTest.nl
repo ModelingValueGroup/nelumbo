@@ -1,5 +1,4 @@
 import    nelumbo.datetime
-import    nelumbo.integers
 
 DateTime a, b
 Date     c, d

@@ -38,11 +38,11 @@ public final class Strings extends Predicate {
     @NelumboMethod
     protected InferResult string_concat(NString addend1, NString addend2, NString sum) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         String a1 = addend1 == null ? null : addend1.value();
         String a2 = addend2 == null ? null : addend2.value();
-        String s  = sum     == null ? null : sum.value();
+        String s = sum == null ? null : sum.value();
         if (a1 != null && a2 != null) {
             String r = a1 + a2;
             if (s != null) {
@@ -60,7 +60,7 @@ public final class Strings extends Predicate {
     @NelumboMethod
     protected InferResult string_length(NString string, NInteger length) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         if (string != null) {
             BigInteger actual = BigInteger.valueOf(string.value().length());
@@ -75,7 +75,7 @@ public final class Strings extends Predicate {
     @NelumboMethod
     protected InferResult integer_string(NInteger integer, NString string) {
         if (nrOfUnbound() > 1) {
-            return unresolvable();
+            return unknown();
         }
         if (string != null) {
             try {

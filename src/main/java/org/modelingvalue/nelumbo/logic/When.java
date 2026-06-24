@@ -97,15 +97,15 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected InferResult resolvedOnly(InferResult[] predResult) {
-        if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
+    protected InferResult resolvedOnly(InferResult[] predResult, InferContext context) {
+        if (isResolved(predResult[0], context) && isResolved(predResult[1], context)) {
             return predResult[0].complete().add(predResult[1]);
-        } else if (!predResult[0].unresolvable()) {
+        } else if (isResolved(predResult[0], context)) {
             return predResult[0].complete();
-        } else if (!predResult[1].unresolvable()) {
+        } else if (isResolved(predResult[1], context)) {
             return predResult[1];
         } else {
-            return unresolvable();
+            return unknown();
         }
     }
 

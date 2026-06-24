@@ -40,7 +40,7 @@ public class Collections extends Predicate {
     @NelumboMethod
     protected InferResult size(NCollection collection, NInteger size) {
         if (collection == null && size == null) {
-            return unresolvable();
+            return unknown();
         }
         if (collection == null) {
             return unknown();
@@ -55,10 +55,10 @@ public class Collections extends Predicate {
     @NelumboMethod
     protected InferResult indexOf(NList list, Object element, NInteger index) {
         if (list == null) {
-            return unresolvable();
+            return unknown();
         }
         if (element == null && index == null) {
-            return unresolvable();
+            return unknown();
         }
         List<?> coll = list.collection();
         if (index != null) {
@@ -82,7 +82,7 @@ public class Collections extends Predicate {
     @NelumboMethod
     protected InferResult elementOf(NSet set, Object element) {
         if (set == null) {
-            return unresolvable();
+            return unknown();
         }
         Set<?> coll = set.collection();
         if (element != null) {
@@ -98,7 +98,7 @@ public class Collections extends Predicate {
     @NelumboMethod
     protected InferResult subset(NSet a, NSet b) {
         if (a == null || b == null) {
-            return unresolvable();
+            return unknown();
         }
         return b.collection().containsAll(a.collection()) ? factCC() : falsehoodCC();
     }
@@ -106,7 +106,7 @@ public class Collections extends Predicate {
     @NelumboMethod
     protected InferResult intersection(NSet a, NSet b, NSet i) {
         if (a == null || b == null) {
-            return unresolvable();
+            return unknown();
         }
         NSet intersection = new NSet(a.elementType(), a.collection().retainAll(b.collection()));
         if (i != null) {
@@ -118,7 +118,7 @@ public class Collections extends Predicate {
     @NelumboMethod
     protected InferResult union(NSet a, NSet b, NSet u) {
         if (a == null || b == null) {
-            return unresolvable();
+            return unknown();
         }
         NSet union = new NSet(a.elementType(), a.collection().addAll(b.collection()));
         if (u != null) {
@@ -130,7 +130,7 @@ public class Collections extends Predicate {
     @NelumboMethod
     protected InferResult diff(NSet a, NSet b, NSet d) {
         if (a == null || b == null) {
-            return unresolvable();
+            return unknown();
         }
         NSet diff = new NSet(a.elementType(), a.collection().removeAll(b.collection()));
         if (d != null) {
@@ -142,7 +142,7 @@ public class Collections extends Predicate {
     @NelumboMethod
     protected InferResult concat(NList a, NList b, NList c) {
         if (a == null || b == null) {
-            return unresolvable();
+            return unknown();
         }
         NList concat = new NList(a.elementType(), a.collection().addAll(b.collection()));
         if (c != null) {

@@ -76,19 +76,19 @@ public abstract class BinaryPredicate extends CompoundPredicate {
                 return setPredicates(0, predResult[0].predicate(), predResult[1].predicate()).unknown();
             }
         } else {
-            return resolvedOnly(predResult);
+            return resolvedOnly(predResult, context);
         }
     }
 
-    protected InferResult resolvedOnly(InferResult[] predResult) {
-        if (!predResult[0].unresolvable() && !predResult[1].unresolvable()) {
+    protected InferResult resolvedOnly(InferResult[] predResult, InferContext context) {
+        if (isResolved(predResult[0], context) && isResolved(predResult[1], context)) {
             return predResult[0].add(predResult[1]);
-        } else if (!predResult[0].unresolvable()) {
+        } else if (isResolved(predResult[0], context)) {
             return predResult[0];
-        } else if (!predResult[1].unresolvable()) {
+        } else if (isResolved(predResult[1], context)) {
             return predResult[1];
         } else {
-            return unresolvable();
+            return unknown();
         }
     }
 

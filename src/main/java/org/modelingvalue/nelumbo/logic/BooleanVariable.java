@@ -96,7 +96,7 @@ public class BooleanVariable extends Predicate {
             return unknown();
         }
         if (context != null && context.shallow()) {
-            return unresolvable();
+            return unknown();
         }
         if (result == null) {
             result = InferResult.of(declaration(), Set.of(set(0, NBoolean.TRUE)), true, //

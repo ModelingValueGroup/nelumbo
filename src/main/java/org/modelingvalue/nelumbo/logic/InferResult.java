@@ -47,10 +47,6 @@ public interface InferResult {
 
     Predicate predicate();
 
-    default boolean unresolvable() {
-        return false;
-    }
-
     default Set<Predicate> cycles() {
         return Set.of();
     }
@@ -65,6 +61,11 @@ public interface InferResult {
 
     default boolean hasStackOverflow() {
         return stackOverflow() != null;
+    }
+
+    default boolean isUnknown() {
+        return allFalsehoods().isEmpty() && allFacts().isEmpty() && !completeFalsehoods() && !completeFacts()
+                && cycles().isEmpty();
     }
 
     default boolean isTrueCC() {
@@ -207,40 +208,6 @@ public interface InferResult {
             @Override
             public Predicate predicate() {
                 return unknown;
-            }
-        };
-    }
-
-    static InferResult unresolvable(Predicate unknown) {
-        return new InferResultImpl() {
-            @Override
-            public Set<Predicate> facts() {
-                return Set.of();
-            }
-
-            @Override
-            public Set<Predicate> falsehoods() {
-                return Set.of();
-            }
-
-            @Override
-            public boolean completeFacts() {
-                return false;
-            }
-
-            @Override
-            public boolean completeFalsehoods() {
-                return false;
-            }
-
-            @Override
-            public Predicate predicate() {
-                return unknown;
-            }
-
-            @Override
-            public boolean unresolvable() {
-                return true;
             }
         };
     }

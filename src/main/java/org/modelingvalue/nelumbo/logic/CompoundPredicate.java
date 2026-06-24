@@ -61,7 +61,7 @@ public abstract class CompoundPredicate extends Predicate {
                 result = predicate.infer(resolve);
                 if (result.hasStackOverflow()) {
                     return result;
-                } else if (!result.unresolvable()) {
+                } else if (!result.isUnknown()) {
                     for (Predicate pred : result.allFacts()) {
                         Map<Variable, Object> b = pred.getBinding();
                         if (!b.isEmpty()) {
@@ -79,14 +79,17 @@ public abstract class CompoundPredicate extends Predicate {
                     completeFacts &= result.completeFacts();
                     completeFalsehoods &= result.completeFalsehoods();
                     cycles = cycles.addAll(result.cycles());
+                } else if (resolve == deep) {
+                    completeFacts = false;
+                    completeFalsehoods = false;
                 }
             }
         } while (!next.isEmpty());
-        if (facts.isEmpty() && completeFacts && falsehoods.isEmpty() && completeFalsehoods) {
-            completeFacts = false;
-            completeFalsehoods = false;
-        }
         return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, cycles);
+    }
+
+    protected final boolean isResolved(InferResult result, InferContext context) {
+        return !result.isUnknown() || (context.deep() && result.predicate().nrOfUnbound() < 2);
     }
 
 }
