@@ -98,22 +98,21 @@ public final class Rule extends Node implements Evaluatable {
         if (reason == ConstructionReason.transforming) {
             return this;
         }
-        Predicate p = consequence();
-        Functor consFunctor = p.functor();
+        Predicate c = consequence();
+        Functor consFunctor = c.functor();
         Functor litFunctor = knowledgeBase.literal(consFunctor);
         if (Type.FACT_TYPE.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
             knowledgeBase.addException(
-                    new ParseException("Rule consequence " + p + " must be a Predicate, not a FactType", p));
+                    new ParseException("Rule consequence " + c + " must be a Predicate, not a FactType", c));
         }
-        List<AstElement> elements = astElements();
-        NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
-        Node l = p instanceof NIs ? (Node) p.get(0) : p;
-        Predicate cons = (Predicate) p.replace(e -> e != p && e instanceof BooleanVariable v ? v.variable() : e)
+        Node left = c instanceof NIs ? (Node) c.get(0) : c;
+        Predicate cons = (Predicate) c.replace(e -> e != c && e instanceof BooleanVariable v ? v.variable() : e)
                 .resetDeclaration();
         Map<Variable, Object> consVars = cons.getBinding();
-        Map<Variable, Object> nodeVars = l == cons ? consVars : l.getBinding();
-        Functor nodeFunctor = l.functor();
+        Functor nodeFunctor = left.functor();
         Functor literalFunctor = nodeFunctor != null ? knowledgeBase.literal(nodeFunctor) : null;
+        List<AstElement> elements = astElements();
+        NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
         int i = 0;
         for (List<Object> condIf : (List<List<Object>>) get(1)) {
             Predicate cond = (Predicate) condIf.get(0);
@@ -135,7 +134,7 @@ public final class Rule extends Node implements Evaluatable {
                 }
             }
             if (literalFunctor != null) {
-                Map<Variable, Object> litVars = Predicate.literals(nodeVars.putAll(nonConsVars));
+                Map<Variable, Object> litVars = Predicate.literals(consVars.putAll(nonConsVars));
                 cons = cons.setVariables(knowledgeBase, litVars, ctx);
                 cond = cond.setVariables(knowledgeBase, litVars, ctx);
                 if (when != null) {
