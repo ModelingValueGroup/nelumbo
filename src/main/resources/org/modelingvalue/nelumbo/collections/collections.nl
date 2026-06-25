@@ -22,8 +22,8 @@ Boolean         ::= <Set<E>> "<"  <Set<E>>        #30,
                     <Set<E>> ">=" <Set<E>>        #30,
                     <E>      "in" <Collection<E>> #30
 
-Set<E>          ::= { <(> <E> <,> , <)*> }      @nelumbo.collections.NSet,
-                    { [ <E> ] ( <Boolean#0> ) } @nelumbo.collections.SetBuilder,
+Set<E>          ::= { <(> <E> <,> , <)*> }                 @nelumbo.collections.NSet,
+                    { [ <{Variable&E}> ] ( <Boolean#0> ) } @nelumbo.collections.SetBuilder,
                     <Set<E>> && <Set<E>> #60,
                     <Set<E>> || <Set<E>> #60,
                     <Set<E>> - <Set<E>>  #50

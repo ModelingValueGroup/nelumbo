@@ -169,6 +169,10 @@ public final class Type extends Node implements FunctorOrType {
         this(List.of(), name, Set.of(sup), group, arg);
     }
 
+    public Type(List<AstElement> elements, Set<Type> all) {
+        this(NodeInfo.of(TYPE, elements), all, Set.of(), all.get(0).group());
+    }
+
     private Type(Set<Type> all, String group) {
         this(NodeInfo.of(TYPE), all, Set.of(), group);
     }
@@ -565,9 +569,6 @@ public final class Type extends Node implements FunctorOrType {
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
-            if (length() > 2 && get(2) instanceof String) {
-                return this;
-            }
             if (super.functorOrType() instanceof Functor functor
                     && functor.astElements().first() instanceof Type type) {
                 Type result = type.setAstElements(astElements());
@@ -576,14 +577,25 @@ public final class Type extends Node implements FunctorOrType {
                 }
                 return result.setFunctorOrType(functor);
             }
+            if (get(0) instanceof Type t) {
+                Set<Type> all = Set.of(t);
+                for (int i = 1; i < length(); i++) {
+                    all = all.add((Type) get(i));
+                }
+                if (all.size() == 1) {
+                    return all.get(0).setAstElements(astElements());
+                } else {
+                    return new Type(astElements(), all);
+                }
+            }
             List<Type> supers = (List<Type>) get(2);
             String group = (String) get(3);
             if (group == null) {
                 group = DEFAULT_GROUP;
             }
-            Type type;
             String name = (String) get(0);
             Type arg = (Type) get(1);
+            Type type;
             if (arg != null) {
                 Variable var = arg.variable();
                 if (var == null || !Type.TYPE.equals(var.type())) {
