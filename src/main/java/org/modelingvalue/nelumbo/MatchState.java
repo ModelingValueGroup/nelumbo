@@ -116,7 +116,7 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
             break;
         }
         case Variable var -> {
-            state = matchType(var.type(), typeArgs);
+            state = matchType(var.type().toVariable(), typeArgs);
             break;
         }
         case Node node    -> {

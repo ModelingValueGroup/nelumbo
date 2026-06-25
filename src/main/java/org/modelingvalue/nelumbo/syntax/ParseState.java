@@ -644,18 +644,11 @@ public class ParseState extends AbstractState<ParseState> {
             } catch (NotMergeableException exc) {
                 result.addException(new ParseException(exc.getMessage(), node));
             }
-            Type type = node.type();
+            Type type = node instanceof Variable ? node.type().toVariable() : node.type();
             ParseState next = matchType(type, result.typeArgs());
             if (next != null) {
                 result.add(node);
                 return new TokenState(node.nextToken(), next);
-            }
-            if (node instanceof Variable var) {
-                next = nodeTypes().get(Type.VARIABLE);
-                if (next != null) {
-                    result.add(var);
-                    return new TokenState(node.nextToken(), next);
-                }
             }
             result.addException(new ParseException(
                     "Node " + node + " of unexpected type " + type + ", expected " + expectedTypes(), node));

@@ -22,6 +22,7 @@ import java.util.function.Function;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -153,27 +154,15 @@ public class NodeTypePattern extends Pattern {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
-                Type sub = nodeType();
-                Type sup = n.type();
-                Variable var = sub.argument().variable();
-                if (var != null) {
-                    Type arg = typeArgs.get(var);
-                    if (arg != null) {
-                        sub = sub.setArgument(arg);
-                        sup = sup.setArgument(arg);
-                    }
-                }
-                if (sub.isAssignableFrom(sup)) {
-                    args.add(n);
-                    return i + 1;
-                }
-                if (Type.VARIABLE.equals(sub) && n instanceof Variable) {
+                Type type = n instanceof Variable ? n.type().toVariable() : n.type();
+                if (!nodeType().typeMatcher().match(type, MutableMap.of(typeArgs)).isEmpty()) {
                     args.add(n);
                     return i + 1;
                 }
             }
         }
         return -1;
+
     }
 
     @Override

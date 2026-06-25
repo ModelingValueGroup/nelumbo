@@ -210,7 +210,7 @@ public interface ParseContext {
         if (left != null) {
             Map<Type, ParseState> states = postStates(group);
             if (states != null) {
-                Type type = left.type();
+                Type type = left instanceof Variable ? left.type().toVariable() : left.type();
                 for (ParseState state : states.toValues()) {
                     result.clear();
                     ParseState found = state.matchType(type, result.typeArgs());
