@@ -39,8 +39,9 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-        int               port    = 8080;
-        List<Path>        paths   = new ArrayList<>();
+        int               port      = 8080;
+        long              timeoutMs = NelumboHttpServer.DEFAULT_TIMEOUT_MS;
+        List<Path>        paths     = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             String a = args[i];
             switch (a) {
@@ -50,6 +51,13 @@ public final class Main {
                     fail("missing value for " + a);
                 }
                 port = Integer.parseInt(args[++i]);
+                break;
+            case "-t":
+            case "--timeout":
+                if (i + 1 >= args.length) {
+                    fail("missing value for " + a);
+                }
+                timeoutMs = Long.parseLong(args[++i]);
                 break;
             case "-h":
             case "--help":
@@ -81,10 +89,10 @@ public final class Main {
         }
 
         KnowledgeBase base   = KnowledgeBaseLoader.load(sources);
-        NelumboHttpServer server = new NelumboHttpServer(base, files);
+        NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs);
         int bound = server.start(port);
         System.out.println("Nelumbo HTTP server listening on http://localhost:" + bound
-                + " (" + files.size() + " file(s) loaded)");
+                + " (" + files.size() + " file(s) loaded, timeout " + timeoutMs + " ms)");
     }
 
     private static List<Path> expand(Path path) {
@@ -122,7 +130,8 @@ public final class Main {
         out.println("  GET  /metadata     knowledge base metadata (types, counts, loaded files)");
         out.println("  GET  /health       liveness check");
         out.println();
-        out.println("  -p, --port N   port to listen on (default 8080; 0 picks a free port)");
-        out.println("  -h, --help     show this help and exit");
+        out.println("  -p, --port N      port to listen on (default 8080; 0 picks a free port)");
+        out.println("  -t, --timeout MS  per-request inference budget in ms (default 30000; 0 disables)");
+        out.println("  -h, --help        show this help and exit");
     }
 }

@@ -28,6 +28,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
@@ -378,6 +379,9 @@ public class Predicate extends Node {
     private InferResult fixpoint(InferContext context) {
         InferResult previousResult = null, cycleResult = InferResult.cycle(Set.of(), Set.of(), this), nextResult;
         do {
+            if (context.knowledgebase().isPastDeadline()) {
+                throw new NelumboTimeoutException();
+            }
             nextResult = inferRules(context.putCycleResult(this, cycleResult));
             if (nextResult.hasStackOverflow()) {
                 return nextResult;

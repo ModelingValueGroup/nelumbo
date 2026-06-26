@@ -25,9 +25,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -47,19 +54,37 @@ import io.javalin.http.Context;
  */
 public final class NelumboHttpServer {
 
+    /** Default per-request inference budget, in milliseconds. */
+    public static final long DEFAULT_TIMEOUT_MS = 30_000;
+    /** Extra wall-clock the HTTP backstop waits beyond the engine deadline before giving up. */
+    private static final long GRACE_MS = 2_000;
+
     private final KnowledgeBase baseKb;
     private final List<String>  loadedFiles;
+    private final long          timeoutMs;
 
-    private Javalin app;
+    private Javalin         app;
+    private ExecutorService evalExecutor;
 
     public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles) {
+        this(baseKb, loadedFiles, DEFAULT_TIMEOUT_MS);
+    }
+
+    /** {@code timeoutMs} is the per-request inference budget; 0 (or less) disables the timeout. */
+    public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs) {
         this.baseKb = baseKb;
         this.loadedFiles = List.copyOf(loadedFiles);
+        this.timeoutMs = timeoutMs;
     }
 
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
     public int start(int port) {
         String playground = loadResource("/public/playground.html");
+        evalExecutor = Executors.newCachedThreadPool(runnable -> {
+            Thread thread = new Thread(runnable, "nelumbo-http-eval");
+            thread.setDaemon(true);
+            return thread;
+        });
         app = Javalin.create();
         app.get("/", ctx -> ctx.html(playground));
         app.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
@@ -73,6 +98,9 @@ public final class NelumboHttpServer {
     public void stop() {
         if (app != null) {
             app.stop();
+        }
+        if (evalExecutor != null) {
+            evalExecutor.shutdownNow();
         }
     }
 
@@ -88,7 +116,20 @@ public final class NelumboHttpServer {
             ctx.status(400).json(response);
             return;
         }
-        EvalResult result = evaluate(document);
+        EvalResult result;
+        try {
+            result = evaluate(document);
+        } catch (EvalTimeoutException e) {
+            Map<String, Object> timeout = new LinkedHashMap<>();
+            timeout.put("error", "timeout");
+            timeout.put("timeoutMs", timeoutMs);
+            timeout.put("message", "inference exceeded " + timeoutMs + " ms");
+            if (trace) {
+                addTraceStub(timeout);
+            }
+            ctx.status(408).json(timeout);
+            return;
+        }
         response.put("queries", result.queries);
         response.put("errors", result.errors);
         if (trace) {
@@ -97,6 +138,11 @@ public final class NelumboHttpServer {
         // A document that produced no queries but did report errors is treated as a client error.
         boolean ok = result.errors.isEmpty() || !result.queries.isEmpty();
         ctx.status(ok ? 200 : 400).json(response);
+    }
+
+    /** Signals that a request exceeded its inference budget. */
+    private static final class EvalTimeoutException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
     }
 
     private static String loadResource(String path) {
@@ -122,9 +168,10 @@ public final class NelumboHttpServer {
         String src = document.endsWith("\n") ? document : document + "\n";
         List<Map<String, Object>> queries = new ArrayList<>();
         List<Map<String, Object>> errors = new ArrayList<>();
-        // baseKb.run(...) evaluates against a throwaway child of the loaded base, so a request's own
-        // declarations never leak into the shared base and concurrent requests stay isolated.
-        baseKb.run(() -> {
+        // A throwaway child of the loaded base: a request's own declarations never leak into the shared
+        // base, concurrent requests stay isolated, and the deadline is carried into the inference.
+        KnowledgeBase requestKb = new KnowledgeBase(baseKb);
+        Runnable work = () -> {
             ParserResult parsed = new Parser(new Tokenizer(src, "<request>").tokenize()).parseNonThrowing();
             try {
                 parsed.evaluate();
@@ -139,8 +186,34 @@ public final class NelumboHttpServer {
                     queries.add(queryJson(query));
                 }
             }
-        });
+        };
+        if (timeoutMs <= 0) {
+            requestKb.run(work);
+        } else {
+            runWithTimeout(requestKb, work);
+        }
         return new EvalResult(queries, errors);
+    }
+
+    private void runWithTimeout(KnowledgeBase requestKb, Runnable work) {
+        // The engine deadline makes the inference self-abort (via fixpoint -> NelumboTimeoutException); the
+        // future.get backstop guarantees the HTTP handler returns even if some step never re-checks the clock.
+        requestKb.setDeadlineNanos(System.nanoTime() + timeoutMs * 1_000_000L);
+        Future<?> future = evalExecutor.submit(() -> requestKb.run(work));
+        try {
+            future.get(timeoutMs + GRACE_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            throw new EvalTimeoutException();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof NelumboTimeoutException) {
+                throw new EvalTimeoutException();
+            }
+            throw e.getCause() instanceof RuntimeException re ? re : new IllegalStateException(e.getCause());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new EvalTimeoutException();
+        }
     }
 
     private static Map<String, Object> queryJson(Query query) {

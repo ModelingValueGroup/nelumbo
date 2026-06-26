@@ -141,6 +141,11 @@ fib(5)=r ?
       return;
     }
     let html = "";
+    if (data.error) {
+      $("results").innerHTML = '<div class="errors"><h3>' + esc(data.error) + "</h3>"
+        + '<div class="e">' + esc(data.message || "") + "</div></div>";
+      return;
+    }
     if (data.traceStatus) {
       html += '<div class="note">trace: ' + esc(data.traceStatus) + "</div>";
     }

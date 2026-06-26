@@ -123,6 +123,25 @@ class NelumboHttpServerTest {
     }
 
     @Test
+    void evalTimesOutOnLongRunningInference() throws Exception {
+        // A 1 ms inference budget: fib(20000) cannot finish in time, so the engine deadline trips.
+        NelumboHttpServer tight = new NelumboHttpServer(
+                KnowledgeBaseLoader.load(List.of(new NamedSource("fibonacci.nl", FIB_BASE))),
+                List.of("fibonacci.nl"), 1);
+        int tightPort = tight.start(0);
+        try {
+            HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + tightPort + "/eval"))
+                    .header("Content-Type", "text/plain")
+                    .POST(BodyPublishers.ofString("Integer r\nfib(20000)=r ?\n")).build();
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            assertEquals(408, response.statusCode(), "a query exceeding the budget should time out");
+            assertEquals("timeout", mapper.readTree(response.body()).get("error").asText());
+        } finally {
+            tight.stop();
+        }
+    }
+
+    @Test
     void evalReportsFalseForARefutedQuery() throws Exception {
         HttpResponse<String> response = post("/eval", "fib(5)=6 ?\n");
         assertEquals(200, response.statusCode());
