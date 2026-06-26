@@ -364,10 +364,10 @@ public class Functor extends Node implements FunctorOrType {
         ast = ast.prepend(pattern);
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
-        Type e = type.hasArgument() ? type.argument() : null;
+        List<Type> gen = type.hasArguments() ? type.arguments() : List.of();
         if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
                 && !Type.PATTERN.isAssignableFrom(type)
-                && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !t.equals(e))) {
+                && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !gen.contains(t))) {
             type = type.toLiteral();
         } else if (type.variable() == null) {
             if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
@@ -379,10 +379,11 @@ public class Functor extends Node implements FunctorOrType {
             if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
                     && !Type.NAMESPACE.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
                     && !Type.COLLECTION.isAssignableFrom(type) //
-                    && args.noneMatch(t -> Type.OBJECT.equals(t.argument()) //
-                            || Type.BOOLEAN.isAssignableFrom(t.argument()) //
-                            || Type.VARIABLE.isAssignableFrom(t.argument()) //
-                            || Type.LITERAL.isAssignableFrom(t.argument()))) {
+                    && args.flatMap(t -> t.hasArguments() ? t.arguments() : List.of(t))
+                            .noneMatch(t -> Type.OBJECT.equals(t) //
+                                    || Type.BOOLEAN.isAssignableFrom(t) //
+                                    || Type.VARIABLE.isAssignableFrom(t) //
+                                    || Type.LITERAL.isAssignableFrom(t))) {
                 toLiteral = true;
             }
         }

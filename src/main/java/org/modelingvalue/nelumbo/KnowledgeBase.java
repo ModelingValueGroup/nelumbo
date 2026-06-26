@@ -142,8 +142,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         Pattern pattern;
         if (var != null) {
             pattern = t(List.of(type), var);
-        } else if (type.hasArgument()) {
-            pattern = c(List.of(type), t(type.rawName()), t("<"), n(Type.TYPE, Integer.MAX_VALUE), t(">"));
+        } else if (type.hasArguments()) {
+            pattern = c(List.of(type), t(type.rawName()), t("<"), r(n(Type.TYPE, Integer.MAX_VALUE), true, t(",")),
+                    t(">"));
         } else {
             pattern = t(List.of(type), type.rawName());
         }
@@ -199,7 +200,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         parseContext, bootstrapping);
 
                 Functor.of(
-                        s(c(t(NAME), o(s(t("<"), n(Type.TYPE, 100), t(">")))), t("::"),
+                        s(c(t(NAME), o(s(t("<"), r(n(Type.TYPE, 100), true, t(",")), t(">")))), t("::"),
                                 r(n(Type.TYPE, 100), true, t(",")), o(s(t("#"), t(NAME)))),
                         Type.ROOT, null, Type.class, null).init(this, parseContext, bootstrapping);
 

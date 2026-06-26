@@ -72,9 +72,9 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type PATTERN_PART = new Type("PatternPart", ROOT);
     public static final Type PATTERN      = new Type("Pattern", PATTERN_GROUP, OBJECT);
     public static final Type TYPE_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
-    public static final Type COLLECTION   = new Type("Collection", OBJECT, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type SET          = new Type("Set", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
-    public static final Type LIST         = new Type("List", COLLECTION, TYPE_ARG_VAR, DEFAULT_GROUP);
+    public static final Type COLLECTION   = new Type("Collection", OBJECT, List.of(TYPE_ARG_VAR), DEFAULT_GROUP);
+    public static final Type SET          = new Type("Set", COLLECTION, List.of(TYPE_ARG_VAR), DEFAULT_GROUP);
+    public static final Type LIST         = new Type("List", COLLECTION, List.of(TYPE_ARG_VAR), DEFAULT_GROUP);
 
     public static List<Type> predefined() {
         return List.of(//
@@ -161,12 +161,12 @@ public final class Type extends Node implements FunctorOrType {
         this(NodeInfo.of(TYPE, elements), name, supers.asSet(), group);
     }
 
-    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, Type arg) {
-        this(NodeInfo.of(TYPE, elements), name, supers.asSet(), group, arg);
+    public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, List<Type> args) {
+        this(NodeInfo.of(TYPE, elements), name, supers.asSet(), group, args);
     }
 
-    private Type(String name, Type sup, Type arg, String group) {
-        this(List.of(), name, Set.of(sup), group, arg);
+    private Type(String name, Type sup, List<Type> args, String group) {
+        this(List.of(), name, Set.of(sup), group, args);
     }
 
     public Type(List<AstElement> elements, Set<Type> all) {
@@ -200,10 +200,10 @@ public final class Type extends Node implements FunctorOrType {
         return (Set<Type>) get(0);
     }
 
-    public boolean hasArgument() {
+    public boolean hasArguments() {
         if (isMany()) {
             for (Type m : many()) {
-                if (m.hasArgument()) {
+                if (m.hasArguments()) {
                     return true;
                 }
             }
@@ -212,35 +212,27 @@ public final class Type extends Node implements FunctorOrType {
         return length() == 4;
     }
 
-    public Type argument() {
-        if (hasArgument()) {
-            if (isMany()) {
-                for (Type m : many()) {
-                    if (m.hasArgument()) {
-                        return m.argument();
-                    }
+    @SuppressWarnings("unchecked")
+    public List<Type> arguments() {
+        if (isMany()) {
+            for (Type m : many()) {
+                if (m.hasArguments()) {
+                    return m.arguments();
                 }
-                return this;
             }
-            return (Type) get(3);
-        } else {
-            return this;
         }
+        return (List<Type>) get(3);
     }
 
-    public Type setArgument(Type argument) {
-        if (hasArgument()) {
-            if (argument().equals(argument)) {
-                return this;
-            } else {
-                if (isMany()) {
-                    return set(0, many().replaceAll(t -> t.hasArgument() ? t.setArgument(argument) : t));
-                }
-                Set<Type> supers = supersDeclaration().replaceAll(s -> s.hasArgument() ? s.setArgument(argument) : s);
-                return set(3, argument).set(1, supers);
-            }
+    public Type setArguments(List<Type> arguments) {
+        if (arguments().equals(arguments)) {
+            return this;
         } else {
-            return argument;
+            if (isMany()) {
+                return set(0, many().replaceAll(t -> t.hasArguments() ? t.setArguments(arguments) : t));
+            }
+            Set<Type> supers = supersDeclaration().replaceAll(s -> s.hasArguments() ? s.setArguments(arguments) : s);
+            return set(3, arguments).set(1, supers);
         }
     }
 
@@ -252,8 +244,12 @@ public final class Type extends Node implements FunctorOrType {
             }
             return tv;
         }
-        if (hasArgument()) {
-            return argument().typeVariables();
+        if (hasArguments()) {
+            Set<Variable> tv = Set.of();
+            for (Type a : arguments()) {
+                tv = tv.addAll(a.typeVariables());
+            }
+            return tv;
         }
         Object type = get(0);
         return type instanceof Variable var ? Set.of(var) : Set.of();
@@ -318,11 +314,15 @@ public final class Type extends Node implements FunctorOrType {
             }
             return result;
         }
-        if (hasArgument()) {
+        if (hasArguments()) {
             Set<Type> result = supersDeclaration();
-            Type arg = argument();
-            for (Type sup : arg.supers()) {
-                result = result.add(setArgument(sup));
+            List<Type> args = arguments();
+            int i = 0;
+            for (Type arg : args) {
+                for (Type sup : arg.supers()) {
+                    result = result.add(setArguments(args.replace(i, sup)));
+                }
+                i++;
             }
             return result;
         }
@@ -348,10 +348,13 @@ public final class Type extends Node implements FunctorOrType {
         return typeMatcher(this, new TypeMatcher(Map.of(), this));
     }
 
-    private static TypeMatcher typeMatcher(Type type, TypeMatcher next) {
-        if (type.hasArgument()) {
-            next = typeMatcher(type.argument(), next);
-            type = type.setArgument($OBJECT);
+    private TypeMatcher typeMatcher(Type type, TypeMatcher next) {
+        if (type.hasArguments()) {
+            List<Type> args = type.arguments();
+            for (Type arg : args.reverse()) {
+                next = typeMatcher(arg, next);
+            }
+            type = type.setArguments(args.replaceAll(a -> $OBJECT));
         }
         return new TypeMatcher(Map.of(Entry.of(type, next)), null);
     }
@@ -438,12 +441,12 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type toList(String group) {
-        return LIST.setArgument(this).setGroup(group());
+        return LIST.setArguments(List.of(this)).setGroup(group());
 
     }
 
     public Type toSet(String group) {
-        return SET.setArgument(this).setGroup(group());
+        return SET.setArguments(List.of(this)).setGroup(group());
     }
 
     public TokenType tokenType() {
@@ -457,7 +460,8 @@ public final class Type extends Node implements FunctorOrType {
     public String name() {
         String name = rawName();
         if (length() == 4) {
-            return name + "<" + argument().name() + ">";
+            String args = arguments().map(Type::name).reduce("", (a, b) -> a.length() > 0 ? (a + "," + b) : b);
+            return name + "<" + args + ">";
         }
         return name;
     }
@@ -543,11 +547,21 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     private Type getAssignedType(Type other) {
-        if (hasArgument() && other.hasArgument()) {
-            Type element = argument().getAssignedType(other.argument());
-            if (element != null) {
-                Type te = setArgument(element);
-                Type oe = other.setArgument(element);
+        if (hasArguments() && other.hasArguments()) {
+            List<Type> tArgs = arguments();
+            List<Type> oArgs = other.arguments();
+            List<Type> args = List.of();
+            if (tArgs.size() == oArgs.size()) {
+                for (int i = 0; i < tArgs.size(); i++) {
+                    Type arg = tArgs.get(i).getAssignedType(oArgs.get(i));
+                    if (arg != null) {
+                        args = args.add(arg);
+                    } else {
+                        return null;
+                    }
+                }
+                Type te = setArguments(args);
+                Type oe = other.setArguments(args);
                 if (te.isAssignableFrom(oe)) {
                     return oe;
                 }
@@ -565,17 +579,23 @@ public final class Type extends Node implements FunctorOrType {
         return clss != null && clss.isAssignableFrom(type);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
             if (super.functorOrType() instanceof Functor functor
                     && functor.astElements().first() instanceof Type type) {
-                Type result = type.setAstElements(astElements());
-                if (result.hasArgument() && get(0) instanceof Type elem) {
-                    result = result.setArgument(elem);
+                type = type.setAstElements(astElements());
+                if (type.hasArguments()) {
+                    List<Type> args = (List) args();
+                    if (type.arguments().size() != args.size()) {
+                        knowledgeBase.addException(new ParseException(
+                                "Number of type arguments is " + args.size() + " must be " + type.arguments().size(),
+                                this));
+                    }
+                    type = type.setArguments(args);
                 }
-                return result.setFunctorOrType(functor);
+                return type.setFunctorOrType(functor);
             }
             if (get(0) instanceof Type t) {
                 Set<Type> all = Set.of(t);
@@ -594,15 +614,17 @@ public final class Type extends Node implements FunctorOrType {
                 group = DEFAULT_GROUP;
             }
             String name = (String) get(0);
-            Type arg = (Type) get(1);
+            List<Type> args = (List<Type>) get(1);
             Type type;
-            if (arg != null) {
-                Variable var = arg.variable();
-                if (var == null || !Type.TYPE.equals(var.type())) {
-                    knowledgeBase.addException(
-                            new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
+            if (args != null) {
+                for (Type arg : args) {
+                    Variable var = arg.variable();
+                    if (var != null && !Type.TYPE.equals(var.type())) {
+                        knowledgeBase.addException(
+                                new ParseException("Type argument " + arg + " must be a Variable of type <Type>", arg));
+                    }
                 }
-                type = new Type(astElements(), name, supers, group, arg);
+                type = new Type(astElements(), name, supers, group, args);
             } else {
                 type = new Type(astElements(), name, supers, group);
             }

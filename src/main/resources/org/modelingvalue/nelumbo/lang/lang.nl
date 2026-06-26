@@ -45,15 +45,13 @@ Pattern          ::= <NAME>                                                     
                      "<" <(> <(> "visible" <|> "hidden" <)> <)?> <Type#100> <(> # <NUMBER> <)?> ">"                               @nelumbo.patterns.NodeTypePattern,
                      "<" <PatternPart#100> ">"                                                                                    @nelumbo.patterns.PatternPartPattern
 
-Type             ::= { <(> <Type> <,> & <)+> }  @nelumbo.lang.Type
+Type             ::= { <(> <Type> <,> , <)+> }  @nelumbo.lang.Type
 
-Root             ::= "import" <(> <QNAME> <,> , <)+>                                                                        @nelumbo.lang.Import,
-                     <Root#0> ::> <RootNamespace>                                                                           @nelumbo.lang.Transform,
-                     <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                                     @nelumbo.lang.Variable,
-                     <[> <NAME> <(> < <Type#100> > <)?> <]> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?>                  @nelumbo.lang.Type,
-                     <(> "private" <)?> <Type#100> ::= <(> <PATTERNS> <(> "#" <NUMBER> <)?> <(> "@" <QNAME> <)?> <,> , <)+> @nelumbo.lang.Functor
-
+Root             ::= "import" <(> <QNAME> <,> , <)+>                                                                          @nelumbo.lang.Import,
+                     <Root#0> ::> <RootNamespace>                                                                             @nelumbo.lang.Transform,
+                     <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                                       @nelumbo.lang.Variable,
+                     <[> <NAME> <(> "<" <(> <Type#100> <,> , <)+> ">" <)?> <]> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?> @nelumbo.lang.Type,
+                     <(> "private" <)?> <Type#100> ::= <(> <PATTERNS> <(> "#" <NUMBER> <)?> <(> "@" <QNAME> <)?> <,> , <)+>   @nelumbo.lang.Functor
 
 Type P
-
 P ::= (<P>)       @nelumbo.lang.Parenthesized

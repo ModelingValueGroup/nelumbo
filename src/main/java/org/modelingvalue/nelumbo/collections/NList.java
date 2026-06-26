@@ -81,7 +81,7 @@ public final class NList extends NCollection {
     }
 
     public Type elementType() {
-        return type().argument();
+        return type().arguments().first();
     }
 
     @Override

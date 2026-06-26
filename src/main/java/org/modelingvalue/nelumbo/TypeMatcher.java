@@ -57,17 +57,32 @@ public class TypeMatcher {
         return typeArgs;
     }
 
-    public Set<Type> match(Type type, MutableMap<Variable, Type> typeArgs) {
-        Set<Type> result = Set.of();
+    public final Set<Type> match(Type type, MutableMap<Variable, Type> typeArgs) {
+        return doMatch(type, typeArgs).replaceAll(TypeMatcher::type);
+    }
+
+    private Set<TypeMatcher> doMatch(Type type, MutableMap<Variable, Type> typeArgs) {
+        Set<TypeMatcher> result = Set.of();
         for (Type sup : type.allSupersList()) {
             TypeMatcher state = transitions.get(sup);
             if (state != null) {
-                result = sup.hasArgument() ? result.addAll(state.match(type.argument(), typeArgs))
-                        : result.add(state.type);
+                if (sup.hasArguments()) {
+                    Set<TypeMatcher> pre, post = Set.of(state);
+                    for (Type arg : type.arguments()) {
+                        pre = post;
+                        post = Set.of();
+                        for (TypeMatcher s : pre) {
+                            post = post.addAll(s.doMatch(arg, typeArgs));
+                        }
+                    }
+                    result = result.addAll(post);
+                } else {
+                    result = result.add(state);
+                }
                 break;
             }
         }
-        if (!type.hasArgument() && (result.isEmpty() || type.variable() == null)) {
+        if (!type.hasArguments() && (result.isEmpty() || type.variable() == null)) {
             outer: for (Entry<Type, TypeMatcher> e : typeArgs()) {
                 if (e.getKey().isMany()) {
                     for (Type m : e.getKey().many()) {
@@ -81,12 +96,12 @@ public class TypeMatcher {
                 Type found = typeArgs.get(var);
                 if (found == null) {
                     typeArgs.put(var, type);
-                    result = result.add(e.getValue().type);
+                    result = result.add(e.getValue());
                 } else {
                     found = type.common(found);
                     if (found != null) {
                         typeArgs.put(var, found);
-                        result = result.add(e.getValue().type);
+                        result = result.add(e.getValue());
                     } else {
                         typeArgs.put(var, Type.$NONE);
                     }
