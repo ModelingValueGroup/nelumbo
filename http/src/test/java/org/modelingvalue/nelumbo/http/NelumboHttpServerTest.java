@@ -164,16 +164,25 @@ class NelumboHttpServerTest {
     }
 
     @Test
-    void metadataExposesLoadedTypesAndFiles() throws Exception {
+    void metadataExposesDeclaredVocabulary() throws Exception {
         HttpResponse<String> response = get("/metadata");
         assertEquals(200, response.statusCode());
-
         JsonNode body = mapper.readTree(response.body());
-        List<String> types = mapper.convertValue(body.get("types"), STRING_LIST);
-        assertTrue(types.contains("Integer"), "loaded types should include Integer: " + types);
 
         List<String> files = mapper.convertValue(body.get("files"), STRING_LIST);
         assertTrue(files.contains("fibonacci.nl"), "metadata should list loaded files: " + files);
+
+        // The lists hold only what the loaded file declared — not the imported integer/logic vocabulary.
+        List<String> functors = mapper.convertValue(body.get("functors"), STRING_LIST);
+        assertTrue(functors.contains("fib(<Integer>)"), "declared functors should be just fib: " + functors);
+
+        List<String> rules = mapper.convertValue(body.get("rules"), STRING_LIST);
+        assertTrue(rules.stream().anyMatch(r -> r.contains("fib(n)=f") && r.contains("<=>")),
+                "rules should hold the readable fib rule(s): " + rules);
+
+        // fib declares no new type (Integer is imported) and no facts, so those lists are empty here.
+        assertTrue(body.get("types").isEmpty(), "fib declares no types: " + body.get("types"));
+        assertTrue(body.get("facts").isEmpty(), "fib declares no facts: " + body.get("facts"));
     }
 
     @Test

@@ -21,28 +21,35 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.logic.InferResult;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 import io.javalin.Javalin;
@@ -268,16 +275,88 @@ public final class NelumboHttpServer {
 
     private Map<String, Object> metadata() {
         Map<String, Object> json = new LinkedHashMap<>();
-        TreeSet<String> typeNames = new TreeSet<>();
-        for (Type type : baseKb.types()) {
-            typeNames.add(type.name());
-        }
-        json.put("types", new ArrayList<>(typeNames));
-        json.put("functorCount", baseKb.functors().size());
-        json.put("ruleCount", baseKb.rules().size());
-        json.put("factCount", baseKb.facts().size());
-        json.put("transformCount", baseKb.transforms().size());
         json.put("files", loadedFiles);
+        // Only declarations that originate from the loaded files (matched by source file name): this drops
+        // both the bootstrap/library vocabulary (sourced from /nelumbo/...) and synthetic compiled nodes.
+        json.put("types", declaredTypes());
+        // Functors render cleanly via deparse (the pattern, e.g. "fib(<Integer>)"); rules/transforms via
+        // toString (deparse of the compiled clause loses the head and "if" keywords).
+        addFunctors(json);
+        json.put("rules", declaredSources(baseKb.rules(), n -> collapse(String.valueOf(n))));
+        json.put("transforms", declaredSources(baseKb.transforms(), n -> collapse(String.valueOf(n))));
+        json.put("facts", declaredFacts());
         return json;
+    }
+
+    private void addFunctors(Map<String, Object> json) {
+        LinkedHashSet<String> functors = new LinkedHashSet<>();
+        LinkedHashSet<String> constants = new LinkedHashSet<>();
+        for (Functor functor : baseKb.functors()) {
+            if (!fromLoadedFile(functor)) {
+                continue;
+            }
+            String rendered = deparse(functor);
+            if (rendered.contains("::")) {
+                continue; // a type declaration registered as a functor — already shown under "types"
+            }
+            (functor.argTypes().isEmpty() ? constants : functors).add(rendered);
+        }
+        json.put("functors", sorted(functors));
+        json.put("constants", sorted(constants));
+    }
+
+    private static List<String> sorted(Collection<String> values) {
+        List<String> out = new ArrayList<>(values);
+        Collections.sort(out);
+        return out;
+    }
+
+    private List<String> declaredFacts() {
+        List<Predicate> predicates = new ArrayList<>();
+        for (Entry<Predicate, InferResult> fact : baseKb.facts()) {
+            predicates.add(fact.getKey());
+        }
+        return declaredSources(predicates, NelumboHttpServer::deparse);
+    }
+
+    private boolean fromLoadedFile(Node node) {
+        Token first = node.firstToken();
+        return first != null && loadedFiles.contains(first.fileName());
+    }
+
+    private List<String> declaredSources(Iterable<? extends Node> nodes, Function<Node, String> render) {
+        LinkedHashSet<String> sources = new LinkedHashSet<>();
+        for (Node node : nodes) {
+            if (fromLoadedFile(node)) {
+                sources.add(render.apply(node));
+            }
+        }
+        List<String> out = new ArrayList<>(sources);
+        Collections.sort(out);
+        return out;
+    }
+
+    private List<Map<String, Object>> declaredTypes() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Type type : baseKb.types()) {
+            if (!fromLoadedFile(type)) {
+                continue;
+            }
+            List<String> supers = new ArrayList<>();
+            for (Type sup : type.supersDeclaration()) {
+                supers.add(sup.name());
+            }
+            Collections.sort(supers);
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("name", type.name());
+            entry.put("supertypes", supers);
+            out.add(entry);
+        }
+        out.sort(Comparator.comparing(e -> String.valueOf(e.get("name"))));
+        return out;
+    }
+
+    private static String collapse(String text) {
+        return text.trim().replaceAll("\\s+", " ");
     }
 }

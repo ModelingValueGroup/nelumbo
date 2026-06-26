@@ -80,8 +80,11 @@ public final class Main {
         List<String>      files   = new ArrayList<>();
         for (Path path : paths) {
             for (Path file : expand(path)) {
-                sources.add(new NamedSource(file.toString(), read(file)));
-                files.add(file.getFileName().toString());
+                // The source name must be the same string the metadata filter matches against, so use it
+                // both as the NamedSource name (tokenizer source) and the reported/loaded file name.
+                String name = file.toString();
+                sources.add(new NamedSource(name, read(file)));
+                files.add(name);
             }
         }
         if (sources.isEmpty()) {
