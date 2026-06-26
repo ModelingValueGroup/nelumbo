@@ -91,6 +91,17 @@ class NelumboHttpServerTest {
     }
 
     @Test
+    void playgroundIsServedAtRoot() throws Exception {
+        HttpResponse<String> response = get("/");
+        assertEquals(200, response.statusCode());
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/html"),
+                "playground should be served as HTML");
+        String html = response.body();
+        assertTrue(html.contains("<textarea"), "playground should have a text input");
+        assertTrue(html.contains("/eval"), "playground should post documents to /eval");
+    }
+
+    @Test
     void evalSolvesQueryAgainstLoadedKnowledgeBase() throws Exception {
         // A posted document is self-contained: it declares the variable it queries with. The fib rule
         // it relies on comes from the knowledge base loaded at startup.

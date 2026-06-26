@@ -16,6 +16,10 @@
 
 package org.modelingvalue.nelumbo.http;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,7 +59,9 @@ public final class NelumboHttpServer {
 
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
     public int start(int port) {
+        String playground = loadResource("/public/playground.html");
         app = Javalin.create();
+        app.get("/", ctx -> ctx.html(playground));
         app.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
         app.post("/eval", ctx -> handleEval(ctx, false));
         app.post("/eval/trace", ctx -> handleEval(ctx, true));
@@ -91,6 +97,17 @@ public final class NelumboHttpServer {
         // A document that produced no queries but did report errors is treated as a client error.
         boolean ok = result.errors.isEmpty() || !result.queries.isEmpty();
         ctx.status(ok ? 200 : 400).json(response);
+    }
+
+    private static String loadResource(String path) {
+        try (InputStream in = NelumboHttpServer.class.getResourceAsStream(path)) {
+            if (in == null) {
+                throw new IllegalStateException("resource not found on classpath: " + path);
+            }
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException("cannot read resource " + path, e);
+        }
     }
 
     private static void addTraceStub(Map<String, Object> response) {
