@@ -63,3 +63,30 @@ fib(
 POST {{host}}/eval
 Content-Type: text/plain
 
+
+### JSON envelope — document plus options in the body instead of the path
+POST {{host}}/eval
+Content-Type: application/json
+
+{
+  "document": "Integer r\nfib(10)=r ?\n"
+}
+
+### JSON envelope with trace flag — enables tracing on /eval (stubbed for now)
+POST {{host}}/eval
+Content-Type: application/json
+
+{
+  "document": "Integer r\nfib(10)=r ?\n",
+  "trace": true
+}
+
+### JSON envelope with limit — cap bindings per query; adds "truncated": true when applied
+### (most useful against a knowledge base whose queries have many solutions)
+POST {{host}}/eval
+Content-Type: application/json
+
+{
+  "document": "Integer r\nfib(10)=r ?\n",
+  "limit": 1
+}

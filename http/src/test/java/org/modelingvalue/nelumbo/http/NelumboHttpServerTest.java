@@ -26,7 +26,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,6 +83,65 @@ class NelumboHttpServerTest {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
                 .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(body)).build();
         return client.send(request, BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> postJson(int onPort, String json) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + onPort + "/eval"))
+                .header("Content-Type", "application/json").POST(BodyPublishers.ofString(json)).build();
+        return client.send(request, BodyHandlers.ofString());
+    }
+
+    private String envelope(Map<String, Object> fields) throws Exception {
+        return mapper.writeValueAsString(fields);
+    }
+
+    @Test
+    void evalAcceptsJsonEnvelope() throws Exception {
+        HttpResponse<String> response = postJson(port, envelope(Map.of("document", "Integer r\nfib(5)=r ?\n")));
+        assertEquals(200, response.statusCode());
+        JsonNode query = mapper.readTree(response.body()).get("queries").get(0);
+        assertEquals("true", query.get("status").asText());
+        assertEquals("5", query.get("bindings").get(0).get("r").asText());
+    }
+
+    @Test
+    void envelopeTraceFlagEnablesTraceOnEval() throws Exception {
+        HttpResponse<String> response = postJson(port,
+                envelope(Map.of("document", "Integer r\nfib(5)=r ?\n", "trace", true)));
+        assertEquals(200, response.statusCode());
+        assertEquals("not-implemented", mapper.readTree(response.body()).get("traceStatus").asText());
+    }
+
+    @Test
+    void malformedJsonEnvelopeReturns400() throws Exception {
+        HttpResponse<String> response = postJson(port, "{ not valid json");
+        assertEquals(400, response.statusCode());
+    }
+
+    @Test
+    void jsonEnvelopeWithoutDocumentReturns400() throws Exception {
+        HttpResponse<String> response = postJson(port, envelope(Map.of("trace", true)));
+        assertEquals(400, response.statusCode());
+    }
+
+    @Test
+    void envelopeLimitTruncatesBindings() throws Exception {
+        String family = new String(getClass().getResourceAsStream(
+                "/org/modelingvalue/nelumbo/examples/family.nl").readAllBytes(), StandardCharsets.UTF_8);
+        NelumboHttpServer fam = new NelumboHttpServer(
+                KnowledgeBaseLoader.load(List.of(new NamedSource("family.nl", family))), List.of("family.nl"));
+        int famPort = fam.start(0);
+        try {
+            // Juliana has two parents; limit 1 must return a single binding and flag the truncation.
+            HttpResponse<String> response = postJson(famPort,
+                    envelope(Map.of("document", "Person q\npc(q, Juliana) ?\n", "limit", 1)));
+            assertEquals(200, response.statusCode());
+            JsonNode query = mapper.readTree(response.body()).get("queries").get(0);
+            assertEquals(1, query.get("bindings").size(), "limit should cap bindings: " + query);
+            assertTrue(query.get("truncated").asBoolean(), "truncation should be flagged: " + query);
+        } finally {
+            fam.stop();
+        }
     }
 
     @Test

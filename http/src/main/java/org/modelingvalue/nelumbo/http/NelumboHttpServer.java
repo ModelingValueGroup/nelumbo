@@ -52,6 +52,9 @@ import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -69,6 +72,7 @@ public final class NelumboHttpServer {
     private final KnowledgeBase baseKb;
     private final List<String>  loadedFiles;
     private final long          timeoutMs;
+    private final ObjectMapper  mapper = new ObjectMapper();
 
     private Javalin         app;
     private ExecutorService evalExecutor;
@@ -111,12 +115,19 @@ public final class NelumboHttpServer {
         }
     }
 
-    private void handleEval(Context ctx, boolean trace) {
-        String document = ctx.body();
+    private void handleEval(Context ctx, boolean pathTrace) {
+        EvalRequest request;
+        try {
+            request = parseRequest(ctx, pathTrace);
+        } catch (IOException e) {
+            ctx.status(400).json(Map.of("error", "bad-request", "message", "malformed JSON request body"));
+            return;
+        }
+        boolean trace = request.trace();
         Map<String, Object> response = new LinkedHashMap<>();
-        if (document == null || document.isBlank()) {
+        if (request.document() == null || request.document().isBlank()) {
             response.put("queries", List.of());
-            response.put("errors", List.of(Map.of("message", "empty request body")));
+            response.put("errors", List.of(Map.of("message", "no document in request")));
             if (trace) {
                 addTraceStub(response);
             }
@@ -125,7 +136,7 @@ public final class NelumboHttpServer {
         }
         EvalResult result;
         try {
-            result = evaluate(document);
+            result = evaluate(request.document(), request.limit());
         } catch (EvalTimeoutException e) {
             Map<String, Object> timeout = new LinkedHashMap<>();
             timeout.put("error", "timeout");
@@ -145,6 +156,27 @@ public final class NelumboHttpServer {
         // A document that produced no queries but did report errors is treated as a client error.
         boolean ok = result.errors.isEmpty() || !result.queries.isEmpty();
         ctx.status(ok ? 200 : 400).json(response);
+    }
+
+    /**
+     * A request is either a raw {@code .nl} document (any non-JSON content type) or a JSON envelope
+     * {@code {"document": "...", "trace": bool, "limit": int}} when the content type is JSON.
+     */
+    private EvalRequest parseRequest(Context ctx, boolean pathTrace) throws IOException {
+        String body = ctx.body();
+        String contentType = ctx.contentType();
+        if (contentType != null && contentType.toLowerCase().contains("json") && body != null && !body.isBlank()) {
+            JsonNode node = mapper.readTree(body);
+            String document = node.path("document").isTextual() ? node.get("document").asText() : null;
+            boolean trace = pathTrace || node.path("trace").asBoolean(false);
+            Integer limit = node.path("limit").isInt() && node.get("limit").asInt() >= 0 ? node.get("limit").asInt()
+                    : null;
+            return new EvalRequest(document, trace, limit);
+        }
+        return new EvalRequest(body, pathTrace, null);
+    }
+
+    private record EvalRequest(String document, boolean trace, Integer limit) {
     }
 
     /** Signals that a request exceeded its inference budget. */
@@ -171,7 +203,7 @@ public final class NelumboHttpServer {
     private record EvalResult(List<Map<String, Object>> queries, List<Map<String, Object>> errors) {
     }
 
-    private EvalResult evaluate(String document) {
+    private EvalResult evaluate(String document, Integer limit) {
         String src = document.endsWith("\n") ? document : document + "\n";
         List<Map<String, Object>> queries = new ArrayList<>();
         List<Map<String, Object>> errors = new ArrayList<>();
@@ -190,7 +222,7 @@ public final class NelumboHttpServer {
             }
             for (Node root : parsed.roots()) {
                 if (root instanceof Query query && query.inferResult() != null) {
-                    queries.add(queryJson(query));
+                    queries.add(queryJson(query, limit));
                 }
             }
         };
@@ -223,7 +255,7 @@ public final class NelumboHttpServer {
         }
     }
 
-    private static Map<String, Object> queryJson(Query query) {
+    private static Map<String, Object> queryJson(Query query, Integer limit) {
         InferResult result = query.inferResult();
         boolean hasFacts = !result.allFacts().isEmpty();
         boolean hasFalsehoods = !result.allFalsehoods().isEmpty();
@@ -232,17 +264,31 @@ public final class NelumboHttpServer {
         // "unknown" = neither (or both) — the canonical "result" string carries the full detail.
         String status = hasFacts && !hasFalsehoods ? "true" : hasFalsehoods && !hasFacts ? "false" : "unknown";
 
+        List<Map<String, String>> bindings = bindings(result.trueBindings());
+        List<Map<String, String>> counterexamples = bindings(result.falseBindings());
+        boolean truncated = limit != null && (bindings.size() > limit || counterexamples.size() > limit);
+
         Map<String, Object> json = new LinkedHashMap<>();
         json.put("query", deparse(query.predicate()));
         json.put("status", status);
-        json.put("bindings", bindings(result.trueBindings()));
-        json.put("counterexamples", bindings(result.falseBindings()));
+        json.put("bindings", capped(bindings, limit));
+        json.put("counterexamples", capped(counterexamples, limit));
+        if (truncated) {
+            json.put("truncated", true);
+        }
         json.put("result", String.valueOf(result));
         Map<String, Object> complete = new LinkedHashMap<>();
         complete.put("facts", result.completeFacts());
         complete.put("falsehoods", result.completeFalsehoods());
         json.put("complete", complete);
         return json;
+    }
+
+    private static List<Map<String, String>> capped(List<Map<String, String>> values, Integer limit) {
+        if (limit == null || values.size() <= limit) {
+            return values;
+        }
+        return new ArrayList<>(values.subList(0, limit));
     }
 
     private static List<Map<String, String>> bindings(
