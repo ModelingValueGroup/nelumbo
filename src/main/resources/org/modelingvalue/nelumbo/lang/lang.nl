@@ -65,8 +65,8 @@ Rel3<A1,A2,A3>       :: Object
 Rel4<A1,A2,A3,A4>    :: Object
 Rel5<A1,A2,A3,A4,A5> :: Object
 
-Rel1<A1>             ::= [<{Variable,A1}#100>](<Boolean#0>)
-Rel2<A1,A2>          ::= [<{Variable,A1}#100>,<{Variable,A2}#100>](<Boolean#0>)
-Rel3<A1,A2,A3>       ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>](<Boolean#0>)
-Rel4<A1,A2,A3,A4>    ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>](<Boolean#0>)
-Rel5<A1,A2,A3,A4,A5> ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>,<{Variable,A5}>](<Boolean#0>)
+Rel1<A1>             ::= [<{Variable,A1}#100>](<Boolean#0>)                                                                             @nelumbo.lang.Lambda
+Rel2<A1,A2>          ::= [<{Variable,A1}#100>,<{Variable,A2}#100>](<Boolean#0>)                                                         @nelumbo.lang.Lambda
+Rel3<A1,A2,A3>       ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>](<Boolean#0>)                                     @nelumbo.lang.Lambda
+Rel4<A1,A2,A3,A4>    ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>](<Boolean#0>)                 @nelumbo.lang.Lambda
+Rel5<A1,A2,A3,A4,A5> ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>,<{Variable,A5}>](<Boolean#0>) @nelumbo.lang.Lambda
