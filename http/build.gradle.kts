@@ -14,24 +14,63 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-// HTTP server
-include("http")
+plugins {
+    id("com.gradleup.shadow") version "9.3.2"
+    java
+}
 
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
-
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-        }
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
+}
+
+val archiveName = "nelumbo-http-server"
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation(project(":"))
+    implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
+    implementation("io.javalin:javalin:6.3.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.1")
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.16")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    jvmArgs("-ea") // Enable assertions
+}
+
+tasks.register<ShadowJar>("serverJar") {
+    archiveBaseName.set(archiveName)
+    // Produce a single shaded jar without the default "-all" classifier
+    archiveClassifier.set("")
+    manifest {
+        attributes["Main-Class"] = "org.modelingvalue.nelumbo.http.Main"
+    }
+    from(sourceSets.main.get().output)
+    configurations = listOf(project.configurations.runtimeClasspath.get())
+
+    // Exclude signature files from signed dependencies to avoid SecurityException
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    mergeServiceFiles()
+}
+
+tasks.shadowJar {
+    // Disable default shadowJar task; use serverJar instead
+    enabled = false
+}
+
+tasks.jar {
+    // Disable plain jar to avoid duplicate artifact name; we use the shaded jar as the main distribution
+    enabled = false
 }
