@@ -14,24 +14,20 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo;
 
-// HTTP server
-include("http")
+import java.io.Serial;
 
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
+/**
+ * Thrown by the inference engine when the current {@link KnowledgeBase} is past its deadline (see
+ * {@link KnowledgeBase#setDeadlineNanos(long)}). Unwinds the in-progress inference so a long-running query can be
+ * aborted cooperatively.
+ */
+public final class NelumboTimeoutException extends RuntimeException {
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-        }
+    public NelumboTimeoutException() {
+        super("inference exceeded its deadline");
     }
 }
