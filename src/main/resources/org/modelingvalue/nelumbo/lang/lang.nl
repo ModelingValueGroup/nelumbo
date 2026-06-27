@@ -57,16 +57,16 @@ Type P
 
 P ::= (<P>)       @nelumbo.lang.Parenthesized
 
-Type A1, A2, A3, A4, A5
+Type A1, A2, A3, A4, A5, R
 
-Rel1<A1>             :: Object
-Rel2<A1,A2>          :: Object
-Rel3<A1,A2,A3>       :: Object
-Rel4<A1,A2,A3,A4>    :: Object
-Rel5<A1,A2,A3,A4,A5> :: Object
+Rel1<A1,R>             :: Object
+Rel2<A1,A2,R>          :: Object
+Rel3<A1,A2,A3,R>       :: Object
+Rel4<A1,A2,A3,A4,R>    :: Object
+Rel5<A1,A2,A3,A4,A5,R> :: Object
 
-Rel1<A1>             ::= [<{Variable,A1}#100>](<Boolean#0>)                                                                             @nelumbo.lang.Lambda
-Rel2<A1,A2>          ::= [<{Variable,A1}#100>,<{Variable,A2}#100>](<Boolean#0>)                                                         @nelumbo.lang.Lambda
-Rel3<A1,A2,A3>       ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>](<Boolean#0>)                                     @nelumbo.lang.Lambda
-Rel4<A1,A2,A3,A4>    ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>](<Boolean#0>)                 @nelumbo.lang.Lambda
-Rel5<A1,A2,A3,A4,A5> ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>,<{Variable,A5}>](<Boolean#0>) @nelumbo.lang.Lambda
+Rel1<A1,R>             ::= [<{Variable,A1}#100>](<R#0>)                                                                             @nelumbo.lang.Lambda
+Rel2<A1,A2,R>          ::= [<{Variable,A1}#100>,<{Variable,A2}#100>](<R#0>)                                                         @nelumbo.lang.Lambda
+Rel3<A1,A2,A3,R>       ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>](<R#0>)                                     @nelumbo.lang.Lambda
+Rel4<A1,A2,A3,A4,R>    ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>](<R#0>)                 @nelumbo.lang.Lambda
+Rel5<A1,A2,A3,A4,A5,R> ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>,<{Variable,A5}>](<R#0>) @nelumbo.lang.Lambda
