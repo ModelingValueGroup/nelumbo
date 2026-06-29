@@ -17,7 +17,9 @@
 package org.modelingvalue.nelumbo.rationals;
 
 import java.io.Serial;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -33,8 +35,6 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 public final class Rational extends Node {
     @Serial
     private static final long serialVersionUID = 5534246508330776916L;
-
-    private static final BigInteger HUNDERD = BigInteger.valueOf(100);
 
     @NelumboFunctorField
     private static Functor FUNCTOR;
@@ -75,12 +75,8 @@ public final class Rational extends Node {
     public String toString(TokenType[] previous) {
         BigInteger num = getVal(0);
         BigInteger den = getVal(1);
-        String string = num.multiply(HUNDERD).divide(den).toString();
-        if (string.length() > 2) {
-            string = string.substring(0, string.length() - 2) + "." + string.substring(string.length() - 2);
-        } else {
-            string = "0." + string;
-        }
+        BigDecimal dec = new BigDecimal(num).divide(new BigDecimal(den), MathContext.DECIMAL32);
+        String string = dec.toString();
         if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
             previous[0] = TokenType.NUMBER;
             return " " + string;
