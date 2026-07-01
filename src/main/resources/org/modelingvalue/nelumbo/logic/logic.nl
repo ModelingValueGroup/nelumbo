@@ -7,15 +7,15 @@ Literal         :: Object
 
 private Boolean ::= eq(<Literal>,<Literal>) @nelumbo.logic.Equal
 
-Boolean         ::= true                                          @nelumbo.logic.NBoolean,
-                    false                                         @nelumbo.logic.NBoolean,
-                    unknown                                       @nelumbo.logic.NBoolean,
-                    ! <Boolean>               #25                 @nelumbo.logic.Not,
-                    <Boolean> & <Boolean>     #22                 @nelumbo.logic.And,
-                    <Boolean> | <Boolean>     #20                 @nelumbo.logic.Or,
-                    E[<(> <Variable#100> <,> , <)+>](<Boolean#0>) @nelumbo.logic.ExistentialQuantifier,
-                    A[<(> <Variable#100> <,> , <)+>](<Boolean#0>) @nelumbo.logic.UniversalQuantifier,
-                    <Object> = <Object>       #30                 @nelumbo.logic.NIs,
+Boolean         ::= true                          @nelumbo.logic.NBoolean,
+                    false                         @nelumbo.logic.NBoolean,
+                    unknown                       @nelumbo.logic.NBoolean,
+                    ! <Boolean>               #25 @nelumbo.logic.Not,
+                    <Boolean> & <Boolean>     #22 @nelumbo.logic.And,
+                    <Boolean> | <Boolean>     #20 @nelumbo.logic.Or,
+                    E<Lambda<Boolean>>            @nelumbo.logic.ExistentialQuantifier,
+                    A<Lambda<Boolean>>            @nelumbo.logic.UniversalQuantifier,
+                    <Object> = <Object>       #30 @nelumbo.logic.NIs,
                     <Object> != <Object>      #30,
                     <Boolean> -> <Boolean>    #18,
                     <Boolean> "<->" <Boolean> #16

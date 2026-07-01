@@ -20,7 +20,6 @@ import java.io.Serial;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
 public abstract class Quantifier extends CompoundPredicate {
@@ -33,28 +32,12 @@ public abstract class Quantifier extends CompoundPredicate {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<Variable> localVars() {
-        return (List<Variable>) get(0);
+        return getVal(0, 0);
     }
 
     public final Predicate predicate() {
-        return predicate(1);
-    }
-
-    @Override
-    protected int countNrOfUnbound() {
-        return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
-    }
-
-    @Override
-    protected boolean doGetBinding(Object varVal, int i) {
-        return i > 0 || varVal instanceof Variable;
-    }
-
-    @Override
-    protected boolean doSetBinding(Object varVal, int i) {
-        return i > 0 || varVal instanceof Variable;
+        return getVal(0, 1);
     }
 
     @Override

@@ -51,7 +51,8 @@ public class Predicate extends Node {
 
     public static Node INCOMPLETE = new Predicate(NodeInfo.of(Type.BOOLEAN), "..");
 
-    private int nrOfUnbound = -1;
+    private int           nrOfUnbound    = -1;
+    private Set<Variable> localVariables = null;
 
     @NelumboConstructor
     public Predicate(NodeInfo nodeInfo, Object... args) {
@@ -65,13 +66,18 @@ public class Predicate extends Node {
 
     protected final int nrOfUnbound() {
         if (nrOfUnbound < 0) {
-            nrOfUnbound = countNrOfUnbound();
+            nrOfUnbound = (int) getBinding().removeAllKey(allLocalVars()).filter(e -> e.getValue() instanceof Type)
+                    .count();
         }
         return nrOfUnbound;
     }
 
-    protected int countNrOfUnbound() {
-        return (int) getBinding().filter(e -> e.getValue() instanceof Type).count();
+    @Override
+    public Set<Variable> allLocalVars() {
+        if (localVariables == null) {
+            localVariables = super.allLocalVars();
+        }
+        return localVariables;
     }
 
     public final boolean isFullyBound() {

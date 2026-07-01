@@ -19,7 +19,6 @@ package org.modelingvalue.nelumbo.collections;
 import java.io.Serial;
 
 import org.modelingvalue.collections.Entry;
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.ConstructionReason;
@@ -51,7 +50,7 @@ public final class BuildSet extends Quantifier {
     }
 
     public NSet set() {
-        return (NSet) get(2);
+        return (NSet) get(1);
     }
 
     @Override
@@ -69,19 +68,19 @@ public final class BuildSet extends Quantifier {
             trueMap = trueMap.put(fact, set != null ? set.add(val) : Set.of(val));
         }
         for (Entry<Predicate, Set<Object>> e : trueMap) {
-            facts = facts.add(setBinding(e.getKey().getBinding()).set(2, new NSet(type, e.getValue())));
+            facts = facts.add(setBinding(e.getKey().getBinding()).set(1, new NSet(type, e.getValue())));
         }
         for (Predicate predFalsehood : predResult.falsehoods()) {
             Object val = predFalsehood.getBinding().get(localVar);
             Predicate falshood = predFalsehood.setBinding(clearLocal);
-            falsehoods = falsehoods.add(setBinding(falshood.getBinding()).set(2, new NSet(type, Set.of(val))));
+            falsehoods = falsehoods.add(setBinding(falshood.getBinding()).set(1, new NSet(type, Set.of(val))));
         }
         return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        return set(0, List.of(get(0))).resetDeclaration();
+        return resetDeclaration();
     }
 
 }

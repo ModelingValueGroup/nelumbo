@@ -6,7 +6,7 @@ Collection<E>   :: Object
 Set<E>          :: Collection<E>
 List<E>         :: Collection<E>
 
-private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)          @nelumbo.collections.BuildSet,
+private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)      @nelumbo.collections.BuildSet,
                     size(<Collection<E>>, <Integer>)           @nelumbo.collections.Collections,
                     indexOf(<List<E>>, <E>, <Integer>)         @nelumbo.collections.Collections,
                     elementOf(<Set<E>>, <E>)                   @nelumbo.collections.Collections,
@@ -22,8 +22,8 @@ Boolean         ::= <Set<E>> "<"  <Set<E>>        #30,
                     <Set<E>> ">=" <Set<E>>        #30,
                     <E>      "in" <Collection<E>> #30
 
-Set<E>          ::= { <(> <E> <,> , <)*> }                 @nelumbo.collections.NSet,
-                    { [ <{Variable,E}> ] ( <Boolean#0> ) } @nelumbo.collections.SetBuilder,
+Set<E>          ::= { <(> <E> <,> , <)*> }   @nelumbo.collections.NSet,
+                    { <Lambda1<E,Boolean>> },
                     <Set<E>> && <Set<E>> #60,
                     <Set<E>> || <Set<E>> #60,
                     <Set<E>> - <Set<E>>  #50
@@ -31,19 +31,21 @@ Set<E>          ::= { <(> <E> <,> , <)*> }                 @nelumbo.collections.
 Integer         ::= | <Collection<E>> | #35,
                     <E> "pos" <List<E>> #40
 
-List<E>         ::= [ <(> <E> <,> , <)*> ]       @nelumbo.collections.NList,
+List<E>         ::= [ <(> <E> <,> , <)*> ]   @nelumbo.collections.NList,
                     <List<E>> + <List<E>>  #50
 
-E             e
-Boolean       b
-Integer       i
-Collection<E> c
-Set<E>        s, s1, s2, s3
-List<E>       l, l1, l2, l3
+E                  e
+Lambda1<E,Boolean> la
+Boolean            b
+Integer            i
+Collection<E>      c
+Set<E>             s, s1, s2, s3
+List<E>            l, l1, l2, l3
+
 
 |c|=i         <=>  size(c,i)
 
-{[e](b)}=s    <=>  build(e, b, s)
+{la}=s        <=>  build(la, s)
 e in s        <=>  elementOf(s, e)
 s1 < s2       <=>  subset(s1, s2)
 s1 > s2       <=>  subset(s2, s1)

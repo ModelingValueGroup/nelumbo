@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Entry;
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
@@ -68,9 +69,14 @@ public class TypeMatcher {
             if (state != null) {
                 if (sup.hasArguments()) {
                     Set<TypeMatcher> pre, post = Set.of(state);
-                    for (Type arg : type.arguments()) {
+                    List<Type> ta = type.arguments();
+                    List<Type> sa = sup.arguments();
+                    List<Type> td = type.declaration().arguments();
+                    List<Type> sd = sup.declaration().arguments();
+                    for (int i = 0; i < sa.size(); i++) {
                         pre = post;
                         post = Set.of();
+                        Type arg = ta.size() == sa.size() ? ta.get(i) : ta.get(td.index(sd.get(i)));
                         for (TypeMatcher s : pre) {
                             post = post.addAll(s.doMatch(arg, typeArgs));
                         }

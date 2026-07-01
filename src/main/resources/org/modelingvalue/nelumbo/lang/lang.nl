@@ -26,9 +26,9 @@ RootNamespace    :: Root, Namespace
 pattern PATTERNS ::= <(> <Pattern#100> <)+>
 pattern QNAME    ::= <[> <(> <NAME> <,> . <)+> <]>
 
-Namespace        ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>  @nelumbo.lang.Namespace
-RootNamespace    ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                        @nelumbo.lang.Namespace
-PatternPart      ::= "pattern" <NAME> ::= <PATTERNS>                                               @nelumbo.lang.PatternPart
+Namespace        ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE> @nelumbo.lang.Namespace
+RootNamespace    ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                       @nelumbo.lang.Namespace
+PatternPart      ::= "pattern" <NAME> ::= <PATTERNS>                                              @nelumbo.lang.PatternPart
 
 Pattern          ::= <NAME>                                                                                                       @nelumbo.patterns.TokenTextPattern,
                      <STRING>                                                                                                     @nelumbo.patterns.TokenTextPattern,
@@ -55,18 +55,16 @@ Root             ::= "import" <(> <QNAME> <,> , <)+>                            
 
 Type P
 
-P ::= (<P>)       @nelumbo.lang.Parenthesized
+P ::= (<P>) @nelumbo.lang.Parenthesized
 
-Type A1, A2, A3, A4, A5, R
+Type A1, A2, A3, R
 
-lambda1<A1,R>             :: Object
-lambda2<A1,A2,R>          :: Object
-lambda3<A1,A2,A3,R>       :: Object
-lambda4<A1,A2,A3,A4,R>    :: Object
-lambda5<A1,A2,A3,A4,A5,R> :: Object
+Lambda<R>           :: Object
 
-lambda1<A1,R>             ::= [<{Variable,A1}#100>](<R#0>)                                                                             @nelumbo.lang.Lambda
-lambda2<A1,A2,R>          ::= [<{Variable,A1}#100>,<{Variable,A2}#100>](<R#0>)                                                         @nelumbo.lang.Lambda
-lambda3<A1,A2,A3,R>       ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>](<R#0>)                                     @nelumbo.lang.Lambda
-lambda4<A1,A2,A3,A4,R>    ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>](<R#0>)                 @nelumbo.lang.Lambda
-lambda5<A1,A2,A3,A4,A5,R> ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>,<{Variable,A4}#100>,<{Variable,A5}>](<R#0>) @nelumbo.lang.Lambda
+Lambda1<A1,R>       :: Lambda<R>
+Lambda2<A1,A2,R>    :: Lambda<R>
+Lambda3<A1,A2,A3,R> :: Lambda<R>
+
+Lambda1<A1,R>       ::= [<{Variable,A1}#100>](<R#0>)                                         @nelumbo.lang.Lambda
+Lambda2<A1,A2,R>    ::= [<{Variable,A1}#100>,<{Variable,A2}#100>](<R#0>)                     @nelumbo.lang.Lambda
+Lambda3<A1,A2,A3,R> ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>](<R#0>) @nelumbo.lang.Lambda

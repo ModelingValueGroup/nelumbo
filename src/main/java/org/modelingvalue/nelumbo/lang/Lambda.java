@@ -19,11 +19,14 @@ package org.modelingvalue.nelumbo.lang;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
@@ -31,15 +34,26 @@ public class Lambda extends Node {
     @Serial
     private static final long serialVersionUID = -8085779803830595557L;
 
+    @NelumboFunctorField
+    private static Functor FUNCTOR;
+
     @NelumboConstructor
     public Lambda(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
+    }
+
+    public Lambda(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
+        super(NodeInfo.of(FUNCTOR, elements), localVars, predicate);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public List<Variable> localVars() {
         return (List<Variable>) get(0);
+    }
+
+    public Node expression() {
+        return (Node) get(1);
     }
 
     @Override
@@ -54,6 +68,7 @@ public class Lambda extends Node {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        return this;
+        List<Object> args = args();
+        return set(0, args.removeLast(), args.last());
     }
 }

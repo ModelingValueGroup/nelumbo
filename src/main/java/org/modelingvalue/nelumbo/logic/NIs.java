@@ -30,7 +30,6 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
-import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 public class NIs extends Predicate {
@@ -68,16 +67,6 @@ public class NIs extends Predicate {
     @Override
     public NIs set(int i, Object... a) {
         return (NIs) super.set(i, a);
-    }
-
-    @Override
-    public List<Variable> localVars() {
-        return left().localVars().addAll(right().localVars());
-    }
-
-    @Override
-    protected int countNrOfUnbound() {
-        return (int) getBinding().removeAllKey(localVars()).filter(e -> e.getValue() instanceof Type).count();
     }
 
     @Override

@@ -27,6 +27,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Lambda;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -53,7 +54,7 @@ public final class ExistentialQuantifier extends Quantifier {
     }
 
     public ExistentialQuantifier(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(NodeInfo.of(FUNCTOR, elements), localVars, predicate);
+        super(NodeInfo.of(FUNCTOR, elements), new Lambda(List.of(), localVars, predicate));
     }
 
     @Override

@@ -337,7 +337,7 @@ public class Node extends StructImpl implements AstElement {
         return new Node(nodeInfo, args);
     }
 
-    public final Set<Variable> allLocalVars() {
+    public Set<Variable> allLocalVars() {
         Set<Variable> allLocalVars = localVars().asSet();
         for (int i = 0; i < length(); i++) {
             allLocalVars = allLocalVars(get(i), allLocalVars);
@@ -348,8 +348,8 @@ public class Node extends StructImpl implements AstElement {
     private Set<Variable> allLocalVars(Object val, Set<Variable> allLocalVars) {
         if (val instanceof Node node) {
             allLocalVars = allLocalVars.addAll(node.allLocalVars());
-        } else if (val instanceof List<?> list) {
-            for (Object e : list) {
+        } else if (val instanceof ContainingCollection<?> coll) {
+            for (Object e : coll) {
                 allLocalVars = allLocalVars(e, allLocalVars);
             }
         }
@@ -639,8 +639,8 @@ public class Node extends StructImpl implements AstElement {
         return !TRACE_SYNTATIC && (astElements().isEmpty() || firstToken().fileName().contains("/nelumbo/"));
     }
 
-    protected final Predicate predicate(int i) {
-        return (Predicate) get(i);
+    protected final Predicate predicate(int... i) {
+        return getVal(i);
     }
 
     public Node add(Node added) {

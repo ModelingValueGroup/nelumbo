@@ -231,8 +231,18 @@ public final class Type extends Node implements FunctorOrType {
             if (isMany()) {
                 return set(0, many().replaceAll(t -> t.hasArguments() ? t.setArguments(arguments) : t));
             }
-            Set<Type> supers = supersDeclaration().replaceAll(s -> s.hasArguments() ? s.setArguments(arguments) : s);
-            return set(3, arguments).set(1, supers);
+            Set<Type> supers = supersDeclaration().replaceAll(s -> {
+                if (s.hasArguments()) {
+                    List<Type> args = List.of();
+                    for (Type a : s.arguments()) {
+                        int i = arguments().index(a);
+                        args = args.add(arguments.get(i));
+                    }
+                    return s.setArguments(args);
+                }
+                return s;
+            });
+            return set(1, supers, group(), arguments);
         }
     }
 
@@ -470,8 +480,8 @@ public final class Type extends Node implements FunctorOrType {
     public String rawName() {
         Object type = get(0);
         if (type instanceof Set<?> s) {
-            return "(" + ((Set<Type>) s).map(Type::name).sorted().sequential().reduce("",
-                    (a, b) -> a.isEmpty() ? b : a + "," + b) + ")";
+            return "{" + ((Set<Type>) s).map(Type::name).sorted().sequential().reduce("",
+                    (a, b) -> a.isEmpty() ? b : a + "," + b) + "}";
         } else if (type instanceof TokenType tt) {
             return tt.name();
         } else if (type instanceof Variable var) {
@@ -611,7 +621,15 @@ public final class Type extends Node implements FunctorOrType {
             List<Type> supers = (List<Type>) get(2);
             String group = (String) get(3);
             if (group == null) {
-                group = DEFAULT_GROUP;
+                for (Type sup : supers) {
+                    group = sup.group();
+                    if (!group.equals(DEFAULT_GROUP)) {
+                        break;
+                    }
+                }
+                if (group == null) {
+                    group = DEFAULT_GROUP;
+                }
             }
             String name = (String) get(0);
             List<Type> args = (List<Type>) get(1);
