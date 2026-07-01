@@ -97,14 +97,14 @@ public class TypeMatcher {
                         }
                     }
                 }
-                type = type.nonVariable();
+                Type nvt = type.nonVariable();
                 Variable var = e.getKey().variable();
                 Type found = typeArgs.get(var);
                 if (found == null) {
-                    typeArgs.put(var, type);
+                    typeArgs.put(var, nvt);
                     result = result.add(e.getValue());
                 } else {
-                    found = type.common(found);
+                    found = nvt.common(found);
                     if (found != null) {
                         typeArgs.put(var, found);
                         result = result.add(e.getValue());

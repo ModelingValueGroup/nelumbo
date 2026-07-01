@@ -416,7 +416,6 @@ public class ParseState extends AbstractState<ParseState> {
                                 if (state != null) {
                                     next2 = new TokenState(next1.token, state);
                                     states = states.add(next2);
-                                    break;
                                 }
                             }
                         }
