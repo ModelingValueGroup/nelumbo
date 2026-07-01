@@ -39,9 +39,10 @@ public class DocumentFormattingServiceTest {
     private static final String URI = "test://format.nl";
 
     /**
-     * Within a run of adjacent query lines, every {@code ?} is padded to the same column (the longest
-     * left-hand side + one space), and exactly one space separates {@code ?} from the expected clause.
-     * This is what users mean by "aligned across the column": the markers form a vertical line.
+     * Within a run of adjacent query lines, every {@code ?} is padded to the same
+     * column (the longest left-hand side + one space), and exactly one space
+     * separates {@code ?} from the expected clause. This is what users mean by
+     * "aligned across the column": the markers form a vertical line.
      */
     @Test
     void alignsQuestionMarksWithinAConsecutiveBlock() throws Exception {
@@ -56,7 +57,10 @@ public class DocumentFormattingServiceTest {
         assertEquals(indexOfQuestion(formatted, 0), indexOfQuestion(formatted, 1), "the two ? must share a column");
     }
 
-    /** Alignment must both grow short gaps and shrink drifted ones, so any starting whitespace lands on the same column. */
+    /**
+     * Alignment must both grow short gaps and shrink drifted ones, so any starting
+     * whitespace lands on the same column.
+     */
     @Test
     void normalisesAnyStartingWhitespaceToTheSameColumn() throws Exception {
         assertEquals("""
@@ -69,19 +73,23 @@ public class DocumentFormattingServiceTest {
     }
 
     /**
-     * The bug users originally reported: re-running the formatter kept pushing the expected value
-     * right. Formatting must be idempotent — applying it to its own output is a no-op.
+     * The bug users originally reported: re-running the formatter kept pushing the
+     * expected value right. Formatting must be idempotent — applying it to its own
+     * output is a no-op.
      */
     @Test
     void formattingIsIdempotent() throws Exception {
-        String once  = format("""
+        String once = format("""
                 fib(0)=f ? [(f=0)][..]
                 fib(1000)=f ? [(f=2)][..]
                 """);
         assertEquals(once, format(once), "formatting its own output must not change it");
     }
 
-    /** A single blank line keeps the two {@code ?} aligned to one shared column (single-gap = same block). */
+    /**
+     * A single blank line keeps the two {@code ?} aligned to one shared column
+     * (single-gap = same block).
+     */
     @Test
     void singleBlankLineKeepsQueriesAligned() throws Exception {
         String formatted = format("""
@@ -90,11 +98,15 @@ public class DocumentFormattingServiceTest {
                 maxFib(1000000)=f          ? [..]
                 """);
         String[] ls = formatted.split("\n", -1);
-        assertEquals(ls[0].indexOf('?'), ls[2].indexOf('?'), "a single blank line must not split the query alignment block");
+        assertEquals(ls[0].indexOf('?'), ls[2].indexOf('?'),
+                "a single blank line must not split the query alignment block");
         assertEquals(formatted, format(formatted), "idempotent");
     }
 
-    /** A double (2+) blank line separates the query alignment block: each side aligns independently. */
+    /**
+     * A double (2+) blank line separates the query alignment block: each side
+     * aligns independently.
+     */
     @Test
     void doubleBlankLineSeparatesQueries() throws Exception {
         String formatted = format("""
@@ -111,7 +123,10 @@ public class DocumentFormattingServiceTest {
                 """, formatted);
     }
 
-    /** A single blank-line gap keeps declaration operators in ONE alignment column (the user's integers.nl case). */
+    /**
+     * A single blank-line gap keeps declaration operators in ONE alignment column
+     * (the user's integers.nl case).
+     */
     @Test
     void alignsDeclarationOperatorsAcrossSingleBlankLine() throws Exception {
         String out = format("""
@@ -121,11 +136,15 @@ public class DocumentFormattingServiceTest {
                 """);
         String[] ls = out.split("\n", -1);
         // both <=> share a column even though a blank line separates the two groups:
-        assertEquals(ls[0].indexOf("<=>"), ls[2].indexOf("<=>"), "single blank line must not split the alignment block");
+        assertEquals(ls[0].indexOf("<=>"), ls[2].indexOf("<=>"),
+                "single blank line must not split the alignment block");
         assertEquals(out, format(out), "idempotent");
     }
 
-    /** A double (2+) blank-line gap is a hard separator: each group aligns independently. */
+    /**
+     * A double (2+) blank-line gap is a hard separator: each group aligns
+     * independently.
+     */
     @Test
     void doubleBlankLineSeparatesAlignmentBlocks() throws Exception {
         String out = format("""
@@ -137,12 +156,15 @@ public class DocumentFormattingServiceTest {
         String[] ls = out.split("\n", -1);
         // the short group's <=> is NOT pulled out to the long group's column:
         org.junit.jupiter.api.Assertions.assertTrue(ls[0].indexOf("<=>") < ls[3].indexOf("<=>"),
-            "2+ blank lines separate alignment blocks");
+                "2+ blank lines separate alignment blocks");
         assertEquals(out, format(out), "idempotent");
     }
 
-    /** A continuation line does not break the alignment run: a statement with a continuation still aligns with the
-     *  following statement's operator (collections.nl: Set<E> ::= …(cont) then List<E> ::= … line up). */
+    /**
+     * A continuation line does not break the alignment run: a statement with a
+     * continuation still aligns with the following statement's operator
+     * (collections.nl: Set<E> ::= …(cont) then List<E> ::= … line up).
+     */
     @Test
     void continuationLineDoesNotBreakAlignmentRun() throws Exception {
         String out = format("""
@@ -151,17 +173,22 @@ public class DocumentFormattingServiceTest {
                 List<E> ::= [ c ]
                 """);
         String[] ls = out.split("\n", -1);
-        int setOp  = ls[0].indexOf("::=");
+        int setOp = ls[0].indexOf("::=");
         int listOp = ls[2].indexOf("::=");
         org.junit.jupiter.api.Assertions.assertTrue(setOp > 0 && setOp == listOp,
-            "Set<E> ::= and List<E> ::= must share a column across the continuation line (got " + setOp + " vs " + listOp + ")");
+                "Set<E> ::= and List<E> ::= must share a column across the continuation line (got " + setOp + " vs "
+                        + listOp + ")");
         assertEquals(out, format(out), "idempotent");
     }
 
-    /** A content (non-blank) line between two marker lines also separates the alignment block. */
+    /**
+     * A content (non-blank) line between two marker lines also separates the
+     * alignment block.
+     */
     @Test
     void contentLineBetweenSeparatesAlignmentBlocks() throws Exception {
-        // 'Integer a' is a content line between the two rules; the <=> must not align across it.
+        // 'Integer a' is a content line between the two rules; the <=> must not align
+        // across it.
         String out = format("""
                 a<b   <=> b>a
                 Integer a
@@ -169,16 +196,22 @@ public class DocumentFormattingServiceTest {
                 """);
         String[] ls = out.split("\n", -1);
         org.junit.jupiter.api.Assertions.assertTrue(ls[0].indexOf("<=>") < ls[2].indexOf("<=>"),
-            "a content line between separates alignment blocks");
+                "a content line between separates alignment blocks");
     }
 
-    /** A {@code ?} that ends the line has no expected clause, so nothing is added after it. */
+    /**
+     * A {@code ?} that ends the line has no expected clause, so nothing is added
+     * after it.
+     */
     @Test
     void leavesTrailingQuestionMarkUntouched() throws Exception {
         assertEquals("n = 5 ?\n", format("n = 5 ?\n"));
     }
 
-    /** A trailing query `?` (no expected-result clause) terminates the statement; the next query is not hung-indented. */
+    /**
+     * A trailing query `?` (no expected-result clause) terminates the statement;
+     * the next query is not hung-indented.
+     */
     @Test
     void trailingQueryMarkerDoesNotContinueLine() throws Exception {
         String out = format("""
@@ -186,16 +219,18 @@ public class DocumentFormattingServiceTest {
                 22+11!=a ?
                 """);
         String[] ls = out.split("\n", -1);
-        org.junit.jupiter.api.Assertions.assertEquals(0, ls[1].indexOf("22+11!=a"), "second query must start at column 0, not be hung-indented");
+        org.junit.jupiter.api.Assertions.assertEquals(0, ls[1].indexOf("22+11!=a"),
+                "second query must start at column 0, not be hung-indented");
         // both `?` align (single-block):
         org.junit.jupiter.api.Assertions.assertEquals(ls[0].indexOf('?'), ls[1].indexOf('?'), "the two ? align");
         assertEquals(out, format(out), "idempotent");
     }
 
     /**
-     * {@code ::}, {@code ::=} and {@code <=>} on adjacent lines form one block whose operators all line up
-     * to a single column (longest left-hand side + one space), each followed by exactly one space —
-     * except {@code <=>} which gets two spaces (corpus convention).
+     * {@code ::}, {@code ::=} and {@code <=>} on adjacent lines form one block
+     * whose operators all line up to a single column (longest left-hand side + one
+     * space), each followed by exactly one space — except {@code <=>} which gets
+     * two spaces (corpus convention).
      */
     @Test
     void alignsDeclarationOperatorsAsOneCombinedBlock() throws Exception {
@@ -210,7 +245,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** Decision #8: the corpus consistently writes two spaces after {@code <=>}; declarations and queries keep one. */
+    /**
+     * Decision #8: the corpus consistently writes two spaces after {@code <=>};
+     * declarations and queries keep one.
+     */
     @Test
     void usesTwoSpacesAfterRuleArrowButOneElsewhere() throws Exception {
         assertEquals("""
@@ -225,7 +263,10 @@ public class DocumentFormattingServiceTest {
         assertEquals("n=5 ? [..]\n", format("n=5 ? [..]\n"));
     }
 
-    /** Declaration alignment is its own block; an adjacent query line does not pull into it (? stays separate). */
+    /**
+     * Declaration alignment is its own block; an adjacent query line does not pull
+     * into it (? stays separate).
+     */
     @Test
     void queriesAndDeclarationsAlignIndependently() throws Exception {
         assertEquals("""
@@ -237,15 +278,19 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** Trailing horizontal whitespace is stripped, including on otherwise-blank lines and the final line; the file ends with one newline. */
+    /**
+     * Trailing horizontal whitespace is stripped, including on otherwise-blank
+     * lines and the final line; the file ends with one newline.
+     */
     @Test
     void stripsTrailingWhitespace() throws Exception {
         assertEquals("a :: Object\n\nb :: Object\n", format("a :: Object   \n   \nb :: Object\t"));
     }
 
     /**
-     * Formatting a selection (rangeFormatting) only edits the selected lines, but the alignment column is
-     * still taken from the whole block — so a selected line lines up with its (unselected) block-mates.
+     * Formatting a selection (rangeFormatting) only edits the selected lines, but
+     * the alignment column is still taken from the whole block — so a selected line
+     * lines up with its (unselected) block-mates.
      */
     @Test
     void rangeFormattingOnlyTouchesSelectedLinesButKeepsBlockAlignment() throws Exception {
@@ -271,7 +316,10 @@ public class DocumentFormattingServiceTest {
         return apply(content, edits == null ? List.of() : edits);
     }
 
-    /** A line ending in a comma hangs its continuation lines under the first list item, after the operator. */
+    /**
+     * A line ending in a comma hangs its continuation lines under the first list
+     * item, after the operator.
+     */
     @Test
     void indentsCommaContinuationUnderFirstItemAfterOperator() throws Exception {
         assertEquals("""
@@ -285,7 +333,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** With no operator (e.g. a {@code fact} list) the continuation hangs under the first item after the keyword. */
+    /**
+     * With no operator (e.g. a {@code fact} list) the continuation hangs under the
+     * first item after the keyword.
+     */
     @Test
     void indentsCommaContinuationUnderFirstItemAfterKeyword() throws Exception {
         assertEquals("""
@@ -297,7 +348,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** A trailing line comment after the comma must not stop the head line from being recognised. */
+    /**
+     * A trailing line comment after the comma must not stop the head line from
+     * being recognised.
+     */
     @Test
     void commaFollowedByCommentStillContinues() throws Exception {
         assertEquals("""
@@ -309,7 +363,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** Any continuation token (here a trailing {@code |}) hangs the next line under the first item, not only commas. */
+    /**
+     * Any continuation token (here a trailing {@code |}) hangs the next line under
+     * the first item, not only commas.
+     */
     @Test
     void indentsOperatorContinuationUnderFirstItemAfterOperator() throws Exception {
         assertEquals("""
@@ -321,7 +378,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** The continuation indent must be idempotent: re-running over aligned output changes nothing. */
+    /**
+     * The continuation indent must be idempotent: re-running over aligned output
+     * changes nothing.
+     */
     @Test
     void continuationIndentIsIdempotent() throws Exception {
         String once = format("""
@@ -332,7 +392,10 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once), "formatting its own output must not change it");
     }
 
-    /** The two-space rule after {@code <=>} must be a fixed point: formatting its own output changes nothing. */
+    /**
+     * The two-space rule after {@code <=>} must be a fixed point: formatting its
+     * own output changes nothing.
+     */
     @Test
     void ruleArrowSpacingIsIdempotent() throws Exception {
         String once = format("""
@@ -343,9 +406,10 @@ public class DocumentFormattingServiceTest {
     }
 
     /**
-     * Regression: the parser splits a glued operator run to match a pattern, so {@code <)?>} becomes the
-     * tokens {@code <} {@code )} {@code ?} {@code >}. That pattern {@code ?} is not whitespace-delimited and
-     * must not be aligned/spaced like a query {@code ?} (which previously produced {@code <) ? >}).
+     * Regression: the parser splits a glued operator run to match a pattern, so
+     * {@code <)?>} becomes the tokens {@code <} {@code )} {@code ?} {@code >}. That
+     * pattern {@code ?} is not whitespace-delimited and must not be aligned/spaced
+     * like a query {@code ?} (which previously produced {@code <) ? >}).
      */
     @Test
     void doesNotTreatPatternQuestionMarkAsAQuery() throws Exception {
@@ -356,13 +420,19 @@ public class DocumentFormattingServiceTest {
         assertEquals(src, format(src), "a ? glued inside a pattern must be left untouched");
     }
 
-    /** Decision #7: leading indentation on top-level statements is stripped to column 0. */
+    /**
+     * Decision #7: leading indentation on top-level statements is stripped to
+     * column 0.
+     */
     @Test
     void stripsLeadingIndentOnTopLevelStatements() throws Exception {
         assertEquals("Integer :: Object\nInteger a, b\n", format("    Integer :: Object\n  Integer a, b\n"));
     }
 
-    /** Continuation lines are NOT stripped to 0 — they keep the hanging indent under the first item. */
+    /**
+     * Continuation lines are NOT stripped to 0 — they keep the hanging indent under
+     * the first item.
+     */
     @Test
     void doesNotStripContinuationLineIndent() throws Exception {
         assertEquals("""
@@ -374,14 +444,21 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** A declaration operator as the first token on an indented line: no overlapping edits, indent stripped. */
+    /**
+     * A declaration operator as the first token on an indented line: no overlapping
+     * edits, indent stripped.
+     */
     @Test
     void handlesAlignedMarkerAsFirstTokenOnIndentedLine() throws Exception {
-        // ':: Object' with leading indent must not produce overlapping edits; indent is stripped to col 0.
+        // ':: Object' with leading indent must not produce overlapping edits; indent is
+        // stripped to col 0.
         assertEquals(":: Object\n", format("    :: Object\n"));
     }
 
-    /** Indent stripping is idempotent and leaves blank lines to the trailing-whitespace pass. */
+    /**
+     * Indent stripping is idempotent and leaves blank lines to the
+     * trailing-whitespace pass.
+     */
     @Test
     void indentStripIsIdempotent() throws Exception {
         String once = format("   a :: Object\n   b :: Object\n");
@@ -389,7 +466,10 @@ public class DocumentFormattingServiceTest {
         assertEquals("a :: Object\nb :: Object\n", once);
     }
 
-    /** A run of {@code Type names...} declarations aligns the variable-name column under the longest type. */
+    /**
+     * A run of {@code Type names...} declarations aligns the variable-name column
+     * under the longest type.
+     */
     @Test
     void alignsVariableDeclarationNames() throws Exception {
         assertEquals("""
@@ -403,7 +483,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** Variable-name alignment works on indented input: indent is stripped AND names align at column 0-relative. */
+    /**
+     * Variable-name alignment works on indented input: indent is stripped AND names
+     * align at column 0-relative.
+     */
     @Test
     void alignsVariableDeclarationNamesOnIndentedInput() throws Exception {
         assertEquals("""
@@ -417,7 +500,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** A non-declaration line (one containing an operator) breaks the block; names are not pulled in. */
+    /**
+     * A non-declaration line (one containing an operator) breaks the block; names
+     * are not pulled in.
+     */
     @Test
     void variableNameAlignmentStopsAtNonDeclarations() throws Exception {
         assertEquals("""
@@ -429,14 +515,20 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** Variable-name alignment is idempotent: re-formatting already aligned output changes nothing. */
+    /**
+     * Variable-name alignment is idempotent: re-formatting already aligned output
+     * changes nothing.
+     */
     @Test
     void variableNameAlignmentIsIdempotent() throws Exception {
         String once = format("Literal  l1, l2\nFunction f1, f2\n");
         assertEquals(once, format(once));
     }
 
-    /** The `#N` precedence markers across the alternatives of one `::=` body align into a single column. */
+    /**
+     * The `#N` precedence markers across the alternatives of one `::=` body align
+     * into a single column.
+     */
     @Test
     void alignsPrecedenceMarkersInBody() throws Exception {
         String formatted = format("""
@@ -466,7 +558,10 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
-    /** Embedded precedence inside a pattern type-reference (e.g. <Boolean#0>) must NOT be treated as an alignable #N. */
+    /**
+     * Embedded precedence inside a pattern type-reference (e.g. <Boolean#0>) must
+     * NOT be treated as an alignable #N.
+     */
     @Test
     void doesNotAlignPrecedenceEmbeddedInPattern() throws Exception {
         String src = """
@@ -479,10 +574,14 @@ public class DocumentFormattingServiceTest {
         org.junit.jupiter.api.Assertions.assertTrue(out.contains("<Boolean#0>"), "embedded #0 must be untouched");
         // and the two trailing #20 / #22 must align to one column:
         String[] ls = out.split("\n", -1);
-        org.junit.jupiter.api.Assertions.assertEquals(ls[0].lastIndexOf('#'), ls[1].lastIndexOf('#'), "trailing # aligned");
+        org.junit.jupiter.api.Assertions.assertEquals(ls[0].lastIndexOf('#'), ls[1].lastIndexOf('#'),
+                "trailing # aligned");
     }
 
-    /** `@` annotations align into a column; when `#N` also appears, `@` sits in the next column to its right. */
+    /**
+     * `@` annotations align into a column; when `#N` also appears, `@` sits in the
+     * next column to its right.
+     */
     @Test
     void alignsAnnotationsAfterPrecedence() throws Exception {
         assertEquals("""
@@ -496,7 +595,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** With #N AND @ on the same lines, the @ column lands right of the aligned #N column (post-#N coordinates). */
+    /**
+     * With #N AND @ on the same lines, the @ column lands right of the aligned #N
+     * column (post-#N coordinates).
+     */
     @Test
     void alignsAnnotationsRightOfPrecedenceColumn() throws Exception {
         String out = format("""
@@ -528,7 +630,10 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
-    /** The `if` guards of a rule's clauses align into one column (only inside a `<=>` body). */
+    /**
+     * The `if` guards of a rule's clauses align into one column (only inside a
+     * `<=>` body).
+     */
     @Test
     void alignsIfGuardsInRuleBody() throws Exception {
         assertEquals("""
@@ -540,7 +645,10 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** A bare `if` outside a `<=>` body (e.g. a name in a fact) is never aligned/touched. */
+    /**
+     * A bare `if` outside a `<=>` body (e.g. a name in a fact) is never
+     * aligned/touched.
+     */
     @Test
     void doesNotAlignIfOutsideRuleBody() throws Exception {
         String src = "fact thenElse(if, then)\n";
@@ -556,7 +664,10 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
-    /** Head-line operator-shift: `<=>` with ONE space in the source still aligns the `if` guards after formatting. */
+    /**
+     * Head-line operator-shift: `<=>` with ONE space in the source still aligns the
+     * `if` guards after formatting.
+     */
     @Test
     void alignsIfGuardsWhenRuleArrowSpacingIsCorrected() throws Exception {
         String out = format("""
@@ -565,11 +676,14 @@ public class DocumentFormattingServiceTest {
                 """);
         String[] ls = out.split("\n", -1);
         org.junit.jupiter.api.Assertions.assertEquals(ls[0].indexOf(" if "), ls[1].indexOf(" if "),
-            "head-line if must align with continuation if even though <=> spacing was corrected from 1 to 2");
+                "head-line if must align with continuation if even though <=> spacing was corrected from 1 to 2");
         assertEquals(out, format(out), "must be idempotent");
     }
 
-    /** Trailing `//` comments across one body block align into a column two spaces past the longest line. */
+    /**
+     * Trailing `//` comments across one body block align into a column two spaces
+     * past the longest line.
+     */
     @Test
     void alignsTrailingComments() throws Exception {
         assertEquals("""
@@ -592,14 +706,20 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
-    /** A single trailing comment (block of one) is left alone; a comment-only line is never a column. */
+    /**
+     * A single trailing comment (block of one) is left alone; a comment-only line
+     * is never a column.
+     */
     @Test
     void leavesLoneAndStandaloneCommentsAlone() throws Exception {
         assertEquals("a :: Object  // note\n", format("a :: Object  // note\n"));
         assertEquals("// just a comment\n", format("// just a comment\n"));
     }
 
-    /** Comment-only lines are indented to the surrounding brace depth, not left at their original indent. */
+    /**
+     * Comment-only lines are indented to the surrounding brace depth, not left at
+     * their original indent.
+     */
     @Test
     void indentsCommentOnlyLinesToBraceDepth() throws Exception {
         String out = format("""
@@ -614,45 +734,62 @@ public class DocumentFormattingServiceTest {
         org.junit.jupiter.api.Assertions.assertEquals("// top comment", ls[0], "top-level comment to column 0");
         org.junit.jupiter.api.Assertions.assertEquals("a :: Object", ls[1]);
         org.junit.jupiter.api.Assertions.assertEquals("{", ls[2]);
-        org.junit.jupiter.api.Assertions.assertEquals("    // inner comment", ls[3], "in-block comment indented one level");
+        org.junit.jupiter.api.Assertions.assertEquals("    // inner comment", ls[3],
+                "in-block comment indented one level");
         org.junit.jupiter.api.Assertions.assertEquals("    b :: Object", ls[4]);
         assertEquals(out, format(out), "idempotent");
     }
 
-    /** Same hardening for the #N column: a head line whose operator spacing changes keeps #N aligned. */
+    /**
+     * Same hardening for the #N column: a head line whose operator spacing changes
+     * keeps #N aligned.
+     */
     @Test
     void alignsPrecedenceWhenHeadOperatorSpacingChanges() throws Exception {
-        // ::= with extra spaces in source gets normalized to one; head-line #N must still align with continuations.
+        // ::= with extra spaces in source gets normalized to one; head-line #N must
+        // still align with continuations.
         String out = format("""
                 Integer ::=    <Integer> + <Integer> #40,
                             <Integer> * <Integer> #50
                 """);
         String[] ls = out.split("\n", -1);
         org.junit.jupiter.api.Assertions.assertEquals(ls[0].lastIndexOf('#'), ls[1].lastIndexOf('#'),
-            "head-line #N must align with continuation #N after operator spacing normalization");
+                "head-line #N must align with continuation #N after operator spacing normalization");
         assertEquals(out, format(out), "must be idempotent");
     }
 
-    /** Internal blank-line runs are preserved verbatim (no collapsing); only trailing blanks are trimmed. */
+    /**
+     * Internal blank-line runs are preserved verbatim (no collapsing); only
+     * trailing blanks are trimmed.
+     */
     @Test
     void preservesInternalBlankLinesTrimsTrailing() throws Exception {
         assertEquals("a :: Object\n\n\n\nb :: Object\n", format("a :: Object\n\n\n\nb :: Object\n"));
         assertEquals("a :: Object\n", format("a :: Object\n\n\n"));
     }
 
-    /** Blank lines at end of file are removed (the final statement keeps its single trailing newline). */
+    /**
+     * Blank lines at end of file are removed (the final statement keeps its single
+     * trailing newline).
+     */
     @Test
     void trimsTrailingBlankLinesAtEof() throws Exception {
         assertEquals("a :: Object\n", format("a :: Object\n\n\n"));
     }
 
-    /** A single blank line between statements is preserved (does not collapse to zero). */
+    /**
+     * A single blank line between statements is preserved (does not collapse to
+     * zero).
+     */
     @Test
     void keepsSingleBlankLine() throws Exception {
         assertEquals("a :: Object\n\nb :: Object\n", format("a :: Object\n\nb :: Object\n"));
     }
 
-    /** Blank-line normalisation is idempotent; internal double blank preserved, trailing blank trimmed. */
+    /**
+     * Blank-line normalisation is idempotent; internal double blank preserved,
+     * trailing blank trimmed.
+     */
     @Test
     void blankLineCollapseIsIdempotent() throws Exception {
         String once = format("a :: Object\n\n\nb :: Object\n\n");
@@ -660,10 +797,15 @@ public class DocumentFormattingServiceTest {
         assertEquals("a :: Object\n\n\nb :: Object\n", once);
     }
 
-    /** A hand-aligned sample touching every pass must be a fixed point: formatting it changes nothing. */
+    /**
+     * A hand-aligned sample touching every pass must be a fixed point: formatting
+     * it changes nothing.
+     */
     @Test
     void fullyFormattedSampleIsFixedPoint() throws Exception {
         String sample = """
+                import nelumbo.integers
+
                 Integer :: Object
 
                 Boolean ::= <Integer> ">" <Integer> #30 @nelumbo.integers.GreaterThan,
@@ -678,7 +820,10 @@ public class DocumentFormattingServiceTest {
         assertEquals(sample, format(sample), "a hand-aligned file must survive formatting unchanged");
     }
 
-    /** Leading blank lines at the top of the file are removed (vim edge-trim behaviour). */
+    /**
+     * Leading blank lines at the top of the file are removed (vim edge-trim
+     * behaviour).
+     */
     @Test
     void removesLeadingBlankLines() throws Exception {
         assertEquals("a :: Object\n", format("\n\n\na :: Object\n"));
@@ -691,7 +836,10 @@ public class DocumentFormattingServiceTest {
         assertEquals("a :: Object\n", format("a :: Object"));
     }
 
-    /** Leading and trailing blank lines are both removed; an interior blank run is preserved. */
+    /**
+     * Leading and trailing blank lines are both removed; an interior blank run is
+     * preserved.
+     */
     @Test
     void trimsLeadingAndTrailingButKeepsInterior() throws Exception {
         assertEquals("a :: Object\n\nb :: Object\n", format("\n\na :: Object\n\nb :: Object\n\n\n"));
@@ -705,7 +853,10 @@ public class DocumentFormattingServiceTest {
         assertEquals("a :: Object\n\n\nb :: Object\n", once);
     }
 
-    /** Bug 1: a closing generic `>` does not start a continuation; type declarations stay at column 0 and their `::` align. */
+    /**
+     * Bug 1: a closing generic `>` does not start a continuation; type declarations
+     * stay at column 0 and their `::` align.
+     */
     @Test
     void alignsTypeDeclarationsWithGenericTypes() throws Exception {
         assertEquals("""
@@ -719,15 +870,22 @@ public class DocumentFormattingServiceTest {
                 """));
     }
 
-    /** Bug 1 (minimal): a line ending in a closing generic `>` must not hang-indent the next line. */
+    /**
+     * Bug 1 (minimal): a line ending in a closing generic `>` must not hang-indent
+     * the next line.
+     */
     @Test
     void closingGenericDoesNotContinueLine() throws Exception {
         String out = format("Set<E> :: Collection<E>\nList<E> :: Object\n");
         String[] ls = out.split("\n", -1);
-        org.junit.jupiter.api.Assertions.assertEquals(0, ls[1].indexOf("List"), "second line must start at column 0, not be hung-indented");
+        org.junit.jupiter.api.Assertions.assertEquals(0, ls[1].indexOf("List"),
+                "second line must start at column 0, not be hung-indented");
     }
 
-    /** Bug 2: a variable declaration whose type has a generic parameter is aligned with its plain-type siblings. */
+    /**
+     * Bug 2: a variable declaration whose type has a generic parameter is aligned
+     * with its plain-type siblings.
+     */
     @Test
     void alignsVariableDeclarationsWithGenericTypes() throws Exception {
         assertEquals("""
@@ -748,7 +906,10 @@ public class DocumentFormattingServiceTest {
         assertEquals(once, format(once));
     }
 
-    /** A `{ }` scope block indents its contents one level; `{`/`}` stay at the enclosing level; alignment happens within the block. */
+    /**
+     * A `{ }` scope block indents its contents one level; `{`/`}` stay at the
+     * enclosing level; alignment happens within the block.
+     */
     @Test
     void indentsScopeBlockContents() throws Exception {
         String out = format("""
@@ -761,14 +922,18 @@ public class DocumentFormattingServiceTest {
         String[] ls = out.split("\n", -1);
         org.junit.jupiter.api.Assertions.assertEquals("{", ls[0]);
         org.junit.jupiter.api.Assertions.assertEquals("}", ls[4]);
-        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    ") && !ls[1].startsWith("     "), "contents indented one level (4): " + ls[1]);
+        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    ") && !ls[1].startsWith("     "),
+                "contents indented one level (4): " + ls[1]);
         org.junit.jupiter.api.Assertions.assertTrue(ls[2].startsWith("    "), "contents indented: " + ls[2]);
         // :: and ::= align within the block:
         org.junit.jupiter.api.Assertions.assertEquals(ls[1].indexOf("::"), ls[2].indexOf("::"));
         org.junit.jupiter.api.Assertions.assertEquals(out, format(out), "idempotent");
     }
 
-    /** A `{` at the end of a line opens a block; the next line is indented (not treated as a continuation). */
+    /**
+     * A `{` at the end of a line opens a block; the next line is indented (not
+     * treated as a continuation).
+     */
     @Test
     void opensBlockOnTrailingBrace() throws Exception {
         String out = format("""
@@ -778,7 +943,8 @@ public class DocumentFormattingServiceTest {
                 """);
         String[] ls = out.split("\n", -1);
         org.junit.jupiter.api.Assertions.assertEquals(0, ls[0].indexOf("foo"), "opener at column 0");
-        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    bar"), "block content indented, not a continuation: " + ls[1]);
+        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    bar"),
+                "block content indented, not a continuation: " + ls[1]);
         org.junit.jupiter.api.Assertions.assertEquals("}", ls[2]);
         org.junit.jupiter.api.Assertions.assertEquals(out, format(out), "idempotent");
     }
@@ -795,15 +961,18 @@ public class DocumentFormattingServiceTest {
                 }
                 """);
         String[] ls = out.split("\n", -1);
-        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    a") , "depth1: " + ls[1]);     // 4
-        org.junit.jupiter.api.Assertions.assertTrue(ls[2].startsWith("    {") , "inner { at depth1: " + ls[2]);
-        org.junit.jupiter.api.Assertions.assertTrue(ls[3].startsWith("        b"), "depth2: " + ls[3]);  // 8
+        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    a"), "depth1: " + ls[1]); // 4
+        org.junit.jupiter.api.Assertions.assertTrue(ls[2].startsWith("    {"), "inner { at depth1: " + ls[2]);
+        org.junit.jupiter.api.Assertions.assertTrue(ls[3].startsWith("        b"), "depth2: " + ls[3]); // 8
         org.junit.jupiter.api.Assertions.assertTrue(ls[4].equals("    }"), "inner } back to depth1: " + ls[4]);
         org.junit.jupiter.api.Assertions.assertEquals("}", ls[5], "outer } at depth0");
         org.junit.jupiter.api.Assertions.assertEquals(out, format(out), "idempotent");
     }
 
-    /** A declaration before a `{` block and one after `}` are NOT aligned together (the block breaks the run). */
+    /**
+     * A declaration before a `{` block and one after `}` are NOT aligned together
+     * (the block breaks the run).
+     */
     @Test
     void scopeBlockBreaksAlignmentRun() throws Exception {
         String out = format("""
@@ -814,12 +983,16 @@ public class DocumentFormattingServiceTest {
                 muchLongerLHS :: C
                 """);
         String[] ls = out.split("\n", -1);
-        // the two outer decls must NOT share a column (block between them breaks the run):
+        // the two outer decls must NOT share a column (block between them breaks the
+        // run):
         org.junit.jupiter.api.Assertions.assertNotEquals(ls[0].indexOf("::"), ls[4].indexOf("::"),
-            "a scope block between two declarations breaks their alignment run");
+                "a scope block between two declarations breaks their alignment run");
     }
 
-    /** A marker line that also opens a block ({ at end of line) must not align its marker with the in-block line below. */
+    /**
+     * A marker line that also opens a block ({ at end of line) must not align its
+     * marker with the in-block line below.
+     */
     @Test
     void alignmentDoesNotCrossBraceFromBlockOpener() throws Exception {
         String out = format("""
@@ -829,12 +1002,17 @@ public class DocumentFormattingServiceTest {
                 """);
         String[] ls = out.split("\n", -1);
         org.junit.jupiter.api.Assertions.assertEquals("y ?", ls[1].trim(),
-            "inner query keeps a single space; it must not align to the outer ? across the brace (got '" + ls[1] + "')");
-        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    "), "inner query indented one level: " + ls[1]);
+                "inner query keeps a single space; it must not align to the outer ? across the brace (got '" + ls[1]
+                        + "')");
+        org.junit.jupiter.api.Assertions.assertTrue(ls[1].startsWith("    "),
+                "inner query indented one level: " + ls[1]);
         assertEquals(out, format(out), "idempotent");
     }
 
-    /** Like above but with a long outer LHS so cross-brace alignment would visibly pad the inner marker. */
+    /**
+     * Like above but with a long outer LHS so cross-brace alignment would visibly
+     * pad the inner marker.
+     */
     @Test
     void alignmentDoesNotCrossBraceFromBlockOpenerLongLhs() throws Exception {
         String out = format("""
@@ -844,7 +1022,8 @@ public class DocumentFormattingServiceTest {
                 """);
         String[] ls = out.split("\n", -1);
         org.junit.jupiter.api.Assertions.assertEquals("y ?", ls[1].trim(),
-            "inner query keeps a single space; it must not align to the outer ? across the brace (got '" + ls[1] + "')");
+                "inner query keeps a single space; it must not align to the outer ? across the brace (got '" + ls[1]
+                        + "')");
     }
 
     private static int indexOfQuestion(String text, int lineIndex) {
@@ -853,7 +1032,7 @@ public class DocumentFormattingServiceTest {
     }
 
     private static String format(String content) throws ExecutionException, InterruptedException {
-        NlDocumentManager       manager = new NlDocumentManager(new Workspace());
+        NlDocumentManager manager = new NlDocumentManager(new Workspace());
         manager.addDocument(URI, content, 1);
         DocumentFormattingService service = new DocumentFormattingService(manager);
 
@@ -864,11 +1043,14 @@ public class DocumentFormattingServiceTest {
         return apply(content, edits == null ? List.of() : edits);
     }
 
-    /** Apply LSP text edits (all single-line here) to {@code text}, splicing from the back so offsets stay valid. */
+    /**
+     * Apply LSP text edits (all single-line here) to {@code text}, splicing from
+     * the back so offsets stay valid.
+     */
     private static String apply(String text, List<? extends TextEdit> edits) {
-        String[] lines     = text.split("\n", -1);
-        int[]    lineStart = new int[lines.length];
-        int      acc       = 0;
+        String[] lines = text.split("\n", -1);
+        int[] lineStart = new int[lines.length];
+        int acc = 0;
         for (int i = 0; i < lines.length; i++) {
             lineStart[i] = acc;
             acc += lines[i].length() + 1; // + 1 for the '\n'
@@ -877,7 +1059,8 @@ public class DocumentFormattingServiceTest {
         sorted.sort(Comparator.comparingInt((TextEdit e) -> offset(lineStart, e.getRange().getStart())).reversed());
         StringBuilder sb = new StringBuilder(text);
         for (TextEdit e : sorted) {
-            sb.replace(offset(lineStart, e.getRange().getStart()), offset(lineStart, e.getRange().getEnd()), e.getNewText());
+            sb.replace(offset(lineStart, e.getRange().getStart()), offset(lineStart, e.getRange().getEnd()),
+                    e.getNewText());
         }
         return sb.toString();
     }
