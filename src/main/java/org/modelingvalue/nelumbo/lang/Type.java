@@ -506,19 +506,11 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type toList() {
-        return toList(group());
-    }
-
-    public Type toSet() {
-        return toSet(group());
-    }
-
-    public Type toList(String group) {
         return LIST.setArguments(List.of(this)).setGroup(group());
 
     }
 
-    public Type toSet(String group) {
+    public Type toSet() {
         return SET.setArguments(List.of(this)).setGroup(group());
     }
 
