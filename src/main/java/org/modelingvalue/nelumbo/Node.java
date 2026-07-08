@@ -95,15 +95,16 @@ public class Node extends StructImpl implements AstElement {
         return set(nodeInfo.resetDeclaration(), array);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private Object resetDeclaration(Object from) {
         if (from instanceof Node node) {
             return node.resetDeclaration();
-        } else if (from instanceof List<?> list) {
-            List<Object> l = List.of();
-            for (Object e : list) {
-                l = l.add(resetDeclaration(e));
+        } else if (from instanceof ContainingCollection coll) {
+            ContainingCollection c = coll.clear();
+            for (Object e : coll) {
+                c = c.add(resetDeclaration(e));
             }
-            return l;
+            return c;
         }
         return from;
     }

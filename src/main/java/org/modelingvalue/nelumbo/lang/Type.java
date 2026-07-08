@@ -97,6 +97,7 @@ public final class Type extends Node implements FunctorOrType {
                 LIST);
     }
 
+    private final Type     original;
     private final TypeInfo typeInfo;
 
     @Override
@@ -116,53 +117,54 @@ public final class Type extends Node implements FunctorOrType {
 
     @NelumboConstructor
     public Type(NodeInfo nodeInfo, Object... args) {
+        this(nodeInfo, null, args);
+    }
+
+    private Type(NodeInfo nodeInfo, Type original, Object... args) {
         super(nodeInfo, args);
         if (args.length > 1 && get(1) instanceof Set) {
+            this.original = original != null ? original : this;
             KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
             Type canonical = knowledgeBase.getType(this);
             if (canonical == null) {
-                this.typeInfo = initTypeInfo();
+                this.typeInfo = new TypeInfo();
                 knowledgeBase.register(this);
             } else {
                 this.typeInfo = canonical.typeInfo;
             }
         } else {
+            this.original = null;
             this.typeInfo = null;
         }
     }
 
-    private Type(NodeInfo nodeInfo, TypeInfo typeInfo, Object... args) {
-        super(nodeInfo, args);
-        this.typeInfo = typeInfo;
-    }
-
     public Type(Class<?> clss, Type... supers) {
-        this(NodeInfo.of(TYPE), clss, Set.of(supers), group(supers));
+        this(NodeInfo.of(TYPE), null, clss, Set.of(supers), group(supers));
     }
 
     public Type(String name, String group, Type... supers) {
-        this(NodeInfo.of(TYPE), name, Set.of(supers), group);
+        this(NodeInfo.of(TYPE), null, name, Set.of(supers), group);
     }
 
     public Type(String name, Type... supers) {
-        this(NodeInfo.of(TYPE), name, Set.of(supers), group(supers));
+        this(NodeInfo.of(TYPE), null, name, Set.of(supers), group(supers));
     }
 
     public Type(TokenType type) {
-        this(NodeInfo.of(TYPE), type, Set.of(), DEFAULT_GROUP);
+        this(NodeInfo.of(TYPE), null, type, Set.of(), DEFAULT_GROUP);
     }
 
     public Type(Variable var) {
-        this(NodeInfo.of(TYPE, List.of(var)), var, Set.of(OBJECT), DEFAULT_GROUP);
+        this(NodeInfo.of(TYPE, List.of(var)), null, var, Set.of(OBJECT), DEFAULT_GROUP);
         assert Type.TYPE.equals(var.type());
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
-        this(NodeInfo.of(TYPE, elements), name, supers.asSet(), group);
+        this(NodeInfo.of(TYPE, elements), null, name, supers.asSet(), group);
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group, List<Type> args) {
-        this(NodeInfo.of(TYPE, elements), name, supers.asSet(), group, args);
+        this(NodeInfo.of(TYPE, elements), null, name, supers.asSet(), group, args);
     }
 
     private Type(String name, Type sup, List<Type> args, String group) {
@@ -170,11 +172,20 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type(List<AstElement> elements, Set<Type> all) {
-        this(NodeInfo.of(TYPE, elements), all, Set.of(), all.get(0).group());
+        this(NodeInfo.of(TYPE, elements), null, all, Set.of(), all.get(0).group());
     }
 
     private Type(Set<Type> all, String group) {
-        this(NodeInfo.of(TYPE), all, Set.of(), group);
+        this(all, manyOriginal(all, group), group);
+    }
+
+    private Type(Set<Type> all, Type original, String group) {
+        this(NodeInfo.of(TYPE), original, all, Set.of(), group);
+    }
+
+    protected static Type manyOriginal(Set<Type> all, String group) {
+        Set<Type> orig = all.replaceAll(Type::original);
+        return all.equals(orig) ? null : new Type(orig, null, group);
     }
 
     private static Object group(Type... supers) {
@@ -183,7 +194,7 @@ public final class Type extends Node implements FunctorOrType {
 
     @Override
     protected Type set(NodeInfo nodeInfo, Object[] args) {
-        return new Type(nodeInfo, args);
+        return new Type(nodeInfo, original(), args);
     }
 
     @Override
@@ -224,26 +235,37 @@ public final class Type extends Node implements FunctorOrType {
         return (List<Type>) get(3);
     }
 
+    public Type original() {
+        return original;
+    }
+
     public Type setArguments(List<Type> arguments) {
         if (arguments().equals(arguments)) {
             return this;
-        } else {
-            if (isMany()) {
-                return set(0, many().replaceAll(t -> t.hasArguments() ? t.setArguments(arguments) : t));
-            }
-            Set<Type> supers = supersDeclaration().replaceAll(s -> {
-                if (s.hasArguments()) {
-                    List<Type> args = List.of();
-                    for (Type a : s.arguments()) {
-                        int i = arguments().index(a);
-                        args = args.add(arguments.get(i));
-                    }
-                    return s.setArguments(args);
-                }
-                return s;
-            });
-            return set(1, supers, group(), arguments);
+        } else if (isMany()) {
+            return set(0, many().replaceAll(t -> t.hasArguments() ? t.setArguments(arguments) : t));
         }
+        return set(1, original().actualSupers(arguments), group(), arguments);
+    }
+
+    public Set<Type> actualSupers(List<Type> actArgs) {
+        List<Type> origArgs = hasArguments() ? arguments() : List.of();
+        return supersDeclaration().replaceAll(s -> {
+            if (s.hasArguments()) {
+                List<Type> supArgs = s.arguments();
+                for (int i = 0; i < supArgs.size(); i++) {
+                    Type arg = supArgs.get(i);
+                    if (arg.variable() != null) {
+                        int idx = origArgs.firstIndexOf(arg);
+                        if (idx >= 0) {
+                            supArgs = supArgs.replace(i, actArgs.get(idx));
+                        }
+                    }
+                }
+                return s.setArguments(supArgs);
+            }
+            return s;
+        });
     }
 
     public Set<Variable> typeVariables() {
@@ -297,18 +319,42 @@ public final class Type extends Node implements FunctorOrType {
         return (Type) super.setBinding(declaration(), vars, setFunctorOrType);
     }
 
-    private static record TypeInfo(Set<Type> supers, List<Type> allSupersList, Set<Type> allSupersSet,
-            TypeMatcher typeMatcher) {
+    public class TypeInfo {
+        private Set<Type>               supers;
+        private List<Entry<Type, Type>> allSupersList;
+        private Map<Type, Type>         allSupersMap;
+        private TypeMatcher             typeMatcher;
+
+        public Set<Type> supers() {
+            if (supers == null) {
+                supers = initSupers();
+            }
+            return supers;
+        }
+
+        public List<Entry<Type, Type>> allSupersList() {
+            if (allSupersList == null) {
+                allSupersList = initAllSupersList();
+            }
+            return allSupersList;
+        }
+
+        public Map<Type, Type> allSupersMap() {
+            if (allSupersMap == null) {
+                allSupersMap = allSupersList().asMap(e -> e);
+            }
+            return allSupersMap;
+        }
+
+        public TypeMatcher typeMatcher() {
+            if (typeMatcher == null) {
+                typeMatcher = initTypeMatcher();
+            }
+            return typeMatcher;
+        }
     }
 
-    private TypeInfo initTypeInfo() {
-        Set<Type> supersSet = initSupersSet();
-        List<Type> allSupersList = initSupersList(supersSet);
-        TypeMatcher typeMatcher = initTypeMatcher();
-        return new TypeInfo(supersSet, allSupersList, allSupersList.asSet(), typeMatcher);
-    }
-
-    private Set<Type> initSupersSet() {
+    private Set<Type> initSupers() {
         if (isMany()) {
             Set<Type> result = Set.of();
             Set<Type> many = many();
@@ -340,18 +386,31 @@ public final class Type extends Node implements FunctorOrType {
         return supers.size() > 1 ? Set.of(new Type(supers, group())) : supers;
     }
 
-    private List<Type> initSupersList(Set<Type> supersSet) {
-        List<Type> pre = List.of(), post = List.of(this);
-        do {
-            int i = pre.size();
-            pre = post;
-            for (; i < pre.size(); i++) {
-                Type type = pre.get(i);
-                Set<Type> superSuperSet = type == this ? supersSet : type.supers();
-                post = post.removeAll(superSuperSet).addAll(superSuperSet);
+    private List<Entry<Type, Type>> initAllSupersList() {
+        List<Entry<Type, Type>> all = List.of(Entry.of(this, this));
+        for (int i = 0; i < all.size();) {
+            List<Entry<Type, Type>> add = List.of();
+            for (; i < all.size(); i++) {
+                Entry<Type, Type> entry = all.get(i);
+                for (Type sup : entry.getKey().supers()) {
+                    Type sub = sup;
+                    if (sup.hasArguments()) {
+                        for (Entry<Type, Type> e : all.reverse()) {
+                            if (e.getKey().original().equals(sup.original())) {
+                                sub = e.getValue();
+                                break;
+                            }
+                        }
+                    }
+                    add = add.addUnique(Entry.of(sup, sub));
+                }
             }
-        } while (post.size() > pre.size());
-        return post;
+            if (!add.isEmpty()) {
+                all = all.removeAll(add).addAll(add);
+                i = all.size() - add.size();
+            }
+        }
+        return all;
     }
 
     private TypeMatcher initTypeMatcher() {
@@ -364,25 +423,29 @@ public final class Type extends Node implements FunctorOrType {
             for (Type arg : args.reverse()) {
                 next = typeMatcher(arg, next);
             }
-            type = type.setArguments(args.replaceAll(a -> $OBJECT));
+            type = type.setArguments(args.replaceAll(a -> OBJECT.isAssignableFrom(a) ? OBJECT : a));
         }
         return new TypeMatcher(Map.of(Entry.of(type, next)), null);
     }
 
+    public TypeInfo typeInfo() {
+        return typeInfo;
+    }
+
     public Set<Type> supers() {
-        return typeInfo.supers;
+        return typeInfo().supers();
     }
 
-    public List<Type> allSupersList() {
-        return typeInfo.allSupersList;
+    public List<Entry<Type, Type>> allSupersList() {
+        return typeInfo().allSupersList();
     }
 
-    public Set<Type> allSupersSet() {
-        return typeInfo.allSupersSet;
+    public Map<Type, Type> allSupersMap() {
+        return typeInfo().allSupersMap();
     }
 
     public TypeMatcher typeMatcher() {
-        return typeInfo.typeMatcher;
+        return typeInfo().typeMatcher();
     }
 
     public boolean isFunction() {
@@ -531,7 +594,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public boolean isAssignableFrom(Type type) {
-        return type.allSupersSet().contains(this);
+        return type.allSupersMap().containsKey(this);
     }
 
     public Type common(Type other) {

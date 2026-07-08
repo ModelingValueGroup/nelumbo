@@ -16,6 +16,7 @@
 
 package org.modelingvalue.nelumbo;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.Mergeable;
@@ -54,7 +55,8 @@ public abstract class AbstractState<S extends AbstractState> implements Mergeabl
     protected <K> Map<K, S> inherit(Map<K, S> transitions) {
         for (Object key : transitions.toKeys()) {
             if (key instanceof Type subType) {
-                for (Type superType : subType.allSupersList()) {
+                for (Entry<Type, Type> entry : subType.allSupersList()) {
+                    Type superType = entry.getKey();
                     if (!superType.equals(subType)) {
                         S superState = transitions.get((K) superType);
                         if (superState != null) {
