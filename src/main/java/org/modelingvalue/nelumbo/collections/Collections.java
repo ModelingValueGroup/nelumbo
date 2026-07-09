@@ -155,8 +155,8 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        InferContext c = context();
-        NSet filter = new NSet(a.elementType(), a.collection().filter(e -> filter(e, l, c)).asSet());
+        InferContext ctx = context();
+        NSet filter = new NSet(a.elementType(), a.collection().filter(e -> l.test(ctx, e)).asSet());
         if (b != null) {
             return filter.equals(b) ? factCC() : falsehoodCC();
         }
@@ -168,18 +168,12 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        InferContext c = context();
-        NList filter = new NList(a.elementType(), a.collection().filter(e -> filter(e, l, c)).asList());
+        InferContext ctx = context();
+        NList filter = new NList(a.elementType(), a.collection().filter(e -> l.test(ctx, e)).asList());
         if (b != null) {
             return filter.equals(b) ? factCC() : falsehoodCC();
         }
         return set(2, filter).factCI();
-    }
-
-    private static boolean filter(Object e, Lambda l, InferContext ctx) {
-        Predicate p = (Predicate) l.setVariables(e).expression();
-        InferResult result = p.resolve(ctx);
-        return result.isTrueCC();
     }
 
 }

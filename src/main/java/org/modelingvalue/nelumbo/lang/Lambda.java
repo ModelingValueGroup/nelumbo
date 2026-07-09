@@ -27,6 +27,8 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.logic.InferContext;
+import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -73,13 +75,19 @@ public class Lambda extends Node {
         return set(0, args.removeLast(), args.last());
     }
 
-    public Lambda setVariables(Object... val) {
+    private Lambda setVariables(Object... vals) {
         Map<Variable, Object> binding = Map.of();
         List<Variable> localVars = localVars();
-        for (int i = 0; i < val.length; i++) {
-            binding = binding.add(localVars.get(i), val[i]);
+        for (int i = 0; i < vals.length; i++) {
+            binding = binding.add(localVars.get(i), vals[i]);
         }
         return (Lambda) setBinding(declaration(), binding, false);
+    }
+
+    public boolean test(InferContext ctx, Object... vals) {
+        Predicate p = (Predicate) setVariables(vals).expression();
+        InferResult result = p.resolve(ctx);
+        return result.isTrueCC();
     }
 
 }

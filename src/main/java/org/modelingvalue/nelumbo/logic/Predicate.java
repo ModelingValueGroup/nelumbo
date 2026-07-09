@@ -43,8 +43,6 @@ public class Predicate extends Node {
     @Serial
     private static final long serialVersionUID = -1605559565948158856L;
 
-    private static final ThreadLocal<InferContext> CURRENT_CONTEXT = new ThreadLocal<>();
-
     protected static final boolean RANDOM_NELUMBO  = Boolean.getBoolean("RANDOM_NELUMBO");
     protected static final boolean REVERSE_NELUMBO = Boolean.getBoolean("REVERSE_NELUMBO");
     protected static final int     MAX_LOGIC_DEPTH = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
@@ -80,10 +78,6 @@ public class Predicate extends Node {
             localVariables = super.allLocalVars();
         }
         return localVariables;
-    }
-
-    public static InferContext context() {
-        return CURRENT_CONTEXT.get();
     }
 
     public final boolean isFullyBound() {

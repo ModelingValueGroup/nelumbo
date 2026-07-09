@@ -40,6 +40,7 @@ import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
+import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -51,6 +52,12 @@ public class Node extends StructImpl implements AstElement {
     @Serial
     private static final long serialVersionUID = 7315776001191198132L;
     //
+    protected static final ThreadLocal<InferContext> CURRENT_CONTEXT = new ThreadLocal<>();
+
+    public static InferContext context() {
+        return CURRENT_CONTEXT.get();
+    }
+
     private final NodeInfo nodeInfo;
 
     //
