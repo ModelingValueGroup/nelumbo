@@ -25,6 +25,8 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.integers.NInteger;
+import org.modelingvalue.nelumbo.lang.Lambda;
+import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
@@ -146,6 +148,38 @@ public class Collections extends Predicate {
             return concat.equals(c) ? factCC() : falsehoodCC();
         }
         return set(2, concat).factCI();
+    }
+
+    @NelumboMethod
+    protected InferResult setFilter(NSet a, Lambda l, NSet b) {
+        if (a == null || l == null) {
+            return unknown();
+        }
+        InferContext c = context();
+        NSet filter = new NSet(a.elementType(), a.collection().filter(e -> filter(e, l, c)).asSet());
+        if (b != null) {
+            return filter.equals(b) ? factCC() : falsehoodCC();
+        }
+        return set(2, filter).factCI();
+    }
+
+    @NelumboMethod
+    protected InferResult listFilter(NList a, Lambda l, NList b) {
+        if (a == null || l == null) {
+            return unknown();
+        }
+        InferContext c = context();
+        NList filter = new NList(a.elementType(), a.collection().filter(e -> filter(e, l, c)).asList());
+        if (b != null) {
+            return filter.equals(b) ? factCC() : falsehoodCC();
+        }
+        return set(2, filter).factCI();
+    }
+
+    private static boolean filter(Object e, Lambda l, InferContext ctx) {
+        Predicate p = (Predicate) l.setVariables(e).expression();
+        InferResult result = p.resolve(ctx);
+        return result.isTrueCC();
     }
 
 }

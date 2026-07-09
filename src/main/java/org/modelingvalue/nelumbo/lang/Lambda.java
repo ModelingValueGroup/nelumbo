@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.lang;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -71,4 +72,14 @@ public class Lambda extends Node {
         List<Object> args = args();
         return set(0, args.removeLast(), args.last());
     }
+
+    public Lambda setVariables(Object... val) {
+        Map<Variable, Object> binding = Map.of();
+        List<Variable> localVars = localVars();
+        for (int i = 0; i < val.length; i++) {
+            binding = binding.add(localVars.get(i), val[i]);
+        }
+        return (Lambda) setBinding(declaration(), binding, false);
+    }
+
 }

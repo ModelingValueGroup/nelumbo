@@ -423,7 +423,7 @@ public class Node extends StructImpl implements AstElement {
         return v instanceof Type type ? type : v instanceof Node node ? node.type() : null;
     }
 
-    protected Node set(Variable var, Object val) {
+    public Node set(Variable var, Object val) {
         return setBinding(declaration(), Map.of(Entry.of(var, val)), false);
     }
 

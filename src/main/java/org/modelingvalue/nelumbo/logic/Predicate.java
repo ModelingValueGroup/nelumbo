@@ -43,6 +43,8 @@ public class Predicate extends Node {
     @Serial
     private static final long serialVersionUID = -1605559565948158856L;
 
+    private static final ThreadLocal<InferContext> CURRENT_CONTEXT = new ThreadLocal<>();
+
     protected static final boolean RANDOM_NELUMBO  = Boolean.getBoolean("RANDOM_NELUMBO");
     protected static final boolean REVERSE_NELUMBO = Boolean.getBoolean("REVERSE_NELUMBO");
     protected static final int     MAX_LOGIC_DEPTH = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
@@ -78,6 +80,10 @@ public class Predicate extends Node {
             localVariables = super.allLocalVars();
         }
         return localVariables;
+    }
+
+    public static InferContext context() {
+        return CURRENT_CONTEXT.get();
     }
 
     public final boolean isFullyBound() {
@@ -148,7 +154,7 @@ public class Predicate extends Node {
     }
 
     @Override
-    protected Predicate set(Variable var, Object val) {
+    public Predicate set(Variable var, Object val) {
         return (Predicate) super.set(var, val);
     }
 
@@ -305,11 +311,12 @@ public class Predicate extends Node {
 
     private InferResult doInfer(int nrOfUnbound, InferContext context) {
         Method method = functor().method();
-        return method != null ? callMethod(method) : infer(nrOfUnbound, context);
+        return method != null ? callMethod(method, context) : infer(nrOfUnbound, context);
     }
 
-    private InferResult callMethod(Method method) {
+    private InferResult callMethod(Method method, InferContext context) {
         try {
+            CURRENT_CONTEXT.set(context);
             Object[] args = toArray();
             for (int i = 0; i < args.length; i++) {
                 if (args[i] instanceof Type) {
@@ -319,6 +326,8 @@ public class Predicate extends Node {
             return (InferResult) method.invoke(this, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new IllegalArgumentException(e);
+        } finally {
+            CURRENT_CONTEXT.remove();
         }
     }
 
