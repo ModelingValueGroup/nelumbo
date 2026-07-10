@@ -156,7 +156,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 type = nat.setAstElements(type.astElements());
             }
         }
-        Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, null, Type.class, null);
+        Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, var != null ? Type.NAMESPACE : null, Type.class,
+                null);
         functor.init(this, ctx, bootstrapping);
         return functor;
     }
