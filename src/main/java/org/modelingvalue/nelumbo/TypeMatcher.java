@@ -80,7 +80,6 @@ public class TypeMatcher {
                 } else {
                     result = result.add(state);
                 }
-                break;
             }
         }
         if (!type.hasArguments() && (result.isEmpty() || type.variable() == null)) {

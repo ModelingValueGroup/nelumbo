@@ -72,6 +72,10 @@ public interface InferResult {
         return allFalsehoods().isEmpty() && !allFacts().isEmpty() && completeFalsehoods() && completeFacts();
     }
 
+    default boolean isTrueCI() {
+        return allFalsehoods().isEmpty() && !allFacts().isEmpty() && !completeFalsehoods() && completeFacts();
+    }
+
     default boolean isFalseCC() {
         return allFacts().isEmpty() && !allFalsehoods().isEmpty() && completeFacts() && completeFalsehoods();
     }

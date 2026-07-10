@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
@@ -34,12 +35,15 @@ import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
-public class Lambda extends Node {
+public final class Lambda extends Node {
     @Serial
     private static final long serialVersionUID = -8085779803830595557L;
 
     @NelumboFunctorField
     private static Functor FUNCTOR;
+
+    private Variable var;
+    private NIs      is;
 
     @NelumboConstructor
     public Lambda(NodeInfo nodeInfo, Object... args) {
@@ -60,6 +64,22 @@ public class Lambda extends Node {
         return (Node) get(1);
     }
 
+    protected NIs is() {
+        if (is == null) {
+            Variable r = var();
+            is = new NIs(List.of(), expression(), r).setBinding(Map.of(Entry.of(r, r.type())));
+        }
+        return is;
+    }
+
+    protected Variable var() {
+        if (var == null) {
+            Type t = type().arguments().last().toLiteral();
+            var = new Variable(List.of(), false, t, "$r");
+        }
+        return var;
+    }
+
     @Override
     protected boolean doGetBinding(Object varVal, int i) {
         return i > 0 || varVal instanceof Variable;
@@ -76,39 +96,36 @@ public class Lambda extends Node {
         return set(0, args.removeLast(), args.last());
     }
 
-    private Lambda setVariables(Object... vals) {
+    private Node setVariables(Object... vals) {
         Map<Variable, Object> binding = Map.of();
         List<Variable> localVars = localVars();
         for (int i = 0; i < vals.length; i++) {
             binding = binding.add(localVars.get(i), vals[i]);
         }
-        return (Lambda) setBinding(declaration(), binding, false);
+        return expression().setBinding(binding);
     }
 
     public boolean test(Object... vals) {
-        Predicate p = (Predicate) setVariables(vals).expression();
-        InferResult result = resolve(p);
+        Predicate p = (Predicate) setVariables(vals);
+        InferResult result = resolve(p, true);
         return result != null && result.isTrueCC();
     }
 
     @SuppressWarnings("unchecked")
     public <R> R apply(Object... vals) {
-        Node l = setVariables(vals).expression();
-        Type t = type().arguments().last();
-        Variable r = new Variable(List.of(), false, t, "$r");
-        Predicate p = new NIs(List.of(), l, r);
-        InferResult result = resolve(p);
-        Predicate fact = result != null && result.isTrueCC() ? result.facts().findFirst().orElse(null) : null;
-        return fact != null ? (R) fact.getBinding().get(r) : null;
+        Predicate p = is().set(0, setVariables(vals));
+        InferResult result = resolve(p, false);
+        Predicate fact = result != null && result.isTrueCI() ? result.facts().findFirst().orElse(null) : null;
+        return fact != null ? (R) fact.getBinding().get(var()) : null;
     }
 
-    private InferResult resolve(Predicate p) {
-        InferContext ctx = context();
+    private InferResult resolve(Predicate p, boolean bool) {
+        InferContext ctx = CURRENT_CONTEXT.get();
         InferResult result = p.resolve(ctx);
         if (result.hasStackOverflow()) {
             ctx.incompleteResult().set(result);
         }
-        if (!result.isTrueCC() && !result.isFalseCC()) {
+        if (!isComplete(result, bool)) {
             ctx.incompleteResult().accumulateAndGet(result, (a, b) -> {
                 if (a == null) {
                     return b;
@@ -120,6 +137,10 @@ public class Lambda extends Node {
             });
         }
         return result;
+    }
+
+    private boolean isComplete(InferResult result, boolean bool) {
+        return bool ? (result.isTrueCC() || result.isFalseCC()) : result.isTrueCI();
     }
 
 }

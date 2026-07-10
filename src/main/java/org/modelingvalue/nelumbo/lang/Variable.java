@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
@@ -65,8 +66,8 @@ public final class Variable extends Node {
         return type.isLiteral() ? this : new Variable(astElements(), hidden(), type.toLiteral(), name());
     }
 
-    public Variable rename(String name) {
-        return new Variable(astElements(), hidden(), type(), name);
+    public Variable rename(Function<String, String> rename) {
+        return new Variable(astElements(), hidden(), type(), rename.apply(name()));
     }
 
     public boolean hidden() {

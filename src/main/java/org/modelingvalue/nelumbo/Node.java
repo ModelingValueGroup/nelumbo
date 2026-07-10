@@ -52,12 +52,8 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 public class Node extends StructImpl implements AstElement {
     @Serial
     private static final long serialVersionUID = 7315776001191198132L;
-    //
-    protected static final Context<InferContext> CURRENT_CONTEXT = Context.of(null);
 
-    public static InferContext context() {
-        return CURRENT_CONTEXT.get();
-    }
+    protected static final Context<InferContext> CURRENT_CONTEXT = Context.of(null);
 
     private final NodeInfo nodeInfo;
 
@@ -406,9 +402,9 @@ public class Node extends StructImpl implements AstElement {
                 if (thisVal != null && doGetBinding(thisVal, i)) {
                     vars = vars.put(declVar, thisVal);
                     if (thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
-                        vars = vars.putAll(thisNode.getBinding().replaceAll(e -> {
+                        vars = vars.putAll(thisNode.getBinding().removeAllKey(allLocalVars()).replaceAll(e -> {
                             Variable nodeVar = e.getKey();
-                            return Entry.of(nodeVar.rename("$" + nodeVar.name()), e.getValue());
+                            return Entry.of(nodeVar.rename(n -> "$" + n), e.getValue());
                         }));
                     }
                 }

@@ -154,9 +154,9 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NSet filter = new NSet(a.elementType(), a.collection().filter(e -> l.test(e)).asSet());
-        if (context().hasIncompleteResult()) {
-            return context().incompleteResult(this);
+        NSet filter = new NSet(a.elementType(), a.collection().filter(l::test).asSet());
+        if (hasIncompleteResult()) {
+            return incompleteResult();
         }
         if (b != null) {
             return filter.equals(b) ? factCC() : falsehoodCC();
@@ -169,9 +169,9 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList filter = new NList(a.elementType(), a.collection().filter(e -> l.test(e)).asList());
-        if (context().hasIncompleteResult()) {
-            return context().incompleteResult(this);
+        NList filter = new NList(a.elementType(), a.collection().filter(l::test).asList());
+        if (hasIncompleteResult()) {
+            return incompleteResult();
         }
         if (b != null) {
             return filter.equals(b) ? factCC() : falsehoodCC();
@@ -179,4 +179,18 @@ public class Collections extends Predicate {
         return set(2, filter).factCI();
     }
 
+    @NelumboMethod
+    protected InferResult map(NCollection a, Lambda l, NList b) {
+        if (a == null || l == null) {
+            return unknown();
+        }
+        NList filter = new NList(a.elementType(), a.collection().map(l::apply).asList());
+        if (hasIncompleteResult()) {
+            return incompleteResult();
+        }
+        if (b != null) {
+            return filter.equals(b) ? factCC() : falsehoodCC();
+        }
+        return set(2, filter).factCI();
+    }
 }

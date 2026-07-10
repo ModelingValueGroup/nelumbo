@@ -80,10 +80,6 @@ public final class NList extends NCollection {
         return (NList) super.setAstElements(elements);
     }
 
-    public Type elementType() {
-        return type().arguments().first();
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public <T> List<T> collection() {
