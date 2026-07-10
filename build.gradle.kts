@@ -40,6 +40,7 @@ dependencies {
 
 tasks {
     register<ShadowJar>("editorJar") {
+        description = "produce the jar for running the editor"
         archiveClassifier.set("editor")
         manifest {
             attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboEditor"
