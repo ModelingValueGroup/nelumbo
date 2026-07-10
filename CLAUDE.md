@@ -15,6 +15,7 @@ Requires **Java 21+**. Uses Gradle 8.14.3 (Kotlin DSL) via wrapper.
 ./gradlew test                           # Run all tests (core + LSP server)
 ./gradlew jar                            # Core library only
 ./gradlew :lsp:server:serverJar          # LSP server shaded JAR
+./gradlew :http:serverJar                # HTTP server shaded JAR (nelumbo-http-server)
 ./gradlew :lsp:plugins:eclipse:jar       # Eclipse plugin
 ./gradlew :lsp:plugins:intellij:build    # IntelliJ plugin
 ./gradlew editorJar                      # Standalone editor (ShadowJar)
@@ -38,6 +39,7 @@ The root `test` task depends on `:lsp:server:test`, so `./gradlew test` runs bot
 
 ```
 nelumbo (root)              → Core language: syntax, semantics, pattern matching, knowledge base
+├── http                    → HTTP server (Javalin + Jackson): serves a KB over REST (/eval, /metadata, /health)
 ├── lsp/server              → LSP server (depends on root + LSP4J + Jackson + Tyrus WebSocket)
 └── lsp/plugins/
     ├── eclipse             → Eclipse IDE plugin (Java, dropins-based)

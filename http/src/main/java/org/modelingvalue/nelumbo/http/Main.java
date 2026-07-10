@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 
 /**
  * Command-line entry point: loads the given {@code .nl} files/directories into a base knowledge base and serves it over
- * HTTP. Usage: {@code nelumbo-http [--port N] <file-or-dir>...}.
+ * HTTP. Usage: {@code nelumbo-http [--port N] [<file-or-dir>...]}. Without files it starts with an empty knowledge base.
  */
 public final class Main {
 
@@ -61,7 +61,7 @@ public final class Main {
                 break;
             case "-h":
             case "--help":
-                printUsage(System.out);
+                printUsage();
                 return;
             default:
                 if (a.startsWith("-")) {
@@ -70,12 +70,6 @@ public final class Main {
                 paths.add(Path.of(a));
             }
         }
-        if (paths.isEmpty()) {
-            printUsage(System.err);
-            System.exit(2);
-            return;
-        }
-
         List<NamedSource> sources = new ArrayList<>();
         List<String>      files   = new ArrayList<>();
         for (Path path : paths) {
@@ -87,7 +81,7 @@ public final class Main {
                 files.add(name);
             }
         }
-        if (sources.isEmpty()) {
+        if (!paths.isEmpty() && sources.isEmpty()) {
             fail("no .nl files found in: " + paths);
         }
 
@@ -123,11 +117,13 @@ public final class Main {
         System.exit(2);
     }
 
-    private static void printUsage(PrintStream out) {
-        out.println("Usage: nelumbo-http [--port N] <file-or-dir>...");
+    private static void printUsage() {
+        PrintStream out = System.out;
+        out.println("Usage: nelumbo-http [--port N] [<file-or-dir>...]");
         out.println();
         out.println("Loads the given .nl files (directories are scanned for *.nl) into a knowledge base");
-        out.println("and serves it over HTTP. Endpoints:");
+        out.println("and serves it over HTTP. Without files it starts with an empty knowledge base.");
+        out.println("Endpoints:");
         out.println("  POST /eval         evaluate a posted Nelumbo document, returns query results as JSON");
         out.println("  POST /eval/trace   like /eval, with a (currently stubbed) trace field");
         out.println("  GET  /metadata     knowledge base metadata (types, counts, loaded files)");
