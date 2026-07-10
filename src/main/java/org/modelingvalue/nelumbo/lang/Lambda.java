@@ -29,6 +29,7 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
+import org.modelingvalue.nelumbo.logic.NIs;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -88,6 +89,17 @@ public class Lambda extends Node {
         Predicate p = (Predicate) setVariables(vals).expression();
         InferResult result = p.resolve(ctx);
         return result.isTrueCC();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <R> R apply(InferContext ctx, Object... vals) {
+        Node l = setVariables(vals).expression();
+        Type t = type().arguments().last();
+        Variable r = new Variable(List.of(), false, t, "$r");
+        Predicate p = new NIs(List.of(), l, r);
+        InferResult result = p.resolve(ctx);
+        Predicate fact = result.isTrueCC() ? result.facts().findFirst().orElse(null) : null;
+        return fact != null ? (R) fact.getBinding().get(r) : null;
     }
 
 }
