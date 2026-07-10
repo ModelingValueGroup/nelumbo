@@ -21,6 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.lang.Type;
 
 public abstract class NCollection extends Node {
     @Serial
@@ -37,6 +38,10 @@ public abstract class NCollection extends Node {
 
     public int size() {
         return collection().size();
+    }
+
+    public Type elementType() {
+        return type().arguments().first();
     }
 
 }

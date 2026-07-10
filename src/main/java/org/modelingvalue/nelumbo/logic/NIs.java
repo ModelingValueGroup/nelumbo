@@ -23,6 +23,7 @@ import static org.modelingvalue.nelumbo.patterns.Pattern.t;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
@@ -30,6 +31,7 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 public class NIs extends Predicate {
@@ -67,6 +69,11 @@ public class NIs extends Predicate {
     @Override
     public NIs set(int i, Object... a) {
         return (NIs) super.set(i, a);
+    }
+
+    @Override
+    public NIs setBinding(Map<Variable, Object> vars) {
+        return (NIs) super.setBinding(vars);
     }
 
     @Override

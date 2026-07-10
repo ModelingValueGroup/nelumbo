@@ -48,10 +48,6 @@ public class NSet extends NCollection {
         return Type.SET;
     }
 
-    public Type elementType() {
-        return type().arguments().first();
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public <T> Set<T> collection() {

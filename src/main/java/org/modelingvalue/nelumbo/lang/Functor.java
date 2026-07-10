@@ -366,8 +366,8 @@ public class Functor extends Node implements FunctorOrType {
         List<Type> args = pattern.argTypes(List.of());
         List<Type> gen = type.hasArguments() ? type.arguments() : List.of();
         if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
-                && !Type.PATTERN.isAssignableFrom(type)
-                && args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !gen.contains(t))) {
+                && !Type.PATTERN.isAssignableFrom(type) && (Lambda.class.equals(clazz)
+                        || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !gen.contains(t)))) {
             type = type.toLiteral();
         } else if (type.variable() == null) {
             if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)

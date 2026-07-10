@@ -112,7 +112,7 @@ public class Predicate extends Node {
     }
 
     protected static Map<Variable, Object> literals(Map<Variable, Object> vars, Function<String, String> rename) {
-        return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal().rename(rename.apply(e.getKey().name()))));
+        return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal().rename(rename)));
     }
 
     public Predicate setVariables(KnowledgeBase kb, Map<Variable, Object> vars, ParseContext ctx)
@@ -454,6 +454,14 @@ public class Predicate extends Node {
     @Override
     public Predicate setTypeArgs(Map<Variable, Type> typeArgs) {
         return (Predicate) super.setTypeArgs(typeArgs);
+    }
+
+    protected final InferResult incompleteResult() {
+        return CURRENT_CONTEXT.get().incompleteResult(this);
+    }
+
+    protected final boolean hasIncompleteResult() {
+        return CURRENT_CONTEXT.get().hasIncompleteResult();
     }
 
 }
