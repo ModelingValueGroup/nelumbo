@@ -157,6 +157,10 @@ public class Collections extends Predicate {
         }
         InferContext ctx = context();
         NSet filter = new NSet(a.elementType(), a.collection().filter(e -> l.test(ctx, e)).asSet());
+        InferResult result = ctx.incompleteResult().get();
+        if (result != null) {
+            return result.hasStackOverflow() ? result : unknown();
+        }
         if (b != null) {
             return filter.equals(b) ? factCC() : falsehoodCC();
         }
@@ -170,6 +174,10 @@ public class Collections extends Predicate {
         }
         InferContext ctx = context();
         NList filter = new NList(a.elementType(), a.collection().filter(e -> l.test(ctx, e)).asList());
+        InferResult result = ctx.incompleteResult().get();
+        if (result != null) {
+            return result.hasStackOverflow() ? result : unknown();
+        }
         if (b != null) {
             return filter.equals(b) ? factCC() : falsehoodCC();
         }

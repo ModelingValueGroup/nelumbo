@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -37,8 +39,10 @@ public interface InferContext {
 
     boolean trace();
 
+    AtomicReference<InferResult> incompleteResult();
+
     static InferContext of(KnowledgeBase knowledgebase, List<Predicate> stack, Map<Predicate, InferResult> cyclic, //
-            boolean shallow, boolean reduce, boolean trace) {
+            boolean shallow, boolean reduce, boolean trace, AtomicReference<InferResult> incompleteResult) {
         return new InferContext() {
             @Override
             public KnowledgeBase knowledgebase() {
@@ -70,31 +74,42 @@ public interface InferContext {
                 return trace;
             }
 
+            @Override
+            public AtomicReference<InferResult> incompleteResult() {
+                return incompleteResult;
+            }
+
         };
     }
 
     default InferContext pushOnStack(Predicate predicate) {
-        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false, trace());
+        return of(knowledgebase(), stack().append(predicate), cycleResult(), false, false, trace(), incompleteResult());
     }
 
     default InferContext putCycleResult(Predicate predicate, InferResult cycleResult) {
-        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false, trace());
+        return of(knowledgebase(), stack(), cycleResult().put(predicate, cycleResult), false, false, trace(),
+                incompleteResult());
     }
 
     default InferContext toReduce() {
-        return reduce() ? this : of(knowledgebase(), stack(), cycleResult(), false, true, trace());
+        return reduce() ? this : of(knowledgebase(), stack(), cycleResult(), false, true, trace(), incompleteResult());
     }
 
     default InferContext toShallow() {
-        return shallow() ? this : of(knowledgebase(), stack(), cycleResult(), true, false, trace());
+        return shallow() ? this : of(knowledgebase(), stack(), cycleResult(), true, false, trace(), incompleteResult());
     }
 
     default InferContext toDeep() {
-        return deep() ? this : of(knowledgebase(), stack(), cycleResult(), false, false, trace());
+        return deep() ? this : of(knowledgebase(), stack(), cycleResult(), false, false, trace(), incompleteResult());
     }
 
     default InferContext trace(boolean trace) {
-        return trace == trace() ? this : of(knowledgebase(), stack(), cycleResult(), shallow(), reduce(), trace);
+        return trace == trace() ? this
+                : of(knowledgebase(), stack(), cycleResult(), shallow(), reduce(), trace, incompleteResult());
+    }
+
+    default InferContext withResult() {
+        return of(knowledgebase(), stack(), cycleResult(), shallow(), reduce(), trace(), new AtomicReference<>());
     }
 
     default String prefix() {

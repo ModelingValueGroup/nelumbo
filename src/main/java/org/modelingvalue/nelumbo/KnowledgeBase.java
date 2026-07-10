@@ -316,15 +316,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
         this.deadlineNanos = init != null ? init.deadlineNanos : 0;
-        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, TRACE_NELUMBO);
+        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, TRACE_NELUMBO, null);
         parseContext = ParseContext.of(Type.DEFAULT_GROUP, prePatterns, postPatterns, hiddenVariables);
         init();
     }
 
     /**
-     * Sets an absolute {@link System#nanoTime()} deadline for inference run in this knowledge base (and the child
-     * knowledge bases it spawns via {@link #run(Runnable)}). 0 disables the deadline. When set, inference checks the
-     * clock and throws {@link NelumboTimeoutException} once it is past.
+     * Sets an absolute {@link System#nanoTime()} deadline for inference run in this
+     * knowledge base (and the child knowledge bases it spawns via
+     * {@link #run(Runnable)}). 0 disables the deadline. When set, inference checks
+     * the clock and throws {@link NelumboTimeoutException} once it is past.
      */
     public void setDeadlineNanos(long deadlineNanos) {
         this.deadlineNanos = deadlineNanos;

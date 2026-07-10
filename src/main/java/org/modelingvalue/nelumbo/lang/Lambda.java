@@ -87,8 +87,8 @@ public class Lambda extends Node {
 
     public boolean test(InferContext ctx, Object... vals) {
         Predicate p = (Predicate) setVariables(vals).expression();
-        InferResult result = p.resolve(ctx);
-        return result.isTrueCC();
+        InferResult result = resolve(ctx, p);
+        return result != null && result.isTrueCC();
     }
 
     @SuppressWarnings("unchecked")
@@ -97,9 +97,28 @@ public class Lambda extends Node {
         Type t = type().arguments().last();
         Variable r = new Variable(List.of(), false, t, "$r");
         Predicate p = new NIs(List.of(), l, r);
-        InferResult result = p.resolve(ctx);
-        Predicate fact = result.isTrueCC() ? result.facts().findFirst().orElse(null) : null;
+        InferResult result = resolve(ctx, p);
+        Predicate fact = result != null && result.isTrueCC() ? result.facts().findFirst().orElse(null) : null;
         return fact != null ? (R) fact.getBinding().get(r) : null;
+    }
+
+    private InferResult resolve(InferContext ctx, Predicate p) {
+        InferResult result = p.resolve(ctx);
+        if (result.hasStackOverflow()) {
+            ctx.incompleteResult().set(result);
+        }
+        if (!result.isTrueCC() && !result.isFalseCC()) {
+            ctx.incompleteResult().accumulateAndGet(result, (a, b) -> {
+                if (a == null) {
+                    return b;
+                } else if (a.hasStackOverflow()) {
+                    return a;
+                } else {
+                    return a.add(b);
+                }
+            });
+        }
+        return result;
     }
 
 }

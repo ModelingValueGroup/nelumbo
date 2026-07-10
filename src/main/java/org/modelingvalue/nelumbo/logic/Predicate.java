@@ -309,20 +309,19 @@ public class Predicate extends Node {
     }
 
     private InferResult callMethod(Method method, InferContext context) {
-        try {
-            CURRENT_CONTEXT.set(context);
-            Object[] args = toArray();
-            for (int i = 0; i < args.length; i++) {
-                if (args[i] instanceof Type) {
-                    args[i] = null;
+        return CURRENT_CONTEXT.get(context.withResult(), () -> {
+            try {
+                Object[] args = toArray();
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i] instanceof Type) {
+                        args[i] = null;
+                    }
                 }
+                return (InferResult) method.invoke(this, args);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new IllegalArgumentException(e);
             }
-            return (InferResult) method.invoke(this, args);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new IllegalArgumentException(e);
-        } finally {
-            CURRENT_CONTEXT.remove();
-        }
+        });
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {

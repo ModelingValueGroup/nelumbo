@@ -32,6 +32,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.mutable.MutableSet;
 import org.modelingvalue.collections.struct.impl.StructImpl;
+import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.collections.util.StringUtil;
 import org.modelingvalue.nelumbo.collections.NList;
@@ -52,7 +53,7 @@ public class Node extends StructImpl implements AstElement {
     @Serial
     private static final long serialVersionUID = 7315776001191198132L;
     //
-    protected static final ThreadLocal<InferContext> CURRENT_CONTEXT = new ThreadLocal<>();
+    protected static final Context<InferContext> CURRENT_CONTEXT = Context.of(null);
 
     public static InferContext context() {
         return CURRENT_CONTEXT.get();
