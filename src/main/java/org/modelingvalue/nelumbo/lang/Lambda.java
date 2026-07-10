@@ -85,24 +85,25 @@ public class Lambda extends Node {
         return (Lambda) setBinding(declaration(), binding, false);
     }
 
-    public boolean test(InferContext ctx, Object... vals) {
+    public boolean test(Object... vals) {
         Predicate p = (Predicate) setVariables(vals).expression();
-        InferResult result = resolve(ctx, p);
+        InferResult result = resolve(p);
         return result != null && result.isTrueCC();
     }
 
     @SuppressWarnings("unchecked")
-    public <R> R apply(InferContext ctx, Object... vals) {
+    public <R> R apply(Object... vals) {
         Node l = setVariables(vals).expression();
         Type t = type().arguments().last();
         Variable r = new Variable(List.of(), false, t, "$r");
         Predicate p = new NIs(List.of(), l, r);
-        InferResult result = resolve(ctx, p);
+        InferResult result = resolve(p);
         Predicate fact = result != null && result.isTrueCC() ? result.facts().findFirst().orElse(null) : null;
         return fact != null ? (R) fact.getBinding().get(r) : null;
     }
 
-    private InferResult resolve(InferContext ctx, Predicate p) {
+    private InferResult resolve(Predicate p) {
+        InferContext ctx = context();
         InferResult result = p.resolve(ctx);
         if (result.hasStackOverflow()) {
             ctx.incompleteResult().set(result);

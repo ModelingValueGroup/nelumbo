@@ -26,7 +26,6 @@ import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.lang.Lambda;
-import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
 
@@ -155,11 +154,9 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        InferContext ctx = context();
-        NSet filter = new NSet(a.elementType(), a.collection().filter(e -> l.test(ctx, e)).asSet());
-        InferResult result = ctx.incompleteResult().get();
-        if (result != null) {
-            return result.hasStackOverflow() ? result : unknown();
+        NSet filter = new NSet(a.elementType(), a.collection().filter(e -> l.test(e)).asSet());
+        if (context().hasIncompleteResult()) {
+            return context().incompleteResult(this);
         }
         if (b != null) {
             return filter.equals(b) ? factCC() : falsehoodCC();
@@ -172,11 +169,9 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        InferContext ctx = context();
-        NList filter = new NList(a.elementType(), a.collection().filter(e -> l.test(ctx, e)).asList());
-        InferResult result = ctx.incompleteResult().get();
-        if (result != null) {
-            return result.hasStackOverflow() ? result : unknown();
+        NList filter = new NList(a.elementType(), a.collection().filter(e -> l.test(e)).asList());
+        if (context().hasIncompleteResult()) {
+            return context().incompleteResult(this);
         }
         if (b != null) {
             return filter.equals(b) ? factCC() : falsehoodCC();

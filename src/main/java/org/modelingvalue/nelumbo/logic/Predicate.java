@@ -240,7 +240,11 @@ public class Predicate extends Node {
     }
 
     public final InferResult unknown() {
-        return InferResult.unknown(this);
+        return InferResult.unknown(this, Set.of());
+    }
+
+    public final InferResult unknown(Set<Predicate> cycles) {
+        return InferResult.unknown(this, cycles);
     }
 
     public final InferResult factCC() {

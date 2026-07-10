@@ -41,6 +41,15 @@ public interface InferContext {
 
     AtomicReference<InferResult> incompleteResult();
 
+    default boolean hasIncompleteResult() {
+        return incompleteResult().get() != null;
+    }
+
+    default InferResult incompleteResult(Predicate predicate) {
+        InferResult incompleteResult = incompleteResult().get();
+        return incompleteResult.hasStackOverflow() ? incompleteResult : predicate.unknown(incompleteResult.cycles());
+    }
+
     static InferContext of(KnowledgeBase knowledgebase, List<Predicate> stack, Map<Predicate, InferResult> cyclic, //
             boolean shallow, boolean reduce, boolean trace, AtomicReference<InferResult> incompleteResult) {
         return new InferContext() {

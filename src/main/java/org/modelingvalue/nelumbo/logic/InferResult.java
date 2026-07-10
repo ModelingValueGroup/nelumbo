@@ -183,7 +183,7 @@ public interface InferResult {
         };
     }
 
-    static InferResult unknown(Predicate unknown) {
+    static InferResult unknown(Predicate unknown, Set<Predicate> cycles) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -208,6 +208,11 @@ public interface InferResult {
             @Override
             public Predicate predicate() {
                 return unknown;
+            }
+
+            @Override
+            public Set<Predicate> cycles() {
+                return cycles;
             }
         };
     }
