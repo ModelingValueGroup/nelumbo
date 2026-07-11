@@ -40,7 +40,7 @@ dependencies {
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
     implementation("io.javalin:javalin:6.3.0")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
     runtimeOnly("org.slf4j:slf4j-simple:2.0.16")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
