@@ -5,7 +5,9 @@
   "scripts": {
     "check": "tsc --noEmit",
     "build": "npm run check && node esbuild.mjs",
-    "dist": "npm ci && npm run build"
+    "dist": "npm ci && npm run build",
+    "test:e2e": "../../../../gradlew :http:serverJar && playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "monaco-editor": "~0.34.1",
@@ -14,6 +16,7 @@
     "vscode-ws-jsonrpc": "~2.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "esbuild": "^0.25.0",
     "typescript": "^5.4.5"
   }

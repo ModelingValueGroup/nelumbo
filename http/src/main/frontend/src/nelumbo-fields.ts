@@ -165,6 +165,11 @@ function connectLanguageClient(): Promise<MonacoLanguageClient | null> {
     });
 }
 
+// Test hook (used by the Playwright e2e suite via window.NelumboFields.__editors / .__monaco).
+// Read-only access to the mounted editors and the monaco namespace; harmless in production.
+export const __editors: Array<{ editor: monaco.editor.IStandaloneCodeEditor; model: monaco.editor.ITextModel }> = [];
+export const __monaco: typeof monaco = monaco;
+
 let servicesReady: boolean                                     = false;
 let clientPromise: Promise<MonacoLanguageClient | null> | null = null;
 let fieldIndex:    number                                      = 0;
@@ -251,6 +256,7 @@ function buildField(div: HTMLElement, index: number): void {
         // Cmd/Ctrl+Click goes to definition (Alt+Click is multi-cursor), the VS Code default made explicit
         multiCursorModifier:  'alt',
     });
+    __editors.push({ editor: editor, model: model });
 
     const run = (): void => {
         void runEval(model.getValue(), status, results);

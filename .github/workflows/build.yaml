@@ -62,7 +62,16 @@ jobs:
                         :lsp:plugins:intellij:buildPlugin \
                         mvgTagger \
                         build-slides
-            
+
+            ################################################################################
+            -   name: "e2e (playwright)"
+                working-directory: http/src/main/frontend
+                run : |
+                    npm ci
+                    npx playwright install --with-deps chromium
+                    ../../../../gradlew :http:serverJar
+                    npx playwright test
+
             ################################################################################
             -   name: "upload-editor-jar"
                 uses: actions/upload-artifact@v7

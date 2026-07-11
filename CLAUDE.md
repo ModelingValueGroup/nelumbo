@@ -118,6 +118,8 @@ The frontend is an npm project at `http/src/main/frontend/` (Monaco + monaco-lan
 
 The pages are `tour.html` (served at `/`): a sidebar feature tour with 8 sections, each with prose, a demo field, and self-checking exercises (the exercise query carries an expected result like `? [(r=120)][..]`, so the LSP mismatch squiggle confirms a solution); and `playground.html` (served at `/playground.html`): a single free-form field.
 
+End-to-end browser tests live in `http/src/main/frontend/e2e/` (Playwright, Chromium). In `http/src/main/frontend/` run `npm run test:e2e:install` once, then `npm run test:e2e` (which rebuilds `:http:serverJar` and runs the suite; `playwright.config.ts` spawns the jar on port 8899). They cover tour structure, Run->/eval, Show-solution, and the LSP features (diagnostics, hover, completion, go-to-definition) via the `NelumboFields.__editors`/`.__monaco` test hook. CI runs them after the build.
+
 **Public-deployment note.** The per-session guards above are in-process only. For a public site, front `/lsp` with a TLS reverse proxy that enforces per-IP connection limits (32 idle-but-pinging sockets can otherwise hold every session slot) and consider rate-limiting log output (malformed frames and unknown LSP methods each log a line).
 
 ## Code Conventions
