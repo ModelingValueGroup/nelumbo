@@ -46,10 +46,23 @@ final class LspBridge {
         Map<String, JsonRpcMethod> methods = ServiceEndpoints.getSupportedMethods(LanguageServer.class);
         methods.putAll(ServiceEndpoints.getSupportedMethods(LanguageClient.class));
         jsonHandler    = new MessageJsonHandler(methods);
-        remoteEndpoint = new RemoteEndpoint(message -> ctx.send(jsonHandler.serialize(message)), ServiceEndpoints.toEndpoint(List.of(server)));
+        remoteEndpoint = new RemoteEndpoint(message -> send(ctx, message), ServiceEndpoints.toEndpoint(List.of(server)));
         jsonHandler.setMethodProvider(remoteEndpoint);
         remoteEndpoint.setJsonHandler(jsonHandler);
         server.connect(ServiceEndpoints.toServiceObject(remoteEndpoint, LanguageClient.class));
+    }
+
+    private void send(WsContext ctx, Message message) {
+        // The client can close the socket (e.g. navigate away) while the server is still writing a
+        // notification/response. Skip closed sessions, and swallow the write-on-closed race so it does
+        // not surface as an error stack trace from the LSP endpoint - dropping the message is correct.
+        if (!ctx.session.isOpen()) {
+            return;
+        }
+        try {
+            ctx.send(jsonHandler.serialize(message));
+        } catch (Exception ignored) {
+        }
     }
 
     void onMessage(String json) {
