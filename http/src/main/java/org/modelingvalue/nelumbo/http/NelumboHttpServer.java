@@ -57,6 +57,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.http.staticfiles.Location;
 
 /**
  * HTTP front-end for a Nelumbo knowledge base. The base KB is loaded once at startup; every evaluating request runs
@@ -65,13 +66,16 @@ import io.javalin.http.Context;
 public final class NelumboHttpServer {
 
     /** Default per-request inference budget, in milliseconds. */
-    public static final long DEFAULT_TIMEOUT_MS = 30_000;
+    public static final  long DEFAULT_TIMEOUT_MS       = 30_000;
+    /** Default cap on concurrent LSP WebSocket sessions. */
+    public static final  int  DEFAULT_MAX_LSP_SESSIONS = 32;
     /** Extra wall-clock the HTTP backstop waits beyond the engine deadline before giving up. */
-    private static final long GRACE_MS = 2_000;
+    private static final long GRACE_MS                 = 2_000;
 
     private final KnowledgeBase baseKb;
     private final List<String>  loadedFiles;
     private final long          timeoutMs;
+    private final int           maxLspSessions;
     private final ObjectMapper  mapper = new ObjectMapper();
 
     private Javalin         app;
@@ -83,25 +87,46 @@ public final class NelumboHttpServer {
 
     /** {@code timeoutMs} is the per-request inference budget; 0 (or less) disables the timeout. */
     public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs) {
-        this.baseKb = baseKb;
-        this.loadedFiles = List.copyOf(loadedFiles);
-        this.timeoutMs = timeoutMs;
+        this(baseKb, loadedFiles, timeoutMs, DEFAULT_MAX_LSP_SESSIONS);
+    }
+
+    /** {@code maxLspSessions} caps the number of concurrent LSP WebSocket sessions. */
+    public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs, int maxLspSessions) {
+        this.baseKb         = baseKb;
+        this.loadedFiles    = List.copyOf(loadedFiles);
+        this.timeoutMs      = timeoutMs;
+        this.maxLspSessions = maxLspSessions;
     }
 
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
     public int start(int port) {
         String playground = loadResource("/public/playground.html");
+        String demo       = loadResource("/public/demo.html");
         evalExecutor = Executors.newCachedThreadPool(runnable -> {
             Thread thread = new Thread(runnable, "nelumbo-http-eval");
             thread.setDaemon(true);
             return thread;
         });
-        app = Javalin.create();
+        app = Javalin.create(config -> {
+            // serve the bundled frontend (Monaco js/css + codicon font) from the classpath under /assets
+            config.staticFiles.add(staticFiles -> {
+                staticFiles.hostedPath = "/assets";
+                staticFiles.directory  = "/public/assets";
+                staticFiles.location   = Location.CLASSPATH;
+                // Jetty has no default mapping for the codicon font
+                staticFiles.mimeTypes.add("font/ttf", "ttf");
+            });
+            // make the 64 KB text-frame limit explicit (Jetty's default is the same size, but do not rely on it)
+            config.jetty.modifyWebSocketServletFactory(factory ->
+                    factory.setMaxTextMessageSize(LspWebSocket.MAX_MESSAGE_CHARS));
+        });
         app.get("/", ctx -> ctx.html(playground));
+        app.get("/demo.html", ctx -> ctx.html(demo));
         app.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
         app.post("/eval", ctx -> handleEval(ctx, false));
         app.post("/eval/trace", ctx -> handleEval(ctx, true));
         app.get("/metadata", ctx -> ctx.json(metadata()));
+        app.ws("/lsp", new LspWebSocket(baseKb, timeoutMs, maxLspSessions)::configure);
         app.start(port);
         return app.port();
     }

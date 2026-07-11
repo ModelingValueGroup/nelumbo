@@ -77,6 +77,6 @@ tasks.shadowJar {
 }
 
 tasks.jar {
-    // Disable plain jar to avoid duplicate artifact name; we use the shaded jar as the main distribution
-    enabled = false
+    // plain jar (classifier avoids clashing with the shaded serverJar); needed so other projects can depend on this one
+    archiveClassifier.set("plain")
 }

@@ -29,7 +29,6 @@ import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
 import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.lsp.CommandType;
-import org.modelingvalue.nelumbo.lsp.Main;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.lsp.QueryEvaluator;
@@ -63,14 +62,15 @@ public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
         int      pos      = asInt(args.get(2));
         Position position = new Position(line, pos);
 
-        NlDocumentManager dm       = getWorkspace().getDocumentManager();
+        Workspace         ws       = getWorkspace();
+        NlDocumentManager dm       = ws.getDocumentManager();
         NlDocument        document = dm.getDocument(docUri);
         if (document == null) {
-            Main.client.showMessage(new MessageParams(MessageType.Error, "Document not found: " + docUri));
+            showMessage(new MessageParams(MessageType.Error, "Document not found: " + docUri));
             return;
         }
 
-        Map<Query, QueryResult> results = QueryEvaluator.evaluate(document.content(), document.uri());
+        Map<Query, QueryResult> results = QueryEvaluator.evaluate(ws.getBaseKnowledgeBase(), ws.getEvalDeadlineMs(), document.content(), document.uri());
 
         QueryResult result = null;
         for (Map.Entry<Query, QueryResult> e : results.entrySet()) {
@@ -81,17 +81,24 @@ public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
             }
         }
         if (result == null) {
-            Main.client.showMessage(new MessageParams(MessageType.Error, "No query found at this position [" + position + "]"));
+            showMessage(new MessageParams(MessageType.Error, "No query found at this position [" + position + "]"));
             return;
         }
 
         MessageParams message = switch (result.kind()) {
-            case RESULT -> new MessageParams(MessageType.Info, result.inferred());
-            case MATCH -> new MessageParams(MessageType.Info, "✓ " + result.inferred());
+            case RESULT   -> new MessageParams(MessageType.Info, result.inferred());
+            case MATCH    -> new MessageParams(MessageType.Info, "✓ " + result.inferred());
             case MISMATCH -> new MessageParams(MessageType.Warning, result.message());
-            case ERROR -> new MessageParams(MessageType.Error, result.inferred());
+            case ERROR    -> new MessageParams(MessageType.Error, result.inferred());
         };
-        Main.client.showMessage(message);
+        showMessage(message);
+    }
+
+    private void showMessage(MessageParams message) {
+        org.eclipse.lsp4j.services.LanguageClient client = getWorkspace().getClient();
+        if (client != null) {
+            client.showMessage(message);
+        }
     }
 
     private static String asString(Object o) {

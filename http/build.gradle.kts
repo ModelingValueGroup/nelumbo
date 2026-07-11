@@ -36,6 +36,8 @@ repositories {
 
 dependencies {
     implementation(project(":"))
+    implementation(project(":lsp:server"))
+    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
     implementation("io.javalin:javalin:6.3.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.21.1")
@@ -48,6 +50,49 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     jvmArgs("-ea") // Enable assertions
+}
+
+val frontendDir = layout.projectDirectory.dir("src/main/frontend")
+
+// Resolve the npm executable: the PATH first (CI/setup-node and normal shells), then nvm's node
+// versions (a Gradle daemon started outside a login shell does not see nvm on the PATH).
+fun findNpm(): String {
+    val isWindows = System.getProperty("os.name").lowercase().contains("win")
+    val exe       = if (isWindows) "npm.cmd" else "npm"
+    val onPath    = System.getenv("PATH").orEmpty().split(File.pathSeparator)
+            .map { File(it, exe) }
+    val nvmDir    = File(System.getProperty("user.home"), ".nvm/versions/node")
+    val inNvm     = (nvmDir.listFiles()?.filter { it.isDirectory } ?: emptyList())
+            .sortedByDescending { it.lastModified() }
+            .map { File(it, "bin/$exe") }
+    return (onPath + inNvm).firstOrNull { it.canExecute() }?.absolutePath ?: exe
+}
+
+val npmBundle by tasks.registering(Exec::class) {
+    description = "install frontend deps and build the Monaco fields bundle"
+    workingDir  = frontendDir.asFile
+    commandLine(findNpm(), "run", "dist")
+    inputs.dir(frontendDir.dir("src"))
+    inputs.file(frontendDir.file("package.json"))
+    inputs.file(frontendDir.file("package-lock.json"))
+    inputs.file(frontendDir.file("tsconfig.json"))
+    inputs.file(frontendDir.file("esbuild.mjs"))
+    outputs.dir(frontendDir.dir("dist"))
+}
+
+val copyFrontend by tasks.registering(Sync::class) {
+    dependsOn(npmBundle)
+    from(frontendDir.dir("dist"))
+    // source maps only help debug this bundle in devtools; no need to ship ~9 MB of them in the server jar
+    exclude("*.map")
+    into(layout.buildDirectory.dir("generated-resources/public/assets"))
+}
+
+// Register the copied bundle as a source-set OUTPUT dir (not a resources source dir): this puts it on the
+// runtime/test classpath and into serverJar via sourceSets.main.output, carries the copyFrontend dependency,
+// and - unlike resources.srcDir - keeps it out of the sourcesJar.
+sourceSets.main {
+    output.dir(mapOf("builtBy" to copyFrontend), layout.buildDirectory.dir("generated-resources"))
 }
 
 tasks.register<ShadowJar>("serverJar") {

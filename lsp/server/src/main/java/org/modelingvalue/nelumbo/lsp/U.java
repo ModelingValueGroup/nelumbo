@@ -43,6 +43,7 @@ import org.eclipse.lsp4j.WorkDoneProgressBegin;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.collections.NList;
@@ -256,24 +257,30 @@ public class U {
         }
     }
 
-    public static void progressBegin(String what) {
-        Main.client.createProgress(new WorkDoneProgressCreateParams(Either.forLeft(what)));
+    public static void progressBegin(LanguageClient client, String what) {
+        if (client == null) {
+            return;
+        }
+        client.createProgress(new WorkDoneProgressCreateParams(Either.forLeft(what)));
         WorkDoneProgressBegin begin = new WorkDoneProgressBegin();
         begin.setTitle(what + " in progress");
         begin.setCancellable(false);
-        Main.client.notifyProgress(new ProgressParams(Either.forLeft(what), Either.forLeft(begin)));
+        client.notifyProgress(new ProgressParams(Either.forLeft(what), Either.forLeft(begin)));
     }
 
-    public static void progressEnd(String what) {
+    public static void progressEnd(LanguageClient client, String what) {
+        if (client == null) {
+            return;
+        }
         WorkDoneProgressEnd end = new WorkDoneProgressEnd();
         end.setMessage(what + " done");
-        Main.client.notifyProgress(new ProgressParams(Either.forLeft(what), Either.forLeft(end)));
+        client.notifyProgress(new ProgressParams(Either.forLeft(what), Either.forLeft(end)));
     }
 
-    public static void withProgress(String what, Runnable runnable) {
-        progressBegin(what);
+    public static void withProgress(LanguageClient client, String what, Runnable runnable) {
+        progressBegin(client, what);
         runnable.run();
-        progressEnd(what);
+        progressEnd(client, what);
     }
 
     public static String render(SelectionRange sr) {

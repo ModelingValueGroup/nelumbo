@@ -39,7 +39,14 @@ jobs:
                     java-version: 21
                     distribution: zulu
                     cache       : gradle
-            
+
+            # Node is needed to build the http module's Monaco/LSP frontend bundle (:http:npmBundle)
+            -   uses: actions/setup-node@v4
+                with:
+                    node-version         : 22
+                    cache                : npm
+                    cache-dependency-path: http/src/main/frontend/package-lock.json
+
             # Ensure Docker CLI and Buildx are available for docker commands
             -   name: Set up Docker Buildx
                 uses: docker/setup-buildx-action@v4

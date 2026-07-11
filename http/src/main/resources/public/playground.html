@@ -12,9 +12,6 @@
     --text: #e6e8ee;
     --muted: #9aa0ac;
     --accent: #6ea8fe;
-    --true: #46c98b;
-    --false: #f1707b;
-    --unknown: #c9a14a;
     --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
@@ -34,158 +31,34 @@
   header nav a { color: var(--muted); text-decoration: none; font-size: 12px; }
   header nav a:hover { color: var(--accent); }
 
-  main { flex: 1; display: flex; min-height: 0; }
-  .pane { flex: 1 1 50%; display: flex; flex-direction: column; min-width: 0; }
-  .pane.left { border-right: 1px solid var(--border); }
-
-  .toolbar {
-    display: flex; align-items: center; gap: 14px;
-    padding: 8px 12px; border-bottom: 1px solid var(--border);
-  }
-  button {
-    background: var(--accent); color: #0c1322; border: 0; border-radius: 6px;
-    padding: 6px 14px; font-weight: 600; cursor: pointer; font-size: 13px;
-  }
-  button:active { transform: translateY(1px); }
-  label.check { color: var(--muted); display: flex; align-items: center; gap: 5px; cursor: pointer; }
-  .hint { margin-left: auto; color: var(--muted); font-size: 12px; }
-
-  textarea {
-    flex: 1; resize: none; border: 0; outline: none;
-    background: var(--panel); color: var(--text);
-    font-family: var(--mono); font-size: 13px; padding: 14px; tab-size: 2;
-  }
-
-  .results { flex: 1; overflow: auto; padding: 12px; }
-  .results .placeholder { color: var(--muted); padding: 24px 8px; }
-
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
-  .card .q { font-family: var(--mono); font-size: 13px; word-break: break-all; }
-  .badge { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; margin-left: 8px; vertical-align: middle; }
-  .badge.true { background: rgba(70,201,139,.16); color: var(--true); }
-  .badge.false { background: rgba(241,112,123,.16); color: var(--false); }
-  .badge.unknown { background: rgba(201,161,74,.16); color: var(--unknown); }
-  .bindings { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
-  .bindings .b { font-family: var(--mono); font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; }
-  .meta { color: var(--muted); font-size: 12px; margin-top: 8px; font-family: var(--mono); }
-
-  .errors { background: rgba(241,112,123,.10); border: 1px solid rgba(241,112,123,.4); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
-  .errors h3 { margin: 0 0 6px; font-size: 12px; color: var(--false); text-transform: uppercase; letter-spacing: .04em; }
-  .errors .e { font-family: var(--mono); font-size: 12px; }
-  .note { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
-  pre.raw { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; word-break: break-word; margin: 0; }
+  main { flex: 1; display: block; min-height: 0; overflow: auto; padding: 16px; }
+  main .intro { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
 </style>
 </head>
 <body>
 <header>
   <h1>Nelumbo Playground</h1>
-  <span class="sub">evaluate a document against the loaded knowledge base</span>
+  <span class="sub">edit and run a Nelumbo document against the loaded knowledge base</span>
   <nav>
+    <a href="/demo.html">demo</a>
     <a href="/metadata" target="_blank">metadata</a>
     <a href="/health" target="_blank">health</a>
   </nav>
 </header>
 
 <main>
-  <section class="pane left">
-    <div class="toolbar">
-      <button id="run">Run</button>
-      <label class="check"><input type="checkbox" id="trace"> trace</label>
-      <label class="check"><input type="checkbox" id="raw"> raw JSON</label>
-      <span class="hint">&#8984;/Ctrl + Enter</span>
-    </div>
-    <textarea id="doc" spellcheck="false">// A posted document is self-contained: declare the variables you query with.
-// The loaded knowledge base provides the types, functors, rules and facts.
-
+  <p class="intro">Edit the document below and press Run. The document is self-contained: it imports the stdlib it needs, so it evaluates even against an empty knowledge base.</p>
+  <div class="nelumbo-field" data-height="55vh">import nelumbo.integers
+Integer ::= fib(&lt;Integer&gt;)
+Integer n, f
+fib(n)=f &lt;=&gt; f=n if n&lt;=1, f=fib(n-1)+fib(n-2) if n&gt;1
 Integer r
-fib(5)=r ?
-</textarea>
-  </section>
-
-  <section class="pane right">
-    <div class="toolbar"><span class="hint" id="status" style="margin-left:0">ready</span></div>
-    <div class="results" id="results">
-      <div class="placeholder">Results appear here. Press Run.</div>
-    </div>
-  </section>
+fib(7)=r ?
+</div>
 </main>
 
-<script>
-  const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-  let lastData = null;
-
-  async function run() {
-    const doc = $("doc").value;
-    const path = $("trace").checked ? "/eval/trace" : "/eval";
-    $("status").textContent = "running…";
-    const t0 = performance.now();
-    let res, data;
-    try {
-      res = await fetch(path, { method: "POST", headers: { "Content-Type": "text/plain" }, body: doc });
-      data = await res.json();
-    } catch (err) {
-      $("status").textContent = "request failed";
-      $("results").innerHTML = '<div class="errors"><div class="e">' + esc(err) + "</div></div>";
-      return;
-    }
-    const ms = Math.round(performance.now() - t0);
-    $("status").textContent = "HTTP " + res.status + " · " + ms + " ms";
-    render(data);
-  }
-
-  function render(data) {
-    lastData = data;
-    if ($("raw").checked) {
-      $("results").innerHTML = '<pre class="raw">' + esc(JSON.stringify(data, null, 2)) + "</pre>";
-      return;
-    }
-    let html = "";
-    if (data.error) {
-      $("results").innerHTML = '<div class="errors"><h3>' + esc(data.error) + "</h3>"
-        + '<div class="e">' + esc(data.message || "") + "</div></div>";
-      return;
-    }
-    if (data.traceStatus) {
-      html += '<div class="note">trace: ' + esc(data.traceStatus) + "</div>";
-    }
-    if (data.errors && data.errors.length) {
-      html += '<div class="errors"><h3>errors</h3>';
-      for (const e of data.errors) {
-        const loc = (e.line != null ? e.line + ":" + e.column + "  " : "");
-        html += '<div class="e">' + esc(loc + (e.message || "")) + "</div>";
-      }
-      html += "</div>";
-    }
-    const queries = data.queries || [];
-    if (!queries.length && !(data.errors && data.errors.length)) {
-      html += '<div class="placeholder">No queries in the document (declarations evaluated).</div>';
-    }
-    for (const q of queries) {
-      html += '<div class="card">';
-      html += '<div class="q">' + esc(q.query) + '<span class="badge ' + esc(q.status) + '">' + esc(q.status) + "</span></div>";
-      const bindings = q.bindings || [];
-      if (bindings.length) {
-        html += '<div class="bindings">';
-        for (const b of bindings) {
-          const parts = Object.entries(b).map(([k, v]) => k + " = " + v).join(", ");
-          html += '<span class="b">' + esc(parts || "()") + "</span>";
-        }
-        html += "</div>";
-      }
-      html += '<div class="meta">' + esc(q.result || "");
-      if (q.complete) html += "  ·  complete: facts=" + q.complete.facts + " falsehoods=" + q.complete.falsehoods;
-      html += "</div>";
-      html += "</div>";
-    }
-    $("results").innerHTML = html || '<div class="placeholder">No output.</div>';
-  }
-
-  $("run").addEventListener("click", run);
-  $("raw").addEventListener("change", () => { if (lastData) render(lastData); });
-  document.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); run(); }
-  });
-</script>
+<link rel="stylesheet" href="/assets/nelumbo-fields.css">
+<script src="/assets/nelumbo-fields.js"></script>
+<script>NelumboFields.initNelumboFields();</script>
 </body>
 </html>

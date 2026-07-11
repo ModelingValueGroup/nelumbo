@@ -155,3 +155,39 @@ unavailable.
 - Frontend component + build wiring: the bulk of the work.
 - Pages: small.
 - Core language module: no changes.
+
+## Implementation Notes (as built)
+
+Discovered during implementation, beyond the original design:
+
+- `NelumboLanguageServer.exit()` called `System.exit(0)`; embedded sessions must not
+  kill the host JVM. Fixed with an injectable exit handler (default preserves the old
+  behavior for stdio/IDE).
+- All client callbacks went through the static `Main.client`; wrong client would win
+  with concurrent sessions. Moved the client onto `Workspace` (volatile), threaded it
+  through `NlDocument`, `QueryResultCache`, `WorkspaceExecuteCommandService`, and `U`.
+- Query auto-eval (`QueryResultCache` -> `QueryEvaluator`) and document parsing had no
+  deadline; a public visitor could burn CPU. Added `evalDeadlineMs` on `Workspace`
+  (0 = disabled, IDE default), a `QueryResultCache` hard backstop thread, and
+  deadline-bounded parsing. Timeouts return partial results with a per-query marker
+  rather than discarding everything.
+- `QueryResultCache`'s scheduler thread leaked per session; added `Workspace.dispose()`.
+- `WsServer.java` (dead code, referenced the static client) was deleted.
+- Security hardening for the public target: `initialize` skips client workspace-folder
+  resolution / filesystem scanning in embedded mode; documents are capped per session
+  (64); ws slot accounting releases the slot if bridge construction fails; explicit
+  64 KB text-frame limit and 10-minute idle timeout.
+- `lsp:server` re-enabled its plain jar (classifier `"plain"`) so `http` can use a
+  normal `implementation(project(":lsp:server"))` dependency; the generated frontend
+  bundle is a source-set output dir (not a resources srcDir) so `sourcesJar` stays clean.
+
+Deviations from the design:
+
+- The playground's `trace` and `raw-JSON` toolbar options were dropped; the field
+  component owns Run + results. `/eval/trace` is still reachable via curl.
+- KB seeding is asserted end-to-end via the inlay-hint query result, not a completion
+  item.
+- Frontend uses an older, self-contained Monaco stack (monaco-editor 0.34 +
+  monaco-languageclient 1.0.1) because the design's monaco-languageclient v8 +
+  `@codingame/monaco-vscode-*` service-override stack does not bundle cleanly in a plain
+  esbuild IIFE. See `http/src/main/frontend/README.md`.

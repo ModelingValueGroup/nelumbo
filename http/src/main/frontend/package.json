@@ -1,0 +1,20 @@
+{
+  "name": "nelumbo-fields",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "npm run check && node esbuild.mjs",
+    "dist": "npm ci && npm run build"
+  },
+  "dependencies": {
+    "monaco-editor": "~0.34.1",
+    "monaco-languageclient": "~1.0.1",
+    "tslib": "^2.6.0",
+    "vscode-ws-jsonrpc": "~2.0.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.4.5"
+  }
+}

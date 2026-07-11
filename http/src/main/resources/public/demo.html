@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nelumbo Demo</title>
+<style>
+  :root {
+    --bg: #1b1d23;
+    --panel: #23262e;
+    --border: #343843;
+    --text: #e6e8ee;
+    --muted: #9aa0ac;
+    --accent: #6ea8fe;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    display: flex; flex-direction: column;
+  }
+  header {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 15px; font-weight: 600; margin: 0; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  header nav { margin-left: auto; display: flex; gap: 14px; }
+  header nav a { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header nav a:hover { color: var(--accent); }
+
+  main { flex: 1; overflow: auto; }
+  .content { max-width: 900px; margin: 0 auto; padding: 24px 20px 64px; }
+  .content h2 { font-size: 18px; margin: 32px 0 8px; }
+  .content h2:first-child { margin-top: 8px; }
+  .content p { color: var(--text); margin: 0 0 14px; }
+  .content p code { font-family: var(--mono); font-size: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+  .content .nelumbo-field { margin-bottom: 24px; }
+  .lead { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Nelumbo Demo</h1>
+  <span class="sub">a guided tour of the language</span>
+  <nav>
+    <a href="/">playground</a>
+    <a href="/metadata" target="_blank">metadata</a>
+    <a href="/health" target="_blank">health</a>
+  </nav>
+</header>
+
+<main>
+  <div class="content">
+    <p class="lead">Each block below is a live Nelumbo editor. Press Run to evaluate it. A query line ends with <code>?</code> and the result shows the facts and falsehoods that were inferred. Every block imports the stdlib module it needs, so it runs on its own.</p>
+
+    <h2>Propositional logic</h2>
+    <p>Import <code>nelumbo.logic</code> to work with truth values. Nelumbo evaluates each query and reports whether it holds. Variables of type <code>Boolean</code> get bound to the values that make the query true.</p>
+    <div class="nelumbo-field">import nelumbo.logic
+true &amp; true ?
+true | false ?
+!false ?
+Boolean p
+p &amp; true ?
+</div>
+
+    <h2>Integer arithmetic</h2>
+    <p>Import <code>nelumbo.integers</code> for numbers. Queries run both ways: give the result and Nelumbo solves for the unknown. Below, <code>a + 11 = 21</code> binds <code>a</code> to <code>10</code>.</p>
+    <div class="nelumbo-field">import nelumbo.integers
+Integer a
+10 + 11 = a ?
+10 * 11 = a ?
+a + 11 = 21 ?
+a &gt; 0 ?
+</div>
+
+    <h2>Rules and recursion</h2>
+    <p>Declare a functor with <code>::=</code> and give it a rule with <code>&lt;=&gt;</code>. This defines Fibonacci recursively: the base case for <code>n &lt;= 1</code> and the recursive case for <code>n &gt; 1</code>. The query solves <code>fib(7)</code>.</p>
+    <div class="nelumbo-field" data-height="260px">import nelumbo.integers
+Integer ::= fib(&lt;Integer&gt;)
+Integer n, f
+fib(n)=f &lt;=&gt; f=n if n&lt;=1, f=fib(n-1)+fib(n-2) if n&gt;1
+Integer r
+fib(7)=r ?
+</div>
+
+    <h2>Strings</h2>
+    <p>Import <code>nelumbo.strings</code> for text. Concatenation with <code>+</code> is reversible, so <code>"foo" + a = "foobar"</code> binds <code>a</code> to <code>"bar"</code>. Use <code>len</code> for length and <code>str</code> to convert a number.</p>
+    <div class="nelumbo-field">import nelumbo.strings
+String a
+Integer d
+"foo" + "bar" = a ?
+"foo" + a = "foobar" ?
+len("foo") = d ?
+str(123456) = a ?
+</div>
+  </div>
+</main>
+
+<link rel="stylesheet" href="/assets/nelumbo-fields.css">
+<script src="/assets/nelumbo-fields.js"></script>
+<script>NelumboFields.initNelumboFields();</script>
+</body>
+</html>

@@ -158,8 +158,32 @@ class NelumboHttpServerTest {
         assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/html"),
                 "playground should be served as HTML");
         String html = response.body();
-        assertTrue(html.contains("<textarea"), "playground should have a text input");
-        assertTrue(html.contains("/eval"), "playground should post documents to /eval");
+        assertTrue(html.contains("nelumbo-field"), "playground should mount a Nelumbo editor field");
+        assertTrue(html.contains("/assets/nelumbo-fields.js"), "playground should load the frontend bundle");
+        assertTrue(html.contains("initNelumboFields"), "playground should initialize the editor fields");
+    }
+
+    @Test
+    void demoPageIsServed() throws Exception {
+        HttpResponse<String> response = get("/demo.html");
+        assertEquals(200, response.statusCode());
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/html"),
+                "demo should be served as HTML");
+        String html = response.body();
+        assertTrue(html.contains("nelumbo-field"), "demo should mount Nelumbo editor fields");
+        assertTrue(html.contains("/assets/nelumbo-fields.js"), "demo should load the frontend bundle");
+        assertTrue(html.contains("initNelumboFields"), "demo should initialize the editor fields");
+    }
+
+    @Test
+    void frontendBundleIsServed() throws Exception {
+        HttpResponse<String> js = get("/assets/nelumbo-fields.js");
+        assertEquals(200, js.statusCode(), "the frontend bundle referenced by the pages must actually be served");
+        assertTrue(js.headers().firstValue("Content-Type").orElse("").contains("javascript"),
+                "the bundle should be served as JavaScript");
+
+        HttpResponse<String> css = get("/assets/nelumbo-fields.css");
+        assertEquals(200, css.statusCode(), "the frontend stylesheet must actually be served");
     }
 
     @Test

@@ -15,7 +15,7 @@ Requires **Java 21+**. Uses Gradle 8.14.3 (Kotlin DSL) via wrapper.
 ./gradlew test                           # Run all tests (core + LSP server)
 ./gradlew jar                            # Core library only
 ./gradlew :lsp:server:serverJar          # LSP server shaded JAR
-./gradlew :http:serverJar                # HTTP server shaded JAR (nelumbo-http-server)
+./gradlew :http:serverJar                # HTTP server shaded JAR (needs node/npm: bundles the Monaco/LSP frontend)
 ./gradlew :lsp:plugins:eclipse:jar       # Eclipse plugin
 ./gradlew :lsp:plugins:intellij:build    # IntelliJ plugin
 ./gradlew editorJar                      # Standalone editor (ShadowJar)
@@ -39,7 +39,7 @@ The root `test` task depends on `:lsp:server:test`, so `./gradlew test` runs bot
 
 ```
 nelumbo (root)              → Core language: syntax, semantics, pattern matching, knowledge base
-├── http                    → HTTP server (Javalin + Jackson): serves a KB over REST (/eval, /metadata, /health)
+├── http                    → HTTP server (Javalin + Jackson): serves a KB over REST (/eval, /metadata, /health), an LSP WebSocket at /lsp, and the Monaco-based playground (/) and demo (/demo.html) pages from src/main/resources/public/
 ├── lsp/server              → LSP server (depends on root + LSP4J + Jackson + Tyrus WebSocket)
 └── lsp/plugins/
     ├── eclipse             → Eclipse IDE plugin (Java, dropins-based)
@@ -68,8 +68,9 @@ Package: `org.modelingvalue.nelumbo.lsp`
 - `NlDocument` — Represents an open document.
 - `documentService/` — Individual LSP features (completion, hover, definition, semantic tokens, formatting, folding, code lens, code actions, selection ranges).
 - `workspaceService/` — Workspace-level features (symbols, execute command).
-- `WsServer` — WebSocket transport support.
-- Main class: `org.modelingvalue.nelumbo.lsp.Main`
+- Main class: `org.modelingvalue.nelumbo.lsp.Main` (stdio, or a Tyrus WebSocket via `Main ws [port]`)
+
+The server is **embeddable**: `NelumboLanguageServer(baseKb, evalDeadlineMs, exitHandler)` + `connect(client)` runs it with a per-instance `LanguageClient` (stored on `Workspace`, not the static `Main.client`), an injectable base KB, a query-eval deadline, and no `System.exit`. The http module embeds it behind `/lsp` (see below). Client folder resolution and filesystem scanning in `initialize` are skipped in embedded mode.
 
 ### Key Entry Points
 
@@ -102,6 +103,20 @@ Building a DSL in Nelumbo means declaring `MyType :: Root` and giving it functor
 **Precedence gotcha — Root-extending functors need explicit `#N`.** When a functor is declared on a `Root` subtype, append an explicit precedence to each alternative (e.g. `MyStmt ::= keyword <(> <Arg> <,> , <)+> #0`). Without it, instances containing repetition / optional / alternation patterns fail with `Unexpected token '\n', expected ` and the error cascades. `Object`-based functors (`Color ::= mix(<Color>,<Color>)`) don't need this. See `logic.nl`, `examples/deHet.nl`, and the pattern-coverage section of `tests/langOnly.nl` for the convention.
 
 **Fast verify loop — use the CLI, not JUnit, while iterating.** `./gradlew cliJar` produces `build/libs/nelumbo-<version>-cli.jar`; then `java -jar build/libs/nelumbo-*-cli.jar path/to/file.nl` parses and evaluates the file (exit 0 on success; parse/eval errors print `file:line:col`). Add `-q` to silence query output. JUnit tests over `.nl` resources are Gradle-cached, so pass `--rerun-tasks` when only the resource changed; filter with `./gradlew :test --tests "..." --rerun-tasks` (the `:` targets root project, since the root `test` task chains `:lsp:server:test`).
+
+## LSP Server - Injectable Base KB
+
+`QueryEvaluator` now has a 4-arg overload `evaluate(KnowledgeBase base, long deadlineMs, String content, String uri)`. The 2-arg overload delegates to it with `(BASE, 0, ...)`. Call sites in `QueryResultCache` and `WorkspaceExecuteCommandService` pass `workspace.getBaseKnowledgeBase()` and `workspace.getEvalDeadlineMs()`. `NlDocument.of` parses against the workspace KB via `Parser.parse(workspace.getBaseKnowledgeBase(), tokenizerResult)`.
+
+## HTTP Module - LSP over WebSocket
+
+`NelumboHttpServer` exposes a `/lsp` WebSocket route (in addition to the REST endpoints). Each connection gets its own embedded `NelumboLanguageServer` instance wired via `LspBridge`. Wire format: one plain JSON-RPC message per text frame (no Content-Length framing - vscode-ws-jsonrpc compatible). A session cap (default 32, `--max-lsp-sessions` on the CLI / 4-arg constructor) rejects excess connections with close code 1013; per-session guards: 64 KB text-frame limit, 10-minute idle timeout, 64 documents max, and the eval deadline also bounds LSP parsing/inference. The 3-arg ctor delegates to the 4-arg one.
+
+`lsp:server` publishes a plain jar with classifier `"plain"` (in addition to the shadow jar). `http/build.gradle.kts` depends on it via a normal `implementation(project(":lsp:server"))` dependency.
+
+The frontend is an npm project at `http/src/main/frontend/` (Monaco + monaco-languageclient, esbuild IIFE, entry `NelumboFields.initNelumboFields()`). The `:http:npmBundle` Gradle task runs `npm run dist`; the bundle is registered as a source-set output dir and shipped inside the shaded jar under `public/assets/`, served at `/assets/`. See `http/src/main/frontend/README.md` for the (intentionally old, self-contained) dependency-stack rationale.
+
+**Public-deployment note.** The per-session guards above are in-process only. For a public site, front `/lsp` with a TLS reverse proxy that enforces per-IP connection limits (32 idle-but-pinging sockets can otherwise hold every session slot) and consider rate-limiting log output (malformed frames and unknown LSP methods each log a line).
 
 ## Code Conventions
 

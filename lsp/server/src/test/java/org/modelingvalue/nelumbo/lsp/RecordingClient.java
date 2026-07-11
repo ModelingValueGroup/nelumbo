@@ -16,56 +16,58 @@
 
 package org.modelingvalue.nelumbo.lsp;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-public class NlDocumentManager {
-    /** Safety backstop against a hostile client looping didOpen with unique URIs; a real page uses a handful. */
-    public static final int MAX_DOCUMENTS = 64;
+import org.eclipse.lsp4j.MessageActionItem;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.ShowMessageRequestParams;
+import org.eclipse.lsp4j.services.LanguageClient;
 
-    private final Workspace                             workspace;
-    private final ConcurrentHashMap<String, NlDocument> documentCache    = new ConcurrentHashMap<>();
-    private final QueryResultCache                      queryResultCache = new QueryResultCache(this);
+/** Test double: records diagnostics published by the server under test. */
+public class RecordingClient implements LanguageClient {
+    public final List<PublishDiagnosticsParams> diagnostics        = new CopyOnWriteArrayList<>();
+    private final CountDownLatch                firstDiagnostics   = new CountDownLatch(1);
+    private final CountDownLatch                inlayHintsRefreshed = new CountDownLatch(1);
 
-    public NlDocumentManager(Workspace workspace) {
-        this.workspace = workspace;
+    @Override
+    public void telemetryEvent(Object object) {
     }
 
-    public Workspace workspace() {
-        return workspace;
+    @Override
+    public void publishDiagnostics(PublishDiagnosticsParams params) {
+        diagnostics.add(params);
+        firstDiagnostics.countDown();
     }
 
-    public QueryResultCache queryResultCache() {
-        return queryResultCache;
+    @Override
+    public void showMessage(MessageParams params) {
     }
 
-    public void addDocument(String uri, String content, int version) {
-        // refuse new URIs once the cap is reached; updates to already-open documents still go through
-        if (documentCache.size() >= MAX_DOCUMENTS && !documentCache.containsKey(uri)) {
-            return;
-        }
-        documentCache.put(uri, NlDocument.of(workspace, content, version, uri));
-        queryResultCache.schedule(uri);
+    @Override
+    public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams params) {
+        return CompletableFuture.completedFuture(null);
     }
 
-    public void updateDocument(String uri, String content) {
-        NlDocument document = getDocument(uri);
-        if (document != null) {
-            documentCache.put(uri, NlDocument.of(document, content));
-            queryResultCache.schedule(uri);
-        }
+    @Override
+    public void logMessage(MessageParams params) {
     }
 
-    public NlDocument getDocument(String uri) {
-        return documentCache.get(uri);
+    @Override
+    public CompletableFuture<Void> refreshInlayHints() {
+        inlayHintsRefreshed.countDown();
+        return CompletableFuture.completedFuture(null);
     }
 
-    public void closeDocument(String uri) {
-        documentCache.remove(uri);
-        queryResultCache.remove(uri);
+    public boolean awaitDiagnostics(long seconds) throws InterruptedException {
+        return firstDiagnostics.await(seconds, TimeUnit.SECONDS);
     }
 
-    public List<String> uris() {
-        return documentCache.keySet().stream().toList();
+    public boolean awaitInlayHintRefresh(long seconds) throws InterruptedException {
+        return inlayHintsRefreshed.await(seconds, TimeUnit.SECONDS);
     }
 }
