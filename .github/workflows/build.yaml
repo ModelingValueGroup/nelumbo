@@ -65,11 +65,11 @@ jobs:
 
             ################################################################################
             -   name: "e2e (playwright)"
-                working-directory: http/src/main/frontend
                 run : |
+                    ./gradlew :http:serverJar
+                    cd http/src/main/frontend
                     npm ci
                     npx playwright install --with-deps chromium
-                    ../../../../gradlew :http:serverJar
                     npx playwright test
 
             ################################################################################

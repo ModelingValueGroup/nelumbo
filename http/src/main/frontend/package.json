@@ -6,7 +6,7 @@
     "check": "tsc --noEmit",
     "build": "npm run check && node esbuild.mjs",
     "dist": "npm ci && npm run build",
-    "test:e2e": "../../../../gradlew :http:serverJar && playwright test",
+    "test:e2e": "(cd ../../../.. && ./gradlew :http:serverJar) && playwright test",
     "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
