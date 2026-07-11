@@ -133,3 +133,10 @@
 .nelumbo-lsp-banner.visible {
     display: block;
 }
+
+.nelumbo-exercise { border-left: 3px solid #6ea8fe; padding-left: 12px; margin: 16px 0; }
+.nelumbo-exercise .challenge { color: #c6cad4; margin: 0 0 6px; }
+.nelumbo-solution { display: none; margin: 8px 0 0; padding: 10px 12px; background: #1b1d23; border: 1px solid #343843; border-radius: 8px; font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #e6e8ee; white-space: pre-wrap; }
+.nelumbo-solution.visible { display: block; }
+.nelumbo-field-toolbar button.secondary { background: transparent; color: #9aa0ac; border: 1px solid #343843; }
+.nelumbo-field-toolbar button.secondary:hover { color: #e6e8ee; }

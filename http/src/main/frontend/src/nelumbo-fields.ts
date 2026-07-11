@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
 import {
     MonacoLanguageClient,
     MonacoServices,
@@ -165,6 +165,43 @@ function connectLanguageClient(): Promise<MonacoLanguageClient | null> {
     });
 }
 
+let servicesReady: boolean                                     = false;
+let clientPromise: Promise<MonacoLanguageClient | null> | null = null;
+let fieldIndex:    number                                      = 0;
+
+function ensureServices(): void {
+    if (servicesReady) {
+        return;
+    }
+    MonacoServices.install(monaco);
+    monaco.languages.register({ id: LANGUAGE_ID, extensions: ['.nl'] });
+    servicesReady = true;
+}
+
+function showBanner(): void {
+    const banner: HTMLDivElement = document.createElement('div');
+    banner.className   = 'nelumbo-lsp-banner visible';
+    banner.textContent = 'Language features are unavailable (LSP connection failed). Editing and Run still work.';
+    document.body.prepend(banner);
+}
+
+function addSolutionToggle(field: HTMLElement, toolbar: HTMLElement): void {
+    const next: Element | null = field.nextElementSibling;
+    if (next === null || !next.classList.contains('nelumbo-solution')) {
+        return;
+    }
+    const solution: HTMLElement = next as HTMLElement;
+    const button:   HTMLButtonElement = document.createElement('button');
+    button.type        = 'button';
+    button.className   = 'secondary';
+    button.textContent = 'Show solution';
+    button.addEventListener('click', (): void => {
+        const visible: boolean = solution.classList.toggle('visible');
+        button.textContent = visible ? 'Hide solution' : 'Show solution';
+    });
+    toolbar.appendChild(button);
+}
+
 function buildField(div: HTMLElement, index: number): void {
     let initial: string = div.textContent || '';
     if (initial.startsWith('\n')) {
@@ -200,8 +237,8 @@ function buildField(div: HTMLElement, index: number): void {
     div.appendChild(host);
     div.appendChild(results);
 
-    const uri:   monaco.Uri            = monaco.Uri.parse('inmemory://field-' + index + '.nl');
-    const model: monaco.editor.ITextModel = monaco.editor.createModel(initial, LANGUAGE_ID, uri);
+    const uri:   monaco.Uri                = monaco.Uri.parse('inmemory://field-' + index + '.nl');
+    const model: monaco.editor.ITextModel  = monaco.editor.createModel(initial, LANGUAGE_ID, uri);
 
     const editor: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(host, {
         model:                model,
@@ -211,6 +248,8 @@ function buildField(div: HTMLElement, index: number): void {
         fontSize:             13,
         'semanticHighlighting.enabled': true,
         scrollBeyondLastLine: false,
+        // Cmd/Ctrl+Click goes to definition (Alt+Click is multi-cursor), the VS Code default made explicit
+        multiCursorModifier:  'alt',
     });
 
     const run = (): void => {
@@ -218,30 +257,44 @@ function buildField(div: HTMLElement, index: number): void {
     };
     runButton.addEventListener('click', run);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, run);
+
+    addSolutionToggle(div, toolbar);
 }
 
-// Lifecycle is intentionally page-scoped: initNelumboFields runs once per page load and the editors,
-// models and language client live until the page unloads. No teardown is wired (no reader.onClose ->
-// client.stop, no model dispose) because these fields are never mounted/unmounted dynamically. No
-// MonacoEnvironment.getWorker is set either: standalone monaco falls back to a synchronous main-thread
-// worker (one console warning at load), which is fine here since the /lsp server supplies all language
-// features. Revisit both if these fields ever get mounted in an SPA.
-export async function initNelumboFields(): Promise<void> {
-    MonacoServices.install(monaco);
-    monaco.languages.register({ id: LANGUAGE_ID, extensions: ['.nl'] });
+// Establish the single page-shared /lsp language client. Idempotent: repeated calls return the
+// same promise. On failure resolves null and shows the banner (editing + Run still work).
+export function connect(): Promise<MonacoLanguageClient | null> {
+    ensureServices();
+    if (clientPromise === null) {
+        clientPromise = connectLanguageClient().then((client: MonacoLanguageClient | null): MonacoLanguageClient | null => {
+            if (client === null) {
+                showBanner();
+            }
+            return client;
+        });
+    }
+    return clientPromise;
+}
 
-    const divs: NodeListOf<HTMLElement> = document.querySelectorAll<HTMLElement>('.nelumbo-field');
-    let index: number = 0;
+// Upgrade every .nelumbo-field in `container` not already mounted into a Monaco editor. Idempotent
+// (skips fields already wrapped), so it is safe to call each time a tour section is shown. The shared
+// client (via connect()) attaches to models created after it starts, so lazy mounting keeps full LSP.
+export function mountFields(container: ParentNode): void {
+    ensureServices();
+    const divs: NodeListOf<HTMLElement> = container.querySelectorAll<HTMLElement>('.nelumbo-field');
     for (const div of Array.from(divs)) {
-        buildField(div, index);
-        index++;
+        if (div.classList.contains('nelumbo-field-wrap')) {
+            continue;
+        }
+        buildField(div, fieldIndex);
+        fieldIndex++;
     }
+}
 
-    const client: MonacoLanguageClient | null = await connectLanguageClient();
-    if (client === null) {
-        const banner: HTMLDivElement = document.createElement('div');
-        banner.className   = 'nelumbo-lsp-banner visible';
-        banner.textContent = 'Language features are unavailable (LSP connection failed). Editing and Run still work.';
-        document.body.prepend(banner);
-    }
+// Playground entry point: mount every field on the page and connect once. Lifecycle is page-scoped
+// (no teardown); standalone monaco falls back to a synchronous main-thread worker (one console
+// warning) since the /lsp server supplies all language features.
+export async function initNelumboFields(): Promise<void> {
+    mountFields(document);
+    await connect();
 }

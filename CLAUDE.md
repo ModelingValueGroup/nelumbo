@@ -39,7 +39,7 @@ The root `test` task depends on `:lsp:server:test`, so `./gradlew test` runs bot
 
 ```
 nelumbo (root)              → Core language: syntax, semantics, pattern matching, knowledge base
-├── http                    → HTTP server (Javalin + Jackson): serves a KB over REST (/eval, /metadata, /health), an LSP WebSocket at /lsp, and the Monaco-based playground (/) and demo (/demo.html) pages from src/main/resources/public/
+├── http                    → HTTP server (Javalin + Jackson): serves a KB over REST (/eval, /metadata, /health), an LSP WebSocket at /lsp, and the Monaco-based feature tour (/) and free-form playground (/playground.html) pages from src/main/resources/public/
 ├── lsp/server              → LSP server (depends on root + LSP4J + Jackson + Tyrus WebSocket)
 └── lsp/plugins/
     ├── eclipse             → Eclipse IDE plugin (Java, dropins-based)
@@ -114,7 +114,9 @@ Building a DSL in Nelumbo means declaring `MyType :: Root` and giving it functor
 
 `lsp:server` publishes a plain jar with classifier `"plain"` (in addition to the shadow jar). `http/build.gradle.kts` depends on it via a normal `implementation(project(":lsp:server"))` dependency.
 
-The frontend is an npm project at `http/src/main/frontend/` (Monaco + monaco-languageclient, esbuild IIFE, entry `NelumboFields.initNelumboFields()`). The `:http:npmBundle` Gradle task runs `npm run dist`; the bundle is registered as a source-set output dir and shipped inside the shaded jar under `public/assets/`, served at `/assets/`. See `http/src/main/frontend/README.md` for the (intentionally old, self-contained) dependency-stack rationale.
+The frontend is an npm project at `http/src/main/frontend/` (Monaco + monaco-languageclient, esbuild IIFE). It exposes `NelumboFields.connect()` (establish the single page-shared `/lsp` client) + `NelumboFields.mountFields(container)` (mount `.nelumbo-field` editors within a container, idempotent) so the feature tour mounts each section's editors lazily over one shared client; `initNelumboFields()` (the playground) mounts every field at once. An exercise field with a following `.nelumbo-solution` sibling gets a "Show solution" toggle. The `:http:npmBundle` Gradle task runs `npm run dist`; the bundle is registered as a source-set output dir and shipped inside the shaded jar under `public/assets/`, served at `/assets/`. See `http/src/main/frontend/README.md` for the (intentionally old, self-contained) dependency-stack rationale.
+
+The pages are `tour.html` (served at `/`): a sidebar feature tour with 8 sections, each with prose, a demo field, and self-checking exercises (the exercise query carries an expected result like `? [(r=120)][..]`, so the LSP mismatch squiggle confirms a solution); and `playground.html` (served at `/playground.html`): a single free-form field.
 
 **Public-deployment note.** The per-session guards above are in-process only. For a public site, front `/lsp` with a TLS reverse proxy that enforces per-IP connection limits (32 idle-but-pinging sockets can otherwise hold every session slot) and consider rate-limiting log output (malformed frames and unknown LSP methods each log a line).
 

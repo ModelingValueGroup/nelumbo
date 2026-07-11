@@ -100,8 +100,8 @@ public final class NelumboHttpServer {
 
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
     public int start(int port) {
+        String tour       = loadResource("/public/tour.html");
         String playground = loadResource("/public/playground.html");
-        String demo       = loadResource("/public/demo.html");
         evalExecutor = Executors.newCachedThreadPool(runnable -> {
             Thread thread = new Thread(runnable, "nelumbo-http-eval");
             thread.setDaemon(true);
@@ -120,8 +120,8 @@ public final class NelumboHttpServer {
             config.jetty.modifyWebSocketServletFactory(factory ->
                     factory.setMaxTextMessageSize(LspWebSocket.MAX_MESSAGE_CHARS));
         });
-        app.get("/", ctx -> ctx.html(playground));
-        app.get("/demo.html", ctx -> ctx.html(demo));
+        app.get("/", ctx -> ctx.html(tour));
+        app.get("/playground.html", ctx -> ctx.html(playground));
         app.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
         app.post("/eval", ctx -> handleEval(ctx, false));
         app.post("/eval/trace", ctx -> handleEval(ctx, true));

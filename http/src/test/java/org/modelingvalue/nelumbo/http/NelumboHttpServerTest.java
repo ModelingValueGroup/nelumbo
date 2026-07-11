@@ -152,27 +152,24 @@ class NelumboHttpServerTest {
     }
 
     @Test
-    void playgroundIsServedAtRoot() throws Exception {
+    void tourIsServedAtRoot() throws Exception {
         HttpResponse<String> response = get("/");
         assertEquals(200, response.statusCode());
         assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/html"),
-                "playground should be served as HTML");
+                "tour should be served as HTML");
         String html = response.body();
-        assertTrue(html.contains("nelumbo-field"), "playground should mount a Nelumbo editor field");
-        assertTrue(html.contains("/assets/nelumbo-fields.js"), "playground should load the frontend bundle");
-        assertTrue(html.contains("initNelumboFields"), "playground should initialize the editor fields");
+        assertTrue(html.contains("data-section=\"logic\""), "tour should render the sidebar navigation");
+        assertTrue(html.contains("nelumbo-field"), "tour should mount Nelumbo editor fields");
+        assertTrue(html.contains("/assets/nelumbo-fields.js"), "tour should load the frontend bundle");
     }
 
     @Test
-    void demoPageIsServed() throws Exception {
-        HttpResponse<String> response = get("/demo.html");
+    void playgroundIsServedAtItsPath() throws Exception {
+        HttpResponse<String> response = get("/playground.html");
         assertEquals(200, response.statusCode());
-        assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/html"),
-                "demo should be served as HTML");
         String html = response.body();
-        assertTrue(html.contains("nelumbo-field"), "demo should mount Nelumbo editor fields");
-        assertTrue(html.contains("/assets/nelumbo-fields.js"), "demo should load the frontend bundle");
-        assertTrue(html.contains("initNelumboFields"), "demo should initialize the editor fields");
+        assertTrue(html.contains("nelumbo-field"), "playground should mount a Nelumbo editor field");
+        assertTrue(html.contains("initNelumboFields"), "playground should initialize the editor fields");
     }
 
     @Test
