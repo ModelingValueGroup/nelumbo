@@ -51,6 +51,7 @@ public final class ExampleCatalog {
         ENTRIES.put("ternary",                new Entry(BASE + "examples/ternary.nl",                "generic ternary operator (b?t:f) declared as a Type-parametric functor, used with strings"));
         ENTRIES.put("scoping",                new Entry(BASE + "examples/scoping.nl",                "private functor scope blocks: two independent namespaces each with a private XXX constant"));
         ENTRIES.put("koningsdag",             new Entry(BASE + "examples/koningsdag.nl",             "calendar decision rule: Dutch King's Day date shifts from Apr-27 to Apr-26 if it falls on Sunday"));
+        ENTRIES.put("clubFees",               new Entry(BASE + "examples/clubFees.nl",               "membership-fee decision model: conditional rule branches on age facts (base fee 100, half under 18 or over 65); authored via the MCP tools"));
         ENTRIES.put("hidden",                 new Entry(BASE + "examples/hidden.nl",                 "hidden variable feature: unnamed variable in queries and in operator functors"));
         ENTRIES.put("queryOnly",              new Entry(BASE + "examples/queryOnly.nl",              "query-only file: exercises integer arithmetic, abs, E[], A[], negation without any custom types"));
         ENTRIES.put("transformation",         new Entry(BASE + "examples/transformation.nl",         "transform statement (::>): Root functor generates sub-functors, facts, and rules at load time"));

@@ -104,4 +104,9 @@ public class ExamplesTest extends NelumboTestBase {
         exampleResource("ternary.nl");
     }
 
+    @RepeatedTest(10)
+    public void clubFees() {
+        exampleResource("clubFees.nl");
+    }
+
 }

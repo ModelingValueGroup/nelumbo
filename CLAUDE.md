@@ -129,6 +129,8 @@ End-to-end browser tests live in `http/src/main/frontend/e2e/` (Playwright, Chro
 
 `mcp/` is an MCP stdio server (`org.modelingvalue.nelumbo.mcp.Main`, SDK `io.modelcontextprotocol.sdk:mcp`) for LLM authoring of self-contained `.nl` decision models. Tools: `eval_nl` (structured diagnostics via the core `NelumboEvaluator`, enriched by the curated `Hints` table, plus per-query expectation results), `search_docs` (keyword search over `docs/**/*.md`, bundled at build time with an `index.txt`; query terms under 3 chars are ignored), `get_example` (bundled `.nl` corpus with curated descriptions), `new_model` (self-verifying skeleton, `ModelSkeleton` - its test evaluates the skeleton, so it must always stay valid; note: decision functors do not enumerate free variables, queries in the skeleton show the working idiom). Handlers live SDK-free in `NelumboTools`; `Main` owns protocol wiring, the eval deadline (`--eval-deadline-ms`, default 10s) and reroutes `System.out` to stderr (stdout is the JSON-RPC channel). `NelumboCli` now delegates to `NelumboEvaluator` (`tools/NelumboEvaluator.java`). Design: `docs/superpowers/specs/2026-07-12-mcp-server-design.md`.
 
+Adding a `.nl` example (`src/main/resources/org/modelingvalue/nelumbo/examples/`) requires registering it in two explicit lists: `ExampleCatalog.ENTRIES` (mcp, serves `get_example`) and `ExamplesTest` (core, runs it as a test) - neither auto-discovers files. The README has an "MCP Server" section with the install/usage story (`./gradlew :mcp:mcpJar` + `claude mcp add nelumbo -- java -jar ...`).
+
 ## Code Conventions
 
 - All Java source files carry an LGPL 3.0 header (auto-corrected by `mvgCorrector` Gradle task using `header-template.txt`).
