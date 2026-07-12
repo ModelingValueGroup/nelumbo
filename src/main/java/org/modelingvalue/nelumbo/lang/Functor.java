@@ -405,13 +405,14 @@ public class Functor extends Node implements FunctorOrType {
             Object[] nodVars = new Object[args.size()];
             Object[] litVars = new Object[args.size()];
             List<Type> litArgs = args.replaceAll(Type::toLiteral);
+            Object id = new Object();
             for (int v = 0; v < args.size(); v++) {
-                nodVars[v] = new Variable(List.of(), false, args.get(v), "n" + (v + 1));
-                litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1));
+                nodVars[v] = new Variable(List.of(), false, args.get(v), "n" + (v + 1), id);
+                litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1), id);
             }
             Node nodNode = nodFunctor.construct(List.of(), nodVars, knowledgeBase, ctx);
             Node litNode = litFunctor.construct(List.of(), litVars, knowledgeBase, ctx);
-            Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
+            Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r", id) : null;
             Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
             Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
             for (int c = args.size() - 1; c >= 0; c--) {
@@ -424,7 +425,7 @@ public class Functor extends Node implements FunctorOrType {
             }
             ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
             Rule rule = new Rule(List.of(), nodCons, exists);
-            roots = new NList(List.of(), roots, rule);
+            roots = new NList(List.of(), roots, rule.makeVariablesUnique());
         }
         return roots;
     }
@@ -463,6 +464,11 @@ public class Functor extends Node implements FunctorOrType {
     @Override
     public Functor declaration() {
         return (Functor) super.declaration();
+    }
+
+    @Override
+    public Functor makeVariablesUnique() {
+        return (Functor) super.makeVariablesUnique();
     }
 
 }

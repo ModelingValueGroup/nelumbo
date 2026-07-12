@@ -83,9 +83,15 @@ public final class Transform extends Node {
     }
 
     @Override
+    public Transform makeVariablesUnique() {
+        return (Transform) super.makeVariablesUnique();
+    }
+
+    @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        knowledgeBase.addTransform(this);
-        return this;
+        Transform t = makeVariablesUnique();
+        knowledgeBase.addTransform(t);
+        return t;
     }
 
     public Node transform(Node start, Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx)

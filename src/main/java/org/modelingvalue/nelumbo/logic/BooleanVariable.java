@@ -19,14 +19,11 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.FunctorOrType;
-import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
 public class BooleanVariable extends Predicate {
@@ -63,20 +60,6 @@ public class BooleanVariable extends Predicate {
     @Override
     public BooleanVariable setAstElements(List<AstElement> elements) {
         return (BooleanVariable) super.setAstElements(elements);
-    }
-
-    @Override
-    protected BooleanVariable setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
-        Variable var = variable();
-        if (var != null && vars.get(var) instanceof Type t && !t.equals(functor().resultType())) {
-            return (BooleanVariable) super.setBinding(declaration, vars, setFunctorOrType)
-                    .setFunctorOrType(functor().setResultType(t));
-        }
-        if (var != null && vars.get(var) instanceof Variable v && !v.type().equals(functor().resultType())) {
-            return (BooleanVariable) super.setBinding(declaration, vars, setFunctorOrType)
-                    .setFunctorOrType(functor().setResultType(v.type()));
-        }
-        return (BooleanVariable) super.setBinding(declaration, vars, setFunctorOrType);
     }
 
     @Override

@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -46,6 +47,10 @@ public final class Variable extends Node {
         super(NodeInfo.of(Type.VARIABLE, elements), hidden, type, name);
     }
 
+    public Variable(List<AstElement> elements, boolean hidden, Type type, String name, Object id) {
+        super(NodeInfo.of(Type.VARIABLE, elements), hidden, type, Pair.of(name, id));
+    }
+
     @Override
     protected Variable set(NodeInfo nodeInfo, Object[] args) {
         return new Variable(nodeInfo, args);
@@ -61,13 +66,22 @@ public final class Variable extends Node {
         return (Variable) super.setAstElements(elements);
     }
 
+    public Variable makeUnique(Object id) {
+        return set(2, Pair.of(name(), id));
+    }
+
     public Variable literal() {
         Type type = type();
-        return type.isLiteral() ? this : new Variable(astElements(), hidden(), type.toLiteral(), name());
+        Object n = get(2);
+        return type.isLiteral() ? this
+                : n instanceof Pair p ? new Variable(astElements(), hidden(), type.toLiteral(), (String) p.a(), p.b())
+                        : new Variable(astElements(), hidden(), type.toLiteral(), (String) n);
     }
 
     public Variable rename(Function<String, String> rename) {
-        return new Variable(astElements(), hidden(), type(), rename.apply(name()));
+        Object n = get(2);
+        return n instanceof Pair p ? new Variable(astElements(), hidden(), type(), rename.apply((String) p.a()), p.b())
+                : new Variable(astElements(), hidden(), type(), rename.apply((String) n));
     }
 
     public boolean hidden() {
@@ -80,7 +94,8 @@ public final class Variable extends Node {
     }
 
     public String name() {
-        return (String) get(2);
+        Object n = get(2);
+        return (String) (n instanceof Pair p ? p.a() : n);
     }
 
     @Override

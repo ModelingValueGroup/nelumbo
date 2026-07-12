@@ -149,7 +149,7 @@ public final class Rule extends Node implements Evaluatable {
             }
             Rule rule = new Rule(when != null ? List.of(cond, when) : List.of(cond), //
                     cons, when != null ? When.of(when, cond) : cond);
-            roots = new NList(List.of(), roots, rule);
+            roots = new NList(List.of(), roots, rule.makeVariablesUnique());
             for (i++; i < elements.size(); i++) {
                 if (elements.get(i) instanceof Token t && t.text().equals(",")) {
                     roots = roots.setAstElements(roots.astElements().add(t));
@@ -241,6 +241,11 @@ public final class Rule extends Node implements Evaluatable {
     @Override
     public String toString(TokenType[] previous) {
         return consequence() + " <=> " + condition();
+    }
+
+    @Override
+    public Rule makeVariablesUnique() {
+        return (Rule) super.makeVariablesUnique();
     }
 
 }
