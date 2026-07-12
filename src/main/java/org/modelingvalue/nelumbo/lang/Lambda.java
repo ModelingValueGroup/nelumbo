@@ -107,8 +107,7 @@ public final class Lambda extends Node {
 
     public boolean test(Object... vals) {
         Predicate p = (Predicate) setVariables(vals);
-        InferResult result = resolve(p, true);
-        return result != null && result.isTrueCC();
+        return resolve(p, true).isTrueCC();
     }
 
     @SuppressWarnings("unchecked")
@@ -119,7 +118,7 @@ public final class Lambda extends Node {
         return fact != null ? (R) fact.getBinding().get(var()) : null;
     }
 
-    private InferResult resolve(Predicate p, boolean bool) {
+    private static InferResult resolve(Predicate p, boolean bool) {
         InferContext ctx = CURRENT_CONTEXT.get();
         InferResult result = p.resolve(ctx);
         if (result.hasStackOverflow()) {
@@ -139,7 +138,7 @@ public final class Lambda extends Node {
         return result;
     }
 
-    private boolean isComplete(InferResult result, boolean bool) {
+    private static boolean isComplete(InferResult result, boolean bool) {
         return bool ? (result.isTrueCC() || result.isFalseCC()) : result.isTrueCI();
     }
 
