@@ -14,27 +14,27 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo.mcp;
 
-// HTTP server
-include("http")
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// MCP server
-include("mcp")
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
+import org.junit.jupiter.api.Test;
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
+public class DocIndexTest {
+
+    @Test
+    public void docsAreBundledWithAnIndex() throws IOException {
+        try (InputStream in = DocIndexTest.class.getResourceAsStream("/nelumbo-docs/index.txt")) {
+            assertNotNull(in, "nelumbo-docs/index.txt missing from classpath");
+            String index = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            assertTrue(index.contains("reference/grammar.md"), index);
+            assertTrue(index.lines().count() > 10, index);
         }
+        assertNotNull(DocIndexTest.class.getResourceAsStream("/nelumbo-docs/reference/grammar.md"));
     }
 }

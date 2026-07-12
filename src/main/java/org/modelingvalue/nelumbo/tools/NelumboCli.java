@@ -24,14 +24,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.logic.Query;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
-import org.modelingvalue.nelumbo.syntax.Tokenizer;
-
 public final class NelumboCli {
 
     private NelumboCli() {
@@ -96,39 +88,18 @@ public final class NelumboCli {
             System.err.println(file + ": " + e.getMessage());
             return false;
         }
-        if (!source.endsWith("\n")) {
-            source += "\n";
+        NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, name, 0);
+        for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
+            System.err.println(name + ":" + d.line() + ":" + d.col() + ": " + d.message());
         }
-        final String fn = name;
-        final String src = source;
-        final boolean[] ok = {true};
-        KnowledgeBase.BASE.run(() -> {
-            ParserResult result = new Parser(new Tokenizer(src, fn).tokenize()).parseNonThrowing();
-            try {
-                result.evaluate();
-            } catch (ParseException e) {
-                report(fn, e);
-                ok[0] = false;
-            }
-            for (ParseException e : result.exceptions()) {
-                report(fn, e);
-                ok[0] = false;
-            }
-            if (!quiet) {
-                for (Node root : result.roots()) {
-                    if (root instanceof Query query && query.inferResult() != null) {
-                        StringBuffer sb = new StringBuffer();
-                        query.predicate().deparse(sb);
-                        System.out.println(sb.toString().trim() + " ? " + query.inferResult());
-                    }
+        if (!quiet) {
+            for (NelumboEvaluator.QueryOutcome q : result.queries()) {
+                if (q.result() != null) {
+                    System.out.println(q.query() + " ? " + q.result());
                 }
             }
-        });
-        return ok[0];
-    }
-
-    private static void report(String file, ParseException e) {
-        System.err.println(file + ":" + (e.line() + 1) + ":" + (e.position() + 1) + ": " + e.getShortMessage());
+        }
+        return result.ok();
     }
 
     private static void printUsage(PrintStream out) {
