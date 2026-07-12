@@ -17,7 +17,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    id("com.gradleup.shadow") version "9.3.2"
+    id("com.gradleup.shadow") version "9.4.3"
     java
 }
 
@@ -37,15 +37,15 @@ repositories {
 dependencies {
     implementation(project(":"))
     implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
-    implementation("org.ow2.asm:asm-tree:9.9.1")
+    implementation("org.ow2.asm:asm-tree:9.10.1")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     // Include websocket launchers so Main.start(ws) can find a WebSocket launcher at runtime
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
     // Jakarta WebSocket server (Tyrus)
     implementation("org.glassfish.tyrus:tyrus-server:2.2.2")
     implementation("org.glassfish.tyrus:tyrus-container-grizzly-server:2.2.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.22.1")
     implementation("org.tomlj:tomlj:1.1.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
@@ -77,6 +77,6 @@ tasks.shadowJar {
 }
 
 tasks.jar {
-    // Disable plain jar to avoid duplicate artifact name; we use the shaded jar as the main distribution
-    enabled = false
+    // plain jar (classifier avoids clashing with the shaded serverJar); needed so other projects can depend on this one
+    archiveClassifier.set("plain")
 }

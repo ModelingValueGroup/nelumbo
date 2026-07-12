@@ -26,7 +26,10 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
@@ -48,8 +51,8 @@ public record NlDocument(Workspace workspace,
 
     public static NlDocument of(Workspace workspace, String content, int version, String uri) {
         TokenizerResult tokenizerResult = new Tokenizer(content, uri).tokenize();
-        ParserResult    parserResult    = Parser.parse(tokenizerResult);
-        publishDiagnosticsAsync(uri, tokenizerResult, parserResult);
+        ParserResult    parserResult    = parse(workspace, tokenizerResult);
+        publishDiagnosticsAsync(workspace, uri, tokenizerResult, parserResult);
 
         U.DEBUG("    #tokens    : %4d", tokenizerResult.listAll().size());
         U.DEBUG("    #root-nodes: %4d", parserResult.roots().size());
@@ -62,6 +65,25 @@ public record NlDocument(Workspace workspace,
         }
 
         return new NlDocument(workspace, content, version, uri, tokenizerResult, parserResult);
+    }
+
+    /**
+     * Parse against a deadline-bearing child KB when the workspace carries one (public /lsp), so a pathological
+     * document cannot occupy the shared engine pool indefinitely. A timeout yields an empty (root-less) result.
+     */
+    private static ParserResult parse(Workspace workspace, TokenizerResult tokenizerResult) {
+        long deadlineMs = workspace.getEvalDeadlineMs();
+        if (deadlineMs <= 0) {
+            return Parser.parse(workspace.getBaseKnowledgeBase(), tokenizerResult);
+        }
+        KnowledgeBase parseKb = new KnowledgeBase(workspace.getBaseKnowledgeBase());
+        parseKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
+        try {
+            return Parser.parse(parseKb, tokenizerResult);
+        } catch (NelumboTimeoutException e) {
+            U.DEBUG("    parse timed out after %d ms", deadlineMs);
+            return new ParserResult(tokenizerResult, false);
+        }
     }
 
     public List<Token> tokens() {
@@ -86,8 +108,8 @@ public record NlDocument(Workspace workspace,
         return org.modelingvalue.collections.List.of();
     }
 
-    private static void publishDiagnosticsAsync(String uri, TokenizerResult tokenizerResult, ParserResult parserResult) {
-        publishDiagnostics(uri, baseDiagnostics(tokenizerResult, parserResult));
+    private static void publishDiagnosticsAsync(Workspace workspace, String uri, TokenizerResult tokenizerResult, ParserResult parserResult) {
+        publishDiagnostics(workspace, uri, baseDiagnostics(tokenizerResult, parserResult));
     }
 
     /** Syntax/parse diagnostics for the document; query-result diagnostics are added on top by {@link QueryResultCache}. */
@@ -103,12 +125,16 @@ public record NlDocument(Workspace workspace,
         return diagnostics;
     }
 
-    public static void publishDiagnostics(String uri, List<Diagnostic> diagnostics) {
+    public static void publishDiagnostics(Workspace workspace, String uri, List<Diagnostic> diagnostics) {
+        LanguageClient client = workspace.getClient();
+        if (client == null) {
+            return;
+        }
         if (Main.debugging() && !diagnostics.isEmpty()) {
             U.DEBUG("    #errors    : %4d", diagnostics.size());
         }
         try (ExecutorService svc = Executors.newSingleThreadExecutor()) {
-            svc.submit(() -> Main.client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics)));
+            svc.submit(() -> client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics)));
         }
     }
 

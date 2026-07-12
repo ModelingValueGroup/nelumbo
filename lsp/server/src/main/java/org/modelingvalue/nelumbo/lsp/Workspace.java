@@ -36,16 +36,23 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.tomlj.Toml;
 import org.tomlj.TomlParseResult;
 import org.tomlj.TomlTable;
 
 @SuppressWarnings("DuplicatedCode")
 public class Workspace {
-    private       Setting            setting         = new Setting();
-    private final List<String>       folders         = new ArrayList<>();
-    private final List<Path>         dependencies    = new ArrayList<>();
-    private       NlDocumentManager  documentManager;
+    private          Setting           setting           = new Setting();
+    private final    List<String>      folders           = new ArrayList<>();
+    private final    List<Path>        dependencies      = new ArrayList<>();
+    private          NlDocumentManager documentManager;
+    private volatile LanguageClient    client;
+    private          KnowledgeBase     baseKnowledgeBase = KnowledgeBase.BASE;
+    private          long              evalDeadlineMs;
+    // embedded (public /lsp) mode never resolves client-supplied workspace folders (no filesystem walk)
+    private          boolean           embedded;
 
     public Workspace() {
         findSettings();
@@ -65,6 +72,45 @@ public class Workspace {
             documentManager = new NlDocumentManager(this);
         }
         return documentManager;
+    }
+
+    public LanguageClient getClient() {
+        return client;
+    }
+
+    public void setClient(LanguageClient client) {
+        this.client = client;
+    }
+
+    public KnowledgeBase getBaseKnowledgeBase() {
+        return baseKnowledgeBase;
+    }
+
+    public void setBaseKnowledgeBase(KnowledgeBase baseKnowledgeBase) {
+        this.baseKnowledgeBase = baseKnowledgeBase;
+    }
+
+    public long getEvalDeadlineMs() {
+        return evalDeadlineMs;
+    }
+
+    public void setEvalDeadlineMs(long evalDeadlineMs) {
+        this.evalDeadlineMs = evalDeadlineMs;
+    }
+
+    public boolean isEmbedded() {
+        return embedded;
+    }
+
+    public void setEmbedded(boolean embedded) {
+        this.embedded = embedded;
+    }
+
+    /** Release per-instance resources (embedded servers create one Workspace per connection). */
+    public void dispose() {
+        if (documentManager != null) {
+            documentManager.queryResultCache().shutdown();
+        }
     }
 
     public Setting getSetting() {
@@ -95,7 +141,7 @@ public class Workspace {
     }
 
     private void findConfiguration(List<Path> projects) {
-        withProgress("Find Dependencies By Configuration", () -> {
+        withProgress(getClient(), "Find Dependencies By Configuration", () -> {
             for (Path project : projects) {
                 Path pomPath = project.resolve("pom.xml");
                 if (Files.exists(pomPath)) {
@@ -215,7 +261,7 @@ public class Workspace {
     }
 
     private void processSource(List<Path> projects) {
-        withProgress("Process Source", () -> {
+        withProgress(getClient(), "Process Source", () -> {
             try (ThreadPoolExecutor pool = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 2, Runtime.getRuntime().availableProcessors() * 4, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>())) {
                 projects.forEach(project -> System.err.println(" - " + project));
             }
@@ -239,7 +285,7 @@ public class Workspace {
     }
 
     public void indexClasses() {
-        withProgress("Index Classes", () -> {
+        withProgress(getClient(), "Index Classes", () -> {
             List<Path> classpath = new ArrayList<>(findClasspath());
             try {
                 classpath.add(Paths.get(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()));

@@ -30,7 +30,7 @@ jobs:
             TOKEN       : "${{secrets.ALLREP_TOKEN}}"
             CI          : "true"
         steps  :
-            -   uses: actions/checkout@v6
+            -   uses: actions/checkout@v7
                 with:
                     fetch-depth: 0
             
@@ -39,7 +39,14 @@ jobs:
                     java-version: 21
                     distribution: zulu
                     cache       : gradle
-            
+
+            # Node is needed to build the http module's Monaco/LSP frontend bundle (:http:npmBundle)
+            -   uses: actions/setup-node@v4
+                with:
+                    node-version         : 22
+                    cache                : npm
+                    cache-dependency-path: http/src/main/frontend/package-lock.json
+
             # Ensure Docker CLI and Buildx are available for docker commands
             -   name: Set up Docker Buildx
                 uses: docker/setup-buildx-action@v4
@@ -50,12 +57,24 @@ jobs:
                     ./gradlew --info \
                         mvgCorrector \
                         build \
+                        :http:serverJar \
                         editorJar \
                         :lsp:plugins:eclipse:jar \
                         :lsp:plugins:intellij:buildPlugin \
                         mvgTagger \
                         build-slides
-            
+
+            ################################################################################
+            # the serverJar is built in the "build" step above (a second gradle run here would
+            # re-trigger :mvgcorrector against the generated docs/site assets and fail); this step
+            # only runs Playwright against that pre-built jar.
+            -   name: "e2e (playwright)"
+                working-directory: http/src/main/frontend
+                run : |
+                    npm ci
+                    npx playwright install --with-deps chromium
+                    npx playwright test
+
             ################################################################################
             -   name: "upload-editor-jar"
                 uses: actions/upload-artifact@v7

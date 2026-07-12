@@ -24,6 +24,7 @@ import org.eclipse.lsp4j.Range;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Query;
@@ -34,7 +35,7 @@ import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 /**
- * Evaluates every {@code Query} in a document in a single {@code KnowledgeBase.BASE.run}, so the
+ * Evaluates every {@code Query} in a document against a given {@code KnowledgeBase}, so the
  * user-declared types, patterns, facts and rules are all registered in the same inference KB
  * (see {@code QueryExecutionFlowTest}). Shared by the inline inlay hints and the "Query" code lens
  * popup so both render identical results.
@@ -46,38 +47,60 @@ public final class QueryEvaluator {
 
     /** @return result per query, in document order. Queries that could not be reached are absent. */
     public static Map<Query, QueryResult> evaluate(String content, String uri) {
+        return evaluate(KnowledgeBase.BASE, 0, content, uri);
+    }
+
+    /**
+     * Same, but declarations are resolved against {@code base} (a loaded KB for embedded servers) and, when
+     * {@code deadlineMs > 0}, inference self-aborts past the deadline. On timeout, queries already evaluated keep
+     * their results; the first unreached query gets an ERROR result; remaining queries are absent from the map.
+     */
+    public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri) {
         Map<Query, QueryResult> results = new LinkedHashMap<>();
-        KnowledgeBase.BASE.run(() -> {
-            KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
-            ParserResult  parsed        = new Parser(new Tokenizer(content, uri).tokenize()).parseNonThrowing();
-            ParserResult  throwing      = new ParserResult(null, true);
-            for (Node root : parsed.roots()) {
-                if (!(root instanceof Evaluatable eval)) {
-                    continue;
-                }
-                try {
-                    eval.evaluate(knowledgeBase, throwing);
-                    if (eval instanceof Query query) {
-                        InferResult ir = query.inferResult();
-                        if (ir == null) {
-                            results.put(query, QueryResult.error("Infer resulted in nothing"));
-                        } else if (query.hasExpected()) {
-                            results.put(query, QueryResult.match(ir.toString()));
+        KnowledgeBase           evalKb  = new KnowledgeBase(base);
+        if (deadlineMs > 0) {
+            evalKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
+        }
+        try {
+            evalKb.run(() -> {
+                KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+                ParserResult  parsed        = new Parser(new Tokenizer(content, uri).tokenize()).parseNonThrowing();
+                ParserResult  throwing      = new ParserResult(null, true);
+                for (Node root : parsed.roots()) {
+                    if (!(root instanceof Evaluatable eval)) {
+                        continue;
+                    }
+                    try {
+                        eval.evaluate(knowledgeBase, throwing);
+                        if (eval instanceof Query query) {
+                            InferResult ir = query.inferResult();
+                            if (ir == null) {
+                                results.put(query, QueryResult.error("Infer resulted in nothing"));
+                            } else if (query.hasExpected()) {
+                                results.put(query, QueryResult.match(ir.toString()));
+                            } else {
+                                results.put(query, QueryResult.result(ir.toString()));
+                            }
+                        }
+                    } catch (NelumboTimeoutException tex) {
+                        if (eval instanceof Query query) {
+                            results.put(query, QueryResult.error("evaluation exceeded the deadline"));
+                        }
+                        break;
+                    } catch (ParseException exc) {
+                        if (eval instanceof Query query) {
+                            results.put(query, toResult(query, exc));
                         } else {
-                            results.put(query, QueryResult.result(ir.toString()));
+                            // a fact/rule failed to evaluate: later queries can't be trusted, stop here.
+                            System.err.println("query evaluation aborted at " + eval.getClass().getSimpleName() + ": " + exc.getMessage());
+                            break;
                         }
                     }
-                } catch (ParseException exc) {
-                    if (eval instanceof Query query) {
-                        results.put(query, toResult(query, exc));
-                    } else {
-                        // a fact/rule failed to evaluate: later queries can't be trusted, stop here.
-                        System.err.println("query evaluation aborted at " + eval.getClass().getSimpleName() + ": " + exc.getMessage());
-                        break;
-                    }
                 }
-            }
-        });
+            });
+        } catch (NelumboTimeoutException ignored) {
+            // partial results already in the map; return them as-is
+        }
         return results;
     }
 

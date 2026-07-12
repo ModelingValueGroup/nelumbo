@@ -61,6 +61,7 @@ public class Main {
         server = new NelumboLanguageServer();
         Launcher<LanguageClient> launcher = Launcher.createLauncher(server, LanguageClient.class, input, output);
         client = launcher.getRemoteProxy();
+        server.connect(client);
         LOGGER.info("Starting Language Server");
         launcher.startListening();
     }
@@ -122,6 +123,7 @@ public class Main {
                                                                                                   .create();
 
                 Main.client = launcher.getRemoteProxy();
+                server.connect(Main.client);
                 launcher.startListening();
                 Main.LOGGER.info("WebSocket session opened: " + safeId(session));
             } catch (Exception e) {

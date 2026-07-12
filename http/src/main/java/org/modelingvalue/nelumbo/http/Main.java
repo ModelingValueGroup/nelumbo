@@ -39,9 +39,10 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-        int               port      = 8080;
-        long              timeoutMs = NelumboHttpServer.DEFAULT_TIMEOUT_MS;
-        List<Path>        paths     = new ArrayList<>();
+        int               port           = 8080;
+        long              timeoutMs      = NelumboHttpServer.DEFAULT_TIMEOUT_MS;
+        int               maxLspSessions = NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS;
+        List<Path>        paths          = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             String a = args[i];
             switch (a) {
@@ -58,6 +59,13 @@ public final class Main {
                     fail("missing value for " + a);
                 }
                 timeoutMs = Long.parseLong(args[++i]);
+                break;
+            case "-s":
+            case "--max-lsp-sessions":
+                if (i + 1 >= args.length) {
+                    fail("missing value for " + a);
+                }
+                maxLspSessions = Integer.parseInt(args[++i]);
                 break;
             case "-h":
             case "--help":
@@ -86,7 +94,7 @@ public final class Main {
         }
 
         KnowledgeBase base   = KnowledgeBaseLoader.load(sources);
-        NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs);
+        NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs, maxLspSessions);
         int bound = server.start(port);
         System.out.println("Nelumbo HTTP server listening on http://localhost:" + bound
                 + " (" + files.size() + " file(s) loaded, timeout " + timeoutMs + " ms)");
@@ -131,6 +139,7 @@ public final class Main {
         out.println();
         out.println("  -p, --port N      port to listen on (default 8080; 0 picks a free port)");
         out.println("  -t, --timeout MS  per-request inference budget in ms (default 30000; 0 disables)");
+        out.println("  -s, --max-lsp-sessions N  cap on concurrent LSP editor sessions (default 32)");
         out.println("  -h, --help        show this help and exit");
     }
 }

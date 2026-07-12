@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nelumbo - Feature Tour</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: #1b1d23; color: #e6e8ee; font: 15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; display: flex; }
+  aside { width: 210px; flex: 0 0 210px; border-right: 1px solid #343843; padding: 16px 0; overflow: auto; }
+  aside h1 { font-size: 15px; margin: 0 16px 14px; }
+  aside nav a { display: block; padding: 6px 16px; color: #9aa0ac; text-decoration: none; font-size: 13px; cursor: pointer; }
+  aside nav a:hover { color: #e6e8ee; }
+  aside nav a.active { color: #6ea8fe; border-left: 2px solid #6ea8fe; padding-left: 14px; }
+  aside .sep { border-top: 1px solid #343843; margin: 12px 0; }
+  main { flex: 1; overflow: auto; }
+  .tour-section { display: none; max-width: 860px; margin: 0 auto; padding: 24px 24px 80px; }
+  .tour-section.active { display: block; }
+  h2 { font-size: 20px; margin-top: 8px; }
+  p { color: #c6cad4; }
+  code { background: #23262e; border-radius: 4px; padding: 1px 5px; font: 13px ui-monospace, Menlo, Consolas, monospace; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Nelumbo</h1>
+  <nav>
+    <a data-section="logic" class="active">Propositional logic</a>
+    <a data-section="facts">Facts &amp; queries</a>
+    <a data-section="rules">Rules &amp; recursion</a>
+    <a data-section="types">Data types</a>
+    <a data-section="relations">Relational KB</a>
+    <a data-section="dsl">Custom DSL</a>
+    <a data-section="transform">Transformations</a>
+    <a data-section="scoping">Scoping</a>
+    <div class="sep"></div>
+    <a href="/playground.html">Playground -&gt;</a>
+  </nav>
+</aside>
+<main>
+  <section class="tour-section active" id="logic">
+    <h2>Propositional logic</h2>
+    <p>Nelumbo is three-valued: a query is <code>true</code>, <code>false</code>, or
+       <code>unknown</code>. The result notation <code>[facts][falsehoods]</code> shows the two
+       sides; <code>[()][]</code> means "true", <code>[][()]</code> means "false", and
+       <code>[..][..]</code> means "unknown". Edit and press Run (or Cmd/Ctrl+Enter).</p>
+    <div class="nelumbo-field" data-height="200px">import nelumbo.logic
+
+true &amp; true ?
+true | false ?
+!false ?
+unknown &amp; true ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Make the query below come out <strong>true</strong> by changing only the
+         operator (the expected-result annotation <code>[()][]</code> means the editor will underline
+         a mismatch until it is true).</p>
+      <div class="nelumbo-field" data-height="90px">import nelumbo.logic
+
+false &amp; true ? [()][]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+
+false | true ? [()][]
+</pre>
+    </div>
+  </section>
+  <section class="tour-section" id="facts">
+    <h2>Facts &amp; queries</h2>
+    <p>Ground truth is asserted with <code>fact</code>. Objects and their functors are declared first
+       (<code>Person :: Object</code> introduces a type, <code>FactType ::= ...</code> a fact shape),
+       then a query binds a variable and enumerates every matching answer.</p>
+    <div class="nelumbo-field" data-height="200px">import nelumbo.logic
+Person :: Object
+FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Person ::= Piet, Jan, Klaas
+fact friends(Piet, Jan),
+     friends(Jan,  Klaas)
+Person X
+friends(Piet, X) ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Add a fact so that <code>friends(Klaas, Kees)</code> holds.</p>
+      <div class="nelumbo-field" data-height="150px">import nelumbo.logic
+Person :: Object
+FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Person ::= Piet, Jan, Klaas, Kees
+// add a fact here
+friends(Klaas, Kees) ? [()][]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Person :: Object
+FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Person ::= Piet, Jan, Klaas, Kees
+fact friends(Klaas, Kees)
+friends(Klaas, Kees) ? [()][]
+</pre>
+    </div>
+  </section>
+  <section class="tour-section" id="rules">
+    <h2>Rules &amp; recursion</h2>
+    <p>A rule <code>&lt;=&gt;</code> defines how a functor is derived; <code>if</code> attaches a guard
+       to each alternative, and a rule may reference itself to recurse. The classic Fibonacci rule has
+       a base case for <code>n&lt;=1</code> and a recursive step for <code>n&gt;1</code>.</p>
+    <div class="nelumbo-field" data-height="200px">import nelumbo.integers
+Integer ::= fib(&lt;Integer&gt;)
+Integer n, f
+fib(n)=f &lt;=&gt; f=n if n&lt;=1, f=fib(n-1)+fib(n-2) if n&gt;1
+Integer r
+fib(7)=r ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Define factorial so that factorial(5) = 120.</p>
+      <div class="nelumbo-field" data-height="150px">import nelumbo.integers
+Integer ::= factorial(&lt;Integer&gt;)
+Integer n, r
+// fix this rule so factorial(5)=120  (hint: 1 if n&lt;=0, else n*factorial(n-1))
+factorial(n)=r &lt;=&gt; r=n
+factorial(5)=r ? [(r=120)][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.integers
+Integer ::= factorial(&lt;Integer&gt;)
+Integer n, r
+factorial(n)=r &lt;=&gt; r=1 if n&lt;=0, r=n*factorial(n-1) if n&gt;0
+factorial(5)=r ? [(r=120)][..]
+</pre>
+    </div>
+  </section>
+  <section class="tour-section" id="types">
+    <h2>Data types</h2>
+    <p>Nelumbo ships built-in types - integers, rationals, strings, collections, datetime - each
+       importable, with its own operators and functions. Declare a variable of a type, then let a query
+       compute and bind it. Operators like <code>+</code> and functions like <code>len</code> come from
+       the imported module.</p>
+    <div class="nelumbo-field" data-height="200px">import nelumbo.integers
+import nelumbo.strings
+Integer i
+String  s
+2+3=i ?
+"foo"+"bar"=s ?
+len("hello")=i ?
+</div>
+    <div class="nelumbo-field" data-height="150px">import nelumbo.collections
+Set&lt;Integer&gt; s
+Integer i
+s={1,2,3} ?
+|{1,2,3}|=i ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Fix the concatenation so <code>a = "lotus"</code> and its length check
+         (<code>len(a) = 5</code>) passes.</p>
+      <div class="nelumbo-field" data-height="150px">import nelumbo.strings
+String  a
+Integer d
+// fix the concatenation so a = "lotus" and its length is 5
+"lo"+"xus"=a &amp; len(a)=d ? [(a="lotus",d=5)][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.strings
+String  a
+Integer d
+"lo"+"tus"=a &amp; len(a)=d ? [(a="lotus",d=5)][..]
+</pre>
+    </div>
+  </section>
+  <section class="tour-section" id="relations">
+    <h2>Relational KB</h2>
+    <p>A knowledge base is facts plus rules over relations. Base facts (here <code>pc</code>,
+       parent-child) are asserted directly; rules with quantifiers such as <code>E[x]</code>
+       (there exists) and <code>A[y]</code> (for all) derive new relations from them. Below, the mother
+       relation <code>m</code> is derived from <code>pc</code> via an existential over female children.</p>
+    <div class="nelumbo-field" data-height="260px">import nelumbo.logic
+Person   :: Object
+Male     :: Person
+Female   :: Person
+FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
+Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;)
+Person a, b
+Female x
+c(a)=b &lt;=&gt; pc(a,b)
+p(a)=b &lt;=&gt; pc(b,a)
+m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
+Female ::= Juliana, Beatrix
+fact pc(Juliana, Beatrix)
+Person who
+m(Beatrix)=who ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Add a father relation <code>f</code> that mirrors the mother rule, using
+         <code>E[y]</code> over male children, so <code>f(Beatrix) = Bernhard</code>.</p>
+      <div class="nelumbo-field" data-height="260px">import nelumbo.logic
+Person   :: Object
+Male     :: Person
+Female   :: Person
+FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
+Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;), f(&lt;Person&gt;)
+Person a, b
+Female x
+Male   y
+c(a)=b &lt;=&gt; pc(a,b)
+p(a)=b &lt;=&gt; pc(b,a)
+m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
+// fix this rule so f(Beatrix)=Bernhard (mirror the mother rule using Male y)
+f(a)=b &lt;=&gt; E[y](p(y)=a &amp; b=y)
+Female ::= Juliana, Beatrix
+Male   ::= Bernhard
+fact pc(Juliana, Beatrix),
+     pc(Bernhard, Beatrix)
+Person who
+f(Beatrix)=who ? [(who=Bernhard)][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Person   :: Object
+Male     :: Person
+Female   :: Person
+FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
+Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;), f(&lt;Person&gt;)
+Person a, b
+Female x
+Male   y
+c(a)=b &lt;=&gt; pc(a,b)
+p(a)=b &lt;=&gt; pc(b,a)
+m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
+f(a)=b &lt;=&gt; E[y](c(y)=a &amp; b=y)
+Female ::= Juliana, Beatrix
+Male   ::= Bernhard
+fact pc(Juliana, Beatrix),
+     pc(Bernhard, Beatrix)
+Person who
+f(Beatrix)=who ? [(who=Bernhard)][..]
+</pre>
+    </div>
+  </section>
+  <section class="tour-section" id="dsl">
+    <h2>Custom DSL</h2>
+    <p>Nelumbo is a meta-language: declare your own functors and patterns with an explicit precedence
+       (<code>#N</code>) and natural-language statements and queries become first-class syntax. Here a
+       <code>friend</code> functor is derived from base <code>friends</code> facts, then the phrase
+       <code>X is a friend of Y</code> is declared as a <code>Boolean</code> pattern that reads as
+       ordinary English.</p>
+    <div class="nelumbo-field" data-height="260px">import nelumbo.logic
+Person   :: Object
+FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Person   ::= friend(&lt;Person&gt;)
+Person   ::= Piet, Jan, Klaas
+Person A, B, Who
+friend(A)=B &lt;=&gt; friends(A,B) | friends(B,A) | friend(friend(A))=B
+Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
+Person X, Y
+X is a friend of Y &lt;=&gt; friend(Y)=X
+fact friends(Piet, Jan), friends(Jan, Klaas)
+Who is a friend of Piet ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">A synonym phrase <code>X knows Y</code> has been declared but its rule is
+         wrong (<code>X knows Y &lt;=&gt; X=Y</code>). Fix the rule so <code>Who knows Piet</code> lists the
+         same friends as the phrase above.</p>
+      <div class="nelumbo-field" data-height="260px">import nelumbo.logic
+Person   :: Object
+FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Person   ::= friend(&lt;Person&gt;)
+Person   ::= Piet, Jan, Klaas
+Person A, B, Who
+friend(A)=B &lt;=&gt; friends(A,B) | friends(B,A) | friend(friend(A))=B
+Boolean ::= &lt;Person&gt; knows &lt;Person&gt; #30
+Person X, Y
+X knows Y &lt;=&gt; X=Y
+fact friends(Piet, Jan), friends(Jan, Klaas)
+Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet)][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Person   :: Object
+FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Person   ::= friend(&lt;Person&gt;)
+Person   ::= Piet, Jan, Klaas
+Person A, B, Who
+friend(A)=B &lt;=&gt; friends(A,B) | friends(B,A) | friend(friend(A))=B
+Boolean ::= &lt;Person&gt; knows &lt;Person&gt; #30
+Person X, Y
+X knows Y &lt;=&gt; friend(Y)=X
+fact friends(Piet, Jan), friends(Jan, Klaas)
+Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet)][..]
+</pre>
+    </div>
+  </section>
+  <section class="tour-section" id="transform">
+    <h2>Transformations</h2>
+    <p>A transformation rule <code>::&gt;</code> rewrites one construct into several. The
+       <code>attr</code> declaration below expands - at declaration time - into a type, a
+       <code>:=</code> setter, a <code>private</code> fact relation, and a getter rule. Declaring
+       <code>attr Person name String</code> then behaves as if all four were written by hand.</p>
+    <div class="nelumbo-field" data-height="300px">import nelumbo.strings
+Root ::= attr &lt;Type&gt; &lt;NAME&gt; &lt;Type&gt; #100
+Type OT, AT
+NAME AN
+attr OT AN AT ::&gt; {
+    AT   ::= &lt;OT&gt;.AN
+    Root ::= &lt;OT&gt;.AN := &lt;AT&gt;
+    private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
+    OT o
+    AT a
+    o.AN=a &lt;=&gt; AN(o,a)
+    o.AN := a ::&gt; {
+        fact AN(o,a)
+    }
+}
+Person :: Object
+attr Person name String
+Person ::= Piet
+Piet.name := "Piet"
+String n
+Piet.name=n ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">An <code>address</code> attribute has been added to <code>Person</code>, but
+         Piet's address is set to the wrong value. Set it to <code>"Kalverstraat"</code> so the query
+         matches.</p>
+      <div class="nelumbo-field" data-height="300px">import nelumbo.strings
+Root ::= attr &lt;Type&gt; &lt;NAME&gt; &lt;Type&gt; #100
+Type OT, AT
+NAME AN
+attr OT AN AT ::&gt; {
+    AT   ::= &lt;OT&gt;.AN
+    Root ::= &lt;OT&gt;.AN := &lt;AT&gt;
+    private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
+    OT o
+    AT a
+    o.AN=a &lt;=&gt; AN(o,a)
+    o.AN := a ::&gt; {
+        fact AN(o,a)
+    }
+}
+Person :: Object
+attr Person name String
+attr Person address String
+Person ::= Piet
+Piet.name := "Piet"
+Piet.address := "Dam"
+String a
+Piet.address=a ? [(a="Kalverstraat")][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.strings
+Root ::= attr &lt;Type&gt; &lt;NAME&gt; &lt;Type&gt; #100
+Type OT, AT
+NAME AN
+attr OT AN AT ::&gt; {
+    AT   ::= &lt;OT&gt;.AN
+    Root ::= &lt;OT&gt;.AN := &lt;AT&gt;
+    private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
+    OT o
+    AT a
+    o.AN=a &lt;=&gt; AN(o,a)
+    o.AN := a ::&gt; {
+        fact AN(o,a)
+    }
+}
+Person :: Object
+attr Person name String
+attr Person address String
+Person ::= Piet
+Piet.name := "Piet"
+Piet.address := "Kalverstraat"
+String a
+Piet.address=a ? [(a="Kalverstraat")][..]
+</pre>
+    </div>
+  </section>
+  <section class="tour-section" id="scoping">
+    <h2>Scoping</h2>
+    <p>A <code>{ }</code> block introduces a namespace; a <code>private</code> declaration is hidden
+       outside its block; and the same name can be reused independently in separate scopes. Both scopes
+       below declare their own <code>XXX</code> member without any clash.</p>
+    <div class="nelumbo-field" data-height="240px">import nelumbo.logic
+{
+    Aa         :: Object
+    private Aa ::= XXX
+    Aa x
+    x=XXX ?
+}
+{
+    Bb         :: Object
+    private Bb ::= XXX
+    Bb y
+    y=XXX ?
+}
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">The third scope declares <code>Cc</code> with members <code>XXX</code> and
+         <code>YYY</code>, but its query binds <code>z</code> to the wrong one. Fix the query so
+         <code>z=XXX</code> holds.</p>
+      <div class="nelumbo-field" data-height="240px">import nelumbo.logic
+{
+    Aa         :: Object
+    private Aa ::= XXX
+    Aa x
+    x=XXX ? [(x=XXX)][..]
+}
+{
+    Bb         :: Object
+    private Bb ::= XXX
+    Bb y
+    y=XXX ? [(y=XXX)][..]
+}
+{
+    Cc         :: Object
+    private Cc ::= XXX, YYY
+    Cc z
+    z=YYY ? [(z=XXX)][..]
+}
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+{
+    Aa         :: Object
+    private Aa ::= XXX
+    Aa x
+    x=XXX ? [(x=XXX)][..]
+}
+{
+    Bb         :: Object
+    private Bb ::= XXX
+    Bb y
+    y=XXX ? [(y=XXX)][..]
+}
+{
+    Cc         :: Object
+    private Cc ::= XXX, YYY
+    Cc z
+    z=XXX ? [(z=XXX)][..]
+}
+</pre>
+    </div>
+  </section>
+</main>
+<link rel="stylesheet" href="/assets/nelumbo-fields.css">
+<script src="/assets/nelumbo-fields.js"></script>
+<script>
+  (function () {
+    var sections = document.querySelectorAll('.tour-section');
+    var links = document.querySelectorAll('aside nav a[data-section]');
+    function show(id) {
+      var found = document.getElementById(id);
+      if (!found) { return; }
+      sections.forEach(function (s) { s.classList.toggle('active', s.id === id); });
+      links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('data-section') === id); });
+      NelumboFields.mountFields(found);
+      if (location.hash !== '#' + id) { history.replaceState(null, '', '#' + id); }
+    }
+    links.forEach(function (a) {
+      a.addEventListener('click', function (e) { e.preventDefault(); show(a.getAttribute('data-section')); });
+    });
+    NelumboFields.connect();
+    var initial = (location.hash || '').replace('#', '');
+    show(document.getElementById(initial) ? initial : sections[0].id);
+  })();
+</script>
+</body>
+</html>

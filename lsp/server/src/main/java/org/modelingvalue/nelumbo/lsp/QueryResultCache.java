@@ -20,10 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -31,6 +34,7 @@ import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.syntax.Token;
 
@@ -43,9 +47,14 @@ import org.modelingvalue.nelumbo.syntax.Token;
 public class QueryResultCache {
     private static final long DEBOUNCE_MS = 300;
 
-    private final NlDocumentManager                            documentManager;
-    private final ScheduledExecutorService                     scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+    private final NlDocumentManager                             documentManager;
+    private final ScheduledExecutorService                      scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "nelumbo-query-eval");
+        t.setDaemon(true);
+        return t;
+    });
+    private final ExecutorService                               backstop  = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "nelumbo-query-eval-backstop");
         t.setDaemon(true);
         return t;
     });
@@ -78,14 +87,52 @@ public class QueryResultCache {
         hints.remove(uri);
     }
 
+    /** Stop the debounce scheduler and backstop executor; used when an embedded server's connection closes. */
+    public void shutdown() {
+        scheduler.shutdownNow();
+        backstop.shutdownNow();
+    }
+
     private void evaluate(String uri) {
-        NlDocument document = documentManager.getDocument(uri);
+        Workspace  workspace   = documentManager.workspace();
+        NlDocument document    = documentManager.getDocument(uri);
         if (document == null) {
             return;
         }
+        long             deadlineMs  = workspace.getEvalDeadlineMs();
         List<Diagnostic> diagnostics = NlDocument.baseDiagnostics(document.tokenizerResult(), document.parserResult());
         try {
-            Map<Query, QueryResult> results = QueryEvaluator.evaluate(document.content(), uri);
+            Map<Query, QueryResult> results;
+            if (deadlineMs > 0) {
+                String  content = document.content();
+                String  docUri  = uri;
+                Future<Map<Query, QueryResult>> future = backstop.submit(
+                        () -> QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), deadlineMs, content, docUri));
+                try {
+                    results = future.get(deadlineMs + 2000, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException te) {
+                    future.cancel(true);
+                    hints.put(uri, List.of());
+                    NlDocument.publishDiagnostics(workspace, uri, diagnostics);
+                    LanguageClient client = workspace.getClient();
+                    if (client != null) {
+                        try {
+                            client.refreshInlayHints();
+                        } catch (Exception ex) {
+                            // client may not support inlay-hint refresh
+                        }
+                    }
+                    return;
+                } catch (java.util.concurrent.ExecutionException ee) {
+                    throw ee.getCause() instanceof RuntimeException re ? re : new RuntimeException(ee.getCause());
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    hints.put(uri, List.of());
+                    return;
+                }
+            } else {
+                results = QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), 0, document.content(), uri);
+            }
             List<InlayHint>         list    = new ArrayList<>();
             for (Map.Entry<Query, QueryResult> e : results.entrySet()) {
                 QueryResult result = e.getValue();
@@ -107,10 +154,11 @@ public class QueryResultCache {
             hints.put(uri, List.of());
         }
         // republish parse diagnostics together with the query mismatches so neither clobbers the other.
-        NlDocument.publishDiagnostics(uri, diagnostics);
-        if (Main.client != null) {
+        NlDocument.publishDiagnostics(workspace, uri, diagnostics);
+        LanguageClient client    = workspace.getClient();
+        if (client != null) {
             try {
-                Main.client.refreshInlayHints();
+                client.refreshInlayHints();
             } catch (Exception ex) {
                 // client may not support inlay-hint refresh; the next pull picks up the new results anyway.
             }

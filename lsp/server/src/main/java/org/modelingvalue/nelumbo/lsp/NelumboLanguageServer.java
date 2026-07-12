@@ -38,15 +38,40 @@ import org.eclipse.lsp4j.TextDocumentSyncOptions;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.lsp4j.WorkspaceServerCapabilities;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
 
-public class NelumboLanguageServer implements LanguageServer {
+public class NelumboLanguageServer implements LanguageServer, LanguageClientAware {
     private final Workspace          workspace = new Workspace();
+    private final Runnable           exitHandler;
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private       ClientCapabilities capabilities;
+
+    public NelumboLanguageServer() {
+        this.exitHandler = () -> {
+            // a clean and quick shutdown:
+            System.err.println("~~~ exit");
+            System.exit(0);
+        };
+    }
+
+    /** Embedded use: seed documents with a custom base KB, bound query auto-eval, and never exit the host JVM. */
+    public NelumboLanguageServer(KnowledgeBase baseKnowledgeBase, long evalDeadlineMs, Runnable exitHandler) {
+        this.exitHandler = exitHandler;
+        workspace.setBaseKnowledgeBase(baseKnowledgeBase);
+        workspace.setEvalDeadlineMs(evalDeadlineMs);
+        workspace.setEmbedded(true);
+    }
+
+    @Override
+    public void connect(LanguageClient client) {
+        workspace.setClient(client);
+    }
 
     public Workspace getWorkspace() {
         return workspace;
@@ -56,12 +81,15 @@ public class NelumboLanguageServer implements LanguageServer {
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         capabilities = params.getCapabilities();
 
-        if (params.getWorkspaceFolders() != null) {
-            for (WorkspaceFolder folder : params.getWorkspaceFolders()) {
-                workspace.getFolders().add(folder.getUri());
+        // embedded (public /lsp) mode never trusts client-supplied folders: no resolve(), no filesystem walk
+        if (!workspace.isEmbedded()) {
+            if (params.getWorkspaceFolders() != null) {
+                for (WorkspaceFolder folder : params.getWorkspaceFolders()) {
+                    workspace.getFolders().add(folder.getUri());
+                }
             }
+            workspace.resolve();
         }
-        workspace.resolve();
 
         ServerCapabilities serverCapabilities = new ServerCapabilities();
         serverCapabilities.setWorkspace(makeWorkspaceCapabilities());
@@ -144,9 +172,7 @@ public class NelumboLanguageServer implements LanguageServer {
 
     @Override
     public void exit() {
-        // a clean and quick shutdown:
-        System.err.println("~~~ exit");
-        System.exit(0);
+        exitHandler.run();
     }
 
     //==========================================================================================================
