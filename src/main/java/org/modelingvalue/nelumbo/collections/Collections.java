@@ -193,4 +193,20 @@ public class Collections extends Predicate {
         }
         return set(2, filter).factCI();
     }
+
+    @NelumboMethod
+    protected InferResult sort(NCollection a, Lambda l, NList b) {
+        if (a == null || l == null) {
+            return unknown();
+        }
+        NList filter = new NList(a.elementType(),
+                a.collection().sorted((x, y) -> l.test(x, y) ? -1 : l.test(y, x) ? 1 : 0).asList());
+        if (hasIncompleteResult()) {
+            return incompleteResult();
+        }
+        if (b != null) {
+            return filter.equals(b) ? factCC() : falsehoodCC();
+        }
+        return set(2, filter).factCI();
+    }
 }
