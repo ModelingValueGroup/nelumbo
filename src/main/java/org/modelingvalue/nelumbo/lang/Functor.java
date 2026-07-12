@@ -405,14 +405,13 @@ public class Functor extends Node implements FunctorOrType {
             Object[] nodVars = new Object[args.size()];
             Object[] litVars = new Object[args.size()];
             List<Type> litArgs = args.replaceAll(Type::toLiteral);
-            Object id = new Object();
             for (int v = 0; v < args.size(); v++) {
-                nodVars[v] = new Variable(List.of(), false, args.get(v), "n" + (v + 1), id);
-                litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1), id);
+                nodVars[v] = new Variable(List.of(), false, args.get(v), "n" + (v + 1));
+                litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1));
             }
             Node nodNode = nodFunctor.construct(List.of(), nodVars, knowledgeBase, ctx);
             Node litNode = litFunctor.construct(List.of(), litVars, knowledgeBase, ctx);
-            Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r", id) : null;
+            Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
             Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
             Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
             for (int c = args.size() - 1; c >= 0; c--) {

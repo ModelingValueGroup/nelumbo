@@ -402,10 +402,7 @@ public class Node extends StructImpl implements AstElement {
                 if (thisVal != null && doGetBinding(thisVal, i)) {
                     vars = vars.put(declVar, thisVal);
                     if (thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
-                        vars = vars.putAll(thisNode.getBinding().removeAllKey(allLocalVars()).replaceAll(e -> {
-                            Variable nodeVar = e.getKey();
-                            return Entry.of(nodeVar.rename(n -> "$" + n), e.getValue());
-                        }));
+                        vars = thisNode.getBinding(thisNode.declaration(), vars);
                     }
                 }
             }
@@ -520,8 +517,14 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Node makeVariablesUnique() throws ParseException {
+        assert this == declaration();
         Object id = new Object();
-        return replace(n -> n instanceof Variable v ? v.makeUnique(id) : n);
+        return replace(n -> {
+            if (n instanceof Variable v) {
+                return v.makeUnique(id);
+            }
+            return n;
+        }).resetDeclaration();
     }
 
     public Node setTypes() {
