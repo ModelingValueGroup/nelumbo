@@ -83,7 +83,7 @@ public final class Transform extends Node {
     }
 
     @Override
-    public Transform makeVariablesUnique() {
+    public Transform makeVariablesUnique() throws ParseException {
         return (Transform) super.makeVariablesUnique();
     }
 

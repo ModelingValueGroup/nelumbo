@@ -244,7 +244,7 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    public Rule makeVariablesUnique() {
+    public Rule makeVariablesUnique() throws ParseException {
         return (Rule) super.makeVariablesUnique();
     }
 

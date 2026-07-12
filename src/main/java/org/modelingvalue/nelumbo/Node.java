@@ -427,13 +427,6 @@ public class Node extends StructImpl implements AstElement {
         return v instanceof Type type ? type : v instanceof Node node ? node.type() : null;
     }
 
-    public Node makeVariablesUnique() {
-        Object id = new Object();
-        Map<Variable, Object> variables = getBinding();
-        variables = variables.replaceAll(e -> Entry.of(e.getKey(), e.getKey().makeUnique(id)));
-        return setBinding(declaration(), variables, false).resetDeclaration();
-    }
-
     public Node set(Variable var, Object val) {
         return setBinding(declaration(), Map.of(Entry.of(var, val)), false);
     }
@@ -524,6 +517,11 @@ public class Node extends StructImpl implements AstElement {
         Map<Variable, Object> vars = getBinding();
         vars = vars.replaceAll(e -> e.getValue() instanceof Type ? Entry.of(e.getKey(), e.getKey()) : e);
         return setBinding(vars);
+    }
+
+    public Node makeVariablesUnique() throws ParseException {
+        Object id = new Object();
+        return replace(n -> n instanceof Variable v ? v.makeUnique(id) : n);
     }
 
     public Node setTypes() {

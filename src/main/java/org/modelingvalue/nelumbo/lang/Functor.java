@@ -467,7 +467,7 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    public Functor makeVariablesUnique() {
+    public Functor makeVariablesUnique() throws ParseException {
         return (Functor) super.makeVariablesUnique();
     }
 
