@@ -54,12 +54,17 @@ intellijPlatform {
     sandboxContainer = layout.buildDirectory.dir("idea-sandbox")
 }
 
-// initializeIntellijPlatformPlugin unconditionally (re)creates <root>/.intellijPlatform; remove it again
-// as long as it stays empty (File.delete() on a directory is rmdir: it fails silently when non-empty)
+// the IntelliJ Platform Gradle Plugin unconditionally (re)creates <root>/.intellijPlatform; remove it
+// again as long as it stays empty (File.delete() on a directory is rmdir: it fails silently when
+// non-empty). It is created at configuration time of every build (hence the whenReady hook) and
+// again when initializeIntellijPlatformPlugin executes (hence the finalizer).
+val platformCacheDir = rootProject.layout.projectDirectory.dir(".intellijPlatform").asFile
+gradle.taskGraph.whenReady {
+    platformCacheDir.delete()
+}
 val removeEmptyPlatformCacheDir by tasks.registering {
-    val cacheDir = rootProject.layout.projectDirectory.dir(".intellijPlatform").asFile
     doLast {
-        cacheDir.delete()
+        platformCacheDir.delete()
     }
 }
 tasks.named("initializeIntellijPlatformPlugin") {
