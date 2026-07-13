@@ -49,6 +49,23 @@ java {
     }
 }
 
+intellijPlatform {
+    // keep the IDE sandbox (runIde/test scratch data) inside the build dir instead of <root>/.intellijPlatform
+    sandboxContainer = layout.buildDirectory.dir("idea-sandbox")
+}
+
+// initializeIntellijPlatformPlugin unconditionally (re)creates <root>/.intellijPlatform; remove it again
+// as long as it stays empty (File.delete() on a directory is rmdir: it fails silently when non-empty)
+val removeEmptyPlatformCacheDir by tasks.registering {
+    val cacheDir = rootProject.layout.projectDirectory.dir(".intellijPlatform").asFile
+    doLast {
+        cacheDir.delete()
+    }
+}
+tasks.named("initializeIntellijPlatformPlugin") {
+    finalizedBy(removeEmptyPlatformCacheDir)
+}
+
 tasks {
     patchPluginXml {
         sinceBuild.set("232")

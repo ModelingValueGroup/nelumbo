@@ -34,6 +34,8 @@ Run a single test method:
 
 The root `test` task depends on `:lsp:server:test`, so `./gradlew test` runs both.
 
+The IntelliJ plugin's IDE sandbox is redirected to `lsp/plugins/intellij/build/idea-sandbox` (`sandboxContainer` in its build script), so it is wiped by `clean`. The `.intellijPlatform/` dir at the repo root (gitignored) is IntelliJ Platform Gradle Plugin cache; the plugin unconditionally recreates it, so the intellij build script has a `removeEmptyPlatformCacheDir` finalizer that rmdirs it when it stays empty (content appears on demand: ivy descriptors on cold dependency resolution, coroutines javaagent for runIde/test - then it is left alone). Its location is not project-relative configurable (the `org.jetbrains.intellij.platform.intellijPlatformCache` property resolves relative paths against the daemon cwd, so only absolute paths work there). `org.jetbrains.intellij.platform.selfUpdateCheck=false` in `gradle.properties` stops the plugin's update check from writing a lock file there (and avoids a network call). Note: changing `gradle.properties` while a daemon is up trips mvgplugin's "changed in mid air" guard - run `./gradlew --stop`.
+
 ## Architecture
 
 ### Module Structure
@@ -133,6 +135,6 @@ Adding a `.nl` example (`src/main/resources/org/modelingvalue/nelumbo/examples/`
 
 ## Code Conventions
 
-- All Java source files carry an LGPL 3.0 header (auto-corrected by `mvgCorrector` Gradle task using `header-template.txt`).
+- All Java source files carry an LGPL 3.0 header (auto-corrected by `mvgCorrector` Gradle task using `docs/header-template.txt`).
 - Git branches: `master` (release), `develop` (active development).
 - CI runs on GitHub Actions (`.github/workflows/build.yaml`). Skip CI with `[no-ci]` in commit message.
