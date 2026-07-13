@@ -60,7 +60,6 @@ public final class PatternResult implements ParseExceptionHandler {
         elements.clear();
         splitted.clear();
         merged.clear();
-        typeArgs.clear();
         functor = null;
         state = null;
         leftPrecedence = null;

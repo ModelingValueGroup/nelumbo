@@ -82,7 +82,7 @@ public class TypeMatcher {
                 }
             }
         }
-        if (!type.hasArguments() && (result.isEmpty() || type.variable() == null)) {
+        if (result.isEmpty() || (type.variable() == null && !type.hasArguments())) {
             outer: for (Entry<Type, TypeMatcher> e : typeArgs()) {
                 if (e.getKey().isMany()) {
                     for (Type m : e.getKey().many()) {

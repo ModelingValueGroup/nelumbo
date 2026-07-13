@@ -1,6 +1,6 @@
 import    nelumbo.integers
 
-Type E, F, T
+Type E, F
 
 Collection<E>   :: Object
 Set<E>          :: Collection<E>
@@ -17,7 +17,7 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @ne
                     concat(<List<E>>, <List<E>>, <List<E>>)                  @nelumbo.collections.Collections,
                     setFilter(<Set<E>>, <Lambda1<E,Boolean>>, <Set<E>>)      @nelumbo.collections.Collections,
                     listFilter(<List<E>>, <Lambda1<E,Boolean>>, <List<E>>)   @nelumbo.collections.Collections,
-                    map(<Collection<F>>, <Lambda1<F,T>>, <List<T>>)          @nelumbo.collections.Collections,
+                    map(<Collection<F>>, <Lambda1<F,E>>, <List<E>>)          @nelumbo.collections.Collections,
                     sort(<Collection<E>>, <Lambda2<E,E,Boolean>>, <List<E>>) @nelumbo.collections.Collections
 
 Boolean         ::= <Set<E>> "<"  <Set<E>>        #30,
@@ -39,7 +39,7 @@ Integer         ::= | <Collection<E>> | #35,
 List<E>         ::= [ <(> <E> <,> , <)*> ]   @nelumbo.collections.NList,
                     <List<E>> + <List<E>>                       #50,
                     <List<E>> where <Lambda1<E,Boolean>>        #37,
-                    <Collection<F>> map <Lambda1<F,T>>          #37,
+                    <Collection<F>> map <Lambda1<F,E>>          #37,
                     <Collection<E>> sort <Lambda2<E,E,Boolean>> #37
 
 Integer              i
@@ -73,9 +73,7 @@ l1 where leb = l2 <=>  listFilter(l1, leb, l2)
 c sort le2 = l    <=>  sort(c, le2, l)
 
 F             f
-T             t
 Collection<F> cf
-List<T>       lt
-Lambda1<F,T>  lft
+Lambda1<F,E>  lfe
 
-cf map lft = lt <=>  map(cf, lft, lt)
+cf map lfe = l <=>  map(cf, lfe, l)
