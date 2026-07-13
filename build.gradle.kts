@@ -135,4 +135,5 @@ tasks.named<Delete>("clean") {
 tasks.test {
     dependsOn(":lsp:server:test")
     dependsOn(":http:test")
+    dependsOn(":mcp:test")
 }

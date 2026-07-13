@@ -16,6 +16,7 @@ Requires **Java 21+**. Uses Gradle 8.14.3 (Kotlin DSL) via wrapper.
 ./gradlew jar                            # Core library only
 ./gradlew :lsp:server:serverJar          # LSP server shaded JAR
 ./gradlew :http:serverJar                # HTTP server shaded JAR (needs node/npm: bundles the Monaco/LSP frontend)
+./gradlew :mcp:mcpJar                    # MCP server shaded JAR (stdio; register as: java -jar nelumbo-mcp-server-<version>.jar)
 ./gradlew :lsp:plugins:eclipse:jar       # Eclipse plugin
 ./gradlew :lsp:plugins:intellij:build    # IntelliJ plugin
 ./gradlew editorJar                      # Standalone editor (ShadowJar)
@@ -40,6 +41,7 @@ The root `test` task depends on `:lsp:server:test`, so `./gradlew test` runs bot
 ```
 nelumbo (root)              → Core language: syntax, semantics, pattern matching, knowledge base
 ├── http                    → HTTP server (Javalin + Jackson): serves a KB over REST (/eval, /metadata, /health), an LSP WebSocket at /lsp, and the Monaco-based feature tour (/) and free-form playground (/playground.html) pages from src/main/resources/public/
+├── mcp                     → MCP stdio server (official MCP Java SDK): tools eval_nl, search_docs, get_example, new_model for LLM authoring of .nl decision models
 ├── lsp/server              → LSP server (depends on root + LSP4J + Jackson + Tyrus WebSocket)
 └── lsp/plugins/
     ├── eclipse             → Eclipse IDE plugin (Java, dropins-based)
@@ -76,6 +78,7 @@ The server is **embeddable**: `NelumboLanguageServer(baseKb, evalDeadlineMs, exi
 
 - `org.modelingvalue.nelumbo.KnowledgeBase` — Core language execution
 - `org.modelingvalue.nelumbo.lsp.Main` — LSP server
+- `org.modelingvalue.nelumbo.mcp.Main` — MCP server (stdio)
 - `org.modelingvalue.nelumbo.tools.NelumboEditor` — Standalone editor
 
 ## Testing
@@ -121,6 +124,12 @@ The pages are `tour.html` (served at `/`): a sidebar feature tour with 8 section
 End-to-end browser tests live in `http/src/main/frontend/e2e/` (Playwright, Chromium). In `http/src/main/frontend/` run `npm run test:e2e:install` once, then `npm run test:e2e` (which rebuilds `:http:serverJar` and runs the suite; `playwright.config.ts` spawns the jar on port 8899). They cover tour structure, Run->/eval, Show-solution, and the LSP features (diagnostics, hover, completion, go-to-definition) via the `NelumboFields.__editors`/`.__monaco` test hook. CI runs them after the build.
 
 **Public-deployment note.** The per-session guards above are in-process only. For a public site, front `/lsp` with a TLS reverse proxy that enforces per-IP connection limits (32 idle-but-pinging sockets can otherwise hold every session slot) and consider rate-limiting log output (malformed frames and unknown LSP methods each log a line).
+
+## MCP Module - LLM Authoring Tools
+
+`mcp/` is an MCP stdio server (`org.modelingvalue.nelumbo.mcp.Main`, SDK `io.modelcontextprotocol.sdk:mcp`) for LLM authoring of self-contained `.nl` decision models. Tools: `eval_nl` (structured diagnostics via the core `NelumboEvaluator`, enriched by the curated `Hints` table, plus per-query expectation results), `search_docs` (keyword search over `docs/**/*.md`, bundled at build time with an `index.txt`; query terms under 3 chars are ignored), `get_example` (bundled `.nl` corpus with curated descriptions), `new_model` (self-verifying skeleton, `ModelSkeleton` - its test evaluates the skeleton, so it must always stay valid; note: decision functors do not enumerate free variables, queries in the skeleton show the working idiom). Handlers live SDK-free in `NelumboTools`; `Main` owns protocol wiring, the eval deadline (`--eval-deadline-ms`, default 10s) and reroutes `System.out` to stderr (stdout is the JSON-RPC channel). `NelumboCli` now delegates to `NelumboEvaluator` (`tools/NelumboEvaluator.java`). Design: `docs/superpowers/specs/2026-07-12-mcp-server-design.md`.
+
+Adding a `.nl` example (`src/main/resources/org/modelingvalue/nelumbo/examples/`) requires registering it in two explicit lists: `ExampleCatalog.ENTRIES` (mcp, serves `get_example`) and `ExamplesTest` (core, runs it as a test) - neither auto-discovers files. The README has an "MCP Server" section with the install/usage story (`./gradlew :mcp:mcpJar` + `claude mcp add nelumbo -- java -jar ...`).
 
 ## Code Conventions
 

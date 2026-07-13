@@ -18,6 +18,7 @@ occur.
 - [Building](#building)
 - [IDE Plugins](#ide-plugins)
 - [Command-Line Interface](#command-line-interface)
+- [MCP Server](#mcp-server)
 - [Examples](#examples)
 - [Releasing](#releasing)
 - [Contributing](#contributing)
@@ -91,6 +92,33 @@ java -jar build/libs/nelumbo-<version>-cli.jar [options] <file>...
 ```
 
 Pass `-` in place of a filename to read from stdin. Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
+
+## MCP Server
+
+The `mcp` module is a [Model Context Protocol](https://modelcontextprotocol.io) stdio server that lets LLM agents author and verify self-contained `.nl` decision models. It exposes four tools:
+
+| Tool          | Purpose                                                                                                                      |
+|---------------|------------------------------------------------------------------------------------------------------------------------------|
+| `eval_nl`     | Parse and evaluate a `.nl` model; returns structured diagnostics and per-query results, including whether embedded expected results matched |
+| `search_docs` | Keyword search over the bundled language documentation                                                                       |
+| `get_example` | List or fetch the bundled working `.nl` examples                                                                             |
+| `new_model`   | Return a commented, self-verifying skeleton model to start from                                                              |
+
+Build the shaded jar:
+
+```sh
+./gradlew :mcp:mcpJar
+```
+
+Register it with an MCP client, for example Claude Code:
+
+```sh
+claude mcp add nelumbo -- java -jar $(pwd)/mcp/build/libs/nelumbo-mcp-server-<version>.jar
+```
+
+The server communicates over stdio (stdout is the JSON-RPC channel, logging goes to stderr). The query evaluation deadline defaults to 10 seconds and can be changed with `--eval-deadline-ms <ms>`.
+
+The intended agent workflow: start from `new_model`, look up syntax with `search_docs` and `get_example`, then iterate with `eval_nl` until it reports `ok=true` with all expected query results matched. The bundled example [`clubFees.nl`](src/main/resources/org/modelingvalue/nelumbo/examples/clubFees.nl) was authored end-to-end this way.
 
 ## Examples
 

@@ -14,27 +14,40 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo.mcp;
 
-// HTTP server
-include("http")
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// MCP server
-include("mcp")
+import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.mcp.Hints.Hint;
 
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
+public class HintsTest {
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-        }
+    @Test
+    public void newlineTokenErrorGetsPrecedenceHint() {
+        // The parser uses U.traceable() which renders literal newline as the two-char sequence \n
+        Hint h = Hints.hintFor("Unexpected token '\\n', expected '('");
+        assertTrue(h.text().contains("#0"));
+        assertTrue(h.docRef().contains("precedence"));
+    }
+
+    @Test
+    public void expectationMismatchGetsExpectedResultHint() {
+        Hint h = Hints.hintFor("Expected result [[(f=99)],true,[],true], found [[(f=5)],true,[],true]");
+        assertTrue(h.docRef().contains("test-expression"));
+        assertTrue(h.text().contains("falsehoods"));
+        assertTrue(h.text().contains("open"));
+    }
+
+    @Test
+    public void otherUnexpectedTokenGetsGrammarHint() {
+        Hint h = Hints.hintFor("Unexpected token 'blarg', expected NAME");
+        assertTrue(h.docRef().contains("grammar"));
+    }
+
+    @Test
+    public void unknownMessageGetsNoHint() {
+        assertNull(Hints.hintFor("something else entirely"));
     }
 }

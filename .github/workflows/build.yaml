@@ -58,6 +58,7 @@ jobs:
                         mvgCorrector \
                         build \
                         :http:serverJar \
+                        :mcp:mcpJar \
                         editorJar \
                         :lsp:plugins:eclipse:jar \
                         :lsp:plugins:intellij:buildPlugin \

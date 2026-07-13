@@ -14,27 +14,29 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo.mcp;
 
-// HTTP server
-include("http")
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// MCP server
-include("mcp")
+import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
+public class ModelSkeletonTest {
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-        }
+    @Test
+    public void skeletonEvaluatesCleanly() {
+        String nl = ModelSkeleton.skeleton("Loan eligibility");
+        assertTrue(nl.contains("Loan eligibility"));
+        EvalResult r = NelumboEvaluator.evaluate(nl, "skeleton.nl", 30_000);
+        assertTrue(r.ok(), () -> "diagnostics: " + r.diagnostics());
+        assertFalse(r.queries().isEmpty());
+        assertTrue(r.queries().stream().allMatch(q -> Boolean.TRUE.equals(q.expectationMatched())));
+    }
+
+    @Test
+    public void blankTitleGetsDefault() {
+        assertTrue(ModelSkeleton.skeleton(" ").contains("Decision model"));
     }
 }

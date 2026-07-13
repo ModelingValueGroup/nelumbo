@@ -14,27 +14,55 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo.mcp;
 
-// HTTP server
-include("http")
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// MCP server
-include("mcp")
+import java.util.List;
 
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
+import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.mcp.ExampleCatalog.Example;
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
+public class ExampleCatalogTest {
+
+    @Test
+    public void listContainsKnownExamplesWithDescriptions() {
+        List<Example> all = ExampleCatalog.list();
+        assertTrue(all.stream().anyMatch(e -> e.name().equals("family")));
+        assertTrue(all.stream().anyMatch(e -> e.name().equals("langOnly")));
+        assertTrue(all.stream().allMatch(e -> e.description() != null && !e.description().isBlank()));
+    }
+
+    @Test
+    public void familyDescriptionIsInformative() {
+        List<Example> all  = ExampleCatalog.list();
+        String        desc = all.stream()
+                               .filter(e -> e.name().equals("family"))
+                               .findFirst()
+                               .map(Example::description)
+                               .orElse("");
+        assertTrue(desc.toLowerCase().contains("family") || desc.toLowerCase().contains("fact"),
+                   "family description should mention 'family' or 'fact': " + desc);
+    }
+
+    @Test
+    public void everyEntryResolvesOnTheClasspath() {
+        for (Example e : ExampleCatalog.list()) {
+            assertNotNull(ExampleCatalog.content(e.name()), e.name());
         }
+    }
+
+    @Test
+    public void contentOfFamily() {
+        String content = ExampleCatalog.content("family");
+        assertNotNull(content);
+        assertTrue(content.contains("pc(Hendrik, Juliana)"));
+    }
+
+    @Test
+    public void unknownNameGivesNull() {
+        assertNull(ExampleCatalog.content("no-such-example"));
     }
 }
