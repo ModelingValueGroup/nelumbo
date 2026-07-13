@@ -91,7 +91,7 @@ public class TypeMatcher {
                         }
                     }
                 }
-                Type nvt = type.nonVariable();
+                Type nvt = type.nonVariable().nonFunction();
                 Variable var = e.getKey().variable();
                 Type found = typeArgs.get(var);
                 if (found == null) {
