@@ -16,7 +16,7 @@
 
 services:
   nelumbo:
-    image: registry.gitlab.com/openwalnoot/services-docker-images/nelumbo-website:latest
+    image: registry.openwalnoot.com/openwalnoot/services-docker-images/nelumbo-website:latest
     container_name: nelumbo
     restart: always
     networks:

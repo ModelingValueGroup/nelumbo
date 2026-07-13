@@ -22,8 +22,8 @@ on:
     workflow_dispatch:
 
 env:
-    DOCKER_REGISTRY: registry.gitlab.com
-    DOCKER_REPO    : registry.gitlab.com/openwalnoot/services-docker-images
+    DOCKER_REGISTRY: registry.openwalnoot.com
+    DOCKER_REPO    : registry.openwalnoot.com/openwalnoot/services-docker-images
     IMAGE_NAME     : nelumbo-website
 
 jobs:
