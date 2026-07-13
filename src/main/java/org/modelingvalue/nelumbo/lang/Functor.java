@@ -378,12 +378,10 @@ public class Functor extends Node implements FunctorOrType {
             }
             if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
                     && !Type.NAMESPACE.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
-                    && !Type.COLLECTION.isAssignableFrom(type) //
-                    && args.flatMap(t -> t.hasArguments() ? t.arguments() : List.of(t))
-                            .noneMatch(t -> Type.OBJECT.equals(t) //
-                                    || Type.BOOLEAN.isAssignableFrom(t) //
-                                    || Type.VARIABLE.isAssignableFrom(t) //
-                                    || Type.LITERAL.isAssignableFrom(t))) {
+                    && args.noneMatch(t -> Type.OBJECT.equals(t) //
+                            || Type.BOOLEAN.equals(t) //
+                            || Type.VARIABLE.equals(t) //
+                            || Type.LITERAL.equals(t))) {
                 toLiteral = true;
             }
         }
