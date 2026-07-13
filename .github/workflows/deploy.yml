@@ -1,0 +1,144 @@
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## (C) Copyright 2018-2026 Modeling Value Group B.V. (http://modelingvalue.org)                                        ~
+##                                                                                                                     ~
+## Licensed under the GNU Lesser General Public License v3.0 (the 'License'). You may not use this file except in      ~
+## compliance with the License. You may obtain a copy of the License at: https://choosealicense.com/licenses/lgpl-3.0  ~
+## Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on ~
+## an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the  ~
+## specific language governing permissions and limitations under the License.                                          ~
+##                                                                                                                     ~
+## Maintainers:                                                                                                        ~
+##     Wim Bast, Tom Brus                                                                                              ~
+##                                                                                                                     ~
+## Contributors:                                                                                                       ~
+##     Victor Lap                                                                                                      ~
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+name: deploy-website
+
+on:
+    push:
+        branches: [ master ]
+    workflow_dispatch:
+
+env:
+    DOCKER_REGISTRY: registry.gitlab.com
+    DOCKER_REPO    : registry.gitlab.com/openwalnoot/services-docker-images
+    IMAGE_NAME     : nelumbo-website
+
+jobs:
+    validate:
+        runs-on: ubuntu-latest
+        if     : "!contains(github.event.head_commit.message, '[no-ci]')"
+        steps:
+            -   name: Validate required secrets and env vars
+                run : |
+                    missing=()
+
+                    [ -z "${{ secrets.OW_HOST }}"             ] && missing+=("secret: OW_HOST")
+                    [ -z "${{ secrets.OW_USER }}"             ] && missing+=("secret: OW_USER")
+                    [ -z "${{ secrets.OW_PRIVATE_KEY }}"      ] && missing+=("secret: OW_PRIVATE_KEY")
+                    [ -z "${{ secrets.GITLAB_USER }}"         ] && missing+=("secret: GITLAB_USER")
+                    [ -z "${{ secrets.GITLAB_DOCKER_TOKEN }}" ] && missing+=("secret: GITLAB_DOCKER_TOKEN")
+                    [ -z "${{ secrets.ALLREP_TOKEN }}"        ] && missing+=("secret: ALLREP_TOKEN")
+
+                    [ -z "${{ env.DOCKER_REGISTRY }}"         ] && missing+=("env: DOCKER_REGISTRY")
+                    [ -z "${{ env.DOCKER_REPO }}"             ] && missing+=("env: DOCKER_REPO")
+                    [ -z "${{ env.IMAGE_NAME }}"              ] && missing+=("env: IMAGE_NAME")
+
+                    if [ ${#missing[@]} -ne 0 ]; then
+                        echo "::error::Missing required configuration: ${missing[*]}"
+                        exit 1
+                    fi
+                    echo "All required secrets and env vars are set"
+
+    build-and-push:
+        needs  : validate
+        if     : "!contains(github.event.head_commit.message, '[no-ci]')"
+        runs-on: ubuntu-24.04-arm
+        env    :
+            ALLREP_TOKEN: "${{secrets.ALLREP_TOKEN}}"
+            TOKEN       : "${{secrets.ALLREP_TOKEN}}"
+        steps  :
+            -   uses: actions/checkout@v7
+                with:
+                    fetch-depth: 0
+
+            -   uses: actions/setup-java@v4
+                with:
+                    java-version: 21
+                    distribution: zulu
+                    cache       : gradle
+
+            # Node is needed to build the website module's Monaco/LSP frontend bundle (:website:npmBundle)
+            -   uses: actions/setup-node@v4
+                with:
+                    node-version         : 22
+                    cache                : npm
+                    cache-dependency-path: website/src/main/frontend/package-lock.json
+
+            -   name: Build server jar
+                run : ./gradlew :website:serverJar
+
+            -   name: Set up Docker Buildx
+                uses: docker/setup-buildx-action@v4
+
+            -   name: Log in to Container Registry
+                uses: docker/login-action@v3
+                with:
+                    registry: ${{ env.DOCKER_REGISTRY }}
+                    username: ${{ secrets.GITLAB_USER }}
+                    password: ${{ secrets.GITLAB_DOCKER_TOKEN }}
+
+            -   name: Extract metadata
+                id  : meta
+                uses: docker/metadata-action@v5
+                with:
+                    images: ${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                    tags  : |
+                        type=sha,prefix=
+                        type=raw,value=latest
+
+            -   name: Build and push
+                uses: docker/build-push-action@v6
+                with:
+                    context: website
+                    file   : website/Dockerfile
+                    push   : true
+                    tags   : ${{ steps.meta.outputs.tags }}
+                    labels : ${{ steps.meta.outputs.labels }}
+
+    deploy:
+        needs  : build-and-push
+        if     : "!contains(github.event.head_commit.message, '[no-ci]')"
+        runs-on: ubuntu-latest
+        steps  :
+            -   uses: actions/checkout@v7
+
+            -   name: Setup SSH key
+                run : |
+                    mkdir -p ~/.ssh
+                    echo "${{ secrets.OW_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+                    chmod 600 ~/.ssh/deploy_key
+                    ssh-keyscan -H ${{ secrets.OW_HOST }} >> ~/.ssh/known_hosts
+
+            -   name: Deploy to server
+                run : |
+                    SERVER="${{ secrets.OW_USER }}@${{ secrets.OW_HOST }}"
+                    DIR="/data/sites/nelumbo.nl"
+                    ssh -i ~/.ssh/deploy_key "$SERVER" "mkdir -p '$DIR'"
+                    scp -i ~/.ssh/deploy_key website/docker-compose.yml "$SERVER:$DIR"
+
+                    ssh -i ~/.ssh/deploy_key "$SERVER" << ENDSSH
+                    set -eu
+                    cd "$DIR"
+                    docker compose pull
+                    docker compose up -d --force-recreate
+                    ENDSSH
+
+            -   name: Health check
+                run : |
+                    SERVER="${{ secrets.OW_USER }}@${{ secrets.OW_HOST }}"
+                    sleep 5
+                    ssh -i ~/.ssh/deploy_key "$SERVER" \
+                        "docker run --rm --network web curlimages/curl -fsS http://nelumbo:8080/health"

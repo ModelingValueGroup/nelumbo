@@ -14,27 +14,11 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo.website;
 
-// Website (HTTP server + Monaco/LSP frontend)
-include("website")
-
-// MCP server
-include("mcp")
-
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
-
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-        }
-    }
+/**
+ * A named Nelumbo source: the {@code name} is used for error reporting and metadata, {@code content} is the raw
+ * {@code .nl} text.
+ */
+public record NamedSource(String name, String content) {
 }

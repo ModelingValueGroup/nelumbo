@@ -40,12 +40,12 @@ jobs:
                     distribution: zulu
                     cache       : gradle
 
-            # Node is needed to build the http module's Monaco/LSP frontend bundle (:http:npmBundle)
+            # Node is needed to build the website module's Monaco/LSP frontend bundle (:website:npmBundle)
             -   uses: actions/setup-node@v4
                 with:
                     node-version         : 22
                     cache                : npm
-                    cache-dependency-path: http/src/main/frontend/package-lock.json
+                    cache-dependency-path: website/src/main/frontend/package-lock.json
 
             # Ensure Docker CLI and Buildx are available for docker commands
             -   name: Set up Docker Buildx
@@ -57,7 +57,7 @@ jobs:
                     ./gradlew --info \
                         mvgCorrector \
                         build \
-                        :http:serverJar \
+                        :website:serverJar \
                         :mcp:mcpJar \
                         editorJar \
                         :lsp:plugins:eclipse:jar \
@@ -70,7 +70,7 @@ jobs:
             # re-trigger :mvgcorrector against the generated docs/site assets and fail); this step
             # only runs Playwright against that pre-built jar.
             -   name: "e2e (playwright)"
-                working-directory: http/src/main/frontend
+                working-directory: website/src/main/frontend
                 run : |
                     npm ci
                     npx playwright install --with-deps chromium

@@ -126,7 +126,7 @@ tasks.register<Exec>("build-slides") {
 tasks.named<Delete>("clean") {
     delete(file("docs/site"))
     delete(rootProject.layout.buildDirectory)
-    delete(file("http/build"))
+    delete(file("website/build"))
     delete(file("lsp/server/build"))
     delete(file("lsp/plugins/eclipse/build"))
     delete(file("lsp/plugins/intellij/build"))
@@ -134,6 +134,6 @@ tasks.named<Delete>("clean") {
 
 tasks.test {
     dependsOn(":lsp:server:test")
-    dependsOn(":http:test")
+    dependsOn(":website:test")
     dependsOn(":mcp:test")
 }
