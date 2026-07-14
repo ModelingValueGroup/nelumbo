@@ -115,7 +115,7 @@ Building a DSL in Nelumbo means declaring `MyType :: Root` and giving it functor
 
 ## Website Module - LSP over WebSocket
 
-`NelumboHttpServer` exposes a `/lsp` WebSocket route (in addition to the REST endpoints). Each connection gets its own embedded `NelumboLanguageServer` instance wired via `LspBridge`. Wire format: one plain JSON-RPC message per text frame (no Content-Length framing - vscode-ws-jsonrpc compatible). A session cap (default 32, `--max-lsp-sessions` on the CLI / 4-arg constructor) rejects excess connections with close code 1013; per-session guards: 64 KB text-frame limit, 10-minute idle timeout, 64 documents max, and the eval deadline also bounds LSP parsing/inference. The 3-arg ctor delegates to the 4-arg one.
+`NelumboHttpServer` exposes a `/lsp` WebSocket route (in addition to the REST endpoints). Javalin 7: routes are registered inside the `Javalin.create(config -> ...)` block via `config.routes.get/post/ws` - the `app.get(...)` instance methods were removed in 7.x. Each connection gets its own embedded `NelumboLanguageServer` instance wired via `LspBridge`. Wire format: one plain JSON-RPC message per text frame (no Content-Length framing - vscode-ws-jsonrpc compatible). A session cap (default 32, `--max-lsp-sessions` on the CLI / 4-arg constructor) rejects excess connections with close code 1013; per-session guards: 64 KB text-frame limit, 10-minute idle timeout, 64 documents max, and the eval deadline also bounds LSP parsing/inference. The 3-arg ctor delegates to the 4-arg one.
 
 `lsp:server` publishes a plain jar with classifier `"plain"` (in addition to the shadow jar). `website/build.gradle.kts` depends on it via a normal `implementation(project(":lsp:server"))` dependency.
 

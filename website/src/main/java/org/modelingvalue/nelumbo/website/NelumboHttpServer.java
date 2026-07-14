@@ -120,15 +120,15 @@ public final class NelumboHttpServer {
             // make the 64 KB text-frame limit explicit (Jetty's default is the same size, but do not rely on it)
             config.jetty.modifyWebSocketServletFactory(factory ->
                     factory.setMaxTextMessageSize(LspWebSocket.MAX_MESSAGE_CHARS));
+            config.routes.get("/", ctx -> ctx.html(landing));
+            config.routes.get("/tour.html", ctx -> ctx.html(tour));
+            config.routes.get("/playground.html", ctx -> ctx.html(playground));
+            config.routes.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
+            config.routes.post("/eval", ctx -> handleEval(ctx, false));
+            config.routes.post("/eval/trace", ctx -> handleEval(ctx, true));
+            config.routes.get("/metadata", ctx -> ctx.json(metadata()));
+            config.routes.ws("/lsp", new LspWebSocket(baseKb, timeoutMs, maxLspSessions)::configure);
         });
-        app.get("/", ctx -> ctx.html(landing));
-        app.get("/tour.html", ctx -> ctx.html(tour));
-        app.get("/playground.html", ctx -> ctx.html(playground));
-        app.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
-        app.post("/eval", ctx -> handleEval(ctx, false));
-        app.post("/eval/trace", ctx -> handleEval(ctx, true));
-        app.get("/metadata", ctx -> ctx.json(metadata()));
-        app.ws("/lsp", new LspWebSocket(baseKb, timeoutMs, maxLspSessions)::configure);
         app.start(port);
         return app.port();
     }
