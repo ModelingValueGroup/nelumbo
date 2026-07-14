@@ -18,6 +18,7 @@ occur.
 - [Building](#building)
 - [IDE Plugins](#ide-plugins)
 - [Command-Line Interface](#command-line-interface)
+- [HTTP Server](#http-server)
 - [MCP Server](#mcp-server)
 - [Examples](#examples)
 - [Releasing](#releasing)
@@ -58,6 +59,7 @@ Build individual components:
 
 ```sh
 ./gradlew jar                          # core library
+./gradlew :nelumbo-server:serverJar    # HTTP eval server (shaded jar)
 ./gradlew :lsp:server:serverJar        # LSP server (shaded jar)
 ./gradlew :lsp:plugins:eclipse:jar     # Eclipse plugin (includes LSP server)
 ./gradlew :lsp:plugins:intellij:build  # IntelliJ plugin
@@ -92,6 +94,26 @@ java -jar build/libs/nelumbo-<version>-cli.jar [options] <file>...
 ```
 
 Pass `-` in place of a filename to read from stdin. Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
+
+## HTTP Server
+
+The `nelumbo-server` module is a lean HTTP executor for `.nl` specifications: it loads the given files (directories are scanned for `*.nl`) into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server and has no third-party dependencies — the shaded jar is about 2 MB. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-server-<version>.jar`, or can be built from source:
+
+```sh
+./gradlew :nelumbo-server:serverJar
+java -jar nelumbo-server/build/libs/nelumbo-server-<version>.jar [--port N] [--timeout MS] [<file-or-dir>...]
+```
+
+| Endpoint           | Purpose                                                                                              |
+|--------------------|------------------------------------------------------------------------------------------------------|
+| `POST /eval`       | Evaluate a posted `.nl` document (raw text, or a JSON envelope `{"document": "...", "limit": N}`); returns query results as JSON |
+| `POST /eval/trace` | Like `/eval`, with a (currently stubbed) trace field                                                  |
+| `GET /metadata`    | Knowledge base metadata: declared types, functors, rules, and facts                                   |
+| `GET /health`      | Liveness check                                                                                        |
+
+Each request is evaluated against a throwaway child of the loaded knowledge base, so requests are isolated from each other and never mutate shared state. The per-request inference budget defaults to 30 seconds (`--timeout`, 0 disables).
+
+The website server (`nelumbo-http-server-<version>.jar`, the `website` module) serves the same REST endpoints plus an LSP editor service over WebSocket and the public pages of [nelumbo.nl](https://nelumbo.nl).
 
 ## MCP Server
 
