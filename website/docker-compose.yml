@@ -25,7 +25,7 @@ services:
       - "8080"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nelumbo.rule=Host(`nelumbo.nl`)"
+      - "traefik.http.routers.nelumbo.rule=Host(`nelumbo.nl`) || Host(`www.nelumbo.nl`)"
       - "traefik.http.services.nelumbo.loadbalancer.server.port=8080"
 
 networks:
