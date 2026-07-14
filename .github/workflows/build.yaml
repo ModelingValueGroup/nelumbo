@@ -109,6 +109,8 @@ jobs:
                     path: |
                         nelumbo-server/build/libs/nelumbo-server-*.jar
                         !nelumbo-server/build/libs/*-plain.jar
+                        !nelumbo-server/build/libs/*-sources.jar
+                        !nelumbo-server/build/libs/*-javadoc.jar
                     if-no-files-found: error
                     retention-days: 30
 
