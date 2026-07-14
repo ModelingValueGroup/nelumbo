@@ -21,18 +21,10 @@ defaultTasks("mvgCorrector", "test", "publish", "mvgTagger", "editorJar", "cliJa
 plugins {
     `java-library`
     `maven-publish`
-    id("org.modelingvalue.gradle.mvgplugin") version "2.3.23"
+    id("org.modelingvalue.gradle.mvgplugin") version "2.3.24"
     id("com.gradleup.shadow") version "9.5.1"
     idea
     eclipse
-}
-
-// Locally built artifacts are not for distribution; version them "dev" so they can not be mistaken
-// for a release. In CI mvgplugin rebases the gradle.properties version to the next vacant tag version.
-if (System.getenv("CI") != "true") {
-    allprojects {
-        version = "dev"
-    }
 }
 
 mvgcorrector {
