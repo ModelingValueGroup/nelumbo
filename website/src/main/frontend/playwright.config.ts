@@ -31,7 +31,7 @@ export default defineConfig({
         { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     ],
     webServer: {
-        command:             'java -jar "' + serverJar() + '" --port ' + PORT,
+        command:             'java -jar "' + serverJar() + '" --port ' + PORT + ' --no-gui',
         url:                 'http://localhost:' + PORT + '/health',
         reuseExistingServer: !process.env.CI,
         timeout:             60_000,

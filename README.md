@@ -113,6 +113,8 @@ java -jar nelumbo-server/build/libs/nelumbo-server-<version>.jar [--port N] [--t
 
 Each request is evaluated against a throwaway child of the loaded knowledge base, so requests are isolated from each other and never mutate shared state. The per-request inference budget defaults to 30 seconds (`--timeout`, 0 disables).
 
+The jar is also double-clickable: when launched without a console it shows a small status window with the server URL and Open in Browser / Stop buttons (`--no-gui` suppresses it).
+
 The website server (`nelumbo-http-server-<version>.jar`, the `website` module) serves the same REST endpoints plus an LSP editor service over WebSocket and the public pages of [nelumbo.nl](https://nelumbo.nl).
 
 ## MCP Server

@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.server.KnowledgeBaseLoader;
 import org.modelingvalue.nelumbo.server.NamedSource;
+import org.modelingvalue.nelumbo.server.ServerGui;
 
 /**
  * Command-line entry point: loads the given {@code .nl} files/directories into a base knowledge base and serves it over
@@ -44,6 +45,7 @@ public final class Main {
         int               port           = 8080;
         long              timeoutMs      = NelumboHttpServer.DEFAULT_TIMEOUT_MS;
         int               maxLspSessions = NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS;
+        boolean           noGui          = false;
         List<Path>        paths          = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             String a = args[i];
@@ -68,6 +70,9 @@ public final class Main {
                     fail("missing value for " + a);
                 }
                 maxLspSessions = Integer.parseInt(args[++i]);
+                break;
+            case "--no-gui":
+                noGui = true;
                 break;
             case "-h":
             case "--help":
@@ -98,8 +103,11 @@ public final class Main {
         KnowledgeBase base   = KnowledgeBaseLoader.load(sources);
         NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs, maxLspSessions);
         int bound = server.start(port);
-        System.out.println("Nelumbo HTTP server listening on http://localhost:" + bound
-                + " (" + files.size() + " file(s) loaded, timeout " + timeoutMs + " ms)");
+        String detail = files.size() + " file(s) loaded, timeout " + timeoutMs + " ms";
+        System.out.println("Nelumbo HTTP server listening on http://localhost:" + bound + " (" + detail + ")");
+        if (ServerGui.wanted(noGui)) {
+            ServerGui.show("Nelumbo Website Server", "http://localhost:" + bound, detail);
+        }
     }
 
     private static List<Path> expand(Path path) {
@@ -142,6 +150,7 @@ public final class Main {
         out.println("  -p, --port N      port to listen on (default 8080; 0 picks a free port)");
         out.println("  -t, --timeout MS  per-request inference budget in ms (default 30000; 0 disables)");
         out.println("  -s, --max-lsp-sessions N  cap on concurrent LSP editor sessions (default 32)");
+        out.println("      --no-gui      never show the status window (shown when launched without a console)");
         out.println("  -h, --help        show this help and exit");
     }
 }
