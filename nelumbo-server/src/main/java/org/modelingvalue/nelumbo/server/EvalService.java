@@ -16,7 +16,6 @@
 
 package org.modelingvalue.nelumbo.server;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +33,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
+import org.modelingvalue.json.Json;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
@@ -48,9 +48,6 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Transport-independent Nelumbo eval service: turns a posted {@code .nl} document into JSON-ready result maps, and
@@ -72,7 +69,6 @@ public final class EvalService implements AutoCloseable {
     private final KnowledgeBase   baseKb;
     private final List<String>    loadedFiles;
     private final long            timeoutMs;
-    private final ObjectMapper    mapper = new ObjectMapper();
     private final ExecutorService evalExecutor;
 
     /** {@code timeoutMs} is the per-request inference budget; 0 (or less) disables the timeout. */
@@ -105,7 +101,7 @@ public final class EvalService implements AutoCloseable {
         EvalRequest request;
         try {
             request = parseRequest(body, contentType, pathTrace);
-        } catch (IOException e) {
+        } catch (IllegalArgumentException e) {
             return new Response(400, Map.of("error", "bad-request", "message", "malformed JSON request body"));
         }
         boolean trace = request.trace();
@@ -141,12 +137,13 @@ public final class EvalService implements AutoCloseable {
         return new Response(ok ? 200 : 400, response);
     }
 
-    private EvalRequest parseRequest(String body, String contentType, boolean pathTrace) throws IOException {
+    private EvalRequest parseRequest(String body, String contentType, boolean pathTrace) {
         if (contentType != null && contentType.toLowerCase().contains("json") && body != null && !body.isBlank()) {
-            JsonNode node = mapper.readTree(body);
-            String document = node.path("document").isTextual() ? node.get("document").asText() : null;
-            boolean trace = pathTrace || node.path("trace").asBoolean(false);
-            Integer limit = node.path("limit").isInt() && node.get("limit").asInt() >= 0 ? node.get("limit").asInt()
+            // Json.fromJson throws IllegalArgumentException on malformed JSON; integral numbers come back as Long
+            Map<?, ?> node = Json.fromJson(body) instanceof Map<?, ?> m ? m : Map.of();
+            String document = node.get("document") instanceof String s ? s : null;
+            boolean trace = pathTrace || Boolean.TRUE.equals(node.get("trace"));
+            Integer limit = node.get("limit") instanceof Long l && 0 <= l && l <= Integer.MAX_VALUE ? l.intValue()
                     : null;
             return new EvalRequest(document, trace, limit);
         }

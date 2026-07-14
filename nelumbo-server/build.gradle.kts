@@ -37,9 +37,11 @@ repositories {
 dependencies {
     implementation(project(":"))
     implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
+    implementation("org.modelingvalue:mvg-json:6.0.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    // the test client parses/builds JSON with Jackson; the server itself uses mvg-json
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

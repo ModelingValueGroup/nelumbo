@@ -26,9 +26,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.modelingvalue.json.Json;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -42,8 +42,7 @@ public final class NelumboServer {
     /** Default per-request inference budget, in milliseconds. */
     public static final long DEFAULT_TIMEOUT_MS = EvalService.DEFAULT_TIMEOUT_MS;
 
-    private final EvalService  service;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final EvalService service;
 
     private HttpServer      server;
     private ExecutorService httpExecutor;
@@ -126,7 +125,7 @@ public final class NelumboServer {
     }
 
     private void respond(HttpExchange exchange, int status, Map<String, Object> body) throws IOException {
-        byte[] bytes = mapper.writeValueAsBytes(body);
+        byte[] bytes = Json.toJson(body).getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.sendResponseHeaders(status, bytes.length);
         try (OutputStream out = exchange.getResponseBody()) {
