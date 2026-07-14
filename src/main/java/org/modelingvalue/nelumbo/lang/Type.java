@@ -194,7 +194,7 @@ public final class Type extends Node implements FunctorOrType {
 
     @Override
     protected Type set(NodeInfo nodeInfo, Object[] args) {
-        return new Type(nodeInfo, original(), args);
+        return new Type(nodeInfo.resetDeclaration(), original(), args);
     }
 
     @Override
