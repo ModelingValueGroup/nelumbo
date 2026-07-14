@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { readdirSync }           from 'node:fs';
+import { readdirSync, statSync } from 'node:fs';
 import { resolve }               from 'node:path';
 
 const PORT:    number = 8899;
@@ -8,7 +8,9 @@ const LIBSDIR: string = resolve(__dirname, '../../../build/libs');
 function serverJar(): string {
     let jars: string[] = [];
     try {
-        jars = readdirSync(LIBSDIR).filter((f: string): boolean => /^nelumbo-http-server-.*\.jar$/.test(f));
+        jars = readdirSync(LIBSDIR)
+                .filter((f: string): boolean => /^nelumbo-http-server-.*\.jar$/.test(f))
+                .sort((a: string, b: string): number => statSync(resolve(LIBSDIR, b)).mtimeMs - statSync(resolve(LIBSDIR, a)).mtimeMs);
     } catch {
         jars = [];
     }

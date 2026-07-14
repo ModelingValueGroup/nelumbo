@@ -42,6 +42,10 @@ val generateManifest = tasks.register("generateManifest") {
     outputs.upToDateWhen { false }
     doLast {
         val qualifier = System.currentTimeMillis().toString()
+        // OSGi Bundle-Version must be numeric; the local "dev" version falls back to the
+        // gradle.properties floor so the timestamp qualifier keeps superseding older installs
+        val osgiVersion = version.toString().takeIf { it.matches(Regex("""\d+(\.\d+)*""")) }
+                ?: providers.gradleProperty("version").get()
         manifestFile.get().asFile.parentFile.mkdirs()
         manifestFile.get().asFile.writeText(
             """
@@ -50,7 +54,7 @@ val generateManifest = tasks.register("generateManifest") {
             |Bundle-Name: Nelumbo LSP Eclipse Plugin
             |Bundle-SymbolicName: org.modelingvalue.nelumbo.lsp.eclipse;
             | singleton:=true
-            |Bundle-Version: $version.$qualifier
+            |Bundle-Version: $osgiVersion.$qualifier
             |Bundle-Vendor: Modeling Value Group
             |Bundle-RequiredExecutionEnvironment: JavaSE-21
             |Bundle-ActivationPolicy: lazy
