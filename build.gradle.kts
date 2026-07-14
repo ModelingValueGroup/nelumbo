@@ -38,7 +38,7 @@ mvgcorrector {
 
 dependencies {
     implementation("org.modelingvalue:immutable-collections:6.0.0-BRANCHED")
-    implementation("com.formdev:flatlaf:3.7.1")
+    implementation("com.formdev:flatlaf:3.7.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
