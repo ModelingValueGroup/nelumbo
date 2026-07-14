@@ -103,6 +103,7 @@ public final class NelumboHttpServer {
         String landing    = loadResource("/public/landing.html");
         String tour       = loadResource("/public/tour.html");
         String playground = loadResource("/public/playground.html");
+        String favicon    = loadResource("/public/favicon.svg");
         evalExecutor = Executors.newCachedThreadPool(runnable -> {
             Thread thread = new Thread(runnable, "nelumbo-http-eval");
             thread.setDaemon(true);
@@ -121,6 +122,7 @@ public final class NelumboHttpServer {
             config.jetty.modifyWebSocketServletFactory(factory ->
                     factory.setMaxTextMessageSize(LspWebSocket.MAX_MESSAGE_CHARS));
             config.routes.get("/", ctx -> ctx.html(landing));
+            config.routes.get("/favicon.svg", ctx -> ctx.contentType("image/svg+xml").result(favicon));
             config.routes.get("/tour.html", ctx -> ctx.html(tour));
             config.routes.get("/playground.html", ctx -> ctx.html(playground));
             config.routes.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
