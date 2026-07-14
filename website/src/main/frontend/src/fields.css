@@ -122,9 +122,14 @@
 
 .nelumbo-lsp-banner {
     display:    none;
-    background: rgba(169, 154, 232, .12);
+    position:   fixed;
+    left:       0;
+    right:      0;
+    bottom:     0;
+    z-index:    40;
+    background: #2c2c3b;
     color:      #a99ae8;
-    border:     1px solid rgba(169, 154, 232, .4);
+    border-top: 1px solid rgba(169, 154, 232, .4);
     padding:    8px 14px;
     font:       13px/1.5 "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     text-align: center;
