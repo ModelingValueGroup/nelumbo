@@ -3,25 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M16 27 C 9 19, 9.5 9, 16 3 C 22.5 9, 23 19, 16 27 Z%27 fill=%27none%27 stroke=%27%23d9a441%27 stroke-width=%272%27/%3E%3Cpath d=%27M16 27 C 6 22, 3 14, 4 12 C 12 13, 15 18, 16 27 Z M16 27 C 26 22, 29 14, 28 12 C 20 13, 17 18, 16 27 Z%27 fill=%27%23d9a441%27 opacity=%27.55%27/%3E%3C/svg%3E">
-<title>Nelumbo - Logic, in bloom</title>
-<meta name="description" content="Nelumbo is a declarative logic language and meta-language: state the facts, define the rules, shape the syntax, ask the questions.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M16 27 C 9 19, 9.5 9, 16 3 C 22.5 9, 23 19, 16 27 Z%27 fill=%27none%27 stroke=%27%23c184d8%27 stroke-width=%272%27/%3E%3Cpath d=%27M16 27 C 6 22, 3 14, 4 12 C 12 13, 15 18, 16 27 Z M16 27 C 26 22, 29 14, 28 12 C 20 13, 17 18, 16 27 Z%27 fill=%27%23c184d8%27 opacity=%27.55%27/%3E%3C/svg%3E">
+<title>Nelumbo - grow your own language</title>
+<meta name="description" content="Nelumbo is a logic meta-language for specifying declarative languages and DSLs: define syntax and semantics - the semantics in logic - and use each construct the moment it is defined.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --water-deep:   #071016;
-    --water-mid:    #0b1a22;
-    --water-light:  #10242e;
-    --ink:          #e9e4d6;
-    --ink-dim:      #a8a595;
-    --gold:         #d9a441;
-    --gold-soft:    #e8c47a;
-    --petal:        #e8a0a8;
-    --panel:        rgba(16, 32, 40, .55);
-    --panel-line:   rgba(217, 164, 65, .28);
-    --code-bg:      #101820;
-    --serif:        "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-    --sans:         system-ui, -apple-system, "Segoe UI", sans-serif;
-    --mono:         ui-monospace, Menlo, Consolas, monospace;
+    --water-deep:   #0d0813;
+    --water-mid:    #151024;
+    --water-light:  #1d1630;
+    --ink:          #eae5ee;
+    --ink-dim:      #a89fb2;
+    --lotus:        #c184d8;
+    --lotus-soft:   #edd4e8;
+    --petal:        #a99ae8;
+    --panel:        rgba(29, 22, 48, .55);
+    --panel-line:   rgba(193, 132, 216, .28);
+    --code-bg:      #161022;
+    --display:      "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+    --sans:         "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono:         "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -29,10 +32,10 @@
     margin: 0;
     color: var(--ink);
     background:
-      radial-gradient(1200px 600px at 75% -10%, rgba(232, 160, 168, .07), transparent 60%),
-      radial-gradient(1400px 900px at 20% 110%, rgba(217, 164, 65, .06), transparent 55%),
+      radial-gradient(1200px 600px at 75% -10%, rgba(169, 154, 232, .07), transparent 60%),
+      radial-gradient(1400px 900px at 20% 110%, rgba(193, 132, 216, .06), transparent 55%),
       linear-gradient(180deg, var(--water-mid) 0%, var(--water-deep) 45%, var(--water-deep) 100%);
-    font: 17px/1.7 var(--serif);
+    font: 16px/1.7 var(--sans);
     overflow-x: hidden;
   }
   /* grain overlay */
@@ -43,16 +46,16 @@
     opacity: .05;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  a { color: var(--gold-soft); }
+  a { color: var(--lotus-soft); }
 
   header.top {
     display: flex; align-items: baseline; justify-content: space-between;
     max-width: 1080px; margin: 0 auto; padding: 26px 28px 0;
   }
   .wordmark {
-    font: 600 14px/1 var(--sans);
+    font: 700 14px/1 var(--display);
     letter-spacing: .42em; text-transform: uppercase;
-    color: var(--gold-soft);
+    color: var(--lotus-soft);
   }
   header.top nav a {
     font: 500 13px/1 var(--sans); letter-spacing: .08em;
@@ -71,14 +74,14 @@
     align-items: center;
   }
   .hero h1 {
-    font: italic 600 clamp(44px, 7vw, 84px)/1.05 var(--serif);
-    letter-spacing: -0.015em;
+    font: 800 clamp(42px, 6.6vw, 78px)/1.02 var(--display);
+    letter-spacing: -0.03em;
     margin: 0 0 22px;
   }
-  .hero h1 .accent { color: var(--gold); }
+  .hero h1 .accent { color: var(--lotus); }
   .hero p.lead {
     max-width: 34em;
-    font-size: 19px;
+    font-size: 18px;
     color: var(--ink-dim);
     margin: 0 0 34px;
   }
@@ -86,39 +89,41 @@
   .cta { display: flex; gap: 14px; flex-wrap: wrap; }
   .btn {
     display: inline-block; text-decoration: none;
-    font: 600 15px/1 var(--sans); letter-spacing: .04em;
+    font: 600 15px/1 var(--display); letter-spacing: .02em;
     padding: 15px 26px; border-radius: 999px;
     transition: transform .15s ease, box-shadow .15s ease;
   }
   .btn:hover { transform: translateY(-2px); }
-  .btn.gold {
-    background: linear-gradient(160deg, var(--gold-soft), var(--gold));
-    color: #241a06;
-    box-shadow: 0 6px 24px rgba(217, 164, 65, .25);
+  .btn.bloom {
+    background: linear-gradient(160deg, var(--lotus-soft), var(--lotus));
+    color: #2a1033;
+    box-shadow: 0 6px 24px rgba(193, 132, 216, .25);
   }
-  .btn.gold:hover { box-shadow: 0 10px 30px rgba(217, 164, 65, .4); }
+  .btn.bloom:hover { box-shadow: 0 10px 30px rgba(193, 132, 216, .4); }
   .btn.ghost {
     color: var(--ink);
     border: 1px solid var(--panel-line);
-    background: rgba(217, 164, 65, .05);
+    background: rgba(193, 132, 216, .05);
   }
 
-  /* lotus artwork */
+  /* lotus artwork: stroke petals bloom open, then crossfade into the exact nelumbo icon */
   .pond { position: relative; min-height: 340px; }
   .lotus { width: 100%; max-width: 420px; display: block; margin: 0 auto; }
   .lotus .petal {
-    fill: rgba(232, 160, 168, .05);
-    stroke: var(--gold);
-    stroke-width: 1.4;
-    transform-origin: 210px 300px;
-    animation: bloom 2.4s cubic-bezier(.19, 1, .3, 1) both;
+    fill: rgba(237, 212, 232, .1);
+    stroke: var(--lotus);
+    stroke-width: 22;
+    stroke-linejoin: round;
+    transform-origin: 250px 430px;
+    animation: bloom 1.1s cubic-bezier(.19, 1, .3, 1) both, fadeout .9s ease 1.9s forwards;
   }
-  .lotus .petal.inner { stroke: var(--gold-soft); fill: rgba(232, 160, 168, .09); }
-  .lotus .heart { fill: var(--gold); opacity: 0; animation: appear 1s ease 1.8s both; }
-  .lotus .waterline { stroke: rgba(217, 164, 65, .35); stroke-width: 1; fill: none; }
+  .lotus .icon { opacity: 0; animation: appear 1s ease 1.5s forwards; }
+  .lotus .icon-body { fill: rgba(237, 212, 232, .1); }
+  .lotus .icon-line { fill: var(--lotus); }
+  .lotus .waterline { stroke: rgba(193, 132, 216, .35); stroke-width: 1.2; fill: none; }
   .ripple {
-    stroke: rgba(217, 164, 65, .30); fill: none; stroke-width: 1;
-    transform-origin: 210px 318px;
+    stroke: rgba(193, 132, 216, .30); fill: none; stroke-width: 1.2;
+    transform-origin: 250px 512px;
     animation: ripple 7s linear infinite;
   }
   .ripple.r2 { animation-delay: 2.3s; }
@@ -127,6 +132,7 @@
     from { transform: rotate(0deg) scale(.12); opacity: 0; }
     to   { opacity: 1; }
   }
+  @keyframes fadeout { to { opacity: 0; } }
   @keyframes appear { from { opacity: 0; } to { opacity: 1; } }
   @keyframes ripple {
     0%   { transform: scale(.25); opacity: 0; }
@@ -144,17 +150,19 @@
     to   { opacity: 1; transform: none; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .reveal, .lotus .petal, .lotus .heart { animation: none; }
+    .reveal { animation: none; }
+    .lotus .petal { animation: none; opacity: 0; }
+    .lotus .icon { animation: none; opacity: 1; }
     .ripple { animation: none; opacity: .3; }
   }
 
   /* ---------------- sections ---------------- */
   section.band { max-width: 1080px; margin: 0 auto; padding: 56px 28px; }
   .kicker {
-    font: 600 12px/1 var(--sans); letter-spacing: .38em; text-transform: uppercase;
+    font: 600 12px/1 var(--display); letter-spacing: .38em; text-transform: uppercase;
     color: var(--petal); margin: 0 0 14px;
   }
-  section.band h2 { font: italic 600 34px/1.2 var(--serif); margin: 0 0 12px; }
+  section.band h2 { font: 700 34px/1.15 var(--display); letter-spacing: -0.015em; margin: 0 0 12px; }
   section.band > p.sub { color: var(--ink-dim); max-width: 44em; margin: 0 0 36px; }
 
   .cards {
@@ -162,7 +170,7 @@
   }
   .card {
     background: var(--panel);
-    border: 1px solid rgba(217, 164, 65, .12);
+    border: 1px solid rgba(193, 132, 216, .12);
     border-top: 2px solid var(--panel-line);
     border-radius: 10px;
     padding: 22px 20px 18px;
@@ -171,8 +179,8 @@
   .card:nth-child(2) { transform: translateY(14px); }
   .card:nth-child(3) { transform: translateY(4px); }
   .card:nth-child(4) { transform: translateY(20px); }
-  .card h3 { font: italic 600 20px/1.3 var(--serif); margin: 0 0 8px; color: var(--gold-soft); }
-  .card p { font-size: 15px; color: var(--ink-dim); margin: 0; }
+  .card h3 { font: 600 19px/1.3 var(--display); margin: 0 0 8px; color: var(--lotus-soft); }
+  .card p { font-size: 14.5px; color: var(--ink-dim); margin: 0; }
   .card p code { font: 13px var(--mono); color: var(--ink); background: rgba(255,255,255,.06); border-radius: 4px; padding: 1px 5px; }
 
   /* code showcase */
@@ -182,7 +190,7 @@
   }
   .codecard {
     background: var(--code-bg);
-    border: 1px solid rgba(217, 164, 65, .18);
+    border: 1px solid rgba(193, 132, 216, .18);
     border-radius: 12px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
     overflow: hidden;
@@ -190,30 +198,30 @@
   .codecard .bar {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 14px;
-    border-bottom: 1px solid rgba(217, 164, 65, .14);
+    border-bottom: 1px solid rgba(193, 132, 216, .14);
     font: 500 12px/1 var(--sans); letter-spacing: .06em; color: var(--ink-dim);
   }
-  .codecard .bar .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(217, 164, 65, .35); }
+  .codecard .bar .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(193, 132, 216, .35); }
   .codecard pre {
     margin: 0; padding: 18px 20px 20px;
-    font: 14px/1.75 var(--mono);
-    color: #ccd5dd;
+    font: 13.5px/1.75 var(--mono);
+    color: #d2cbdc;
     overflow-x: auto;
   }
   .codecard .kw  { color: var(--petal); }
-  .codecard .ty  { color: var(--gold-soft); }
-  .codecard .cm  { color: #5f6f7a; }
+  .codecard .ty  { color: var(--lotus-soft); }
+  .codecard .cm  { color: #6f6482; }
   .codecard .qy  { color: #8fd0a0; }
 
   /* closing cta */
   .close {
     text-align: center; padding: 80px 28px 30px;
   }
-  .close h2 { font: italic 600 clamp(30px, 4.5vw, 46px)/1.2 var(--serif); margin: 0 0 26px; }
+  .close h2 { font: 700 clamp(30px, 4.5vw, 46px)/1.15 var(--display); letter-spacing: -0.02em; margin: 0 0 26px; }
 
   footer {
     max-width: 1080px; margin: 0 auto; padding: 30px 28px 44px;
-    border-top: 1px solid rgba(217, 164, 65, .14);
+    border-top: 1px solid rgba(193, 132, 216, .14);
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
     font: 400 13px/1.6 var(--sans); color: var(--ink-dim);
   }
@@ -246,65 +254,71 @@
 
 <div class="hero">
   <div>
-    <h1 class="reveal">Logic,<br>in <span class="accent">bloom</span>.</h1>
-    <p class="lead reveal d1">Nelumbo is a declarative logic language that reasons the way you think:
-       <strong>state the facts, define the rules, ask the questions.</strong>
-       Then go further - reshape the language itself, until your code reads like your domain.</p>
+    <h1 class="reveal">Grow your own <span class="accent">language</span>.</h1>
+    <p class="lead reveal d1">Nelumbo is a logic meta-language for specifying declarative languages.
+       You define your DSL's <strong>syntax and semantics</strong> - the semantics in pure logic -
+       and every construct is live on the very next line.</p>
     <div class="cta reveal d2">
-      <a class="btn gold" href="/tour.html">Take the tour</a>
+      <a class="btn bloom" href="/tour.html">Take the tour</a>
       <a class="btn ghost" href="/playground.html">Open the playground</a>
     </div>
   </div>
   <div class="pond reveal d1" aria-hidden="true">
-    <svg class="lotus" viewBox="0 0 420 360">
-      <!-- outer petals -->
+    <svg class="lotus" viewBox="0 0 500 545">
+      <!-- blooming petals: the exact icon center petal, plus copies rotated/scaled so each
+           lands on an icon petal position (side tips ~(385,110), bowl tips ~(27,199), pivot
+           (250,430)); stroke weight and fill match the icon render, so the crossfade into the
+           exact icon below is seamless. Draw order back to front: sides, bowls, center. -->
       <g>
-        <path class="petal" style="transform: rotate(-64deg); animation-delay: .55s" d="M210 300 C 160 240, 165 160, 210 105 C 255 160, 260 240, 210 300 Z"/>
-        <path class="petal" style="transform: rotate(-32deg); animation-delay: .40s" d="M210 300 C 160 240, 165 160, 210 105 C 255 160, 260 240, 210 300 Z"/>
-        <path class="petal" style="transform: rotate(32deg);  animation-delay: .40s" d="M210 300 C 160 240, 165 160, 210 105 C 255 160, 260 240, 210 300 Z"/>
-        <path class="petal" style="transform: rotate(64deg);  animation-delay: .55s" d="M210 300 C 160 240, 165 160, 210 105 C 255 160, 260 240, 210 300 Z"/>
+        <path class="petal" style="transform: rotate(-23deg) scale(.97); animation-delay: .4s, 1.9s"  d="M 250.5 427.4 C 240.3 417.1, 175.8 341.7, 175.8 250 C 175.8 151.7, 250 72, 250 72 C 250 72, 324.2 151.7, 324.2 250 C 324.2 344.3, 256.1 421.3, 250.5 427.4 Z"/>
+        <path class="petal" style="transform: rotate(23deg) scale(.97);  animation-delay: .4s, 1.9s"  d="M 250.5 427.4 C 240.3 417.1, 175.8 341.7, 175.8 250 C 175.8 151.7, 250 72, 250 72 C 250 72, 324.2 151.7, 324.2 250 C 324.2 344.3, 256.1 421.3, 250.5 427.4 Z"/>
+        <path class="petal" style="transform: rotate(-44deg) scale(.9);  animation-delay: .65s, 1.9s" d="M 250.5 427.4 C 240.3 417.1, 175.8 341.7, 175.8 250 C 175.8 151.7, 250 72, 250 72 C 250 72, 324.2 151.7, 324.2 250 C 324.2 344.3, 256.1 421.3, 250.5 427.4 Z"/>
+        <path class="petal" style="transform: rotate(44deg) scale(.9);   animation-delay: .65s, 1.9s" d="M 250.5 427.4 C 240.3 417.1, 175.8 341.7, 175.8 250 C 175.8 151.7, 250 72, 250 72 C 250 72, 324.2 151.7, 324.2 250 C 324.2 344.3, 256.1 421.3, 250.5 427.4 Z"/>
+        <path class="petal" style="animation-delay: .15s, 1.9s"                                       d="M 250.5 427.4 C 240.3 417.1, 175.8 341.7, 175.8 250 C 175.8 151.7, 250 72, 250 72 C 250 72, 324.2 151.7, 324.2 250 C 324.2 344.3, 256.1 421.3, 250.5 427.4 Z"/>
       </g>
-      <!-- inner petals -->
-      <g>
-        <path class="petal inner" style="transform: rotate(-16deg); animation-delay: .85s" d="M210 300 C 175 250, 178 185, 210 140 C 242 185, 245 250, 210 300 Z"/>
-        <path class="petal inner" style="transform: rotate(16deg);  animation-delay: .85s" d="M210 300 C 175 250, 178 185, 210 140 C 242 185, 245 250, 210 300 Z"/>
-        <path class="petal inner" style="animation-delay: 1.05s" d="M210 300 C 182 255, 184 195, 210 155 C 236 195, 238 255, 210 300 Z"/>
+      <!-- the nelumbo icon, exact paths from lsp/plugins/*/icons/logo.svg -->
+      <g class="icon">
+        <path class="icon-body" d="M 479.761 204.6C 479.377 192.182 469.608 182.185 457.505 181.762L 454.318 181.722C 446.885 181.722 426.253 182.461 400.743 187.559C 396.175 152.169 386.929 127.043 386.163 125.038C 383.895 119.04 379.329 114.256 373.536 111.795C 370.719 110.601 367.729 110.002 364.741 110.002C 361.585 110.002 358.436 110.671 355.486 112C 353.802 112.762 335.237 121.35 312.076 138.084C 291.785 98.45 268.303 72.9 266.579 71.051C 262.234 66.395 256.234 63.77 249.969 63.77C 243.703 63.77 237.703 66.395 233.367 71.042C 231.642 72.891 208.131 98.481 187.829 138.154C 164.721 121.468 146.135 112.753 144.457 111.991C 141.508 110.663 138.36 109.995 135.204 109.995C 132.217 109.995 129.227 110.591 126.409 111.786C 120.617 114.249 116.058 119.04 113.784 125.03C 113.026 127.034 103.776 152.152 99.212 187.55C 73.685 182.444 53.062 181.722 45.629 181.722L 42.426 181.762C 30.33 182.185 20.553 192.182 20.172 204.6C 20.034 209.019 17.588 313.664 80.993 378.754C 138.919 438.214 229.821 441.225 247.458 441.225L 249.818 441.194C 249.863 441.194 249.908 441.225 249.955 441.225C 250 441.225 250.046 441.194 250.093 441.194L 252.451 441.225C 270.09 441.225 360.989 438.214 418.915 378.754C 482.342 313.672 479.897 209.025 479.761 204.6Z"/>
+        <path class="icon-line" d="M 497.223 198.364C 496.81 184.978 486.301 174.202 473.28 173.745L 469.851 173.702C 461.855 173.702 439.658 174.498 412.211 179.993C 407.298 141.843 397.35 114.757 396.527 112.596C 394.087 106.127 389.175 100.972 382.943 98.319C 379.911 97.032 376.695 96.385 373.48 96.385C 370.085 96.385 366.697 97.106 363.525 98.538C 361.711 99.361 341.74 108.619 316.822 126.659C 294.991 83.932 269.728 56.389 267.873 54.396C 263.2 49.377 256.746 46.546 250.004 46.546C 243.263 46.546 236.808 49.377 232.142 54.387C 230.289 56.38 204.992 83.966 183.15 126.734C 158.291 108.744 138.296 99.352 136.491 98.529C 133.319 97.097 129.93 96.378 126.535 96.378C 123.322 96.378 120.106 97.021 117.074 98.31C 110.842 100.964 105.938 106.127 103.489 112.587C 102.674 114.748 92.725 141.826 87.813 179.984C 60.351 174.482 38.162 173.702 30.167 173.702L 26.722 173.745C 13.707 174.202 3.19 184.978 2.778 198.364C 2.63 203.129 0 315.94 68.213 386.108C 130.534 450.209 228.328 453.454 247.302 453.454L 249.84 453.421C 249.89 453.421 249.938 453.454 249.99 453.454C 250.037 453.454 250.088 453.421 250.137 453.421L 252.675 453.454C 271.65 453.454 369.444 450.209 431.764 386.108C 500 315.949 497.37 203.137 497.223 198.364ZM 373.48 121.811C 373.48 121.811 383.388 148.499 387.913 185.953C 373.588 190.082 358.703 195.626 343.925 203.043C 340.092 184.112 334.347 166.369 327.58 150.142C 352.834 131.322 373.48 121.811 373.48 121.811ZM 126.526 121.811C 126.526 121.811 147.172 131.271 172.443 150.092C 165.659 166.369 159.891 184.182 156.058 203.179C 141.28 195.76 126.419 190.131 112.084 185.995C 116.61 148.523 126.526 121.811 126.526 121.811ZM 85.709 368.128C 24.272 304.937 27.494 199.169 27.494 199.169C 27.494 199.169 28.426 199.143 30.157 199.143C 43.114 199.143 100.859 201.263 152.034 229.62C 151.441 236.31 151.095 243.1 151.095 249.999C 151.095 328.29 192.406 394.424 216.068 425.919C 180.618 421.587 124.819 408.354 85.709 368.128ZM 250.547 427.428C 250.07 427.268 249.599 427.116 248.989 426.886C 240.286 417.128 175.822 341.686 175.822 250.001C 175.822 151.677 250.004 71.972 250.004 71.972C 250.004 71.972 324.184 151.677 324.184 250.001C 324.184 344.347 256.07 421.342 250.547 427.428ZM 414.305 368.128C 375.193 408.354 319.396 421.587 283.945 425.92C 307.6 394.425 348.91 328.292 348.91 250.001C 348.91 243.057 348.565 236.226 347.954 229.494C 399.13 201.162 456.9 199.136 469.85 199.136C 471.579 199.136 472.511 199.161 472.511 199.161C 472.511 199.161 475.734 304.937 414.305 368.128Z"/>
       </g>
-      <circle class="heart" cx="210" cy="290" r="5"/>
       <!-- water -->
-      <path class="waterline" d="M60 318 Q 210 332, 360 318"/>
-      <ellipse class="ripple"    cx="210" cy="318" rx="120" ry="14"/>
-      <ellipse class="ripple r2" cx="210" cy="318" rx="120" ry="14"/>
-      <ellipse class="ripple r3" cx="210" cy="318" rx="120" ry="14"/>
+      <path class="waterline" d="M90 512 Q 250 528, 410 512"/>
+      <ellipse class="ripple"    cx="250" cy="512" rx="145" ry="15"/>
+      <ellipse class="ripple r2" cx="250" cy="512" rx="145" ry="15"/>
+      <ellipse class="ripple r3" cx="250" cy="512" rx="145" ry="15"/>
     </svg>
   </div>
 </div>
 
 <section class="band">
   <p class="kicker">Why Nelumbo</p>
-  <h2>A language that thinks out loud.</h2>
-  <p class="sub">Most languages tell a computer what to do. Nelumbo describes what is true,
-     and lets an inference engine work out the rest - live, in your editor, while you type.</p>
+  <h2>Syntax and semantics, in one file.</h2>
+  <p class="sub">Language workbenches let you define structure and notation. Nelumbo goes further:
+     you also define what your language <em>means</em>, as inference rules -
+     and the language runs while you are still writing it.</p>
   <div class="cards">
     <div class="card">
-      <h3>Honest logic</h3>
-      <p>Three-valued reasoning: every query is <code>true</code>, <code>false</code>, or
-         <code>unknown</code>. Nelumbo never pretends to know what it cannot prove.</p>
+      <h3>Syntax, declared</h3>
+      <p>One pattern line - <code>Boolean ::= &lt;Person&gt; likes &lt;Person&gt;</code> -
+         and the new notation is first-class syntax, with IDE support included.</p>
     </div>
     <div class="card">
-      <h3>Your syntax, your rules</h3>
-      <p>Nelumbo is a meta-language. Declare new notation in a line - <code>Boolean ::= gc(&lt;Person&gt;,&lt;Person&gt;)</code> -
-         and it becomes first-class syntax, with IDE support included.</p>
+      <h3>Semantics, in logic</h3>
+      <p>Meaning is written as inference rules over honest three-valued logic.
+         Logic is the medium, not the target: you write your domain,
+         the engine does the reasoning.</p>
     </div>
     <div class="card">
-      <h3>IDE smarts everywhere</h3>
-      <p>One Language Server, many homes: live diagnostics, hover, completion and
-         go-to-definition in the browser, VS Code, IntelliJ and Eclipse.</p>
+      <h3>Live on the next line</h3>
+      <p>Nelumbo executes immediately: a construct defined on line <code>n</code>
+         is available from line <code>n+1</code> on. No generators, no compile
+         step, no deployment loop.</p>
     </div>
     <div class="card">
-      <h3>Speaks fluent AI</h3>
-      <p>The bundled MCP server lets AI assistants author and verify Nelumbo decision
-         models - with the inference engine checking every answer.</p>
+      <h3>Beyond MPS &amp; EMF</h3>
+      <p>Everything a language workbench gives you, plus executable semantics -
+         with live IDE support in the browser, VS Code, IntelliJ and Eclipse,
+         and an MCP server for AI assistants.</p>
     </div>
   </div>
 </section>
@@ -312,31 +326,37 @@
 <section class="band">
   <div class="showcase">
     <div>
-      <p class="kicker">See it think</p>
-      <h2>Rules in, answers out.</h2>
-      <p class="sub">This is real Nelumbo: two rules define Fibonacci, one query asks a question,
-         and the annotation states the expected answer - the editor verifies it live.
+      <p class="kicker">See it grow</p>
+      <h2>Define it. Use it. Same file.</h2>
+      <p class="sub">This is real Nelumbo: one line declares new syntax, one rule gives it
+         meaning in logic, and the query at the bottom already speaks the new language -
+         the editor verifies the expected answer live.
          Try it yourself in the <a href="/tour.html">feature tour</a>; no install needed.</p>
     </div>
     <div class="codecard">
-      <div class="bar"><span class="dot"></span><span class="dot"></span> fibonacci.nl</div>
-      <pre><span class="kw">import</span> nelumbo.integers
+      <div class="bar"><span class="dot"></span><span class="dot"></span> grandparent.nl</div>
+      <pre><span class="kw">import</span> nelumbo.logic
 
-<span class="ty">Integer</span> ::= fib(&lt;<span class="ty">Integer</span>&gt;)
-<span class="ty">Integer</span> n, f
+<span class="ty">Person</span>   :: <span class="ty">Object</span>
+<span class="ty">FactType</span> ::= pc(&lt;<span class="ty">Person</span>&gt;,&lt;<span class="ty">Person</span>&gt;)
 
-fib(n)=f &lt;=&gt; f=n                   <span class="kw">if</span> n&lt;=1,
-             f=fib(n-1)+fib(n-2)   <span class="kw">if</span> n&gt;1
+<span class="ty">Boolean</span>  ::= &lt;<span class="ty">Person</span>&gt; is a grandparent of &lt;<span class="ty">Person</span>&gt;  #30   <span class="cm">// new syntax...</span>
 
-<span class="qy">fib(10)=f ?  [(f=55)][..]</span>          <span class="cm">// verified while you type</span></pre>
+<span class="ty">Person</span> g, p, c
+g is a grandparent of c &lt;=&gt; E[p](pc(g,p) &amp; pc(p,c))       <span class="cm">// ...meaning, in logic...</span>
+
+<span class="ty">Person</span> ::= Hendrik, Juliana, Beatrix
+<span class="kw">fact</span> pc(Hendrik, Juliana), pc(Juliana, Beatrix)
+
+<span class="qy">g is a grandparent of Beatrix ?  [(g=Hendrik)][..]</span>        <span class="cm">// ...used immediately</span></pre>
     </div>
   </div>
 </section>
 
 <div class="close">
-  <h2>Plant a fact. Watch it grow.</h2>
+  <h2>Plant a language. Watch it bloom.</h2>
   <div class="cta" style="justify-content: center">
-    <a class="btn gold" href="/tour.html">Take the tour</a>
+    <a class="btn bloom" href="/tour.html">Take the tour</a>
     <a class="btn ghost" href="https://github.com/ModelingValueGroup/nelumbo">Star on GitHub</a>
   </div>
 </div>
