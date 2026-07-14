@@ -41,7 +41,7 @@ dependencies {
     implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
     implementation("io.javalin:javalin:7.2.2")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    runtimeOnly("org.slf4j:slf4j-simple:2.0.16")
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.18")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
