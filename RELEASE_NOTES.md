@@ -17,6 +17,11 @@ String  a
 Query results are calculated and shown on the fly.
 This editor is not an LSP-based editor, and useful for educational and demo purposes.
 
+To run the lean **nelumbo** executor (REST eval of `.nl` documents, no UI):
+
+- download `nelumbo-server-${version-num}.jar`
+- run `java -jar nelumbo-server-${version-num}.jar [<file-or-dir>...]`
+
 To run the **nelumbo** website server (REST eval + LSP over WebSocket + tour/playground pages):
 
 - download `nelumbo-http-server-${version-num}.jar`

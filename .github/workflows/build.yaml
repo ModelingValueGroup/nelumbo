@@ -57,6 +57,7 @@ jobs:
                     ./gradlew --info \
                         mvgCorrector \
                         build \
+                        :nelumbo-server:serverJar \
                         :website:serverJar \
                         :mcp:mcpJar \
                         editorJar \
@@ -98,6 +99,16 @@ jobs:
                 with:
                     name: website-server
                     path: website/build/libs/nelumbo-http-server-*.jar
+                    if-no-files-found: error
+                    retention-days: 30
+
+            -   name: "upload-server-jar"
+                uses: actions/upload-artifact@v7
+                with:
+                    name: nelumbo-server
+                    path: |
+                        nelumbo-server/build/libs/nelumbo-server-*.jar
+                        !nelumbo-server/build/libs/*-plain.jar
                     if-no-files-found: error
                     retention-days: 30
 

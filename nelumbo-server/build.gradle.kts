@@ -14,11 +14,63 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.website;
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-/**
- * A named Nelumbo source: the {@code name} is used for error reporting and metadata, {@code content} is the raw
- * {@code .nl} text.
- */
-public record NamedSource(String name, String content) {
+plugins {
+    id("com.gradleup.shadow") version "9.5.1"
+    java
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+val archiveName = "nelumbo-server"
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation(project(":"))
+    implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
+    implementation("org.modelingvalue:mvg-json:6.0.0")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    // the test client parses/builds JSON with Jackson; the server itself uses mvg-json
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    jvmArgs("-ea") // Enable assertions
+}
+
+tasks.register<ShadowJar>("serverJar") {
+    archiveBaseName.set(archiveName)
+    // Produce a single shaded jar without the default "-all" classifier
+    archiveClassifier.set("")
+    manifest {
+        attributes["Main-Class"] = "org.modelingvalue.nelumbo.server.Main"
+    }
+    from(sourceSets.main.get().output)
+    configurations = listOf(project.configurations.runtimeClasspath.get())
+
+    // Exclude signature files from signed dependencies to avoid SecurityException
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    mergeServiceFiles()
+}
+
+tasks.shadowJar {
+    // Disable default shadowJar task; use serverJar instead
+    enabled = false
+}
+
+tasks.jar {
+    // plain jar (classifier avoids clashing with the shaded serverJar); needed so other projects can depend on this one
+    archiveClassifier.set("plain")
 }

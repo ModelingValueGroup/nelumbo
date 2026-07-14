@@ -34,6 +34,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.server.KnowledgeBaseLoader;
+import org.modelingvalue.nelumbo.server.NamedSource;
 
 public class LspWebSocketTest {
 

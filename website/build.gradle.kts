@@ -36,6 +36,7 @@ repositories {
 
 dependencies {
     implementation(project(":"))
+    implementation(project(":nelumbo-server"))
     implementation(project(":lsp:server"))
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")

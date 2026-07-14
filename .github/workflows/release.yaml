@@ -57,6 +57,7 @@ jobs:
 
                     ASSETS=()
                     for f in artifacts/editor/nelumbo*editor.jar \
+                             artifacts/nelumbo-server/nelumbo-server-*.jar \
                              artifacts/website-server/nelumbo-http-server-*.jar \
                              artifacts/mcp-server/nelumbo-mcp-server-*.jar \
                              artifacts/eclipse-plugin/eclipse-nelumbo-plugin-*.jar \
