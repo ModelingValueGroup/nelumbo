@@ -23,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.modelingvalue.collections.ContainingCollection;
 import org.modelingvalue.collections.Entry;
@@ -517,6 +518,19 @@ public class Node extends StructImpl implements AstElement {
         Map<Variable, Object> vars = getBinding();
         vars = vars.replaceAll(e -> e.getValue() instanceof Type ? Entry.of(e.getKey(), e.getKey()) : e);
         return setBinding(vars);
+    }
+
+    private static final AtomicInteger COUNTER = new AtomicInteger(0);
+
+    public Node makeVariablesUnique() throws ParseException {
+        assert this == declaration();
+        int id = COUNTER.getAndIncrement();
+        return replace(n -> {
+            if (n instanceof Variable v) {
+                return v.makeUnique(id);
+            }
+            return n;
+        }).resetDeclaration();
     }
 
     public Node setTypes() {
