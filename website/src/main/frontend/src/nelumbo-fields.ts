@@ -180,6 +180,10 @@ function ensureServices(): void {
     }
     MonacoServices.install(monaco);
     monaco.languages.register({ id: LANGUAGE_ID, extensions: ['.nl'] });
+    // the webfont may finish loading after the first editor measured its glyphs
+    void document.fonts.ready.then((): void => {
+        monaco.editor.remeasureFonts();
+    });
     servicesReady = true;
 }
 
@@ -251,6 +255,7 @@ function buildField(div: HTMLElement, index: number): void {
         minimap:              { enabled: false },
         automaticLayout:      true,
         fontSize:             13,
+        fontFamily:           '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace',
         'semanticHighlighting.enabled': true,
         scrollBeyondLastLine: false,
         // Cmd/Ctrl+Click goes to definition (Alt+Click is multi-cursor), the VS Code default made explicit

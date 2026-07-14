@@ -4,18 +4,18 @@
     --nf-border:  #343843;
     --nf-text:    #e6e8ee;
     --nf-muted:   #9aa0ac;
-    --nf-accent:  #6ea8fe;
+    --nf-accent:  #c184d8;
     --nf-true:    #46c98b;
     --nf-false:   #f1707b;
-    --nf-unknown: #c9a14a;
-    --nf-mono:    ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --nf-unknown: #a99ae8;
+    --nf-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
     border:        1px solid var(--nf-border);
     border-radius: 8px;
     overflow:      hidden;
     background:    var(--nf-panel);
     color:         var(--nf-text);
-    font:          14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font:          14px/1.5 "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     margin:        12px 0;
 }
 
@@ -29,7 +29,7 @@
 
 .nelumbo-field-toolbar button {
     background:    var(--nf-accent);
-    color:         #0c1322;
+    color:         #2a1033;
     border:        0;
     border-radius: 6px;
     padding:       6px 14px;
@@ -122,11 +122,11 @@
 
 .nelumbo-lsp-banner {
     display:    none;
-    background: rgba(201, 161, 74, .12);
-    color:      #c9a14a;
-    border:     1px solid rgba(201, 161, 74, .4);
+    background: rgba(169, 154, 232, .12);
+    color:      #a99ae8;
+    border:     1px solid rgba(169, 154, 232, .4);
     padding:    8px 14px;
-    font:       13px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font:       13px/1.5 "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     text-align: center;
 }
 
@@ -134,9 +134,9 @@
     display: block;
 }
 
-.nelumbo-exercise { border-left: 3px solid #6ea8fe; padding-left: 12px; margin: 16px 0; }
+.nelumbo-exercise { border-left: 3px solid #c184d8; padding-left: 12px; margin: 16px 0; }
 .nelumbo-exercise .challenge { color: #c6cad4; margin: 0 0 6px; }
-.nelumbo-solution { display: none; margin: 8px 0 0; padding: 10px 12px; background: #1b1d23; border: 1px solid #343843; border-radius: 8px; font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #e6e8ee; white-space: pre-wrap; }
+.nelumbo-solution { display: none; margin: 8px 0 0; padding: 10px 12px; background: #1b1d23; border: 1px solid #343843; border-radius: 8px; font: 12px/1.5 var(--nf-mono, "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace); color: #e6e8ee; white-space: pre-wrap; }
 .nelumbo-solution.visible { display: block; }
 .nelumbo-field-toolbar button.secondary { background: transparent; color: #9aa0ac; border: 1px solid #343843; }
 .nelumbo-field-toolbar button.secondary:hover { color: #e6e8ee; }

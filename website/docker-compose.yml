@@ -26,6 +26,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nelumbo.rule=Host(`nelumbo.nl`)"
+      - "traefik.http.routers.nelumbo-www.rule=Host(`www.nelumbo.nl`)"
+      - "traefik.http.routers.nelumbo-www.middlewares=nelumbo-www-redirect"
+      - "traefik.http.middlewares.nelumbo-www-redirect.redirectregex.regex=^https?://www\\.nelumbo\\.nl/(.*)"
+      - "traefik.http.middlewares.nelumbo-www-redirect.redirectregex.replacement=https://nelumbo.nl/$${1}"
+      - "traefik.http.middlewares.nelumbo-www-redirect.redirectregex.permanent=true"
       - "traefik.http.services.nelumbo.loadbalancer.server.port=8080"
 
 networks:
