@@ -23,25 +23,31 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.server.NelumboServer;
+import org.modelingvalue.nelumbo.server.EvalService;
 
+import io.javalin.Javalin;
+import io.javalin.http.Context;
 import io.javalin.http.staticfiles.Location;
 
 /**
- * The website HTTP server: a {@link NelumboServer} (eval/metadata/health REST endpoints) extended with the public
- * pages, the bundled Monaco frontend under {@code /assets}, and the {@code /lsp} WebSocket.
+ * The website HTTP server: the shared {@link EvalService} REST endpoints (eval/metadata/health) plus the public
+ * pages, the bundled Monaco frontend under {@code /assets}, and the {@code /lsp} WebSocket, all served by one
+ * Javalin (Jetty) instance — the WebSocket route is why this module does not run on the JDK server like the lean
+ * {@code nelumbo-server} executor does.
  */
 public final class NelumboHttpServer {
 
     /** Default per-request inference budget, in milliseconds. */
-    public static final long DEFAULT_TIMEOUT_MS       = NelumboServer.DEFAULT_TIMEOUT_MS;
+    public static final long DEFAULT_TIMEOUT_MS       = EvalService.DEFAULT_TIMEOUT_MS;
     /** Default cap on concurrent LSP WebSocket sessions. */
     public static final int  DEFAULT_MAX_LSP_SESSIONS = 32;
 
-    private final NelumboServer server;
+    private final EvalService   service;
     private final KnowledgeBase baseKb;
     private final long          timeoutMs;
     private final int           maxLspSessions;
+
+    private Javalin app;
 
     public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles) {
         this(baseKb, loadedFiles, DEFAULT_TIMEOUT_MS);
@@ -54,7 +60,7 @@ public final class NelumboHttpServer {
 
     /** {@code maxLspSessions} caps the number of concurrent LSP WebSocket sessions. */
     public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs, int maxLspSessions) {
-        this.server         = new NelumboServer(baseKb, loadedFiles, timeoutMs);
+        this.service        = new EvalService(baseKb, loadedFiles, timeoutMs);
         this.baseKb         = baseKb;
         this.timeoutMs      = timeoutMs;
         this.maxLspSessions = maxLspSessions;
@@ -66,7 +72,7 @@ public final class NelumboHttpServer {
         String tour       = loadResource("/public/tour.html");
         String playground = loadResource("/public/playground.html");
         String favicon    = loadResource("/public/favicon.svg");
-        return server.start(port, config -> {
+        app = Javalin.create(config -> {
             // serve the bundled frontend (Monaco js/css + codicon font) from the classpath under /assets
             config.staticFiles.add(staticFiles -> {
                 staticFiles.hostedPath = "/assets";
@@ -82,12 +88,26 @@ public final class NelumboHttpServer {
             config.routes.get("/favicon.svg", ctx -> ctx.contentType("image/svg+xml").result(favicon));
             config.routes.get("/tour.html", ctx -> ctx.html(tour));
             config.routes.get("/playground.html", ctx -> ctx.html(playground));
+            config.routes.get("/health", ctx -> ctx.json(EvalService.health()));
+            config.routes.post("/eval", ctx -> handleEval(ctx, false));
+            config.routes.post("/eval/trace", ctx -> handleEval(ctx, true));
+            config.routes.get("/metadata", ctx -> ctx.json(service.metadata()));
             config.routes.ws("/lsp", new LspWebSocket(baseKb, timeoutMs, maxLspSessions)::configure);
         });
+        app.start(port);
+        return app.port();
     }
 
     public void stop() {
-        server.stop();
+        if (app != null) {
+            app.stop();
+        }
+        service.close();
+    }
+
+    private void handleEval(Context ctx, boolean pathTrace) {
+        EvalService.Response response = service.eval(ctx.body(), ctx.contentType(), pathTrace);
+        ctx.status(response.status()).json(response.body());
     }
 
     private static String loadResource(String path) {
