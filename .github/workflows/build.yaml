@@ -93,6 +93,22 @@ jobs:
                     if-no-files-found: error
                     retention-days: 30
                     
+            -   name: "upload-website-jar"
+                uses: actions/upload-artifact@v7
+                with:
+                    name: website-server
+                    path: website/build/libs/nelumbo-http-server-*.jar
+                    if-no-files-found: error
+                    retention-days: 30
+
+            -   name: "upload-mcp-jar"
+                uses: actions/upload-artifact@v7
+                with:
+                    name: mcp-server
+                    path: mcp/build/libs/nelumbo-mcp-server-*.jar
+                    if-no-files-found: error
+                    retention-days: 30
+
             -   name: "upload-eclipse-plugin"
                 uses: actions/upload-artifact@v7
                 with:

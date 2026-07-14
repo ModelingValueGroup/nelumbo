@@ -57,6 +57,8 @@ jobs:
 
                     ASSETS=()
                     for f in artifacts/editor/nelumbo*editor.jar \
+                             artifacts/website-server/nelumbo-http-server-*.jar \
+                             artifacts/mcp-server/nelumbo-mcp-server-*.jar \
                              artifacts/eclipse-plugin/eclipse-nelumbo-plugin-*.jar \
                              artifacts/intellij-plugin/intellij-nelumbo-plugin-*.zip; do
                         [ -f "$f" ] && ASSETS+=("$f")

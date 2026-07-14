@@ -140,3 +140,4 @@ Adding a `.nl` example (`src/main/resources/org/modelingvalue/nelumbo/examples/`
 - All Java source files carry an LGPL 3.0 header (auto-corrected by `mvgCorrector` Gradle task using `docs/header-template.txt`).
 - Git branches: `master` (release), `develop` (active development).
 - CI runs on GitHub Actions (`.github/workflows/build.yaml`). Skip CI with `[no-ci]` in commit message.
+- Releases: `.github/workflows/release.yaml` fires on `v*` tag pushes, downloads the build run's artifacts and attaches editor jar, website server jar (`nelumbo-http-server-*`), mcp server jar (`nelumbo-mcp-server-*`), eclipse/intellij plugins, and slides zip; release body comes from `RELEASE_NOTES.md` (`${version}`/`${version-num}` placeholders).
