@@ -14,6 +14,7 @@ Requires **Java 21+**. Uses Gradle 8.14.3 (Kotlin DSL) via wrapper.
 ./gradlew build                          # Build everything (core + LSP server + tests)
 ./gradlew test                           # Run all tests (core + LSP server)
 ./gradlew jar                            # Core library only
+./gradlew :nelumbo-server:serverJar      # Lean executor shaded JAR (REST eval only, no UI/LSP)
 ./gradlew :lsp:server:serverJar          # LSP server shaded JAR
 ./gradlew :website:serverJar             # Website HTTP server shaded JAR (needs node/npm: bundles the Monaco/LSP frontend)
 ./gradlew :mcp:mcpJar                    # MCP server shaded JAR (stdio; register as: java -jar nelumbo-mcp-server-<version>.jar)
@@ -42,7 +43,8 @@ The IntelliJ plugin's IDE sandbox is redirected to `lsp/plugins/intellij/build/i
 
 ```
 nelumbo (root)              → Core language: syntax, semantics, pattern matching, knowledge base
-├── website                 → HTTP server (Javalin + Jackson): serves a KB over REST (/eval, /metadata, /health), an LSP WebSocket at /lsp, and the public pages from src/main/resources/public/: landing (/), Monaco-based feature tour (/tour.html) and free-form playground (/playground.html)
+├── nelumbo-server          → Lean HTTP executor (Javalin + Jackson): NelumboServer serves a KB over REST (/eval, /eval/trace, /metadata, /health) + KnowledgeBaseLoader/NamedSource + CLI Main; jar nelumbo-server-<version>.jar
+├── website                 → Website server: embeds nelumbo-server's NelumboServer (REST endpoints) and adds an LSP WebSocket at /lsp and the public pages from src/main/resources/public/: landing (/), Monaco-based feature tour (/tour.html) and free-form playground (/playground.html)
 ├── mcp                     → MCP stdio server (official MCP Java SDK): tools eval_nl, search_docs, get_example, new_model for LLM authoring of .nl decision models
 ├── lsp/server              → LSP server (depends on root + LSP4J + Jackson + Tyrus WebSocket)
 └── lsp/plugins/
@@ -113,9 +115,13 @@ Building a DSL in Nelumbo means declaring `MyType :: Root` and giving it functor
 
 `QueryEvaluator` now has a 4-arg overload `evaluate(KnowledgeBase base, long deadlineMs, String content, String uri)`. The 2-arg overload delegates to it with `(BASE, 0, ...)`. Call sites in `QueryResultCache` and `WorkspaceExecuteCommandService` pass `workspace.getBaseKnowledgeBase()` and `workspace.getEvalDeadlineMs()`. `NlDocument.of` parses against the workspace KB via `Parser.parse(workspace.getBaseKnowledgeBase(), tokenizerResult)`.
 
+## nelumbo-server Module - Lean Executor
+
+`nelumbo-server/` holds the lean HTTP executor extracted from the website: `NelumboServer` (REST /eval, /eval/trace, /metadata, /health; per-request throwaway child KB; engine deadline + future backstop timeout), `KnowledgeBaseLoader`, `NamedSource`, and a CLI `Main` (`-p/--port`, `-t/--timeout`, files/dirs). `NelumboServer.start(port, Consumer<JavalinConfig>)` is the embedding hook: the website registers its pages/assets/ws routes through it. The module dir/project name is `nelumbo-server` (NOT `server`) because `:lsp:server` already has project name "server" - two subprojects with the same group:name make Gradle's dependency conflict resolution silently drop one of them off the compile classpath. Plain jar has classifier "plain" so other projects can depend on it; the shaded jar is `nelumbo-server-<version>.jar` (the CI upload excludes `*-plain.jar`).
+
 ## Website Module - LSP over WebSocket
 
-`NelumboHttpServer` exposes a `/lsp` WebSocket route (in addition to the REST endpoints). Javalin 7: routes are registered inside the `Javalin.create(config -> ...)` block via `config.routes.get/post/ws` - the `app.get(...)` instance methods were removed in 7.x. Each connection gets its own embedded `NelumboLanguageServer` instance wired via `LspBridge`. Wire format: one plain JSON-RPC message per text frame (no Content-Length framing - vscode-ws-jsonrpc compatible). A session cap (default 32, `--max-lsp-sessions` on the CLI / 4-arg constructor) rejects excess connections with close code 1013; per-session guards: 64 KB text-frame limit, 10-minute idle timeout, 64 documents max, and the eval deadline also bounds LSP parsing/inference. The 3-arg ctor delegates to the 4-arg one.
+`website`'s `NelumboHttpServer` is a thin composition: it wraps `NelumboServer` (which owns the REST endpoints) and adds the public pages, `/assets` static files, and the `/lsp` WebSocket route. Javalin 7: routes are registered inside the `Javalin.create(config -> ...)` block via `config.routes.get/post/ws` - the `app.get(...)` instance methods were removed in 7.x. Each connection gets its own embedded `NelumboLanguageServer` instance wired via `LspBridge`. Wire format: one plain JSON-RPC message per text frame (no Content-Length framing - vscode-ws-jsonrpc compatible). A session cap (default 32, `--max-lsp-sessions` on the CLI / 4-arg constructor) rejects excess connections with close code 1013; per-session guards: 64 KB text-frame limit, 10-minute idle timeout, 64 documents max, and the eval deadline also bounds LSP parsing/inference. The 3-arg ctor delegates to the 4-arg one.
 
 `lsp:server` publishes a plain jar with classifier `"plain"` (in addition to the shadow jar). `website/build.gradle.kts` depends on it via a normal `implementation(project(":lsp:server"))` dependency.
 

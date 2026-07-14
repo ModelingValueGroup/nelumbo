@@ -126,6 +126,7 @@ tasks.register<Exec>("build-slides") {
 tasks.named<Delete>("clean") {
     delete(file("docs/site"))
     delete(rootProject.layout.buildDirectory)
+    delete(file("nelumbo-server/build"))
     delete(file("website/build"))
     delete(file("lsp/server/build"))
     delete(file("lsp/plugins/eclipse/build"))
@@ -134,6 +135,7 @@ tasks.named<Delete>("clean") {
 
 tasks.test {
     dependsOn(":lsp:server:test")
+    dependsOn(":nelumbo-server:test")
     dependsOn(":website:test")
     dependsOn(":mcp:test")
 }

@@ -14,52 +14,63 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.website;
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+plugins {
+    id("com.gradleup.shadow") version "9.5.1"
+    java
+}
 
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboTimeoutException;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
-import org.modelingvalue.nelumbo.syntax.Tokenizer;
-
-/**
- * Verifies the engine-level mechanism the HTTP timeout relies on: an inference whose knowledge base is past its
- * deadline aborts by throwing {@link NelumboTimeoutException}. Deterministic — the deadline is set in the past, so the
- * very first {@code fixpoint} check trips it regardless of timing.
- */
-class InferenceDeadlineTest {
-
-    private static final String FIB = """
-            import nelumbo.integers
-
-            Integer ::= fib(<Integer>)
-
-            Integer n, f
-
-            fib(n)=f <=>  f=n                 if n>=0 & n<=1,
-                          f=fib(n-1)+fib(n-2) if n>1
-            """;
-
-    @Test
-    void inferencePastDeadlineThrows() {
-        KnowledgeBase base = KnowledgeBaseLoader.load(List.of(new NamedSource("fib.nl", FIB)));
-        KnowledgeBase request = new KnowledgeBase(base);
-        request.setDeadlineNanos(System.nanoTime() - 1); // already expired
-
-        assertThrows(NelumboTimeoutException.class, () -> request.run(() -> {
-            ParserResult result = new Parser(new Tokenizer("Integer r\nfib(8)=r ?\n", "<t>").tokenize())
-                    .parseNonThrowing();
-            try {
-                result.evaluate();
-            } catch (ParseException e) {
-                throw new IllegalStateException(e);
-            }
-        }));
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
+}
+
+val archiveName = "nelumbo-server"
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation(project(":"))
+    implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
+    implementation("io.javalin:javalin:7.2.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.18")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    jvmArgs("-ea") // Enable assertions
+}
+
+tasks.register<ShadowJar>("serverJar") {
+    archiveBaseName.set(archiveName)
+    // Produce a single shaded jar without the default "-all" classifier
+    archiveClassifier.set("")
+    manifest {
+        attributes["Main-Class"] = "org.modelingvalue.nelumbo.server.Main"
+    }
+    from(sourceSets.main.get().output)
+    configurations = listOf(project.configurations.runtimeClasspath.get())
+
+    // Exclude signature files from signed dependencies to avoid SecurityException
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    mergeServiceFiles()
+}
+
+tasks.shadowJar {
+    // Disable default shadowJar task; use serverJar instead
+    enabled = false
+}
+
+tasks.jar {
+    // plain jar (classifier avoids clashing with the shaded serverJar); needed so other projects can depend on this one
+    archiveClassifier.set("plain")
 }
