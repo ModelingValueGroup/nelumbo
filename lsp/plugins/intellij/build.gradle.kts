@@ -55,16 +55,22 @@ intellijPlatform {
 }
 
 // the IntelliJ Platform Gradle Plugin unconditionally (re)creates <root>/.intellijPlatform; remove it
-// again as long as it stays empty (File.delete() on a directory is rmdir: it fails silently when
-// non-empty). It is created at configuration time of every build (hence the whenReady hook) and
-// again when initializeIntellijPlatformPlugin executes (hence the finalizer).
+// again. It is created at configuration time of every build (hence the whenReady hook) and again when
+// initializeIntellijPlatformPlugin executes (hence the finalizer). localPlatformArtifacts holds only
+// ivy descriptors that the plugin rewrites on demand, so it is deleted recursively; anything else
+// (the coroutines javaagent downloaded for runIde/test) is left alone, in which case the rmdir of
+// the root fails silently and the dir stays.
 val platformCacheDir = rootProject.layout.projectDirectory.dir(".intellijPlatform").asFile
-gradle.taskGraph.whenReady {
+fun removePlatformCacheDir() {
+    File(platformCacheDir, "localPlatformArtifacts").deleteRecursively()
     platformCacheDir.delete()
+}
+gradle.taskGraph.whenReady {
+    removePlatformCacheDir()
 }
 val removeEmptyPlatformCacheDir by tasks.registering {
     doLast {
-        platformCacheDir.delete()
+        removePlatformCacheDir()
     }
 }
 tasks.named("initializeIntellijPlatformPlugin") {
