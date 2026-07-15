@@ -95,7 +95,7 @@ java -jar build/libs/nelumbo-cli-<version>.jar [options] <file>...
 
 Pass `-` in place of a filename to read from stdin. Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
 
-The jar is also double-clickable: launched without a console and without arguments it opens a file chooser for a `.nl` file and shows the evaluation results in a window.
+The jar is also double-clickable: launched without a console and without arguments it opens an interactive window with an editable Nelumbo example, a Run button evaluating it in place, and the command-line usage as documentation.
 
 ## HTTP Server
 
