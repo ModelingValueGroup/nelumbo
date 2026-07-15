@@ -166,6 +166,11 @@ public final class NelumboServer {
               textarea { width: 100%; height: 160px; box-sizing: border-box; }
               pre { background: #f4f4f6; padding: 10px; border-radius: 6px; white-space: pre-wrap; }
               button { font-size: 14px; padding: 4px 14px; }
+              #tree { background: #f4f4f6; padding: 10px; border-radius: 6px;
+                      font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace; }
+              #tree details { padding-left: 18px; }
+              #tree div { padding-left: 18px; }
+              #tree summary { cursor: pointer; margin-left: -18px; }
             </style>
             </head>
             <body>
@@ -191,19 +196,49 @@ public final class NelumboServer {
             <p>
               <button onclick="run('/eval')">/eval</button>
               <button onclick="run('/eval/trace')">/eval/trace</button>
+              &nbsp; view as:
+              <label><input type="radio" name="view" value="text" checked onchange="showView()"> text</label>
+              <label><input type="radio" name="view" value="tree" onchange="showView()"> tree</label>
             </p>
             <pre id="out">(press a button to evaluate)</pre>
+            <div id="tree" style="display: none"></div>
             <script>
+              function treeNode(label, value) {
+                if (value !== null && typeof value === 'object') {
+                  const details = document.createElement('details');
+                  details.open = true;
+                  const summary = document.createElement('summary');
+                  summary.textContent = Array.isArray(value) ? label + ' [' + value.length + ']' : label;
+                  details.appendChild(summary);
+                  const entries = Array.isArray(value) ? value.map((v, i) => ['[' + i + ']', v]) : Object.entries(value);
+                  for (const [key, val] of entries) {
+                    details.appendChild(treeNode(key, val));
+                  }
+                  return details;
+                }
+                const leaf = document.createElement('div');
+                leaf.textContent = label + ': ' + value;
+                return leaf;
+              }
+              function showView() {
+                const asText = document.querySelector('input[name="view"]:checked').value === 'text';
+                document.getElementById('out').style.display = asText ? '' : 'none';
+                document.getElementById('tree').style.display = asText ? 'none' : '';
+              }
               async function run(path) {
                 const out = document.getElementById('out');
+                const tree = document.getElementById('tree');
                 out.textContent = 'running...';
+                tree.replaceChildren();
                 try {
-                  const response = await fetch(path, { method: 'POST',
+                  const result = await (await fetch(path, { method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
-                    body: document.getElementById('src').value });
-                  out.textContent = JSON.stringify(await response.json(), null, 2);
+                    body: document.getElementById('src').value })).json();
+                  out.textContent = JSON.stringify(result, null, 2);
+                  tree.replaceChildren(treeNode('result', result));
                 } catch (e) {
                   out.textContent = 'request failed: ' + e;
+                  tree.textContent = out.textContent;
                 }
               }
             </script>
