@@ -145,6 +145,17 @@ class NelumboServerTest {
     }
 
     @Test
+    void rootServesInfoPage() throws Exception {
+        HttpResponse<String> response = get("/");
+        assertEquals(200, response.statusCode());
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/html"),
+                "the index page should be served as HTML");
+        String html = response.body();
+        assertTrue(html.contains("POST /eval"), "the index page should document the endpoints");
+        assertTrue(html.contains("id=\"src\""), "the index page should offer the try-it form");
+    }
+
+    @Test
     void healthReportsOk() throws Exception {
         HttpResponse<String> response = get("/health");
         assertEquals(200, response.statusCode());

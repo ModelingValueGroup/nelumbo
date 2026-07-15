@@ -154,6 +154,7 @@ public final class Main {
         out.println("Loads the given .nl files (directories are scanned for *.nl) into a knowledge base");
         out.println("and serves it over HTTP. Without files it starts with an empty knowledge base.");
         out.println("Endpoints:");
+        out.println("  GET  /            info page with endpoint docs and a try-it form");
         out.println("  POST /eval         evaluate a posted Nelumbo document, returns query results as JSON");
         out.println("  POST /eval/trace   like /eval, with a (currently stubbed) trace field");
         out.println("  GET  /metadata     knowledge base metadata (types, counts, loaded files)");

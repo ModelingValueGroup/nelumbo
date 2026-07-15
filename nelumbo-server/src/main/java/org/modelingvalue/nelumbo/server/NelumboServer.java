@@ -87,6 +87,11 @@ public final class NelumboServer {
             String path = exchange.getRequestURI().getPath();
             String method = exchange.getRequestMethod();
             switch (path) {
+            case "/":
+                if (requires(exchange, method, "GET")) {
+                    respondHtml(exchange, INDEX_HTML);
+                }
+                break;
             case "/health":
                 if (requires(exchange, method, "GET")) {
                     respond(exchange, 200, EvalService.health());
@@ -132,4 +137,73 @@ public final class NelumboServer {
             out.write(bytes);
         }
     }
+
+    private static void respondHtml(HttpExchange exchange, String html) throws IOException {
+        byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+        exchange.sendResponseHeaders(200, bytes.length);
+        try (OutputStream out = exchange.getResponseBody()) {
+            out.write(bytes);
+        }
+    }
+
+    /** A minimal index page so a browser (e.g. via the status window's Open in Browser) sees something useful. */
+    private static final String INDEX_HTML = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Nelumbo Server</title>
+            <style>
+              body { max-width: 720px; margin: 40px auto; padding: 0 16px; color: #1b1d23;
+                     font: 15px/1.6 system-ui, -apple-system, sans-serif; }
+              h1 { font-size: 22px; }
+              code, textarea, pre { font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace; }
+              table { border-collapse: collapse; }
+              td { padding: 2px 12px 2px 0; vertical-align: top; }
+              textarea { width: 100%; height: 160px; box-sizing: border-box; }
+              pre { background: #f4f4f6; padding: 10px; border-radius: 6px; white-space: pre-wrap; }
+              button { font-size: 14px; padding: 4px 14px; }
+            </style>
+            </head>
+            <body>
+            <h1>Nelumbo Server</h1>
+            <p>A lean executor for Nelumbo documents. Endpoints:</p>
+            <table>
+              <tr><td><code>POST /eval</code></td><td>evaluate a posted Nelumbo document, returns query results and parse tree as JSON</td></tr>
+              <tr><td><code>POST /eval/trace</code></td><td>like /eval, with a (currently stubbed) trace field</td></tr>
+              <tr><td><code><a href="/metadata">GET /metadata</a></code></td><td>knowledge base metadata (types, functors, rules, facts)</td></tr>
+              <tr><td><code><a href="/health">GET /health</a></code></td><td>liveness check</td></tr>
+            </table>
+            <h2>Try it</h2>
+            <textarea id="src">import nelumbo.integers
+
+            Integer ::= fib(&lt;Integer&gt;)
+            Integer n, f
+
+            fib(n)=f &lt;=&gt; f=n if n&lt;=1, f=fib(n-1)+fib(n-2) if n&gt;1
+
+            Integer r
+            fib(7)=r ?
+            </textarea>
+            <p><button onclick="run()">Run</button></p>
+            <pre id="out">(press Run to evaluate)</pre>
+            <script>
+              async function run() {
+                const out = document.getElementById('out');
+                out.textContent = 'running...';
+                try {
+                  const response = await fetch('/eval', { method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: document.getElementById('src').value });
+                  out.textContent = JSON.stringify(await response.json(), null, 2);
+                } catch (e) {
+                  out.textContent = 'request failed: ' + e;
+                }
+              }
+            </script>
+            </body>
+            </html>
+            """;
 }
