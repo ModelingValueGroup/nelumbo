@@ -236,20 +236,21 @@ public final class NelumboCli {
             JTextArea input = new JTextArea(EXAMPLE);
             input.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
 
-            JTextArea textOutput = new JTextArea("(press Run to evaluate)");
+            JTextArea textOutput = new JTextArea();
             textOutput.setEditable(false);
             textOutput.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
-            JTextArea jsonOutput = new JTextArea("(press Run to evaluate)");
+            JTextArea jsonOutput = new JTextArea();
             jsonOutput.setEditable(false);
             jsonOutput.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
             JTextArea usage = new JTextArea(usageText());
             usage.setEditable(false);
             usage.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
+            JScrollPane outputScroll = new JScrollPane(textOutput);
+            JScrollPane jsonScroll = new JScrollPane(jsonOutput);
+            // the output and json tabs only appear once there is something to show (after the first Run)
             JTabbedPane tabs = new JTabbedPane();
             tabs.addTab("nelumbo", new JScrollPane(input));
-            tabs.addTab("output", new JScrollPane(textOutput));
-            tabs.addTab("json", new JScrollPane(jsonOutput));
             tabs.addTab("usage", new JScrollPane(usage));
             tabs.setPreferredSize(new Dimension(760, 460));
 
@@ -276,7 +277,11 @@ public final class NelumboCli {
                         textOutput.setText(textResult);
                         jsonOutput.setText(jsonResult);
                         run.setEnabled(true);
-                        tabs.setSelectedIndex(1); // show the output tab
+                        if (tabs.indexOfComponent(outputScroll) < 0) {
+                            tabs.insertTab("output", null, outputScroll, null, 1);
+                            tabs.insertTab("json", null, jsonScroll, null, 2);
+                        }
+                        tabs.setSelectedComponent(outputScroll);
                     });
                 }, "nelumbo-cli-run").start();
             });
