@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo.mcp;
 
+import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
@@ -28,7 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -103,14 +109,24 @@ public final class Main {
     }
 
     private static void explainUsageWhenDoubleClicked() {
-        String jar = ownJarName();
-        String message = "This is a Model Context Protocol (MCP) server: it is not meant to be started directly,\n"
-                + "but to be registered with an MCP client, which starts it itself. For example:\n\n"
-                + "    claude mcp add nelumbo -- java -jar " + jar;
-        System.err.println(message);
+        String command = "claude mcp add nelumbo -- java -jar " + ownJarName();
+        String explanation = "This is a Model Context Protocol (MCP) server: it is not meant to be started directly,\n"
+                + "but to be registered with an MCP client, which starts it itself. For example:";
+        System.err.println(explanation + "\n\n    " + command);
         if (System.console() == null && !GraphicsEnvironment.isHeadless()) {
             org.modelingvalue.nelumbo.tools.AppIcon.install(null);
-            JOptionPane.showMessageDialog(null, message, "Nelumbo MCP Server", JOptionPane.INFORMATION_MESSAGE);
+            JPanel panel = new JPanel(new BorderLayout(0, 10));
+            panel.add(new JLabel("<html>This is a Model Context Protocol (MCP) server: it is not meant to be started directly,<br>"
+                    + "but to be registered with an MCP client, which starts it itself. For example:</html>"), BorderLayout.NORTH);
+            JTextArea commandArea = new JTextArea(command);
+            commandArea.setEditable(false);
+            commandArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+            commandArea.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+            panel.add(commandArea, BorderLayout.CENTER);
+            JOptionPane.showOptionDialog(null, panel, "Nelumbo MCP Server", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Quit"}, "Quit");
+            // the AWT event thread is non-daemon: without an explicit exit the process lingers after the dialog
+            System.exit(0);
         }
     }
 
