@@ -35,10 +35,12 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import org.modelingvalue.json.Json;
+import org.modelingvalue.json.JsonPrettyfier;
 
 public final class NelumboCli {
 
@@ -167,16 +169,37 @@ public final class NelumboCli {
         }
         for (NelumboEvaluator.QueryOutcome q : result.queries()) {
             if (json != null) {
-                java.util.Map<String, Object> entry = new LinkedHashMap<>();
-                entry.put("query", q.query());
-                entry.put("facts", q.facts());
-                entry.put("falsehoods", q.falsehoods());
-                json.queries.add(entry);
+                json.queries.add(queryEntry(q));
             } else if (!quiet && q.result() != null) {
                 System.out.println(q.query() + " ? " + q.result());
             }
         }
         return result.ok();
+    }
+
+    private static java.util.Map<String, Object> queryEntry(NelumboEvaluator.QueryOutcome q) {
+        java.util.Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("query", q.query());
+        entry.put("facts", q.facts());
+        entry.put("falsehoods", q.falsehoods());
+        return entry;
+    }
+
+    /** The same JSON object shape as batch {@code --json} mode, for one result. */
+    private static java.util.Map<String, Object> jsonObject(NelumboEvaluator.EvalResult result, String name) {
+        java.util.List<String> errors = new ArrayList<>();
+        for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
+            errors.add(name + ":" + d.line() + ":" + d.col() + ": " + d.message());
+        }
+        java.util.List<java.util.Map<String, Object>> queries = new ArrayList<>();
+        for (NelumboEvaluator.QueryOutcome q : result.queries()) {
+            queries.add(queryEntry(q));
+        }
+        java.util.Map<String, Object> out = new LinkedHashMap<>();
+        out.put("errors", errors);
+        out.put("queries", queries);
+        out.put("parseTree", result.parseTree());
+        return out;
     }
 
     private static final String EXAMPLE = """
@@ -200,19 +223,35 @@ public final class NelumboCli {
             JTextArea input = new JTextArea(EXAMPLE);
             input.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
 
-            JTextArea output = new JTextArea("(press Run to evaluate)");
-            output.setEditable(false);
-            output.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+            JTextArea textOutput = new JTextArea("(press Run to evaluate)");
+            textOutput.setEditable(false);
+            textOutput.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+            JTextArea jsonOutput = new JTextArea("(press Run to evaluate)");
+            jsonOutput.setEditable(false);
+            jsonOutput.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
 
             JButton run = new JButton("Run");
             run.addActionListener(e -> {
                 run.setEnabled(false);
-                output.setText("running...");
+                textOutput.setText("running...");
+                jsonOutput.setText("running...");
                 String source = input.getText();
                 new Thread(() -> {
-                    String text = evaluateToText(source);
+                    String text;
+                    String json;
+                    try {
+                        NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, "<input>", 0);
+                        text = renderText(result);
+                        json = JsonPrettyfier.pretty(Json.toJson(jsonObject(result, "<input>")));
+                    } catch (RuntimeException ex) {
+                        text = "evaluation failed: " + ex;
+                        json = text;
+                    }
+                    String textResult = text;
+                    String jsonResult = json;
                     SwingUtilities.invokeLater(() -> {
-                        output.setText(text);
+                        textOutput.setText(textResult);
+                        jsonOutput.setText(jsonResult);
                         run.setEnabled(true);
                     });
                 }, "nelumbo-cli-run").start();
@@ -225,9 +264,11 @@ public final class NelumboCli {
 
             JScrollPane inputScroll = new JScrollPane(input);
             inputScroll.setPreferredSize(new Dimension(720, 280));
-            JScrollPane outputScroll = new JScrollPane(output);
-            outputScroll.setPreferredSize(new Dimension(720, 160));
-            JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, inputScroll, outputScroll);
+            JTabbedPane outputTabs = new JTabbedPane();
+            outputTabs.addTab("text", new JScrollPane(textOutput));
+            outputTabs.addTab("json", new JScrollPane(jsonOutput));
+            outputTabs.setPreferredSize(new Dimension(720, 200));
+            JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, inputScroll, outputTabs);
             split.setResizeWeight(0.7);
 
             JPanel buttons = new JPanel();
@@ -248,13 +289,7 @@ public final class NelumboCli {
         });
     }
 
-    private static String evaluateToText(String source) {
-        NelumboEvaluator.EvalResult result;
-        try {
-            result = NelumboEvaluator.evaluate(source, "<input>", 0);
-        } catch (RuntimeException e) {
-            return "evaluation failed: " + e;
-        }
+    private static String renderText(NelumboEvaluator.EvalResult result) {
         StringBuilder text = new StringBuilder();
         for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
             text.append(d.line()).append(":").append(d.col()).append(": ").append(d.message()).append("\n");
