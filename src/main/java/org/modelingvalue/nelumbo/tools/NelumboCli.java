@@ -42,6 +42,10 @@ public final class NelumboCli {
     private NelumboCli() {
     }
 
+    /** One unit of work: either a file path (or {@code -} for stdin), or an inline source from {@code -nl}. */
+    private record Input(String file, String inlineSource) {
+    }
+
     public static void main(String[] args) {
         // A double-clicked jar has no console and no arguments: open an interactive evaluate window
         // instead of printing usage to an invisible stderr.
@@ -50,12 +54,23 @@ public final class NelumboCli {
             return;
         }
         boolean quiet = false;
-        java.util.List<String> files = new ArrayList<>();
-        for (String a : args) {
+        java.util.List<Input> inputs = new ArrayList<>();
+        for (int i = 0; i < args.length; i++) {
+            String a = args[i];
             switch (a) {
             case "-q":
             case "--quiet":
                 quiet = true;
+                break;
+            case "-nl":
+            case "--nelumbo":
+                if (i + 1 >= args.length) {
+                    System.err.println("nelumbo: missing value for " + a);
+                    printUsage(System.err);
+                    System.exit(2);
+                    return;
+                }
+                inputs.add(new Input(null, args[++i]));
                 break;
             case "-h":
             case "--help":
@@ -63,7 +78,7 @@ public final class NelumboCli {
                 System.exit(0);
                 return;
             case "-":
-                files.add(a);
+                inputs.add(new Input(a, null));
                 break;
             default:
                 if (a.startsWith("-")) {
@@ -72,17 +87,19 @@ public final class NelumboCli {
                     System.exit(2);
                     return;
                 }
-                files.add(a);
+                inputs.add(new Input(a, null));
             }
         }
-        if (files.isEmpty()) {
+        if (inputs.isEmpty()) {
             printUsage(System.err);
             System.exit(2);
             return;
         }
         int failed = 0;
-        for (String file : files) {
-            if (!runFile(file, quiet)) {
+        for (Input input : inputs) {
+            boolean ok = input.file() != null ? runFile(input.file(), quiet)
+                    : runSource(input.inlineSource(), "<nelumbo>", quiet);
+            if (!ok) {
                 failed++;
             }
         }
@@ -107,6 +124,10 @@ public final class NelumboCli {
             System.err.println(file + ": " + e.getMessage());
             return false;
         }
+        return runSource(source, name, quiet);
+    }
+
+    private static boolean runSource(String source, String name, boolean quiet) {
         NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, name, 0);
         for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
             System.err.println(name + ":" + d.line() + ":" + d.col() + ": " + d.message());
@@ -224,9 +245,10 @@ public final class NelumboCli {
                 queries with expected results [(facts)][(falsehoods)] are compared,
                 and mismatches are reported as errors.
 
-                  <file>         path to a .nl file, or - to read stdin
-                  -q, --quiet    suppress query result output (errors still printed)
-                  -h, --help     show this help and exit
+                  <file>            path to a .nl file, or - to read stdin
+                  -nl, --nelumbo S  evaluate the Nelumbo source given as argument S
+                  -q, --quiet       suppress query result output (errors still printed)
+                  -h, --help        show this help and exit
 
                 Exit codes: 0 success, 1 parse/evaluation/comparison errors, 2 usage error.
                 """;

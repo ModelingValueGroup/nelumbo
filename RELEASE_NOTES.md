@@ -49,8 +49,10 @@ reported as errors. Exit codes: `0` success, `1` parse/evaluation/comparison err
 `2` usage error - suitable for scripting and CI.
 
 - run `java -jar nelumbo-cli-${version-num}.jar [options] <file>...` (pass `-` to read stdin,
+  `-nl '<src>'` to evaluate source given on the command line,
   `-q` to suppress query output, `-h` for all options)
-- or double-click the jar: a file chooser opens for a `.nl` file and the results are shown in a window
+- or double-click the jar: an interactive window opens with an editable Nelumbo example, a Run
+  button, and the command-line usage as documentation
 
 ## nelumbo-mcp-server-${version-num}.jar - MCP server
 
