@@ -1,25 +1,29 @@
 This release delivers the following artifacts. All jars require Java 21 or higher.
 
-## nelumbo-cli-server-${version-num}.jar - lean executor
+## nelumbo-cli-${version-num}.jar - command-line runner and eval server
 
-The smallest way to run **nelumbo** specifications: a self-contained HTTP server (~2 MB) that
-loads `.nl` files into a knowledge base and evaluates posted documents against it. No UI, no
-editor support - just execution. It runs on the JDK's built-in HTTP server and has no
-third-party dependencies.
+Parses and evaluates `.nl` files from the terminal, printing each query together with its
+inferred result. Queries that declare expected results are compared and mismatches are
+reported as errors. Exit codes: `0` success, `1` parse/evaluation/comparison errors,
+`2` usage error - suitable for scripting and CI. Self-contained (~2 MB, no third-party
+dependencies, HTTP served by the JDK's built-in server).
 
-- run `java -jar nelumbo-cli-server-${version-num}.jar [--port N] [--timeout MS] [<file-or-dir>...]`,
-  or double-click the jar: a small status window shows the URL with Open in Browser / Stop buttons
-- `POST /eval` evaluates a posted **nelumbo** document (raw text, or a JSON envelope
-  `{"document": "...", "limit": N}`) and returns the query results and the parse tree as JSON
-- `POST /eval/trace` is `/eval` with a (currently stubbed) trace field
-- `GET /metadata` describes the loaded knowledge base (types, functors, rules, facts)
-- `GET /health` is a liveness check
+- run `java -jar nelumbo-cli-${version-num}.jar [options] <file>...` (pass `-` to read stdin,
+  `-n '<src>'` to evaluate source given on the command line, `-p logic,integers,...|all` to preload stdlib modules, `-j` for JSON output including
+  the parse tree, `-q` to suppress query output, `-h` for all options)
+- with `--server <port>` the inputs are instead loaded into a knowledge base that is served
+  over HTTP: an info/try-it page at `/`, `POST /eval` (raw text or a JSON envelope
+  `{"document": "...", "limit": N, "stdlib": bool}`) returning query results and parse tree,
+  `POST /eval/trace`, `GET /metadata`, `GET /examples`, and `GET /health`
+- or double-click the jar: an interactive window opens with an editable Nelumbo example, Run
+  and output/json tabs, a server tab (start/stop the HTTP server, request counter), and the
+  command-line usage as documentation
 
 ## nelumbo-web-server-${version-num}.jar - website server
 
 The full **nelumbo** website server, as it runs on [nelumbo.nl](https://nelumbo.nl): the same
-REST endpoints as the lean executor, plus an LSP editor service over WebSocket at `/lsp` and
-the public pages (landing page, feature tour, and playground with browser-based editors).
+REST endpoints as the cli's `--server` mode, plus an LSP editor service over WebSocket at
+`/lsp` and the public pages (landing page, feature tour, and playground with browser-based editors).
 
 - run `java -jar nelumbo-web-server-${version-num}.jar [--port N] [<file-or-dir>...]`,
   or double-click the jar: a small status window shows the URL with Open in Browser / Stop buttons
@@ -40,19 +44,6 @@ String  a
 
 "foo"+"bar"=a  ?    [(a="foobar")][..]
 ```
-
-## nelumbo-cli-${version-num}.jar - command-line runner
-
-Parses and evaluates `.nl` files from the terminal, printing each query together with its
-inferred result. Queries that declare expected results are compared and mismatches are
-reported as errors. Exit codes: `0` success, `1` parse/evaluation/comparison errors,
-`2` usage error - suitable for scripting and CI.
-
-- run `java -jar nelumbo-cli-${version-num}.jar [options] <file>...` (pass `-` to read stdin,
-  `-n '<src>'` to evaluate source given on the command line, `-j` for JSON output,
-  `-q` to suppress query output, `-h` for all options)
-- or double-click the jar: an interactive window opens with an editable Nelumbo example, a Run
-  button, and the command-line usage as documentation
 
 ## nelumbo-mcp-server-${version-num}.jar - MCP server
 

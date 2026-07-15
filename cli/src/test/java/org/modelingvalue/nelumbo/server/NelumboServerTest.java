@@ -192,6 +192,7 @@ class NelumboServerTest {
         HttpResponse<String> response = get("/health");
         assertEquals(200, response.statusCode());
         assertEquals("ok", mapper.readTree(response.body()).get("status").asText());
+        assertTrue(server.requestCount() >= 1, "handled requests should be counted");
     }
 
     @Test

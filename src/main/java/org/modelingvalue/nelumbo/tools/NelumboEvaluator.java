@@ -61,6 +61,11 @@ public final class NelumboEvaluator {
 
     /** deadlineMs <= 0 means no deadline. */
     public static EvalResult evaluate(String source, String name, long deadlineMs) {
+        return evaluate(source, name, deadlineMs, null);
+    }
+
+    /** {@code preamble} (e.g. import statements) is evaluated first as a separate source, so the document's line numbers are unaffected. */
+    public static EvalResult evaluate(String source, String name, long deadlineMs, String preamble) {
         String src = source.endsWith("\n") ? source : source + "\n";
         List<Diagnostic> diagnostics = new ArrayList<>();
         List<QueryOutcome> queries = new ArrayList<>();
@@ -72,6 +77,13 @@ public final class NelumboEvaluator {
         try {
             evalKb.run(() -> {
                 KnowledgeBase kb = KnowledgeBase.CURRENT.get();
+                if (preamble != null && !preamble.isBlank()) {
+                    try {
+                        new Parser(new Tokenizer(preamble, "<prep>").tokenize()).parseNonThrowing().evaluate();
+                    } catch (ParseException e) {
+                        diagnostics.add(toDiagnostic(e));
+                    }
+                }
                 ParserResult parsed = new Parser(new Tokenizer(src, name).tokenize()).parseNonThrowing();
                 for (ParseException e : parsed.exceptions()) {
                     diagnostics.add(toDiagnostic(e));

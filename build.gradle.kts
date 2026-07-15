@@ -66,29 +66,10 @@ tasks {
         }
     }
 
-    register<ShadowJar>("cliJar") {
-        archiveBaseName.set("nelumbo-cli")
-        archiveClassifier.set("")
-        manifest {
-            attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboCli"
-        }
-        from(sourceSets.main.get().output)
-        configurations = listOf(project.configurations.runtimeClasspath.get())
-
-        // Exclude signature files from signed dependencies to avoid SecurityException
-        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-
-        doFirst {
-            // Clean only previous shadow jars; leave regular publication jars intact
-            val libsDir = layout.buildDirectory.dir("libs")
-            libsDir.get().asFile.listFiles()
-                ?.filter { f -> f.isFile && (f.name.endsWith("-cli.jar") || f.name.contains("-cli-")) }
-                ?.forEach { it.delete() }
-        }
-    }
+    // the cli jar (which includes the HTTP eval server) is built by the :cli module's cliJar task
 
     shadowJar {
-        // Disable default shadowJar task; use editorJar / cliJar instead
+        // Disable default shadowJar task; use editorJar instead
         enabled = false
     }
 }
@@ -129,7 +110,7 @@ tasks.register<Exec>("build-slides") {
 tasks.named<Delete>("clean") {
     delete(file("docs/site"))
     delete(rootProject.layout.buildDirectory)
-    delete(file("nelumbo-server/build"))
+    delete(file("cli/build"))
     delete(file("website/build"))
     delete(file("lsp/server/build"))
     delete(file("lsp/plugins/eclipse/build"))
@@ -138,7 +119,7 @@ tasks.named<Delete>("clean") {
 
 tasks.test {
     dependsOn(":lsp:server:test")
-    dependsOn(":nelumbo-server:test")
+    dependsOn(":cli:test")
     dependsOn(":website:test")
     dependsOn(":mcp:test")
 }

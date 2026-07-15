@@ -57,11 +57,10 @@ jobs:
                     ./gradlew --info \
                         mvgCorrector \
                         build \
-                        :nelumbo-server:serverJar \
+                        :cli:cliJar \
                         :website:serverJar \
                         :mcp:mcpJar \
                         editorJar \
-                        cliJar \
                         :lsp:plugins:eclipse:jar \
                         :lsp:plugins:intellij:buildPlugin \
                         mvgTagger \
@@ -91,7 +90,8 @@ jobs:
                 uses: actions/upload-artifact@v7
                 with:
                     name: cli
-                    path: build/libs/nelumbo-cli-*.jar
+                    # plain/sources/javadoc jars are named after the project (cli-*), so they do not match
+                    path: cli/build/libs/nelumbo-cli-*.jar
                     if-no-files-found: error
                     retention-days: 30
 
@@ -111,14 +111,6 @@ jobs:
                     if-no-files-found: error
                     retention-days: 30
 
-            -   name: "upload-server-jar"
-                uses: actions/upload-artifact@v7
-                with:
-                    name: nelumbo-server
-                    # plain/sources/javadoc jars are named after the project (nelumbo-server-*), so they no longer match
-                    path: nelumbo-server/build/libs/nelumbo-cli-server-*.jar
-                    if-no-files-found: error
-                    retention-days: 30
 
             -   name: "upload-mcp-jar"
                 uses: actions/upload-artifact@v7

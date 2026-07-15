@@ -59,11 +59,10 @@ Build individual components:
 
 ```sh
 ./gradlew jar                          # core library
-./gradlew :nelumbo-server:serverJar    # HTTP eval server (shaded jar)
+./gradlew :cli:cliJar                  # command-line runner + HTTP eval server (shaded jar)
 ./gradlew :lsp:server:serverJar        # LSP server (shaded jar)
 ./gradlew :lsp:plugins:eclipse:jar     # Eclipse plugin (includes LSP server)
 ./gradlew :lsp:plugins:intellij:build  # IntelliJ plugin
-./gradlew cliJar                       # command-line runner (shaded jar)
 ```
 
 Run tests:
@@ -87,23 +86,22 @@ See the README in each plugin directory for installation instructions.
 
 ## Command-Line Interface
 
-`NelumboCli` parses and evaluates one or more `.nl` files from the terminal, printing each query together with its inferred result. Queries that declare expected results are compared and mismatches are reported as errors. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-cli-<version>.jar`, or build it with `./gradlew cliJar` (output in `build/libs/nelumbo-cli-<version>.jar`) and run it with `java`:
+`NelumboCli` parses and evaluates one or more `.nl` files from the terminal, printing each query together with its inferred result. Queries that declare expected results are compared and mismatches are reported as errors. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-cli-<version>.jar`, or build it with `./gradlew cliJar` (output in `cli/build/libs/nelumbo-cli-<version>.jar`) and run it with `java`:
 
 ```sh
-java -jar build/libs/nelumbo-cli-<version>.jar [options] <file>...
+java -jar cli/build/libs/nelumbo-cli-<version>.jar [options] <file>...
 ```
 
-Pass `-` in place of a filename to read from stdin, or `-n` / `--nelumbo` followed by Nelumbo source to evaluate it directly from the command line. Use `-j` / `--json` for machine-readable output: one JSON object with an `errors` message array, per-query `facts`/`falsehoods` name/value pairs, and the parse tree of the input (node kind, functor/type, position, text, children). Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
+Pass `-` in place of a filename to read from stdin, or `-n` / `--nelumbo` followed by Nelumbo source to evaluate it directly from the command line. Use `-p` / `--prep` with a comma-separated list of stdlib modules (or `all`) to preload them before each evaluation and into a served knowledge base. Use `-j` / `--json` for machine-readable output: one JSON object with an `errors` message array, per-query `facts`/`falsehoods` name/value pairs, and the parse tree of the input (node kind, functor/type, position, text, children). Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
 
-The jar is also double-clickable: launched without a console and without arguments it opens an interactive window with an editable Nelumbo example, a Run button evaluating it in place, and the command-line usage as documentation.
+The jar is also double-clickable: launched without a console and without arguments it opens an interactive window with an editable Nelumbo example, a Run button evaluating it in place, a server tab (start/stop the HTTP server with a request counter), and the command-line usage as documentation.
 
 ## HTTP Server
 
-The `nelumbo-server` module is a lean HTTP executor for `.nl` specifications: it loads the given files (directories are scanned for `*.nl`) into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server and has no third-party dependencies — the shaded jar is about 2 MB. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-cli-server-<version>.jar`, or can be built from source:
+The same jar is a lean HTTP executor for `.nl` specifications: with `--server <port>` it loads the given files (directories are scanned for `*.nl`) and `-n` sources into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server and has no third-party dependencies — the shaded jar is about 2 MB.
 
 ```sh
-./gradlew :nelumbo-server:serverJar
-java -jar nelumbo-server/build/libs/nelumbo-cli-server-<version>.jar [--port N] [--timeout MS] [<file-or-dir>...]
+java -jar cli/build/libs/nelumbo-cli-<version>.jar --server 8080 [--timeout MS] [<file-or-dir>...]
 ```
 
 | Endpoint           | Purpose                                                                                              |
@@ -111,11 +109,11 @@ java -jar nelumbo-server/build/libs/nelumbo-cli-server-<version>.jar [--port N] 
 | `POST /eval`       | Evaluate a posted `.nl` document (raw text, or a JSON envelope `{"document": "...", "limit": N}`); returns query results and the parse tree as JSON |
 | `POST /eval/trace` | Like `/eval`, with a (currently stubbed) trace field                                                  |
 | `GET /metadata`    | Knowledge base metadata: declared types, functors, rules, and facts                                   |
+| `GET /examples`    | The bundled example names; `GET /examples/<name>` returns the source                                  |
 | `GET /health`      | Liveness check                                                                                        |
+| `GET /`            | Info page with endpoint docs and a try-it form                                                        |
 
 Each request is evaluated against a throwaway child of the loaded knowledge base, so requests are isolated from each other and never mutate shared state. The per-request inference budget defaults to 30 seconds (`--timeout`, 0 disables).
-
-The jar is also double-clickable: when launched without a console it shows a small status window with the server URL and Open in Browser / Stop buttons (`--no-gui` suppresses it).
 
 The website server (`nelumbo-web-server-<version>.jar`, the `website` module) serves the same REST endpoints plus an LSP editor service over WebSocket and the public pages of [nelumbo.nl](https://nelumbo.nl).
 

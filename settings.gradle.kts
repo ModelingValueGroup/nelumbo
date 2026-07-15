@@ -16,8 +16,8 @@
 
 rootProject.name = "nelumbo"
 
-// Lean Nelumbo executor (HTTP eval server)
-include("nelumbo-server")
+// Nelumbo CLI (evaluate .nl files, also runs the HTTP eval server via --server)
+include("cli")
 
 // Website (HTTP server + Monaco/LSP frontend)
 include("website")

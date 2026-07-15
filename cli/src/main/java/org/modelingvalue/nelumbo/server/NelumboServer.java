@@ -43,6 +43,11 @@ public final class NelumboServer {
     public static final long DEFAULT_TIMEOUT_MS = EvalService.DEFAULT_TIMEOUT_MS;
 
     private final EvalService service;
+    private final java.util.concurrent.atomic.AtomicLong requests         = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong errors           = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong handleNanosTotal = new java.util.concurrent.atomic.AtomicLong();
+    private volatile long lastHandleNanos;
+    private volatile long startMillis;
 
     private HttpServer      server;
     private ExecutorService httpExecutor;
@@ -69,6 +74,7 @@ public final class NelumboServer {
         // prefix-based ("/eval" would also match "/evaluate"), which is not what we want
         server.createContext("/", this::handle);
         server.start();
+        startMillis = System.currentTimeMillis();
         return server.getAddress().getPort();
     }
 
@@ -82,7 +88,35 @@ public final class NelumboServer {
         service.close();
     }
 
+    /** The number of HTTP requests handled since start. */
+    public long requestCount() {
+        return requests.get();
+    }
+
+    /** The number of requests answered with a 4xx/5xx status. */
+    public long errorCount() {
+        return errors.get();
+    }
+
+    /** Average request handling time in milliseconds (0 when nothing was handled yet). */
+    public double averageHandleMillis() {
+        long count = requests.get();
+        return count == 0 ? 0 : handleNanosTotal.get() / 1e6 / count;
+    }
+
+    /** Handling time of the most recent request in milliseconds. */
+    public double lastHandleMillis() {
+        return lastHandleNanos / 1e6;
+    }
+
+    /** Milliseconds since the server was started. */
+    public long uptimeMillis() {
+        return startMillis == 0 ? 0 : System.currentTimeMillis() - startMillis;
+    }
+
     private void handle(HttpExchange exchange) throws IOException {
+        requests.incrementAndGet();
+        long handleStart = System.nanoTime();
         try {
             String path = exchange.getRequestURI().getPath();
             String method = exchange.getRequestMethod();
@@ -153,6 +187,9 @@ public final class NelumboServer {
         } catch (RuntimeException e) {
             respond(exchange, 500, Map.of("error", "internal", "message", String.valueOf(e.getMessage())));
         } finally {
+            long handleNanos = System.nanoTime() - handleStart;
+            handleNanosTotal.addAndGet(handleNanos);
+            lastHandleNanos = handleNanos;
             exchange.close();
         }
     }
@@ -166,6 +203,9 @@ public final class NelumboServer {
     }
 
     private void respond(HttpExchange exchange, int status, Map<String, Object> body) throws IOException {
+        if (status >= 400) {
+            errors.incrementAndGet();
+        }
         byte[] bytes = Json.toJson(body).getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.sendResponseHeaders(status, bytes.length);
@@ -186,7 +226,7 @@ public final class NelumboServer {
     private static final String EXAMPLES_DIR = "org/modelingvalue/nelumbo/examples/";
 
     /** The bundled example names, enumerated from wherever a known example resource actually lives (jar or dir). */
-    private static List<String> exampleNames() {
+    public static List<String> exampleNames() {
         java.util.TreeSet<String> names = new java.util.TreeSet<>();
         try {
             java.net.URL known = NelumboServer.class.getResource("/" + EXAMPLES_DIR + "fibonacci.nl");
@@ -214,7 +254,8 @@ public final class NelumboServer {
         return new java.util.ArrayList<>(names);
     }
 
-    private static String exampleSource(String name) {
+    /** The source of a bundled example, or null when unknown. */
+    public static String exampleSource(String name) {
         try (java.io.InputStream in = NelumboServer.class.getResourceAsStream("/" + EXAMPLES_DIR + name + ".nl")) {
             return in == null ? null : new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {

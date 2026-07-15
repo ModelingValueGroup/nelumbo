@@ -27,7 +27,7 @@ java {
     }
 }
 
-val archiveName = "nelumbo-cli-server"
+val archiveName = "nelumbo-cli"
 
 repositories {
     mavenCentral()
@@ -50,12 +50,12 @@ tasks.test {
     jvmArgs("-ea") // Enable assertions
 }
 
-tasks.register<ShadowJar>("serverJar") {
+tasks.register<ShadowJar>("cliJar") {
     archiveBaseName.set(archiveName)
     // Produce a single shaded jar without the default "-all" classifier
     archiveClassifier.set("")
     manifest {
-        attributes["Main-Class"] = "org.modelingvalue.nelumbo.server.Main"
+        attributes["Main-Class"] = "org.modelingvalue.nelumbo.cli.NelumboCli"
     }
     from(sourceSets.main.get().output)
     configurations = listOf(project.configurations.runtimeClasspath.get())
@@ -66,11 +66,11 @@ tasks.register<ShadowJar>("serverJar") {
 }
 
 tasks.shadowJar {
-    // Disable default shadowJar task; use serverJar instead
+    // Disable default shadowJar task; use cliJar instead
     enabled = false
 }
 
 tasks.jar {
-    // plain jar (classifier avoids clashing with the shaded serverJar); needed so other projects can depend on this one
+    // plain jar (classifier avoids clashing with the shaded cliJar); needed so other projects can depend on this one
     archiveClassifier.set("plain")
 }
