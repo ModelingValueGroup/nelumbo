@@ -278,8 +278,8 @@ public final class NelumboCli {
                         jsonOutput.setText(jsonResult);
                         run.setEnabled(true);
                         if (tabs.indexOfComponent(outputScroll) < 0) {
-                            tabs.insertTab("output", null, outputScroll, null, 1);
-                            tabs.insertTab("json", null, jsonScroll, null, 2);
+                            tabs.insertTab("output", null, outputScroll, null, 2);
+                            tabs.insertTab("json", null, jsonScroll, null, 3);
                         }
                         tabs.setSelectedComponent(outputScroll);
                     });
