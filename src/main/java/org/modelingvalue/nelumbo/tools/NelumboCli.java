@@ -17,7 +17,9 @@
 package org.modelingvalue.nelumbo.tools;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
@@ -30,14 +32,20 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
 import org.modelingvalue.json.Json;
 import org.modelingvalue.json.JsonPrettyfier;
@@ -187,6 +195,26 @@ public final class NelumboCli {
         return entry;
     }
 
+    /** The JSON object as a swing tree: maps and lists become branches, everything else leaves. */
+    private static DefaultMutableTreeNode treeNode(String label, Object value) {
+        if (value instanceof java.util.Map<?, ?> map) {
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode(label);
+            for (java.util.Map.Entry<?, ?> entry : map.entrySet()) {
+                node.add(treeNode(String.valueOf(entry.getKey()), entry.getValue()));
+            }
+            return node;
+        }
+        if (value instanceof java.util.List<?> list) {
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode(label + " [" + list.size() + "]");
+            int i = 0;
+            for (Object item : list) {
+                node.add(treeNode("[" + i++ + "]", item));
+            }
+            return node;
+        }
+        return new DefaultMutableTreeNode(label + ": " + value);
+    }
+
     /** The same JSON object shape as batch {@code --json} mode, for one result. */
     private static java.util.Map<String, Object> jsonObject(NelumboEvaluator.EvalResult result, String name) {
         java.util.List<String> errors = new ArrayList<>();
@@ -247,7 +275,28 @@ public final class NelumboCli {
             usage.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
             JScrollPane outputScroll = new JScrollPane(textOutput);
-            JScrollPane jsonScroll = new JScrollPane(jsonOutput);
+
+            // json tab: radio-switched text (pretty json) and tree views of the same object
+            JTree jsonTree = new JTree(new DefaultMutableTreeNode("(press Run to evaluate)"));
+            jsonTree.setRootVisible(true);
+            CardLayout jsonCards = new CardLayout();
+            JPanel jsonViews = new JPanel(jsonCards);
+            jsonViews.add(new JScrollPane(jsonOutput), "text");
+            jsonViews.add(new JScrollPane(jsonTree), "tree");
+            JRadioButton viewText = new JRadioButton("text", true);
+            JRadioButton viewTree = new JRadioButton("tree");
+            ButtonGroup viewGroup = new ButtonGroup();
+            viewGroup.add(viewText);
+            viewGroup.add(viewTree);
+            viewText.addActionListener(e -> jsonCards.show(jsonViews, "text"));
+            viewTree.addActionListener(e -> jsonCards.show(jsonViews, "tree"));
+            JPanel jsonBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
+            jsonBar.add(new JLabel("view as:"));
+            jsonBar.add(viewText);
+            jsonBar.add(viewTree);
+            JPanel jsonTab = new JPanel(new BorderLayout());
+            jsonTab.add(jsonBar, BorderLayout.NORTH);
+            jsonTab.add(jsonViews, BorderLayout.CENTER);
             JButton run = new JButton("Run");
             JPanel buttons = new JPanel();
             buttons.add(run);
@@ -269,23 +318,32 @@ public final class NelumboCli {
                 new Thread(() -> {
                     String text;
                     String json;
+                    DefaultMutableTreeNode tree;
                     try {
                         NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, "<input>", 0);
+                        java.util.Map<String, Object> object = jsonObject(result, "<input>");
                         text = renderText(result);
-                        json = JsonPrettyfier.pretty(Json.toJson(jsonObject(result, "<input>")));
+                        json = JsonPrettyfier.pretty(Json.toJson(object));
+                        tree = treeNode("result", object);
                     } catch (RuntimeException ex) {
                         text = "evaluation failed: " + ex;
                         json = text;
+                        tree = new DefaultMutableTreeNode(text);
                     }
                     String textResult = text;
                     String jsonResult = json;
+                    DefaultMutableTreeNode treeResult = tree;
                     SwingUtilities.invokeLater(() -> {
                         textOutput.setText(textResult);
                         jsonOutput.setText(jsonResult);
+                        jsonTree.setModel(new DefaultTreeModel(treeResult));
+                        for (int i = 0; i < jsonTree.getRowCount(); i++) {
+                            jsonTree.expandRow(i);
+                        }
                         run.setEnabled(true);
                         if (tabs.indexOfComponent(outputScroll) < 0) {
                             tabs.insertTab("output", null, outputScroll, null, 2);
-                            tabs.insertTab("json", null, jsonScroll, null, 3);
+                            tabs.insertTab("json", null, jsonTab, null, 3);
                         }
                         tabs.setSelectedComponent(outputScroll);
                     });
