@@ -118,7 +118,7 @@ public final class EvalService implements AutoCloseable {
         }
         EvalResult result;
         try {
-            result = evaluate(request.document(), request.limit());
+            result = evaluate(request.document(), request.limit(), request.stdlib());
         } catch (EvalTimeoutException e) {
             Map<String, Object> timeout = new LinkedHashMap<>();
             timeout.put("error", "timeout");
@@ -148,13 +148,24 @@ public final class EvalService implements AutoCloseable {
             boolean trace = pathTrace || Boolean.TRUE.equals(node.get("trace"));
             Integer limit = node.get("limit") instanceof Long l && 0 <= l && l <= Integer.MAX_VALUE ? l.intValue()
                     : null;
-            return new EvalRequest(document, trace, limit);
+            boolean stdlib = Boolean.TRUE.equals(node.get("stdlib"));
+            return new EvalRequest(document, trace, limit, stdlib);
         }
-        return new EvalRequest(body, pathTrace, null);
+        return new EvalRequest(body, pathTrace, null, false);
     }
 
-    private record EvalRequest(String document, boolean trace, Integer limit) {
+    private record EvalRequest(String document, boolean trace, Integer limit, boolean stdlib) {
     }
+
+    /** Evaluated before the document when the envelope asks for {@code "stdlib": true}. */
+    private static final String STDLIB_IMPORTS = """
+            import nelumbo.logic
+            import nelumbo.integers
+            import nelumbo.strings
+            import nelumbo.collections
+            import nelumbo.rationals
+            import nelumbo.datetime
+            """;
 
     /** Signals that a request exceeded its inference budget. */
     private static final class EvalTimeoutException extends RuntimeException {
@@ -170,7 +181,7 @@ public final class EvalService implements AutoCloseable {
                               List<Map<String, Object>> parseTree) {
     }
 
-    private EvalResult evaluate(String document, Integer limit) {
+    private EvalResult evaluate(String document, Integer limit, boolean stdlib) {
         String src = document.endsWith("\n") ? document : document + "\n";
         List<Map<String, Object>> queries = new ArrayList<>();
         List<Map<String, Object>> errors = new ArrayList<>();
@@ -179,6 +190,14 @@ public final class EvalService implements AutoCloseable {
         // base, concurrent requests stay isolated, and the deadline is carried into the inference.
         KnowledgeBase requestKb = new KnowledgeBase(baseKb);
         Runnable work = () -> {
+            if (stdlib) {
+                try {
+                    // evaluated as a separate source, so the document's line numbers are unaffected
+                    new Parser(new Tokenizer(STDLIB_IMPORTS, "<stdlib>").tokenize()).parseNonThrowing().evaluate();
+                } catch (ParseException e) {
+                    errors.add(error(e));
+                }
+            }
             ParserResult parsed = new Parser(new Tokenizer(src, "<request>").tokenize()).parseNonThrowing();
             try {
                 parsed.evaluate();

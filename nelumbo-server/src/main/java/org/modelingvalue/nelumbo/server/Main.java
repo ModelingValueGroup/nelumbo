@@ -156,8 +156,10 @@ public final class Main {
         out.println("Endpoints:");
         out.println("  GET  /            info page with endpoint docs and a try-it form");
         out.println("  POST /eval         evaluate a posted Nelumbo document, returns query results as JSON");
+        out.println("                     (JSON envelope option \"stdlib\": true preloads all stdlib imports)");
         out.println("  POST /eval/trace   like /eval, with a (currently stubbed) trace field");
         out.println("  GET  /metadata     knowledge base metadata (types, counts, loaded files)");
+        out.println("  GET  /examples     bundled example names; /examples/<name> returns the source");
         out.println("  GET  /health       liveness check");
         out.println();
         out.println("  -p, --port N      port to listen on (default 8080; 0 picks a free port)");

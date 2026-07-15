@@ -92,6 +92,11 @@ public final class NelumboServer {
                     respondHtml(exchange, INDEX_HTML);
                 }
                 break;
+            case "/examples":
+                if (requires(exchange, method, "GET")) {
+                    respond(exchange, 200, Map.of("examples", exampleNames()));
+                }
+                break;
             case "/favicon.ico":
                 if (requires(exchange, method, "GET")) {
                     if (FAVICON == null) {
@@ -126,6 +131,23 @@ public final class NelumboServer {
                 }
                 break;
             default:
+                if (path.startsWith("/examples/")) {
+                    if (requires(exchange, method, "GET")) {
+                        String name = path.substring("/examples/".length());
+                        String source = name.matches("[A-Za-z0-9]+") ? exampleSource(name) : null;
+                        if (source == null) {
+                            respond(exchange, 404, Map.of("error", "not-found"));
+                        } else {
+                            byte[] bytes = source.getBytes(StandardCharsets.UTF_8);
+                            exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+                            exchange.sendResponseHeaders(200, bytes.length);
+                            try (OutputStream out = exchange.getResponseBody()) {
+                                out.write(bytes);
+                            }
+                        }
+                    }
+                    break;
+                }
                 respond(exchange, 404, Map.of("error", "not-found"));
             }
         } catch (RuntimeException e) {
@@ -158,6 +180,45 @@ public final class NelumboServer {
         exchange.sendResponseHeaders(200, bytes.length);
         try (OutputStream out = exchange.getResponseBody()) {
             out.write(bytes);
+        }
+    }
+
+    private static final String EXAMPLES_DIR = "org/modelingvalue/nelumbo/examples/";
+
+    /** The bundled example names, enumerated from wherever a known example resource actually lives (jar or dir). */
+    private static List<String> exampleNames() {
+        java.util.TreeSet<String> names = new java.util.TreeSet<>();
+        try {
+            java.net.URL known = NelumboServer.class.getResource("/" + EXAMPLES_DIR + "fibonacci.nl");
+            if (known == null) {
+                return List.of();
+            }
+            if ("jar".equals(known.getProtocol())) {
+                String jarPath = known.getPath().substring("file:".length(), known.getPath().indexOf('!'));
+                try (java.util.jar.JarFile jar = new java.util.jar.JarFile(java.net.URLDecoder.decode(jarPath, StandardCharsets.UTF_8))) {
+                    jar.stream().map(java.util.jar.JarEntry::getName)
+                            .filter(n -> n.startsWith(EXAMPLES_DIR) && n.endsWith(".nl"))
+                            .forEach(n -> names.add(n.substring(EXAMPLES_DIR.length(), n.length() - 3)));
+                }
+            } else {
+                java.io.File[] files = new java.io.File(known.toURI()).getParentFile().listFiles((d, n) -> n.endsWith(".nl"));
+                if (files != null) {
+                    for (java.io.File file : files) {
+                        names.add(file.getName().substring(0, file.getName().length() - 3));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // no enumerable source: the list stays empty
+        }
+        return new java.util.ArrayList<>(names);
+    }
+
+    private static String exampleSource(String name) {
+        try (java.io.InputStream in = NelumboServer.class.getResourceAsStream("/" + EXAMPLES_DIR + name + ".nl")) {
+            return in == null ? null : new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return null;
         }
     }
 
@@ -205,9 +266,15 @@ public final class NelumboServer {
               <tr><td><code>POST /eval</code></td><td>evaluate a posted Nelumbo document, returns query results and parse tree as JSON</td></tr>
               <tr><td><code>POST /eval/trace</code></td><td>like /eval, with a (currently stubbed) trace field</td></tr>
               <tr><td><code><a href="/metadata">GET /metadata</a></code></td><td>knowledge base metadata (types, functors, rules, facts)</td></tr>
+              <tr><td><code><a href="/examples">GET /examples</a></code></td><td>the bundled example names; GET /examples/&lt;name&gt; returns the source</td></tr>
               <tr><td><code><a href="/health">GET /health</a></code></td><td>liveness check</td></tr>
             </table>
             <h2>Try it</h2>
+            <p>
+              <label><input type="checkbox" id="stdlib"> include stdlib (no import statements needed)</label>
+              &nbsp; example:
+              <select id="examples" onchange="loadExample()"><option value="">choose...</option></select>
+            </p>
             <textarea id="src">import nelumbo.integers
 
             Integer ::= fib(&lt;Integer&gt;)
@@ -255,10 +322,13 @@ public final class NelumboServer {
                 const tree = document.getElementById('tree');
                 out.textContent = 'running...';
                 tree.replaceChildren();
+                const src = document.getElementById('src').value;
+                const stdlib = document.getElementById('stdlib').checked;
                 try {
-                  const result = await (await fetch(path, { method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: document.getElementById('src').value })).json();
+                  const result = await (await fetch(path, stdlib
+                    ? { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ document: src, stdlib: true }) }
+                    : { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: src })).json();
                   out.textContent = JSON.stringify(result, null, 2);
                   tree.replaceChildren(treeNode('result', result));
                 } catch (e) {
@@ -266,6 +336,21 @@ public final class NelumboServer {
                   tree.textContent = out.textContent;
                 }
               }
+              async function loadExample() {
+                const name = document.getElementById('examples').value;
+                if (name) {
+                  document.getElementById('src').value = await (await fetch('/examples/' + name)).text();
+                }
+              }
+              (async () => {
+                const select = document.getElementById('examples');
+                for (const name of (await (await fetch('/examples')).json()).examples) {
+                  const option = document.createElement('option');
+                  option.value = name;
+                  option.textContent = name;
+                  select.appendChild(option);
+                }
+              })();
             </script>
             </body>
             </html>

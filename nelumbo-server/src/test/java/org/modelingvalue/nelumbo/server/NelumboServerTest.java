@@ -156,6 +156,31 @@ class NelumboServerTest {
     }
 
     @Test
+    void stdlibEnvelopeNeedsNoImports() throws Exception {
+        // no import statements in the document: the stdlib flag preloads them server-side
+        HttpResponse<String> response = postJson(port,
+                envelope(Map.of("document", "Integer i\n2+3=i ?\n", "stdlib", true)));
+        assertEquals(200, response.statusCode());
+        JsonNode query = mapper.readTree(response.body()).get("queries").get(0);
+        assertEquals("5", query.get("bindings").get(0).get("i").asText());
+    }
+
+    @Test
+    void examplesAreListedAndServed() throws Exception {
+        HttpResponse<String> list = get("/examples");
+        assertEquals(200, list.statusCode());
+        List<String> names = mapper.convertValue(mapper.readTree(list.body()).get("examples"), STRING_LIST);
+        assertTrue(names.contains("fibonacci"), "bundled examples should be listed: " + names);
+
+        HttpResponse<String> source = get("/examples/fibonacci");
+        assertEquals(200, source.statusCode());
+        assertTrue(source.body().contains("fib"), "example source expected: " + source.body());
+
+        assertEquals(404, get("/examples/nope").statusCode());
+        assertEquals(404, get("/examples/../secret").statusCode());
+    }
+
+    @Test
     void faviconIsServed() throws Exception {
         HttpResponse<String> response = get("/favicon.ico");
         assertEquals(200, response.statusCode());
