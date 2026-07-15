@@ -162,6 +162,7 @@ public class NelumboEditor {
 
     public NelumboEditor() {
         initLookAndFeel();
+        AppIcon.install(null);
         loadTokenColors();
         windowManager = new WindowManager(this);
         installQuitHandler();

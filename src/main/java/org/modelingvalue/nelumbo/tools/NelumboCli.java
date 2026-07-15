@@ -118,6 +118,7 @@ public final class NelumboCli {
     }
 
     private static void runInteractively() {
+        AppIcon.install(null);
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Choose a Nelumbo (.nl) file to evaluate");
         chooser.setFileFilter(new FileNameExtensionFilter("Nelumbo files (*.nl)", "nl"));

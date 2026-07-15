@@ -109,6 +109,7 @@ public final class Main {
                 + "    claude mcp add nelumbo -- java -jar " + jar;
         System.err.println(message);
         if (System.console() == null && !GraphicsEnvironment.isHeadless()) {
+            org.modelingvalue.nelumbo.tools.AppIcon.install(null);
             JOptionPane.showMessageDialog(null, message, "Nelumbo MCP Server", JOptionPane.INFORMATION_MESSAGE);
         }
     }

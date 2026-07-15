@@ -48,6 +48,7 @@ public final class ServerGui {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame(title);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            org.modelingvalue.nelumbo.tools.AppIcon.install(frame);
 
             JPanel panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
