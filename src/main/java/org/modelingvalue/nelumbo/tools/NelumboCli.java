@@ -248,13 +248,19 @@ public final class NelumboCli {
 
             JScrollPane outputScroll = new JScrollPane(textOutput);
             JScrollPane jsonScroll = new JScrollPane(jsonOutput);
+            JButton run = new JButton("Run");
+            JPanel buttons = new JPanel();
+            buttons.add(run);
+            // the Run button lives on the nelumbo tab only
+            JPanel nelumboTab = new JPanel(new BorderLayout(0, 6));
+            nelumboTab.add(new JScrollPane(input), BorderLayout.CENTER);
+            nelumboTab.add(buttons, BorderLayout.SOUTH);
             // the output and json tabs only appear once there is something to show (after the first Run)
             JTabbedPane tabs = new JTabbedPane();
-            tabs.addTab("nelumbo", new JScrollPane(input));
+            tabs.addTab("nelumbo", nelumboTab);
             tabs.addTab("usage", new JScrollPane(usage));
             tabs.setPreferredSize(new Dimension(760, 460));
 
-            JButton run = new JButton("Run");
             run.addActionListener(e -> {
                 run.setEnabled(false);
                 textOutput.setText("running...");
@@ -286,13 +292,9 @@ public final class NelumboCli {
                 }, "nelumbo-cli-run").start();
             });
 
-            JPanel buttons = new JPanel();
-            buttons.add(run);
-
-            JPanel panel = new JPanel(new BorderLayout(0, 6));
+            JPanel panel = new JPanel(new BorderLayout());
             panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
             panel.add(tabs, BorderLayout.CENTER);
-            panel.add(buttons, BorderLayout.SOUTH);
 
             frame.setContentPane(panel);
             frame.pack();
