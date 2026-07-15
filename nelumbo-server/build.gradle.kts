@@ -27,7 +27,7 @@ java {
     }
 }
 
-val archiveName = "nelumbo-server"
+val archiveName = "nelumbo-cli-server"
 
 repositories {
     mavenCentral()

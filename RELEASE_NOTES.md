@@ -1,13 +1,13 @@
 This release delivers the following artifacts. All jars require Java 21 or higher.
 
-## nelumbo-server-${version-num}.jar - lean executor
+## nelumbo-cli-server-${version-num}.jar - lean executor
 
 The smallest way to run **nelumbo** specifications: a self-contained HTTP server (~2 MB) that
 loads `.nl` files into a knowledge base and evaluates posted documents against it. No UI, no
 editor support - just execution. It runs on the JDK's built-in HTTP server and has no
 third-party dependencies.
 
-- run `java -jar nelumbo-server-${version-num}.jar [--port N] [--timeout MS] [<file-or-dir>...]`,
+- run `java -jar nelumbo-cli-server-${version-num}.jar [--port N] [--timeout MS] [<file-or-dir>...]`,
   or double-click the jar: a small status window shows the URL with Open in Browser / Stop buttons
 - `POST /eval` evaluates a posted **nelumbo** document (raw text, or a JSON envelope
   `{"document": "...", "limit": N}`) and returns the query results as JSON
@@ -15,13 +15,13 @@ third-party dependencies.
 - `GET /metadata` describes the loaded knowledge base (types, functors, rules, facts)
 - `GET /health` is a liveness check
 
-## nelumbo-http-server-${version-num}.jar - website server
+## nelumbo-web-server-${version-num}.jar - website server
 
 The full **nelumbo** website server, as it runs on [nelumbo.nl](https://nelumbo.nl): the same
 REST endpoints as the lean executor, plus an LSP editor service over WebSocket at `/lsp` and
 the public pages (landing page, feature tour, and playground with browser-based editors).
 
-- run `java -jar nelumbo-http-server-${version-num}.jar [--port N] [<file-or-dir>...]`,
+- run `java -jar nelumbo-web-server-${version-num}.jar [--port N] [<file-or-dir>...]`,
   or double-click the jar: a small status window shows the URL with Open in Browser / Stop buttons
 
 ## nelumbo-editor-${version-num}.jar - standalone editor

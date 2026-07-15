@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 
 /**
  * Command-line entry point: loads the given {@code .nl} files/directories into a base knowledge base and serves it over
- * HTTP. Usage: {@code nelumbo-server [--port N] [<file-or-dir>...]}. Without files it starts with an empty knowledge base.
+ * HTTP. Usage: {@code nelumbo-cli-server [--port N] [<file-or-dir>...]}. Without files it starts with an empty knowledge base.
  */
 public final class Main {
 
@@ -120,13 +120,13 @@ public final class Main {
     }
 
     private static void fail(String message) {
-        System.err.println("nelumbo-server: " + message);
+        System.err.println("nelumbo-cli-server: " + message);
         System.exit(2);
     }
 
     private static void printUsage() {
         PrintStream out = System.out;
-        out.println("Usage: nelumbo-server [--port N] [<file-or-dir>...]");
+        out.println("Usage: nelumbo-cli-server [--port N] [<file-or-dir>...]");
         out.println();
         out.println("Loads the given .nl files (directories are scanned for *.nl) into a knowledge base");
         out.println("and serves it over HTTP. Without files it starts with an empty knowledge base.");

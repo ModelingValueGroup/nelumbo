@@ -107,7 +107,7 @@ jobs:
                 uses: actions/upload-artifact@v7
                 with:
                     name: website-server
-                    path: website/build/libs/nelumbo-http-server-*.jar
+                    path: website/build/libs/nelumbo-web-server-*.jar
                     if-no-files-found: error
                     retention-days: 30
 
@@ -115,11 +115,8 @@ jobs:
                 uses: actions/upload-artifact@v7
                 with:
                     name: nelumbo-server
-                    path: |
-                        nelumbo-server/build/libs/nelumbo-server-*.jar
-                        !nelumbo-server/build/libs/*-plain.jar
-                        !nelumbo-server/build/libs/*-sources.jar
-                        !nelumbo-server/build/libs/*-javadoc.jar
+                    # plain/sources/javadoc jars are named after the project (nelumbo-server-*), so they no longer match
+                    path: nelumbo-server/build/libs/nelumbo-cli-server-*.jar
                     if-no-files-found: error
                     retention-days: 30
 

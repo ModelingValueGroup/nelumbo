@@ -18,8 +18,8 @@
 #   ./gradlew :website:serverJar
 FROM eclipse-temurin:21-jre
 
-COPY build/libs/nelumbo-http-server-*.jar /app/nelumbo-http-server.jar
+COPY build/libs/nelumbo-web-server-*.jar /app/nelumbo-web-server.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/nelumbo-http-server.jar"]
+ENTRYPOINT ["java", "-jar", "/app/nelumbo-web-server.jar"]
 CMD ["--port", "8080"]

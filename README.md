@@ -99,11 +99,11 @@ The jar is also double-clickable: launched without a console and without argumen
 
 ## HTTP Server
 
-The `nelumbo-server` module is a lean HTTP executor for `.nl` specifications: it loads the given files (directories are scanned for `*.nl`) into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server and has no third-party dependencies — the shaded jar is about 2 MB. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-server-<version>.jar`, or can be built from source:
+The `nelumbo-server` module is a lean HTTP executor for `.nl` specifications: it loads the given files (directories are scanned for `*.nl`) into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server and has no third-party dependencies — the shaded jar is about 2 MB. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-cli-server-<version>.jar`, or can be built from source:
 
 ```sh
 ./gradlew :nelumbo-server:serverJar
-java -jar nelumbo-server/build/libs/nelumbo-server-<version>.jar [--port N] [--timeout MS] [<file-or-dir>...]
+java -jar nelumbo-server/build/libs/nelumbo-cli-server-<version>.jar [--port N] [--timeout MS] [<file-or-dir>...]
 ```
 
 | Endpoint           | Purpose                                                                                              |
@@ -117,7 +117,7 @@ Each request is evaluated against a throwaway child of the loaded knowledge base
 
 The jar is also double-clickable: when launched without a console it shows a small status window with the server URL and Open in Browser / Stop buttons (`--no-gui` suppresses it).
 
-The website server (`nelumbo-http-server-<version>.jar`, the `website` module) serves the same REST endpoints plus an LSP editor service over WebSocket and the public pages of [nelumbo.nl](https://nelumbo.nl).
+The website server (`nelumbo-web-server-<version>.jar`, the `website` module) serves the same REST endpoints plus an LSP editor service over WebSocket and the public pages of [nelumbo.nl](https://nelumbo.nl).
 
 ## MCP Server
 
