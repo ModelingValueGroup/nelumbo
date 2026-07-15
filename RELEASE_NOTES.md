@@ -41,6 +41,17 @@ String  a
 "foo"+"bar"=a  ?    [(a="foobar")][..]
 ```
 
+## nelumbo-${version-num}-cli.jar - command-line runner
+
+Parses and evaluates `.nl` files from the terminal, printing each query together with its
+inferred result. Queries that declare expected results are compared and mismatches are
+reported as errors. Exit codes: `0` success, `1` parse/evaluation/comparison errors,
+`2` usage error - suitable for scripting and CI.
+
+- run `java -jar nelumbo-${version-num}-cli.jar [options] <file>...` (pass `-` to read stdin,
+  `-q` to suppress query output, `-h` for all options)
+- or double-click the jar: a file chooser opens for a `.nl` file and the results are shown in a window
+
 ## nelumbo-mcp-server-${version-num}.jar - MCP server
 
 A [Model Context Protocol](https://modelcontextprotocol.io) stdio server with LLM authoring

@@ -87,7 +87,7 @@ See the README in each plugin directory for installation instructions.
 
 ## Command-Line Interface
 
-`NelumboCli` parses and evaluates one or more `.nl` files from the terminal, printing each query together with its inferred result. Queries that declare expected results are compared and mismatches are reported as errors. Build the shaded jar with `./gradlew cliJar` (output in `build/libs/nelumbo-<version>-cli.jar`) and run it with `java`:
+`NelumboCli` parses and evaluates one or more `.nl` files from the terminal, printing each query together with its inferred result. Queries that declare expected results are compared and mismatches are reported as errors. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-<version>-cli.jar`, or build it with `./gradlew cliJar` (output in `build/libs/nelumbo-<version>-cli.jar`) and run it with `java`:
 
 ```sh
 java -jar build/libs/nelumbo-<version>-cli.jar [options] <file>...

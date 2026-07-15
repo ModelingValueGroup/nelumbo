@@ -61,6 +61,7 @@ jobs:
                         :website:serverJar \
                         :mcp:mcpJar \
                         editorJar \
+                        cliJar \
                         :lsp:plugins:eclipse:jar \
                         :lsp:plugins:intellij:buildPlugin \
                         mvgTagger \
@@ -83,6 +84,14 @@ jobs:
                 with:
                     name: editor
                     path: build/libs/nelumbo*editor.jar
+                    if-no-files-found: error
+                    retention-days: 30
+
+            -   name: "upload-cli-jar"
+                uses: actions/upload-artifact@v7
+                with:
+                    name: cli
+                    path: build/libs/nelumbo-*-cli.jar
                     if-no-files-found: error
                     retention-days: 30
 
