@@ -49,7 +49,7 @@ reported as errors. Exit codes: `0` success, `1` parse/evaluation/comparison err
 `2` usage error - suitable for scripting and CI.
 
 - run `java -jar nelumbo-cli-${version-num}.jar [options] <file>...` (pass `-` to read stdin,
-  `-nl '<src>'` to evaluate source given on the command line,
+  `-n '<src>'` to evaluate source given on the command line, `-j` for JSON output,
   `-q` to suppress query output, `-h` for all options)
 - or double-click the jar: an interactive window opens with an editable Nelumbo example, a Run
   button, and the command-line usage as documentation

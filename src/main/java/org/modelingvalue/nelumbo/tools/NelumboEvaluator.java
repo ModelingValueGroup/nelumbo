@@ -17,12 +17,15 @@
 package org.modelingvalue.nelumbo.tools;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -41,7 +44,8 @@ public final class NelumboEvaluator {
     }
 
     /** expectationMatched is null when the query carries no expected result. */
-    public record QueryOutcome(String query, String result, Boolean expectationMatched) {
+    public record QueryOutcome(String query, String result, Boolean expectationMatched,
+                               List<java.util.Map<String, String>> facts, List<java.util.Map<String, String>> falsehoods) {
     }
 
     public record EvalResult(boolean ok, List<Diagnostic> diagnostics, List<QueryOutcome> queries) {
@@ -113,6 +117,20 @@ public final class NelumboEvaluator {
         query.predicate().deparse(sb);
         InferResult ir = query.inferResult();
         Boolean expectation = query.hasExpected() ? matched : null;
-        return new QueryOutcome(sb.toString().trim(), ir == null ? null : ir.toString(), expectation);
+        return new QueryOutcome(sb.toString().trim(), ir == null ? null : ir.toString(), expectation,
+                ir == null ? List.of() : bindings(ir.trueBindings()), ir == null ? List.of() : bindings(ir.falseBindings()));
+    }
+
+    private static List<java.util.Map<String, String>> bindings(
+            org.modelingvalue.collections.Set<org.modelingvalue.collections.Map<Variable, Object>> bindings) {
+        List<java.util.Map<String, String>> out = new ArrayList<>();
+        for (org.modelingvalue.collections.Map<Variable, Object> binding : bindings) {
+            java.util.Map<String, String> pairs = new LinkedHashMap<>();
+            for (Entry<Variable, Object> entry : binding) {
+                pairs.put(entry.getKey().name(), String.valueOf(entry.getValue()));
+            }
+            out.add(pairs);
+        }
+        return out;
     }
 }

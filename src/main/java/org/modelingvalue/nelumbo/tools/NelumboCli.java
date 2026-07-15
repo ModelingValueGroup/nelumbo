@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -37,6 +38,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
+import org.modelingvalue.json.Json;
+
 public final class NelumboCli {
 
     private NelumboCli() {
@@ -44,6 +47,12 @@ public final class NelumboCli {
 
     /** One unit of work: either a file path (or {@code -} for stdin), or an inline source from {@code -nl}. */
     private record Input(String file, String inlineSource) {
+    }
+
+    /** In {@code --json} mode all output is collected here and printed as one JSON object at the end. */
+    private static final class JsonOutput {
+        final java.util.List<String>                        errors  = new ArrayList<>();
+        final java.util.List<java.util.Map<String, Object>> queries = new ArrayList<>();
     }
 
     public static void main(String[] args) {
@@ -54,6 +63,7 @@ public final class NelumboCli {
             return;
         }
         boolean quiet = false;
+        JsonOutput json = null;
         java.util.List<Input> inputs = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             String a = args[i];
@@ -62,7 +72,11 @@ public final class NelumboCli {
             case "--quiet":
                 quiet = true;
                 break;
-            case "-nl":
+            case "-j":
+            case "--json":
+                json = new JsonOutput();
+                break;
+            case "-n":
             case "--nelumbo":
                 if (i + 1 >= args.length) {
                     System.err.println("nelumbo: missing value for " + a);
@@ -97,16 +111,22 @@ public final class NelumboCli {
         }
         int failed = 0;
         for (Input input : inputs) {
-            boolean ok = input.file() != null ? runFile(input.file(), quiet)
-                    : runSource(input.inlineSource(), "<nelumbo>", quiet);
+            boolean ok = input.file() != null ? runFile(input.file(), quiet, json)
+                    : runSource(input.inlineSource(), "<nelumbo>", quiet, json);
             if (!ok) {
                 failed++;
             }
         }
+        if (json != null) {
+            java.util.Map<String, Object> out = new LinkedHashMap<>();
+            out.put("errors", json.errors);
+            out.put("queries", json.queries);
+            System.out.println(Json.toJson(out));
+        }
         System.exit(failed == 0 ? 0 : 1);
     }
 
-    private static boolean runFile(String file, boolean quiet) {
+    private static boolean runFile(String file, boolean quiet, JsonOutput json) {
         String source;
         String name;
         try {
@@ -118,25 +138,37 @@ public final class NelumboCli {
                 name = file;
             }
         } catch (NoSuchFileException e) {
-            System.err.println(file + ": no such file");
+            report(json, file + ": no such file");
             return false;
         } catch (IOException e) {
-            System.err.println(file + ": " + e.getMessage());
+            report(json, file + ": " + e.getMessage());
             return false;
         }
-        return runSource(source, name, quiet);
+        return runSource(source, name, quiet, json);
     }
 
-    private static boolean runSource(String source, String name, boolean quiet) {
+    private static void report(JsonOutput json, String message) {
+        if (json != null) {
+            json.errors.add(message);
+        } else {
+            System.err.println(message);
+        }
+    }
+
+    private static boolean runSource(String source, String name, boolean quiet, JsonOutput json) {
         NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, name, 0);
         for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
-            System.err.println(name + ":" + d.line() + ":" + d.col() + ": " + d.message());
+            report(json, name + ":" + d.line() + ":" + d.col() + ": " + d.message());
         }
-        if (!quiet) {
-            for (NelumboEvaluator.QueryOutcome q : result.queries()) {
-                if (q.result() != null) {
-                    System.out.println(q.query() + " ? " + q.result());
-                }
+        for (NelumboEvaluator.QueryOutcome q : result.queries()) {
+            if (json != null) {
+                java.util.Map<String, Object> entry = new LinkedHashMap<>();
+                entry.put("query", q.query());
+                entry.put("facts", q.facts());
+                entry.put("falsehoods", q.falsehoods());
+                json.queries.add(entry);
+            } else if (!quiet && q.result() != null) {
+                System.out.println(q.query() + " ? " + q.result());
             }
         }
         return result.ok();
@@ -245,10 +277,12 @@ public final class NelumboCli {
                 queries with expected results [(facts)][(falsehoods)] are compared,
                 and mismatches are reported as errors.
 
-                  <file>            path to a .nl file, or - to read stdin
-                  -nl, --nelumbo S  evaluate the Nelumbo source given as argument S
-                  -q, --quiet       suppress query result output (errors still printed)
-                  -h, --help        show this help and exit
+                  <file>           path to a .nl file, or - to read stdin
+                  -n, --nelumbo S  evaluate the Nelumbo source given as argument S
+                  -j, --json       output one JSON object: errors as an array of messages,
+                                   per query the facts/falsehoods as name/value pairs
+                  -q, --quiet      suppress query result output (errors still printed)
+                  -h, --help       show this help and exit
 
                 Exit codes: 0 success, 1 parse/evaluation/comparison errors, 2 usage error.
                 """;
