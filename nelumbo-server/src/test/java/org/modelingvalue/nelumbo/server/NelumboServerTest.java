@@ -156,6 +156,13 @@ class NelumboServerTest {
     }
 
     @Test
+    void faviconIsServed() throws Exception {
+        HttpResponse<String> response = get("/favicon.ico");
+        assertEquals(200, response.statusCode());
+        assertEquals("image/png", response.headers().firstValue("Content-Type").orElse(""));
+    }
+
+    @Test
     void healthReportsOk() throws Exception {
         HttpResponse<String> response = get("/health");
         assertEquals(200, response.statusCode());

@@ -92,6 +92,20 @@ public final class NelumboServer {
                     respondHtml(exchange, INDEX_HTML);
                 }
                 break;
+            case "/favicon.ico":
+                if (requires(exchange, method, "GET")) {
+                    if (FAVICON == null) {
+                        respond(exchange, 404, Map.of("error", "not-found"));
+                    } else {
+                        exchange.getResponseHeaders().set("Content-Type", "image/png");
+                        exchange.getResponseHeaders().set("Cache-Control", "max-age=86400");
+                        exchange.sendResponseHeaders(200, FAVICON.length);
+                        try (OutputStream out = exchange.getResponseBody()) {
+                            out.write(FAVICON);
+                        }
+                    }
+                }
+                break;
             case "/health":
                 if (requires(exchange, method, "GET")) {
                     respond(exchange, 200, EvalService.health());
@@ -144,6 +158,17 @@ public final class NelumboServer {
         exchange.sendResponseHeaders(200, bytes.length);
         try (OutputStream out = exchange.getResponseBody()) {
             out.write(bytes);
+        }
+    }
+
+    /** The Nelumbo lotus (the shared app icon resource from core) as favicon; null if the resource is missing. */
+    private static final byte[] FAVICON = loadFavicon();
+
+    private static byte[] loadFavicon() {
+        try (java.io.InputStream in = NelumboServer.class.getResourceAsStream("/org/modelingvalue/nelumbo/tools/nelumbo-icon.png")) {
+            return in == null ? null : in.readAllBytes();
+        } catch (IOException e) {
+            return null;
         }
     }
 
