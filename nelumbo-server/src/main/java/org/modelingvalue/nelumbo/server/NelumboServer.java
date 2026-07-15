@@ -162,6 +162,7 @@ public final class NelumboServer {
               code, textarea, pre { font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace; }
               table { border-collapse: collapse; }
               td { padding: 2px 12px 2px 0; vertical-align: top; }
+              td:first-child { white-space: nowrap; padding-right: 24px; }
               textarea { width: 100%; height: 160px; box-sizing: border-box; }
               pre { background: #f4f4f6; padding: 10px; border-radius: 6px; white-space: pre-wrap; }
               button { font-size: 14px; padding: 4px 14px; }
@@ -187,14 +188,17 @@ public final class NelumboServer {
             Integer r
             fib(7)=r ?
             </textarea>
-            <p><button onclick="run()">Run</button></p>
-            <pre id="out">(press Run to evaluate)</pre>
+            <p>
+              <button onclick="run('/eval')">/eval</button>
+              <button onclick="run('/eval/trace')">/eval/trace</button>
+            </p>
+            <pre id="out">(press a button to evaluate)</pre>
             <script>
-              async function run() {
+              async function run(path) {
                 const out = document.getElementById('out');
                 out.textContent = 'running...';
                 try {
-                  const response = await fetch('/eval', { method: 'POST',
+                  const response = await fetch(path, { method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: document.getElementById('src').value });
                   out.textContent = JSON.stringify(await response.json(), null, 2);
