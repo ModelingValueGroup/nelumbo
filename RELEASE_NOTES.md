@@ -10,7 +10,7 @@ third-party dependencies.
 - run `java -jar nelumbo-cli-server-${version-num}.jar [--port N] [--timeout MS] [<file-or-dir>...]`,
   or double-click the jar: a small status window shows the URL with Open in Browser / Stop buttons
 - `POST /eval` evaluates a posted **nelumbo** document (raw text, or a JSON envelope
-  `{"document": "...", "limit": N}`) and returns the query results as JSON
+  `{"document": "...", "limit": N}`) and returns the query results and the parse tree as JSON
 - `POST /eval/trace` is `/eval` with a (currently stubbed) trace field
 - `GET /metadata` describes the loaded knowledge base (types, functors, rules, facts)
 - `GET /health` is a liveness check

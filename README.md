@@ -108,7 +108,7 @@ java -jar nelumbo-server/build/libs/nelumbo-cli-server-<version>.jar [--port N] 
 
 | Endpoint           | Purpose                                                                                              |
 |--------------------|------------------------------------------------------------------------------------------------------|
-| `POST /eval`       | Evaluate a posted `.nl` document (raw text, or a JSON envelope `{"document": "...", "limit": N}`); returns query results as JSON |
+| `POST /eval`       | Evaluate a posted `.nl` document (raw text, or a JSON envelope `{"document": "...", "limit": N}`); returns query results and the parse tree as JSON |
 | `POST /eval/trace` | Like `/eval`, with a (currently stubbed) trace field                                                  |
 | `GET /metadata`    | Knowledge base metadata: declared types, functors, rules, and facts                                   |
 | `GET /health`      | Liveness check                                                                                        |

@@ -109,7 +109,7 @@ public final class NelumboEvaluator {
     }
 
     /** One parse-tree node as a JSON-ready map: kind, vocabulary name, source position, text, children. */
-    private static java.util.Map<String, Object> nodeJson(Node node) {
+    public static java.util.Map<String, Object> nodeJson(Node node) {
         java.util.Map<String, Object> json = new LinkedHashMap<>();
         json.put("node", node.getClass().getSimpleName());
         if (node.functorOrType() instanceof Functor f) {

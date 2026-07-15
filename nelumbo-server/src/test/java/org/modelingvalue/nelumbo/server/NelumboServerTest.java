@@ -170,6 +170,13 @@ class NelumboServerTest {
         // The binding must actually carry the answer r=5 — not merely "a result".
         assertEquals("5", query.get("bindings").get(0).get("r").asText());
         assertTrue(query.get("result").asText().contains("r=5"), "canonical result should show r=5: " + query.get("result"));
+
+        // The parse tree reflects the posted document: one entry per statement, the query last.
+        JsonNode parseTree = body.get("parseTree");
+        assertTrue(parseTree.isArray() && !parseTree.isEmpty(), "parse tree expected: " + parseTree);
+        JsonNode queryNode = parseTree.get(parseTree.size() - 1);
+        assertEquals("Query", queryNode.get("node").asText(), "last statement is the query: " + queryNode);
+        assertTrue(queryNode.has("children"), "query node should have children: " + queryNode);
     }
 
     @Test

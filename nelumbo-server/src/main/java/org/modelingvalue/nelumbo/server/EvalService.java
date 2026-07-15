@@ -48,6 +48,7 @@ import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 
 /**
  * Transport-independent Nelumbo eval service: turns a posted {@code .nl} document into JSON-ready result maps, and
@@ -109,6 +110,7 @@ public final class EvalService implements AutoCloseable {
         if (request.document() == null || request.document().isBlank()) {
             response.put("queries", List.of());
             response.put("errors", List.of(Map.of("message", "no document in request")));
+            response.put("parseTree", List.of());
             if (trace) {
                 addTraceStub(response);
             }
@@ -129,6 +131,7 @@ public final class EvalService implements AutoCloseable {
         }
         response.put("queries", result.queries);
         response.put("errors", result.errors);
+        response.put("parseTree", result.parseTree);
         if (trace) {
             addTraceStub(response);
         }
@@ -163,13 +166,15 @@ public final class EvalService implements AutoCloseable {
         response.put("traceStatus", "not-implemented");
     }
 
-    private record EvalResult(List<Map<String, Object>> queries, List<Map<String, Object>> errors) {
+    private record EvalResult(List<Map<String, Object>> queries, List<Map<String, Object>> errors,
+                              List<Map<String, Object>> parseTree) {
     }
 
     private EvalResult evaluate(String document, Integer limit) {
         String src = document.endsWith("\n") ? document : document + "\n";
         List<Map<String, Object>> queries = new ArrayList<>();
         List<Map<String, Object>> errors = new ArrayList<>();
+        List<Map<String, Object>> parseTree = new ArrayList<>();
         // A throwaway child of the loaded base: a request's own declarations never leak into the shared
         // base, concurrent requests stay isolated, and the deadline is carried into the inference.
         KnowledgeBase requestKb = new KnowledgeBase(baseKb);
@@ -184,6 +189,7 @@ public final class EvalService implements AutoCloseable {
                 errors.add(error(e));
             }
             for (Node root : parsed.roots()) {
+                parseTree.add(NelumboEvaluator.nodeJson(root));
                 if (root instanceof Query query && query.inferResult() != null) {
                     queries.add(queryJson(query, limit));
                 }
@@ -194,7 +200,7 @@ public final class EvalService implements AutoCloseable {
         } else {
             runWithTimeout(requestKb, work);
         }
-        return new EvalResult(queries, errors);
+        return new EvalResult(queries, errors, parseTree);
     }
 
     private void runWithTimeout(KnowledgeBase requestKb, Runnable work) {
