@@ -34,13 +34,15 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import org.modelingvalue.json.Json;
 import org.modelingvalue.json.JsonPrettyfier;
+
+import com.formdev.flatlaf.FlatLightLaf;
 
 public final class NelumboCli {
 
@@ -215,6 +217,17 @@ public final class NelumboCli {
             """;
 
     private static void runInteractively() {
+        // the same look and feel as the Nelumbo editor
+        System.setProperty("apple.awt.application.name", "Nelumbo");
+        System.setProperty("flatlaf.useWindowDecorations", "false");
+        try {
+            FlatLightLaf.setup();
+            UIManager.put("Button.arc", 8);
+            UIManager.put("Component.arc", 8);
+            UIManager.put("TextComponent.arc", 8);
+        } catch (Exception e) {
+            // keep the default look and feel
+        }
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Nelumbo CLI");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -229,6 +242,16 @@ public final class NelumboCli {
             JTextArea jsonOutput = new JTextArea("(press Run to evaluate)");
             jsonOutput.setEditable(false);
             jsonOutput.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+            JTextArea usage = new JTextArea(usageText());
+            usage.setEditable(false);
+            usage.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+
+            JTabbedPane tabs = new JTabbedPane();
+            tabs.addTab("nelumbo", new JScrollPane(input));
+            tabs.addTab("output", new JScrollPane(textOutput));
+            tabs.addTab("json", new JScrollPane(jsonOutput));
+            tabs.addTab("usage", new JScrollPane(usage));
+            tabs.setPreferredSize(new Dimension(760, 460));
 
             JButton run = new JButton("Run");
             run.addActionListener(e -> {
@@ -253,34 +276,18 @@ public final class NelumboCli {
                         textOutput.setText(textResult);
                         jsonOutput.setText(jsonResult);
                         run.setEnabled(true);
+                        tabs.setSelectedIndex(1); // show the output tab
                     });
                 }, "nelumbo-cli-run").start();
             });
-
-            JTextArea usage = new JTextArea(usageText());
-            usage.setEditable(false);
-            usage.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
-            usage.setBorder(BorderFactory.createTitledBorder("Command-line usage"));
-
-            JScrollPane inputScroll = new JScrollPane(input);
-            inputScroll.setPreferredSize(new Dimension(720, 280));
-            JTabbedPane outputTabs = new JTabbedPane();
-            outputTabs.addTab("text", new JScrollPane(textOutput));
-            outputTabs.addTab("json", new JScrollPane(jsonOutput));
-            outputTabs.setPreferredSize(new Dimension(720, 200));
-            JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, inputScroll, outputTabs);
-            split.setResizeWeight(0.7);
 
             JPanel buttons = new JPanel();
             buttons.add(run);
 
             JPanel panel = new JPanel(new BorderLayout(0, 6));
             panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            panel.add(split, BorderLayout.CENTER);
-            JPanel south = new JPanel(new BorderLayout());
-            south.add(buttons, BorderLayout.NORTH);
-            south.add(usage, BorderLayout.CENTER);
-            panel.add(south, BorderLayout.SOUTH);
+            panel.add(tabs, BorderLayout.CENTER);
+            panel.add(buttons, BorderLayout.SOUTH);
 
             frame.setContentPane(panel);
             frame.pack();
