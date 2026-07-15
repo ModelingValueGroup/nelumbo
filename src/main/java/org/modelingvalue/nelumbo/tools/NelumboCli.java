@@ -43,14 +43,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.modelingvalue.json.Json;
 import org.modelingvalue.json.JsonPrettyfier;
-
-import com.formdev.flatlaf.FlatLightLaf;
 
 public final class NelumboCli {
 
@@ -245,17 +242,7 @@ public final class NelumboCli {
             """;
 
     private static void runInteractively() {
-        // the same look and feel as the Nelumbo editor
-        System.setProperty("apple.awt.application.name", "Nelumbo");
-        System.setProperty("flatlaf.useWindowDecorations", "false");
-        try {
-            FlatLightLaf.setup();
-            UIManager.put("Button.arc", 8);
-            UIManager.put("Component.arc", 8);
-            UIManager.put("TextComponent.arc", 8);
-        } catch (Exception e) {
-            // keep the default look and feel
-        }
+        NelumboLaf.setup();
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Nelumbo CLI");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

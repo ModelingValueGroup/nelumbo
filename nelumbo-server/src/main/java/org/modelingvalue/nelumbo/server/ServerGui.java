@@ -19,20 +19,30 @@ package org.modelingvalue.nelumbo.server;
 import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.GraphicsEnvironment;
+import java.io.File;
 import java.net.URI;
+import java.util.List;
+import java.util.function.Function;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.modelingvalue.nelumbo.tools.AppIcon;
+import org.modelingvalue.nelumbo.tools.NelumboLaf;
 
 /**
- * A minimal status window for a double-clicked server jar: without it a double-click starts the server invisibly,
- * with no way to see the URL or stop it. Shown only when there is no attached console and a display is available;
- * {@code --no-gui} suppresses it.
+ * A status window for a double-clicked server jar: without it a double-click starts the server invisibly, with no way
+ * to see the URL or stop it. Since a double-click cannot pass file arguments, the window also offers loading
+ * {@code .nl} files into the running server (via the {@code loadFiles} callback, which swaps the knowledge base).
+ * Shown only when there is no attached console and a display is available; {@code --no-gui} suppresses it.
  */
 public final class ServerGui {
 
@@ -44,24 +54,31 @@ public final class ServerGui {
         return !noGui && System.console() == null && !GraphicsEnvironment.isHeadless();
     }
 
-    public static void show(String title, String url, String detail) {
+    /** {@code loadFiles} gets the chosen files/directories and returns the new status line (or throws). */
+    public static void show(String title, String url, String detail, Function<List<File>, String> loadFiles) {
+        NelumboLaf.setup();
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame(title);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            org.modelingvalue.nelumbo.tools.AppIcon.install(frame);
+            AppIcon.install(frame);
+
+            JLabel detailLabel = new JLabel(detail, JLabel.CENTER);
 
             JPanel panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
             panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
-            panel.add(new JLabel(title + " is running at " + url));
-            panel.add(new JLabel(detail));
+            panel.add(new JLabel(title + " is running at " + url, JLabel.CENTER));
+            panel.add(detailLabel);
 
             JButton open = new JButton("Open in Browser");
             open.addActionListener(e -> browse(url));
+            JButton load = new JButton("Load .nl files...");
+            load.addActionListener(e -> chooseAndLoad(frame, load, detailLabel, loadFiles));
             JButton stop = new JButton("Stop");
             stop.addActionListener(e -> System.exit(0));
             JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
             buttons.add(open);
+            buttons.add(load);
             buttons.add(stop);
             panel.add(buttons);
 
@@ -70,6 +87,35 @@ public final class ServerGui {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
+    }
+
+    private static void chooseAndLoad(JFrame frame, JButton load, JLabel detailLabel, Function<List<File>, String> loadFiles) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose .nl files or directories to load");
+        chooser.setMultiSelectionEnabled(true);
+        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        chooser.setFileFilter(new FileNameExtensionFilter("Nelumbo files (*.nl)", "nl"));
+        if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        List<File> files = List.of(chooser.getSelectedFiles());
+        load.setEnabled(false);
+        detailLabel.setText("loading...");
+        new Thread(() -> {
+            try {
+                String newDetail = loadFiles.apply(files);
+                SwingUtilities.invokeLater(() -> {
+                    detailLabel.setText(newDetail);
+                    load.setEnabled(true);
+                });
+            } catch (RuntimeException ex) {
+                SwingUtilities.invokeLater(() -> {
+                    detailLabel.setText("load failed - previous knowledge base still active");
+                    load.setEnabled(true);
+                    JOptionPane.showMessageDialog(frame, ex.getMessage(), "Load failed", JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        }, "nelumbo-server-load").start();
     }
 
     private static void browse(String url) {

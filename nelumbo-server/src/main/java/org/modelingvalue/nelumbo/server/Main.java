@@ -16,6 +16,7 @@
 
 package org.modelingvalue.nelumbo.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
@@ -25,6 +26,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -95,7 +97,28 @@ public final class Main {
         String detail = files.size() + " file(s) loaded, timeout " + timeoutMs + " ms";
         System.out.println("Nelumbo server listening on http://localhost:" + bound + " (" + detail + ")");
         if (ServerGui.wanted(noGui)) {
-            ServerGui.show("Nelumbo Server", "http://localhost:" + bound, detail);
+            long tMs = timeoutMs;
+            AtomicReference<NelumboServer> current = new AtomicReference<>(server);
+            ServerGui.show("Nelumbo Server", "http://localhost:" + bound, detail, chosen -> {
+                List<NamedSource> newSources = new ArrayList<>();
+                List<String>      newFiles   = new ArrayList<>();
+                for (File chosenFile : chosen) {
+                    for (Path file : expand(chosenFile.toPath())) {
+                        newFiles.add(file.toString());
+                        newSources.add(new NamedSource(file.toString(), read(file)));
+                    }
+                }
+                if (newSources.isEmpty()) {
+                    throw new IllegalArgumentException("no .nl files in the selection");
+                }
+                // build the new KB first: if it fails to load, the old server keeps running
+                KnowledgeBase kb   = KnowledgeBaseLoader.load(newSources);
+                NelumboServer next = new NelumboServer(kb, newFiles, tMs);
+                current.get().stop();
+                next.start(bound);
+                current.set(next);
+                return newFiles.size() + " file(s) loaded, timeout " + tMs + " ms";
+            });
         }
     }
 
