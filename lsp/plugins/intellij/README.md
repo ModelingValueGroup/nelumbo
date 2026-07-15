@@ -21,7 +21,7 @@ Build the plugin distribution zip (the LSP server is built and embedded automati
 The distribution zip will be at:
 
 ```
-lsp/plugins/intellij/build/distributions/intellij-nelumbo-plugin-<version>.zip
+lsp/plugins/intellij/build/distributions/nelumbo-intellij-plugin-<version>.zip
 ```
 
 To launch a sandboxed IDE with the plugin pre-installed for development:
@@ -37,7 +37,7 @@ Auto-reload is enabled in the sandbox, so rebuilding triggers a hot plugin reloa
 1. Build the plugin (see above), or download a release zip.
 2. In IntelliJ, open **Settings > Plugins**.
 3. Click the gear icon and choose **Install Plugin from Disk...**.
-4. Select the `intellij-nelumbo-plugin-<version>.zip` file.
+4. Select the `nelumbo-intellij-plugin-<version>.zip` file.
 5. Restart the IDE when prompted.
 
 LSP4IJ must be installed alongside the plugin; if it isn't already present, IntelliJ will prompt to install it from Marketplace.

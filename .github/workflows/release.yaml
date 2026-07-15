@@ -56,18 +56,18 @@ jobs:
                     echo "Creating release for tag: $TAG"
 
                     ASSETS=()
-                    for f in artifacts/editor/nelumbo*editor.jar \
-                             artifacts/cli/nelumbo-*-cli.jar \
+                    for f in artifacts/editor/nelumbo-editor-*.jar \
+                             artifacts/cli/nelumbo-cli-*.jar \
                              artifacts/nelumbo-server/nelumbo-server-*.jar \
                              artifacts/website-server/nelumbo-http-server-*.jar \
                              artifacts/mcp-server/nelumbo-mcp-server-*.jar \
-                             artifacts/eclipse-plugin/eclipse-nelumbo-plugin-*.jar \
-                             artifacts/intellij-plugin/intellij-nelumbo-plugin-*.zip; do
+                             artifacts/eclipse-plugin/nelumbo-eclipse-plugin-*.jar \
+                             artifacts/intellij-plugin/nelumbo-intellij-plugin-*.zip; do
                         [ -f "$f" ] && ASSETS+=("$f")
                     done
                     if [ -d "artifacts/slides" ]; then
-                        (cd artifacts && zip -qr ../nelumbo-slides.zip slides)
-                        ASSETS+=("nelumbo-slides.zip")
+                        (cd artifacts && zip -qr "../nelumbo-slides-${TAG#v}.zip" slides)
+                        ASSETS+=("nelumbo-slides-${TAG#v}.zip")
                     fi
 
                     # Substitute version placeholders in release notes

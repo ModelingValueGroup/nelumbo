@@ -75,7 +75,7 @@ val generateManifest = tasks.register("generateManifest") {
 }
 
 tasks.jar {
-    archiveBaseName.set("eclipse-nelumbo-plugin")
+    archiveBaseName.set("nelumbo-eclipse-plugin")
     dependsOn(generateManifest)
     // Repackage every build so the changing Bundle-Version qualifier always reaches the jar.
     outputs.upToDateWhen { false }

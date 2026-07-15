@@ -87,10 +87,10 @@ See the README in each plugin directory for installation instructions.
 
 ## Command-Line Interface
 
-`NelumboCli` parses and evaluates one or more `.nl` files from the terminal, printing each query together with its inferred result. Queries that declare expected results are compared and mismatches are reported as errors. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-<version>-cli.jar`, or build it with `./gradlew cliJar` (output in `build/libs/nelumbo-<version>-cli.jar`) and run it with `java`:
+`NelumboCli` parses and evaluates one or more `.nl` files from the terminal, printing each query together with its inferred result. Queries that declare expected results are compared and mismatches are reported as errors. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-cli-<version>.jar`, or build it with `./gradlew cliJar` (output in `build/libs/nelumbo-cli-<version>.jar`) and run it with `java`:
 
 ```sh
-java -jar build/libs/nelumbo-<version>-cli.jar [options] <file>...
+java -jar build/libs/nelumbo-cli-<version>.jar [options] <file>...
 ```
 
 Pass `-` in place of a filename to read from stdin. Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
@@ -229,10 +229,10 @@ Releases are created automatically by CI. The process works as follows:
 
 The release includes the following artifacts:
 
-- **Editor** — standalone Swing-based editor (`nelumbo-${version-num}-editor.jar`)
-- **Eclipse plugin** — dropins-based plugin (`eclipse-nelumbo-plugin-${version-num}.jar`)
-- **IntelliJ plugin** — LSP4IJ-based plugin (`intellij-nelumbo-plugin-${version-num}.zip`)
-- **Slides** — presentation slides (`nelumbo-slides.zip`)
+- **Editor** — standalone Swing-based editor (`nelumbo-editor-${version-num}.jar`)
+- **Eclipse plugin** — dropins-based plugin (`nelumbo-eclipse-plugin-${version-num}.jar`)
+- **IntelliJ plugin** — LSP4IJ-based plugin (`nelumbo-intellij-plugin-${version-num}.zip`)
+- **Slides** — presentation slides (`nelumbo-slides-${version-num}.zip`)
 
 If `RELEASE_NOTES.md` is absent, GitHub will auto-generate release notes from the commit log.
 

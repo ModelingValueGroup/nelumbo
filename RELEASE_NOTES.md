@@ -24,12 +24,12 @@ the public pages (landing page, feature tour, and playground with browser-based 
 - run `java -jar nelumbo-http-server-${version-num}.jar [--port N] [<file-or-dir>...]`,
   or double-click the jar: a small status window shows the URL with Open in Browser / Stop buttons
 
-## nelumbo-${version-num}-editor.jar - standalone editor
+## nelumbo-editor-${version-num}.jar - standalone editor
 
 A simple desktop editor for **nelumbo** specifications; query results are calculated and shown
 on the fly. This editor is not an LSP-based editor, and useful for educational and demo purposes.
 
-- run `java -jar nelumbo-${version-num}-editor.jar` (or double-click the jar)
+- run `java -jar nelumbo-editor-${version-num}.jar` (or double-click the jar)
 
 Always start a **nelumbo** specification with an import-statement. For example:
 
@@ -41,14 +41,14 @@ String  a
 "foo"+"bar"=a  ?    [(a="foobar")][..]
 ```
 
-## nelumbo-${version-num}-cli.jar - command-line runner
+## nelumbo-cli-${version-num}.jar - command-line runner
 
 Parses and evaluates `.nl` files from the terminal, printing each query together with its
 inferred result. Queries that declare expected results are compared and mismatches are
 reported as errors. Exit codes: `0` success, `1` parse/evaluation/comparison errors,
 `2` usage error - suitable for scripting and CI.
 
-- run `java -jar nelumbo-${version-num}-cli.jar [options] <file>...` (pass `-` to read stdin,
+- run `java -jar nelumbo-cli-${version-num}.jar [options] <file>...` (pass `-` to read stdin,
   `-q` to suppress query output, `-h` for all options)
 - or double-click the jar: a file chooser opens for a `.nl` file and the results are shown in a window
 
@@ -62,11 +62,11 @@ tools for `.nl` decision models (evaluate, search docs, get examples, new model 
 
 ## IDE plugins
 
-- `intellij-nelumbo-plugin-${version-num}.zip` - IntelliJ IDEA plugin (LSP-based); install via
+- `nelumbo-intellij-plugin-${version-num}.zip` - IntelliJ IDEA plugin (LSP-based); install via
   Settings > Plugins > Install Plugin from Disk
-- `eclipse-nelumbo-plugin-${version-num}.jar` - Eclipse plugin; drop it into the `dropins`
+- `nelumbo-eclipse-plugin-${version-num}.jar` - Eclipse plugin; drop it into the `dropins`
   folder of your Eclipse installation
 
-## nelumbo-slides.zip
+## nelumbo-slides-${version-num}.zip
 
 The **nelumbo** presentation slides as a static website; unzip and open `index.html`.

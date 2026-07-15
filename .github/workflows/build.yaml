@@ -83,7 +83,7 @@ jobs:
                 uses: actions/upload-artifact@v7
                 with:
                     name: editor
-                    path: build/libs/nelumbo*editor.jar
+                    path: build/libs/nelumbo-editor-*.jar
                     if-no-files-found: error
                     retention-days: 30
 
@@ -91,7 +91,7 @@ jobs:
                 uses: actions/upload-artifact@v7
                 with:
                     name: cli
-                    path: build/libs/nelumbo-*-cli.jar
+                    path: build/libs/nelumbo-cli-*.jar
                     if-no-files-found: error
                     retention-days: 30
 
@@ -135,7 +135,7 @@ jobs:
                 uses: actions/upload-artifact@v7
                 with:
                     name: eclipse-plugin
-                    path: lsp/plugins/eclipse/build/libs/eclipse-nelumbo-plugin-*.jar
+                    path: lsp/plugins/eclipse/build/libs/nelumbo-eclipse-plugin-*.jar
                     if-no-files-found: error
                     retention-days: 30
 
@@ -143,6 +143,6 @@ jobs:
                 uses: actions/upload-artifact@v7
                 with:
                     name: intellij-plugin
-                    path: lsp/plugins/intellij/build/distributions/intellij-nelumbo-plugin-*.zip
+                    path: lsp/plugins/intellij/build/distributions/nelumbo-intellij-plugin-*.zip
                     if-no-files-found: error
                     retention-days: 30

@@ -45,7 +45,8 @@ dependencies {
 tasks {
     register<ShadowJar>("editorJar") {
         description = "produce the jar for running the editor"
-        archiveClassifier.set("editor")
+        archiveBaseName.set("nelumbo-editor")
+        archiveClassifier.set("")
         manifest {
             attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboEditor"
         }
@@ -65,7 +66,8 @@ tasks {
     }
 
     register<ShadowJar>("cliJar") {
-        archiveClassifier.set("cli")
+        archiveBaseName.set("nelumbo-cli")
+        archiveClassifier.set("")
         manifest {
             attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboCli"
         }
