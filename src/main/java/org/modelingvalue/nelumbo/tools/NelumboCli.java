@@ -51,8 +51,9 @@ public final class NelumboCli {
 
     /** In {@code --json} mode all output is collected here and printed as one JSON object at the end. */
     private static final class JsonOutput {
-        final java.util.List<String>                        errors  = new ArrayList<>();
-        final java.util.List<java.util.Map<String, Object>> queries = new ArrayList<>();
+        final java.util.List<String>                        errors    = new ArrayList<>();
+        final java.util.List<java.util.Map<String, Object>> queries   = new ArrayList<>();
+        final java.util.List<java.util.Map<String, Object>> parseTree = new ArrayList<>();
     }
 
     public static void main(String[] args) {
@@ -121,6 +122,7 @@ public final class NelumboCli {
             java.util.Map<String, Object> out = new LinkedHashMap<>();
             out.put("errors", json.errors);
             out.put("queries", json.queries);
+            out.put("parseTree", json.parseTree);
             System.out.println(Json.toJson(out));
         }
         System.exit(failed == 0 ? 0 : 1);
@@ -159,6 +161,9 @@ public final class NelumboCli {
         NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, name, 0);
         for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
             report(json, name + ":" + d.line() + ":" + d.col() + ": " + d.message());
+        }
+        if (json != null) {
+            json.parseTree.addAll(result.parseTree());
         }
         for (NelumboEvaluator.QueryOutcome q : result.queries()) {
             if (json != null) {
@@ -280,7 +285,8 @@ public final class NelumboCli {
                   <file>           path to a .nl file, or - to read stdin
                   -n, --nelumbo S  evaluate the Nelumbo source given as argument S
                   -j, --json       output one JSON object: errors as an array of messages,
-                                   per query the facts/falsehoods as name/value pairs
+                                   per query the facts/falsehoods as name/value pairs,
+                                   and the parse tree of the input
                   -q, --quiet      suppress query result output (errors still printed)
                   -h, --help       show this help and exit
 

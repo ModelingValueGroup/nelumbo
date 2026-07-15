@@ -93,7 +93,7 @@ See the README in each plugin directory for installation instructions.
 java -jar build/libs/nelumbo-cli-<version>.jar [options] <file>...
 ```
 
-Pass `-` in place of a filename to read from stdin, or `-n` / `--nelumbo` followed by Nelumbo source to evaluate it directly from the command line. Use `-j` / `--json` for machine-readable output: one JSON object with an `errors` message array and per-query `facts`/`falsehoods` name/value pairs. Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
+Pass `-` in place of a filename to read from stdin, or `-n` / `--nelumbo` followed by Nelumbo source to evaluate it directly from the command line. Use `-j` / `--json` for machine-readable output: one JSON object with an `errors` message array, per-query `facts`/`falsehoods` name/value pairs, and the parse tree of the input (node kind, functor/type, position, text, children). Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
 
 The jar is also double-clickable: launched without a console and without arguments it opens an interactive window with an editable Nelumbo example, a Run button evaluating it in place, and the command-line usage as documentation.
 
