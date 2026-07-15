@@ -16,6 +16,9 @@
 
 package org.modelingvalue.nelumbo.tools;
 
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -24,12 +27,24 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 public final class NelumboCli {
 
     private NelumboCli() {
     }
 
     public static void main(String[] args) {
+        // A double-clicked jar has no console and no arguments: offer a file chooser and show the
+        // results in a window instead of printing usage to an invisible stderr.
+        if (args.length == 0 && System.console() == null && !GraphicsEnvironment.isHeadless()) {
+            runInteractively();
+            return;
+        }
         boolean quiet = false;
         java.util.List<String> files = new ArrayList<>();
         for (String a : args) {
@@ -100,6 +115,45 @@ public final class NelumboCli {
             }
         }
         return result.ok();
+    }
+
+    private static void runInteractively() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose a Nelumbo (.nl) file to evaluate");
+        chooser.setFileFilter(new FileNameExtensionFilter("Nelumbo files (*.nl)", "nl"));
+        if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        Path file = chooser.getSelectedFile().toPath();
+        String source;
+        try {
+            source = Files.readString(file, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "cannot read " + file + ":\n" + e, "Nelumbo", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+            return;
+        }
+        NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, file.toString(), 0);
+        StringBuilder text = new StringBuilder();
+        for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
+            text.append(file).append(":").append(d.line()).append(":").append(d.col()).append(": ").append(d.message()).append("\n");
+        }
+        for (NelumboEvaluator.QueryOutcome q : result.queries()) {
+            if (q.result() != null) {
+                text.append(q.query()).append(" ? ").append(q.result()).append("\n");
+            }
+        }
+        if (text.isEmpty()) {
+            text.append("(no queries - file parsed and evaluated without errors)\n");
+        }
+        JTextArea area = new JTextArea(text.toString());
+        area.setEditable(false);
+        area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        JScrollPane scroll = new JScrollPane(area);
+        scroll.setPreferredSize(new Dimension(700, 400));
+        String title = file.getFileName() + (result.ok() ? " - ok" : " - FAILED");
+        JOptionPane.showMessageDialog(null, scroll, title, result.ok() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+        System.exit(result.ok() ? 0 : 1);
     }
 
     private static void printUsage(PrintStream out) {

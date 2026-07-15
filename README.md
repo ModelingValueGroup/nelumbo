@@ -95,6 +95,8 @@ java -jar build/libs/nelumbo-<version>-cli.jar [options] <file>...
 
 Pass `-` in place of a filename to read from stdin. Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
 
+The jar is also double-clickable: launched without a console and without arguments it opens a file chooser for a `.nl` file and shows the evaluation results in a window.
+
 ## HTTP Server
 
 The `nelumbo-server` module is a lean HTTP executor for `.nl` specifications: it loads the given files (directories are scanned for `*.nl`) into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server and has no third-party dependencies — the shaded jar is about 2 MB. It is attached to every [release](https://github.com/ModelingValueGroup/nelumbo/releases) as `nelumbo-server-<version>.jar`, or can be built from source:
