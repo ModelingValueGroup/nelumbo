@@ -24,12 +24,12 @@ the public pages (landing page, feature tour, and playground with browser-based 
 - run `java -jar nelumbo-web-server-${version-num}.jar [--port N] [<file-or-dir>...]`,
   or double-click the jar: a small status window shows the URL with Open in Browser / Stop buttons
 
-## nelumbo-editor-${version-num}.jar - standalone editor
+## nelumbo-ide-${version-num}.jar - standalone editor
 
 A simple desktop editor for **nelumbo** specifications; query results are calculated and shown
 on the fly. This editor is not an LSP-based editor, and useful for educational and demo purposes.
 
-- run `java -jar nelumbo-editor-${version-num}.jar` (or double-click the jar)
+- run `java -jar nelumbo-ide-${version-num}.jar` (or double-click the jar)
 
 Always start a **nelumbo** specification with an import-statement. For example:
 

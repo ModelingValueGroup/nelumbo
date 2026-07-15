@@ -83,7 +83,7 @@ jobs:
                 uses: actions/upload-artifact@v7
                 with:
                     name: editor
-                    path: build/libs/nelumbo-editor-*.jar
+                    path: build/libs/nelumbo-ide-*.jar
                     if-no-files-found: error
                     retention-days: 30
 

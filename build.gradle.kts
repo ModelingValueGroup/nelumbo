@@ -45,7 +45,7 @@ dependencies {
 tasks {
     register<ShadowJar>("editorJar") {
         description = "produce the jar for running the editor"
-        archiveBaseName.set("nelumbo-editor")
+        archiveBaseName.set("nelumbo-ide")
         archiveClassifier.set("")
         manifest {
             attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboEditor"
@@ -60,7 +60,7 @@ tasks {
             // Clean only previous shadow jars; leave regular publication jars intact
             val libsDir = layout.buildDirectory.dir("libs")
             libsDir.get().asFile.listFiles()
-                ?.filter { f -> f.isFile && (f.name.endsWith("-editor.jar") || f.name.contains("-editor-")) }
+                ?.filter { f -> f.isFile && (f.name.endsWith("-editor.jar") || f.name.contains("-editor-") || f.name.contains("-ide-")) }
                 ?.forEach { it.delete() }
         }
     }

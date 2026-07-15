@@ -229,7 +229,7 @@ Releases are created automatically by CI. The process works as follows:
 
 The release includes the following artifacts:
 
-- **Editor** — standalone Swing-based editor (`nelumbo-editor-${version-num}.jar`)
+- **Editor** — standalone Swing-based editor (`nelumbo-ide-${version-num}.jar`)
 - **Eclipse plugin** — dropins-based plugin (`nelumbo-eclipse-plugin-${version-num}.jar`)
 - **IntelliJ plugin** — LSP4IJ-based plugin (`nelumbo-intellij-plugin-${version-num}.zip`)
 - **Slides** — presentation slides (`nelumbo-slides-${version-num}.zip`)
