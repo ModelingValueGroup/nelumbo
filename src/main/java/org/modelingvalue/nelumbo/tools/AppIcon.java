@@ -14,52 +14,50 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.website;
+package org.modelingvalue.nelumbo.tools;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.awt.Image;
+import java.awt.Taskbar;
+import java.awt.Window;
+import java.io.IOException;
+import java.io.InputStream;
 
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboTimeoutException;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
-import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import javax.imageio.ImageIO;
 
 /**
- * Verifies the engine-level mechanism the HTTP timeout relies on: an inference whose knowledge base is past its
- * deadline aborts by throwing {@link NelumboTimeoutException}. Deterministic — the deadline is set in the past, so the
- * very first {@code fixpoint} check trips it regardless of timing.
+ * The Nelumbo lotus as application icon: without it every double-clicked jar shows the default Java icon in the
+ * dock/taskbar. All setters are best-effort - a missing resource or unsupported platform never breaks the caller.
  */
-class InferenceDeadlineTest {
+public final class AppIcon {
 
-    private static final String FIB = """
-            import nelumbo.integers
+    private static Image icon;
+    private static boolean loaded;
 
-            Integer ::= fib(<Integer>)
+    private AppIcon() {
+    }
 
-            Integer n, f
-
-            fib(n)=f <=>  f=n                 if n>=0 & n<=1,
-                          f=fib(n-1)+fib(n-2) if n>1
-            """;
-
-    @Test
-    void inferencePastDeadlineThrows() {
-        KnowledgeBase base = KnowledgeBaseLoader.load(List.of(new NamedSource("fib.nl", FIB)));
-        KnowledgeBase request = new KnowledgeBase(base);
-        request.setDeadlineNanos(System.nanoTime() - 1); // already expired
-
-        assertThrows(NelumboTimeoutException.class, () -> request.run(() -> {
-            ParserResult result = new Parser(new Tokenizer("Integer r\nfib(8)=r ?\n", "<t>").tokenize())
-                    .parseNonThrowing();
-            try {
-                result.evaluate();
-            } catch (ParseException e) {
-                throw new IllegalStateException(e);
+    /** Sets the dock/taskbar icon and, when {@code window} is not null, its window icon. */
+    public static synchronized void install(Window window) {
+        if (!loaded) {
+            loaded = true;
+            try (InputStream in = AppIcon.class.getResourceAsStream("nelumbo-icon.png")) {
+                icon = in == null ? null : ImageIO.read(in);
+            } catch (IOException e) {
+                icon = null;
             }
-        }));
+        }
+        if (icon == null) {
+            return;
+        }
+        if (window != null) {
+            window.setIconImage(icon);
+        }
+        try {
+            if (Taskbar.isTaskbarSupported() && Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                Taskbar.getTaskbar().setIconImage(icon);
+            }
+        } catch (RuntimeException e) {
+            // headless or platform without a taskbar icon: keep going without one
+        }
     }
 }

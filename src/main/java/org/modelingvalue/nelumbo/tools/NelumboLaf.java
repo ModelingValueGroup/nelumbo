@@ -14,30 +14,29 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo.tools;
 
-// Nelumbo CLI (evaluate .nl files, also runs the HTTP eval server via --server)
-include("cli")
+import javax.swing.UIManager;
 
-// Website (HTTP server + Monaco/LSP frontend)
-include("website")
+import com.formdev.flatlaf.FlatLightLaf;
 
-// MCP server
-include("mcp")
+/** The shared Nelumbo look and feel (FlatLaf light + rounded corners), used by every Nelumbo GUI. */
+public final class NelumboLaf {
 
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
+    private NelumboLaf() {
+    }
 
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
+    public static void setup() {
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("apple.awt.application.name", "Nelumbo");
+        System.setProperty("flatlaf.useWindowDecorations", "false");
+        try {
+            FlatLightLaf.setup();
+            UIManager.put("Button.arc", 8);
+            UIManager.put("Component.arc", 8);
+            UIManager.put("TextComponent.arc", 8);
+        } catch (Exception e) {
+            // keep the default look and feel
         }
     }
 }

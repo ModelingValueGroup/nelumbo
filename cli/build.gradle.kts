@@ -27,7 +27,7 @@ java {
     }
 }
 
-val archiveName = "nelumbo-web-server"
+val archiveName = "nelumbo-cli"
 
 repositories {
     mavenCentral()
@@ -36,15 +36,12 @@ repositories {
 
 dependencies {
     implementation(project(":"))
-    implementation(project(":cli"))
-    implementation(project(":lsp:server"))
-    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
-    implementation("io.javalin:javalin:7.2.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    runtimeOnly("org.slf4j:slf4j-simple:2.0.18")
+    implementation("org.modelingvalue:mvg-json:6.0.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    // the test client parses/builds JSON with Jackson; the server itself uses mvg-json
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -53,55 +50,12 @@ tasks.test {
     jvmArgs("-ea") // Enable assertions
 }
 
-val frontendDir = layout.projectDirectory.dir("src/main/frontend")
-
-// Resolve the npm executable: the PATH first (CI/setup-node and normal shells), then nvm's node
-// versions (a Gradle daemon started outside a login shell does not see nvm on the PATH).
-fun findNpm(): String {
-    val isWindows = System.getProperty("os.name").lowercase().contains("win")
-    val exe       = if (isWindows) "npm.cmd" else "npm"
-    val onPath    = System.getenv("PATH").orEmpty().split(File.pathSeparator)
-            .map { File(it, exe) }
-    val nvmDir    = File(System.getProperty("user.home"), ".nvm/versions/node")
-    val inNvm     = (nvmDir.listFiles()?.filter { it.isDirectory } ?: emptyList())
-            .sortedByDescending { it.lastModified() }
-            .map { File(it, "bin/$exe") }
-    return (onPath + inNvm).firstOrNull { it.canExecute() }?.absolutePath ?: exe
-}
-
-val npmBundle by tasks.registering(Exec::class) {
-    description = "install frontend deps and build the Monaco fields bundle"
-    workingDir  = frontendDir.asFile
-    commandLine(findNpm(), "run", "dist")
-    inputs.dir(frontendDir.dir("src"))
-    inputs.file(frontendDir.file("package.json"))
-    inputs.file(frontendDir.file("package-lock.json"))
-    inputs.file(frontendDir.file("tsconfig.json"))
-    inputs.file(frontendDir.file("esbuild.mjs"))
-    outputs.dir(frontendDir.dir("dist"))
-}
-
-val copyFrontend by tasks.registering(Sync::class) {
-    dependsOn(npmBundle)
-    from(frontendDir.dir("dist"))
-    // source maps only help debug this bundle in devtools; no need to ship ~9 MB of them in the server jar
-    exclude("*.map")
-    into(layout.buildDirectory.dir("generated-resources/public/assets"))
-}
-
-// Register the copied bundle as a source-set OUTPUT dir (not a resources source dir): this puts it on the
-// runtime/test classpath and into serverJar via sourceSets.main.output, carries the copyFrontend dependency,
-// and - unlike resources.srcDir - keeps it out of the sourcesJar.
-sourceSets.main {
-    output.dir(mapOf("builtBy" to copyFrontend), layout.buildDirectory.dir("generated-resources"))
-}
-
-tasks.register<ShadowJar>("serverJar") {
+tasks.register<ShadowJar>("cliJar") {
     archiveBaseName.set(archiveName)
     // Produce a single shaded jar without the default "-all" classifier
     archiveClassifier.set("")
     manifest {
-        attributes["Main-Class"] = "org.modelingvalue.nelumbo.website.Main"
+        attributes["Main-Class"] = "org.modelingvalue.nelumbo.cli.NelumboCli"
     }
     from(sourceSets.main.get().output)
     configurations = listOf(project.configurations.runtimeClasspath.get())
@@ -112,11 +66,11 @@ tasks.register<ShadowJar>("serverJar") {
 }
 
 tasks.shadowJar {
-    // Disable default shadowJar task; use serverJar instead
+    // Disable default shadowJar task; use cliJar instead
     enabled = false
 }
 
 tasks.jar {
-    // Disable plain jar to avoid duplicate artifact name; we use the shaded jar as the main distribution
-    enabled = false
+    // plain jar (classifier avoids clashing with the shaded cliJar); needed so other projects can depend on this one
+    archiveClassifier.set("plain")
 }

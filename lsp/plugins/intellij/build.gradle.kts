@@ -158,7 +158,7 @@ tasks {
 
     named<Zip>("buildPlugin") {
         // Customize the distribution zip name (was: intellij-<version>.zip)
-        archiveBaseName.set("intellij-nelumbo-plugin")
+        archiveBaseName.set("nelumbo-intellij-plugin")
         // Copying to Downloads is orchestrated at the root level after the whole build finishes.
     }
 }

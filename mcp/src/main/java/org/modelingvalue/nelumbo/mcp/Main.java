@@ -16,12 +16,25 @@
 
 package org.modelingvalue.nelumbo.mcp;
 
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PushbackInputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -67,8 +80,23 @@ public final class Main {
                 deadlineMs = Long.parseLong(args[i + 1]);
             }
         }
-        NelumboTools                 tools     = new NelumboTools(deadlineMs);
-        StdioServerTransportProvider transport = new StdioServerTransportProvider(McpJsonDefaults.getMapper(), System.in, System.out);
+        NelumboTools tools = new NelumboTools(deadlineMs);
+        // Peek the first byte before wiring the transport: an MCP client always speaks first, so EOF
+        // before any byte means the jar was double-clicked (stdin is /dev/null) - explain instead of
+        // exiting silently.
+        PushbackInputStream in = new PushbackInputStream(System.in);
+        int first;
+        try {
+            first = in.read();
+            if (first < 0) {
+                explainUsageWhenDoubleClicked();
+                return;
+            }
+            in.unread(first);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        StdioServerTransportProvider transport = new StdioServerTransportProvider(McpJsonDefaults.getMapper(), in, System.out);
         // From here on the real stdout belongs to JSON-RPC: reroute everything else
         // (nelumbo TRACE output, stray prints) to stderr.
         System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.err), true));
@@ -78,6 +106,36 @@ public final class Main {
                 .tools(evalNlTool(tools), searchDocsTool(tools), getExampleTool(tools), newModelTool(tools))
                 .build();
         // The stdio transport owns non-daemon threads; the JVM stays alive until stdin closes.
+    }
+
+    private static void explainUsageWhenDoubleClicked() {
+        String command = "claude mcp add nelumbo -- java -jar " + ownJarName();
+        String explanation = "This is a Model Context Protocol (MCP) server: it is not meant to be started directly,\n"
+                + "but to be registered with an MCP client, which starts it itself. For example:";
+        System.err.println(explanation + "\n\n    " + command);
+        if (System.console() == null && !GraphicsEnvironment.isHeadless()) {
+            org.modelingvalue.nelumbo.tools.AppIcon.install(null);
+            JPanel panel = new JPanel(new BorderLayout(0, 10));
+            panel.add(new JLabel("<html>This is a Model Context Protocol (MCP) server: it is not meant to be started directly,<br>"
+                    + "but to be registered with an MCP client, which starts it itself. For example:</html>"), BorderLayout.NORTH);
+            JTextArea commandArea = new JTextArea(command);
+            commandArea.setEditable(false);
+            commandArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+            commandArea.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+            panel.add(commandArea, BorderLayout.CENTER);
+            JOptionPane.showOptionDialog(null, panel, "Nelumbo MCP Server", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Quit"}, "Quit");
+            // the AWT event thread is non-daemon: without an explicit exit the process lingers after the dialog
+            System.exit(0);
+        }
+    }
+
+    private static String ownJarName() {
+        try {
+            return Path.of(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+        } catch (Exception e) {
+            return "nelumbo-mcp-server-<version>.jar";
+        }
     }
 
     private static McpServerFeatures.SyncToolSpecification evalNlTool(NelumboTools tools) {

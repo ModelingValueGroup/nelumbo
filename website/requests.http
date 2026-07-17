@@ -3,7 +3,7 @@
 # Start the server first (loads the fibonacci example into the knowledge base):
 #
 #   ./gradlew :website:serverJar
-#   java -jar http/build/libs/nelumbo-http-server-*.jar \
+#   java -jar http/build/libs/nelumbo-web-server-*.jar \
 #        src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl
 #
 # Then run the requests below (IntelliJ HTTP Client / VS Code REST Client).

@@ -14,11 +14,52 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.website;
+package org.modelingvalue.nelumbo.server;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboTimeoutException;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 /**
- * A named Nelumbo source: the {@code name} is used for error reporting and metadata, {@code content} is the raw
- * {@code .nl} text.
+ * Verifies the engine-level mechanism the HTTP timeout relies on: an inference whose knowledge base is past its
+ * deadline aborts by throwing {@link NelumboTimeoutException}. Deterministic — the deadline is set in the past, so the
+ * very first {@code fixpoint} check trips it regardless of timing.
  */
-public record NamedSource(String name, String content) {
+class InferenceDeadlineTest {
+
+    private static final String FIB = """
+            import nelumbo.integers
+
+            Integer ::= fib(<Integer>)
+
+            Integer n, f
+
+            fib(n)=f <=>  f=n                 if n>=0 & n<=1,
+                          f=fib(n-1)+fib(n-2) if n>1
+            """;
+
+    @Test
+    void inferencePastDeadlineThrows() {
+        KnowledgeBase base = KnowledgeBaseLoader.load(List.of(new NamedSource("fib.nl", FIB)));
+        KnowledgeBase request = new KnowledgeBase(base);
+        request.setDeadlineNanos(System.nanoTime() - 1); // already expired
+
+        assertThrows(NelumboTimeoutException.class, () -> request.run(() -> {
+            ParserResult result = new Parser(new Tokenizer("Integer r\nfib(8)=r ?\n", "<t>").tokenize())
+                    .parseNonThrowing();
+            try {
+                result.evaluate();
+            } catch (ParseException e) {
+                throw new IllegalStateException(e);
+            }
+        }));
+    }
 }

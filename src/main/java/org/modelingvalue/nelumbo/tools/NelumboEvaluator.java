@@ -17,17 +17,24 @@
 package org.modelingvalue.nelumbo.tools;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.modelingvalue.collections.Entry;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 /**
@@ -41,10 +48,12 @@ public final class NelumboEvaluator {
     }
 
     /** expectationMatched is null when the query carries no expected result. */
-    public record QueryOutcome(String query, String result, Boolean expectationMatched) {
+    public record QueryOutcome(String query, String result, Boolean expectationMatched,
+                               List<java.util.Map<String, String>> facts, List<java.util.Map<String, String>> falsehoods) {
     }
 
-    public record EvalResult(boolean ok, List<Diagnostic> diagnostics, List<QueryOutcome> queries) {
+    public record EvalResult(boolean ok, List<Diagnostic> diagnostics, List<QueryOutcome> queries,
+                             List<java.util.Map<String, Object>> parseTree) {
     }
 
     private NelumboEvaluator() {
@@ -52,9 +61,15 @@ public final class NelumboEvaluator {
 
     /** deadlineMs <= 0 means no deadline. */
     public static EvalResult evaluate(String source, String name, long deadlineMs) {
+        return evaluate(source, name, deadlineMs, null);
+    }
+
+    /** {@code preamble} (e.g. import statements) is evaluated first as a separate source, so the document's line numbers are unaffected. */
+    public static EvalResult evaluate(String source, String name, long deadlineMs, String preamble) {
         String src = source.endsWith("\n") ? source : source + "\n";
         List<Diagnostic> diagnostics = new ArrayList<>();
         List<QueryOutcome> queries = new ArrayList<>();
+        List<java.util.Map<String, Object>> parseTree = new ArrayList<>();
         KnowledgeBase evalKb = new KnowledgeBase(KnowledgeBase.BASE);
         if (deadlineMs > 0) {
             evalKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
@@ -62,11 +77,21 @@ public final class NelumboEvaluator {
         try {
             evalKb.run(() -> {
                 KnowledgeBase kb = KnowledgeBase.CURRENT.get();
+                if (preamble != null && !preamble.isBlank()) {
+                    try {
+                        new Parser(new Tokenizer(preamble, "<prep>").tokenize()).parseNonThrowing().evaluate();
+                    } catch (ParseException e) {
+                        diagnostics.add(toDiagnostic(e));
+                    }
+                }
                 ParserResult parsed = new Parser(new Tokenizer(src, name).tokenize()).parseNonThrowing();
                 for (ParseException e : parsed.exceptions()) {
                     diagnostics.add(toDiagnostic(e));
                 }
                 ParserResult throwing = new ParserResult(null, true);
+                for (Node root : parsed.roots()) {
+                    parseTree.add(nodeJson(root));
+                }
                 for (Node root : parsed.roots()) {
                     if (!(root instanceof Evaluatable eval)) {
                         continue;
@@ -92,7 +117,39 @@ public final class NelumboEvaluator {
         } catch (NelumboTimeoutException tex) {
             diagnostics.add(deadlineDiagnostic(deadlineMs));
         }
-        return new EvalResult(diagnostics.isEmpty(), diagnostics, queries);
+        return new EvalResult(diagnostics.isEmpty(), diagnostics, queries, parseTree);
+    }
+
+    /** One parse-tree node as a JSON-ready map: kind, vocabulary name, source position, text, children. */
+    public static java.util.Map<String, Object> nodeJson(Node node) {
+        java.util.Map<String, Object> json = new LinkedHashMap<>();
+        json.put("node", node.getClass().getSimpleName());
+        if (node.functorOrType() instanceof Functor f) {
+            json.put("functor", f.name());
+        } else if (node.functorOrType() instanceof Type t) {
+            json.put("type", t.name());
+        }
+        Token first = node.firstToken();
+        if (first != null) {
+            json.put("line", first.line() + 1);
+            json.put("column", first.position() + 1);
+        }
+        json.put("text", node.toString().trim().replaceAll("\\s+", " "));
+        // astElements are the SYNTACTIC constituents (what was actually parsed at this spot);
+        // children() would recurse into the resolved semantic graph (supertypes, library nodes).
+        org.modelingvalue.collections.List<AstElement> elements = node.astElements();
+        if (elements != null) {
+            List<java.util.Map<String, Object>> childJson = new ArrayList<>();
+            for (AstElement element : elements) {
+                if (element instanceof Node child) {
+                    childJson.add(nodeJson(child));
+                }
+            }
+            if (!childJson.isEmpty()) {
+                json.put("children", childJson);
+            }
+        }
+        return json;
     }
 
     private static boolean isMismatch(ParseException exc) {
@@ -113,6 +170,20 @@ public final class NelumboEvaluator {
         query.predicate().deparse(sb);
         InferResult ir = query.inferResult();
         Boolean expectation = query.hasExpected() ? matched : null;
-        return new QueryOutcome(sb.toString().trim(), ir == null ? null : ir.toString(), expectation);
+        return new QueryOutcome(sb.toString().trim(), ir == null ? null : ir.toString(), expectation,
+                ir == null ? List.of() : bindings(ir.trueBindings()), ir == null ? List.of() : bindings(ir.falseBindings()));
+    }
+
+    private static List<java.util.Map<String, String>> bindings(
+            org.modelingvalue.collections.Set<org.modelingvalue.collections.Map<Variable, Object>> bindings) {
+        List<java.util.Map<String, String>> out = new ArrayList<>();
+        for (org.modelingvalue.collections.Map<Variable, Object> binding : bindings) {
+            java.util.Map<String, String> pairs = new LinkedHashMap<>();
+            for (Entry<Variable, Object> entry : binding) {
+                pairs.put(entry.getKey().name(), String.valueOf(entry.getValue()));
+            }
+            out.add(pairs);
+        }
+        return out;
     }
 }

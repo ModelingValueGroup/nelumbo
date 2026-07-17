@@ -38,6 +38,7 @@ mvgcorrector {
 
 dependencies {
     implementation("org.modelingvalue:immutable-collections:6.0.0-BRANCHED")
+    implementation("org.modelingvalue:mvg-json:6.0.0")
     implementation("com.formdev:flatlaf:3.7.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -45,7 +46,8 @@ dependencies {
 tasks {
     register<ShadowJar>("editorJar") {
         description = "produce the jar for running the editor"
-        archiveClassifier.set("editor")
+        archiveBaseName.set("nelumbo-ide")
+        archiveClassifier.set("")
         manifest {
             attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboEditor"
         }
@@ -59,33 +61,15 @@ tasks {
             // Clean only previous shadow jars; leave regular publication jars intact
             val libsDir = layout.buildDirectory.dir("libs")
             libsDir.get().asFile.listFiles()
-                ?.filter { f -> f.isFile && (f.name.endsWith("-editor.jar") || f.name.contains("-editor-")) }
+                ?.filter { f -> f.isFile && (f.name.endsWith("-editor.jar") || f.name.contains("-editor-") || f.name.contains("-ide-")) }
                 ?.forEach { it.delete() }
         }
     }
 
-    register<ShadowJar>("cliJar") {
-        archiveClassifier.set("cli")
-        manifest {
-            attributes["Main-Class"] = "org.modelingvalue.nelumbo.tools.NelumboCli"
-        }
-        from(sourceSets.main.get().output)
-        configurations = listOf(project.configurations.runtimeClasspath.get())
-
-        // Exclude signature files from signed dependencies to avoid SecurityException
-        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-
-        doFirst {
-            // Clean only previous shadow jars; leave regular publication jars intact
-            val libsDir = layout.buildDirectory.dir("libs")
-            libsDir.get().asFile.listFiles()
-                ?.filter { f -> f.isFile && (f.name.endsWith("-cli.jar") || f.name.contains("-cli-")) }
-                ?.forEach { it.delete() }
-        }
-    }
+    // the cli jar (which includes the HTTP eval server) is built by the :cli module's cliJar task
 
     shadowJar {
-        // Disable default shadowJar task; use editorJar / cliJar instead
+        // Disable default shadowJar task; use editorJar instead
         enabled = false
     }
 }
@@ -126,6 +110,7 @@ tasks.register<Exec>("build-slides") {
 tasks.named<Delete>("clean") {
     delete(file("docs/site"))
     delete(rootProject.layout.buildDirectory)
+    delete(file("cli/build"))
     delete(file("website/build"))
     delete(file("lsp/server/build"))
     delete(file("lsp/plugins/eclipse/build"))
@@ -134,6 +119,7 @@ tasks.named<Delete>("clean") {
 
 tasks.test {
     dependsOn(":lsp:server:test")
+    dependsOn(":cli:test")
     dependsOn(":website:test")
     dependsOn(":mcp:test")
 }

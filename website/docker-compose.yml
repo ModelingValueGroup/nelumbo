@@ -26,6 +26,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nelumbo.rule=Host(`nelumbo.nl`)"
+      - "traefik.http.routers.nelumbo.middlewares=nelumbo-hsts"
+      - "traefik.http.middlewares.nelumbo-hsts.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.nelumbo-hsts.headers.stsIncludeSubdomains=true"
       - "traefik.http.routers.nelumbo-www.rule=Host(`www.nelumbo.nl`)"
       - "traefik.http.routers.nelumbo-www.middlewares=nelumbo-www-redirect"
       - "traefik.http.middlewares.nelumbo-www-redirect.redirectregex.regex=^https?://www\\.nelumbo\\.nl/(.*)"

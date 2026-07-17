@@ -9,13 +9,13 @@ function serverJar(): string {
     let jars: string[] = [];
     try {
         jars = readdirSync(LIBSDIR)
-                .filter((f: string): boolean => /^nelumbo-http-server-.*\.jar$/.test(f))
+                .filter((f: string): boolean => /^nelumbo-web-server-.*\.jar$/.test(f))
                 .sort((a: string, b: string): number => statSync(resolve(LIBSDIR, b)).mtimeMs - statSync(resolve(LIBSDIR, a)).mtimeMs);
     } catch {
         jars = [];
     }
     if (jars.length === 0) {
-        throw new Error('No nelumbo-http-server jar in ' + LIBSDIR + '. Build it first: ./gradlew :website:serverJar');
+        throw new Error('No nelumbo-web-server jar in ' + LIBSDIR + '. Build it first: ./gradlew :website:serverJar');
     }
     return resolve(LIBSDIR, jars[0]);
 }
@@ -31,7 +31,7 @@ export default defineConfig({
         { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     ],
     webServer: {
-        command:             'java -jar "' + serverJar() + '" --port ' + PORT,
+        command:             'java -jar "' + serverJar() + '" --port ' + PORT + ' --no-gui',
         url:                 'http://localhost:' + PORT + '/health',
         reuseExistingServer: !process.env.CI,
         timeout:             60_000,
