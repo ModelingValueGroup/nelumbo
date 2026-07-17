@@ -1,18 +1,17 @@
 [versions]
-# plain versions resolved from maven central - no ALLREP_TOKEN needed
-immutable-collections = "6.0.2"
-mvg-json = "6.0.1"
-jackson = "2.22.1"
-lsp4j = "1.0.0"
-junit-jupiter = "6.1.2"
-slf4j = "2.0.18"
+immutable-collections   = "6.0.2"
+mvg-json                = "6.0.1"
+jackson                 = "2.22.1"
+lsp4j                   = "1.0.0"
+junit-jupiter           = "6.1.2"
+slf4j                   = "2.0.18"
 
 [libraries]
-immutable-collections = { module = "org.modelingvalue:immutable-collections", version.ref = "immutable-collections" }
-mvg-json = { module = "org.modelingvalue:mvg-json", version.ref = "mvg-json" }
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
-jackson-dataformat-xml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version.ref = "jackson" }
-lsp4j = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
+immutable-collections   = { module = "org.modelingvalue:immutable-collections", version.ref = "immutable-collections" }
+mvg-json                = { module = "org.modelingvalue:mvg-json", version.ref = "mvg-json" }
+jackson-databind        = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-dataformat-xml  = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version.ref = "jackson" }
+lsp4j                   = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
 lsp4j-websocket-jakarta = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta", version.ref = "lsp4j" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
-slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+junit-jupiter           = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+slf4j-simple            = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
