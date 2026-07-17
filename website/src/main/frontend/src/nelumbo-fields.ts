@@ -1,4 +1,6 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
+// esbuild tree-shakes this side-effect contribution out of edcore.main; without it inlay hints never render
+import 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsContribution.js';
 import {
     MonacoLanguageClient,
     MonacoServices,
@@ -17,98 +19,19 @@ import './fields.css';
 
 const LANGUAGE_ID: string = 'nelumbo';
 
-interface EvalBinding {
-    [name: string]: string;
-}
-
-interface EvalQuery {
-    query:    string;
-    status:   string;
-    bindings: EvalBinding[];
-    result?:  string;
-}
-
-interface EvalError {
-    line?:    number;
-    column?:  number;
-    message?: string;
-}
-
-interface EvalResponse {
-    queries?: EvalQuery[];
-    errors?:  EvalError[];
-    error?:   string;
-    message?: string;
-}
-
-function esc(s: unknown): string {
-    return String(s).replace(/[&<>]/g, (c: string): string => {
-        if (c === '&') {
-            return '&amp;';
-        }
-        if (c === '<') {
-            return '&lt;';
-        }
-        return '&gt;';
+// Monaco 0.34 subscribes to a provider's onDidChangeInlayHints only once that provider has returned
+// a non-empty result, but the first pull always races the server's initial evaluation (empty), so the
+// server's workspace/inlayHint/refresh request has no subscriber and the first results would only
+// appear on the next edit. Registry changes, however, always re-trigger the InlayHintsController:
+// answer the refresh request by briefly registering a no-op provider, which makes every editor
+// re-pull all providers, including the real LSP one.
+function wireInlayHintRefresh(client: MonacoLanguageClient): void {
+    const noopProvider: monaco.languages.InlayHintsProvider = {
+        provideInlayHints: (): monaco.languages.InlayHintList => ({ hints: [], dispose: (): void => {} }),
+    };
+    client.onRequest('workspace/inlayHint/refresh', (): void => {
+        monaco.languages.registerInlayHintsProvider(LANGUAGE_ID, noopProvider).dispose();
     });
-}
-
-function renderResults(el: HTMLElement, data: EvalResponse): void {
-    let html: string = '';
-    if (data.error) {
-        html += '<div class="q q-error">' + esc(data.error);
-        if (data.message) {
-            html += ': ' + esc(data.message);
-        }
-        html += '</div>';
-    }
-    const errors: EvalError[] = data.errors || [];
-    for (const e of errors) {
-        const loc: string = e.line != null ? e.line + ':' + e.column + '  ' : '';
-        html += '<div class="q q-error">' + esc(loc + (e.message || '')) + '</div>';
-    }
-    const queries: EvalQuery[] = data.queries || [];
-    for (const q of queries) {
-        const cls: string = 'q-' + esc(q.status);
-        html += '<div class="q ' + cls + '">' + esc(q.query);
-        html += '<span class="badge ' + cls + '">' + esc(q.status) + '</span></div>';
-        const bindings: EvalBinding[] = q.bindings || [];
-        if (bindings.length) {
-            html += '<div class="bindings">';
-            for (const b of bindings) {
-                const parts: string = Object.entries(b)
-                    .map(([k, v]: [string, string]): string => k + '=' + v)
-                    .join(', ');
-                html += '<span class="b">' + esc(parts || '()') + '</span>';
-            }
-            html += '</div>';
-        }
-    }
-    if (!html) {
-        html = '<div class="placeholder">No queries in the document (declarations evaluated).</div>';
-    }
-    el.innerHTML = html;
-    el.classList.add('visible');
-}
-
-async function runEval(content: string, statusEl: HTMLElement, resultsEl: HTMLElement): Promise<void> {
-    statusEl.textContent = 'running...';
-    let res:  Response;
-    let data: EvalResponse;
-    try {
-        res  = await fetch('/eval', {
-            method:  'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body:    content,
-        });
-        data = await res.json() as EvalResponse;
-    } catch (err: unknown) {
-        statusEl.textContent = 'request failed';
-        renderResults(resultsEl, { error: 'request failed', message: String(err) });
-        return;
-    }
-    statusEl.textContent = 'HTTP ' + res.status;
-    renderResults(resultsEl, data);
 }
 
 function connectLanguageClient(): Promise<MonacoLanguageClient | null> {
@@ -145,7 +68,9 @@ function connectLanguageClient(): Promise<MonacoLanguageClient | null> {
                     get: (): Promise<MessageTransports> => Promise.resolve({ reader, writer }),
                 },
             });
-            void client.start();
+            void client.start().then((): void => {
+                wireInlayHintRefresh(client);
+            });
             resolve(client);
         };
         ws.onerror = (): void => {
@@ -180,6 +105,22 @@ function ensureServices(): void {
     }
     MonacoServices.install(monaco);
     monaco.languages.register({ id: LANGUAGE_ID, extensions: ['.nl'] });
+    // Query-result inlay hints: the server picks the style bucket via the hint kind
+    // (QueryResultCache): no kind = matched expectation (green checkmark), Type = plain result
+    // value (purple chip), Parameter = failed expectation/error (red on pink chip).
+    monaco.editor.defineTheme('nelumbo-dark', {
+        base:    'vs-dark',
+        inherit: true,
+        rules:   [],
+        colors:  {
+            'editorInlayHint.foreground':          '#46c98b',
+            'editorInlayHint.background':          '#00000000',
+            'editorInlayHint.typeForeground':      '#edd4e8',
+            'editorInlayHint.typeBackground':      '#c184d840',
+            'editorInlayHint.parameterForeground': '#f1707b',
+            'editorInlayHint.parameterBackground': '#f1707b2b',
+        },
+    });
     // the webfont may finish loading after the first editor measured its glyphs
     void document.fonts.ready.then((): void => {
         monaco.editor.remeasureFonts();
@@ -190,25 +131,66 @@ function ensureServices(): void {
 function showBanner(): void {
     const banner: HTMLDivElement = document.createElement('div');
     banner.className   = 'nelumbo-lsp-banner visible';
-    banner.textContent = 'Language features are unavailable (LSP connection failed). Editing and Run still work.';
+    banner.textContent = 'Language features and evaluation are unavailable (LSP connection failed).';
     document.body.prepend(banner);
 }
 
-function addSolutionToggle(field: HTMLElement, toolbar: HTMLElement): void {
+function addSolutionToggle(field: HTMLElement, index: number): void {
     const next: Element | null = field.nextElementSibling;
     if (next === null || !next.classList.contains('nelumbo-solution')) {
         return;
     }
-    const solution: HTMLElement = next as HTMLElement;
+    const solution: HTMLElement       = next as HTMLElement;
+    const toolbar:  HTMLDivElement    = document.createElement('div');
+    toolbar.className                 = 'nelumbo-field-toolbar';
     const button:   HTMLButtonElement = document.createElement('button');
-    button.type        = 'button';
-    button.className   = 'secondary';
-    button.textContent = 'Show solution';
+    button.type                       = 'button';
+    button.textContent                = 'Show solution';
     button.addEventListener('click', (): void => {
         const visible: boolean = solution.classList.toggle('visible');
         button.textContent = visible ? 'Hide solution' : 'Show solution';
     });
     toolbar.appendChild(button);
+    field.appendChild(toolbar);
+    // pull the solution inside the field so it shares the editor's border, right below the toggle
+    field.appendChild(solution);
+    buildSolutionViewer(solution, index);
+}
+
+// Nelumbo has no client-side tokenizer (coloring comes from LSP semantic tokens), so a plain
+// colorized block is not possible: the solution becomes a read-only Monaco editor on the same
+// LSP client, which also gives it inlay hints (a solved exercise shows its own checkmark).
+function buildSolutionViewer(solution: HTMLElement, index: number): void {
+    let text: string = solution.textContent || '';
+    if (text.startsWith('\n')) {
+        text = text.slice(1);
+    }
+    solution.textContent = '';
+
+    const uri:   monaco.Uri               = monaco.Uri.parse('inmemory://solution-' + index + '.nl');
+    const model: monaco.editor.ITextModel = monaco.editor.createModel(text, LANGUAGE_ID, uri);
+
+    const viewer: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(solution, {
+        model:                model,
+        theme:                'nelumbo-dark',
+        readOnly:             true,
+        domReadOnly:          true,
+        minimap:              { enabled: false },
+        automaticLayout:      true,
+        fontSize:             13,
+        fontFamily:           '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace',
+        'semanticHighlighting.enabled': true,
+        scrollBeyondLastLine: false,
+        padding:              { top: 12, bottom: 8 },
+        // hovers escape the field's overflow:hidden border and overlapping sections
+        fixedOverflowWidgets: true,
+        renderLineHighlight:  'none',
+        occurrencesHighlight: false,
+        scrollbar:            { vertical: 'hidden', handleMouseWheel: false },
+    });
+    // fixed content, so size the (initially display:none) host once from the line count
+    const lineHeight: number = viewer.getOption(monaco.editor.EditorOption.lineHeight);
+    solution.style.height = (model.getLineCount() * lineHeight + 12 + 8) + 'px';
 }
 
 function buildField(div: HTMLElement, index: number): void {
@@ -219,61 +201,38 @@ function buildField(div: HTMLElement, index: number): void {
     div.textContent = '';
     div.classList.add('nelumbo-field-wrap');
 
-    const toolbar: HTMLDivElement = document.createElement('div');
-    toolbar.className = 'nelumbo-field-toolbar';
-
-    const runButton: HTMLButtonElement = document.createElement('button');
-    runButton.type        = 'button';
-    runButton.textContent = 'Run';
-
-    const status: HTMLSpanElement = document.createElement('span');
-    status.className   = 'status';
-    status.textContent = 'ready';
-
-    toolbar.appendChild(runButton);
-    toolbar.appendChild(status);
-
     const host: HTMLDivElement = document.createElement('div');
     host.className = 'nelumbo-field-editor';
     if (div.dataset.height) {
         host.style.height = div.dataset.height;
     }
-
-    const results: HTMLDivElement = document.createElement('div');
-    results.className = 'nelumbo-field-results';
-
-    div.appendChild(toolbar);
     div.appendChild(host);
-    div.appendChild(results);
 
-    const uri:   monaco.Uri                = monaco.Uri.parse('inmemory://field-' + index + '.nl');
-    const model: monaco.editor.ITextModel  = monaco.editor.createModel(initial, LANGUAGE_ID, uri);
+    addSolutionToggle(div, index);
+
+    const uri:   monaco.Uri               = monaco.Uri.parse('inmemory://field-' + index + '.nl');
+    const model: monaco.editor.ITextModel = monaco.editor.createModel(initial, LANGUAGE_ID, uri);
 
     const editor: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(host, {
         model:                model,
-        theme:                'vs-dark',
+        theme:                'nelumbo-dark',
         minimap:              { enabled: false },
         automaticLayout:      true,
         fontSize:             13,
         fontFamily:           '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace',
         'semanticHighlighting.enabled': true,
         scrollBeyondLastLine: false,
+        padding:              { top: 12, bottom: 8 },
+        // hovers escape the field's overflow:hidden border and overlapping sections
+        fixedOverflowWidgets: true,
         // Cmd/Ctrl+Click goes to definition (Alt+Click is multi-cursor), the VS Code default made explicit
         multiCursorModifier:  'alt',
     });
     __editors.push({ editor: editor, model: model });
-
-    const run = (): void => {
-        void runEval(model.getValue(), status, results);
-    };
-    runButton.addEventListener('click', run);
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, run);
-
-    addSolutionToggle(div, toolbar);
 }
 
 // Establish the single page-shared /lsp language client. Idempotent: repeated calls return the
-// same promise. On failure resolves null and shows the banner (editing + Run still work).
+// same promise. On failure resolves null and shows the banner (editing still works).
 export function connect(): Promise<MonacoLanguageClient | null> {
     ensureServices();
     if (clientPromise === null) {

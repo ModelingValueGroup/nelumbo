@@ -30,14 +30,22 @@ test('each section switches and mounts a Monaco editor', async ({ page }: { page
     }
 });
 
-test('Run on the logic demo evaluates against /eval and renders a result', async ({ page }: { page: Page }): Promise<void> => {
+test('query results appear inline without pressing anything', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/tour.html');
-    const demo:    Locator = page.locator('#logic .nelumbo-field-wrap').first();
-    const results: Locator = demo.locator('.nelumbo-field-results');
-    await demo.getByRole('button', { name: 'Run' }).click();
-    await expect(results).toBeVisible();
-    // assert the actual status badge, not just any "true" text (the query text also contains "true")
-    await expect(results.locator('.badge.q-true').first()).toBeVisible();
+    const demo: Locator = page.locator('#logic .nelumbo-field-wrap').first();
+    // the LSP evaluates on a debounce; "true & true ?" renders its result [()][] as an inlay hint
+    await expect(demo.getByText('[()][]').first()).toBeVisible({ timeout: 20_000 });
+});
+
+test('hovering an inline result shows the full-result tooltip', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/tour.html');
+    const demo: Locator = page.locator('#logic .nelumbo-field-wrap').first();
+    const hint: Locator = demo.getByText('[()][]').first();
+    await expect(hint).toBeVisible({ timeout: 20_000 });
+    await hint.hover();
+    const hover: Locator = page.locator('.monaco-hover').first();
+    await expect(hover).toBeVisible({ timeout: 10_000 });
+    await expect(hover).toContainText('[()][]');
 });
 
 test('Show solution toggles the solution block', async ({ page }: { page: Page }): Promise<void> => {

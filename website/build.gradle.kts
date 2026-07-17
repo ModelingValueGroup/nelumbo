@@ -53,6 +53,15 @@ tasks.test {
     jvmArgs("-ea") // Enable assertions
 }
 
+// bake the build version into the pages (the @VERSION@ token in the footers)
+tasks.processResources {
+    val siteVersion = project.version.toString()
+    inputs.property("siteVersion", siteVersion)
+    filesMatching("public/*.html") {
+        filter { line: String -> line.replace("@VERSION@", siteVersion) }
+    }
+}
+
 val frontendDir = layout.projectDirectory.dir("src/main/frontend")
 
 // Resolve the npm executable: the PATH first (CI/setup-node and normal shells), then nvm's node

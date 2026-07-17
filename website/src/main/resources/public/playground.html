@@ -25,6 +25,10 @@
     font: 14px/1.5 "Instrument Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     display: flex; flex-direction: column;
   }
+  footer {
+    padding: 6px 16px; border-top: 1px solid var(--border);
+    color: #5c6270; font-size: 12px; text-align: right;
+  }
   header {
     display: flex; align-items: baseline; gap: 12px;
     padding: 10px 16px; border-bottom: 1px solid var(--border);
@@ -42,7 +46,7 @@
 <body>
 <header>
   <h1>Nelumbo Playground</h1>
-  <span class="sub">edit and run a Nelumbo document against the loaded knowledge base</span>
+  <span class="sub">edit a Nelumbo document and watch it evaluate as you type</span>
   <nav>
     <a href="/">home</a>
     <a href="/tour.html">tour</a>
@@ -52,7 +56,7 @@
 </header>
 
 <main>
-  <p class="intro">Edit the document below and press Run. The document is self-contained: it imports the stdlib it needs, so it evaluates even against an empty knowledge base.</p>
+  <p class="intro">Edit the document below; results appear inline as you type. The document is self-contained: it imports the stdlib it needs, so it evaluates even against an empty knowledge base.</p>
   <div class="nelumbo-field" data-height="55vh">import nelumbo.integers
 Integer ::= fib(&lt;Integer&gt;)
 Integer n, f
@@ -61,6 +65,8 @@ Integer r
 fib(7)=r ?
 </div>
 </main>
+
+<footer>Nelumbo @VERSION@</footer>
 
 <link rel="stylesheet" href="/assets/nelumbo-fields.css">
 <script src="/assets/nelumbo-fields.js"></script>

@@ -21,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import java.util.List;
+
+import org.eclipse.lsp4j.InlayHint;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 
@@ -66,6 +69,24 @@ public class EmbeddedServerTest {
             server.getWorkspace().getDocumentManager().addDocument("inmemory://t.nl", "import nelumbo.logic\ntrue ?\n", 1);
             org.junit.jupiter.api.Assertions.assertTrue(client.awaitDiagnostics(10), "expected publishDiagnostics on the per-instance client");
             org.junit.jupiter.api.Assertions.assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
+        } finally {
+            server.getWorkspace().dispose();
+        }
+    }
+
+    @Test
+    public void inlayHintsCarryFullResultTooltips() throws InterruptedException {
+        NelumboLanguageServer server = new NelumboLanguageServer(KnowledgeBase.BASE, 0, () -> {
+        });
+        RecordingClient       client = new RecordingClient();
+        server.connect(client);
+        try {
+            server.getWorkspace().getDocumentManager().addDocument("inmemory://t.nl", "import nelumbo.logic\ntrue ?\n", 1);
+            org.junit.jupiter.api.Assertions.assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
+            List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://t.nl");
+            assertEquals(1, hints.size(), "one hint for the single query");
+            assertNotNull(hints.get(0).getTooltip(), "the hint carries a tooltip");
+            assertEquals("[()][]", hints.get(0).getTooltip().getLeft(), "the tooltip is the full inferred result");
         } finally {
             server.getWorkspace().dispose();
         }
