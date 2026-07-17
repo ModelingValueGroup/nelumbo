@@ -36,19 +36,18 @@ repositories {
 
 dependencies {
     implementation(project(":"))
-    implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
     implementation("org.ow2.asm:asm-tree:9.10.1")
-    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
+    implementation(libs.lsp4j)
     // Include websocket launchers so Main.start(ws) can find a WebSocket launcher at runtime
-    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
+    implementation(libs.lsp4j.websocket.jakarta)
     // Jakarta WebSocket server (Tyrus)
     implementation("org.glassfish.tyrus:tyrus-server:2.2.2")
     implementation("org.glassfish.tyrus:tyrus-container-grizzly-server:2.2.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.22.1")
+    implementation(libs.jackson.databind)
+    implementation(libs.jackson.dataformat.xml)
     implementation("org.tomlj:tomlj:1.1.1")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

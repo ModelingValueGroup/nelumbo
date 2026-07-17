@@ -37,10 +37,10 @@ repositories {
 dependencies {
     implementation(project(":"))
     implementation("io.modelcontextprotocol.sdk:mcp:2.0.0")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    runtimeOnly("org.slf4j:slf4j-simple:2.0.18") // logs to stderr; stdout is the protocol channel
+    implementation(libs.jackson.databind)
+    runtimeOnly(libs.slf4j.simple) // logs to stderr; stdout is the protocol channel
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

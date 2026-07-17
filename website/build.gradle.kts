@@ -38,13 +38,12 @@ dependencies {
     implementation(project(":"))
     implementation(project(":cli"))
     implementation(project(":lsp:server"))
-    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
-    implementation("org.modelingvalue:immutable-collections:5.0.1-BRANCHED")
+    implementation(libs.lsp4j)
     implementation("io.javalin:javalin:7.2.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    runtimeOnly("org.slf4j:slf4j-simple:2.0.18")
+    implementation(libs.jackson.databind)
+    runtimeOnly(libs.slf4j.simple)
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
