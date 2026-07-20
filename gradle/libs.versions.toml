@@ -1,5 +1,5 @@
 [versions]
-immutable-collections   = "6.0.2"
+immutable-collections   = "6.0.3"
 mvg-json                = "6.0.1"
 jackson                 = "2.22.1"
 lsp4j                   = "1.0.0"
