@@ -1,6 +1,6 @@
 [versions]
 immutable-collections   = "6.0.2"
-mvg-json                = "6.0.1"
+mvg-json                = "6.0.2"
 jackson                 = "2.22.1"
 lsp4j                   = "1.0.0"
 junit-jupiter           = "6.1.2"
