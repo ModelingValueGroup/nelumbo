@@ -17,6 +17,7 @@
   aside nav a { display: block; padding: 6px 16px; color: #9aa0ac; text-decoration: none; font-size: 13px; cursor: pointer; }
   aside nav a:hover { color: #e6e8ee; }
   aside nav a.active { color: #c184d8; border-left: 2px solid #c184d8; padding-left: 14px; }
+  aside nav .version { display: block; padding: 6px 16px; color: #5c6270; font-size: 12px; }
   aside .sep { border-top: 1px solid #343843; margin: 12px 0; }
   main { flex: 1; overflow: auto; }
   .tour-section { display: none; max-width: 860px; margin: 0 auto; padding: 24px 24px 80px; }
@@ -53,6 +54,8 @@
     <div class="sep"></div>
     <a href="/">&lt;- Home</a>
     <a href="/playground.html">Playground -&gt;</a>
+    <div class="sep"></div>
+    <span class="version">@VERSION@</span>
   </nav>
 </aside>
 <main>
@@ -61,7 +64,7 @@
     <p>Nelumbo is three-valued: a query is <code>true</code>, <code>false</code>, or
        <code>unknown</code>. The result notation <code>[facts][falsehoods]</code> shows the two
        sides; <code>[()][]</code> means "true", <code>[][()]</code> means "false", and
-       <code>[..][..]</code> means "unknown". Edit and press Run (or Cmd/Ctrl+Enter).</p>
+       <code>[..][..]</code> means "unknown". Edit the document; the results update inline as you type.</p>
     <div class="nelumbo-field" data-height="200px">import nelumbo.logic
 
 true &amp; true ?

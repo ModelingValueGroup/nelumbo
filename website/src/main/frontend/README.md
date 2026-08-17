@@ -1,8 +1,8 @@
 # nelumbo-fields
 
 Browser bundle for the Nelumbo demo site. Turns every `<div class="nelumbo-field">` on a page
-into a Monaco editor that is an LSP client over a page-shared `/lsp` WebSocket, plus a Run button
-that POSTs the editor content to `/eval` and renders the query results.
+into a Monaco editor that is an LSP client over a page-shared `/lsp` WebSocket; query results
+appear inline as end-of-line inlay hints (full result in the hover tooltip).
 
 ## Build
 

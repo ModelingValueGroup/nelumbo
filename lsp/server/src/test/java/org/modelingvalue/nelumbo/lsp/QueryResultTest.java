@@ -14,62 +14,43 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+package org.modelingvalue.nelumbo.lsp;
 
-plugins {
-    id("com.gradleup.shadow") version "9.6.0"
-    java
-}
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+import org.junit.jupiter.api.Test;
+
+public class QueryResultTest {
+
+    @Test
+    public void shortLabelIsNotCapped() {
+        QueryResult r = QueryResult.result("[()][]");
+        assertEquals("[()][]", r.inlineLabel());
+        assertEquals("[()][]", r.tooltip());
     }
-}
 
-val archiveName = "nelumbo-cli"
-
-repositories {
-    mavenCentral()
-    mavenLocal()
-}
-
-dependencies {
-    implementation(project(":"))
-    implementation(libs.mvg.json)
-
-    testImplementation(libs.junit.jupiter)
-    // the test client parses/builds JSON with Jackson; the server itself uses mvg-json
-    testImplementation(libs.jackson.databind)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-tasks.test {
-    useJUnitPlatform()
-    jvmArgs("-ea") // Enable assertions
-}
-
-tasks.register<ShadowJar>("cliJar") {
-    archiveBaseName.set(archiveName)
-    // Produce a single shaded jar without the default "-all" classifier
-    archiveClassifier.set("")
-    manifest {
-        attributes["Main-Class"] = "org.modelingvalue.nelumbo.cli.NelumboCli"
+    @Test
+    public void longLabelIsCappedButTooltipIsFull() {
+        String      full = "[(f=0),(f=1),(f=2),(f=3),(f=4),(f=5),(f=6),(f=7),(f=8),(f=9)][..]";
+        QueryResult r    = QueryResult.result(full);
+        assertEquals(60, r.inlineLabel().length(), "inline label is capped at 60 chars");
+        assertTrue(r.inlineLabel().endsWith("..."), "capped label ends in an ellipsis");
+        assertTrue(full.startsWith(r.inlineLabel().substring(0, 57)), "capped label is a prefix of the full result");
+        assertEquals(full, r.tooltip(), "tooltip always carries the full result");
     }
-    from(sourceSets.main.get().output)
-    configurations = listOf(project.configurations.runtimeClasspath.get())
 
-    // Exclude signature files from signed dependencies to avoid SecurityException
-    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-    mergeServiceFiles()
-}
+    @Test
+    public void matchShowsCheckmarkWithResultTooltip() {
+        QueryResult r = QueryResult.match("[()][]");
+        assertEquals("✅", r.inlineLabel());
+        assertEquals("[()][]", r.tooltip(), "the tooltip reveals the result behind the checkmark");
+    }
 
-tasks.shadowJar {
-    // Disable default shadowJar task; use cliJar instead
-    enabled = false
-}
-
-tasks.jar {
-    // plain jar (classifier avoids clashing with the shaded cliJar); needed so other projects can depend on this one
-    archiveClassifier.set("plain")
+    @Test
+    public void errorTooltipCarriesFullMessage() {
+        QueryResult r = QueryResult.error("evaluation exceeded the deadline");
+        assertEquals("⚠ evaluation exceeded the deadline", r.inlineLabel());
+        assertEquals("⚠ evaluation exceeded the deadline", r.tooltip());
+    }
 }

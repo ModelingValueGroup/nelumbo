@@ -32,10 +32,6 @@ dependencies {
     // Core nelumbo library: NelumboLexer (the IntelliJ lexer that backs the PSI tree) runs
     // org.modelingvalue.nelumbo.syntax.Tokenizer so PSI tokens match LSP-side tokenization.
     implementation(project(":"))
-    // Transitive of the line above (root declares it as implementation, so it isn't on our
-    // compile classpath by default). The includeBuild in settings.gradle.kts substitutes any
-    // requested version with the local checkout, so the version here doesn't matter much.
-    implementation("org.modelingvalue:immutable-collections:6.0.0-BRANCHED")
 
     intellijPlatform {
         intellijIdea("2025.3.2")

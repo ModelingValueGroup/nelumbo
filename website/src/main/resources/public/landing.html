@@ -195,23 +195,23 @@
     box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
     overflow: hidden;
   }
+  /* macOS window chrome: 12px traffic lights, 8px apart, 13px from the left, centered title */
   .codecard .bar {
+    position: relative;
     display: flex; align-items: center; gap: 8px;
-    padding: 10px 14px;
+    height: 38px; padding: 0 13px;
     border-bottom: 1px solid rgba(193, 132, 216, .14);
-    font: 500 12px/1 var(--sans); letter-spacing: .06em; color: var(--ink-dim);
   }
-  .codecard .bar .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(193, 132, 216, .35); }
-  .codecard pre {
-    margin: 0; padding: 18px 20px 20px;
-    font: 13.5px/1.75 var(--mono);
-    color: #d2cbdc;
-    overflow-x: auto;
+  .codecard .bar .dot { width: 12px; height: 12px; border-radius: 50%; box-sizing: border-box; border: 1px solid rgba(0, 0, 0, .25); }
+  .codecard .bar .dot.red    { background: #ff5f57; }
+  .codecard .bar .dot.yellow { background: #febc2e; }
+  .codecard .bar .dot.green  { background: #28c840; }
+  .codecard .bar .title {
+    position: absolute; left: 0; right: 0; text-align: center;
+    font: 500 13px/1 var(--sans); color: var(--ink-dim); pointer-events: none;
   }
-  .codecard .kw  { color: var(--petal); }
-  .codecard .ty  { color: var(--lotus-soft); }
-  .codecard .cm  { color: #6f6482; }
-  .codecard .qy  { color: #8fd0a0; }
+  /* the live editor sits flush inside the window frame */
+  .codecard .nelumbo-field-wrap { border: 0; border-radius: 0; margin: 0; background: transparent; }
 
   /* closing cta */
   .close {
@@ -334,21 +334,21 @@
          Try it yourself in the <a href="/tour.html">feature tour</a>; no install needed.</p>
     </div>
     <div class="codecard">
-      <div class="bar"><span class="dot"></span><span class="dot"></span> grandparent.nl</div>
-      <pre><span class="kw">import</span> nelumbo.logic
+      <div class="bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="title">grandparent.nl</span></div>
+      <div class="nelumbo-field" data-height="340px">import nelumbo.logic
 
-<span class="ty">Person</span>   :: <span class="ty">Object</span>
-<span class="ty">FactType</span> ::= pc(&lt;<span class="ty">Person</span>&gt;,&lt;<span class="ty">Person</span>&gt;)
+Person   :: Object
+FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
 
-<span class="ty">Boolean</span>  ::= &lt;<span class="ty">Person</span>&gt; is a grandparent of &lt;<span class="ty">Person</span>&gt;  #30   <span class="cm">// new syntax...</span>
+Boolean  ::= &lt;Person&gt; is a grandparent of &lt;Person&gt;  #30   // new syntax...
 
-<span class="ty">Person</span> g, p, c
-g is a grandparent of c &lt;=&gt; E[p](pc(g,p) &amp; pc(p,c))       <span class="cm">// ...meaning, in logic...</span>
+Person g, p, c
+g is a grandparent of c &lt;=&gt; E[p](pc(g,p) &amp; pc(p,c))       // ...meaning, in logic...
 
-<span class="ty">Person</span> ::= Hendrik, Juliana, Beatrix
-<span class="kw">fact</span> pc(Hendrik, Juliana), pc(Juliana, Beatrix)
+Person ::= Hendrik, Juliana, Beatrix
+fact pc(Hendrik, Juliana), pc(Juliana, Beatrix)
 
-<span class="qy">g is a grandparent of Beatrix ?  [(g=Hendrik)][..]</span>        <span class="cm">// ...used immediately</span></pre>
+g is a grandparent of Beatrix ?  [(g=Hendrik)][..]        // ...used immediately</div>
     </div>
   </div>
 </section>
@@ -362,10 +362,17 @@ g is a grandparent of c &lt;=&gt; E[p](pc(g,p) &amp; pc(p,c))       <span class=
 </div>
 
 <footer>
-  <span>Nelumbo - a Modeling Value Group project</span>
+  <span>Nelumbo @VERSION@ - a Modeling Value Group project</span>
   <span><a href="https://choosealicense.com/licenses/lgpl-3.0">LGPL 3.0</a> -
         <a href="https://github.com/ModelingValueGroup/nelumbo">github.com/ModelingValueGroup/nelumbo</a></span>
 </footer>
+
+<link rel="stylesheet" href="/assets/nelumbo-fields.css">
+<script src="/assets/nelumbo-fields.js"></script>
+<script>
+  NelumboFields.connect();
+  NelumboFields.mountFields(document);
+</script>
 
 </body>
 </html>

@@ -140,8 +140,16 @@ public class QueryResultCache {
                 if (last != null) {
                     Position  pos  = new Position(last.lastLine(), last.positionEnd());
                     InlayHint hint = new InlayHint(pos, Either.forLeft(result.inlineLabel()));
-                    hint.setKind(InlayHintKind.Type);
+                    // the kind selects the client-side style bucket (website theme: no kind = green
+                    // checkmark, Type = plain result chip, Parameter = failed expectation chip)
+                    switch (result.kind()) {
+                        case RESULT -> hint.setKind(InlayHintKind.Type);
+                        case MISMATCH, ERROR -> hint.setKind(InlayHintKind.Parameter);
+                        case MATCH -> {
+                        }
+                    }
                     hint.setPaddingLeft(true);
+                    hint.setTooltip(result.tooltip());
                     list.add(hint);
                 }
                 if (result.kind() == QueryResult.Kind.MISMATCH && result.expectedRange() != null) {

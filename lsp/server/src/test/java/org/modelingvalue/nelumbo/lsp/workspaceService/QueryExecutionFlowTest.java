@@ -143,11 +143,11 @@ public class QueryExecutionFlowTest {
         }
 
         assertNotNull(match, "the query with the correct expected clause must match");
-        assertEquals("✓", match.inlineLabel(), "a correct expectation is rendered as a checkmark");
+        assertEquals("✅", match.inlineLabel(), "a correct expectation is rendered as a checkmark");
 
         assertNotNull(mismatch, "the query with the wrong expected clause must be a mismatch");
         assertEquals("[][()]", mismatch.inferred(), "mismatch must carry the calculated result");
-        assertEquals("[][()]", mismatch.inlineLabel(), "inline label shows the calculated result at the end of the line");
+        assertEquals("❌ [][()]", mismatch.inlineLabel(), "inline label shows a cross plus the calculated result at the end of the line");
         assertNotNull(mismatch.expectedRange(), "mismatch must carry the source range of the expected clause to underline");
     }
 }

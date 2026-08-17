@@ -54,12 +54,27 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
         return new QueryResult(Kind.ERROR, message, message, null);
     }
 
-    /** Short label used for the end-of-line inlay hint. */
+    private static final int MAX_LABEL_LENGTH = 60;
+
+    /** Short label used for the end-of-line inlay hint; capped so long results don't blow out the line. */
     public String inlineLabel() {
         return switch (kind) {
-            case RESULT, MISMATCH -> inferred;
-            case MATCH -> "✓";
+            case RESULT -> cap(inferred);
+            case MATCH -> "✅";
+            case MISMATCH -> cap("❌ " + inferred);
+            case ERROR -> cap("⚠ " + inferred);
+        };
+    }
+
+    /** Full result for the inlay-hint tooltip; never capped. */
+    public String tooltip() {
+        return switch (kind) {
+            case RESULT, MISMATCH, MATCH -> inferred;
             case ERROR -> "⚠ " + inferred;
         };
+    }
+
+    private static String cap(String s) {
+        return s.length() <= MAX_LABEL_LENGTH ? s : s.substring(0, MAX_LABEL_LENGTH - 3) + "...";
     }
 }

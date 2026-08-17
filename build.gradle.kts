@@ -22,7 +22,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("org.modelingvalue.gradle.mvgplugin") version "2.3.25"
-    id("com.gradleup.shadow") version "9.5.1"
+    id("com.gradleup.shadow") version "9.6.0"
     idea
     eclipse
 }
@@ -37,8 +37,10 @@ mvgcorrector {
 }
 
 dependencies {
-    implementation("org.modelingvalue:immutable-collections:6.0.0-BRANCHED")
-    implementation("org.modelingvalue:mvg-json:6.0.0")
+    // api: immutable-collections types are part of the core public API, so consumers of the
+    // root project get the (single) version from the catalog on their compile classpath
+    api(libs.immutable.collections)
+    implementation(libs.mvg.json)
     implementation("com.formdev:flatlaf:3.7.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
