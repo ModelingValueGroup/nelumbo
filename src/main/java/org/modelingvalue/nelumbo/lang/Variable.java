@@ -20,7 +20,6 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -47,10 +46,6 @@ public final class Variable extends Node {
         super(NodeInfo.of(Type.VARIABLE, elements), hidden, type, name);
     }
 
-    public Variable(List<AstElement> elements, boolean hidden, Type type, String name, Object id) {
-        super(NodeInfo.of(Type.VARIABLE, elements), hidden, type, Pair.of(name, id));
-    }
-
     @Override
     protected Variable set(NodeInfo nodeInfo, Object[] args) {
         return new Variable(nodeInfo, args);
@@ -67,21 +62,19 @@ public final class Variable extends Node {
     }
 
     public Variable makeUnique(int id) {
-        return set(2, Pair.of(baseName(), id));
+        return set(2, baseName() + "$" + id);
     }
 
     public Variable literal() {
         Type type = type();
-        Object n = get(2);
-        return type.isLiteral() ? this
-                : n instanceof Pair p ? new Variable(astElements(), hidden(), type.toLiteral(), (String) p.a(), p.b())
-                        : new Variable(astElements(), hidden(), type.toLiteral(), (String) n);
+        return type.isLiteral() ? this : setType(type.toLiteral());
     }
 
     public Variable rename(Function<String, String> rename) {
-        Object n = get(2);
-        return n instanceof Pair p ? new Variable(astElements(), hidden(), type(), rename.apply((String) p.a()), p.b())
-                : new Variable(astElements(), hidden(), type(), rename.apply((String) n));
+        String n = name();
+        int i = n.indexOf('$');
+        n = i >= 0 ? rename.apply(n.substring(0, i)) + "$" + n.substring(i + 1) : rename.apply(n);
+        return set(2, n);
     }
 
     public boolean hidden() {
@@ -94,13 +87,13 @@ public final class Variable extends Node {
     }
 
     private String baseName() {
-        Object n = get(2);
-        return n instanceof Pair p ? (String) p.a() : (String) n;
+        String n = name();
+        int i = n.indexOf('$');
+        return i >= 0 ? n.substring(0, i) : n;
     }
 
     public String name() {
-        Object n = get(2);
-        return n instanceof Pair p ? ((String) p.a()) + p.b() : (String) n;
+        return (String) get(2);
     }
 
     @Override
