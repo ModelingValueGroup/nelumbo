@@ -24,13 +24,13 @@ import org.modelingvalue.nelumbo.lang.Variable;
 @SuppressWarnings("rawtypes")
 public abstract class AbstractState<S extends AbstractState> implements IState<S> {
 
-    private final TypeMatcher typeMatcher;
+    private final TypeMatcherState typeMatcher;
 
-    protected AbstractState(TypeMatcher typeMatcher) {
+    protected AbstractState(TypeMatcherState typeMatcher) {
         this.typeMatcher = typeMatcher;
     }
 
-    protected final TypeMatcher typeMatcher() {
+    protected final TypeMatcherState typeMatcher() {
         return typeMatcher;
     }
 

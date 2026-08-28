@@ -27,7 +27,7 @@ import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AbstractState;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.TypeMatcher;
+import org.modelingvalue.nelumbo.TypeMatcherState;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -35,8 +35,8 @@ import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public class ParseState extends AbstractState<ParseState> {
-    public static final ParseState EMPTY = new ParseState(TypeMatcher.EMPTY, Map.of(), Map.of(), Map.of(), null, null,
-            null, null, Set.of(), Set.of(), false, Visibility.optional, false);
+    public static final ParseState EMPTY = new ParseState(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), null,
+            null, null, null, Set.of(), Set.of(), false, Visibility.optional, false);
 
     private final Map<String, ParseState>    tokenTexts;
     private final Map<TokenType, ParseState> tokenTypes;
@@ -54,23 +54,23 @@ public class ParseState extends AbstractState<ParseState> {
     private List<String> connected = null;
 
     public ParseState(Functor functor) {
-        this(TypeMatcher.EMPTY, Map.of(), Map.of(), Map.of(), functor, null, null, null, Set.of(), Set.of(), false,
+        this(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), functor, null, null, null, Set.of(), Set.of(), false,
                 Visibility.optional, false);
     }
 
     public ParseState(Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions) {
-        this(TypeMatcher.EMPTY, Map.of(), Map.of(), Map.of(), null, null, null, null, startRepetitions, endRepetitions,
-                false, Visibility.optional, false);
+        this(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), null, null, null, null, startRepetitions,
+                endRepetitions, false, Visibility.optional, false);
     }
 
     public ParseState(String text, boolean isKeyword, ParseState next) {
-        this(TypeMatcher.EMPTY, Map.of(Entry.of(text, isKeyword ? next.setIsKeyword() : next)), Map.of(), Map.of(),
+        this(TypeMatcherState.EMPTY, Map.of(Entry.of(text, isKeyword ? next.setIsKeyword() : next)), Map.of(), Map.of(),
                 null, null, null, null, Set.of(), Set.of(), false, Visibility.optional, false);
     }
 
     public ParseState(TokenType tokenType, ParseState next) {
-        this(TypeMatcher.EMPTY, Map.of(), Map.of(Entry.of(tokenType, next)), Map.of(), null, null, null, null, Set.of(),
-                Set.of(), false, Visibility.optional, false);
+        this(TypeMatcherState.EMPTY, Map.of(), Map.of(Entry.of(tokenType, next)), Map.of(), null, null, null, null,
+                Set.of(), Set.of(), false, Visibility.optional, false);
     }
 
     public ParseState(Type nodeType, Integer innerPrecedence, ParseState next) {
@@ -78,7 +78,7 @@ public class ParseState extends AbstractState<ParseState> {
                 nodeType.group(), Set.of(), Set.of(), false, Visibility.optional, false);
     }
 
-    private ParseState(TypeMatcher typeMatcher, Map<String, ParseState> tokenTexts,
+    private ParseState(TypeMatcherState typeMatcher, Map<String, ParseState> tokenTexts,
             Map<TokenType, ParseState> tokenTypes, Map<Type, ParseState> nodeTypes, //
             Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, //
             Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, boolean isKeyword,
@@ -677,7 +677,7 @@ public class ParseState extends AbstractState<ParseState> {
         if (merged == null) {
             return this;
         }
-        TypeMatcher typeMatcher = typeMatcher().merge(merged.typeMatcher());
+        TypeMatcherState typeMatcher = typeMatcher().merge(merged.typeMatcher());
         Map<String, ParseState> tokenTexts = tokenTexts().addAll(merged.tokenTexts(), ParseState::merge);
         Map<TokenType, ParseState> tokenTypes = tokenTypes().addAll(merged.tokenTypes(), ParseState::merge);
         Map<Type, ParseState> nodeTypes = nodeTypes().addAll(merged.nodeTypes(), ParseState::merge);

@@ -29,7 +29,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.TypeMatcher;
+import org.modelingvalue.nelumbo.TypeMatcherState;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
@@ -323,7 +323,7 @@ public final class Type extends Node implements FunctorOrType {
         private Set<Type>               supers;
         private List<Entry<Type, Type>> allSupersList;
         private Map<Type, Type>         allSupersMap;
-        private TypeMatcher             typeMatcher;
+        private TypeMatcherState        typeMatcher;
 
         public Set<Type> supers() {
             if (supers == null) {
@@ -346,7 +346,7 @@ public final class Type extends Node implements FunctorOrType {
             return allSupersMap;
         }
 
-        public TypeMatcher typeMatcher() {
+        public TypeMatcherState typeMatcher() {
             if (typeMatcher == null) {
                 typeMatcher = initTypeMatcher();
             }
@@ -413,11 +413,11 @@ public final class Type extends Node implements FunctorOrType {
         return all;
     }
 
-    private TypeMatcher initTypeMatcher() {
-        return typeMatcher(this, new TypeMatcher(Map.of(), this));
+    private TypeMatcherState initTypeMatcher() {
+        return typeMatcher(this, new TypeMatcherState(Map.of(), this));
     }
 
-    private TypeMatcher typeMatcher(Type type, TypeMatcher next) {
+    private TypeMatcherState typeMatcher(Type type, TypeMatcherState next) {
         if (type.hasArguments()) {
             List<Type> args = type.arguments();
             for (Type arg : args.reverse()) {
@@ -425,7 +425,7 @@ public final class Type extends Node implements FunctorOrType {
             }
             type = type.setArguments(args.replaceAll(a -> OBJECT.isAssignableFrom(a) ? OBJECT : a));
         }
-        return new TypeMatcher(Map.of(Entry.of(type, next)), null);
+        return new TypeMatcherState(Map.of(Entry.of(type, next)), null);
     }
 
     public TypeInfo typeInfo() {
@@ -444,7 +444,7 @@ public final class Type extends Node implements FunctorOrType {
         return typeInfo().allSupersMap();
     }
 
-    public TypeMatcher typeMatcher() {
+    public TypeMatcherState typeMatcher() {
         return typeInfo().typeMatcher();
     }
 

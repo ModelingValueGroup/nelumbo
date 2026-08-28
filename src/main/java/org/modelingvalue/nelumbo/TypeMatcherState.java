@@ -24,16 +24,16 @@ import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
-public class TypeMatcher implements IState<TypeMatcher> {
+public class TypeMatcherState implements IState<TypeMatcherState> {
 
-    public static final TypeMatcher EMPTY = new TypeMatcher(Map.of(), null);
+    public static final TypeMatcherState EMPTY = new TypeMatcherState(Map.of(), null);
 
-    private final Map<Type, TypeMatcher> transitions;
-    private final Type                   type;
+    private final Map<Type, TypeMatcherState> transitions;
+    private final Type                        type;
 
-    private Map<Type, TypeMatcher> typeArgs = null;
+    private Map<Type, TypeMatcherState> typeArgs = null;
 
-    public TypeMatcher(Map<Type, TypeMatcher> transitions, Type type) {
+    public TypeMatcherState(Map<Type, TypeMatcherState> transitions, Type type) {
         this.transitions = transitions;
         this.type = type;
     }
@@ -42,10 +42,10 @@ public class TypeMatcher implements IState<TypeMatcher> {
         return type;
     }
 
-    private Map<Type, TypeMatcher> typeArgs() {
+    private Map<Type, TypeMatcherState> typeArgs() {
         if (typeArgs == null) {
-            Map<Type, TypeMatcher> map = Map.of();
-            for (Entry<Type, TypeMatcher> e : transitions) {
+            Map<Type, TypeMatcherState> map = Map.of();
+            for (Entry<Type, TypeMatcherState> e : transitions) {
                 if (e.getKey() instanceof Type t) {
                     if (t.variable() != null) {
                         map = map.put(t, e.getValue());
@@ -58,21 +58,21 @@ public class TypeMatcher implements IState<TypeMatcher> {
     }
 
     public final Set<Type> match(Type type, MutableMap<Variable, Type> typeArgs) {
-        return doMatch(type, typeArgs).replaceAll(TypeMatcher::type);
+        return doMatch(type, typeArgs).replaceAll(TypeMatcherState::type);
     }
 
-    private Set<TypeMatcher> doMatch(Type type, MutableMap<Variable, Type> typeArgs) {
-        Set<TypeMatcher> result = Set.of();
+    private Set<TypeMatcherState> doMatch(Type type, MutableMap<Variable, Type> typeArgs) {
+        Set<TypeMatcherState> result = Set.of();
         for (Entry<Type, Type> entry : type.allSupersList()) {
             Type sup = entry.getKey();
-            TypeMatcher state = transitions.get(sup);
+            TypeMatcherState state = transitions.get(sup);
             if (state != null) {
                 if (sup.hasArguments()) {
-                    Set<TypeMatcher> pre, post = Set.of(state);
+                    Set<TypeMatcherState> pre, post = Set.of(state);
                     for (Type arg : entry.getValue().arguments()) {
                         pre = post;
                         post = Set.of();
-                        for (TypeMatcher s : pre) {
+                        for (TypeMatcherState s : pre) {
                             post = post.addAll(s.doMatch(arg, typeArgs));
                         }
                     }
@@ -84,7 +84,7 @@ public class TypeMatcher implements IState<TypeMatcher> {
             }
         }
         if (result.isEmpty()) {
-            outer: for (Entry<Type, TypeMatcher> e : typeArgs()) {
+            outer: for (Entry<Type, TypeMatcherState> e : typeArgs()) {
                 if (e.getKey().isMany()) {
                     for (Type m : e.getKey().many()) {
                         if (m.variable() == null && !m.isAssignableFrom(type)) {
@@ -113,8 +113,8 @@ public class TypeMatcher implements IState<TypeMatcher> {
     }
 
     @Override
-    public TypeMatcher merge(TypeMatcher merged) {
-        return new TypeMatcher(inherit(transitions.addAll(merged.transitions, TypeMatcher::merge)),
+    public TypeMatcherState merge(TypeMatcherState merged) {
+        return new TypeMatcherState(inherit(transitions.addAll(merged.transitions, TypeMatcherState::merge)),
                 elementMerge(type, merged.type));
     }
 
@@ -137,8 +137,8 @@ public class TypeMatcher implements IState<TypeMatcher> {
     }
 
     @Override
-    public TypeMatcher merge(TypeMatcher[] branches, int length) {
-        TypeMatcher state = this;
+    public TypeMatcherState merge(TypeMatcherState[] branches, int length) {
+        TypeMatcherState state = this;
         for (int i = 0; i < length; i++) {
             state = branches[i].merge(state);
         }
@@ -146,13 +146,13 @@ public class TypeMatcher implements IState<TypeMatcher> {
     }
 
     @Override
-    public TypeMatcher getMerger() {
+    public TypeMatcherState getMerger() {
         return EMPTY;
     }
 
     @Override
     public Class<?> getMeetClass() {
-        return TypeMatcher.class;
+        return TypeMatcherState.class;
     }
 
 }
