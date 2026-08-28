@@ -522,11 +522,11 @@ public class Node extends StructImpl implements AstElement {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
-    public Node makeVariablesUnique() throws ParseException {
+    public Node makeVariablesUnique(ParseContext ctx) throws ParseException {
         assert this == declaration();
         int id = COUNTER.getAndIncrement();
         return replace(n -> {
-            if (n instanceof Variable v) {
+            if (n instanceof Variable v && ctx.outer().type(v.name()) != null) {
                 return v.makeUnique(id);
             }
             return n;

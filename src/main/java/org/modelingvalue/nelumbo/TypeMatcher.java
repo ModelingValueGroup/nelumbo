@@ -24,7 +24,7 @@ import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
-public class TypeMatcher {
+public class TypeMatcher implements IState<TypeMatcher> {
 
     public static final TypeMatcher EMPTY = new TypeMatcher(Map.of(), null);
 
@@ -80,9 +80,10 @@ public class TypeMatcher {
                 } else {
                     result = result.add(state);
                 }
+                break;
             }
         }
-        if (result.isEmpty() || (type.variable() == null && !type.hasArguments())) {
+        if (result.isEmpty()) {
             outer: for (Entry<Type, TypeMatcher> e : typeArgs()) {
                 if (e.getKey().isMany()) {
                     for (Type m : e.getKey().many()) {
@@ -111,13 +112,20 @@ public class TypeMatcher {
         return result;
     }
 
+    @Override
     public TypeMatcher merge(TypeMatcher merged) {
-        return new TypeMatcher(transitions.addAll(merged.transitions, TypeMatcher::merge),
+        return new TypeMatcher(inherit(transitions.addAll(merged.transitions, TypeMatcher::merge)),
                 elementMerge(type, merged.type));
     }
 
-    private static <T> T elementMerge(T t1, T t2) {
+    private static Type elementMerge(Type t1, Type t2) {
         if (t1 != null && t2 != null && !t1.equals(t2)) {
+            if (t1.isAssignableFrom(t2)) {
+                return t2;
+            }
+            if (t2.isAssignableFrom(t1)) {
+                return t1;
+            }
             throw new NotMergeableException("Non deterministic pattern merge " + t1 + " <> " + t2);
         }
         return t1 == null ? t2 : t1;
@@ -126,6 +134,25 @@ public class TypeMatcher {
     @Override
     public String toString() {
         return transitions.toKeys().asSet().toString().substring(3);
+    }
+
+    @Override
+    public TypeMatcher merge(TypeMatcher[] branches, int length) {
+        TypeMatcher state = this;
+        for (int i = 0; i < length; i++) {
+            state = branches[i].merge(state);
+        }
+        return state;
+    }
+
+    @Override
+    public TypeMatcher getMerger() {
+        return EMPTY;
+    }
+
+    @Override
+    public Class<?> getMeetClass() {
+        return TypeMatcher.class;
     }
 
 }

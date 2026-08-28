@@ -149,6 +149,7 @@ public final class Rule extends Node implements Evaluatable {
             }
             Rule rule = new Rule(when != null ? List.of(cond, when) : List.of(cond), //
                     cons, when != null ? When.of(when, cond) : cond);
+            rule = rule.makeVariablesUnique(ctx);
             roots = new NList(List.of(), roots, rule);
             for (i++; i < elements.size(); i++) {
                 if (elements.get(i) instanceof Token t && t.text().equals(",")) {
@@ -226,6 +227,11 @@ public final class Rule extends Node implements Evaluatable {
         completeFalsehoods |= result.completeFalsehoods();
         return InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
                 result.cycles().addAll(ruleResult.cycles()));
+    }
+
+    @Override
+    public Rule makeVariablesUnique(ParseContext ctx) throws ParseException {
+        return (Rule) super.makeVariablesUnique(ctx);
     }
 
     @Override

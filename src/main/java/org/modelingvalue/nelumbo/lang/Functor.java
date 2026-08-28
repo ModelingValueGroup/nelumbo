@@ -119,8 +119,8 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    public Functor makeVariablesUnique() throws ParseException {
-        return (Functor) super.makeVariablesUnique();
+    public Functor makeVariablesUnique(ParseContext ctx) throws ParseException {
+        return (Functor) super.makeVariablesUnique(ctx);
     }
 
     @Override
@@ -392,7 +392,7 @@ public class Functor extends Node implements FunctorOrType {
         }
         Type nodType = toLiteral && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
         Functor nodFunctor = Functor.of(ast, pattern, nodType, local, toLiteral ? null : clazz, prec)
-                .makeVariablesUnique();
+                .makeVariablesUnique(ctx);
         nodFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && clazz != null) {
@@ -401,7 +401,7 @@ public class Functor extends Node implements FunctorOrType {
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
-            Functor litFunctor = Functor.of(ast, litPattern, type, local, clazz, prec).makeVariablesUnique();
+            Functor litFunctor = Functor.of(ast, litPattern, type, local, clazz, prec).makeVariablesUnique(ctx);
             litFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
             roots = new NList(List.of(), roots, litFunctor);
             knowledgeBase.addLiteral(nodFunctor, litFunctor);
@@ -428,6 +428,7 @@ public class Functor extends Node implements FunctorOrType {
             }
             ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
             Rule rule = new Rule(List.of(), nodCons, exists);
+            rule = rule.makeVariablesUnique(ctx);
             roots = new NList(List.of(), roots, rule);
         }
         return roots;
