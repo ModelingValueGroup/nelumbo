@@ -215,7 +215,7 @@ The `Functor` alternative is the dense one: it carries the optional `private` mo
 
 The `import` and `@`-binding forms now share the `QNAME` [named pattern](#named-patterns) for the dotted qualified name; the `import` alternative still permits both comma-separated lists (`import M1, M2`) and dotted module paths (`import a.b.c`). The type-declaration head (`<[> <NAME> … <]>`) is a connected-token group, so `Set<E>` must be written tightly.
 
-The `::>` transformation (Transform) takes any `<Root>` shape on the left and a `RootNamespace` (a `{ ... }` block of declarations) on the right. See [`language-transformations.md`](../guides/language-transformations.md). It is declared here, but the mechanism is only useful in conjunction with the rest of the language.
+The `::>` transformation (Transform) takes any `<Root>` shape on the left and a `RootNamespace` (a `{ ... }` block of declarations) on the right. See [`language-transformations.md`](../../guides/language-transformations.md). It is declared here, but the mechanism is only useful in conjunction with the rest of the language.
 
 `fact`, `<=>`, and `?` are **not** in this list — they are added by `nelumbo.logic`. Without `logic`, a `lang`-only file can declare types, patterns, variables, imports, and transformations, but it cannot assert facts, write rules, or run queries.
 

@@ -41,6 +41,9 @@ dependencies {
     implementation(libs.lsp4j)
     implementation("io.javalin:javalin:7.2.2")
     implementation(libs.jackson.databind)
+    // markdown -> html for the /docs pages (module-unique dependency, so not in the version catalog)
+    implementation("org.commonmark:commonmark:0.24.0")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.24.0")
     runtimeOnly(libs.slf4j.simple)
 
     testImplementation(libs.junit.jupiter)
@@ -97,11 +100,32 @@ val copyFrontend by tasks.registering(Sync::class) {
     into(layout.buildDirectory.dir("generated-resources/public/assets"))
 }
 
-// Register the copied bundle as a source-set OUTPUT dir (not a resources source dir): this puts it on the
-// runtime/test classpath and into serverJar via sourceSets.main.output, carries the copyFrontend dependency,
-// and - unlike resources.srcDir - keeps it out of the sourcesJar.
+// Bundle the language documentation (rendered to HTML at startup by DocsSite and served under /docs) plus an
+// index.txt so it can be enumerated from the classpath at runtime - same pattern as the mcp module's search_docs.
+val copyDocs by tasks.registering(Sync::class) {
+    from(rootProject.layout.projectDirectory.dir("docs")) {
+        include("**/*.md")
+        include("nelumbo.svg")
+        exclude("superpowers/**")
+        exclude("site/**")
+    }
+    into(layout.buildDirectory.dir("generated-resources/nelumbo-docs"))
+    doLast {
+        val dir = destinationDir
+        val index = dir.walkTopDown()
+                .filter { it.isFile && it.extension == "md" }
+                .map { it.relativeTo(dir).invariantSeparatorsPath }
+                .sorted()
+                .joinToString("\n")
+        File(dir, "index.txt").writeText(index + "\n")
+    }
+}
+
+// Register the copied bundle and docs as a source-set OUTPUT dir (not a resources source dir): this puts them on
+// the runtime/test classpath and into serverJar via sourceSets.main.output, carries the copyFrontend/copyDocs
+// dependencies, and - unlike resources.srcDir - keeps them out of the sourcesJar.
 sourceSets.main {
-    output.dir(mapOf("builtBy" to copyFrontend), layout.buildDirectory.dir("generated-resources"))
+    output.dir(mapOf("builtBy" to listOf(copyFrontend, copyDocs)), layout.buildDirectory.dir("generated-resources"))
 }
 
 tasks.register<ShadowJar>("serverJar") {

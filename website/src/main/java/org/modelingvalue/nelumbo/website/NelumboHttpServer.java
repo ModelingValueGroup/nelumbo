@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.server.EvalService;
@@ -31,7 +32,8 @@ import io.javalin.http.staticfiles.Location;
 
 /**
  * The website HTTP server: the shared {@link EvalService} REST endpoints (eval/metadata/health) plus the public
- * pages, the bundled Monaco frontend under {@code /assets}, and the {@code /lsp} WebSocket, all served by one
+ * pages, the documentation under {@code /docs} (see {@link DocsSite}), the bundled Monaco frontend under
+ * {@code /assets}, and the {@code /lsp} WebSocket, all served by one
  * Javalin (Jetty) instance — the WebSocket route is why this module does not run on the JDK server like the lean
  * {@code nelumbo-server} executor does.
  */
@@ -72,6 +74,8 @@ public final class NelumboHttpServer {
         String tour       = loadResource("/public/tour.html");
         String playground = loadResource("/public/playground.html");
         String favicon    = loadResource("/public/favicon.svg");
+        String docsLogo   = loadResource(DocsSite.RESOURCE_ROOT + "nelumbo.svg");
+        DocsSite docs     = DocsSite.load();
         app = Javalin.create(config -> {
             // serve the bundled frontend (Monaco js/css + codicon font) from the classpath under /assets
             config.staticFiles.add(staticFiles -> {
@@ -88,6 +92,9 @@ public final class NelumboHttpServer {
             config.routes.get("/favicon.svg", ctx -> ctx.contentType("image/svg+xml").result(favicon));
             config.routes.get("/tour.html", ctx -> ctx.html(tour));
             config.routes.get("/playground.html", ctx -> ctx.html(playground));
+            // the docs index is /docs/ (its relative image link needs the trailing slash); <page> also matches slashes
+            config.routes.get("/docs", ctx -> handleDocs(ctx, docs, docsLogo));
+            config.routes.get("/docs/<page>", ctx -> handleDocs(ctx, docs, docsLogo));
             config.routes.get("/health", ctx -> ctx.json(EvalService.health()));
             config.routes.post("/eval", ctx -> handleEval(ctx, false));
             config.routes.post("/eval/trace", ctx -> handleEval(ctx, true));
@@ -103,6 +110,22 @@ public final class NelumboHttpServer {
             app.stop();
         }
         service.close();
+    }
+
+    private static void handleDocs(Context ctx, DocsSite docs, String docsLogo) {
+        String path = ctx.path();
+        if (path.equals("/docs")) {
+            ctx.redirect("/docs/");
+        } else if (path.equals(DocsSite.URL_PREFIX + "nelumbo.svg")) {
+            ctx.contentType("image/svg+xml").result(docsLogo);
+        } else {
+            Optional<String> page = docs.page(path);
+            if (page.isPresent()) {
+                ctx.html(page.get());
+            } else {
+                ctx.status(404).html(docs.notFoundPage());
+            }
+        }
     }
 
     private void handleEval(Context ctx, boolean pathTrace) {

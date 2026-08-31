@@ -43,7 +43,7 @@ occur.
 
 Detailed documentation.
 
-- [Detailed documentation](docs/documentation.md)
+- [Detailed documentation](docs/documentation.md) (also served at [nelumbo.nl/docs](https://nelumbo.nl/docs/))
 
 ## Building
 
