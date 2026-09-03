@@ -26,3 +26,13 @@ updates:
     target-branch: "develop"
     schedule:
       interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/website/src/main/frontend"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/lsp/plugins/vscode"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
