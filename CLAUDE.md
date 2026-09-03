@@ -149,6 +149,10 @@ End-to-end browser tests live in `website/src/main/frontend/e2e/` (Playwright, C
 
 Adding a `.nl` example (`src/main/resources/org/modelingvalue/nelumbo/examples/`) requires registering it in two explicit lists: `ExampleCatalog.ENTRIES` (mcp, serves `get_example`) and `ExamplesTest` (core, runs it as a test) - neither auto-discovers files. The README has an "MCP Server" section with the install/usage story (`./gradlew :mcp:mcpJar` + `claude mcp add nelumbo -- java -jar ...`).
 
+## IntelliJ Plugin - Semantic Tokens (Editor Coloring)
+
+.nl coloring in IntelliJ comes ONLY from LSP semantic tokens (there is no `lang.syntaxHighlighterFactory`). LSP4IJ applies received tokens via one of two paths: direct (plain text/TextMate files) or "lazy" via `HighlightVisitor#visit(PsiElement)` for languages with their own `ParserDefinition`. The lazy path produces NO editor colors for nelumbo's flat PSI even though the tokens arrive correctly (verifiable in LSP4IJ's Semantic Tokens Inspector tool window) - same code in LSP4IJ 0.19.1 and 0.21.0, so it was broken ever since the custom PSI landed (fe02be8, 2026-05-28). Fix (2026-09-03): `NelumboLanguageServerFactory.createClientFeatures()` forces the direct path by overriding `LSPSemanticTokensFeature.shouldVisitPsiElement` to return false. Keep the LSP4IJ pin (now 0.21.0) at the current marketplace version: the runIde sandbox IDE auto-updates LSP4IJ from the marketplace on first launch, so a lower pin compiles against a version users never actually run. Sandbox debugging notes: the LSP server's stderr appears only in the LSP4IJ console (Language Servers tool window), not in the sandbox `idea.log`; `NlTextDocumentService` prints a `~~~ <request>` line for every LSP request unconditionally, and `~/nelumbo/settings.json` (`"Debugging":true`) enables the per-token server-side dump. The server jar the sandbox runs is `~/nelumbo/server.jar`, freshly extracted from the plugin resources on every start (sandbox mode never downloads).
+
 ## Code Conventions
 
 - All Java source files carry an LGPL 3.0 header (auto-corrected by `mvgCorrector` Gradle task using `docs/header-template.txt`).
