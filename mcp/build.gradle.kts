@@ -17,7 +17,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    id("com.gradleup.shadow") version "9.6.0"
+    id("com.gradleup.shadow") version "9.6.1"
     java
 }
 
@@ -36,7 +36,7 @@ repositories {
 
 dependencies {
     implementation(project(":"))
-    implementation("io.modelcontextprotocol.sdk:mcp:2.0.0")
+    implementation("io.modelcontextprotocol.sdk:mcp:2.0.1")
     implementation(libs.jackson.databind)
     runtimeOnly(libs.slf4j.simple) // logs to stderr; stdout is the protocol channel
 

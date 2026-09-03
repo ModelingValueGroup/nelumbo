@@ -131,6 +131,38 @@ class NelumboHttpServerTest {
     }
 
     @Test
+    void docsAreServedUnderDocs() throws Exception {
+        HttpResponse<String> index = get("/docs/");
+        assertEquals(200, index.statusCode());
+        assertTrue(index.headers().firstValue("Content-Type").orElse("").contains("text/html"), "docs should be served as HTML");
+        assertTrue(index.body().contains("Nelumbo documentation"), "the docs index is the documentation overview");
+        assertTrue(index.body().contains("href=\"/docs/reference/grammar.html\""), "the docs sidebar should link the reference pages");
+
+        HttpResponse<String> grammar = get("/docs/reference/grammar.html");
+        assertEquals(200, grammar.statusCode(), "nested doc pages are served by the wildcard route");
+        assertTrue(grammar.body().contains("<title>Grammar - Nelumbo docs</title>"), grammar.body().substring(0, 300));
+
+        HttpResponse<String> logo = get("/docs/nelumbo.svg");
+        assertEquals(200, logo.statusCode(), "the overview embeds the logo relative to /docs/");
+        assertTrue(logo.headers().firstValue("Content-Type").orElse("").contains("image/svg+xml"));
+
+        HttpResponse<String> missing = get("/docs/reference/nope.html");
+        assertEquals(404, missing.statusCode());
+        assertTrue(missing.body().contains("Page not found"), "unknown docs pages get the docs-styled 404");
+
+        HttpResponse<String> bare = get("/docs");
+        assertEquals(302, bare.statusCode(), "/docs redirects to /docs/ so relative links on the index resolve");
+        assertEquals("/docs/", bare.headers().firstValue("Location").orElse(""));
+    }
+
+    @Test
+    void pagesLinkToTheDocs() throws Exception {
+        for (String page : List.of("/", "/tour.html", "/playground.html")) {
+            assertTrue(get(page).body().contains("href=\"/docs/\""), page + " should link to the docs");
+        }
+    }
+
+    @Test
     void frontendBundleIsServed() throws Exception {
         HttpResponse<String> js = get("/assets/nelumbo-fields.js");
         assertEquals(200, js.statusCode(), "the frontend bundle referenced by the pages must actually be served");

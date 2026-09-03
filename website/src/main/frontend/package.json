@@ -16,8 +16,8 @@
     "vscode-ws-jsonrpc": "~2.0.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.0",
-    "esbuild": "^0.25.0",
+    "@playwright/test": "^1.62.1",
+    "esbuild": "^0.28.2",
     "typescript": "^5.4.5"
   }
 }

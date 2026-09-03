@@ -39,8 +39,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiFile;
 import com.redhat.devtools.lsp4ij.LanguageServerFactory;
 import com.redhat.devtools.lsp4ij.client.LanguageClientImpl;
+import com.redhat.devtools.lsp4ij.client.features.LSPClientFeatures;
+import com.redhat.devtools.lsp4ij.client.features.LSPSemanticTokensFeature;
 import com.redhat.devtools.lsp4ij.server.JavaProcessCommandBuilder;
 import com.redhat.devtools.lsp4ij.server.OSProcessStreamConnectionProvider;
 import com.redhat.devtools.lsp4ij.server.StreamConnectionProvider;
@@ -185,6 +188,21 @@ public class NelumboLanguageServerFactory implements LanguageServerFactory {
             command = List.of("java", "-cp", jarFile, Constants.LSP_SERVER_MAIN_CLASS);
         }
         return command;
+    }
+
+    @Override
+    public @NotNull LSPClientFeatures createClientFeatures() {
+        return new LSPClientFeatures().setSemanticTokensFeature(new LSPSemanticTokensFeature() {
+            @Override
+            public boolean shouldVisitPsiElement(@NotNull PsiFile file) {
+                // Use LSP4IJ's direct highlight path instead of the HighlightVisitor#visit()
+                // (lazy) path it selects for languages with a custom ParserDefinition. With our
+                // flat nelumbo PSI the lazy path yields no editor coloring even though the
+                // tokens arrive (visible in the Semantic Tokens Inspector); the direct path
+                // applies them.
+                return false;
+            }
+        });
     }
 
     @Override
