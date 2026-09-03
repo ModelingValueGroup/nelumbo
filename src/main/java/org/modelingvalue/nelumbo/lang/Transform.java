@@ -101,6 +101,15 @@ public final class Transform extends Node {
                 }
             }
         }
+        t = (Transform) t.replace(n -> {
+            if (n.functorOrType() instanceof Functor f) {
+                int i = ftl.index(f);
+                if (i >= 0) {
+                    return n.setFunctorOrType((Functor) ttl.get(i));
+                }
+            }
+            return n;
+        });
         knowledgeBase.addTransform(t);
         return t;
     }

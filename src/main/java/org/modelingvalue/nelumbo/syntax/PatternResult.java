@@ -169,8 +169,10 @@ public final class PatternResult implements ParseExceptionHandler {
             List<AstElement> elements = elements();
             Object[] args = functor.args(elements, typeArgs);
             Node node = functor.construct(elements, args, this, context);
-            if (!typeArgs.isEmpty()) {
-                node = node.setTypeArgs(typeArgs.get());
+            Set<Variable> tv = functor.typeVariables();
+            Map<Variable, Type> tas = typeArgs.get().retainAll(e -> tv.contains(e.getKey()));
+            if (!tas.isEmpty()) {
+                node = node.setTypeArgs(tas);
             }
             if (hasLeft && args.length == 1 && args[0] instanceof Node arg) {
                 if (node.functor().equals(arg.functor())) {
