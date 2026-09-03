@@ -18,6 +18,6 @@
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "esbuild": "^0.25.0",
-    "typescript": "^5.4.5"
+    "typescript": "^7.0.2"
   }
 }
