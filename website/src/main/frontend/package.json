@@ -13,7 +13,7 @@
     "monaco-editor": "~0.34.1",
     "monaco-languageclient": "~1.0.1",
     "tslib": "^2.6.0",
-    "vscode-ws-jsonrpc": "~2.0.2"
+    "vscode-ws-jsonrpc": "~3.5.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
