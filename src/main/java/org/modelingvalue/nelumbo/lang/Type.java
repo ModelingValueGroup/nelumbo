@@ -156,7 +156,7 @@ public final class Type extends Node implements FunctorOrType {
 
     public Type(Variable var) {
         this(NodeInfo.of(TYPE, List.of(var)), null, var, Set.of(OBJECT), DEFAULT_GROUP);
-        assert Type.TYPE.equals(var.type());
+        assert Type.TYPE.isAssignableFrom(var.type());
     }
 
     public Type(List<AstElement> elements, String name, Collection<Type> supers, String group) {
@@ -714,6 +714,11 @@ public final class Type extends Node implements FunctorOrType {
     @Override
     public Type setTypeArgs(Map<Variable, Type> typeArgs) {
         return (Type) super.setTypeArgs(typeArgs);
+    }
+
+    @Override
+    public Type makeVariablesUnique(ParseContext ctx, int id) throws ParseException {
+        return (Type) super.makeVariablesUnique(ctx, id);
     }
 
 }

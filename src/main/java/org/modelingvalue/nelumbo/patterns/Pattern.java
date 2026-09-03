@@ -20,8 +20,8 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
@@ -175,7 +175,7 @@ public abstract class Pattern extends Node {
     public abstract int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt);
 
     public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
-            Map<Variable, Type> typeArgs);
+            MutableMap<Variable, Type> typeArgs);
 
     public static boolean isEndOfLine(Token token) {
         return token.type() == TokenType.ENDOFFILE

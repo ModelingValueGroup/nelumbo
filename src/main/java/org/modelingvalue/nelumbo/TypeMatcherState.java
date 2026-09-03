@@ -65,6 +65,12 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
         Set<TypeMatcherState> result = Set.of();
         for (Entry<Type, Type> entry : type.allSupersList()) {
             Type sup = entry.getKey();
+            if (sup.equals(Type.OBJECT)) {
+                result = generics(type, typeArgs, result);
+                if (!result.isEmpty()) {
+                    break;
+                }
+            }
             TypeMatcherState state = transitions.get(sup);
             if (state != null) {
                 if (sup.hasArguments()) {
@@ -80,36 +86,56 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
                 } else {
                     result = result.add(state);
                 }
+                if (!sup.equals(Type.OBJECT)) {
+                    result = generics(type, typeArgs, result);
+                }
                 break;
             }
         }
-        if (result.isEmpty()) {
-            outer: for (Entry<Type, TypeMatcherState> e : typeArgs()) {
-                if (e.getKey().isMany()) {
-                    for (Type m : e.getKey().many()) {
-                        if (m.variable() == null && !m.isAssignableFrom(type)) {
-                            continue outer;
-                        }
+        return result;
+    }
+
+    private Set<TypeMatcherState> generics(Type type, MutableMap<Variable, Type> typeArgs,
+            Set<TypeMatcherState> result) {
+        outer: for (Entry<Type, TypeMatcherState> e : typeArgs()) {
+            if (e.getKey().isMany()) {
+                for (Type m : e.getKey().many()) {
+                    if (m.variable() == null && !m.isAssignableFrom(type)) {
+                        continue outer;
                     }
                 }
-                Type nvt = type.nonVariable();
-                Variable var = e.getKey().variable();
-                Type found = typeArgs.get(var);
-                if (found == null) {
-                    typeArgs.put(var, nvt);
+            }
+            Type nvt = type.nonVariable();
+            Variable var = e.getKey().variable();
+            Type found = typeArgs.get(var);
+            if (found == null) {
+                typeArgs.put(var, nvt);
+                result = result.add(e.getValue());
+            } else {
+                found = common(nvt, found, typeArgs);
+                if (found != null) {
+                    typeArgs.put(var, found);
                     result = result.add(e.getValue());
                 } else {
-                    found = nvt.common(found);
-                    if (found != null) {
-                        typeArgs.put(var, found);
-                        result = result.add(e.getValue());
-                    } else {
-                        typeArgs.put(var, Type.$NONE);
-                    }
+                    typeArgs.put(var, Type.$NONE);
                 }
             }
         }
         return result;
+    }
+
+    private static Type common(Type a, Type b, MutableMap<Variable, Type> typeArgs) {
+        Variable av = a.variable();
+        Variable bv = b.variable();
+        if (av != null && bv == null) {
+            typeArgs.put(av, b);
+            return b;
+        }
+        if (av == null && bv != null) {
+            typeArgs.put(bv, a);
+            return a;
+        }
+        return a.common(b);
     }
 
     @Override

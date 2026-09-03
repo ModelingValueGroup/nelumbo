@@ -90,6 +90,17 @@ public final class Transform extends Node {
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         Transform t = makeVariablesUnique(ctx);
+        List<Node> ftl = targetsFlattened();
+        List<Node> ttl = t.targetsFlattened();
+        for (int ni = 0; ni < ftl.size(); ni++) {
+            if (ftl.get(ni) instanceof Functor nf) {
+                Functor lf = knowledgeBase.literal(nf);
+                if (lf != null) {
+                    int li = ftl.index(lf);
+                    knowledgeBase.addLiteral((Functor) ttl.get(ni), (Functor) ttl.get(li));
+                }
+            }
+        }
         knowledgeBase.addTransform(t);
         return t;
     }
@@ -104,7 +115,7 @@ public final class Transform extends Node {
         for (Node target : targetsFlattened()) {
             if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())
                     && !functor.pattern().equals(start)) {
-                Functor rewrite = functor.setBinding(binding).resetDeclaration();
+                Functor rewrite = functor.setBinding(binding).resetDeclaration().makeVariablesUnique(ctx);
                 for (Entry<Functor, Functor> e : functors) {
                     if (functor.equals(knowledgeBase.literal(e.getKey()))) {
                         knowledgeBase.addLiteral(e.getValue(), rewrite);
@@ -130,7 +141,7 @@ public final class Transform extends Node {
                         }
                     }
                     return n;
-                }).setBinding(binding).setAstElements(node.astElements()).resetDeclaration();
+                }).setBinding(binding).setAstElements(node.astElements()).resetDeclaration().makeVariablesUnique(ctx);
                 rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
             }

@@ -19,8 +19,8 @@ package org.modelingvalue.nelumbo.patterns;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NodeInfo;
@@ -107,7 +107,7 @@ public class TokenTypePattern extends Pattern {
 
     @Override
     public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
-            Map<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             TokenType type = tokenType();

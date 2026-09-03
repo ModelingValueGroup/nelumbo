@@ -56,6 +56,12 @@ public class Node extends StructImpl implements AstElement {
 
     protected static final Context<InferContext> CURRENT_CONTEXT = Context.of(null);
 
+    private static final AtomicInteger UNIQUE_COUNTER = new AtomicInteger(0);
+
+    protected static int uniqueId() {
+        return UNIQUE_COUNTER.getAndIncrement();
+    }
+
     private final NodeInfo nodeInfo;
 
     //
@@ -251,6 +257,7 @@ public class Node extends StructImpl implements AstElement {
             if (string != null) {
                 return string;
             }
+            functor.string(args(), previous);
         }
         StringBuilder sb = new StringBuilder();
         if (functor != null) {
@@ -438,7 +445,7 @@ public class Node extends StructImpl implements AstElement {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Node setTypeArgs(Map<Variable, Type> typeArgs) {
-        return setBinding(declaration(), (Map) typeArgs, true);
+        return typeArgs.isEmpty() ? this : setBinding(declaration(), (Map) typeArgs, true);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -447,7 +454,7 @@ public class Node extends StructImpl implements AstElement {
         for (int i = 0; i < length(); i++) {
             Object thisVal = get(i);
             Object bound = setBinding(declaration.get(i), thisVal, vars, i, setFunctorOrType);
-            if (!Objects.equals(bound, thisVal)) {
+            if (bound != thisVal) {
                 if (array == null) {
                     array = toArray();
                 }
@@ -520,17 +527,22 @@ public class Node extends StructImpl implements AstElement {
         return setBinding(vars);
     }
 
-    private static final AtomicInteger COUNTER = new AtomicInteger(0);
-
     public Node makeVariablesUnique(ParseContext ctx) throws ParseException {
         assert this == declaration();
-        int id = COUNTER.getAndIncrement();
+        int id = uniqueId();
+        return makeVariablesUnique(ctx, id);
+    }
+
+    public Node makeVariablesUnique(ParseContext ctx, int id) throws ParseException {
         return replace(n -> {
-            if (n instanceof Variable v && ctx.outer().type(v.name()) != null) {
-                return v.makeUnique(id);
+            if (n instanceof Variable v) {
+                if (ctx.outer().type(v.name()) != null || ctx.outer().variable(v.name()) != null) {
+                    return v.makeUnique(id);
+                }
             }
             return n;
         }).resetDeclaration();
+
     }
 
     public Node setTypes() {

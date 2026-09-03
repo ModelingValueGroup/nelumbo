@@ -17,6 +17,8 @@
 package org.modelingvalue.nelumbo.lang;
 
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 
 public interface FunctorOrType {
 
@@ -25,5 +27,7 @@ public interface FunctorOrType {
     FunctorOrType setTypeArgs(Map<Variable, Type> typeArgs);
 
     FunctorOrType declaration();
+
+    FunctorOrType makeVariablesUnique(ParseContext ctx, int id) throws ParseException;
 
 }

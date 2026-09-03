@@ -41,7 +41,8 @@ public abstract class AbstractState<S extends AbstractState> implements IState<S
             if (s == null) {
                 s = typeTransitions().get(m);
             } else {
-                s = (S) s.merge(typeTransitions().get(m));
+                S fs = s;
+                s = TYPE_ARGS.get(typeArgs.get(), () -> (S) fs.merge(typeTransitions().get(m)));
             }
         }
         return s;

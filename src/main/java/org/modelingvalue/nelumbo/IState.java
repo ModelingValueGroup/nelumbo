@@ -18,11 +18,15 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.Mergeable;
 import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 
 @SuppressWarnings("rawtypes")
 public interface IState<S extends IState> extends Mergeable<S> {
+
+    Context<Map<Variable, Type>> TYPE_ARGS = Context.of(Map.of());
 
     @SuppressWarnings("unchecked")
     default <K> Map<K, S> inherit(Map<K, S> transitions) {

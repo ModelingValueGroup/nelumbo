@@ -410,11 +410,10 @@ public class ParseState extends AbstractState<ParseState> {
                         for (TokenState next1 : pre.tokenNext(token, ctx)) {
                             states = states.add(next1);
                             if (next1.state.functor() != null) {
-                                TokenState next2 = null;
                                 Type type = next1.state.functor().resultType();
                                 ParseState state = matchType(type, MutableMap.of(typeArgs));
                                 if (state != null) {
-                                    next2 = new TokenState(next1.token, state);
+                                    TokenState next2 = new TokenState(next1.token, state);
                                     states = states.add(next2);
                                 }
                             }
@@ -697,7 +696,7 @@ public class ParseState extends AbstractState<ParseState> {
         return functor() == null ? state.functor() : //
                 state.functor() == null ? functor() : //
                         functor().equals(state.functor()) ? functor().nonBootstrap(state.functor()) : //
-                                functor().mostSpecific(state.functor());
+                                functor().mostSpecific(state.functor(), TYPE_ARGS.get());
     }
 
     private Integer leftPrecedenceMerge(ParseState state) {

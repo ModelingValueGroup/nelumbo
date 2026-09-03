@@ -261,7 +261,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public void addLiteral(Functor nodFunctor, Functor litFunctor) {
-        literalFunctors.updateAndGet(m -> m.put(nodFunctor, litFunctor));
+        literalFunctors.updateAndGet(m -> m.put(nodFunctor.declaration(), litFunctor));
     }
 
     private final static AtomicReference<Map<String, KnowledgeBase>> IMPORT_MAP       = new AtomicReference<>(Map.of());
@@ -386,7 +386,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Functor literal(Functor functor) {
-        return literalFunctors.get().get(functor);
+        return literalFunctors.get().get(functor.declaration());
     }
 
     @Override

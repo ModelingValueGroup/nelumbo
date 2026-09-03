@@ -21,6 +21,7 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -145,7 +146,7 @@ public class TokenTextPattern extends Pattern {
 
     @Override
     public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
-            Map<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Token t && t.text().equals(tokenText())) {

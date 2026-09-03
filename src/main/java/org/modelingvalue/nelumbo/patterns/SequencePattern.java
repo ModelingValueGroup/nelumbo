@@ -20,8 +20,8 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -155,7 +155,7 @@ public class SequencePattern extends Pattern {
 
     @Override
     public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
-            Map<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs) {
         List<Object> result = List.of();
         for (Pattern element : elements()) {
             MutableList<Object> inner = MutableList.of(List.of());

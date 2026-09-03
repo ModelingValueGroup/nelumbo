@@ -20,9 +20,9 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -151,7 +151,7 @@ public class RepetitionPattern extends Pattern {
 
     @Override
     public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
-            Map<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs) {
         Pattern repeated = repeated();
         Pattern separator = separator();
         boolean mandatory = mandatory();

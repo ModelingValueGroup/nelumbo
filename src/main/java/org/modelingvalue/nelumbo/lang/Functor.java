@@ -25,8 +25,8 @@ import java.lang.reflect.Method;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
@@ -70,12 +70,11 @@ public class Functor extends Node implements FunctorOrType {
                         : null);
     }
 
-    private String        name;
-    private List<Type>    argTypes;
-    private Set<Variable> typeVariables;
-    private ParseState    start;
-    private ParseState    startPre;
-    private ParseState    startPost;
+    private String     name;
+    private List<Type> argTypes;
+    private ParseState start;
+    private ParseState startPre;
+    private ParseState startPost;
 
     private Functor(List<AstElement> elements, Object... args) {
         super(NodeInfo.of(Type.FUNCTOR, elements), args);
@@ -172,13 +171,6 @@ public class Functor extends Node implements FunctorOrType {
         return argTypes;
     }
 
-    public Set<Variable> typeVariables() {
-        if (typeVariables == null) {
-            typeVariables = argTypes().flatMap(Type::typeVariables).asSet();
-        }
-        return typeVariables;
-    }
-
     @Override
     public String toString(TokenType[] previous) {
         return resultType() + "::=" + pattern();
@@ -246,7 +238,7 @@ public class Functor extends Node implements FunctorOrType {
         return set(1, type);
     }
 
-    public Object[] args(List<AstElement> elements, Map<Variable, Type> typeArgs) {
+    public Object[] args(List<AstElement> elements, MutableMap<Variable, Type> typeArgs) {
         Pattern pattern = pattern();
         MutableList<Object> args = MutableList.of(List.of());
         int i = pattern.args(elements, 0, args, false, this, typeArgs);
@@ -374,7 +366,7 @@ public class Functor extends Node implements FunctorOrType {
                 && !Type.PATTERN.isAssignableFrom(type) && (Lambda.class.equals(clazz)
                         || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !gen.contains(t)))) {
             type = type.toLiteral();
-        } else if (type.variable() == null) {
+        } else if (clazz != Parenthesized.class) {
             if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
                     && !Type.ROOT.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
                     && !Type.NAMESPACE.isAssignableFrom(type)) {
@@ -405,41 +397,51 @@ public class Functor extends Node implements FunctorOrType {
             litFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
             roots = new NList(List.of(), roots, litFunctor);
             knowledgeBase.addLiteral(nodFunctor, litFunctor);
-            // Implied Rule
-            Object[] nodVars = new Object[args.size()];
-            Object[] litVars = new Object[args.size()];
-            List<Type> litArgs = args.replaceAll(Type::toLiteral);
-            for (int v = 0; v < args.size(); v++) {
-                nodVars[v] = new Variable(List.of(), false, args.get(v), "n" + (v + 1));
-                litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1));
-            }
-            Node nodNode = nodFunctor.construct(List.of(), nodVars, knowledgeBase, ctx);
-            Node litNode = litFunctor.construct(List.of(), litVars, knowledgeBase, ctx);
-            Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
-            Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
-            Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
-            for (int c = args.size() - 1; c >= 0; c--) {
-                Predicate eq = new NIs(List.of(), (Variable) nodVars[c], (Variable) litVars[c]);
-                litCond = And.of(eq, litCond);
-            }
-            List<Variable> localVars = List.of();
-            for (int v = 0; v < args.size(); v++) {
-                localVars = localVars.add((Variable) litVars[v]);
-            }
-            ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
-            Rule rule = new Rule(List.of(), nodCons, exists);
-            rule = rule.makeVariablesUnique(ctx);
-            roots = new NList(List.of(), roots, rule);
+            roots = node2literalRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor);
         }
         return roots;
     }
 
-    public Functor mostSpecific(Functor other) {
-        List<Type> thisTypes = argTypes();
-        List<Type> otherTypes = other.argTypes();
+    private NList node2literalRule(Type type, NList roots, KnowledgeBase knowledgeBase, ParseContext ctx,
+            boolean function, Functor nodFunctor, Functor litFunctor) throws ParseException {
+        List<Type> nodArgs = nodFunctor.argTypes();
+        List<Type> litArgs = litFunctor.argTypes();
+        String uid = "$" + uniqueId();
+        Object[] nodVars = new Object[nodArgs.size()];
+        Object[] litVars = new Object[litArgs.size()];
+        assert nodVars.length == litVars.length;
+        for (int v = 0; v < nodVars.length; v++) {
+            nodVars[v] = new Variable(List.of(), false, nodArgs.get(v), "n" + (v + 1) + uid);
+            litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1) + uid);
+        }
+        Node nodNode = nodFunctor.construct(List.of(), nodVars, knowledgeBase, ctx);
+        Node litNode = litFunctor.construct(List.of(), litVars, knowledgeBase, ctx);
+        Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r" + uid) : null;
+        Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
+        Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
+        for (int c = nodVars.length - 1; c >= 0; c--) {
+            Predicate eq = new NIs(List.of(), (Variable) nodVars[c], (Variable) litVars[c]);
+            litCond = And.of(eq, litCond);
+        }
+        List<Variable> localVars = List.of();
+        for (int v = 0; v < nodVars.length; v++) {
+            localVars = localVars.add((Variable) litVars[v]);
+        }
+        ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
+        Rule rule = new Rule(List.of(), nodCons, exists);
+        return new NList(List.of(), roots, rule);
+    }
+
+    public Functor mostSpecific(Functor other, Map<Variable, Type> typeArgs) {
+        List<Type> thisTypes = argTypes(), otherTypes = other.argTypes();
+        boolean thisAllGeneric = true, otherAllGeneric = true;
         for (int i = 0; i < thisTypes.size() && i < otherTypes.size(); i++) {
             Type thisType = thisTypes.get(i);
             Type otherType = otherTypes.get(i);
+            thisAllGeneric &= !thisType.isMany() && thisType.variable() != null;
+            otherAllGeneric &= !otherType.isMany() && otherType.variable() != null;
+            thisType = thisType.setTypeArgs(typeArgs);
+            otherType = otherType.setTypeArgs(typeArgs);
             if (!thisType.equals(otherType)) {
                 if (thisType.isAssignableFrom(otherType)) {
                     return other;
@@ -447,6 +449,11 @@ public class Functor extends Node implements FunctorOrType {
                     return this;
                 }
             }
+        }
+        if (thisAllGeneric && !otherAllGeneric) {
+            return other;
+        } else if (otherAllGeneric && !thisAllGeneric) {
+            return this;
         }
         throw new NotMergeableException("Non deterministic pattern merge " + this + " <> " + other);
     }
@@ -458,7 +465,7 @@ public class Functor extends Node implements FunctorOrType {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected Functor setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
-        Functor functor = (Functor) super.setBinding(declaration, vars, setFunctorOrType);
+        Functor functor = (Functor) super.setBinding(declaration, vars, false);
         List<AstElement> from = astElements();
         List to = (List) setBinding(from, from, vars, -1, setFunctorOrType);
         to = to.replaceAll(e -> e instanceof String s ? Pattern.t(s) : e);
@@ -470,4 +477,8 @@ public class Functor extends Node implements FunctorOrType {
         return (Functor) super.declaration();
     }
 
+    @Override
+    public Functor makeVariablesUnique(ParseContext ctx, int id) throws ParseException {
+        return (Functor) super.makeVariablesUnique(ctx, id);
+    }
 }

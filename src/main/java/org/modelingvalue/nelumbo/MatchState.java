@@ -47,7 +47,7 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
 
     public MatchState(Functor functor, MatchState<E> to) {
         super(TypeMatcherState.EMPTY);
-        this.transitions = Map.of(Entry.of(functor, to));
+        this.transitions = Map.of(Entry.of(functor.declaration(), to));
         this.elements = Set.of();
     }
 
@@ -121,10 +121,7 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
         }
         case Node node    -> {
             Functor functor = node.functor();
-            state = functor != null ? transitions().get(functor) : null;
-            if (state == null && functor != null) {
-                state = transitions().get(functor.declaration());
-            }
+            state = functor != null ? transitions().get(functor.declaration()) : null;
             if (state != null) {
                 for (Object arg : node.args()) {
                     state = state.doMatch(arg, typeArgs);

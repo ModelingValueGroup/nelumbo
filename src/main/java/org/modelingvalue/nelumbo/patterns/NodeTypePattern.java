@@ -150,12 +150,12 @@ public class NodeTypePattern extends Pattern {
 
     @Override
     public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
-            Map<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
                 Type type = n instanceof Variable ? n.type().toVariable() : n.type();
-                if (!nodeType().typeMatcher().match(type, MutableMap.of(typeArgs)).isEmpty()) {
+                if (!nodeType().typeMatcher().match(type, typeArgs).isEmpty()) {
                     args.add(n);
                     return i + 1;
                 }
