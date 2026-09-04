@@ -59,7 +59,7 @@ public final class NelumboEvaluator {
     private NelumboEvaluator() {
     }
 
-    /** deadlineMs <= 0 means no deadline. */
+    /** {@code deadlineMs <= 0} means no deadline. */
     public static EvalResult evaluate(String source, String name, long deadlineMs) {
         return evaluate(source, name, deadlineMs, null);
     }

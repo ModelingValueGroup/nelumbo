@@ -535,10 +535,8 @@ public class Node extends StructImpl implements AstElement {
 
     public Node makeVariablesUnique(ParseContext ctx, int id) throws ParseException {
         return replace(n -> {
-            if (n instanceof Variable v) {
-                if (ctx.outer().type(v.name()) != null || ctx.outer().variable(v.name()) != null) {
-                    return v.makeUnique(id);
-                }
+            if (n instanceof Variable v && ctx.outer().type(v.name()) != null) {
+                return v.makeUnique(id);
             }
             return n;
         }).resetDeclaration();
@@ -609,22 +607,11 @@ public class Node extends StructImpl implements AstElement {
         for (Object arg : args().reverse()) {
             switch (arg) {
             case Type type    -> {
-                TokenType tt = type.tokenType();
-                if (tt != null) {
-                    next = new MatchState<>(tt, next);
-                } else {
-                    next = new MatchState<>(type, next);
-                }
+                next = matchType(next, type);
                 break;
             }
             case Variable var -> {
-                Type type = var.type();
-                TokenType tt = type.tokenType();
-                if (tt != null) {
-                    next = new MatchState<>(tt, next);
-                } else {
-                    next = new MatchState<>(type, next);
-                }
+                next = matchType(next, var.type());
                 break;
             }
             case Node node    -> {
@@ -639,6 +626,15 @@ public class Node extends StructImpl implements AstElement {
         Functor functor = functor();
         assert functor != null;
         return new MatchState<>(functor, next);
+    }
+
+    private static <E extends Node> MatchState<E> matchType(MatchState<E> next, Type type) {
+        TokenType tt = type.tokenType();
+        if (tt != null) {
+            return new MatchState<>(tt, next);
+        } else {
+            return new MatchState<>(type, next);
+        }
     }
 
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
@@ -679,7 +675,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Node setType(Type type) {
-        return this; // type.equals(type()) ? this : setFunctorOrType(type);
+        return type.equals(type()) ? this : setFunctorOrType(type);
     }
 
 }
