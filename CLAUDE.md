@@ -35,6 +35,8 @@ Run a single test method:
 
 The root `test` task depends on `:lsp:server:test`, so `./gradlew test` runs both.
 
+Failing tests are made prominent in the log by an `allprojects` test listener in the root `build.gradle.kts`: a red (ANSI 91) `####` banner with the exception per failed test, a red per-task tail summary, and on GitHub Actions additionally a `::error` workflow annotation (shows up on the run's summary page). Covers every `Test` task in every (sub)project; do not use raw ESC bytes in the build script - the codes are backslash-u001B string escapes.
+
 ### Dependency versions
 
 Shared third-party versions live in the version catalog `gradle/libs.versions.toml` (immutable-collections, mvg-json, jackson, lsp4j, junit-jupiter, slf4j) - referenced as `libs.mvg.json` etc.; bump versions there only. Module-unique dependencies stay as literals in their build script. immutable-collections is declared ONCE, in the root project, as `api(libs.immutable.collections)` (its types are part of the core public API), so every `implementation(project(":"))` consumer gets it transitively at the same version - do NOT re-declare it in submodules.

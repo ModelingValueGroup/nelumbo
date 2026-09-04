@@ -125,3 +125,48 @@ tasks.test {
     dependsOn(":website:test")
     dependsOn(":mcp:test")
 }
+
+// make failing tests stand out in the (CI) log: a red banner per failure + a GitHub error annotation
+allprojects {
+    tasks.withType<Test>().configureEach {
+        val taskPath = path
+        addTestListener(object : TestListener {
+            val red   = "\u001B[91m"
+            val reset = "\u001B[0m"
+            val bar   = "#".repeat(120)
+
+            override fun beforeSuite(suite: TestDescriptor) {
+            }
+
+            override fun beforeTest(testDescriptor: TestDescriptor) {
+            }
+
+            override fun afterTest(desc: TestDescriptor, result: TestResult) {
+                if (result.resultType == TestResult.ResultType.FAILURE) {
+                    val name = "${desc.className}.${desc.name}"
+                    val msg  = result.exception?.toString() ?: "no exception info"
+                    println()
+                    println("$red$bar")
+                    println("##")
+                    println("##  TEST FAILED: $name")
+                    msg.lines().forEach { println("##      $it") }
+                    println("##")
+                    println("$bar$reset")
+                    println()
+                    if (System.getenv("GITHUB_ACTIONS") != null) {
+                        val oneLine = "$name: $msg".replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+                        println("::error title=Test failed::$oneLine")
+                    }
+                }
+            }
+
+            override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+                if (suite.parent == null && result.failedTestCount > 0) {
+                    println("$red$bar")
+                    println("##  ${result.failedTestCount} FAILED test(s) in $taskPath - look for 'TEST FAILED' banners above")
+                    println("$bar$reset")
+                }
+            }
+        })
+    }
+}
