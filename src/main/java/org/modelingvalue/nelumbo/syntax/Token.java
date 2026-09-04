@@ -413,7 +413,21 @@ public final class Token implements AstElement {
         sb.append(text);
     }
 
-    public List<String> completions() {
+    // offsets are 0-based indexes into text(), 0..numChars()
+    public record Completion(int replaceStart,
+                             // start of the text to replace (may be before the cursor)
+                             int replaceEnd,
+                             // end (exclusive) of the text to replace (may be after the cursor)
+                             String text,
+                             // replacement text, any length
+                             TokenType kind,
+                             // KEYWORD if the parser marks it keyword, else TokenType.of(text)
+                             String documentation) // functor declaration when known, else null
+    {
+    }
+
+    // cursor: offset of the caret in the token text, 0..numChars()
+    public List<Completion> completions(int cursor) {
         Token t = previous;
         while (t != null && t.state == null) {
             t = t.previous;
@@ -422,7 +436,10 @@ public final class Token implements AstElement {
         if (t == null) {
             return List.of();
         }
-        return t.state.tokenTexts().toKeys().sorted().asList();
+        System.err.println("completions: " + t.state.tokenTexts().size());
+        // stub: replaces the whole token, cursor ignored, kind/documentation not yet determined
+        return t.state.tokenTexts().toKeys().sorted()
+                      .map(s -> new Completion(0, numChars, s, TokenType.KEYWORD, null)).asList();
     }
 
 }

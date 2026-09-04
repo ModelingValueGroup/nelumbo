@@ -17,9 +17,7 @@
 package org.modelingvalue.nelumbo.lsp.documentService;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CompletionItem;
@@ -28,10 +26,13 @@ import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class DocumentCompletionService extends DocumentServiceAdapter {
     public DocumentCompletionService(NlDocumentManager documentManager) {
@@ -46,25 +47,67 @@ public class DocumentCompletionService extends DocumentServiceAdapter {
         }
         Position             caretPos   = params.getPosition();
         Token                caretToken = document.tokenAt(caretPos);
-        Set<String>          seen       = new HashSet<>();
         List<CompletionItem> items      = new ArrayList<>();
 
-        // Primary: parser-state-aware completions
         if (caretToken != null) {
-            for (String completion : caretToken.completions()) {
-                if (seen.add(completion)) {
-                    CompletionItem ci = new CompletionItem(completion);
-                    ci.setKind(CompletionItemKind.Keyword);
-                    ci.setDetail("keyword");
-                    ci.setInsertTextFormat(InsertTextFormat.PlainText);
-                    items.add(ci);
-                }
+            int cursor = offsetIn(caretToken, caretPos);
+            for (Token.Completion completion : caretToken.completions(cursor)) {
+                //System.err.println("  - " + completion);
+                items.add(toCompletionItem(caretToken, completion));
             }
         }
-
         if (items.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
         return CompletableFuture.completedFuture(Either.forLeft(items));
+    }
+
+    private static CompletionItem toCompletionItem(Token token, Token.Completion completion) {
+        CompletionItem ci = new CompletionItem(completion.text());
+        ci.setKind(kindOf(completion.kind()));
+        ci.setDetail(completion.kind() == null ? null : completion.kind().name().toLowerCase());
+        if (completion.documentation() != null) {
+            ci.setDocumentation(completion.documentation());
+        }
+        Range range = new Range(positionIn(token, completion.replaceStart()),
+                                positionIn(token, completion.replaceEnd()));
+        ci.setTextEdit(Either.forLeft(new TextEdit(range, completion.text())));
+        ci.setInsertTextFormat(InsertTextFormat.PlainText);
+        return ci;
+    }
+
+    // document Position -> offset in the token text (handles multi-line tokens)
+    private static int offsetIn(Token token, Position pos) {
+        if (pos.getLine() == token.line()) {
+            return pos.getCharacter() - token.position();
+        }
+        String text   = token.text();
+        int    offset = 0;
+        for (int line = token.line(); line < pos.getLine(); line++) {
+            offset = text.indexOf('\n', offset) + 1;
+        }
+        return offset + pos.getCharacter();
+    }
+
+    // offset in the token text -> document Position (handles multi-line tokens)
+    private static Position positionIn(Token token, int offset) {
+        String head = token.text().substring(0, offset);
+        int    nl   = head.lastIndexOf('\n');
+        if (nl < 0) {
+            return new Position(token.line(), token.position() + offset);
+        }
+        int lines = (int) head.chars().filter(c -> c == '\n').count();
+        return new Position(token.line() + lines, offset - nl - 1);
+    }
+
+    private static CompletionItemKind kindOf(TokenType kind) {
+        return switch (kind) {
+            case KEYWORD -> CompletionItemKind.Keyword;
+            case OPERATOR, META_OPERATOR, SINGLEQUOTE, SEMICOLON, COMMA, LEFT, RIGHT -> CompletionItemKind.Operator;
+            case TYPE -> CompletionItemKind.Class;
+            case VARIABLE -> CompletionItemKind.Variable;
+            case NUMBER, STRING -> CompletionItemKind.Value;
+            case null, default -> CompletionItemKind.Text;
+        };
     }
 }
