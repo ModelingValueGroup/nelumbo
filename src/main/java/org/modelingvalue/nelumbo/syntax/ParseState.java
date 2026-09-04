@@ -342,7 +342,7 @@ public class ParseState extends AbstractState<ParseState> {
         if (token == null) {
             return null;
         }
-        Map<DirectionContext, Set<ParseState>> dirStates = dirStates(outerRepetitions, ctx, group, typeArgs);
+        Map<DirectionContext, Set<TokenState>> dirStates = dirStates(token, outerRepetitions, ctx, group, typeArgs);
         while (dirStates.size() > 1) {
             int max = max(dirStates);
             for (Entry<DirectionContext, Set<TokenState>> e : dirStates) {
@@ -376,6 +376,33 @@ public class ParseState extends AbstractState<ParseState> {
             max = Math.max(max, ts.token.index());
         }
         return max;
+    }
+
+    private Map<DirectionContext, Set<TokenState>> dirStates(Token token,
+            Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx, String group,
+            Map<Variable, Type> typeArgs) throws ParseException {
+        Map<DirectionContext, Set<TokenState>> dirStates = Map.of();
+        for (Entry<DirectionContext, Set<ParseState>> e : dirStates(outerRepetitions, ctx, group, typeArgs)) {
+            Set<TokenState> states = Set.of();
+            for (ParseState state : e.getValue()) {
+                if (e.getKey().direction != Direction.tokenType) {
+                    TokenState next = state.tokenTextNext(token, ctx, null);
+                    if (next != null) {
+                        states = states.add(next);
+                    }
+                }
+                if (e.getKey().direction != Direction.tokenText) {
+                    TokenState next = state.tokenTypeNext(token, ctx, null);
+                    if (next != null) {
+                        states = states.add(next);
+                    }
+                }
+            }
+            if (!states.isEmpty()) {
+                dirStates = dirStates.put(e.getKey(), states);
+            }
+        }
+        return dirStates;
     }
 
     private Map<DirectionContext, Set<ParseState>> dirStates(Map<RepetitionPattern, ParseState> outerRepetitions,
@@ -427,12 +454,10 @@ public class ParseState extends AbstractState<ParseState> {
     private void repetitionStates(ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions, //
             MutableMap<DirectionContext, Set<ParseState>> dirStates) throws ParseException {
         if (!endRepetitions().isEmpty()) {
-            Set<TokenState> states = Set.of();
+            Set<ParseState> states = Set.of();
             for (Entry<RepetitionPattern, ParseState> r : repetitions) {
                 if (endRepetitions().contains(r.getKey())) {
-                    for (TokenState next : r.getValue().tokenNext(token, ctx)) {
-                        states = states.add(next);
-                    }
+                    states = states.add(r.getValue());
                 }
             }
             if (!states.isEmpty()) {
@@ -446,14 +471,12 @@ public class ParseState extends AbstractState<ParseState> {
             Map<Variable, Type> typeArgs) throws ParseException {
         if (functor() != null) {
             Type type = functor().resultType();
-            Set<TokenState> states = Set.of();
+            Set<ParseState> states = Set.of();
             for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
                 if (pc.outer() != null && pc.state() != null && !pc.state().isNodesEmpty()) {
                     ParseState state = pc.state().matchType(type, MutableMap.of(typeArgs));
                     if (state != null) {
-                        for (TokenState next : state.tokenNext(token, ctx)) {
-                            states = states.add(next);
-                        }
+                        states = states.add(state);
                         if (state.functor() != null) {
                             type = state.functor().resultType();
                         }
@@ -483,14 +506,6 @@ public class ParseState extends AbstractState<ParseState> {
             }
         }
         return states;
-    }
-
-    private TokenState[] tokenNext(Token token, ParseContext ctx) throws ParseException {
-        TokenState next1 = tokenTextNext(token, ctx, null);
-        TokenState next2 = tokenTypeNext(token, ctx, null);
-        return next1 != null && next2 != null ? new TokenState[] { next1, next2 }
-                : next1 != null ? new TokenState[] { next1 }
-                        : next2 != null ? new TokenState[] { next2 } : new TokenState[0];
     }
 
     private TokenState tokenTextNext(Token token, ParseContext ctx, PatternResult result) {
