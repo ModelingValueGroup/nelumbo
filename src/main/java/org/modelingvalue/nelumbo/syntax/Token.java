@@ -29,7 +29,7 @@ import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.PatternPartPattern;
 
-@SuppressWarnings({ "unused" })
+@SuppressWarnings({"unused"})
 public final class Token implements AstElement {
 
     private final TokenType type;
@@ -65,19 +65,19 @@ public final class Token implements AstElement {
         if (text == null) {
             throw new NullPointerException("text can not be null");
         }
-        this.type = type;
-        this.text = text;
-        this.index = index;
-        this.numLines = U.numLines(text);
-        this.numChars = text.length();
-        this.indexEnd = index + numChars;
-        this.line = line;
-        this.lineEnd = line + numLines;
-        this.lastLine = numLines == 0 ? lineEnd : lineEnd - 1;
-        this.position = position;
-        this.positionEnd = numLines == 0 || numLines == 1 ? position + numChars : numChars - text.lastIndexOf('\n') - 1;
+        this.type         = type;
+        this.text         = text;
+        this.index        = index;
+        this.numLines     = U.numLines(text);
+        this.numChars     = text.length();
+        this.indexEnd     = index + numChars;
+        this.line         = line;
+        this.lineEnd      = line + numLines;
+        this.lastLine     = numLines == 0 ? lineEnd : lineEnd - 1;
+        this.position     = position;
+        this.positionEnd  = numLines == 0 || numLines == 1 ? position + numChars : numChars - text.lastIndexOf('\n') - 1;
         this.lastPosition = positionEnd - 1;
-        this.fileName = fileName;
+        this.fileName     = fileName;
     }
 
     public void setNext(Token next) {
@@ -111,9 +111,9 @@ public final class Token implements AstElement {
     public Token split(int i) {
         Token t1 = splitGet1(i);
         Token t2 = splitGet2(i);
-        t1.next = t2;
+        t1.next    = t2;
         t1.nextAll = t2;
-        t2.next = next();
+        t2.next    = next();
         t2.nextAll = nextAll();
         return t1;
     }
@@ -130,7 +130,7 @@ public final class Token implements AstElement {
 
     public void connect(Token t1) {
         Token t2 = t1.next;
-        t2.previous = t1;
+        t2.previous    = t1;
         t2.previousAll = t1;
         previous.setNext(t1);
         previousAll.setNextAll(t1);
@@ -141,8 +141,8 @@ public final class Token implements AstElement {
     public Token prepend(String prefix) {
         String sup = prefix + text;
         Token merge = new Token(TokenType.of(sup), sup, line, position - prefix.length(), index - prefix.length(),
-                fileName);
-        merge.next = next;
+                                fileName);
+        merge.next    = next;
         merge.nextAll = nextAll;
         return merge;
     }
@@ -271,12 +271,12 @@ public final class Token implements AstElement {
     @Override
     public boolean equals(Object obj) {
         return obj == this || obj instanceof Token that//
-                && Objects.equals(this.type, that.type)//
-                && Objects.equals(this.text, that.text)//
-                && this.line == that.line//
-                && this.position == that.position//
-                && this.index == that.index//
-                && Objects.equals(this.fileName, that.fileName);
+                              && Objects.equals(this.type, that.type)//
+                              && Objects.equals(this.text, that.text)//
+                              && this.line == that.line//
+                              && this.position == that.position//
+                              && this.index == that.index//
+                              && Objects.equals(this.fileName, that.fileName);
     }
 
     @Override
@@ -292,11 +292,11 @@ public final class Token implements AstElement {
 
     public String debug() {
         return String.format("%s:[%d:%d...%d:%d]:[#%d:#%d]:[%d:%d]:%s:%s", //
-                fileName, //
-                line + 1, position + 1, lastLine + 1, lastPosition + 1, //
-                numLines, numChars, //
-                lineEnd + 1, positionEnd + 1, //
-                type, textTraced());
+                             fileName, //
+                             line + 1, position + 1, lastLine + 1, lastPosition + 1, //
+                             numLines, numChars, //
+                             lineEnd + 1, positionEnd + 1, //
+                             type, textTraced());
     }
 
     @Override
@@ -311,9 +311,9 @@ public final class Token implements AstElement {
 
     public List<Token> list(Token last) {
         List<Token> list = List.of(this);
-        Token t = this;
+        Token       t    = this;
         while (t != last) {
-            t = t.next();
+            t    = t.next();
             list = list.add(t);
         }
         return list;
@@ -321,9 +321,9 @@ public final class Token implements AstElement {
 
     public List<Token> listAll(Token last) {
         List<Token> list = List.of(this);
-        Token t = this;
+        Token       t    = this;
         while (t != last) {
-            t = t.nextAll();
+            t    = t.nextAll();
             list = list.add(t);
         }
         return list;
@@ -387,7 +387,7 @@ public final class Token implements AstElement {
 
     public void setTextMatch(boolean isKeyword, boolean isConnected) {
         this.isTextMatch = true;
-        this.isKeyword = isKeyword;
+        this.isKeyword   = isKeyword;
         this.isConnected = isConnected;
     }
 
@@ -414,7 +414,15 @@ public final class Token implements AstElement {
     }
 
     public List<String> completions() {
-        return state != null ? state.tokenTexts().toKeys().sorted().asList() : List.of();
+        Token t = previous;
+        while (t != null && t.state == null) {
+            t = t.previous;
+        }
+
+        if (t == null) {
+            return List.of();
+        }
+        return t.state.tokenTexts().toKeys().sorted().asList();
     }
 
 }

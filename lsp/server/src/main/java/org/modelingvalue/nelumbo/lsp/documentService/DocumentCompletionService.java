@@ -26,12 +26,12 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
 import org.modelingvalue.nelumbo.lsp.NlDocumentManager;
 import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class DocumentCompletionService extends DocumentServiceAdapter {
     public DocumentCompletionService(NlDocumentManager documentManager) {
@@ -44,10 +44,10 @@ public class DocumentCompletionService extends DocumentServiceAdapter {
         if (document == null) {
             return CompletableFuture.completedFuture(null);
         }
-        Position caretPos   = params.getPosition();
-        Token    caretToken = document.tokenAt(caretPos);
-        Set<String>          seen  = new HashSet<>();
-        List<CompletionItem> items = new ArrayList<>();
+        Position             caretPos   = params.getPosition();
+        Token                caretToken = document.tokenAt(caretPos);
+        Set<String>          seen       = new HashSet<>();
+        List<CompletionItem> items      = new ArrayList<>();
 
         // Primary: parser-state-aware completions
         if (caretToken != null) {
@@ -56,25 +56,7 @@ public class DocumentCompletionService extends DocumentServiceAdapter {
                     CompletionItem ci = new CompletionItem(completion);
                     ci.setKind(CompletionItemKind.Keyword);
                     ci.setDetail("keyword");
-                    items.add(ci);
-                }
-            }
-        }
-
-        // Supplementary: NAME tokens matching prefix
-        if (caretToken != null && caretToken.type() == TokenType.NAME) {
-            String prefix = caretToken.text().substring(0, caretPos.getCharacter() - caretToken.position());
-            for (Token t : document.tokens()) {
-                if (t.type() == TokenType.NAME && t.text().startsWith(prefix) && seen.add(t.text())) {
-                    CompletionItem ci = new CompletionItem(t.text());
-                    TokenType ct = t.colorType();
-                    ci.setKind(switch (ct) {
-                        case TYPE -> CompletionItemKind.Class;
-                        case VARIABLE -> CompletionItemKind.Variable;
-                        case KEYWORD -> CompletionItemKind.Keyword;
-                        default -> CompletionItemKind.Text;
-                    });
-                    ci.setDetail(ct.name().toLowerCase());
+                    ci.setInsertTextFormat(InsertTextFormat.PlainText);
                     items.add(ci);
                 }
             }
