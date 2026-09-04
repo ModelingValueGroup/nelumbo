@@ -29,6 +29,12 @@ jobs:
             ALLREP_TOKEN: "${{secrets.ALLREP_TOKEN}}"
             TOKEN       : "${{secrets.ALLREP_TOKEN}}"
             CI          : "true"
+            # be kind to the npm registry: with the warm setup-node cache npm ci still does
+            # audit/metadata round trips per install - skip those in CI (applies to every npm
+            # invocation, including the one inside gradle's :website:npmBundle)
+            npm_config_prefer_offline: "true"
+            npm_config_audit         : "false"
+            npm_config_fund          : "false"
         steps  :
             -   uses: actions/checkout@v7
                 with:

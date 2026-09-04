@@ -59,6 +59,10 @@ jobs:
         env    :
             ALLREP_TOKEN: "${{secrets.ALLREP_TOKEN}}"
             TOKEN       : "${{secrets.ALLREP_TOKEN}}"
+            # be kind to the npm registry: skip audit/metadata round trips in CI (see build.yaml)
+            npm_config_prefer_offline: "true"
+            npm_config_audit         : "false"
+            npm_config_fund          : "false"
         steps  :
             -   uses: actions/checkout@v7
                 with:
