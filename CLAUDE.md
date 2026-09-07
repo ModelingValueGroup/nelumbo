@@ -18,6 +18,7 @@ Requires **Java 21+**. Uses Gradle 8.14.3 (Kotlin DSL) via wrapper.
 ./gradlew :lsp:server:serverJar          # LSP server shaded JAR
 ./gradlew :website:serverJar             # Website HTTP server shaded JAR (needs node/npm: bundles the Monaco/LSP frontend)
 ./gradlew :mcp:mcpJar                    # MCP server shaded JAR (stdio; register as: java -jar nelumbo-mcp-server-<version>.jar)
+./gradlew :browser:browserDist           # In-browser build (TeaVM JS): demo page + nelumbo.js in browser/build/dist/ (needs node: smoke test)
 ./gradlew :lsp:plugins:eclipse:jar       # Eclipse plugin
 ./gradlew :lsp:plugins:intellij:build    # IntelliJ plugin
 ./gradlew editorJar                      # Standalone editor (ShadowJar)
@@ -52,6 +53,7 @@ nelumbo (root)              → Core language: syntax, semantics, pattern matchi
 ├── cli                     → The Nelumbo CLI (NelumboCli, package org.modelingvalue.nelumbo.cli): evaluates .nl files/inline sources (-n), --json output, and with --server <port> serves a KB over REST (JDK com.sun.net.httpserver + mvg-json, no third-party deps) + EvalService/NelumboServer/KnowledgeBaseLoader/NamedSource/ServerGui in package org.modelingvalue.nelumbo.server; jar nelumbo-cli-<version>.jar (~2 MB)
 ├── website                 → Website server: uses the cli module's EvalService (REST endpoints) and adds an LSP WebSocket at /lsp and the public pages from src/main/resources/public/: landing (/), Monaco-based feature tour (/tour.html) and free-form playground (/playground.html)
 ├── mcp                     → MCP stdio server (official MCP Java SDK): tools eval_nl, search_docs, get_example, new_model for LLM authoring of .nl decision models
+├── browser                 → In-browser build of the core (TeaVM 0.15 JS target): exports evaluateNl(source) → JSON; source overlays + demo page (see Browser Module below)
 ├── lsp/server              → LSP server (depends on root + LSP4J + Jackson + Tyrus WebSocket)
 └── lsp/plugins/
     ├── eclipse             → Eclipse IDE plugin (Java, dropins-based)
@@ -142,6 +144,18 @@ End-to-end browser tests live in `website/src/main/frontend/e2e/` (Playwright, C
 **Deployment.** `.github/workflows/deploy.yml` deploys the website on pushes to `master` (and manually via workflow_dispatch): it builds `:website:serverJar`, bakes it into a Docker image (`website/Dockerfile`, arm64), pushes to `registry.openwalnoot.com/openwalnoot/services-docker-images/nelumbo-website` (the self-hosted gitlab.openwalnoot.com registry), then over plain SSH copies `website/docker-compose.yml` to `/data/sites/nelumbo.nl` on the Openwalnoot server and runs `docker compose pull && up -d --force-recreate`, followed by an in-network health check. Traefik routes `nelumbo.nl` to the container (external `web` network); a second router 301-redirects `www.nelumbo.nl` to the apex (redirectregex middleware; `$$` in the compose label escapes compose interpolation); the apex router adds HSTS (headers middleware, max-age 1 year + includeSubDomains, no preload flag - preload-list inclusion is hard to reverse); the server's default ACME resolver obtains the Let's Encrypt cert automatically from the Host rule (no TLS labels needed), but only if DNS (including AAAA - Let's Encrypt prefers IPv6) already points at the server, and after a failure it retries only on a Traefik restart or config change. Required repo secrets: `OW_HOST`, `OW_USER`, `OW_PRIVATE_KEY`, `GITLAB_USER`, `GITLAB_DOCKER_TOKEN` (plus the existing `ALLREP_TOKEN`). Note: mvgplugin fails the build if any workflow job lacks the `[no-ci]` guard in an `if:`.
 
 **Public-deployment note.** The per-session guards above are in-process only. For a public site, front `/lsp` with a TLS reverse proxy that enforces per-IP connection limits (32 idle-but-pinging sockets can otherwise hold every session slot) and consider rate-limiting log output (malformed frames and unknown LSP methods each log a line).
+
+## Browser Module - Nelumbo compiled to JS (TeaVM)
+
+`browser/` compiles the core to a single JS bundle (TeaVM 0.15, JS target, UMD) exporting `evaluateNl(source) → JSON string` (shape mirrors `NelumboEvaluator.EvalResult`: ok/diagnostics/queries; 10 s eval deadline; internal errors come back as a diagnostic, never a JS exception). `./gradlew :browser:browserDist` assembles `browser/build/dist/` (demo page + `nelumbo.js`, works from `file://`; UMD attaches `evaluateNl` to `self` in a plain `<script>`).
+
+**Overlay strategy.** TeaVM can't run ForkJoin/`SerializedLambda`/`Class.getResource`, so `browser/src/main/java` carries same-FQN patched COPIES that shadow the originals by classpath order: core `KnowledgeBase` (synchronous `run()`, no POOL, empty default resolver list) and `NInteger` (BigInteger canonicalized in `of()` — TeaVM hashCode bug), plus immutable-collections `Collection` (PARALLELISM=1), `ContextThread` (plain ThreadLocal, no worker threads), `TreeCollectionImpl` (`split()` false, `getIntStream` via `IntStream.range`), `MutableMap` (`compareAndSet`), `LambdaReflection` (`serialized()` null → lambda-class-based equals/hashCode). Each overlay's header comment names its origin + deltas. The collections overlays are copied from the local `../immutable-collections` checkout and must stay API-compatible with the published version in the catalog; when either upstream class changes, re-copy + re-apply the marked deltas. The crucial build trick: `generateJavaScript`'s classpath is re-ordered so the module's own classes precede the dependency jars (TeaVM would otherwise link the originals — javac already prefers local sources, TeaVM does not).
+
+**Glue** (package `org.modelingvalue.nelumbo.browser`): `NelumboBrowser` (`@JSExport` entry), `EmbeddedStdlibResolver` + build-generated `StdlibSources` (stdlib .nl files embedded as strings by the `generateStdlibSources` task — no `Class.getResource` under TeaVM), `ReflectionKeep` (class-literal array + `link()` touching constructors/methods/fields so TeaVM keeps the `@NelumboConstructor`/`@NelumboMethod`/`@NelumboFunctorField` classes that are only reached via `Class.forName`) and `NelumboReflectionSupplier` (build-time SPI via META-INF/services, deprecated-but-functional in 0.15). Adding a new annotated stdlib class requires adding it to `ReflectionKeep.CLASSES` or browser eval breaks (the smoke test catches it).
+
+**Testing.** `:browser:check` runs `browserSmokeTest`: `node src/test/js/smoke.js` evaluates fib(100) (bignum) and `examples/family.nl` and pins the exact result strings to the JVM `NelumboEvaluator` output (byte-identical; also the overlay-drift guard). Node is resolved like the website module's npm (PATH, then nvm). One JVM-neutral core change supports this build: `TokenType`'s `\v`/`\h`/`\R` regexes are spelled out as explicit char classes (TeaVM's regex engine lacks them).
+
+**Not wired up (yet):** website integration, wasm-GC target, releases/CI artifact upload.
 
 ## MCP Module - LLM Authoring Tools
 
