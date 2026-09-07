@@ -87,6 +87,37 @@ tasks.named<org.teavm.gradle.tasks.GenerateJavaScriptTask>("generateJavaScript")
     classpath.setFrom(listOf(sourceSets["main"].output) + original)
 }
 
+// Resolve the node executable: the PATH first (CI/setup-node and normal shells), then nvm's node
+// versions - same pattern as the website module's findNpm (a Gradle daemon started outside a login
+// shell does not see nvm on the PATH).
+fun findNode(): String {
+    val isWindows = System.getProperty("os.name").lowercase().contains("win")
+    val exe       = if (isWindows) "node.exe" else "node"
+    val onPath    = System.getenv("PATH").orEmpty().split(File.pathSeparator)
+            .map { File(it, exe) }
+    val nvmDir    = File(System.getProperty("user.home"), ".nvm/versions/node")
+    val inNvm     = (nvmDir.listFiles()?.filter { it.isDirectory } ?: emptyList())
+            .sortedByDescending { it.lastModified() }
+            .map { File(it, "bin/$exe") }
+    return (onPath + inNvm).firstOrNull { it.canExecute() }?.absolutePath ?: exe
+}
+
+// Node smoke test: pins the compiled bundle's eval output to the JVM results (see smoke.js).
+// Node is already a build prerequisite (the website module bundles its frontend with npm).
+val browserSmokeTest = tasks.register<Exec>("browserSmokeTest") {
+    dependsOn(tasks.named("generateJavaScript"))
+    inputs.file(layout.buildDirectory.file("generated/teavm/js/nelumbo.js"))
+    inputs.file("src/test/js/smoke.js")
+    commandLine(
+        findNode(), "src/test/js/smoke.js",
+        layout.buildDirectory.file("generated/teavm/js/nelumbo.js").get().asFile.path,
+        rootProject.file("src/main/resources/org/modelingvalue/nelumbo/examples/family.nl").path,
+    )
+}
+tasks.named("check") {
+    dependsOn(browserSmokeTest)
+}
+
 teavm.js {
     mainClass = "org.modelingvalue.nelumbo.browser.NelumboBrowser"
     moduleType = org.teavm.gradle.api.JSModuleType.UMD
