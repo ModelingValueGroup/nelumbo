@@ -159,6 +159,16 @@ Adding a `.nl` example (`src/main/resources/org/modelingvalue/nelumbo/examples/`
 
 .nl coloring in IntelliJ comes ONLY from LSP semantic tokens (there is no `lang.syntaxHighlighterFactory`). LSP4IJ applies received tokens via one of two paths: direct (plain text/TextMate files) or "lazy" via `HighlightVisitor#visit(PsiElement)` for languages with their own `ParserDefinition`. The lazy path produces NO editor colors for nelumbo's flat PSI even though the tokens arrive correctly (verifiable in LSP4IJ's Semantic Tokens Inspector tool window) - same code in LSP4IJ 0.19.1 and 0.21.0, so it was broken ever since the custom PSI landed (fe02be8, 2026-05-28). Fix (2026-09-03): `NelumboLanguageServerFactory.createClientFeatures()` forces the direct path by overriding `LSPSemanticTokensFeature.shouldVisitPsiElement` to return false. Keep the LSP4IJ pin (now 0.21.0) at the current marketplace version: the runIde sandbox IDE auto-updates LSP4IJ from the marketplace on first launch, so a lower pin compiles against a version users never actually run. Sandbox debugging notes: the LSP server's stderr appears only in the LSP4IJ console (Language Servers tool window), not in the sandbox `idea.log`; `NlTextDocumentService` prints a `~~~ <request>` line for every LSP request unconditionally, and `~/nelumbo/settings.json` (`"Debugging":true`) enables the per-token server-side dump. The server jar the sandbox runs is `~/nelumbo/server.jar`, freshly extracted from the plugin resources on every start (sandbox mode never downloads).
 
+## Bug Repros (`bug-repros/`)
+
+Red-by-design `.nl` reproductions for the confirmed findings of the 2026-09-07 multi-agent
+code review of core + lsp (16 files, `run-all.sh` runs them all against the CLI jar with
+`-ea`). Every expectation states the CORRECT behavior, so each file fails (mismatch or
+crash) until its bug is fixed; after a fix, promote the file into the regular test
+resources. They are NOT wired into the Gradle build. The full review report (37 confirmed,
+7 half-verified, 11 unverified findings, incl. the LSP/editor ones that have no CLI repro)
+lives in the 2026-09-07 session; findings reference file:line in their header comments.
+
 ## Code Conventions
 
 - All Java source files carry an LGPL 3.0 header (auto-corrected by `mvgCorrector` Gradle task using `docs/header-template.txt`).
