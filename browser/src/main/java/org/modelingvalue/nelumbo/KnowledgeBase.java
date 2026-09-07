@@ -236,8 +236,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private final static AtomicReference<Map<String, KnowledgeBase>> IMPORT_MAP       = new AtomicReference<>(Map.of());
+    // TEAVM delta: no default ResourceImportResolver (Class.getResource does not exist under TeaVM);
+    // the browser entry point registers an EmbeddedStdlibResolver instead
     private final static AtomicReference<List<ImportResolver>>       IMPORT_RESOLVERS = new AtomicReference<>(
-            List.of(new ResourceImportResolver()));
+            List.of());
 
     /**
      * Registers an import resolver. Resolvers added later have higher priority.

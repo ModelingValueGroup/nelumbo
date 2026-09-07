@@ -16,6 +16,13 @@
 
 package org.modelingvalue.nelumbo.browser;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 import org.teavm.jso.JSExport;
 
 /**
@@ -23,12 +30,63 @@ import org.teavm.jso.JSExport;
  */
 public final class NelumboBrowser {
 
+    private static final long DEADLINE_MS = 10_000;
+
+    private static boolean initialized;
+
     private NelumboBrowser() {
     }
 
+    /**
+     * Evaluates a self-contained .nl source and returns a JSON string:
+     * {@code {"ok":bool,"diagnostics":[{"line","col","length","message"}],
+     * "queries":[{"query","result","expectationMatched","facts","falsehoods"}]}}.
+     * Never throws into JS: internal errors come back as a diagnostic.
+     */
     @JSExport
     public static String evaluateNl(String source) {
-        return "{\"ok\":true}";
+        try {
+            init();
+            NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, "<browser>", DEADLINE_MS);
+            Map<String, Object> json = new LinkedHashMap<>();
+            json.put("ok", result.ok());
+            List<Object> diagnostics = new ArrayList<>();
+            for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
+                Map<String, Object> dj = new LinkedHashMap<>();
+                dj.put("line", d.line());
+                dj.put("col", d.col());
+                dj.put("length", d.length());
+                dj.put("message", d.message());
+                diagnostics.add(dj);
+            }
+            json.put("diagnostics", diagnostics);
+            List<Object> queries = new ArrayList<>();
+            for (NelumboEvaluator.QueryOutcome q : result.queries()) {
+                Map<String, Object> qj = new LinkedHashMap<>();
+                qj.put("query", q.query());
+                qj.put("result", q.result());
+                qj.put("expectationMatched", q.expectationMatched());
+                qj.put("facts", q.facts());
+                qj.put("falsehoods", q.falsehoods());
+                queries.add(qj);
+            }
+            json.put("queries", queries);
+            return Json.write(json);
+        } catch (Throwable t) {
+            return Json.write(Map.of(
+                    "ok", false,
+                    "diagnostics", List.of(Map.of(
+                            "line", 1, "col", 1, "length", 1,
+                            "message", "internal error: " + t))));
+        }
+    }
+
+    private static void init() {
+        if (!initialized) {
+            ReflectionKeep.link();
+            KnowledgeBase.registerResolver(new EmbeddedStdlibResolver());
+            initialized = true;
+        }
     }
 
     public static void main(String[] args) {
