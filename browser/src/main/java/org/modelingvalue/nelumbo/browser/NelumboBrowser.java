@@ -14,33 +14,24 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+package org.modelingvalue.nelumbo.browser;
 
-// Nelumbo CLI (evaluate .nl files, also runs the HTTP eval server via --server)
-include("cli")
+import org.teavm.jso.JSExport;
 
-// Website (HTTP server + Monaco/LSP frontend)
-include("website")
+/**
+ * Entry point of the TeaVM browser build: exports {@link #evaluateNl(String)} to JavaScript.
+ */
+public final class NelumboBrowser {
 
-// MCP server
-include("mcp")
+    private NelumboBrowser() {
+    }
 
-// Browser build of the core (TeaVM JS)
-include("browser")
+    @JSExport
+    public static String evaluateNl(String source) {
+        return "{\"ok\":true}";
+    }
 
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
-
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-        }
+    public static void main(String[] args) {
+        // no-op: the exported evaluateNl is the API; TeaVM needs a main class to link from
     }
 }

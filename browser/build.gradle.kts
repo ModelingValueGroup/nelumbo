@@ -14,33 +14,31 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rootProject.name = "nelumbo"
+plugins {
+    java
+    // TeaVM version is a module-unique literal (version-catalog convention: shared versions only)
+    id("org.teavm") version "0.15.0"
+}
 
-// Nelumbo CLI (evaluate .nl files, also runs the HTTP eval server via --server)
-include("cli")
-
-// Website (HTTP server + Monaco/LSP frontend)
-include("website")
-
-// MCP server
-include("mcp")
-
-// Browser build of the core (TeaVM JS)
-include("browser")
-
-// LSP components
-include("lsp:server")
-include("lsp:plugins:eclipse")
-include("lsp:plugins:intellij")
-
-val inEclipse: String? = System.getenv("GRADLE_ECLIPSE")
-val localImmutables = file("../immutable-collections")
-val useLocalImmutables = inEclipse == "true" || localImmutables.isDirectory
-println("Gradle: inEclipse=$inEclipse, useLocalImmutables=$useLocalImmutables")
-if (useLocalImmutables) {
-    includeBuild(localImmutables) {
-        dependencySubstitution {
-            substitute(module("org.modelingvalue:immutable-collections")).using(project(":"))
-        }
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation(project(":"))
+}
+
+teavm.js {
+    mainClass = "org.modelingvalue.nelumbo.browser.NelumboBrowser"
+    moduleType = org.teavm.gradle.api.JSModuleType.UMD
+    targetFileName = "nelumbo.js"
+    obfuscated = true
+    sourceMap = false
 }
