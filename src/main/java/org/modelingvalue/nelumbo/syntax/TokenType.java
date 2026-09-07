@@ -32,11 +32,12 @@ public enum TokenType {
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //
     NUMBER("[0-9]+", VARIABLE_CONTENT), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", VARIABLE_CONTENT), //
-    END_LINE_COMMENT("//[^\\v]*", SKIP, VARIABLE_CONTENT), //
+    // \v, \h and \R are spelled out as explicit char classes: the TeaVM (browser) build's regex engine lacks them
+    END_LINE_COMMENT("//[^\\n\\x0B\\f\\r\\x85\\u2028\\u2029]*", SKIP, VARIABLE_CONTENT), //
     IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     OPERATOR("(?!//)[~!@#$%^&*=+|:<>.?/-]+", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
-    NEWLINE("\\R", CONTINUES_ON_NEXT_LINE, LAYOUT), //
-    HSPACE("\\h+", SKIP, LAYOUT), //
+    NEWLINE("\\r\\n|[\\n\\x0B\\f\\r\\x85\\u2028\\u2029]", CONTINUES_ON_NEXT_LINE, LAYOUT), //
+    HSPACE("[ \\t\\xA0\\u1680\\u180E\\u2000-\\u200A\\u202F\\u205F\\u3000]+", SKIP, LAYOUT), //
     ERROR(".", VARIABLE_CONTENT), //
     // ================ rest is not actually matched:
     BEGINOFFILE("", LAYOUT), //
