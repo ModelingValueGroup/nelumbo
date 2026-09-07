@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nelumbo in the browser</title>
+<style>
+    body { font-family: system-ui, sans-serif; max-width: 56rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.4rem; } h1 span { color: #c184d8; }
+    textarea { width: 100%; height: 16rem; font: 13px/1.5 ui-monospace, monospace; padding: .75rem;
+               border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+    button { margin: .75rem 0; padding: .5rem 1.5rem; font-size: 1rem; border: none; border-radius: 8px;
+             background: #c184d8; color: #fff; cursor: pointer; }
+    button:hover { background: #a99ae8; }
+    pre { background: #f6f2f8; border-radius: 8px; padding: .75rem; font-size: 13px; white-space: pre-wrap; }
+    .err { color: #b00020; }
+    .okq { color: #1d7a1d; }
+    p.note { color: #666; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1><span>Nelumbo</span> in the browser</h1>
+<p class="note">The whole Nelumbo engine (parser, stdlib, inference) compiled to JavaScript with TeaVM.
+Evaluation happens right here in this page &mdash; no server involved.</p>
+<textarea id="source" spellcheck="false">import nelumbo.logic
+
+Person   :: Object
+FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
+
+Boolean  ::= &lt;Person&gt; is a grandparent of &lt;Person&gt;  #30   // new syntax...
+
+Person g, p, c
+g is a grandparent of c &lt;=&gt; E[p](pc(g,p) &amp; pc(p,c))       // ...meaning, in logic...
+
+Person ::= Hendrik, Juliana, Beatrix
+fact pc(Hendrik, Juliana), pc(Juliana, Beatrix)
+
+g is a grandparent of Beatrix ?  [(g=Hendrik)][..]        // ...used immediately</textarea>
+<br>
+<button id="run">Run</button>
+<pre id="out">Results appear here.</pre>
+<script src="nelumbo.js"></script>
+<script>
+    var out = document.getElementById('out');
+    document.getElementById('run').addEventListener('click', function () {
+        out.textContent = 'evaluating…';
+        setTimeout(function () {
+            var result = JSON.parse(evaluateNl(document.getElementById('source').value));
+            out.innerHTML = '';
+            result.diagnostics.forEach(function (d) {
+                var line = document.createElement('div');
+                line.className = 'err';
+                line.textContent = d.line + ':' + d.col + ' ' + d.message;
+                out.appendChild(line);
+            });
+            result.queries.forEach(function (q) {
+                var line = document.createElement('div');
+                line.className = q.expectationMatched === false ? 'err' : 'okq';
+                line.textContent = q.query + ' ?  →  ' + q.result;
+                out.appendChild(line);
+            });
+            if (!out.firstChild) {
+                out.textContent = 'no queries (add a line ending in ?)';
+            }
+        }, 10);
+    });
+</script>
+</body>
+</html>

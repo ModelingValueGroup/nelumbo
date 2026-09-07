@@ -118,6 +118,14 @@ tasks.named("check") {
     dependsOn(browserSmokeTest)
 }
 
+// Standalone demo: web/index.html + the compiled bundle; works straight from file:// (single JS file)
+tasks.register<Sync>("browserDist") {
+    dependsOn(tasks.named("generateJavaScript"))
+    from("web")
+    from(layout.buildDirectory.dir("generated/teavm/js"))
+    into(layout.buildDirectory.dir("dist"))
+}
+
 teavm.js {
     mainClass = "org.modelingvalue.nelumbo.browser.NelumboBrowser"
     moduleType = org.teavm.gradle.api.JSModuleType.UMD
