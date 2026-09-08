@@ -96,7 +96,7 @@ public final class Parser implements ParseExceptionHandler {
         try {
             Token token = tokenizerResult.first();
             ParseContext ctx = ParseContext.of(Type.DEFAULT_GROUP, Integer.MIN_VALUE, knowledgeBase.parseContext());
-            Node node = parseNode(token, ctx);
+            Node node = parseNode(token, ctx, null);
             if (node != null) {
                 result.setRoot(node);
                 token = node.nextToken();
@@ -115,18 +115,18 @@ public final class Parser implements ParseExceptionHandler {
         }
     }
 
-    protected Node parseNode(Token token, ParseContext ctx) throws ParseException {
-        String group = ctx.group();
-        PatternResult result = new PatternResult(this, ctx);
-        if (!preParse(group, token, null, result)) {
-            if (!hiddenParse(group, token, result) || ctx.precedence() >= result.leftPrecedence()) {
+    protected Node parseNode(Token token, ParseContext inner, ParseContext outer) throws ParseException {
+        String group = inner.group();
+        PatternResult result = new PatternResult(this, inner);
+        if (!preParse(group, token, null, result, outer)) {
+            if (!hiddenParse(group, token, result, outer) || inner.precedence() >= result.leftPrecedence()) {
                 return null;
             }
         }
         Node left = result.postParse();
-        token = left != null && ctx.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;
-        while (token != null && preParse(group, token, left, result)) {
-            if (ctx.precedence() >= result.leftPrecedence()) {
+        token = left != null && inner.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;
+        while (token != null && preParse(group, token, left, result, null)) {
+            if (inner.precedence() >= result.leftPrecedence()) {
                 return left;
             }
             left = result.postParse();
@@ -135,8 +135,10 @@ public final class Parser implements ParseExceptionHandler {
         return left;
     }
 
-    private boolean preParse(String group, Token token, Node left, PatternResult result) throws ParseException {
-        for (ParseContext pc = result.context(); pc != null; pc = pc.outer()) {
+    private boolean preParse(String group, Token token, Node left, PatternResult result, ParseContext outer)
+            throws ParseException {
+        for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null
+                : pc.outer()) {
             if (pc.preParse(group, token, left, result)) {
                 return true;
             }
@@ -144,12 +146,14 @@ public final class Parser implements ParseExceptionHandler {
         return false;
     }
 
-    private boolean hiddenParse(String group, Token token, PatternResult result) throws ParseException {
-        for (ParseContext pc = result.context(); pc != null; pc = pc.outer()) {
+    private boolean hiddenParse(String group, Token token, PatternResult result, ParseContext outer)
+            throws ParseException {
+        for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null
+                : pc.outer()) {
             Map<Type, Variable> vars = pc.hiddenVariables(group);
             if (vars != null) {
                 for (Entry<Type, Variable> var : vars) {
-                    if (preParse(group, token, var.getValue(), result)) {
+                    if (preParse(group, token, var.getValue(), result, null)) {
                         return true;
                     }
                 }
