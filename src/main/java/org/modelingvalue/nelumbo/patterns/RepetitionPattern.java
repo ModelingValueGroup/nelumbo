@@ -158,7 +158,7 @@ public class RepetitionPattern extends Pattern {
         List<Object> result = List.of();
         while (true) {
             MutableList<Object> inner = MutableList.of(List.of());
-            int ii = repeated.args(elements, i, inner, false, functor, typeArgs);
+            int ii = repeated.args(elements, i, inner, true, functor, typeArgs);
             if (ii >= 0) {
                 result = result.addAll(inner.toImmutable());
                 i = ii;
