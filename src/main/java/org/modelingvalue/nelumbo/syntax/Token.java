@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.syntax;
 import java.util.Objects;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
@@ -28,6 +29,7 @@ import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.PatternPartPattern;
+import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 @SuppressWarnings({ "unused" })
 public final class Token implements AstElement {
@@ -52,11 +54,11 @@ public final class Token implements AstElement {
     private Token nextAll;
     private Token previousAll;
 
-    private ParseState state;
-    private Node       node;
-    private boolean    isTextMatch;
-    private boolean    isKeyword;
-    private boolean    isConnected;
+    private StateRepetitionsContext stateContext;
+    private Node                    node;
+    private boolean                 isTextMatch;
+    private boolean                 isKeyword;
+    private boolean                 isConnected;
 
     public Token(TokenType type, String text, int line, int position, int index, String fileName) {
         if (type == null) {
@@ -337,12 +339,12 @@ public final class Token implements AstElement {
         this.node = node;
     }
 
-    public ParseState getState() {
-        return state;
+    public StateRepetitionsContext getStateContext() {
+        return stateContext;
     }
 
-    public void setState(ParseState state) {
-        this.state = state;
+    public void setStateContext(ParseState state, Map<RepetitionPattern, ParseState> repetitions, ParseContext ctx) {
+        this.stateContext = new StateRepetitionsContext(state, repetitions, ctx);
     }
 
     public Pattern declaration() {
@@ -429,10 +431,12 @@ public final class Token implements AstElement {
     // cursor: offset of the caret in the token text, 0..numChars()
     public List<Completion> completions(int cursor) {
         Token t = previous;
-        while (t != null && t.state == null) {
+        while (t != null && t.stateContext == null) {
             t = t.previous;
         }
-        return t != null ? t.state.completions(this, cursor) : List.of();
+        return t != null
+                ? t.stateContext.state.completions(t.stateContext.repetitions, t.stateContext.ctx, this, cursor)
+                : List.of();
     }
 
     public String string(Token to) {
@@ -446,6 +450,10 @@ public final class Token implements AstElement {
             }
         }
         return r;
+    }
+
+    private static record StateRepetitionsContext(ParseState state, Map<RepetitionPattern, ParseState> repetitions,
+            ParseContext ctx) {
     }
 
 }
