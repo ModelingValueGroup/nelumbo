@@ -77,10 +77,17 @@ public final class Rationals extends Predicate {
             }
             return set(2, p).factCI();
         } else if (factor1 != null && product != null) {
+            if (factor1.numerator().signum() == 0) {
+                // 0*x=0 holds for any x, 0*x=p with p!=0 never
+                return product.numerator().signum() == 0 ? unknown() : falsehoodCI();
+            }
             BigInteger dn = product.numerator().multiply(factor1.denominator());
             BigInteger dd = product.denominator().multiply(factor1.numerator());
             return set(1, Rational.of(dn, dd)).factCI();
         } else if (factor2 != null && product != null) {
+            if (factor2.numerator().signum() == 0) {
+                return product.numerator().signum() == 0 ? unknown() : falsehoodCI();
+            }
             BigInteger dn = product.numerator().multiply(factor2.denominator());
             BigInteger dd = product.denominator().multiply(factor2.numerator());
             return set(0, Rational.of(dn, dd)).factCI();

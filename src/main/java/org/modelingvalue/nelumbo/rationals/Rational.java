@@ -67,6 +67,14 @@ public final class Rational extends Node {
     }
 
     private static Object[] normalize(BigInteger numerator, BigInteger denominator) {
+        if (denominator.signum() == 0) {
+            throw new ArithmeticException("Rational with zero denominator: " + numerator + "/0");
+        }
+        if (denominator.signum() < 0) {
+            // keep the sign in the numerator so equal values have equal representations
+            numerator = numerator.negate();
+            denominator = denominator.negate();
+        }
         BigInteger gcd = numerator.gcd(denominator);
         return new Object[] { numerator.divide(gcd), denominator.divide(gcd) };
     }

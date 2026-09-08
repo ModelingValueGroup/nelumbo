@@ -46,7 +46,13 @@ public final class Multiply extends Predicate {
         IsoDuration ev = e == null ? null : e.value();
 
         if (dv != null && nv != null) {
-            IsoDuration scaled = dv.multipliedBy(nv.intValueExact());
+            IsoDuration scaled;
+            try {
+                scaled = dv.multipliedBy(nv.intValueExact());
+            } catch (ArithmeticException overflow) {
+                // multiplier or product outside the int range of java.time.Period: no representable result
+                return ev != null ? falsehoodCC() : falsehoodCI();
+            }
             if (ev != null) {
                 return scaled.equals(ev) ? factCC() : falsehoodCC();
             }

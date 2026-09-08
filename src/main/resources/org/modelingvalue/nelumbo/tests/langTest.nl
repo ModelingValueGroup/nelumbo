@@ -155,3 +155,24 @@ box(Alice)=box(Bob)   ? [][()]
 
 // Parenthesisation applies to generic types too
 // (box(red))=box(red)   ? [()][]
+
+// A repetition with a separator followed by more of the enclosing pattern:
+// the last separator belongs to the enclosing pattern, not to the repetition
+Seq<T> :: Object
+Seq<T> ::= seq(<(> <T> <,> , <)+> , end)
+
+seq(red, green, end)=seq(red, green, end) ? [()][]
+seq(red, end)=seq(red, green, end)        ? [][()]
+seq(red, end)=seq(red, end)               ? [()][]
+
+// =========================================================
+// 9. Comments directly after an operator character: the operator
+//    token stops before '//' and '/*' (no space needed)
+// =========================================================
+
+red=red ?// an end-of-line comment right after the '?'
+red=/* an in-line comment right after the '=' */red ? [()][]
+red=// an end-of-line comment right after the '=', the query continues on the next line
+red ? [()][]
+red=// ... and here the continuation makes the query false
+blue ? [][()]

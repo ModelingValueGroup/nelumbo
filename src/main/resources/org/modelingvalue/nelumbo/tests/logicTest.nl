@@ -114,3 +114,22 @@ C ::= rep <(> aa <)+>
 
 rep aa = rep aa aa    ? [][()]
 rep aa = rep aa       ? [()][]
+
+// a keyword-only alternation option keeps its identity
+D :: Object
+D ::= wrap <(> aa bb <|> dd ee <|> cc <)>
+
+wrap aa bb = wrap aa bb ? [()][]
+wrap cc    = wrap cc    ? [()][]
+wrap aa bb = wrap dd ee ? [][()]
+wrap cc    = wrap dd ee ? [][()]
+wrap cc    = wrap aa bb ? [][()]
+
+// a matched keyword-only optional is not the same as an absent one
+O :: Object
+O ::= opt <(> big bang <)?>
+
+opt big bang = opt          ? [][()]
+opt          = opt big bang ? [][()]
+opt big bang = opt big bang ? [()][]
+opt          = opt          ? [()][]

@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.datetime;
 
 import java.io.Serial;
+import java.time.Period;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NodeInfo;
@@ -59,7 +60,8 @@ public final class GreaterThan extends Predicate {
         // P30D has no
         // exact answer, so this is an explicit convention, not an exact ordering).
         if (left instanceof IsoDuration a && right instanceof IsoDuration b) {
-            return Long.compare(nominalSeconds(a), nominalSeconds(b));
+            int seconds = Long.compare(nominalSeconds(a), nominalSeconds(b));
+            return seconds != 0 ? seconds : Integer.compare(a.duration().getNano(), b.duration().getNano());
         }
         // java.time values must share an exact runtime type.
         if (left instanceof Comparable && left.getClass() == right.getClass()) {
@@ -69,7 +71,8 @@ public final class GreaterThan extends Predicate {
     }
 
     private static long nominalSeconds(IsoDuration value) {
-        long days = value.period().toTotalMonths() * 30L + value.period().getDays();
+        Period period = value.period();
+        long days = period.getYears() * 365L + period.getMonths() * 30L + period.getDays();
         return days * 86_400L + value.duration().getSeconds();
     }
 

@@ -118,6 +118,11 @@ P1D * 3 = P3D   ? [()][]
 PT1H * 2 = PT2H ? [()][]
 // forward-compute the scaled duration (period_multiply with result unbound)
 P1D * 3 = y ? [(y=P3D)][..]
+// a multiplier (or product) outside the int range of java.time.Period has no
+// representable result: falsehood, not a crash
+P1D * 9999999999 = y   ? [][..]
+P1D * 9999999999 = P1D ? [][()]
+P2D * 2000000000 = y   ? [][..]
 
 // =========================================================================
 // Comparison operators >, <, <=, >= (datetime.nl lines 38-56).
@@ -136,6 +141,10 @@ PT2H >= PT2H                              ? [()][]
 // Period ordering is by *nominal* magnitude (month = 30 days, year = 365):
 P1M > P29D ? [()][]
 P31D > P1M ? [()][]
+P1Y > P364D ? [()][]
+P366D > P1Y ? [()][]
+P1Y > P365D ? [][()]
+P1Y > P12M  ? [()][]
 // P1M and P30D are nominally equal, but '>=' derives from '>' | '=' and
 // Period equality is field-based (P1M != P30D), so this is *false*:
 P1M >= P30D ? [][()]

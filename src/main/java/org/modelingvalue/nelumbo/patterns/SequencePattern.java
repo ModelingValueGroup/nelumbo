@@ -135,14 +135,15 @@ public class SequencePattern extends Pattern {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
-        if (argTypes(List.of()).size() == 1) {
+        boolean keywordsOnly = keywordsOnly(alt);
+        if (!keywordsOnly && argTypes(List.of()).size() == 1) {
             args = List.of(List.of(args.get(ai)));
         }
         if (args.get(ai) instanceof List list) {
             StringBuffer inner = new StringBuffer();
             int ii = 0;
             for (Pattern element : elements()) {
-                ii = element.string(list, ii, inner, previous, false);
+                ii = element.string(list, ii, inner, previous, keywordsOnly);
                 if (ii < 0) {
                     return -1;
                 }
@@ -157,9 +158,10 @@ public class SequencePattern extends Pattern {
     public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         List<Object> result = List.of();
+        boolean keywordsOnly = keywordsOnly(alt);
         for (Pattern element : elements()) {
             MutableList<Object> inner = MutableList.of(List.of());
-            int ii = element.args(elements, i, inner, false, functor, typeArgs);
+            int ii = element.args(elements, i, inner, keywordsOnly, functor, typeArgs);
             if (ii >= 0) {
                 result = result.addAll(inner.toImmutable());
                 i = ii;
@@ -169,6 +171,16 @@ public class SequencePattern extends Pattern {
         }
         args.add(result.size() > 1 ? result : result.first());
         return i;
+    }
+
+    /**
+     * A sequence that extracts no arguments of its own (keywords only) would be
+     * indistinguishable from its sibling options in an alternation, from absence in an
+     * optional and from other iterations in a repetition; when such a context asks for
+     * identity ({@code alt}), the keyword texts themselves become the argument.
+     */
+    private boolean keywordsOnly(boolean alt) {
+        return alt && argTypes(List.of()).isEmpty();
     }
 
     @Override

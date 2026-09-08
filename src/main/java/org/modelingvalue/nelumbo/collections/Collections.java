@@ -60,7 +60,11 @@ public class Collections extends Predicate {
         }
         List<?> coll = list.collection();
         if (index != null) {
-            Object e = coll.get(index.value().intValue());
+            BigInteger iv = index.value();
+            if (iv.signum() < 0 || iv.compareTo(BigInteger.valueOf(coll.size())) >= 0) {
+                return element != null ? falsehoodCC() : falsehoodCI();
+            }
+            Object e = coll.get(iv.intValue());
             if (element != null) {
                 return element.equals(e) ? factCC() : falsehoodCC();
             }

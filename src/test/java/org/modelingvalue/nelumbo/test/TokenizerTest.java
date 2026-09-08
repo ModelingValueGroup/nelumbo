@@ -241,6 +241,49 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals("+-*/", all.get(1).text(), "mixed operators should be single token");
     }
 
+    @Test
+    public void tokenizerCommentDirectlyAfterOperatorTest() {
+        List<Token> all = tokenizeAll("1 = 2 ?// comment");
+        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        assertEquals("BEGINOFFILE NUMBER HSPACE OPERATOR HSPACE NUMBER HSPACE OPERATOR END_LINE_COMMENT ENDOFFILE",
+                types, "'//' directly after an operator must start a comment");
+        assertEquals("?", all.get(7).text(), "operator must stop before the comment");
+        assertEquals("// comment", all.get(8).text(), "comment must start at '//'");
+    }
+
+    @Test
+    public void tokenizerInLineCommentDirectlyAfterOperatorTest() {
+        List<Token> all = tokenizeAll("a=/*c*/b");
+        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        assertEquals("BEGINOFFILE NAME OPERATOR IN_LINE_COMMENT NAME ENDOFFILE", types,
+                "'/*' directly after an operator must start a comment");
+        assertEquals("=", all.get(2).text(), "operator must stop before the comment");
+    }
+
+    @Test
+    public void tokenizerStringDoesNotSpanLinesTest() {
+        // an unclosed quote (a common transient state while typing) must not swallow the
+        // following lines into one STRING token; the tokenizer's own assertions
+        // (checkToken, active with -ea) used to throw StringIndexOutOfBoundsException.
+        String example = "a = \"abc\na = \"x\" ?";
+        List<Token> all = tokenizeAll(example);
+        String types = all.map(t -> t.type().name()).collect(Collectors.joining(" "));
+        assertEquals("BEGINOFFILE NAME HSPACE OPERATOR HSPACE ERROR NAME NEWLINE NAME HSPACE OPERATOR HSPACE STRING HSPACE OPERATOR ENDOFFILE",
+                types, "an unclosed quote must be a single ERROR token");
+        assertEquals(example, all.map(Token::text).collect(Collectors.joining()), "could not reassemble tokens");
+        assertEqualsToken(0, 4, all, 5, TokenType.ERROR);
+        assertEqualsToken(1, 4, all, 12, TokenType.STRING);
+        assertEquals("\"x\"", all.get(12).text(), "the closed string on the next line must still be a STRING");
+    }
+
+    @Test
+    public void tokenizerEscapedQuoteInStringTest() {
+        List<Token> all = tokenizeAll("\"a\\\"b\"");
+        assertEquals(3, all.size(), "wrong number of tokens for an escaped quote");
+        assertEqualsToken(0, 0, all, 1, TokenType.STRING);
+        assertEquals("\"a\\\"b\"", all.get(1).text(), "escaped quote must stay inside the string");
+    }
+
     private static List<Token> tokenizeAll(String input) {
         return new Tokenizer(input, "test").tokenize().listAll();
     }

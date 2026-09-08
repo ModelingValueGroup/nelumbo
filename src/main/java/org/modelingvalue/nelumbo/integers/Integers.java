@@ -71,9 +71,16 @@ public final class Integers extends Predicate {
             }
             return set(2, NInteger.of(r)).factCI();
         } else if (f1 != null && p != null) {
+            if (f1.signum() == 0) {
+                // 0*x=0 holds for any x, 0*x=p with p!=0 never
+                return p.signum() == 0 ? unknown() : falsehoodCI();
+            }
             BigInteger[] dr = p.divideAndRemainder(f1);
             return dr[1].equals(BigInteger.ZERO) ? set(1, NInteger.of(dr[0])).factCI() : falsehoodCI();
         } else if (f2 != null && p != null) {
+            if (f2.signum() == 0) {
+                return p.signum() == 0 ? unknown() : falsehoodCI();
+            }
             BigInteger[] dr = p.divideAndRemainder(f2);
             return dr[1].equals(BigInteger.ZERO) ? set(0, NInteger.of(dr[0])).factCI() : falsehoodCI();
         }

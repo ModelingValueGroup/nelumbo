@@ -162,10 +162,14 @@ Adding a `.nl` example (`src/main/resources/org/modelingvalue/nelumbo/examples/`
 ## Bug Repros (`bug-repros/`)
 
 Red-by-design `.nl` reproductions for the confirmed findings of the 2026-09-07 multi-agent
-code review of core + lsp (16 files, `run-all.sh` runs them all against the CLI jar with
-`-ea`). Every expectation states the CORRECT behavior, so each file fails (mismatch or
-crash) until its bug is fixed; after a fix, promote the file into the regular test
-resources. They are NOT wired into the Gradle build. The full review report (37 confirmed,
+code review of core + lsp (`run-all.sh` runs them all against the CLI jar with `-ea`).
+Every expectation states the CORRECT behavior, so each file fails (mismatch or crash)
+until its bug is fixed; after a fix, promote the queries into the regular test resources
+(`src/main/resources/org/modelingvalue/nelumbo/tests/*.nl`, or `TokenizerTest` for
+tokenizer-only cases) and delete the repro file. 14 of the 16 were fixed that way on
+2026-09-08 (see the README's "Fixed and promoted" table); the 2 remaining files are
+inference-semantics questions (quantifier completeness on an unknown body, the un-indexed
+diagonal fact shape `r(a,a)`), not local fixes. They are NOT wired into the Gradle build. The full review report (37 confirmed,
 7 half-verified, 11 unverified findings, incl. the LSP/editor ones that have no CLI repro)
 lives in the 2026-09-07 session; findings reference file:line in their header comments.
 
