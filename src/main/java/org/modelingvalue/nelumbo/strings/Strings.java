@@ -52,7 +52,8 @@ public final class Strings extends Predicate {
         } else if (a1 != null && s != null) {
             return s.startsWith(a1) ? set(1, NString.of(s.substring(a1.length()))).factCI() : falsehoodCI();
         } else if (a2 != null && s != null) {
-            return s.endsWith(a2) ? set(0, NString.of(s.substring(0, a2.length()))).factCI() : falsehoodCI();
+            return s.endsWith(a2) ? set(0, NString.of(s.substring(0, s.length() - a2.length()))).factCI()
+                    : falsehoodCI();
         }
         return unknown();
     }

@@ -3,17 +3,20 @@ import    nelumbo.strings
 String  a, b, c
 Integer d
 
-"a"="a"                ? [()][]
-"a"!="a"               ? [][()]
+"a"="a"              ? [()][]
+"a"!="a"             ? [][()]
 
-"a"="b"                ? [][()]
-"a"!="b"               ? [()][]
+"a"="b"              ? [][()]
+"a"!="b"             ? [()][]
 
-"foo"+"bar"="baz"      ? [][()]
-"foo"+"bar"="foobar"   ? [()][]
-a+"bar"="foobar"       ? [(a="foo")][..]
-"foo"+a="foobar"       ? [(a="bar")][..]
-"foo"+"bar"=a          ? [(a="foobar")][..]
+"foo"+"bar"="baz"    ? [][()]
+"foo"+"bar"="foobar" ? [()][]
+a+"bar"="foobar"     ? [(a="foo")][..]
+"foo"+a="foobar"     ? [(a="bar")][..]
+"foo"+"bar"=a        ? [(a="foobar")][..]
+a+"r"="bar"          ? [(a="ba")][..]
+a+"obar"="foobar"    ? [(a="fo")][..]
+
 
 len("foo")=0           ? [][()]
 len("foo")=3           ? [()][]
