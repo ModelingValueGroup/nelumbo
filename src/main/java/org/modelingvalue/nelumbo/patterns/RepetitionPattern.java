@@ -156,27 +156,31 @@ public class RepetitionPattern extends Pattern {
         Pattern separator = separator();
         boolean mandatory = mandatory();
         List<Object> result = List.of();
+        boolean first = true;
         while (true) {
+            int beforeSeparator = i;
+            if (!first && separator != null) {
+                MutableList<Object> sepInner = MutableList.of(List.of());
+                int si = separator.args(elements, i, sepInner, false, functor, typeArgs);
+                if (si < 0) {
+                    break;
+                }
+                i = si;
+            }
             MutableList<Object> inner = MutableList.of(List.of());
             int ii = repeated.args(elements, i, inner, true, functor, typeArgs);
             if (ii >= 0) {
                 result = result.addAll(inner.toImmutable());
                 i = ii;
                 mandatory = false;
+                first = false;
             } else if (mandatory) {
                 return -1;
             } else {
+                // separator (if any) matched but was not followed by another repeated
+                // element: it belongs to the enclosing pattern, not this repetition.
+                i = beforeSeparator;
                 break;
-            }
-            if (separator != null) {
-                inner = MutableList.of(List.of());
-                ii = separator.args(elements, i, inner, false, functor, typeArgs);
-                if (ii >= 0) {
-                    mandatory = true;
-                    i = ii;
-                } else {
-                    break;
-                }
             }
         }
         args.add(result);
