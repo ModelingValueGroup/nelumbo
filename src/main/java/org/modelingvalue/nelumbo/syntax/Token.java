@@ -435,4 +435,17 @@ public final class Token implements AstElement {
         return t != null ? t.state.completions(this, cursor) : List.of();
     }
 
+    public String string(Token to) {
+        String r = "";
+        int toIndex = to != null ? to.index : Integer.MAX_VALUE;
+        for (Token t = this; t != null && t.index < toIndex; t = t.nextAll) {
+            if (t.indexEnd > toIndex) {
+                r += t.text().substring(0, toIndex - t.index);
+            } else {
+                r += t.text();
+            }
+        }
+        return r;
+    }
+
 }
