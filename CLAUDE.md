@@ -101,6 +101,8 @@ Core tests use `NelumboTestBase` which provides `testString()` and `testFile()` 
 
 System properties controlling test behavior: `PARALLEL_COLLECTIONS`, `REVERSE_NELUMBO`, `RANDOM_NELUMBO`, `TRACE_NELUMBO`, `TRACE_SYNTATIC`, `VERBOSE_TESTS`.
 
+`tests/sudoku.nl` (9x9 solver since 2026-09-09, was 6x6) is NOT wired into `NelumboTest`; run it via the CLI with `-DPARALLEL_COLLECTIONS=false`. Under the default (parallel) collections, `map` results are nondeterministic (the `putRow` query fails with different wrong values per run) - unfixed engine bug, not sudoku-specific. Its two solve puzzles derive from one valid grid with blanks chosen so each blank is forced (one per row/column/box, resp. an empty first row plus one blank per other row), keeping the first-found solution independent of engine search order; the whole file runs in ~3s.
+
 ## Nelumbo Language Syntax (.nl files)
 
 - Type declarations: `Person :: Object`
