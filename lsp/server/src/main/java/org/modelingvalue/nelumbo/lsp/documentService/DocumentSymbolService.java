@@ -45,7 +45,8 @@ public class DocumentSymbolService extends DocumentServiceAdapter {
     }
 
     @Override
-    public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
+    public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
+            DocumentSymbolParams params) {
         NlDocument document = documentManager.getDocument(params.getTextDocument().getUri());
         if (document == null) {
             return CompletableFuture.completedFuture(null);
@@ -53,7 +54,7 @@ public class DocumentSymbolService extends DocumentServiceAdapter {
         List<Either<SymbolInformation, DocumentSymbol>> result = new ArrayList<>();
         for (Node node : document.parserResult().roots()) {
             Token first = node.firstToken();
-            Token last  = node.lastToken();
+            Token last = node.lastToken();
             if (first == null || last == null) {
                 continue;
             }
@@ -65,12 +66,14 @@ public class DocumentSymbolService extends DocumentServiceAdapter {
                 docSym.setKind(SymbolKind.Class);
                 StringBuilder detail = new StringBuilder();
                 for (Type sup : type.supersDeclaration()) {
-                    if (!detail.isEmpty()) detail.append(", ");
+                    if (!detail.isEmpty()) {
+                        detail.append(", ");
+                    }
                     detail.append(sup.name());
                 }
                 docSym.setDetail(detail.isEmpty() ? "type" : detail.toString());
             } else if (node instanceof Variable variable) {
-                docSym.setName(variable.name());
+                docSym.setName(variable.baseName());
                 docSym.setKind(SymbolKind.Variable);
                 docSym.setDetail(variable.type().name());
             } else if (node instanceof Functor functor) {

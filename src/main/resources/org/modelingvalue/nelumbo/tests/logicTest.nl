@@ -109,8 +109,8 @@ A[a](a=T1&a=T2)    ? [][()]
 !A[a](a!=T1&a!=T2) ? [()][]
 !E[a](a!=T1|a!=T2) ? [][()]
 
-C :: Object
-C ::= rep <(> aa <)+>
+Rep :: Object
+Rep ::= rep <(> aa <)+>
 
-rep aa = rep aa aa    ? [][()]
-rep aa = rep aa       ? [()][]
+rep aa = rep aa aa ? [][()]
+rep aa = rep aa    ? [()][]

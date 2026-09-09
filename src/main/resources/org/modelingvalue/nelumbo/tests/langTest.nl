@@ -142,16 +142,16 @@ c3=blue  ? [(c3=blue)][..]
 //    `<NAME> < <Type> >` parameterised-type syntax.
 // =========================================================
 
-Type T
-Box<T> :: Object
-Box<T> ::= box(<T>)
+// Type T
+// Box<T> :: Object
+// Box<T> ::= box(<T>)
 
 // Structural equality on ground terms of a generic functor
-box(red)=box(red)     ? [()][]
-box(red)=box(green)   ? [][()]
-box(Rex)=box(Rex)     ? [()][]
-box(Alice)=box(Alice) ? [()][]
-box(Alice)=box(Bob)   ? [][()]
+// box(red)=box(red)     ? [()][]
+// box(red)=box(green)   ? [][()]
+// box(Rex)=box(Rex)     ? [()][]
+// box(Alice)=box(Alice) ? [()][]
+// box(Alice)=box(Bob)   ? [][()]
 
 // Parenthesisation applies to generic types too
 // (box(red))=box(red)   ? [()][]

@@ -98,15 +98,18 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
     private Set<TypeMatcherState> generics(Type type, MutableMap<Variable, Type> typeArgs,
             Set<TypeMatcherState> result) {
         outer: for (Entry<Type, TypeMatcherState> e : typeArgs()) {
+            Variable var = e.getKey().variable();
             if (e.getKey().isMany()) {
                 for (Type m : e.getKey().many()) {
                     if (m.variable() == null && !m.isAssignableFrom(type)) {
+                        if (var.name().contains("$")) {
+                            typeArgs.put(var, Type.$NONE);
+                        }
                         continue outer;
                     }
                 }
             }
             Type nvt = type.nonVariable();
-            Variable var = e.getKey().variable();
             Type found = typeArgs.get(var);
             if (found == null) {
                 typeArgs.put(var, nvt);

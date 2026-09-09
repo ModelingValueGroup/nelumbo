@@ -61,8 +61,8 @@ public final class Variable extends Node {
         return (Variable) super.setAstElements(elements);
     }
 
-    public Variable makeUnique(int id) {
-        return set(2, baseName() + "$" + id);
+    public Variable makeUnique(String id) {
+        return set(2, name() + "$" + id);
     }
 
     public Variable literal() {
@@ -86,7 +86,7 @@ public final class Variable extends Node {
         return length() > 0 ? (Type) get(1) : super.type();
     }
 
-    private String baseName() {
+    public String baseName() {
         String n = name();
         int i = n.indexOf('$');
         return i >= 0 ? n.substring(0, i) : n;
@@ -105,10 +105,10 @@ public final class Variable extends Node {
     public String toString(TokenType[] previous) {
         if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
             previous[0] = TokenType.NAME;
-            return " " + name();
+            return " " + baseName();
         }
         previous[0] = TokenType.NAME;
-        return name();
+        return baseName();
     }
 
     @Override

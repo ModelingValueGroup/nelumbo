@@ -281,8 +281,11 @@ public interface ParseContext {
         for (Map<Type, ParseState> states : preStates().get().toValues()) {
             for (ParseState state : states.toValues()) {
                 ParseState found = state.tokenTexts().get(name);
-                if (found != null && found.functor() != null) {
-                    return found.functor().constructedVariable();
+                if (found != null) {
+                    Functor functor = found.functor(Map.of());
+                    if (functor != null) {
+                        return functor.constructedVariable();
+                    }
                 }
             }
         }
@@ -293,8 +296,11 @@ public interface ParseContext {
         for (Map<Type, ParseState> states : preStates().get().toValues()) {
             for (ParseState state : states.toValues()) {
                 ParseState found = state.tokenTexts().get(name);
-                if (found != null && found.functor() != null) {
-                    return found.functor().constructedType();
+                if (found != null) {
+                    Functor functor = found.functor(Map.of());
+                    if (functor != null) {
+                        return functor.constructedType();
+                    }
                 }
             }
         }

@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
@@ -37,12 +38,12 @@ public abstract class AbstractState<S extends AbstractState> implements IState<S
     @SuppressWarnings("unchecked")
     public S matchType(Type type, MutableMap<Variable, Type> typeArgs) {
         S s = null;
-        for (Type m : typeMatcher().match(type, typeArgs)) {
+        Set<Type> types = typeMatcher().match(type, typeArgs);
+        for (Type m : types) {
             if (s == null) {
                 s = typeTransitions().get(m);
             } else {
-                S fs = s;
-                s = TYPE_ARGS.get(typeArgs.get(), () -> (S) fs.merge(typeTransitions().get(m)));
+                s = (S) s.merge(typeTransitions().get(m));
             }
         }
         return s;

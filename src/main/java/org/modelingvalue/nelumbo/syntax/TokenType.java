@@ -28,7 +28,7 @@ public enum TokenType {
     SEMICOLON(";"), //
     COMMA(",", CONTINUES_ON_NEXT_LINE), //
     LEFT("[\\(\\[\\{]", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
-    RIGHT("[\\)\\]\\}]", VARIABLE_CONTENT), //
+    RIGHT("[\\)\\]\\}]", /* CONTINUES_ON_NEXT_LINE, */ VARIABLE_CONTENT), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //
     NUMBER("[0-9]+", VARIABLE_CONTENT), //
     NAME("[a-zA-Z_][0-9a-zA-Z_]*", VARIABLE_CONTENT), //

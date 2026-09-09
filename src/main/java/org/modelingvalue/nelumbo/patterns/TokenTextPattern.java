@@ -62,7 +62,7 @@ public class TokenTextPattern extends Pattern {
 
     public String tokenText() {
         Object val = get(0);
-        return val instanceof Variable var ? var.name() : (String) val;
+        return val instanceof Variable var ? var.baseName() : (String) val;
     }
 
     @Override

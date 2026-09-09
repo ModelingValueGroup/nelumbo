@@ -51,16 +51,22 @@ import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 
 /**
- * Transport-independent Nelumbo eval service: turns a posted {@code .nl} document into JSON-ready result maps, and
- * renders the loaded knowledge base's metadata. The base KB is loaded once at startup; every evaluating request runs
- * against a throwaway child KB so requests never mutate shared state and are safe to serve concurrently. HTTP fronts
- * ({@link NelumboServer} on the JDK server, the website on Javalin) only map {@link Response} onto their own stack.
+ * Transport-independent Nelumbo eval service: turns a posted {@code .nl}
+ * document into JSON-ready result maps, and renders the loaded knowledge base's
+ * metadata. The base KB is loaded once at startup; every evaluating request
+ * runs against a throwaway child KB so requests never mutate shared state and
+ * are safe to serve concurrently. HTTP fronts ({@link NelumboServer} on the JDK
+ * server, the website on Javalin) only map {@link Response} onto their own
+ * stack.
  */
 public final class EvalService implements AutoCloseable {
 
     /** Default per-request inference budget, in milliseconds. */
-    public static final  long DEFAULT_TIMEOUT_MS = 30_000;
-    /** Extra wall-clock the HTTP backstop waits beyond the engine deadline before giving up. */
+    public static final long  DEFAULT_TIMEOUT_MS = 30_000;
+    /**
+     * Extra wall-clock the HTTP backstop waits beyond the engine deadline before
+     * giving up.
+     */
     private static final long GRACE_MS           = 2_000;
 
     /** An HTTP-ready outcome: the status code and the JSON-serializable body. */
@@ -72,11 +78,14 @@ public final class EvalService implements AutoCloseable {
     private final long            timeoutMs;
     private final ExecutorService evalExecutor;
 
-    /** {@code timeoutMs} is the per-request inference budget; 0 (or less) disables the timeout. */
+    /**
+     * {@code timeoutMs} is the per-request inference budget; 0 (or less) disables
+     * the timeout.
+     */
     public EvalService(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs) {
-        this.baseKb       = baseKb;
-        this.loadedFiles  = List.copyOf(loadedFiles);
-        this.timeoutMs    = timeoutMs;
+        this.baseKb = baseKb;
+        this.loadedFiles = List.copyOf(loadedFiles);
+        this.timeoutMs = timeoutMs;
         this.evalExecutor = Executors.newCachedThreadPool(runnable -> {
             Thread thread = new Thread(runnable, "nelumbo-eval");
             thread.setDaemon(true);
@@ -95,8 +104,10 @@ public final class EvalService implements AutoCloseable {
     }
 
     /**
-     * Handles one eval request body. The request is either a raw {@code .nl} document (any non-JSON content type) or a
-     * JSON envelope {@code {"document": "...", "trace": bool, "limit": int}} when the content type is JSON.
+     * Handles one eval request body. The request is either a raw {@code .nl}
+     * document (any non-JSON content type) or a JSON envelope
+     * {@code {"document": "...", "trace": bool, "limit": int}} when the content
+     * type is JSON.
      */
     public Response eval(String body, String contentType, boolean pathTrace) {
         EvalRequest request;
@@ -135,14 +146,16 @@ public final class EvalService implements AutoCloseable {
         if (trace) {
             addTraceStub(response);
         }
-        // A document that produced no queries but did report errors is treated as a client error.
+        // A document that produced no queries but did report errors is treated as a
+        // client error.
         boolean ok = result.errors.isEmpty() || !result.queries.isEmpty();
         return new Response(ok ? 200 : 400, response);
     }
 
     private EvalRequest parseRequest(String body, String contentType, boolean pathTrace) {
         if (contentType != null && contentType.toLowerCase().contains("json") && body != null && !body.isBlank()) {
-            // Json.fromJson throws IllegalArgumentException on malformed JSON; integral numbers come back as Long
+            // Json.fromJson throws IllegalArgumentException on malformed JSON; integral
+            // numbers come back as Long
             Map<?, ?> node = Json.fromJson(body) instanceof Map<?, ?> m ? m : Map.of();
             String document = node.get("document") instanceof String s ? s : null;
             boolean trace = pathTrace || Boolean.TRUE.equals(node.get("trace"));
@@ -157,7 +170,10 @@ public final class EvalService implements AutoCloseable {
     private record EvalRequest(String document, boolean trace, Integer limit, boolean stdlib) {
     }
 
-    /** Evaluated before the document when the envelope asks for {@code "stdlib": true}. */
+    /**
+     * Evaluated before the document when the envelope asks for
+     * {@code "stdlib": true}.
+     */
     private static final String STDLIB_IMPORTS = """
             import nelumbo.logic
             import nelumbo.integers
@@ -178,7 +194,7 @@ public final class EvalService implements AutoCloseable {
     }
 
     private record EvalResult(List<Map<String, Object>> queries, List<Map<String, Object>> errors,
-                              List<Map<String, Object>> parseTree) {
+            List<Map<String, Object>> parseTree) {
     }
 
     private EvalResult evaluate(String document, Integer limit, boolean stdlib) {
@@ -186,8 +202,10 @@ public final class EvalService implements AutoCloseable {
         List<Map<String, Object>> queries = new ArrayList<>();
         List<Map<String, Object>> errors = new ArrayList<>();
         List<Map<String, Object>> parseTree = new ArrayList<>();
-        // A throwaway child of the loaded base: a request's own declarations never leak into the shared
-        // base, concurrent requests stay isolated, and the deadline is carried into the inference.
+        // A throwaway child of the loaded base: a request's own declarations never leak
+        // into the shared
+        // base, concurrent requests stay isolated, and the deadline is carried into the
+        // inference.
         KnowledgeBase requestKb = new KnowledgeBase(baseKb);
         Runnable work = () -> {
             if (stdlib) {
@@ -223,8 +241,10 @@ public final class EvalService implements AutoCloseable {
     }
 
     private void runWithTimeout(KnowledgeBase requestKb, Runnable work) {
-        // The engine deadline makes the inference self-abort (via fixpoint -> NelumboTimeoutException); the
-        // future.get backstop guarantees the HTTP handler returns even if some step never re-checks the clock.
+        // The engine deadline makes the inference self-abort (via fixpoint ->
+        // NelumboTimeoutException); the
+        // future.get backstop guarantees the HTTP handler returns even if some step
+        // never re-checks the clock.
         requestKb.setDeadlineNanos(System.nanoTime() + timeoutMs * 1_000_000L);
         Future<?> future = evalExecutor.submit(() -> requestKb.run(work));
         try {
@@ -247,9 +267,10 @@ public final class EvalService implements AutoCloseable {
         InferResult result = query.inferResult();
         boolean hasFacts = !result.allFacts().isEmpty();
         boolean hasFalsehoods = !result.allFalsehoods().isEmpty();
-        // "true"  = at least one solution and no counterexample,
+        // "true" = at least one solution and no counterexample,
         // "false" = a counterexample and no solution,
-        // "unknown" = neither (or both) — the canonical "result" string carries the full detail.
+        // "unknown" = neither (or both) — the canonical "result" string carries the
+        // full detail.
         String status = hasFacts && !hasFalsehoods ? "true" : hasFalsehoods && !hasFacts ? "false" : "unknown";
 
         List<Map<String, String>> bindings = bindings(result.trueBindings());
@@ -285,8 +306,9 @@ public final class EvalService implements AutoCloseable {
         for (org.modelingvalue.collections.Map<Variable, Object> binding : bindings) {
             Map<String, String> json = new LinkedHashMap<>();
             for (Entry<Variable, Object> entry : binding) {
-                // Literal values (e.g. NInteger) render through toString(); deparse() yields "" for them.
-                json.put(entry.getKey().name(), String.valueOf(entry.getValue()));
+                // Literal values (e.g. NInteger) render through toString(); deparse() yields ""
+                // for them.
+                json.put(entry.getKey().baseName(), String.valueOf(entry.getValue()));
             }
             out.add(json);
         }
@@ -310,10 +332,13 @@ public final class EvalService implements AutoCloseable {
     public Map<String, Object> metadata() {
         Map<String, Object> json = new LinkedHashMap<>();
         json.put("files", loadedFiles);
-        // Only declarations that originate from the loaded files (matched by source file name): this drops
-        // both the bootstrap/library vocabulary (sourced from /nelumbo/...) and synthetic compiled nodes.
+        // Only declarations that originate from the loaded files (matched by source
+        // file name): this drops
+        // both the bootstrap/library vocabulary (sourced from /nelumbo/...) and
+        // synthetic compiled nodes.
         json.put("types", declaredTypes());
-        // Functors render cleanly via deparse (the pattern, e.g. "fib(<Integer>)"); rules/transforms via
+        // Functors render cleanly via deparse (the pattern, e.g. "fib(<Integer>)");
+        // rules/transforms via
         // toString (deparse of the compiled clause loses the head and "if" keywords).
         addFunctors(json);
         json.put("rules", declaredSources(baseKb.rules(), n -> collapse(String.valueOf(n))));

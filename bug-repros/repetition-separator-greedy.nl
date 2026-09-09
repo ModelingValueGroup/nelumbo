@@ -9,8 +9,8 @@
 import nelumbo.integers
 
 Type T
-C<T> :: Object
-C<T> ::= seq(<(> <T> <,> , <)+> , end)
+Seq<T> :: Object
+Seq<T> ::= seq(<(> <T> <,> , <)+> , end)
 
 seq(1, 2, end) = seq(1, 2, end) ? [()][]
 seq(1, end) = seq(1, 2, end)    ? [][()]
