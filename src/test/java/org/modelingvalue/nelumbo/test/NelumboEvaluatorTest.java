@@ -94,4 +94,47 @@ public class NelumboEvaluatorTest {
         EvalResult r = NelumboEvaluator.evaluate("import  nelumbo.integers", "nonewline.nl", 0);
         assertTrue(r.ok(), () -> "diagnostics: " + r.diagnostics());
     }
+
+    @Test
+    public void declarationsAccumulateAcrossSessionEvaluations() {
+        String setup = """
+                import  nelumbo.integers
+
+                Integer ::= fib(<Integer>)
+
+                Integer n, f
+
+                fib(n)=f <=>  f=n                 if n>=0 & n<=1,
+                              f=fib(n-1)+fib(n-2) if n>1
+                """;
+        NelumboEvaluator.SessionResult first = NelumboEvaluator.evaluate(org.modelingvalue.nelumbo.KnowledgeBase.BASE, setup, "<setup>", 0);
+        assertTrue(first.result().ok(), () -> "diagnostics: " + first.result().diagnostics());
+        // the fib declaration from the first evaluation must be visible in the second
+        NelumboEvaluator.SessionResult second = NelumboEvaluator.evaluate(first.kb(), "Integer r\nfib(7)=r ?\n", "<query>", 0);
+        assertTrue(second.result().ok(), () -> "diagnostics: " + second.result().diagnostics());
+        assertEquals(1, second.result().queries().size());
+        assertTrue(second.result().queries().get(0).result().contains("r=13"),
+                () -> "result: " + second.result().queries().get(0).result());
+    }
+
+    @Test
+    public void variablesPersistAcrossSessionEvaluationsWhenWorldScoped() {
+        org.modelingvalue.nelumbo.KnowledgeBase session = new org.modelingvalue.nelumbo.KnowledgeBase(org.modelingvalue.nelumbo.KnowledgeBase.BASE);
+        session.setWorldScopedVariables(true);
+        NelumboEvaluator.SessionResult imported = NelumboEvaluator.evaluate(session, "import nelumbo.integers\n", "<1>", 0);
+        assertTrue(imported.result().ok(), () -> "diagnostics: " + imported.result().diagnostics());
+        NelumboEvaluator.SessionResult declared = NelumboEvaluator.evaluate(imported.kb(), "Integer r\n", "<2>", 0);
+        assertTrue(declared.result().ok(), () -> "diagnostics: " + declared.result().diagnostics());
+        // r was declared in a previous evaluation and must still be usable here
+        NelumboEvaluator.SessionResult queried = NelumboEvaluator.evaluate(declared.kb(), "3*4=r ?\n", "<3>", 0);
+        assertTrue(queried.result().ok(), () -> "diagnostics: " + queried.result().diagnostics());
+        assertEquals(1, queried.result().queries().size());
+        assertTrue(queried.result().queries().get(0).result().contains("r=12"),
+                () -> "result: " + queried.result().queries().get(0).result());
+        // redeclaring the same variable in a later evaluation must stay harmless
+        NelumboEvaluator.SessionResult redeclared = NelumboEvaluator.evaluate(queried.kb(), "Integer r\n3*3=r ?\n", "<4>", 0);
+        assertTrue(redeclared.result().ok(), () -> "diagnostics: " + redeclared.result().diagnostics());
+        assertTrue(redeclared.result().queries().get(0).result().contains("r=9"),
+                () -> "result: " + redeclared.result().queries().get(0).result());
+    }
 }

@@ -94,11 +94,13 @@ java -jar cli/build/libs/nelumbo-cli-<version>.jar [options] <file>...
 
 Pass `-` in place of a filename to read from stdin, or `-n` / `--nelumbo` followed by Nelumbo source to evaluate it directly from the command line. Use `-p` / `--prep` with a comma-separated list of stdlib modules (or `all`) to preload them before each evaluation and into a served knowledge base. Use `-j` / `--json` for machine-readable output: one JSON object with an `errors` message array, per-query `facts`/`falsehoods` name/value pairs, and the parse tree of the input (node kind, functor/type, position, text, children). Use `-q` / `--quiet` to suppress query output (errors are still reported) and `-h` / `--help` for the full option list. The process exits with `0` on success, `1` on parse/evaluation/comparison errors, and `2` on usage errors — suitable for scripting and CI.
 
+Use `-i` / `--interactive` for a REPL: any given files and `--prep` modules are loaded into a session knowledge base first, then statements and queries are entered one at a time (end a line with `\` to continue it; declarations accumulate, an input with errors is discarded). On a terminal it offers line editing and persistent history (`~/.nelumbo_history`); with piped stdin it runs scripted. `:help` lists the commands, `:quit` or Ctrl-D ends the session.
+
 The jar is also double-clickable: launched without a console and without arguments it opens an interactive window with an editable Nelumbo example, a Run button evaluating it in place, a server tab (start/stop the HTTP server with a request counter), and the command-line usage as documentation.
 
 ## HTTP Server
 
-The same jar is a lean HTTP executor for `.nl` specifications: with `--server <port>` it loads the given files (directories are scanned for `*.nl`) and `-n` sources into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server and has no third-party dependencies — the shaded jar is about 2 MB.
+The same jar is a lean HTTP executor for `.nl` specifications: with `--server <port>` it loads the given files (directories are scanned for `*.nl`) and `-n` sources into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server; the only third-party dependency in the jar is JLine (for the interactive REPL) — the shaded jar is about 4 MB.
 
 ```sh
 java -jar cli/build/libs/nelumbo-cli-<version>.jar --server 8080 [--timeout MS] [<file-or-dir>...]

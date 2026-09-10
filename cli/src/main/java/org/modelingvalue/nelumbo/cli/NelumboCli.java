@@ -98,9 +98,10 @@ public final class NelumboCli {
         }
         boolean quiet = false;
         boolean trace = false;
+        boolean interactive = false;
         JsonOutput json = null;
         Integer serverPort = null;
-        long timeoutMs = NelumboServer.DEFAULT_TIMEOUT_MS;
+        Long timeoutMs = null;
         java.util.List<String> prep = new ArrayList<>();
         java.util.List<Input> inputs = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
@@ -171,6 +172,10 @@ public final class NelumboCli {
             case "--trace":
                 trace = true;
                 break;
+            case "-i":
+            case "--interactive":
+                interactive = true;
+                break;
             case "-h":
             case "--help":
                 printUsage(System.out);
@@ -190,8 +195,22 @@ public final class NelumboCli {
             }
         }
         String preamble = prepPreamble(prep);
+        if (interactive) {
+            if (json != null || serverPort != null) {
+                System.err.println("nelumbo: --interactive cannot be combined with --json or --server");
+                System.exit(2);
+                return;
+            }
+            if (inputs.stream().anyMatch(input -> "-".equals(input.file()))) {
+                System.err.println("nelumbo: - (stdin) cannot be used with --interactive");
+                System.exit(2);
+                return;
+            }
+            System.exit(runRepl(inputs, preamble, timeoutMs != null ? timeoutMs : 0));
+            return;
+        }
         if (serverPort != null) {
-            runServer(serverPort, timeoutMs, inputs, preamble);
+            runServer(serverPort, timeoutMs != null ? timeoutMs : NelumboServer.DEFAULT_TIMEOUT_MS, inputs, preamble);
             return; // no exit: the server's dispatcher thread keeps the JVM alive
         }
         if (inputs.isEmpty()) {
@@ -249,6 +268,39 @@ public final class NelumboCli {
         System.out.println("Nelumbo server listening on http://localhost:" + bound
                 + " (" + files.size() + " source(s) loaded" + (preamble != null ? " + stdlib prep" : "")
                 + ", timeout " + timeoutMs + " ms)");
+    }
+
+    /** Loads the inputs into a session knowledge base and reads statements interactively. */
+    private static int runRepl(java.util.List<Input> inputs, String preamble, long timeoutMs) {
+        boolean console = System.console() != null;
+        try (NelumboRepl.LineSource source = console ? NelumboRepl.terminalSource()
+                : NelumboRepl.plainSource(new java.io.BufferedReader(new java.io.InputStreamReader(System.in, StandardCharsets.UTF_8)), System.out, false)) {
+            NelumboRepl repl = new NelumboRepl(source, System.out, System.err, timeoutMs);
+            if (preamble != null) {
+                repl.load("<prep>", preamble);
+            }
+            int inlineCount = 0;
+            for (Input input : inputs) {
+                if (input.file() != null) {
+                    try {
+                        for (Path file : expand(Path.of(input.file()))) {
+                            repl.load(file.toString(), read(file));
+                        }
+                    } catch (java.io.UncheckedIOException e) {
+                        System.err.println(e.getMessage());
+                    }
+                } else {
+                    repl.load("<nelumbo-" + ++inlineCount + ">", input.inlineSource());
+                }
+            }
+            if (console) {
+                System.out.println("Nelumbo interactive session - :help for commands, :quit or Ctrl-D to exit");
+            }
+            return repl.run();
+        } catch (IOException e) {
+            System.err.println("nelumbo: cannot start interactive session: " + e.getMessage());
+            return 1;
+        }
     }
 
     private static java.util.List<Path> expand(Path path) {
@@ -709,6 +761,11 @@ public final class NelumboCli {
                 With --server the inputs are not evaluated one by one but loaded together
                 into a knowledge base that is served over HTTP.
 
+                With --interactive the inputs are loaded together into a session knowledge
+                base and further statements and queries are read interactively (a REPL).
+                Declarations accumulate; an input with errors is discarded. End a line
+                with \\ to continue it on the next line; :help lists the commands.
+
                   <file>           path to a .nl file, or - to read stdin
                   -n, --nelumbo S  evaluate the Nelumbo source given as argument S
                   -p, --prep M,..  preload stdlib modules before each evaluation (and into
@@ -718,9 +775,12 @@ public final class NelumboCli {
                                    per query the facts/falsehoods as name/value pairs,
                                    and the parse tree of the input
                   --trace          add the (currently stubbed) trace field to the output
+                  -i, --interactive read-eval-print loop; any given files and --prep
+                                   modules are loaded into the session first
                   -s, --server P   serve the inputs over HTTP on port P (0 picks a free port)
-                  -t, --timeout MS per-request inference budget in server mode
-                                   (default 30000; 0 disables)
+                  -t, --timeout MS per-request/per-input inference budget in server and
+                                   interactive mode (server default 30000; interactive
+                                   default unlimited; 0 disables)
                   -q, --quiet      suppress query result output (errors still printed)
                   -h, --help       show this help and exit
 

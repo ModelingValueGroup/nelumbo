@@ -171,7 +171,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             return addType(new Type(var), ctx);
         } else {
             Type type = var.type().toVariable();
-            Functor functor = Functor.of(List.of(var), t(List.of(var), var), type, Type.NAMESPACE, Variable.class,
+            Functor functor = Functor.of(List.of(var), t(List.of(var), var), type, worldScopedVariables ? null : Type.NAMESPACE, Variable.class,
                     null);
             functor.init(this, ctx, bootstrapping);
             return functor;
@@ -313,10 +313,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private boolean               stopped;
     private ParseExceptionHandler exceptionHandler;
     private long                  deadlineNanos;
+    private boolean               worldScopedVariables;
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
         this.deadlineNanos = init != null ? init.deadlineNanos : 0;
+        this.worldScopedVariables = init != null && init.worldScopedVariables;
         context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, TRACE_NELUMBO, null);
         parseContext = ParseContext.of(Type.DEFAULT_GROUP, prePatterns, postPatterns, hiddenVariables);
         init();
@@ -334,6 +336,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public boolean isPastDeadline() {
         return deadlineNanos != 0 && System.nanoTime() - deadlineNanos >= 0;
+    }
+
+    /**
+     * When set, variable declarations register world-scoped instead of namespace-scoped,
+     * so they persist in this knowledge base (and the children it spawns) beyond the
+     * declaring document. Used by REPL-style sessions; inherited by child knowledge bases.
+     */
+    public void setWorldScopedVariables(boolean worldScopedVariables) {
+        this.worldScopedVariables = worldScopedVariables;
     }
 
     @SuppressWarnings("unchecked")
