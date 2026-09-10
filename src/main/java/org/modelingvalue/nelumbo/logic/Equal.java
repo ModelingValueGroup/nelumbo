@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 import java.util.Objects;
 
+import org.modelingvalue.collections.ContainingCollection;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
@@ -70,7 +71,7 @@ public class Equal extends Predicate {
             return type.getAssigned(right);
         } else if (left.equals(right)) {
             return left;
-        } else if (!left.functorOrType().equals(right.functorOrType())) {
+        } else if (!left.functorOrTypeForEquals().equals(right.functorOrTypeForEquals())) {
             return null;
         } else if (left.length() != right.length()) {
             return null;
@@ -91,6 +92,7 @@ public class Equal extends Predicate {
         return array != null ? left.setArgs(array) : left;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private static Object eq(Object left, Object right, boolean[] complete) {
         if (left != right) {
             if (left instanceof Node && right instanceof Node) {
@@ -101,6 +103,20 @@ public class Equal extends Predicate {
             } else if (left instanceof Type) {
                 complete[0] = false;
                 return ((Type) left).isAssignableFrom(right.getClass()) ? right : null;
+            } else if (left instanceof ContainingCollection leftColl
+                    && right instanceof ContainingCollection rightColl) {
+                if (leftColl.size() != rightColl.size()) {
+                    return null;
+                }
+                ContainingCollection toColl = leftColl.clear();
+                for (int i = 0; i < leftColl.size(); i++) {
+                    Object eq = eq(leftColl.get(i), rightColl.get(i), complete);
+                    if (eq == null) {
+                        return null;
+                    }
+                    toColl = toColl.add(eq);
+                }
+                return leftColl.equals(toColl) ? leftColl : toColl;
             } else if (!Objects.equals(left, right)) {
                 return null;
             }

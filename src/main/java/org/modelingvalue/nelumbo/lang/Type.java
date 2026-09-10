@@ -71,8 +71,9 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type  FUNCTOR         = new Type("Functor", ROOT);
     public static final Type  PATTERN_PART    = new Type("PatternPart", ROOT);
     public static final Type  PATTERN         = new Type("Pattern", PATTERN_GROUP, OBJECT);
+    public static final Type  STRUCT          = new Type("Struct", OBJECT);
     private static final Type ELEMENT_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
-    public static final Type  COLLECTION      = new Type("Collection", OBJECT, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
+    public static final Type  COLLECTION      = new Type("Collection", STRUCT, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  SET             = new Type("Set", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  LIST            = new Type("List", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  LAMBDA          = new Type("Lambda", OBJECT);
@@ -93,9 +94,11 @@ public final class Type extends Node implements FunctorOrType {
                 FUNCTOR, //
                 PATTERN_PART, //
                 PATTERN, //
+                STRUCT, //
                 COLLECTION, //
                 SET, //
-                LIST);
+                LIST, //
+                LAMBDA);
     }
 
     private final Type     original;
@@ -107,7 +110,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @Override
-    protected Object typeForEquals() {
+    public Object functorOrTypeForEquals() {
         return EQUALS_TYPE;
     }
 

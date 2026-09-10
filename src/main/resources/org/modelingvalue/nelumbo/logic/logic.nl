@@ -4,6 +4,7 @@ Boolean         :: Object
 FactType        :: Boolean
 Function        :: Object
 Literal         :: Object
+Struct          :: Object
 
 private Boolean ::= eq(<Literal>,<Literal>) @nelumbo.logic.Equal
 

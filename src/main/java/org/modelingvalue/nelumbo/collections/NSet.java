@@ -44,7 +44,7 @@ public class NSet extends NCollection {
     }
 
     @Override
-    protected Object typeForEquals() {
+    public Object functorOrTypeForEquals() {
         return Type.SET;
     }
 

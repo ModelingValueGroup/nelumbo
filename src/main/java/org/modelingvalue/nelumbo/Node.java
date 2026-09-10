@@ -170,7 +170,7 @@ public class Node extends StructImpl implements AstElement {
     @Override
     public int hashCode() {
         if (hashCodeCache == 0) {
-            int hc = 31 * super.hashCode() + typeForEquals().hashCode();
+            int hc = 31 * super.hashCode() + functorOrTypeForEquals().hashCode();
             hashCodeCache = hc == 0 ? 1 : hc;
         }
         return hashCodeCache;
@@ -188,7 +188,7 @@ public class Node extends StructImpl implements AstElement {
             return false;
         } else if (obj.getClass() != getClass()) {
             return false;
-        } else if (!typeForEquals().equals(other.typeForEquals())) {
+        } else if (!functorOrTypeForEquals().equals(other.functorOrTypeForEquals())) {
             return false;
         }
         return super.equals(obj);
@@ -207,7 +207,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     private void diff(Node other, MutableSet<Pair<Object, Object>> diff) {
-        Object tfe = typeForEquals(), otfe = other.typeForEquals();
+        Object tfe = functorOrTypeForEquals(), otfe = other.functorOrTypeForEquals();
         if (!Objects.equals(tfe, otfe)) {
             diff.add(Pair.of(tfe, otfe));
         } else {
@@ -238,7 +238,7 @@ public class Node extends StructImpl implements AstElement {
         }
     }
 
-    protected Object typeForEquals() {
+    public Object functorOrTypeForEquals() {
         return functorOrType().declaration();
     }
 

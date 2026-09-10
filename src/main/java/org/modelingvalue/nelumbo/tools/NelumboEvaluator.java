@@ -57,6 +57,14 @@ public final class NelumboEvaluator {
             List<java.util.Map<String, Object>> parseTree) {
     }
 
+    /**
+     * One evaluation's results plus the populated child knowledge base, so callers
+     * (the CLI REPL) can accumulate declarations across evaluations. On a deadline
+     * timeout {@code kb} is the unchanged base.
+     */
+    public record SessionResult(EvalResult result, KnowledgeBase kb) {
+    }
+
     private NelumboEvaluator() {
     }
 
@@ -70,16 +78,25 @@ public final class NelumboEvaluator {
      * source, so the document's line numbers are unaffected.
      */
     public static EvalResult evaluate(String source, String name, long deadlineMs, String preamble) {
+        return evaluate(KnowledgeBase.BASE, source, name, deadlineMs, preamble).result();
+    }
+
+    /** Like {@link #evaluate(String, String, long, String)} but evaluates against {@code base}. */
+    public static SessionResult evaluate(KnowledgeBase base, String source, String name, long deadlineMs) {
+        return evaluate(base, source, name, deadlineMs, null);
+    }
+
+    public static SessionResult evaluate(KnowledgeBase base, String source, String name, long deadlineMs, String preamble) {
         String src = source.endsWith("\n") ? source : source + "\n";
         List<Diagnostic> diagnostics = new ArrayList<>();
         List<QueryOutcome> queries = new ArrayList<>();
         List<java.util.Map<String, Object>> parseTree = new ArrayList<>();
-        KnowledgeBase evalKb = new KnowledgeBase(KnowledgeBase.BASE);
-        if (deadlineMs > 0) {
-            evalKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
-        }
+        KnowledgeBase evalKb = new KnowledgeBase(base);
+        // set unconditionally: a session base may carry a stale inherited deadline
+        evalKb.setDeadlineNanos(deadlineMs > 0 ? System.nanoTime() + deadlineMs * 1_000_000L : 0);
+        KnowledgeBase resultKb = base;
         try {
-            evalKb.run(() -> {
+            resultKb = evalKb.run(() -> {
                 KnowledgeBase kb = KnowledgeBase.CURRENT.get();
                 if (preamble != null && !preamble.isBlank()) {
                     try {
@@ -120,8 +137,9 @@ public final class NelumboEvaluator {
             });
         } catch (NelumboTimeoutException tex) {
             diagnostics.add(deadlineDiagnostic(deadlineMs));
+            resultKb = base;
         }
-        return new EvalResult(diagnostics.isEmpty(), diagnostics, queries, parseTree);
+        return new SessionResult(new EvalResult(diagnostics.isEmpty(), diagnostics, queries, parseTree), resultKb);
     }
 
     /**
