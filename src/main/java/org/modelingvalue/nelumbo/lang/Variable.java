@@ -112,7 +112,7 @@ public final class Variable extends Node {
     }
 
     @Override
-    protected Object typeForEquals() {
+    public Object functorOrTypeForEquals() {
         return Type.VARIABLE;
     }
 

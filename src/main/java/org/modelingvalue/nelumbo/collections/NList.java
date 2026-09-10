@@ -66,7 +66,7 @@ public final class NList extends NCollection {
     }
 
     @Override
-    protected Object typeForEquals() {
+    public Object functorOrTypeForEquals() {
         return Type.LIST;
     }
 

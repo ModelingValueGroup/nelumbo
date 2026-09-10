@@ -2,7 +2,7 @@ import    nelumbo.integers
 
 Type E, F
 
-Collection<E>   :: Object
+Collection<E>   :: Struct
 Set<E>          :: Collection<E>
 List<E>         :: Collection<E>
 
