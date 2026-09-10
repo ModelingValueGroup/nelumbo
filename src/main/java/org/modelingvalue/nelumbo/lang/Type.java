@@ -57,24 +57,25 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type $OBJECT = new Type(Object.class);
     public static final Type $STRING = new Type(String.class, $OBJECT);
     //
-    public static final Type NATIVE       = new Type("NATIVE");
-    public static final Type OBJECT       = new Type("Object", $OBJECT);
-    public static final Type TYPE         = new Type("Type", OBJECT);
-    public static final Type WORLD        = new Type("World", OBJECT);
-    public static final Type NAMESPACE    = new Type("Namespace", OBJECT);
-    public static final Type FUNCTION     = new Type("Function", OBJECT);
-    public static final Type LITERAL      = new Type("Literal", OBJECT);
-    public static final Type ROOT         = new Type("Root", OBJECT);
-    public static final Type BOOLEAN      = new Type("Boolean", OBJECT);
-    public static final Type FACT_TYPE    = new Type("FactType", BOOLEAN);
-    public static final Type VARIABLE     = new Type("Variable", OBJECT);
-    public static final Type FUNCTOR      = new Type("Functor", ROOT);
-    public static final Type PATTERN_PART = new Type("PatternPart", ROOT);
-    public static final Type PATTERN      = new Type("Pattern", PATTERN_GROUP, OBJECT);
-    public static final Type TYPE_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
-    public static final Type COLLECTION   = new Type("Collection", OBJECT, List.of(TYPE_ARG_VAR), DEFAULT_GROUP);
-    public static final Type SET          = new Type("Set", COLLECTION, List.of(TYPE_ARG_VAR), DEFAULT_GROUP);
-    public static final Type LIST         = new Type("List", COLLECTION, List.of(TYPE_ARG_VAR), DEFAULT_GROUP);
+    public static final Type  NATIVE          = new Type("NATIVE");
+    public static final Type  OBJECT          = new Type("Object", $OBJECT);
+    public static final Type  TYPE            = new Type("Type", OBJECT);
+    public static final Type  WORLD           = new Type("World", OBJECT);
+    public static final Type  NAMESPACE       = new Type("Namespace", OBJECT);
+    public static final Type  FUNCTION        = new Type("Function", OBJECT);
+    public static final Type  LITERAL         = new Type("Literal", OBJECT);
+    public static final Type  ROOT            = new Type("Root", OBJECT);
+    public static final Type  BOOLEAN         = new Type("Boolean", OBJECT);
+    public static final Type  FACT_TYPE       = new Type("FactType", BOOLEAN);
+    public static final Type  VARIABLE        = new Type("Variable", OBJECT);
+    public static final Type  FUNCTOR         = new Type("Functor", ROOT);
+    public static final Type  PATTERN_PART    = new Type("PatternPart", ROOT);
+    public static final Type  PATTERN         = new Type("Pattern", PATTERN_GROUP, OBJECT);
+    private static final Type ELEMENT_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
+    public static final Type  COLLECTION      = new Type("Collection", OBJECT, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
+    public static final Type  SET             = new Type("Set", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
+    public static final Type  LIST            = new Type("List", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
+    public static final Type  LAMBDA          = new Type("Lambda", OBJECT);
 
     public static List<Type> predefined() {
         return List.of(//
@@ -540,7 +541,7 @@ public final class Type extends Node implements FunctorOrType {
         } else if (type instanceof TokenType tt) {
             return tt.name();
         } else if (type instanceof Variable var) {
-            return var.name();
+            return var.baseName();
         } else if (type instanceof Class<?> cls) {
             return "$" + cls.getSimpleName();
         }
@@ -594,9 +595,15 @@ public final class Type extends Node implements FunctorOrType {
             return this;
         } else if (other.isAssignableFrom(this)) {
             return other;
-        } else {
-            return null;
+        } else if (isMany() && other.isMany()) {
+            Set<Type> common = many().retainAll(other.many());
+            if (common.size() == 1) {
+                return common.get(0);
+            } else if (common.size() > 1) {
+                return new Type(List.of(), common);
+            }
         }
+        return null;
     }
 
     public Node getAssigned(Node other) {
@@ -717,7 +724,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     @Override
-    public Type makeVariablesUnique(ParseContext ctx, int id) throws ParseException {
+    public Type makeVariablesUnique(ParseContext ctx, String id) throws ParseException {
         return (Type) super.makeVariablesUnique(ctx, id);
     }
 

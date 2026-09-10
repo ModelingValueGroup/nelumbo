@@ -28,6 +28,6 @@ public interface FunctorOrType {
 
     FunctorOrType declaration();
 
-    FunctorOrType makeVariablesUnique(ParseContext ctx, int id) throws ParseException;
+    FunctorOrType makeVariablesUnique(ParseContext ctx, String id) throws ParseException;
 
 }

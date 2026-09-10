@@ -37,8 +37,8 @@ import org.modelingvalue.nelumbo.syntax.Token.Completion;
 
 public class ParseState extends AbstractState<ParseState> {
 
-    public static final ParseState EMPTY = new ParseState(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), null,
-            null, null, null, Set.of(), Set.of(), false, Visibility.optional, false);
+    public static final ParseState EMPTY = new ParseState(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(),
+            Set.of(), null, null, null, Set.of(), Set.of(), false, Visibility.optional, false);
 
     private static final boolean TRACE_LOOK_AHEAD = Boolean.getBoolean("TRACE_LOOK_AHEAD");
     private static final int     LOOK_AHEAD       = Integer.getInteger("LOOK_AHEAD", 7);
@@ -46,7 +46,7 @@ public class ParseState extends AbstractState<ParseState> {
     private final Map<String, ParseState>    tokenTexts;
     private final Map<TokenType, ParseState> tokenTypes;
     private final Map<Type, ParseState>      nodeTypes;
-    private final Functor                    functor;
+    private final Set<Functor>               functors;
     private final Integer                    leftPrecedence;
     private final Integer                    innerPrecedence;
     private final String                     group;
@@ -59,40 +59,40 @@ public class ParseState extends AbstractState<ParseState> {
     private List<String> connected = null;
 
     public ParseState(Functor functor) {
-        this(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), functor, null, null, null, Set.of(), Set.of(), false,
-                Visibility.optional, false);
+        this(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), Set.of(functor), null, null, null, Set.of(),
+                Set.of(), false, Visibility.optional, false);
     }
 
     public ParseState(Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions) {
-        this(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), null, null, null, null, startRepetitions,
+        this(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), Set.of(), null, null, null, startRepetitions,
                 endRepetitions, false, Visibility.optional, false);
     }
 
     public ParseState(String text, boolean isKeyword, ParseState next) {
         this(TypeMatcherState.EMPTY, Map.of(Entry.of(text, isKeyword ? next.setIsKeyword() : next)), Map.of(), Map.of(),
-                null, null, null, null, Set.of(), Set.of(), false, Visibility.optional, false);
+                Set.of(), null, null, null, Set.of(), Set.of(), false, Visibility.optional, false);
     }
 
     public ParseState(TokenType tokenType, ParseState next) {
-        this(TypeMatcherState.EMPTY, Map.of(), Map.of(Entry.of(tokenType, next)), Map.of(), null, null, null, null,
+        this(TypeMatcherState.EMPTY, Map.of(), Map.of(Entry.of(tokenType, next)), Map.of(), Set.of(), null, null, null,
                 Set.of(), Set.of(), false, Visibility.optional, false);
     }
 
     public ParseState(Type nodeType, Integer innerPrecedence, ParseState next) {
-        this(nodeType.typeMatcher(), Map.of(), Map.of(), Map.of(Entry.of(nodeType, next)), null, null, innerPrecedence,
-                nodeType.group(), Set.of(), Set.of(), false, Visibility.optional, false);
+        this(nodeType.typeMatcher(), Map.of(), Map.of(), Map.of(Entry.of(nodeType, next)), Set.of(), null,
+                innerPrecedence, nodeType.group(), Set.of(), Set.of(), false, Visibility.optional, false);
     }
 
     private ParseState(TypeMatcherState typeMatcher, Map<String, ParseState> tokenTexts,
             Map<TokenType, ParseState> tokenTypes, Map<Type, ParseState> nodeTypes, //
-            Functor functor, Integer leftPrecedence, Integer innerPrecedence, String group, //
+            Set<Functor> functors, Integer leftPrecedence, Integer innerPrecedence, String group, //
             Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, boolean isKeyword,
             Visibility visibility, boolean isConnected) {
         super(typeMatcher);
         this.tokenTexts = tokenTexts;
         this.tokenTypes = tokenTypes;
         this.nodeTypes = nodeTypes;
-        this.functor = functor;
+        this.functors = functors;
         this.leftPrecedence = leftPrecedence;
         this.innerPrecedence = innerPrecedence;
         this.group = group;
@@ -121,8 +121,23 @@ public class ParseState extends AbstractState<ParseState> {
         return (Map) nodeTypes;
     }
 
-    public Functor functor() {
-        return functor;
+    public Functor functor(Map<Variable, Type> typeArgs) {
+        Functor result = null;
+        outer: for (Functor functor : functors) {
+            if (functor.typeVariables().anyMatch(v -> Type.$NONE.equals(typeArgs.get(v)))) {
+                continue outer;
+            }
+            if (result == null) {
+                result = functor;
+            } else {
+                result = result.mostSpecific(functor, typeArgs);
+            }
+        }
+        return result;
+    }
+
+    public Set<Functor> functors() {
+        return functors;
     }
 
     public Integer leftPrecedence() {
@@ -178,7 +193,7 @@ public class ParseState extends AbstractState<ParseState> {
         if (isTokensEmpty()) {
             return null;
         }
-        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, Map.of(), functor, null, null, group,
+        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, Map.of(), functors, null, null, group,
                 startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
     }
 
@@ -186,7 +201,7 @@ public class ParseState extends AbstractState<ParseState> {
         if (isNodesEmpty()) {
             return null;
         }
-        return new ParseState(typeMatcher(), Map.of(), Map.of(), nodeTypes, functor, innerPrecedence, null, group,
+        return new ParseState(typeMatcher(), Map.of(), Map.of(), nodeTypes, functors, innerPrecedence, null, group,
                 startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
     }
 
@@ -197,8 +212,8 @@ public class ParseState extends AbstractState<ParseState> {
                 .replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
         Map<Type, ParseState> c = nodeTypes
                 .replaceAll(e -> Entry.of(e.getKey(), e.getValue().setLeftPrecedence(leftPrecedence)));
-        return new ParseState(typeMatcher(), a, b, c, functor, leftPrecedence, innerPrecedence, group, startRepetitions,
-                endRepetitions, isKeyword, visibility, isConnected);
+        return new ParseState(typeMatcher(), a, b, c, functors, leftPrecedence, innerPrecedence, group,
+                startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
     }
 
     public ParseState setVisibility(boolean visible) {
@@ -206,22 +221,22 @@ public class ParseState extends AbstractState<ParseState> {
         Map<String, ParseState> a = tokenTexts.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setVisibility(v)));
         Map<TokenType, ParseState> b = tokenTypes.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setVisibility(v)));
         Map<Type, ParseState> c = nodeTypes.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setVisibility(v)));
-        return new ParseState(typeMatcher(), a, b, c, functor, leftPrecedence, innerPrecedence, group, startRepetitions,
-                endRepetitions, isKeyword, visibility, isConnected);
+        return new ParseState(typeMatcher(), a, b, c, functors, leftPrecedence, innerPrecedence, group,
+                startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
     }
 
     private ParseState setVisibility(Visibility visibility) {
-        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence,
+        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functors, leftPrecedence,
                 innerPrecedence, group, startRepetitions, endRepetitions, isKeyword, visibility, isConnected);
     }
 
     public ParseState setIsKeyword() {
-        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence,
+        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functors, leftPrecedence,
                 innerPrecedence, group, startRepetitions, endRepetitions, true, visibility, isConnected);
     }
 
     public ParseState setIsConnected() {
-        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functor, leftPrecedence,
+        return new ParseState(typeMatcher(), tokenTexts, tokenTypes, nodeTypes, functors, leftPrecedence,
                 innerPrecedence, group, startRepetitions, endRepetitions, isKeyword, visibility, true);
     }
 
@@ -245,8 +260,9 @@ public class ParseState extends AbstractState<ParseState> {
             TokenState next = null;
             if (dc != null) {
                 if (dc.direction == Direction.outer) {
-                    if (isPostComplete(result)) {
-                        result.endPostParse(functor(), token, leftPrecedence());
+                    Functor functor = isPostComplete(result);
+                    if (functor != null) {
+                        result.endPostParse(functor, token, leftPrecedence());
                     }
                     return true;
                 }
@@ -303,8 +319,9 @@ public class ParseState extends AbstractState<ParseState> {
             break;
         } while (true);
         if (result.functor() == null && result.state() == null) {
-            if (isPostComplete(result)) {
-                result.endPostParse(functor(), token, leftPrecedence());
+            Functor functor = isPostComplete(result);
+            if (functor != null) {
+                result.endPostParse(functor, token, leftPrecedence());
             } else {
                 if (!pre) {
                     String expectedTokens = expectedTokens(outerRepetitions, ctx, result.typeArgs().get());
@@ -321,8 +338,11 @@ public class ParseState extends AbstractState<ParseState> {
         return !result.isEmpty() && (!result.hasLeft() || leftPrecedence() != null);
     }
 
-    private boolean isPostComplete(PatternResult result) {
-        return functor() != null && (!result.hasLeft() || leftPrecedence() != null);
+    private Functor isPostComplete(PatternResult result) {
+        if (!result.hasLeft() || leftPrecedence() != null) {
+            return functor(result.typeArgs().get());
+        }
+        return null;
     }
 
     private String expectedTokens(Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx,
@@ -504,16 +524,19 @@ public class ParseState extends AbstractState<ParseState> {
 
     private void outerStates(ParseContext ctx, MutableMap<DirectionContext, Set<StateContext>> dirStates,
             Map<Variable, Type> typeArgs) {
-        if (functor() != null) {
-            Type type = functor().resultType();
+        Functor functor = functor(typeArgs);
+        if (functor != null) {
+            Type type = functor.resultType();
             Set<StateContext> states = Set.of();
             for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
                 if (pc.outer() != null && pc.state() != null && !pc.state().isNodesEmpty()) {
-                    ParseState state = pc.state().matchType(type, MutableMap.of(typeArgs));
+                    MutableMap<Variable, Type> outerTypeArgs = MutableMap.of(typeArgs);
+                    ParseState state = pc.state().matchType(type, outerTypeArgs);
                     if (state != null) {
-                        states = states.addAll(state.tokenStates(ctx, typeArgs));
-                        if (state.functor() != null) {
-                            type = state.functor().resultType();
+                        states = states.addAll(state.tokenStates(ctx, outerTypeArgs.get()));
+                        functor = state.functor(outerTypeArgs.get());
+                        if (functor != null) {
+                            type = functor.resultType();
                         }
                     }
                 }
@@ -719,7 +742,7 @@ public class ParseState extends AbstractState<ParseState> {
         Map<TokenType, ParseState> tokenTypes = tokenTypes().addAll(merged.tokenTypes(), ParseState::merge);
         Map<Type, ParseState> nodeTypes = nodeTypes().addAll(merged.nodeTypes(), ParseState::merge);
         return new ParseState(typeMatcher, tokenTexts, tokenTypes, inherit(nodeTypes), //
-                functorMerge(merged), //
+                checkForConflict(functors().addAll(merged.functors())), //
                 leftPrecedenceMerge(merged), //
                 elementMerge(innerPrecedence(), merged.innerPrecedence()), //
                 elementMerge(group(), merged.group()), //
@@ -730,11 +753,20 @@ public class ParseState extends AbstractState<ParseState> {
                 isConnected() || merged.isConnected());
     }
 
-    private Functor functorMerge(ParseState state) {
-        return functor() == null ? state.functor() : //
-                state.functor() == null ? functor() : //
-                        functor().equals(state.functor()) ? functor().nonBootstrap(state.functor()) : //
-                                functor().mostSpecific(state.functor(), TYPE_ARGS.get());
+    private Set<Functor> checkForConflict(Set<Functor> all) {
+        for (Functor a : all) {
+            for (Functor b : all) {
+                if (!a.equals(b) && a.typeVariables().isEmpty() && b.typeVariables().isEmpty()) {
+                    Functor x = a.mostSpecific(b, Map.of());
+                    if (x == null) {
+                        throw new NotMergeableException("Non deterministic pattern merge " + a + " <> " + b);
+                    } else {
+                        all = all.remove(a).remove(b).add(x);
+                    }
+                }
+            }
+        }
+        return all;
     }
 
     private Integer leftPrecedenceMerge(ParseState state) {

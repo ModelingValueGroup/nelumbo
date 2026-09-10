@@ -59,7 +59,8 @@ P ::= (<P>) @nelumbo.lang.Parenthesized
 
 Type A1, A2, A3, R
 
-Lambda<R>           :: Object
+Lambda              :: Object
+Lambda<R>           :: Lambda
 
 Lambda1<A1,R>       :: Lambda<R>
 Lambda2<A1,A2,R>    :: Lambda<R>

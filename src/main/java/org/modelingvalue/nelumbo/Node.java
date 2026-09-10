@@ -23,7 +23,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.modelingvalue.collections.ContainingCollection;
 import org.modelingvalue.collections.Entry;
@@ -56,10 +56,11 @@ public class Node extends StructImpl implements AstElement {
 
     protected static final Context<InferContext> CURRENT_CONTEXT = Context.of(null);
 
-    private static final AtomicInteger UNIQUE_COUNTER = new AtomicInteger(0);
+    private static final AtomicLong UNIQUE_COUNTER = new AtomicLong(0);
 
-    protected static int uniqueId() {
-        return UNIQUE_COUNTER.getAndIncrement();
+    protected static String uniqueId() {
+        long l = UNIQUE_COUNTER.getAndIncrement();
+        return Long.toUnsignedString(l, Character.MAX_RADIX);
     }
 
     private final NodeInfo nodeInfo;
@@ -529,13 +530,13 @@ public class Node extends StructImpl implements AstElement {
 
     public Node makeVariablesUnique(ParseContext ctx) throws ParseException {
         assert this == declaration();
-        int id = uniqueId();
-        return makeVariablesUnique(ctx, id);
+        return makeVariablesUnique(ctx, uniqueId());
     }
 
-    public Node makeVariablesUnique(ParseContext ctx, int id) throws ParseException {
+    public Node makeVariablesUnique(ParseContext ctx, String id) throws ParseException {
         return replace(n -> {
-            if (n instanceof Variable v && ctx.outer().type(v.name()) != null) {
+            if (n instanceof Variable v
+                    && (ctx.outer().type(v.name()) != null || ctx.outer().variable(v.name()) != null)) {
                 return v.makeUnique(id);
             }
             return n;

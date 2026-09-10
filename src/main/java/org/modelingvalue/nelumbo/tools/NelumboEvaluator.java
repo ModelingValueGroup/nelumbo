@@ -38,9 +38,10 @@ import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 /**
- * Parses and evaluates a self-contained .nl source and returns structured results
- * (instead of printing, like {@code NelumboCli}, or producing LSP ranges, like the
- * LSP {@code QueryEvaluator}). Line and column in diagnostics are 1-based.
+ * Parses and evaluates a self-contained .nl source and returns structured
+ * results (instead of printing, like {@code NelumboCli}, or producing LSP
+ * ranges, like the LSP {@code QueryEvaluator}). Line and column in diagnostics
+ * are 1-based.
  */
 public final class NelumboEvaluator {
 
@@ -49,11 +50,11 @@ public final class NelumboEvaluator {
 
     /** expectationMatched is null when the query carries no expected result. */
     public record QueryOutcome(String query, String result, Boolean expectationMatched,
-                               List<java.util.Map<String, String>> facts, List<java.util.Map<String, String>> falsehoods) {
+            List<java.util.Map<String, String>> facts, List<java.util.Map<String, String>> falsehoods) {
     }
 
     public record EvalResult(boolean ok, List<Diagnostic> diagnostics, List<QueryOutcome> queries,
-                             List<java.util.Map<String, Object>> parseTree) {
+            List<java.util.Map<String, Object>> parseTree) {
     }
 
     private NelumboEvaluator() {
@@ -64,7 +65,10 @@ public final class NelumboEvaluator {
         return evaluate(source, name, deadlineMs, null);
     }
 
-    /** {@code preamble} (e.g. import statements) is evaluated first as a separate source, so the document's line numbers are unaffected. */
+    /**
+     * {@code preamble} (e.g. import statements) is evaluated first as a separate
+     * source, so the document's line numbers are unaffected.
+     */
     public static EvalResult evaluate(String source, String name, long deadlineMs, String preamble) {
         String src = source.endsWith("\n") ? source : source + "\n";
         List<Diagnostic> diagnostics = new ArrayList<>();
@@ -120,7 +124,10 @@ public final class NelumboEvaluator {
         return new EvalResult(diagnostics.isEmpty(), diagnostics, queries, parseTree);
     }
 
-    /** One parse-tree node as a JSON-ready map: kind, vocabulary name, source position, text, children. */
+    /**
+     * One parse-tree node as a JSON-ready map: kind, vocabulary name, source
+     * position, text, children.
+     */
     public static java.util.Map<String, Object> nodeJson(Node node) {
         java.util.Map<String, Object> json = new LinkedHashMap<>();
         json.put("node", node.getClass().getSimpleName());
@@ -135,8 +142,10 @@ public final class NelumboEvaluator {
             json.put("column", first.position() + 1);
         }
         json.put("text", node.toString().trim().replaceAll("\\s+", " "));
-        // astElements are the SYNTACTIC constituents (what was actually parsed at this spot);
-        // children() would recurse into the resolved semantic graph (supertypes, library nodes).
+        // astElements are the SYNTACTIC constituents (what was actually parsed at this
+        // spot);
+        // children() would recurse into the resolved semantic graph (supertypes,
+        // library nodes).
         org.modelingvalue.collections.List<AstElement> elements = node.astElements();
         if (elements != null) {
             List<java.util.Map<String, Object>> childJson = new ArrayList<>();
@@ -171,7 +180,8 @@ public final class NelumboEvaluator {
         InferResult ir = query.inferResult();
         Boolean expectation = query.hasExpected() ? matched : null;
         return new QueryOutcome(sb.toString().trim(), ir == null ? null : ir.toString(), expectation,
-                ir == null ? List.of() : bindings(ir.trueBindings()), ir == null ? List.of() : bindings(ir.falseBindings()));
+                ir == null ? List.of() : bindings(ir.trueBindings()),
+                ir == null ? List.of() : bindings(ir.falseBindings()));
     }
 
     private static List<java.util.Map<String, String>> bindings(
@@ -180,7 +190,7 @@ public final class NelumboEvaluator {
         for (org.modelingvalue.collections.Map<Variable, Object> binding : bindings) {
             java.util.Map<String, String> pairs = new LinkedHashMap<>();
             for (Entry<Variable, Object> entry : binding) {
-                pairs.put(entry.getKey().name(), String.valueOf(entry.getValue()));
+                pairs.put(entry.getKey().baseName(), String.valueOf(entry.getValue()));
             }
             out.add(pairs);
         }

@@ -18,7 +18,7 @@ attr OT AN AT  ::> {
         fact AN(o,a)
     }
 }
-
+ 
 // Model
 
 Person :: Object

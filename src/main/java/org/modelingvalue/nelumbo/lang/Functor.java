@@ -252,6 +252,7 @@ public class Functor extends Node implements FunctorOrType {
         MutableList<Object> args = MutableList.of(List.of());
         int i = pattern.args(elements, 0, args, false, this, typeArgs);
         if (i < 0) {
+            pattern.args(elements, 0, args, false, this, typeArgs);
             throw new IllegalArgumentException("Error during argument extraction for " + this + " with elements "
                     + elements + " and typeArgs " + typeArgs);
         }
@@ -370,10 +371,9 @@ public class Functor extends Node implements FunctorOrType {
         ast = ast.prepend(pattern);
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
-        List<Type> gen = type.hasArguments() ? type.arguments() : List.of();
         if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
-                && !Type.PATTERN.isAssignableFrom(type) && (Lambda.class.equals(clazz)
-                        || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !gen.contains(t)))) {
+                && !Type.PATTERN.isAssignableFrom(type)
+                && (Type.LAMBDA.isAssignableFrom(type) || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t)))) {
             type = type.toLiteral();
         } else if (clazz != Parenthesized.class) {
             if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
@@ -402,7 +402,8 @@ public class Functor extends Node implements FunctorOrType {
         }
         if (toLiteral) {
             Pattern litPattern = pattern.setTypes(Type::toLiteral);
-            Functor litFunctor = Functor.of(ast, litPattern, type, local, clazz, prec).makeVariablesUnique(ctx);
+            Type litType = clazz != null && !Type.BOOLEAN.isAssignableFrom(type) ? type.toLiteral() : type;
+            Functor litFunctor = Functor.of(ast, litPattern, litType, local, clazz, prec).makeVariablesUnique(ctx);
             litFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
             roots = new NList(List.of(), roots, litFunctor);
             knowledgeBase.addLiteral(nodFunctor, litFunctor);
@@ -449,6 +450,8 @@ public class Functor extends Node implements FunctorOrType {
             Type otherType = otherTypes.get(i);
             thisAllGeneric &= !thisType.isMany() && thisType.variable() != null;
             otherAllGeneric &= !otherType.isMany() && otherType.variable() != null;
+            boolean thisIsLambda = Type.LAMBDA.isAssignableFrom(thisType);
+            boolean otherIsLambda = Type.LAMBDA.isAssignableFrom(otherType);
             thisType = thisType.setTypeArgs(typeArgs);
             otherType = otherType.setTypeArgs(typeArgs);
             if (!thisType.equals(otherType)) {
@@ -456,6 +459,12 @@ public class Functor extends Node implements FunctorOrType {
                     return other;
                 } else if (otherType.isAssignableFrom(thisType)) {
                     return this;
+                }
+            } else {
+                if (thisIsLambda && !otherIsLambda) {
+                    return this;
+                } else if (otherIsLambda && !thisIsLambda) {
+                    return other;
                 }
             }
         }
@@ -487,7 +496,7 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    public Functor makeVariablesUnique(ParseContext ctx, int id) throws ParseException {
+    public Functor makeVariablesUnique(ParseContext ctx, String id) throws ParseException {
         return (Functor) super.makeVariablesUnique(ctx, id);
     }
 }
