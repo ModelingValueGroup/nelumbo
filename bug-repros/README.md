@@ -17,7 +17,7 @@ illustrate the contradiction described in the header comment.
 
 ## Found issues: 2026-09-10 sudoku2 session
 
-Found while building `examples/sudoku2.nl` (a singles-first sudoku solver);
+Found while building `examples/sudoku-9x9-smart.nl` (a singles-first sudoku solver);
 every repro was verified red against the CLI, most of them deterministically
 (`nondeterministic-inference.nl` is red-by-race and may pass on a lucky run).
 All run with `-DPARALLEL_COLLECTIONS=false` (run-all.sh passes it since
@@ -29,7 +29,7 @@ queries. Larger-scale manifestations seen during the session (structurally
 near-identical rules in different rules corrupting each other, a forwarding
 rule like `sudoku2(g)=s <=> s=scan(g,0,0)` flipping results to
 open/inconsistent, an unused rule being load-bearing) reproduced repeatedly
-against intermediate versions of sudoku2.nl but NOT as single mutations of its
+against intermediate versions of sudoku-9x9-smart.nl but NOT as single mutations of its
 final content - consistent with the state/race dependence the minimal repros
 demonstrate.
 

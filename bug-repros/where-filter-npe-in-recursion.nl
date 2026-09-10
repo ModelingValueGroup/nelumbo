@@ -5,13 +5,13 @@
 //   at lang.Lambda.isComplete/resolve/test (Lambda.java:142/127/110)
 //   at collections.Collections.setFilter (Collections.java:157)
 // The same fits() evaluates correctly standalone (see the fits-style queries
-// in examples/sudoku2.nl's history); only the recursive context crashes it.
+// in examples/sudoku-9x9-smart.nl's history); only the recursive context crashes it.
 // This file is a singles-first sudoku solver whose scan guard uses
 // fits(g,r,c) = {1..9} where [d](ok(g,r,c,d)); solving the 64-clue puzzle
-// below crashes. The shipped examples/sudoku2.nl avoids `where` entirely
+// below crashes. The shipped examples/sudoku-9x9-smart.nl avoids `where` entirely
 // (pair-check over ok) for this reason.
 // Correct: the solved grid. Actual: NullPointerException.
-// Found 2026-09-10 while writing examples/sudoku2.nl.
+// Found 2026-09-10 while writing examples/sudoku-9x9-smart.nl.
 import nelumbo.collections
 
 // ---- types ----------------------------------------------------------

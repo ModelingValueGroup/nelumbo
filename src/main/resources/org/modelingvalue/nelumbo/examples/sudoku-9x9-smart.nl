@@ -1,12 +1,12 @@
 import nelumbo.collections
 
-// Faster sudoku solver than sudoku.nl: singles-first search.
-// sudoku.nl branches at the first blank with up to 9 digits, which explodes on
+// Faster sudoku solver than sudoku-9x9.nl: singles-first search.
+// sudoku-9x9.nl branches at the first blank with up to 9 digits, which explodes on
 // puzzles that need guessing. Here scanF walks the grid looking for a forced
 // blank (at most one fitting digit): exactly one is a forced move (placed
 // without branching), zero is a dead end (the placing E fails, backtracking
 // immediately). Only when no forced blank exists solveBX guesses at the first
-// blank. The "real" puzzle of sudoku.nl (2+ hours there) solves here as a
+// blank. The "real" puzzle of sudoku-9x9.nl (2+ hours there) solves here as a
 // chain of 41 forced moves without any backtracking, in seconds.
 //
 // Engine notes (hard-won, each verified in bug-repros/*.nl - see the
@@ -19,7 +19,7 @@ import nelumbo.collections
 // alone on a continuation line (it is silently dropped - break only inside
 // unbalanced parens); and results can depend on unrelated file content and
 // on run-to-run scheduling, so the rule shapes here stick closely to the
-// ones sudoku.nl proves out (guard-pruned alternatives, direct recursion).
+// ones sudoku-9x9.nl proves out (guard-pruned alternatives, direct recursion).
 
 // ---- types ----------------------------------------------------------
 Grid :: Object        // placeholder so we can name the nested list type
@@ -74,7 +74,7 @@ forced(g,r,c)    <=>  cell(g,r,c)=0 &
 List<List<Integer>> ::= scanF(<List<List<Integer>>>,<Integer>,<Integer>),
                         scanB(<List<List<Integer>>>,<Integer>,<Integer>),
                         solveBX(<List<List<Integer>>>,<Integer>,<Integer>),
-                        sudoku2(<List<List<Integer>>>)
+                        sudokuSmart(<List<List<Integer>>>)
 scanF(g,r,c)=s   <=>  s=solveBX(g,0,0)   if r=9,
                       s=scanF(g,r+1,0)   if r<9 & c=9,
                       s=scanF(g,r,c+1)   if r<9 & c<9 & cell(g,r,c)!=0,
@@ -89,15 +89,15 @@ solveBX(g,r,c)=s <=>  s=g                 if r=9,
                       E[d,g2](d in {1,2,3,4,5,6,7,8,9} & ok(g,r,c,d) &
                               put(g,r,c,d)=g2 & s=scanF(g2,0,0))  if r<9 & c<9 & cell(g,r,c)=0
 
-sudoku2(g)=s     <=>  s=scanF(g,0,0)
+sudokuSmart(g)=s     <=>  s=scanF(g,0,0)
 
 // ---- puzzles ------------------------------------------------------
 // 72 clues, one blank per row/column/box, unique solution
-//sudoku2([[0,2,3,4,5,6,7,8,9],[4,5,6,0,8,9,1,2,3],[7,8,9,1,2,3,0,5,6],[2,0,1,5,6,4,8,9,7],[5,6,4,8,0,7,2,3,1],[8,9,7,2,3,1,5,0,4],[3,1,0,6,4,5,9,7,8],[6,4,5,9,7,0,3,1,2],[9,7,8,3,1,2,6,4,0]])=s ? [(s=[[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]]),..][..]
-//sudoku2([[0,0,0,0,0,0,0,0,0],[0,5,6,7,8,9,1,2,3],[7,0,9,1,2,3,4,5,6],[2,3,0,5,6,4,8,9,7],[5,6,4,0,9,7,2,3,1],[8,9,7,2,0,1,5,6,4],[3,1,2,6,4,0,9,7,8],[6,4,5,9,7,8,0,1,2],[9,7,8,3,1,2,6,0,5]])=s ? [(s=[[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]])][..]
-//sudoku2([[1,0,0,8,5,7,0,9,0],[0,3,0,0,2,0,0,0,8],[0,0,9,6,0,0,5,0,0],[0,0,5,3,1,0,9,0,0],[0,1,0,0,8,0,0,0,2],[6,0,0,0,0,4,0,0,0],[3,5,6,4,7,8,0,1,0],[2,4,1,9,3,5,0,0,7],[0,9,7,2,6,1,3,0,0]])=s ? [(s=[[1,6,2,8,5,7,4,9,3],[5,3,4,1,2,9,6,7,8],[7,8,9,6,4,3,5,2,1],[4,7,5,3,1,2,9,8,6],[9,1,3,5,8,6,7,4,2],[6,2,8,7,9,4,1,3,5],[3,5,6,4,7,8,2,1,9],[2,4,1,9,3,5,8,6,7],[8,9,7,2,6,1,3,5,4]])][..]
+//sudokuSmart([[0,2,3,4,5,6,7,8,9],[4,5,6,0,8,9,1,2,3],[7,8,9,1,2,3,0,5,6],[2,0,1,5,6,4,8,9,7],[5,6,4,8,0,7,2,3,1],[8,9,7,2,3,1,5,0,4],[3,1,0,6,4,5,9,7,8],[6,4,5,9,7,0,3,1,2],[9,7,8,3,1,2,6,4,0]])=s ? [(s=[[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]]),..][..]
+//sudokuSmart([[0,0,0,0,0,0,0,0,0],[0,5,6,7,8,9,1,2,3],[7,0,9,1,2,3,4,5,6],[2,3,0,5,6,4,8,9,7],[5,6,4,0,9,7,2,3,1],[8,9,7,2,0,1,5,6,4],[3,1,2,6,4,0,9,7,8],[6,4,5,9,7,8,0,1,2],[9,7,8,3,1,2,6,0,5]])=s ? [(s=[[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]])][..]
+//sudokuSmart([[1,0,0,8,5,7,0,9,0],[0,3,0,0,2,0,0,0,8],[0,0,9,6,0,0,5,0,0],[0,0,5,3,1,0,9,0,0],[0,1,0,0,8,0,0,0,2],[6,0,0,0,0,4,0,0,0],[3,5,6,4,7,8,0,1,0],[2,4,1,9,3,5,0,0,7],[0,9,7,2,6,1,3,0,0]])=s ? [(s=[[1,6,2,8,5,7,4,9,3],[5,3,4,1,2,9,6,7,8],[7,8,9,6,4,3,5,2,1],[4,7,5,3,1,2,9,8,6],[9,1,3,5,8,6,7,4,2],[6,2,8,7,9,4,1,3,5],[3,5,6,4,7,8,2,1,9],[2,4,1,9,3,5,8,6,7],[8,9,7,2,6,1,3,5,4]])][..]
 // 26 clues, needs real guessing (unique solution, verified externally)
-sudoku2([
+sudokuSmart([
     [3,0,0,/**/0,0,0,/**/0,0,0],
     [8,2,1,/**/0,0,0,/**/3,9,0],
     [0,0,7,/**/0,0,0,/**/0,8,5],
