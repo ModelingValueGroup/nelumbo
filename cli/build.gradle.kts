@@ -37,6 +37,8 @@ repositories {
 dependencies {
     implementation(project(":"))
     implementation(libs.mvg.json)
+    // line editing + history for the --interactive REPL (pure Java, no transitive deps)
+    implementation("org.jline:jline:3.26.3")
 
     testImplementation(libs.junit.jupiter)
     // the test client parses/builds JSON with Jackson; the server itself uses mvg-json

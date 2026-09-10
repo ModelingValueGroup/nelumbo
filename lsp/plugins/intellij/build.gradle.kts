@@ -64,7 +64,7 @@ fun removePlatformCacheDir() {
 gradle.taskGraph.whenReady {
     removePlatformCacheDir()
 }
-val removeEmptyPlatformCacheDir by tasks.registering {
+val removeEmptyPlatformCacheDir = tasks.register("removeEmptyPlatformCacheDir") {
     doLast {
         removePlatformCacheDir()
     }
@@ -95,7 +95,7 @@ tasks {
     // Ensure the server fat jar is built and include it into resources as server.jar
     // Some versions of gradle-intellij-plugin repackage resources differently, so we also copy
     // the server jar directly into src/main/resources before build.
-    val prepareServerResource by registering(Copy::class) {
+    val prepareServerResource = register<Copy>("prepareServerResource") {
         dependsOn(":lsp:server:serverJar")
         // Always run to ensure server.jar is refreshed and overwrites any existing file
         outputs.upToDateWhen { false }

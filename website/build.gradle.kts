@@ -80,7 +80,7 @@ fun findNpm(): String {
     return (onPath + inNvm).firstOrNull { it.canExecute() }?.absolutePath ?: exe
 }
 
-val npmBundle by tasks.registering(Exec::class) {
+val npmBundle = tasks.register<Exec>("npmBundle") {
     description = "install frontend deps and build the Monaco fields bundle"
     workingDir  = frontendDir.asFile
     commandLine(findNpm(), "run", "dist")
@@ -92,7 +92,7 @@ val npmBundle by tasks.registering(Exec::class) {
     outputs.dir(frontendDir.dir("dist"))
 }
 
-val copyFrontend by tasks.registering(Sync::class) {
+val copyFrontend = tasks.register<Sync>("copyFrontend") {
     dependsOn(npmBundle)
     from(frontendDir.dir("dist"))
     // source maps only help debug this bundle in devtools; no need to ship ~9 MB of them in the server jar
@@ -102,7 +102,7 @@ val copyFrontend by tasks.registering(Sync::class) {
 
 // Bundle the language documentation (rendered to HTML at startup by DocsSite and served under /docs) plus an
 // index.txt so it can be enumerated from the classpath at runtime - same pattern as the mcp module's search_docs.
-val copyDocs by tasks.registering(Sync::class) {
+val copyDocs = tasks.register<Sync>("copyDocs") {
     from(rootProject.layout.projectDirectory.dir("docs")) {
         include("**/*.md")
         include("nelumbo.svg")

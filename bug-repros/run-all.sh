@@ -31,7 +31,10 @@ run_repro() {
     local file=$1
     local jar=$2
     local out
-    out=$(java -ea -jar "$jar" "$file" 2>&1)
+    # PARALLEL_COLLECTIONS=false is the documented workaround for the parallel
+    # map corruption; inference itself still runs on a parallel pool (see
+    # nondeterministic-inference.nl), so a lucky run can flip a result
+    out=$(java -ea -DPARALLEL_COLLECTIONS=false -jar "$jar" "$file" 2>&1)
     local code=$?
     local name
     name=$(basename "$file")
