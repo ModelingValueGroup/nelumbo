@@ -1,9 +1,11 @@
 # Bug repros
 
-Standalone `.nl` reproductions for confirmed findings of the 2026-09-07 multi-agent
-code review of core + lsp. Each file demonstrates one bug against the CLI and is
-red-by-design: while the bug exists the file fails (expectation mismatch or crash);
-after the fix it passes and can be promoted into the regular test resources.
+Standalone `.nl` reproductions for confirmed engine findings: the 2026-09-07
+multi-agent code review of core + lsp, plus the 2026-09-10 sudoku2 session (its
+own section below). Each file demonstrates one bug against the CLI and is
+red-by-design: while the bug exists the file fails (expectation mismatch or
+crash); after the fix it passes and can be promoted into the regular test
+resources.
 
 Run all: `./run-all.sh` (needs `./gradlew cliJar` first). Assertions are enabled
 (`-ea`); `multiline-string-assert.nl` needs that to show its crash.
@@ -13,7 +15,36 @@ mismatch (or crashes) today. A few queries in the quantifier/diagonal files carr
 expectation on purpose: their exact correct completeness is debatable, they only
 illustrate the contradiction described in the header comment.
 
-## Found issues
+## Found issues: 2026-09-10 sudoku2 session
+
+Found while building `examples/sudoku2.nl` (a singles-first sudoku solver);
+every repro was verified red against the CLI, most of them deterministically
+(`nondeterministic-inference.nl` is red-by-race and may pass on a lucky run).
+All run with `-DPARALLEL_COLLECTIONS=false` (run-all.sh passes it since
+2026-09-10).
+
+The last three rows are facets of one suspected root cause: predicate identity
+/ interning state shared across structurally-similar predicates and across
+queries. Larger-scale manifestations seen during the session (structurally
+near-identical rules in different rules corrupting each other, a forwarding
+rule like `sudoku2(g)=s <=> s=scan(g,0,0)` flipping results to
+open/inconsistent, an unused rule being load-bearing) reproduced repeatedly
+against intermediate versions of sudoku2.nl but NOT as single mutations of its
+final content - consistent with the state/race dependence the minimal repros
+demonstrate.
+
+| Status | Location | Issue | Repro |
+|---|---|---|---|
+| confirmed | logic/InferResult.java:72 via lang/Lambda.java:142 and collections/Collections.java:157 | `where` set-filter over a user Boolean rule NPEs the whole run inside deep recursion (fine standalone) | where-filter-npe-in-recursion.nl |
+| confirmed | logic/Predicate.callMethod -> collections/Collections.java:63 | Rule guards evaluated speculatively: unguarded `pos` accessors crash on out-of-range probes (IndexOutOfBounds) even when a preceding guard conjunct is false | speculative-guard-index-crash.nl |
+| confirmed | lang/Lambda argument extraction | E/!E with 4 variables: parse error in a query, but inside a rule body it parses and then crashes the whole evaluation at runtime | four-var-quantifier-crash.nl |
+| confirmed | syntax/Parser | An alternative's `if` guard on its own continuation line is reported as a parse error and then SILENTLY DROPPED: the alternative runs guardless, results become inconsistent | guard-on-continuation-line-dropped.nl |
+| confirmed | syntax/Parser | Undeclared variable: misleading error pointing at a nearby token, unknown identifier never named, rule silently dropped | undeclared-variable-diagnostics.nl |
+| confirmed | lambda lifting / interning | Guarded Set-valued rule with an empty-set branch, called from a map lambda: map undecided (rule fine standalone, non-empty values fine) | empty-set-branch-in-map-lambda.nl |
+| confirmed | inference memoization / interning | A query's result depends on NEIGHBORING queries: pos-extraction of a mapped result is undecided alone, decided when a whole-result query precedes it; at solver scale result FORMS flip between closed and open | neighbor-query-changes-result.nl |
+| confirmed | ContextPool inference race | Same file, same flags, different results run-to-run: PARALLEL_COLLECTIONS=false serializes collections but NOT inference (ContextThread.createPool, Collection.PARALLELISM floor 2) | nondeterministic-inference.nl |
+
+## Found issues: 2026-09-07 code review
 
 Status: `confirmed` = both adversarial verifiers agreed (usually with a CLI
 reproduction); `half` = only one verifier ran, or one of two refuted; `unverified` =
