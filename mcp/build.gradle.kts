@@ -51,7 +51,7 @@ tasks.test {
 
 // Bundle the language documentation into the jar for the search_docs tool, plus an
 // index.txt so it can be enumerated from the classpath at runtime.
-val copyDocs by tasks.registering(Sync::class) {
+val copyDocs = tasks.register<Sync>("copyDocs") {
     from(rootProject.layout.projectDirectory.dir("docs")) {
         include("**/*.md")
         exclude("superpowers/**")
