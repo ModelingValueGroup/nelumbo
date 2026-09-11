@@ -44,6 +44,16 @@ demonstrate.
 | confirmed | inference memoization / interning | A query's result depends on NEIGHBORING queries: pos-extraction of a mapped result is undecided alone, decided when a whole-result query precedes it; at solver scale result FORMS flip between closed and open | neighbor-query-changes-result.nl |
 | confirmed | ContextPool inference race | Same file, same flags, different results run-to-run: PARALLEL_COLLECTIONS=false serializes collections but NOT inference (ContextThread.createPool, Collection.PARALLELISM floor 2) | nondeterministic-inference.nl |
 
+## Found issues: 2026-09-11 sudoku-csp session
+
+Found while starting `examples/sudoku-4x4-csp.nl` (a Norvig candidate-set CSP
+solver). Building stalled at the grid accessors - both issues below block it.
+
+| Status | Location | Issue | Repro |
+|---|---|---|---|
+| confirmed | logic/Predicate.callMethod (reflective native invoke) | A List-returning functor CALL nested directly as an argument to another functor (`at(row(g,r),c)`) crashes with `IllegalArgumentException: argument type mismatch`. DETERMINISTIC (9/9), independent of PARALLELISM/PARALLEL_COLLECTIONS. Binding the inner call via `E[..]` first works; simple arithmetic nesting works. The exact same `cell(g,r,c)=x <=> x=at(row(g,r),c)` nesting is used in sudoku-4x4-smart.nl and in speculative-guard-index-crash.nl | nested-list-functor-arg-type-mismatch.nl |
+| confirmed | interning race (same root as nondeterministic-inference.nl) | REGRESSION vs 2026-09-10 notes: both `examples/sudoku-4x4.nl` and `examples/sudoku-4x4-smart.nl` now crash on the CLI with `ClassCastException`, deterministically (3/3 resp. 2/2), with `-DPARALLEL_COLLECTIONS=false`. Recorded as CLI-clean (20/20) on 2026-09-10. Simple + collection examples still run clean, so the build/CLI are healthy | (existing example files; nondeterministic-inference.nl) |
+
 ## Found issues: 2026-09-07 code review
 
 Status: `confirmed` = both adversarial verifiers agreed (usually with a CLI
