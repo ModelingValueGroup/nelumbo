@@ -44,6 +44,19 @@ demonstrate.
 | confirmed | inference memoization / interning | A query's result depends on NEIGHBORING queries: pos-extraction of a mapped result is undecided alone, decided when a whole-result query precedes it; at solver scale result FORMS flip between closed and open | neighbor-query-changes-result.nl |
 | confirmed | ContextPool inference race | Same file, same flags, different results run-to-run: PARALLEL_COLLECTIONS=false serializes collections but NOT inference (ContextThread.createPool, Collection.PARALLELISM floor 2) | nondeterministic-inference.nl |
 
+## Found issues: 2026-09-11 sudoku-csp session
+
+Found while writing `examples/sudoku-4x4-csp.nl` (a Norvig candidate-set CSP
+solver). Building stalled at the functional grid update; the three deterministic
+bugs below are the root causes. Each repro is condensed to the minimal trigger
+(no grid / no enum needed).
+
+| Status | Location | Issue | Repro |
+|---|---|---|---|
+| confirmed | logic/Predicate.callMethod (reflective native invoke) | A collection-returning functor CALL used as an argument crashes with `IllegalArgumentException: argument type mismatch`. Minimal: `x pos lst(0)` (functor-list into the native `pos`). DETERMINISTIC (9/9), independent of PARALLELISM/PARALLEL_COLLECTIONS. Binding the inner call via `E[..]` first works; arithmetic nesting works. The sudoku accessor `cell(g,r,c)=x <=> x=at(row(g,r),c)` hits it via the nested `row(g,r)` | nested-list-functor-arg-type-mismatch.nl |
+| confirmed | interning / type-confusion race in recursive list-concat | REGRESSION vs 2026-09-10 notes: a recursive list-CONCAT builder crashes DETERMINISTICALLY on the CLI (5/5) with `ClassCastException: Variable cannot be cast to List`. Minimal: `build(n)` accumulating `[1..n]` by concat; it is the `rowsBefore`/`rowsFrom` shape of sudoku-*-smart.nl. Concat-free recursion is fine; the crash needs `s=pre+[rw]` in the recursion. Over a Set-element grid the same builder DIVERGES (deadline) instead; a recursive set-UNION accumulator crashes identically (so it is recursive COLLECTION accumulation in general). Both `examples/sudoku-4x4.nl` and `sudoku-4x4-smart.nl` now crash too (3/3, 2/2). Simple + collection examples still run clean | recursive-list-concat-classcast.nl |
+| confirmed | logic equality resolution (collection-typed) | A collection-returning functor call on the RHS of `=` is NOT evaluated: `pick(i)=l <=> l = mk(i)` yields `l = mk(0)` (unreduced term + leaking anon binding). `mk(i) = l` (LHS) works; an Integer-returning functor works either side; a `map` on the RHS is unreduced too - so `=` is inconsistently non-commutative for collection-returning functors | set-functor-rhs-equals-not-reduced.nl |
+
 ## Found issues: 2026-09-07 code review
 
 Status: `confirmed` = both adversarial verifiers agreed (usually with a CLI
