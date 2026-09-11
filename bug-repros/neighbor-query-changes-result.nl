@@ -8,7 +8,7 @@
 // additionally race, see nondeterministic-inference.nl).
 // The same neighbor-sensitivity shows at larger scale as result FORMS
 // flipping between closed [(x)] and open [(x),..] depending on surrounding
-// queries (see examples/sudoku2.nl's test-section comment).
+// queries (see examples/sudoku-9x9-smart.nl's test-section comment).
 // Correct: a query's result depends only on the rules and its own inputs.
 // Actual: the two extractions below are undecided until an unrelated query
 // is added.

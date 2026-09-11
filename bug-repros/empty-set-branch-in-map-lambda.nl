@@ -11,7 +11,7 @@
 // Related: {} inside a NESTED list literal does not even type-check
 // ("Node {} of unexpected type ..., expected E$..."), which is why the map
 // result is extracted with sat instead of compared as a whole list.
-// Found 2026-09-10 while writing examples/sudoku2.nl (its candidate
+// Found 2026-09-10 while writing examples/sudoku-9x9-smart.nl (its candidate
 // elimination needed exactly this shape and had to be abandoned).
 import nelumbo.collections
 

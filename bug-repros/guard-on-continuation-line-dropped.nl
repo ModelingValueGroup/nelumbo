@@ -4,13 +4,13 @@
 // and then SILENTLY DROPS IT, keeping the alternative guardless. Evaluation
 // continues with changed semantics: below, f(3) matches BOTH alternatives
 // (y=1 via its guard, y=2 because its guard was dropped), which the engine
-// reports as "Inconsistent results" for the f(3) query. In sudoku2.nl's
+// reports as "Inconsistent results" for the f(3) query. In sudoku-9x9-smart.nl's
 // development this turned a guarded solver into a givens-overwriting one
 // that still looked green because the extra results hid in `,..` forms.
 // Correct: either accept the continuation or fail the file hard.
 // Actual: parse error printed, guard dropped, inconsistent results.
 // Legal continuations must break INSIDE unbalanced parens with the guard on
-// the closing line (see sudoku.nl solve).
+// the closing line (see sudoku-9x9.nl solve).
 import nelumbo.integers
 
 R :: Object

@@ -6,11 +6,11 @@
 //   IndexOutOfBoundsException at collections.Collections.indexOf
 //   (Collections.java:63, get-mode) via Predicate.callMethod.
 // The query below just scans an ALREADY SOLVED grid. The shipped
-// examples/sudoku2.nl works around it by bounds-guarding at/row
+// examples/sudoku-9x9-smart.nl works around it by bounds-guarding at/row
 // (`x pos l = i if i>=0 & i<9`), turning the out-of-range probe into a
 // clean failure.
 // Correct: s = the grid itself. Actual: IndexOutOfBoundsException.
-// Found 2026-09-10 while writing examples/sudoku2.nl.
+// Found 2026-09-10 while writing examples/sudoku-9x9-smart.nl.
 import nelumbo.collections
 
 // ---- types ----------------------------------------------------------

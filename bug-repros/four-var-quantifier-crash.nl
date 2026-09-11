@@ -7,7 +7,7 @@
 // Correct: either support 4+ variables or reject them at parse time in every
 // position. Actual: the query below crashes the run.
 // Workaround: nest quantifiers (E[x,y](... & E[i,j](...))).
-// Found 2026-09-10 while writing examples/sudoku2.nl's box check.
+// Found 2026-09-10 while writing examples/sudoku-9x9-smart.nl's box check.
 import nelumbo.collections
 
 R :: Object
