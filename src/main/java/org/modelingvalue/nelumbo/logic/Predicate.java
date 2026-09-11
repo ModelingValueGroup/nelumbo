@@ -51,6 +51,7 @@ public class Predicate extends Node {
 
     public static Node INCOMPLETE = new Predicate(NodeInfo.of(Type.BOOLEAN), "..");
 
+    // cash
     private int           nrOfUnbound    = -1;
     private Set<Variable> localVariables = null;
 
@@ -135,6 +136,11 @@ public class Predicate extends Node {
             return n;
         });
         return predicate.resetDeclaration();
+    }
+
+    @Override
+    public Predicate normalize() {
+        return (Predicate) super.normalize();
     }
 
     @Override

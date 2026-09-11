@@ -18,7 +18,6 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.lang.FunctorOrType;
-import org.modelingvalue.nelumbo.lang.Type;
 
 public interface NodeInfo {
 
@@ -28,18 +27,10 @@ public interface NodeInfo {
 
     Node declaration();
 
-    NodeInfo type();
-
     public static abstract class AbstractNodeInfo implements NodeInfo {
         @Override
         public String toString() {
             return functorOrType().toString();
-        }
-
-        @Override
-        public NodeInfo type() {
-            FunctorOrType fot = functorOrType();
-            return fot instanceof Type ? this : setFunctorOrType(fot.resultType());
         }
     }
 

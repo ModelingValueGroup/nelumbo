@@ -119,6 +119,11 @@ public final class Type extends Node implements FunctorOrType {
         return (Type) super.declaration();
     }
 
+    @Override
+    public Type normalize() {
+        return this;
+    }
+
     @NelumboConstructor
     public Type(NodeInfo nodeInfo, Object... args) {
         this(nodeInfo, null, args);

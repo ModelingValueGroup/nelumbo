@@ -70,6 +70,10 @@ public final class Variable extends Node {
         return type.isLiteral() ? this : setType(type.toLiteral());
     }
 
+    public Variable setName(String name) {
+        return set(2, name);
+    }
+
     public Variable rename(Function<String, String> rename) {
         String n = name();
         int i = n.indexOf('$');

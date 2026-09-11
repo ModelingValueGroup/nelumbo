@@ -150,7 +150,7 @@ public final class Transform extends Node {
                         }
                     }
                     return n;
-                }).setBinding(binding).setAstElements(node.astElements()).resetDeclaration().makeVariablesUnique(ctx);
+                }).setBinding(binding).setAstElements(node.astElements()).makeVariablesUnique(ctx);
                 rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
             }
