@@ -7,8 +7,12 @@ red-by-design: while the bug exists the file fails (expectation mismatch or
 crash); after the fix it passes and can be promoted into the regular test
 resources.
 
-Run all: `./run-all.sh` (needs `./gradlew cliJar` first). Assertions are enabled
-(`-ea`); `multiline-string-assert.nl` needs that to show its crash.
+Run all: `./run-all.sh` (needs `./gradlew cliJar` first; PASS is green, FAIL red
+on a terminal). Assertions are enabled (`-ea`); `multiline-string-assert.nl`
+needs that to show its crash.
+
+Promoted (bug fixed, moved into the regular test suite): `string-concat-prefix.nl`
+and `repetition-count-lost.nl` (2026-09-11) -> `tests/` + `RegressionTest`.
 
 Every expectation (`? [..][..]`) states the CORRECT behavior, so the CLI reports a
 mismatch (or crashes) today. A few queries in the quantifier/diagonal files carry no
@@ -78,7 +82,7 @@ cases, **low** = minor or unlikely.
 | confirmed | rationals/Rational.java:69 | normalize() keeps negative denominators: broken equality, -2 > 0 inferred | rational-sign.nl |
 | confirmed | rationals/Rationals.java:81 | Zero factor builds n/0 rationals: crash or fabricated fact | rational-zero-factor.nl |
 | confirmed | integers/Integers.java:74 | Division by zero crashes the whole evaluation | integers-div-zero.nl |
-| confirmed | strings/Strings.java:55 | string_concat solves the wrong prefix for asymmetric splits | string-concat-prefix.nl |
+| FIXED 2026-09-11 | strings/Strings.java:55 | string_concat solves the wrong prefix for asymmetric splits | promoted -> tests/string-concat-prefix.nl (RegressionTest) |
 | confirmed | collections/Collections.java:63 | indexOf crashes on out-of-range index; 2^32 wraps to element 0 | collections-index-out-of-range.nl |
 | confirmed | patterns/SequencePattern.java:162 | alt flag dropped: multi-keyword alternation options lose their identity | alternation-option-identity.nl |
 | confirmed | patterns/RepetitionPattern.java:171 | Greedy separator consumption without backtracking: crash on valid input | repetition-separator-greedy.nl |
@@ -93,7 +97,7 @@ cases, **low** = minor or unlikely.
 | confirmed | KnowledgeBase.java:560 | getFacts claims "complete, no facts" for un-indexed shapes like r(a,a) | diagonal-fact-lookup.nl |
 | confirmed | strings/Strings.java:82 | int(...) uses Integer.parseInt: silent 32-bit limit | integer-string-32bit.nl |
 | confirmed | datetime/Multiply.java:49 | period_multiply crashes on multipliers outside int range | datetime-multiply-overflow.nl |
-| confirmed | patterns/RepetitionPattern.java:161 | Keyword-only repetition loses its iteration count: rep aa == rep aa aa | repetition-count-lost.nl |
+| FIXED 2026-09-11 | patterns/RepetitionPattern.java:161 | Keyword-only repetition loses its iteration count: rep aa == rep aa aa | promoted -> tests/repetition-count-lost.nl (RegressionTest) |
 | confirmed | patterns/OptionalPattern.java:118 | Matched optional with multi-keyword body recorded as absent | optional-presence-lost.nl |
 | confirmed | syntax/TokenType.java:37 | '//' directly after an operator char is swallowed into the operator token | comment-after-operator.nl |
 | confirmed | syntax/Tokenizer.java:153 | Multi-line STRING token crashes checkToken with -ea (unclosed quote while typing) | multiline-string-assert.nl |
