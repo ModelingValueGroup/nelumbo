@@ -1,3 +1,19 @@
+// Norvig candidate-set CSP sudoku solver (4x4), options as a Digit enum.
+// CLI-only. Run with: java -DPARALLEL_COLLECTIONS=false -jar nelumbo-cli-*.jar <this file>
+//
+// STATUS (2026-09-11): BLOCKED at the functional grid update. Building this
+// surfaced three deterministic engine bugs (repros in bug-repros/):
+//   1. nested-list-functor-arg-type-mismatch.nl - a collection-returning functor
+//      CALL nested as an argument crashes; worked around here by E-binding.
+//   2. set-functor-rhs-equals-not-reduced.nl - a collection-valued expression on
+//      the RHS of `=` is not reduced; worked around here by using the LHS form.
+//   3. recursive-list-concat-classcast.nl - a recursive collection-accumulation
+//      builder (concat/union) crashes (ClassCast) or diverges. This is a
+//      REGRESSION and it blocks `put` and every candidate-set builder, so the
+//      solver cannot progress past the accessors until it is fixed.
+// What works so far and is kept below: the Digit/IO map, all grid accessors, and
+// the peer/box relation. See docs/superpowers/plans/2026-09-11-sudoku-csp.md.
+
 import nelumbo.collections
 
 Digit :: Object
@@ -16,6 +32,10 @@ Set<Digit>             ::= catRow(<List<Set<Digit>>>,<Integer>),
                           cell(<List<List<Set<Digit>>>>,<Integer>,<Integer>)
 List<Set<Digit>>       ::= crow(<List<List<Set<Digit>>>>,<Integer>)
 List<List<Set<Digit>>> ::= fullGrid(<List<List<Integer>>>)
+
+Integer ::= bb(<Integer>)
+Boolean ::= samebox(<Integer>,<Integer>,<Integer>,<Integer>),
+            peer(<Integer>,<Integer>,<Integer>,<Integer>)
 
 Integer                i, j, k, m, r, c, r2, c2, v
 Digit                  d
@@ -42,8 +62,15 @@ fullGrid(p)=g <=> g=[[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
                      [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
                      [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}]]
 
+bb(r)=k <=> k=0 if r<2, k=2 if r>=2
+samebox(r,c,r2,c2) <=> E[i,j](bb(r)=i & bb(c)=j & bb(r2)=i & bb(c2)=j)
+peer(r,c,r2,c2)    <=> !(r=r2 & c=c2) & (r=r2 | c=c2 | samebox(r,c,r2,c2))
+
 dig(2)=d    ? [(d=D2)][..]
 undig(D3)=v ? [(v=3)][..]
 icell([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]],2,1)=v ? [(v=3)][..]
 cell([[{D1,D2},{D3},{D4},{D1}]],0,0)=sc ? [(sc={D1,D2})][..]
 E[g](fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])=g & cell(g,1,2)=sc) ? [(sc={D1,D2,D3,D4})][..]
+peer(0,0,1,1) ? [()][]
+peer(0,0,2,2) ? [][()]
+peer(0,0,0,0) ? [][()]
