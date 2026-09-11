@@ -23,6 +23,19 @@ set -u
 REPRO_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$REPRO_DIR")"
 
+setup_colors() {
+    # only colorize when stdout is a terminal, so piping stays clean
+    if [ -t 1 ]; then
+        RED=$'\033[31m'
+        GREEN=$'\033[32m'
+        RESET=$'\033[0m'
+    else
+        RED=""
+        GREEN=""
+        RESET=""
+    fi
+}
+
 find_jar() {
     ls -t "$ROOT_DIR"/cli/build/libs/nelumbo-cli-*.jar 2>/dev/null | head -1
 }
@@ -39,16 +52,17 @@ run_repro() {
     local name
     name=$(basename "$file")
     if [ $code -eq 0 ] && ! echo "$out" | grep -q "Expected result"; then
-        echo "PASS  $name (bug appears fixed)"
+        echo "${GREEN}PASS  $name (bug appears fixed)${RESET}"
         return 0
     else
-        echo "FAIL  $name"
+        echo "${RED}FAIL  $name${RESET}"
         echo "$out" | grep -E "Expected result|Exception" | head -2 | sed 's/^/      /'
         return 1
     fi
 }
 
 main() {
+    setup_colors
     local jar
     jar=$(find_jar)
     if [ -z "$jar" ]; then
