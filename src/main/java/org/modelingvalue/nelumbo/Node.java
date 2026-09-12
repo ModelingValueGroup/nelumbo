@@ -93,7 +93,7 @@ public class Node extends StructImpl implements AstElement {
                         return v.setName(post);
                     }
                     return n;
-                });
+                }, true);
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
             }
@@ -123,28 +123,6 @@ public class Node extends StructImpl implements AstElement {
 
     public Node setAstElements(List<AstElement> elements) {
         return elements.equals(astElements()) ? this : set(nodeInfo.setElements(elements), toArray());
-    }
-
-    public Node resetDeclaration() {
-        Object[] array = toArray();
-        for (int i = 0; i < array.length; i++) {
-            array[i] = resetDeclaration(array[i]);
-        }
-        return set(nodeInfo.resetDeclaration(), array);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Object resetDeclaration(Object from) {
-        if (from instanceof Node node) {
-            return node.resetDeclaration();
-        } else if (from instanceof ContainingCollection coll) {
-            ContainingCollection c = coll.clear();
-            for (Object e : coll) {
-                c = c.add(resetDeclaration(e));
-            }
-            return c;
-        }
-        return from;
     }
 
     private static Object[] removeOptionals(Object[] args) {
@@ -555,28 +533,37 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Node makeVariablesUnique(ParseContext ctx) throws ParseException {
-        return makeVariablesUnique(ctx, uniqueId()).resetDeclaration();
+        return makeVariablesUnique(ctx, uniqueId());
     }
 
     public Node makeVariablesUnique(ParseContext ctx, String id) throws ParseException {
-        return replace(n -> {
-            if (n instanceof Variable v
+        return replace(o -> {
+            if (o instanceof Variable v
                     && (ctx.outer().type(v.name()) != null || ctx.outer().variable(v.name()) != null)) {
                 return v.makeUnique(id);
             }
-            return n;
-        });
+            return o;
+        }, true);
     }
 
     public Node setTypes() {
         return setBinding(getBinding());
     }
 
-    public final Node replace(ThrowingFunction<Node, Node> replacer) throws ParseException {
+    public Node resetDeclaration() {
+        try {
+            return replace(o -> o, true);
+        } catch (ParseException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public final Node replace(ThrowingFunction<Object, Object> replacer, boolean resetDeclaration)
+            throws ParseException {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object fromVal = get(i);
-            Object toVal = replace(fromVal, replacer);
+            Object toVal = replace(fromVal, replacer, resetDeclaration);
             if (toVal != fromVal) {
                 if (array == null) {
                     array = toArray();
@@ -584,21 +571,33 @@ public class Node extends StructImpl implements AstElement {
                 array[i] = toVal;
             }
         }
-        return replacer.apply(array != null ? setArgs(array) : this);
+        Node n = (Node) replacer.apply(array != null ? set(nodeInfo, array) : this);
+        return resetDeclaration ? n.set(n.nodeInfo.resetDeclaration(), n.toArray()) : n;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private Object replace(Object from, ThrowingFunction<Node, Node> replacer) throws ParseException {
+    private Object replace(Object from, ThrowingFunction<Object, Object> replacer, boolean resetDeclaration)
+            throws ParseException {
         if (from instanceof Node fromNode) {
-            return fromNode.replace(replacer);
-        } else if (from instanceof ContainingCollection fromList) {
-            ContainingCollection toList = fromList.clear();
-            for (Object e : fromList) {
-                toList = toList.add(replace(e, replacer));
+            return fromNode.replace(replacer, resetDeclaration);
+        } else if (from instanceof ContainingCollection fromColl) {
+            ContainingCollection toColl = null;
+            for (int i = 0; i < fromColl.size(); i++) {
+                Object fromVal = fromColl.get(i);
+                Object toVal = replace(fromVal, replacer, resetDeclaration);
+                if (toVal != fromVal || toColl != null) {
+                    if (toColl == null) {
+                        toColl = fromColl.clear();
+                        for (int ii = 0; ii < i; ii++) {
+                            toColl = toColl.add(fromColl.get(ii));
+                        }
+                    }
+                    toColl = toColl.add(toVal);
+                }
             }
-            return fromList.equals(toList) ? fromList : toList;
+            return toColl != null ? toColl : fromColl;
         }
-        return from;
+        return replacer.apply(from);
     }
 
     public Node setType(int i, Type type) {
