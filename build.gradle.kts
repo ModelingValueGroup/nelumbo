@@ -124,12 +124,79 @@ tasks.test {
     dependsOn(":cli:test")
     dependsOn(":website:test")
     dependsOn(":mcp:test")
+    finalizedBy("allTestsReport")
+}
+
+// one aggregated HTML report over every test task in every project; runs
+// automatically after './gradlew test' (the per-task report lines are then
+// suppressed in favor of the single ALL-tests line). Gradle's own index.html
+// only has per-run tabs ("Gradle Test Run :xxx") without an overall total, so
+// doLast writes an overview.html with the totals from the junit XML results.
+val allTestsReport = tasks.register<TestReport>("allTestsReport") {
+    destinationDirectory = layout.buildDirectory.dir("reports/tests/all")
+    val sources = mutableListOf<Triple<String, Provider<Directory>, Provider<Directory>>>()
+    allprojects.forEach { p ->
+        p.tasks.withType<Test>().forEach { t ->
+            testResults.from(t)
+            sources.add(Triple(t.path, t.reports.junitXml.outputLocation, t.reports.html.outputLocation))
+        }
+    }
+    doLast {
+        fun attr(tag: String, n: String) = Regex("$n=\"([^\"]+)\"").find(tag)?.groupValues?.get(1)
+        var totTests = 0
+        var totFail  = 0
+        var totSkip  = 0
+        var totTime  = 0.0
+        val rows     = StringBuilder()
+        sources.forEach { (taskPath, xmlDir, htmlDir) ->
+            var tests = 0
+            var fail  = 0
+            var skip  = 0
+            var time  = 0.0
+            xmlDir.get().asFile.listFiles { f -> f.name.endsWith(".xml") }?.forEach { f ->
+                val tag = Regex("<testsuite\\b[^>]*>").find(f.readText())?.value ?: return@forEach
+                tests += (attr(tag, "tests") ?: "0").toInt()
+                fail += (attr(tag, "failures") ?: "0").toInt() + (attr(tag, "errors") ?: "0").toInt()
+                skip += (attr(tag, "skipped") ?: "0").toInt()
+                time += (attr(tag, "time") ?: "0").toDouble()
+            }
+            if (tests == 0 && fail == 0 && skip == 0) {
+                return@forEach // e.g. the plugin projects: no tests at all
+            }
+            totTests += tests
+            totFail += fail
+            totSkip += skip
+            totTime += time
+            val link = htmlDir.get().asFile.resolve("index.html").toPath().toUri()
+            val cls = if (fail > 0) "bad" else "ok"
+            rows.append("<tr><td><a href=\"$link\">$taskPath</a></td><td>$tests</td><td class=\"$cls\">$fail</td><td>$skip</td><td>${"%.1f".format(time)}s</td></tr>\n")
+        }
+        val verdict = if (totFail > 0) "<span class=\"bad\">$totFail FAILED</span>" else "<span class=\"ok\">all passed</span>"
+        val tabs = destinationDirectory.get().asFile.resolve("index.html").toPath().toUri()
+        val out = destinationDirectory.get().asFile.resolve("overview.html")
+        out.writeText(
+            """
+            <!DOCTYPE html><html><head><meta charset="utf-8"><title>All tests overview</title><style>
+            body{font-family:sans-serif;margin:2em} table{border-collapse:collapse;margin-top:1em}
+            td,th{border:1px solid #ccc;padding:.4em .9em;text-align:right} td:first-child,th:first-child{text-align:left}
+            tr.total{font-weight:bold;background:#f2f2f2} .ok{color:#2a7a2a} .bad{color:#c22222}
+            </style></head><body>
+            <h1>All tests: $totTests tests, $totSkip skipped (known bugs), $verdict</h1>
+            <p><a href="$tabs">per-run details (Gradle tabs)</a></p>
+            <table><tr><th>test task</th><th>tests</th><th>failures</th><th>skipped</th><th>duration</th></tr>
+            $rows<tr class="total"><td>TOTAL</td><td>$totTests</td><td class="${if (totFail > 0) "bad" else "ok"}">$totFail</td><td>$totSkip</td><td>${"%.1f".format(totTime)}s</td></tr>
+            </table></body></html>
+            """.trimIndent()
+        )
+        println("ALL tests report: ${out.toPath().toUri()}")
+    }
 }
 
 // make failing tests stand out in the (CI) log: a red banner per failure + a GitHub error annotation
 allprojects {
     tasks.withType<Test>().configureEach {
-        val taskPath = path
+        val taskPath   = path
+        val htmlReport = reports.html.outputLocation
         addTestListener(object : TestListener {
             val red   = "\u001B[91m"
             val reset = "\u001B[0m"
@@ -161,10 +228,15 @@ allprojects {
             }
 
             override fun afterSuite(suite: TestDescriptor, result: TestResult) {
-                if (suite.parent == null && result.failedTestCount > 0) {
-                    println("$red$bar")
-                    println("##  ${result.failedTestCount} FAILED test(s) in $taskPath - look for 'TEST FAILED' banners above")
-                    println("$bar$reset")
+                if (suite.parent == null) {
+                    if (result.failedTestCount > 0) {
+                        println("$red$bar")
+                        println("##  ${result.failedTestCount} FAILED test(s) in $taskPath - look for 'TEST FAILED' banners above")
+                        println("$bar$reset")
+                    }
+                    if (!gradle.taskGraph.hasTask(":allTestsReport")) {
+                        println("$taskPath report: ${htmlReport.get().asFile.resolve("index.html").toPath().toUri()}")
+                    }
                 }
             }
         })

@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Test;
 // generic types...") they fail EVERYWHERE deterministically - CLI: ClassCast
 // "Variable cannot be cast to List" at NList.collection; test JVM: expectation
 // mismatches with unreduced terms (map/scanF left unevaluated). Minimal repro:
-// bug-repros/recursive-list-concat-classcast.nl (recursive collection
-// accumulation). The old note here ("crashes in the test JVM yet never in a
+// recursive-list-concat-classcast.nl in the known-bug suite (KnownBugsTest;
+// recursive collection accumulation). The old note here ("crashes in the test JVM yet never in a
 // fresh CLI JVM, 20/20") was an artifact of a STALE cliJar built before
 // bba88fc8 - investigated and explained 2026-09-13, no environment factor.
 // When the engine bug is fixed, un-@Disable the 4x4 methods first (they solve
@@ -40,13 +40,13 @@ public class SudokuExamplesTest extends NelumboTestBase {
         setProp("VERBOSE_TESTS", "false");
     }
 
-    @Disabled("fails everywhere since bba88fc8 - see bug-repros/recursive-list-concat-classcast.nl")
+    @Disabled("fails everywhere since bba88fc8 - see recursive-list-concat-classcast.nl (KnownBugsTest)")
     @Test
     public void sudoku4x4() {
         exampleResource("sudoku-4x4.nl");
     }
 
-    @Disabled("fails everywhere since bba88fc8 - see bug-repros/recursive-list-concat-classcast.nl")
+    @Disabled("fails everywhere since bba88fc8 - see recursive-list-concat-classcast.nl (KnownBugsTest)")
     @Test
     public void sudoku4x4Smart() {
         exampleResource("sudoku-4x4-smart.nl");

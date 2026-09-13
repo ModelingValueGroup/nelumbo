@@ -14,14 +14,30 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.test;
 
-@SuppressWarnings("unused")
-public interface NelumboConstants {
-    String NAME             = "nelumbo";
-    String EXTENSION        = "nl";
-    String NELUMBO_LIBRARY  = "/org/modelingvalue/nelumbo/";
-    String NELUMBO_EXAMPLES = NELUMBO_LIBRARY + "examples/";
-    String NELUMBO_TESTS    = NELUMBO_LIBRARY + "tests/";
-    String NELUMBO_BUGS     = NELUMBO_LIBRARY + "bugs/";
+import java.lang.reflect.Method;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.InvocationInterceptor;
+import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
+import org.opentest4j.TestAbortedException;
+
+public class KnownBugExtension implements InvocationInterceptor {
+    @Override
+    public void interceptTestMethod(Invocation<Void> invocation, ReflectiveInvocationContext<Method> invocationContext,
+            ExtensionContext extensionContext) throws Throwable {
+        KnownBug kb = invocationContext.getExecutable().getAnnotation(KnownBug.class);
+        try {
+            invocation.proceed();
+        } catch (Throwable t) {
+            String detail = t.getMessage() == null ? t.getClass().getSimpleName() : t.getMessage().lines().findFirst().orElse("");
+            throw new TestAbortedException("known bug still present: " + kb.value() + " [" + detail + "]");
+        }
+        if (kb.flaky()) {
+            throw new TestAbortedException("passed this run, but flaky - known bug: " + kb.value());
+        }
+        Assertions.fail("KNOWN BUG APPEARS FIXED: " + kb.value() + " - remove @KnownBug and promote to RegressionTest");
+    }
 }

@@ -15,13 +15,16 @@
 ##     Victor Lap                                                                                                      ~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Runs every bug repro against the CLI. While the bugs exist every file FAILS
-# (expectation mismatch or crash); after a fix the corresponding file passes.
+# Runs every known-bug repro (src/main/resources/org/modelingvalue/nelumbo/bugs/)
+# against the CLI. While the bugs exist every file FAILS (expectation mismatch
+# or crash); after a fix the corresponding file passes.
+# JUnit twin: KnownBugsTest (@KnownBug xfail suite) - note that the SAME bug
+# can manifest differently on the CLI vs the test JVM, so both harnesses stay.
 
 set -u
 
-REPRO_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT_DIR="$(dirname "$REPRO_DIR")"
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPRO_DIR="$ROOT_DIR/src/main/resources/org/modelingvalue/nelumbo/bugs"
 
 setup_colors() {
     # only colorize when stdout is a terminal, so piping stays clean
