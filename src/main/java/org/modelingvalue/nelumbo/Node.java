@@ -572,7 +572,7 @@ public class Node extends StructImpl implements AstElement {
             }
         }
         Node n = (Node) replacer.apply(array != null ? set(nodeInfo, array) : this);
-        return resetDeclaration ? n.set(n.nodeInfo.resetDeclaration(), n.toArray()) : n;
+        return resetDeclaration && n.declaration() != n ? n.set(n.nodeInfo.resetDeclaration(), n.toArray()) : n;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
