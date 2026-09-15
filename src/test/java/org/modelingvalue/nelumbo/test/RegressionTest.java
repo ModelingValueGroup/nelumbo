@@ -18,9 +18,10 @@ package org.modelingvalue.nelumbo.test;
 
 import org.junit.jupiter.api.RepeatedTest;
 
-// Regression tests promoted from bug-repros/ once the engine fix landed. Each
-// guards a previously-broken behavior; the .nl file's query expectation is the
-// assertion (a mismatch throws ParseException and fails the test).
+// Regression tests promoted from the known-bug suite (KnownBugsTest) once the
+// engine fix landed. Each guards a previously-broken behavior; the .nl file's
+// query expectation is the assertion (a mismatch throws ParseException and
+// fails the test).
 public class RegressionTest extends NelumboTestBase {
 
     static {

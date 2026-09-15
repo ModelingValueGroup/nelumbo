@@ -19,18 +19,16 @@ package org.modelingvalue.nelumbo.test;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-// All four sudoku examples are @Disabled: they run only via the standalone CLI,
-// not in the shared test JVM. Even the tiny 4x4 grids crash here with a
-// ClassCastException ("Variable cannot be cast to List") - the immutable-
-// collections interning race under parallel inference. It reproduces 100% in
-// the Gradle test worker yet never in a fresh `java -jar` CLI JVM (20/20), and
-// -DPARALLEL_COLLECTIONS=false / -DPARALLELISM=1 do NOT stop it here (verified:
-// the properties reach the JVM but the inference pool still parallelises). The
-// underlying race is a known, unfixed collections defect. Run these via the CLI:
-//   java -DPARALLEL_COLLECTIONS=false -jar cli/build/libs/nelumbo-cli-*.jar \
-//        src/main/resources/org/modelingvalue/nelumbo/examples/sudoku-4x4.nl
-// If that race is ever fixed, drop the @Disabled from the 4x4 methods first
-// (they solve in <1s); the 9x9 methods stay gated for the extra reasons noted.
+// All four sudoku examples are @Disabled. Since bba88fc8 (2026-09-09, "rename
+// generic types...") they fail EVERYWHERE deterministically - CLI: ClassCast
+// "Variable cannot be cast to List" at NList.collection; test JVM: expectation
+// mismatches with unreduced terms (map/scanF left unevaluated). Minimal repro:
+// recursive-list-concat-classcast.nl in the known-bug suite (KnownBugsTest;
+// recursive collection accumulation). The old note here ("crashes in the test JVM yet never in a
+// fresh CLI JVM, 20/20") was an artifact of a STALE cliJar built before
+// bba88fc8 - investigated and explained 2026-09-13, no environment factor.
+// When the engine bug is fixed, un-@Disable the 4x4 methods first (they solve
+// in <1s); the 9x9 methods stay gated for the extra reasons noted below.
 public class SudokuExamplesTest extends NelumboTestBase {
 
     static {
@@ -42,13 +40,13 @@ public class SudokuExamplesTest extends NelumboTestBase {
         setProp("VERBOSE_TESTS", "false");
     }
 
-    @Disabled("CLI-only: crashes in the test JVM under the parallel-collections interning race")
+    @Disabled("fails everywhere since bba88fc8 - see recursive-list-concat-classcast.nl (KnownBugsTest)")
     @Test
     public void sudoku4x4() {
         exampleResource("sudoku-4x4.nl");
     }
 
-    @Disabled("CLI-only: crashes in the test JVM under the parallel-collections interning race")
+    @Disabled("fails everywhere since bba88fc8 - see recursive-list-concat-classcast.nl (KnownBugsTest)")
     @Test
     public void sudoku4x4Smart() {
         exampleResource("sudoku-4x4-smart.nl");
