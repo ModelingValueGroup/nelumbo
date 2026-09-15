@@ -37,7 +37,6 @@ import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Predicate extends Node {
     @Serial
@@ -54,6 +53,8 @@ public class Predicate extends Node {
     // cash
     private int           nrOfUnbound    = -1;
     private Set<Variable> localVariables = null;
+    private Set<Variable> variables      = null;
+    private Predicate     varsToTypes    = null;
 
     @NelumboConstructor
     public Predicate(NodeInfo nodeInfo, Object... args) {
@@ -67,10 +68,17 @@ public class Predicate extends Node {
 
     protected final int nrOfUnbound() {
         if (nrOfUnbound < 0) {
-            nrOfUnbound = (int) getBinding().removeAllKey(allLocalVars()).filter(e -> e.getValue() instanceof Type)
-                    .count();
+            nrOfUnbound = allVars().removeAll(allLocalVars()).size();
         }
         return nrOfUnbound;
+    }
+
+    @Override
+    public Set<Variable> allVars() {
+        if (variables == null) {
+            variables = super.allVars();
+        }
+        return variables;
     }
 
     @Override
@@ -81,31 +89,28 @@ public class Predicate extends Node {
         return localVariables;
     }
 
+    public Predicate varsToTypes() {
+        if (varsToTypes == null) {
+            try {
+                varsToTypes = (Predicate) replace(o -> {
+                    if (o instanceof Variable var) {
+                        return var.type();
+                    }
+                    return o;
+                }, true);
+            } catch (ParseException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        return varsToTypes;
+    }
+
     public final boolean isFullyBound() {
         return nrOfUnbound() == 0;
     }
 
     public Predicate castFrom(Predicate from) {
         return set(nodeInfo(), from.toArray());
-    }
-
-    @Override
-    public String toString(TokenType[] previous) {
-        return setVariables().superToString(previous);
-    }
-
-    @Override
-    public Predicate setVariables() {
-        return (Predicate) super.setVariables();
-    }
-
-    @Override
-    public Predicate setTypes() {
-        return (Predicate) super.setTypes();
-    }
-
-    private String superToString(TokenType[] previous) {
-        return super.toString(previous);
     }
 
     public static Map<Variable, Object> literals(Map<Variable, Object> vars) {
@@ -172,13 +177,12 @@ public class Predicate extends Node {
     public InferResult infer() {
         KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
         InferContext context = knowledgeBase.context();
-        Predicate predicate = setTypes();
         if (context.trace()) {
-            System.out.println(context.prefix() + predicate);
+            System.out.println(context.prefix() + this);
         }
-        InferResult result = predicate.resolve(context);
+        InferResult result = resolve(context);
         if (context.trace()) {
-            System.out.println(context.prefix() + predicate + " " + result);
+            System.out.println(context.prefix() + this + " " + result);
         }
         return result;
     }
@@ -305,7 +309,7 @@ public class Predicate extends Node {
         }
         InferResult result = doInfer(nrOfUnbound, context);
         if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
-            System.out.println(context.prefix() + "  " + this + " " + result.predicate(setVariables()));
+            System.out.println(context.prefix() + "  " + this + " " + result.predicate(this));
         }
         return result;
     }
@@ -320,7 +324,7 @@ public class Predicate extends Node {
             try {
                 Object[] args = toArray();
                 for (int i = 0; i < args.length; i++) {
-                    if (args[i] instanceof Type) {
+                    if (args[i] instanceof Type || args[i] instanceof Variable) {
                         args[i] = null;
                     }
                 }

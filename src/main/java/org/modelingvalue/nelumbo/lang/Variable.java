@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -101,6 +102,11 @@ public final class Variable extends Node {
     }
 
     @Override
+    public Set<Variable> allVars() {
+        return Set.of(this);
+    }
+
+    @Override
     public Variable set(int i, Object... a) {
         return (Variable) super.set(i, a);
     }
@@ -109,10 +115,10 @@ public final class Variable extends Node {
     public String toString(TokenType[] previous) {
         if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
             previous[0] = TokenType.NAME;
-            return " " + baseName();
+            return " " + name();
         }
         previous[0] = TokenType.NAME;
-        return baseName();
+        return name();
     }
 
     @Override

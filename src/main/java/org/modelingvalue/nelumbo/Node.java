@@ -355,6 +355,25 @@ public class Node extends StructImpl implements AstElement {
         return new Node(nodeInfo, args);
     }
 
+    public Set<Variable> allVars() {
+        Set<Variable> allVars = Set.of();
+        for (int i = 0; i < length(); i++) {
+            allVars = allVars(get(i), allVars);
+        }
+        return allVars;
+    }
+
+    private static Set<Variable> allVars(Object val, Set<Variable> allVars) {
+        if (val instanceof Node node) {
+            allVars = allVars.addAll(node.allVars());
+        } else if (val instanceof ContainingCollection<?> coll) {
+            for (Object e : coll) {
+                allVars = allVars(e, allVars);
+            }
+        }
+        return allVars;
+    }
+
     public Set<Variable> allLocalVars() {
         Set<Variable> allLocalVars = localVars().asSet();
         for (int i = 0; i < length(); i++) {
@@ -363,7 +382,7 @@ public class Node extends StructImpl implements AstElement {
         return allLocalVars;
     }
 
-    private Set<Variable> allLocalVars(Object val, Set<Variable> allLocalVars) {
+    private static Set<Variable> allLocalVars(Object val, Set<Variable> allLocalVars) {
         if (val instanceof Node node) {
             allLocalVars = allLocalVars.addAll(node.allLocalVars());
         } else if (val instanceof ContainingCollection<?> coll) {
@@ -393,38 +412,28 @@ public class Node extends StructImpl implements AstElement {
     }
 
     private Map<Variable, Object> getBinding(Object declVal, Object thisIn, Map<Variable, Object> vars, int i) {
-        Object thisVal = thisIn instanceof Type || thisIn instanceof Variable ? null : thisIn;
+        Object thisVal = thisIn instanceof Variable ? null : thisIn;
         if (declVal instanceof Type declType) {
             declVal = declType.variable();
         }
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
-            varVal = varVal instanceof Type ? null : varVal;
+            varVal = varVal instanceof Type || varVal instanceof Variable ? null : varVal;
             if (varVal != null) {
                 if (thisVal != null && !thisVal.equals(varVal)) {
                     return null;
                 }
             } else {
                 if (thisVal == null) {
-                    if (thisIn instanceof Variable thisVar && !thisVar.equals(declVar)) {
-                        thisVal = thisVar;
-                    } else {
-                        thisVal = typeOf(thisIn);
-                    }
+                    thisVal = varOf(declVar, thisIn);
                 }
                 if (thisVal != null && doGetBinding(thisVal, i)) {
                     vars = vars.put(declVar, thisVal);
-                    if (thisVal instanceof Node thisNode && !(thisNode instanceof Type)) {
-                        vars = vars.putAll(thisNode.getBinding().removeAllKey(allLocalVars()).replaceAll(e -> {
-                            Variable nodeVar = e.getKey();
-                            return Entry.of(nodeVar.rename(n -> "$" + n), e.getValue());
-                        }));
-                    }
                 }
             }
         } else if (declVal instanceof Node declNode && thisVal instanceof Node thisNode) {
             // noinspection ConstantValue
-            assert !(declVal instanceof Type);
+            assert !(declVal instanceof Type || declVal instanceof Variable);
             vars = thisNode.getBinding(declNode, vars);
         } else if (declVal instanceof ContainingCollection<?> declList
                 && thisVal instanceof ContainingCollection<?> thisList && //
@@ -436,8 +445,8 @@ public class Node extends StructImpl implements AstElement {
         return vars;
     }
 
-    public static Type typeOf(Object v) {
-        return v instanceof Type type ? type : v instanceof Node node ? node.type() : null;
+    private static Variable varOf(Variable declVar, Object v) {
+        return v instanceof Variable var ? declVar.setType(var.type()) : declVar;
     }
 
     public Node set(Variable var, Object val) {
@@ -485,10 +494,8 @@ public class Node extends StructImpl implements AstElement {
             if (thisVal instanceof Variable thisVar) {
                 Type from = thisVar.type();
                 Variable var = from.variable();
-                if (var != null) {
-                    if (vars.get(var) instanceof Type to) {
-                        return thisVar.setType(from.rewrite(to));
-                    }
+                if (var != null && vars.get(var) instanceof Type to) {
+                    return thisVar.setType(from.rewrite(to));
                 }
             }
         } else if (declVal instanceof Node declNode && !(declNode instanceof Type) && //
@@ -526,12 +533,6 @@ public class Node extends StructImpl implements AstElement {
         return true;
     }
 
-    public Node setVariables() {
-        Map<Variable, Object> vars = getBinding();
-        vars = vars.replaceAll(e -> e.getValue() instanceof Type ? Entry.of(e.getKey(), e.getKey()) : e);
-        return setBinding(vars);
-    }
-
     public Node makeVariablesUnique(ParseContext ctx) throws ParseException {
         return makeVariablesUnique(ctx, uniqueId());
     }
@@ -544,10 +545,6 @@ public class Node extends StructImpl implements AstElement {
             }
             return o;
         }, true);
-    }
-
-    public Node setTypes() {
-        return setBinding(getBinding());
     }
 
     public Node resetDeclaration() {

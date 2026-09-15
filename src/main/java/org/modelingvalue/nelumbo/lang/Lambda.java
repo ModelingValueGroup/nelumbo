@@ -18,7 +18,6 @@ package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
@@ -66,8 +65,7 @@ public final class Lambda extends Node {
 
     protected NIs is() {
         if (is == null) {
-            Variable r = var();
-            is = new NIs(List.of(), expression(), r).setBinding(Map.of(Entry.of(r, r.type())));
+            is = new NIs(List.of(), expression(), var());
         }
         return is;
     }
@@ -75,7 +73,7 @@ public final class Lambda extends Node {
     protected Variable var() {
         if (var == null) {
             Type t = type().arguments().last().toLiteral();
-            var = new Variable(List.of(), false, t, "$r");
+            var = new Variable(List.of(), false, t, "r$" + uniqueId());
         }
         return var;
     }

@@ -171,8 +171,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             return addType(new Type(var), ctx);
         } else {
             Type type = var.type().toVariable();
-            Functor functor = Functor.of(List.of(var), t(List.of(var), var), type, worldScopedVariables ? null : Type.NAMESPACE, Variable.class,
-                    null);
+            Functor functor = Functor.of(List.of(var), t(List.of(var), var), type,
+                    worldScopedVariables ? null : Type.NAMESPACE, Variable.class, null);
             functor.init(this, ctx, bootstrapping);
             return functor;
         }
@@ -339,9 +339,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     /**
-     * When set, variable declarations register world-scoped instead of namespace-scoped,
-     * so they persist in this knowledge base (and the children it spawns) beyond the
-     * declaring document. Used by REPL-style sessions; inherited by child knowledge bases.
+     * When set, variable declarations register world-scoped instead of
+     * namespace-scoped, so they persist in this knowledge base (and the children it
+     * spawns) beyond the declaring document. Used by REPL-style sessions; inherited
+     * by child knowledge bases.
      */
     public void setWorldScopedVariables(boolean worldScopedVariables) {
         this.worldScopedVariables = worldScopedVariables;
@@ -564,7 +565,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public InferResult getFacts(Predicate predicate, InferContext context) {
-        InferResult result = facts.get().get(predicate);
+        InferResult result = facts.get().get(predicate.varsToTypes());
         if (result != null) {
             result = result.cast(predicate);
         } else {

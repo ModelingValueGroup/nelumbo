@@ -206,7 +206,7 @@ public final class Rule extends Node implements Evaluatable {
         InferResult ruleResult = InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
                 condResult.cycles());
         if (context.trace() && !isSyntatic()) {
-            System.out.println(context.prefix() + consequence + " " + ruleResult.predicate(consequence.setVariables()));
+            System.out.println(context.prefix() + consequence + " " + ruleResult.predicate(consequence));
         }
         for (Predicate fact : result.facts()) {
             if (falsehoods.contains(fact) || (completeFacts && //

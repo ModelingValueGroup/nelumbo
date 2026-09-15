@@ -23,7 +23,7 @@ import org.modelingvalue.collections.ContainingCollection;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 
 public class Equal extends Predicate {
     @Serial
@@ -60,15 +60,15 @@ public class Equal extends Predicate {
     }
 
     private static Node eq(Node left, Node right, boolean[] complete) {
-        if (left instanceof Type && right instanceof Type) {
+        if (left instanceof Variable && right instanceof Variable) {
             complete[0] = false;
             return Objects.equals(left, right) ? left : null;
-        } else if (right instanceof Type type) {
+        } else if (right instanceof Variable var) {
             complete[0] = false;
-            return type.getAssigned(left);
-        } else if (left instanceof Type type) {
+            return var.type().getAssigned(left);
+        } else if (left instanceof Variable var) {
             complete[0] = false;
-            return type.getAssigned(right);
+            return var.type().getAssigned(right);
         } else if (left.equals(right)) {
             return left;
         } else if (!left.functorOrTypeForEquals().equals(right.functorOrTypeForEquals())) {
@@ -97,12 +97,12 @@ public class Equal extends Predicate {
         if (left != right) {
             if (left instanceof Node && right instanceof Node) {
                 return eq((Node) left, (Node) right, complete);
-            } else if (right instanceof Type) {
+            } else if (right instanceof Variable var) {
                 complete[0] = false;
-                return ((Type) right).isAssignableFrom(left.getClass()) ? left : null;
-            } else if (left instanceof Type) {
+                return var.type().isAssignableFrom(left.getClass()) ? left : null;
+            } else if (left instanceof Variable var) {
                 complete[0] = false;
-                return ((Type) left).isAssignableFrom(right.getClass()) ? right : null;
+                return var.type().isAssignableFrom(right.getClass()) ? right : null;
             } else if (left instanceof ContainingCollection leftColl
                     && right instanceof ContainingCollection rightColl) {
                 if (leftColl.size() != rightColl.size()) {
