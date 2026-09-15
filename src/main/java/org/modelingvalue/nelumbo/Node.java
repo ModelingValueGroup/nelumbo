@@ -58,8 +58,6 @@ public class Node extends StructImpl implements AstElement {
 
     private static final AtomicLong UNIQUE_COUNTER = new AtomicLong(0);
 
-    private final static String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-
     protected static String uniqueId() {
         long l = UNIQUE_COUNTER.getAndIncrement();
         return Long.toUnsignedString(l, Character.MAX_RADIX);
@@ -70,35 +68,11 @@ public class Node extends StructImpl implements AstElement {
     // cash
     private Map<Variable, Object> binding;
     private int                   hashCodeCache;
-    private Node                  normal;
 
     @NelumboConstructor
     public Node(NodeInfo nodeInfo, Object... args) {
         super(removeOptionals(args));
         this.nodeInfo = nodeInfo.declaration() == null ? nodeInfo.setDeclaration(this) : nodeInfo;
-    }
-
-    public Node normalize() {
-        if (normal == null) {
-            try {
-                MutableMap<String, String> renames = MutableMap.of(Map.of());
-                normal = replace(n -> {
-                    if (n instanceof Variable v) {
-                        String pre = v.name();
-                        String post = renames.get(pre);
-                        if (post == null) {
-                            post = ALPHABET.substring(renames.size(), 1);
-                            renames.put(pre, post);
-                        }
-                        return v.setName(post);
-                    }
-                    return n;
-                }, true);
-            } catch (ParseException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        return normal;
     }
 
     public NodeInfo nodeInfo() {

@@ -142,11 +142,6 @@ public class Predicate extends Node {
     }
 
     @Override
-    public Predicate normalize() {
-        return (Predicate) super.normalize();
-    }
-
-    @Override
     public Predicate setBinding(Map<Variable, Object> vars) {
         return (Predicate) super.setBinding(vars);
     }
