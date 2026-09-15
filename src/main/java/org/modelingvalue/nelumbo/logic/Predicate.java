@@ -109,10 +109,6 @@ public class Predicate extends Node {
         return nrOfUnbound() == 0;
     }
 
-    public Predicate castFrom(Predicate from) {
-        return set(nodeInfo(), from.toArray());
-    }
-
     public static Map<Variable, Object> literals(Map<Variable, Object> vars) {
         return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal()));
     }
@@ -469,6 +465,11 @@ public class Predicate extends Node {
 
     protected final boolean hasIncompleteResult() {
         return CURRENT_CONTEXT.get().hasIncompleteResult();
+    }
+
+    @Override
+    public Predicate castFrom(Node from) {
+        return (Predicate) super.castFrom(from);
     }
 
 }

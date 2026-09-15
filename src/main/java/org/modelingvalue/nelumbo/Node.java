@@ -211,7 +211,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     private void diff(Node other, MutableSet<Pair<Object, Object>> diff) {
-        Object tfe = functorOrTypeForEquals(), otfe = other.functorOrTypeForEquals();
+        Object tfe = functorOrType(), otfe = other.functorOrType();
         if (!Objects.equals(tfe, otfe)) {
             diff.add(Pair.of(tfe, otfe));
         } else {
@@ -243,7 +243,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Object functorOrTypeForEquals() {
-        return functorOrType().declaration();
+        return functorOrType();
     }
 
     public List<Variable> localVars() {
@@ -697,6 +697,26 @@ public class Node extends StructImpl implements AstElement {
 
     public Node setType(Type type) {
         return type.equals(type()) ? this : setFunctorOrType(type);
+    }
+
+    public Node castFrom(Node from) {
+        Object[] fromArray = from.toArray();
+        for (int i = 0; i < fromArray.length; i++) {
+            fromArray[i] = castFrom(get(i), fromArray[i]);
+        }
+        return set(nodeInfo(), fromArray);
+    }
+
+    private static Object castFrom(Object to, Object from) {
+        if (from instanceof Node fromNode && to instanceof Node toNode) {
+            FunctorOrType fromFunctor = fromNode.functorOrType();
+            FunctorOrType toFunctor = toNode.functorOrType();
+            if (fromFunctor != null && toFunctor != null && !fromFunctor.equals(toFunctor)
+                    && fromFunctor.declaration().equals(toFunctor.declaration())) {
+                return toNode.castFrom(fromNode);
+            }
+        }
+        return from;
     }
 
 }
