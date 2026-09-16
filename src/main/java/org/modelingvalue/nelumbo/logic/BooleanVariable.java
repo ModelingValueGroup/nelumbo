@@ -80,17 +80,17 @@ public class BooleanVariable extends Predicate {
     }
 
     @Override
-    public InferResult resolve(InferContext context) {
-        if (get(0) instanceof Predicate pred) {
-            return pred.resolve(context);
+    public InferResult resolve(Predicate declaration, InferContext context) {
+        if (get(0) instanceof Predicate pred && declaration.get(0) instanceof Predicate decl) {
+            return pred.resolve(decl, context);
         }
-        return infer(context);
+        return infer(null, context);
     }
 
     @Override
-    protected InferResult infer(InferContext context) {
-        if (get(0) instanceof Predicate pred) {
-            return pred.infer(context);
+    protected InferResult infer(Predicate declaration, InferContext context) {
+        if (get(0) instanceof Predicate pred && declaration.get(0) instanceof Predicate decl) {
+            return pred.infer(decl, context);
         }
         if (context != null && !context.deep()) {
             return unknown();

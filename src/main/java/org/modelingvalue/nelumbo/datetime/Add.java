@@ -42,7 +42,7 @@ public final class Add extends Predicate {
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
+    protected InferResult infer(Predicate declaration, int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
             return unknown();
         }

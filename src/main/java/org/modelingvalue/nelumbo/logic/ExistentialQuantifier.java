@@ -59,11 +59,12 @@ public final class ExistentialQuantifier extends Quantifier {
 
     @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
+        Predicate predicate = predResult.predicate();
         List<Variable> localVars = localVars();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
         for (Predicate predFact : predResult.facts()) {
-            Predicate fact = setBinding(predFact.getBinding().removeAllKey(localVars));
+            Predicate fact = setBinding(this, predFact.getBinding(predicate).removeAllKey(localVars));
             if (fact.isFullyBound()) {
                 facts = facts.add(fact);
             } else {
@@ -71,7 +72,7 @@ public final class ExistentialQuantifier extends Quantifier {
             }
         }
         for (Predicate predFalsehood : predResult.falsehoods()) {
-            Predicate falsehood = setBinding(predFalsehood.getBinding().removeAllKey(localVars));
+            Predicate falsehood = setBinding(this, predFalsehood.getBinding(predicate).removeAllKey(localVars));
             if (!facts.contains(falsehood)) {
                 if (falsehood.isFullyBound()) {
                     falsehoods = falsehoods.add(falsehood);

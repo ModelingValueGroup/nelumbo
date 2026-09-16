@@ -29,6 +29,8 @@ import org.modelingvalue.nelumbo.lang.Variable;
 
 public interface InferResult {
 
+    Set<InferResult> resultSet();
+
     Set<Predicate> facts();
 
     Set<Predicate> falsehoods();
@@ -503,6 +505,69 @@ public interface InferResult {
         };
     }
 
+    static InferResult resultSet(Set<InferResult> resultSet) {
+        return new InferResultImpl() {
+
+            @Override
+            public Set<InferResult> resultSet() {
+                return resultSet;
+            }
+
+            @Override
+            public boolean isUnknown() {
+                return false;
+            }
+
+            @Override
+            public InferResult flipComplete() {
+                return InferResult.resultSet(resultSet.replaceAll(InferResult::flipComplete));
+            }
+
+            @Override
+            public InferResult complete() {
+                return InferResult.resultSet(resultSet.replaceAll(InferResult::complete));
+            }
+
+            @Override
+            public boolean isResolved(InferContext context) {
+                return resultSet.anyMatch(ir -> ir.isResolved(context));
+            }
+
+            @Override
+            public Set<Predicate> falsehoods() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean completeFacts() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Predicate predicate() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Set<Predicate> facts() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    default boolean isResolved(InferContext context) {
+        return !isUnknown() || (context.deep() && predicate().nrOfUnbound() < 2);
+    }
+
+    default InferResult addToSet(InferResult other) {
+        return resultSet(resultSet().addAll(other.resultSet()));
+    }
+
     default InferResult add(InferResult other) {
         List<Predicate> facts = Collection.concat(allFacts(), other.allFacts()).asList();
         List<Predicate> falsehoods = Collection.concat(allFalsehoods(), other.allFalsehoods()).asList();
@@ -533,6 +598,12 @@ public interface InferResult {
     }
 
     abstract class InferResultImpl implements InferResult {
+
+        @Override
+        public Set<InferResult> resultSet() {
+            return Set.of(this);
+        }
+
         @Override
         public String toString() {
             List<Predicate> overflow = stackOverflow();

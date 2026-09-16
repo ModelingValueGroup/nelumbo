@@ -66,8 +66,7 @@ public class Node extends StructImpl implements AstElement {
     private final NodeInfo nodeInfo;
 
     // cash
-    private Map<Variable, Object> binding;
-    private int                   hashCodeCache;
+    private int hashCodeCache;
 
     @NelumboConstructor
     public Node(NodeInfo nodeInfo, Object... args) {
@@ -367,15 +366,8 @@ public class Node extends StructImpl implements AstElement {
         return allLocalVars;
     }
 
-    public final Map<Variable, Object> getBinding() {
-        if (binding == null) {
-            binding = getBinding(declaration());
-        }
-        return binding;
-    }
-
     public final Map<Variable, Object> getBinding(Node declaration) {
-        return declaration == null ? getBinding() : getBinding(declaration, Map.of());
+        return getBinding(declaration, Map.of());
     }
 
     private Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars) {
@@ -424,16 +416,16 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Node set(Variable var, Object val) {
-        return setBinding(declaration(), Map.of(Entry.of(var, val)), false);
+        return setBinding(this, Map.of(Entry.of(var, val)), false);
     }
 
-    public Node setBinding(Map<Variable, Object> vars) {
-        return setBinding(declaration(), vars, false);
+    public Node setBinding(Node declaration, Map<Variable, Object> vars) {
+        return setBinding(declaration, vars, false);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Node setTypeArgs(Map<Variable, Type> typeArgs) {
-        return typeArgs.isEmpty() ? this : setBinding(declaration(), (Map) typeArgs, true);
+        return typeArgs.isEmpty() ? this : setBinding(this, (Map) typeArgs, true);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

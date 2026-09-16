@@ -107,7 +107,7 @@ public final class Rule extends Node implements Evaluatable {
         }
         Node left = c instanceof NIs ? (Node) c.get(0) : c;
         Predicate cons = (Predicate) c.replace(e -> e != c && e instanceof BooleanVariable v ? v.variable() : e, true);
-        Map<Variable, Object> consVars = cons.getBinding();
+        Map<Variable, Object> consVars = cons.getBinding(cons);
         Functor nodeFunctor = left.functor();
         Functor literalFunctor = nodeFunctor != null ? knowledgeBase.literal(nodeFunctor) : null;
         List<AstElement> elements = astElements();
@@ -116,8 +116,8 @@ public final class Rule extends Node implements Evaluatable {
         for (List<Object> condIf : (List<List<Object>>) get(1)) {
             Predicate cond = (Predicate) condIf.get(0);
             Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
-            Map<Variable, Object> condVars = cond.getBinding();
-            Map<Variable, Object> whenVars = when != null ? when.getBinding() : null;
+            Map<Variable, Object> condVars = cond.getBinding(cond);
+            Map<Variable, Object> whenVars = when != null ? when.getBinding(when) : null;
             Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars)
                     .removeAllKey(consVars);
             if (!nonConsVars.isEmpty()) {
@@ -161,26 +161,26 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     public final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {
-        Predicate consequence = consequence();
-        Map<Variable, Object> binding = predicate.getBinding(consequence);
+        Predicate consDecl = consequence();
+        Map<Variable, Object> binding = predicate.getBinding(consDecl);
         if (binding == null) {
             return result;
         }
-        Predicate condition = condition();
-        binding = getBinding().putAll(binding);
-        consequence = consequence.setBinding(binding);
-        condition = condition.setBinding(binding);
+        Predicate condDecl = condition();
+        binding = getBinding(this).putAll(binding);
+        Predicate consequence = consDecl.setBinding(consDecl, binding);
+        Predicate condition = condDecl.setBinding(condDecl, binding);
         if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + consequence + " <=> " + condition);
         }
-        InferResult condResult = condition.resolve(context);
+        InferResult condResult = condition.resolve(condition, context);
         if (condResult.hasStackOverflow()) {
             return condResult;
         }
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
         for (Predicate condFact : condResult.facts()) {
-            Predicate fact = predicate.castFrom(consequence.setBinding(condFact.getBinding()));
+            Predicate fact = predicate.castFrom(consequence.setBinding(consequence, condFact.getBinding(condition)));
             if (fact.isFullyBound()) {
                 facts = facts.add(fact);
             } else {
@@ -188,7 +188,8 @@ public final class Rule extends Node implements Evaluatable {
             }
         }
         for (Predicate condFalsehood : condResult.falsehoods()) {
-            Predicate falsehood = predicate.castFrom(consequence.setBinding(condFalsehood.getBinding()));
+            Predicate falsehood = predicate
+                    .castFrom(consequence.setBinding(consequence, condFalsehood.getBinding(condition)));
             if (falsehood.isFullyBound()) {
                 falsehoods = falsehoods.add(falsehood);
             } else {

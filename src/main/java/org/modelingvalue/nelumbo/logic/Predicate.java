@@ -119,7 +119,7 @@ public class Predicate extends Node {
 
     public Predicate setVariables(KnowledgeBase kb, Map<Variable, Object> vars, ParseContext ctx)
             throws ParseException {
-        Predicate predicate = setBinding(vars);
+        Predicate predicate = setBinding(this, vars);
         return (Predicate) predicate.replace(o -> {
             if (o instanceof Node n) {
                 Functor functor = n.functor();
@@ -141,9 +141,8 @@ public class Predicate extends Node {
         }, true);
     }
 
-    @Override
-    public Predicate setBinding(Map<Variable, Object> vars) {
-        return (Predicate) super.setBinding(vars);
+    public Predicate setBinding(Predicate declaration, Map<Variable, Object> vars) {
+        return (Predicate) super.setBinding(declaration, vars);
     }
 
     @Override
@@ -171,7 +170,7 @@ public class Predicate extends Node {
         if (context.trace()) {
             System.out.println(context.prefix() + this);
         }
-        InferResult result = resolve(context);
+        InferResult result = resolve(this, context);
         if (context.trace()) {
             System.out.println(context.prefix() + this + " " + result);
         }
@@ -289,25 +288,25 @@ public class Predicate extends Node {
         return array != null ? setArgs(array) : this;
     }
 
-    public InferResult resolve(InferContext context) {
-        return doInfer(nrOfUnbound(), context);
+    public InferResult resolve(Predicate declaration, InferContext context) {
+        return doInfer(declaration, nrOfUnbound(), context);
     }
 
-    protected InferResult infer(InferContext context) {
+    protected InferResult infer(Predicate declaration, InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 == context.reduce()) {
             return unknown();
         }
-        InferResult result = doInfer(nrOfUnbound, context);
+        InferResult result = doInfer(declaration, nrOfUnbound, context);
         if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
             System.out.println(context.prefix() + "  " + this + " " + result.predicate(this));
         }
         return result;
     }
 
-    private InferResult doInfer(int nrOfUnbound, InferContext context) {
+    private InferResult doInfer(Predicate declaration, int nrOfUnbound, InferContext context) {
         Method method = functor().method();
-        return method != null ? callMethod(method, context) : infer(nrOfUnbound, context);
+        return method != null ? callMethod(method, context) : infer(declaration, nrOfUnbound, context);
     }
 
     private InferResult callMethod(Method method, InferContext context) {
@@ -326,7 +325,7 @@ public class Predicate extends Node {
         });
     }
 
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
+    protected InferResult infer(Predicate declaration, int nrOfUnbound, InferContext context) {
         Functor functor = functor();
         if (nrOfUnbound > 1 || //
                 (context.shallow() && !isShallow(nrOfUnbound, functor)) || //

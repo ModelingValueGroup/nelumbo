@@ -100,7 +100,8 @@ public final class Lambda extends Node {
         for (int i = 0; i < vals.length; i++) {
             binding = binding.add(localVars.get(i), vals[i]);
         }
-        return expression().setBinding(binding);
+        Node exp = expression();
+        return exp.setBinding(exp, binding);
     }
 
     public boolean test(Object... vals) {
@@ -113,12 +114,12 @@ public final class Lambda extends Node {
         Predicate p = is().set(0, setVariables(vals));
         InferResult result = resolve(p, false);
         Predicate fact = result != null && result.isTrueCI() ? result.facts().findFirst().orElse(null) : null;
-        return fact != null ? (R) fact.getBinding().get(var()) : null;
+        return fact != null ? (R) fact.getBinding(result.predicate()).get(var()) : null;
     }
 
     private static InferResult resolve(Predicate p, boolean bool) {
         InferContext ctx = CURRENT_CONTEXT.get();
-        InferResult result = p.resolve(ctx);
+        InferResult result = p.resolve(p, ctx);
         if (result.hasStackOverflow()) {
             ctx.incompleteResult().set(result);
         }

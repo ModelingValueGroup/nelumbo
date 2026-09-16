@@ -46,11 +46,12 @@ public final class UniversalQuantifier extends Quantifier {
 
     @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
+        Predicate predicate = predResult.predicate();
         List<Variable> localVars = localVars();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
         for (Predicate predFalsehood : predResult.falsehoods()) {
-            Predicate falsehood = setBinding(predFalsehood.getBinding().removeAllKey(localVars));
+            Predicate falsehood = setBinding(this, predFalsehood.getBinding(predicate).removeAllKey(localVars));
             if (falsehood.isFullyBound()) {
                 falsehoods = falsehoods.add(falsehood);
             } else {
@@ -58,7 +59,7 @@ public final class UniversalQuantifier extends Quantifier {
             }
         }
         for (Predicate predFact : predResult.facts()) {
-            Predicate fact = setBinding(predFact.getBinding().removeAllKey(localVars));
+            Predicate fact = setBinding(this, predFact.getBinding(predicate).removeAllKey(localVars));
             if (!falsehoods.contains(fact)) {
                 if (fact.isFullyBound()) {
                     facts = facts.add(fact);

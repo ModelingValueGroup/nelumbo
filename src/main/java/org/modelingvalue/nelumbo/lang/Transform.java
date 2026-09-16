@@ -127,7 +127,7 @@ public final class Transform extends Node {
         for (Node target : targetsFlattened()) {
             if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())
                     && !functor.pattern().equals(start)) {
-                Functor rewrite = functor.setBinding(binding).makeVariablesUnique(ctx);
+                Functor rewrite = functor.setBinding(functor, binding).makeVariablesUnique(ctx);
                 for (Entry<Functor, Functor> e : functors) {
                     if (functor.equals(knowledgeBase.literal(e.getKey()))) {
                         knowledgeBase.addLiteral(e.getValue(), rewrite);
@@ -156,7 +156,7 @@ public final class Transform extends Node {
                         return n;
                     }
                     return o;
-                }, false).setBinding(binding).setAstElements(node.astElements()).makeVariablesUnique(ctx);
+                }, false).setBinding(target, binding).setAstElements(node.astElements()).makeVariablesUnique(ctx);
                 rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
             }

@@ -55,6 +55,7 @@ public final class BuildSet extends Quantifier {
 
     @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
+        Predicate predicate = predResult.predicate();
         Variable localVar = localVars().first();
         Type type = localVar.type().nonVariable().toLiteral();
         Map<Variable, Object> clearLocal = Map.of(Entry.of(localVar, localVar));
@@ -62,18 +63,19 @@ public final class BuildSet extends Quantifier {
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         Map<Predicate, Set<Object>> trueMap = Map.of();
         for (Predicate predFact : predResult.facts()) {
-            Object val = predFact.getBinding().get(localVar);
-            Predicate fact = predFact.setBinding(clearLocal);
+            Object val = predFact.getBinding(predicate).get(localVar);
+            Predicate fact = predFact.setBinding(predicate, clearLocal);
             Set<Object> set = trueMap.get(fact);
             trueMap = trueMap.put(fact, set != null ? set.add(val) : Set.of(val));
         }
         for (Entry<Predicate, Set<Object>> e : trueMap) {
-            facts = facts.add(setBinding(e.getKey().getBinding()).set(1, new NSet(type, e.getValue())));
+            facts = facts.add(setBinding(this, e.getKey().getBinding(predicate)).set(1, new NSet(type, e.getValue())));
         }
         for (Predicate predFalsehood : predResult.falsehoods()) {
-            Object val = predFalsehood.getBinding().get(localVar);
-            Predicate falshood = predFalsehood.setBinding(clearLocal);
-            falsehoods = falsehoods.add(setBinding(falshood.getBinding()).set(1, new NSet(type, Set.of(val))));
+            Object val = predFalsehood.getBinding(predicate).get(localVar);
+            Predicate falshood = predFalsehood.setBinding(predicate, clearLocal);
+            falsehoods = falsehoods
+                    .add(setBinding(this, falshood.getBinding(predicate)).set(1, new NSet(type, Set.of(val))));
         }
         return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }

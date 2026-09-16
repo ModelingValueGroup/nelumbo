@@ -50,7 +50,8 @@ public final class Query extends Node implements Evaluatable {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
             Predicate nodePred = predicate();
-            Predicate predicate = nodePred.setVariables(knowledgeBase, Predicate.literals(nodePred.getBinding()), ctx);
+            Predicate predicate = nodePred.setVariables(knowledgeBase,
+                    Predicate.literals(nodePred.getBinding(nodePred)), ctx);
             List<List<Object>> expected = getVal(1);
             if (expected == null) {
                 Object[] array = new Object[1];
@@ -118,9 +119,9 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @Override
-    public Query setBinding(Map<Variable, Object> vars) {
+    public Query setBinding(Node declaration, Map<Variable, Object> vars) {
         vars = vars.replaceAll(e -> e.getKey().type().isLiteral() ? e : Entry.of(e.getKey().literal(), e.getValue()));
-        return (Query) super.setBinding(vars);
+        return (Query) super.setBinding(declaration, vars);
     }
 
     @Override
@@ -172,10 +173,10 @@ public final class Query extends Node implements Evaluatable {
         inferResult = found;
         if (hasExpected()) {
             Set<Map<Variable, Object>> trueBindings = facts();
-            Set<Predicate> truePredicates = trueBindings.map(predicate::setBinding).asSet();
+            Set<Predicate> truePredicates = trueBindings.map(b -> predicate.setBinding(predicate, b)).asSet();
             boolean completeFacts = completeFacts();
             Set<Map<Variable, Object>> falseBindings = falsehoods();
-            Set<Predicate> falsePredicates = falseBindings.map(predicate::setBinding).asSet();
+            Set<Predicate> falsePredicates = falseBindings.map(b -> predicate.setBinding(predicate, b)).asSet();
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
                     completeFalsehoods, Set.of());

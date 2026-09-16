@@ -140,8 +140,8 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    public Functor setBinding(Map<Variable, Object> vars) {
-        return (Functor) super.setBinding(vars);
+    public Functor setBinding(Node declaration, Map<Variable, Object> vars) {
+        return (Functor) super.setBinding(declaration, vars);
     }
 
     @Override

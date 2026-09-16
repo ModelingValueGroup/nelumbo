@@ -72,8 +72,8 @@ public class NIs extends Predicate {
     }
 
     @Override
-    public NIs setBinding(Map<Variable, Object> vars) {
-        return (NIs) super.setBinding(vars);
+    public NIs setBinding(Node declaration, Map<Variable, Object> vars) {
+        return (NIs) super.setBinding(declaration, vars);
     }
 
     @Override

@@ -43,14 +43,17 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     }
 
     @Override
-    protected final InferResult infer(InferContext context) {
+    protected final InferResult infer(Predicate declaration, InferContext context) {
         Predicate[] predicate = new Predicate[2];
+        Predicate[] predDecl = new Predicate[2];
         InferResult[] predResult = new InferResult[2];
         predicate[0] = predicate(0);
         predicate[1] = predicate(1);
-        order(predicate);
+        predDecl[0] = ((BinaryPredicate) declaration).predicate(0);
+        predDecl[1] = ((BinaryPredicate) declaration).predicate(1);
+        order(predicate, predDecl);
         for (int i = 0; i < 2; i++) {
-            predResult[i] = predicate[i].infer(context);
+            predResult[i] = predicate[i].infer(predDecl[i], context);
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
             } else if (context.reduce()) {
@@ -81,11 +84,11 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     }
 
     protected InferResult resolvedOnly(InferResult[] predResult, InferContext context) {
-        if (isResolved(predResult[0], context) && isResolved(predResult[1], context)) {
-            return predResult[0].add(predResult[1]);
-        } else if (isResolved(predResult[0], context)) {
+        if (predResult[0].isResolved(context) && predResult[1].isResolved(context)) {
+            return predResult[0].addToSet(predResult[1]);
+        } else if (predResult[0].isResolved(context)) {
             return predResult[0];
-        } else if (isResolved(predResult[1], context)) {
+        } else if (predResult[1].isResolved(context)) {
             return predResult[1];
         } else {
             return unknown();
@@ -106,15 +109,15 @@ public abstract class BinaryPredicate extends CompoundPredicate {
 
     protected abstract boolean isRight(InferResult[] predResult);
 
-    protected boolean order(Predicate[] predicate) {
+    protected boolean order(Predicate[] predicate, Predicate[] decl) {
         if (predicate[0] instanceof NBoolean && !(predicate[1] instanceof NBoolean)) {
             return false;
         } else if (predicate[1] instanceof NBoolean && !(predicate[0] instanceof NBoolean)) {
-            return flip(predicate);
+            return flip(predicate) && flip(decl);
         } else if (REVERSE_NELUMBO) {
-            return flip(predicate);
+            return flip(predicate) && flip(decl);
         } else if (RANDOM_NELUMBO && ThreadLocalRandom.current().nextBoolean()) {
-            return flip(predicate);
+            return flip(predicate) && flip(decl);
         } else {
             return false;
         }

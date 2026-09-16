@@ -92,17 +92,17 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected boolean order(Predicate[] predicate) {
+    protected boolean order(Predicate[] predicate, Predicate[] decl) {
         return false;
     }
 
     @Override
     protected InferResult resolvedOnly(InferResult[] predResult, InferContext context) {
-        if (isResolved(predResult[0], context) && isResolved(predResult[1], context)) {
-            return predResult[0].complete().add(predResult[1]);
-        } else if (isResolved(predResult[0], context)) {
+        if (predResult[0].isResolved(context) && predResult[1].isResolved(context)) {
+            return predResult[0].complete().addToSet(predResult[1]);
+        } else if (predResult[0].isResolved(context)) {
             return predResult[0].complete();
-        } else if (isResolved(predResult[1], context)) {
+        } else if (predResult[1].isResolved(context)) {
             return predResult[1];
         } else {
             return unknown();

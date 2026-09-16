@@ -33,8 +33,8 @@ public abstract class CompoundPredicate extends Predicate {
     }
 
     @Override
-    public InferResult resolve(InferContext context) {
-        Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(), this));
+    public InferResult resolve(Predicate declaration, InferContext context) {
+        Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(declaration), this));
         Set<Predicate> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
         InferContext deep = context.toDeep(); // Resolve variables shallow (bind)
@@ -47,38 +47,42 @@ public abstract class CompoundPredicate extends Predicate {
                 Map<Variable, Object> binding = entry.getKey();
                 Predicate predicate = entry.getValue();
                 InferContext resolve = shallow;
-                InferResult result = predicate.infer(reduce);
+                InferResult result = predicate.infer(predicate, reduce);
                 if (result.hasStackOverflow()) {
                     return result;
                 } else if (result.isFalseCC()) {
-                    falsehoods = falsehoods.add(setBinding(binding));
+                    falsehoods = falsehoods.add(setBinding(declaration, binding));
                 } else if (result.isTrueCC()) {
-                    facts = facts.add(setBinding(binding));
+                    facts = facts.add(setBinding(declaration, binding));
                 } else {
                     predicate = result.predicate();
                     resolve = deep;
                 }
-                result = predicate.infer(resolve);
+                result = predicate.infer(predicate, resolve);
                 if (result.hasStackOverflow()) {
                     return result;
                 } else if (!result.isUnknown()) {
-                    for (Predicate pred : result.allFacts()) {
-                        Map<Variable, Object> b = pred.getBinding();
-                        if (!b.isEmpty()) {
-                            b = binding.putAll(b);
-                            next = next.put(b, predicate.setBinding(b).replace(pred, NBoolean.TRUE));
+                    for (InferResult ir : result.resultSet()) {
+                        for (Predicate pred : ir.allFacts()) {
+                            Map<Variable, Object> b = pred.getBinding(ir.predicate());
+                            if (!b.isEmpty()) {
+                                b = binding.putAll(b);
+                                pred = predicate.setBinding(predicate, b).replace(pred, NBoolean.TRUE);
+                                next = next.put(b, pred);
+                            }
                         }
-                    }
-                    for (Predicate pred : result.allFalsehoods()) {
-                        Map<Variable, Object> b = pred.getBinding();
-                        if (!b.isEmpty()) {
-                            b = binding.putAll(b);
-                            next = next.put(b, predicate.setBinding(b).replace(pred, NBoolean.FALSE));
+                        for (Predicate pred : ir.allFalsehoods()) {
+                            Map<Variable, Object> b = pred.getBinding(ir.predicate());
+                            if (!b.isEmpty()) {
+                                b = binding.putAll(b);
+                                pred = predicate.setBinding(predicate, b).replace(pred, NBoolean.FALSE);
+                                next = next.put(b, pred);
+                            }
                         }
+                        completeFacts &= ir.completeFacts();
+                        completeFalsehoods &= ir.completeFalsehoods();
+                        cycles = cycles.addAll(ir.cycles());
                     }
-                    completeFacts &= result.completeFacts();
-                    completeFalsehoods &= result.completeFalsehoods();
-                    cycles = cycles.addAll(result.cycles());
                 } else if (resolve == deep) {
                     completeFacts = false;
                     completeFalsehoods = false;
@@ -86,10 +90,6 @@ public abstract class CompoundPredicate extends Predicate {
             }
         } while (!next.isEmpty());
         return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, cycles);
-    }
-
-    protected final boolean isResolved(InferResult result, InferContext context) {
-        return !result.isUnknown() || (context.deep() && result.predicate().nrOfUnbound() < 2);
     }
 
 }
