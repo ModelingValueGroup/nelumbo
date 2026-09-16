@@ -41,15 +41,14 @@ public abstract class Quantifier extends CompoundPredicate {
     }
 
     @Override
-    protected InferResult infer(Predicate declaration, int nrOfUnbound, InferContext context) {
-        return context.shallow() ? unknown() : resolve(declaration, context.toDeep());
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
+        return context.shallow() ? unknown() : resolve(context.toDeep());
     }
 
     @Override
-    public final InferResult resolve(Predicate declaration, InferContext context) {
+    public final InferResult resolve(InferContext context) {
         Predicate predicate = predicate();
-        Predicate predDecl = ((Quantifier) declaration).predicate();
-        InferResult predResult = predicate.resolve(predDecl, context);
+        InferResult predResult = predicate.resolve(context);
         if (predResult.hasStackOverflow()) {
             return predResult;
         }

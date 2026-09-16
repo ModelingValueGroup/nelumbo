@@ -119,7 +119,7 @@ public final class Lambda extends Node {
 
     private static InferResult resolve(Predicate p, boolean bool) {
         InferContext ctx = CURRENT_CONTEXT.get();
-        InferResult result = p.resolve(p, ctx);
+        InferResult result = p.resolve(ctx);
         if (result.hasStackOverflow()) {
             ctx.incompleteResult().set(result);
         }

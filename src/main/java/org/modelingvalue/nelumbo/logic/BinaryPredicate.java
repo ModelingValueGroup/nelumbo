@@ -43,17 +43,15 @@ public abstract class BinaryPredicate extends CompoundPredicate {
     }
 
     @Override
-    protected final InferResult infer(Predicate declaration, InferContext context) {
+    protected final InferResult infer(InferContext context) {
         Predicate[] predicate = new Predicate[2];
         Predicate[] predDecl = new Predicate[2];
         InferResult[] predResult = new InferResult[2];
         predicate[0] = predicate(0);
         predicate[1] = predicate(1);
-        predDecl[0] = ((BinaryPredicate) declaration).predicate(0);
-        predDecl[1] = ((BinaryPredicate) declaration).predicate(1);
         order(predicate, predDecl);
         for (int i = 0; i < 2; i++) {
-            predResult[i] = predicate[i].infer(predDecl[i], context);
+            predResult[i] = predicate[i].infer(context);
             if (predResult[i].hasStackOverflow()) {
                 return predResult[i];
             } else if (context.reduce()) {

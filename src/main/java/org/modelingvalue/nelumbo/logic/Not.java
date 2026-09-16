@@ -54,10 +54,9 @@ public final class Not extends CompoundPredicate {
     }
 
     @Override
-    protected InferResult infer(Predicate declaration, InferContext context) {
+    protected InferResult infer(InferContext context) {
         Predicate predicate = predicate();
-        Predicate predDecl = ((Not) declaration).predicate();
-        InferResult predResult = predicate.infer(predDecl, context);
+        InferResult predResult = predicate.infer(context);
         if (predResult.hasStackOverflow()) {
             return predResult;
         } else if (context.reduce()) {

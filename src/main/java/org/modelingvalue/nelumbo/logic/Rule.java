@@ -173,7 +173,7 @@ public final class Rule extends Node implements Evaluatable {
         if (context.trace() && !isSyntatic()) {
             System.out.println(context.prefix() + consequence + " <=> " + condition);
         }
-        InferResult condResult = condition.resolve(condition, context);
+        InferResult condResult = condition.resolve(context);
         if (condResult.hasStackOverflow()) {
             return condResult;
         }

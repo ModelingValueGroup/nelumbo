@@ -74,16 +74,16 @@ public final class NBoolean extends Predicate {
     }
 
     public InferResult result() {
-        return infer(null, null);
+        return infer(null);
     }
 
     @Override
-    public InferResult resolve(Predicate declaration, InferContext context) {
-        return infer(null, context);
+    public InferResult resolve(InferContext context) {
+        return infer(context);
     }
 
     @Override
-    protected InferResult infer(Predicate declaration, InferContext context) {
+    protected InferResult infer(InferContext context) {
         if (context != null && context.shallow()) {
             return unknown();
         }

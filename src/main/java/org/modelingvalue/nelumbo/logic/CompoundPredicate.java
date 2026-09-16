@@ -33,8 +33,8 @@ public abstract class CompoundPredicate extends Predicate {
     }
 
     @Override
-    public InferResult resolve(Predicate declaration, InferContext context) {
-        Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(declaration), this));
+    public InferResult resolve(InferContext context) {
+        Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(this), this));
         Set<Predicate> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
         InferContext deep = context.toDeep(); // Resolve variables shallow (bind)
@@ -47,18 +47,18 @@ public abstract class CompoundPredicate extends Predicate {
                 Map<Variable, Object> binding = entry.getKey();
                 Predicate predicate = entry.getValue();
                 InferContext resolve = shallow;
-                InferResult result = predicate.infer(predicate, reduce);
+                InferResult result = predicate.infer(reduce);
                 if (result.hasStackOverflow()) {
                     return result;
                 } else if (result.isFalseCC()) {
-                    falsehoods = falsehoods.add(setBinding(declaration, binding));
+                    falsehoods = falsehoods.add(setBinding(this, binding));
                 } else if (result.isTrueCC()) {
-                    facts = facts.add(setBinding(declaration, binding));
+                    facts = facts.add(setBinding(this, binding));
                 } else {
                     predicate = result.predicate();
                     resolve = deep;
                 }
-                result = predicate.infer(predicate, resolve);
+                result = predicate.infer(resolve);
                 if (result.hasStackOverflow()) {
                     return result;
                 } else if (!result.isUnknown()) {

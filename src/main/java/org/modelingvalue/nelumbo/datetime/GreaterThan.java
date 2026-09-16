@@ -34,7 +34,7 @@ public final class GreaterThan extends Predicate {
     }
 
     @Override
-    protected InferResult infer(Predicate declaration, int nrOfUnbound, InferContext context) {
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
         if (nrOfUnbound > 1) {
             return unknown();
         }

@@ -170,7 +170,7 @@ public class Predicate extends Node {
         if (context.trace()) {
             System.out.println(context.prefix() + this);
         }
-        InferResult result = resolve(this, context);
+        InferResult result = resolve(context);
         if (context.trace()) {
             System.out.println(context.prefix() + this + " " + result);
         }
@@ -288,25 +288,25 @@ public class Predicate extends Node {
         return array != null ? setArgs(array) : this;
     }
 
-    public InferResult resolve(Predicate declaration, InferContext context) {
-        return doInfer(declaration, nrOfUnbound(), context);
+    public InferResult resolve(InferContext context) {
+        return doInfer(nrOfUnbound(), context);
     }
 
-    protected InferResult infer(Predicate declaration, InferContext context) {
+    protected InferResult infer(InferContext context) {
         int nrOfUnbound = nrOfUnbound();
         if (nrOfUnbound > 0 == context.reduce()) {
             return unknown();
         }
-        InferResult result = doInfer(declaration, nrOfUnbound, context);
+        InferResult result = doInfer(nrOfUnbound, context);
         if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
             System.out.println(context.prefix() + "  " + this + " " + result.predicate(this));
         }
         return result;
     }
 
-    private InferResult doInfer(Predicate declaration, int nrOfUnbound, InferContext context) {
+    private InferResult doInfer(int nrOfUnbound, InferContext context) {
         Method method = functor().method();
-        return method != null ? callMethod(method, context) : infer(declaration, nrOfUnbound, context);
+        return method != null ? callMethod(method, context) : infer(nrOfUnbound, context);
     }
 
     private InferResult callMethod(Method method, InferContext context) {
@@ -325,7 +325,7 @@ public class Predicate extends Node {
         });
     }
 
-    protected InferResult infer(Predicate declaration, int nrOfUnbound, InferContext context) {
+    protected InferResult infer(int nrOfUnbound, InferContext context) {
         Functor functor = functor();
         if (nrOfUnbound > 1 || //
                 (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
