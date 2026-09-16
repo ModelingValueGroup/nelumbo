@@ -26,8 +26,6 @@ public interface FunctorOrType {
 
     FunctorOrType setTypeArgs(Map<Variable, Type> typeArgs);
 
-    FunctorOrType declaration();
-
     FunctorOrType makeVariablesUnique(ParseContext ctx, String id) throws ParseException;
 
 }

@@ -114,6 +114,6 @@ public final class NList extends NCollection {
         if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof List)) {
             return this;
         }
-        return set(nodeInfo().resetDeclaration(), new Object[] { super.args() });
+        return set(nodeInfo(), new Object[] { super.args() });
     }
 }

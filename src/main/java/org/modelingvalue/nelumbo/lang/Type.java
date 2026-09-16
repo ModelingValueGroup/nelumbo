@@ -114,11 +114,6 @@ public final class Type extends Node implements FunctorOrType {
         return EQUALS_TYPE;
     }
 
-    @Override
-    public Type declaration() {
-        return (Type) super.declaration();
-    }
-
     @NelumboConstructor
     public Type(NodeInfo nodeInfo, Object... args) {
         this(nodeInfo, null, args);
@@ -198,7 +193,7 @@ public final class Type extends Node implements FunctorOrType {
 
     @Override
     protected Type set(NodeInfo nodeInfo, Object[] args) {
-        return new Type(nodeInfo.resetDeclaration(), original(), args);
+        return new Type(nodeInfo, original(), args);
     }
 
     @Override
@@ -320,7 +315,7 @@ public final class Type extends Node implements FunctorOrType {
         if (var != null && vars.get(var) instanceof Type elt) {
             return elt;
         }
-        return (Type) super.setBinding(declaration(), vars, setFunctorOrType);
+        return (Type) super.setBinding(this, vars, setFunctorOrType);
     }
 
     public class TypeInfo {

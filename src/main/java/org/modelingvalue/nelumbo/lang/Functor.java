@@ -89,7 +89,18 @@ public class Functor extends Node implements FunctorOrType {
 
     @Override
     protected Functor set(NodeInfo nodeInfo, Object[] args) {
-        return new Functor(nodeInfo, args);
+        return new Functor(FunctorInfo.of(nodeInfo.functorOrType(), nodeInfo.elements(), original()), args);
+    }
+
+    public Functor original() {
+        if (nodeInfo() instanceof FunctorInfo fi) {
+            return fi.original();
+        }
+        return this;
+    }
+
+    private Functor resetOriginal() {
+        return new Functor(NodeInfo.of(functorOrType(), astElements()), toArray());
     }
 
     public Pattern pattern() {
@@ -121,7 +132,7 @@ public class Functor extends Node implements FunctorOrType {
 
     @Override
     public Functor makeVariablesUnique(ParseContext ctx) throws ParseException {
-        return (Functor) super.makeVariablesUnique(ctx);
+        return ((Functor) super.makeVariablesUnique(ctx)).resetOriginal();
     }
 
     @Override
@@ -266,10 +277,6 @@ public class Functor extends Node implements FunctorOrType {
             return null;
         }
         return sb.toString();
-    }
-
-    public Functor literal() {
-        return KnowledgeBase.CURRENT.get().literal(this);
     }
 
     public Pattern declaration(Token token) {
@@ -485,11 +492,6 @@ public class Functor extends Node implements FunctorOrType {
         List to = (List) setBinding(from, from, vars, -1, setFunctorOrType);
         to = to.replaceAll(e -> e instanceof String s ? Pattern.t(s) : e);
         return from.equals(to) ? functor : functor.setAstElements(to);
-    }
-
-    @Override
-    public Functor declaration() {
-        return (Functor) super.declaration();
     }
 
     @Override

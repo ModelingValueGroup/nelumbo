@@ -106,7 +106,7 @@ public final class Rule extends Node implements Evaluatable {
                     new ParseException("Rule consequence " + c + " must be a Predicate, not a FactType", c));
         }
         Node left = c instanceof NIs ? (Node) c.get(0) : c;
-        Predicate cons = (Predicate) c.replace(e -> e != c && e instanceof BooleanVariable v ? v.variable() : e, true);
+        Predicate cons = (Predicate) c.replace(e -> e != c && e instanceof BooleanVariable v ? v.variable() : e);
         Map<Variable, Object> consVars = cons.getBinding(cons);
         Functor nodeFunctor = left.functor();
         Functor literalFunctor = nodeFunctor != null ? knowledgeBase.literal(nodeFunctor) : null;

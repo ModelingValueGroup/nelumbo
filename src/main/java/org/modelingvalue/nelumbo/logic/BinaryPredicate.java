@@ -29,11 +29,6 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         super(nodeInfo, args);
     }
 
-    @Override
-    public BinaryPredicate declaration() {
-        return (BinaryPredicate) super.declaration();
-    }
-
     public final Predicate predicate1() {
         return predicate(0);
     }

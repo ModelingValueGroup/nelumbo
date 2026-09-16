@@ -118,7 +118,7 @@ public final class NBoolean extends Predicate {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing && length() == 0) {
             Boolean bool = parse(functor().name());
-            NBoolean result = set(nodeInfo().resetDeclaration(), new Object[] { bool });
+            NBoolean result = set(nodeInfo(), new Object[] { bool });
             if (TRUE == null && result.isTrue()) {
                 TRUE = result;
             } else if (FALSE == null && result.isFalse()) {

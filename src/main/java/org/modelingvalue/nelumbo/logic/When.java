@@ -42,11 +42,6 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    public When declaration() {
-        return (When) super.declaration();
-    }
-
-    @Override
     protected When set(NodeInfo nodeInfo, Object[] args) {
         return new When(nodeInfo, args);
     }

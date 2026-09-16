@@ -93,7 +93,7 @@ public final class Rational extends Node {
             if ("-".equals(get(0))) {
                 string = "-" + string;
             }
-            return set(nodeInfo().resetDeclaration(), parse(string));
+            return set(nodeInfo(), parse(string));
         }
         return this;
     }

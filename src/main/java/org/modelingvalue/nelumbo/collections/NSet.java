@@ -70,6 +70,6 @@ public class NSet extends NCollection {
         if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof Set)) {
             return this;
         }
-        return set(nodeInfo().resetDeclaration(), new Object[] { super.args().asSet() });
+        return set(nodeInfo(), new Object[] { super.args().asSet() });
     }
 }

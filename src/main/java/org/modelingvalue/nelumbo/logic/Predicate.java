@@ -61,11 +61,6 @@ public class Predicate extends Node {
         super(nodeInfo, args);
     }
 
-    @Override
-    public Predicate declaration() {
-        return (Predicate) super.declaration();
-    }
-
     protected final int nrOfUnbound() {
         if (nrOfUnbound < 0) {
             nrOfUnbound = allVars().removeAll(allLocalVars()).size();
@@ -97,7 +92,7 @@ public class Predicate extends Node {
                         return var.type();
                     }
                     return o;
-                }, true);
+                });
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
             }
@@ -126,7 +121,7 @@ public class Predicate extends Node {
                 if (functor != null) {
                     Functor lit = kb.literal(functor);
                     if (lit == null) {
-                        lit = kb.literal(functor.declaration());
+                        lit = kb.literal(functor);
                     }
                     if (lit != null) {
                         List<Object> args = n.args();
@@ -138,7 +133,7 @@ public class Predicate extends Node {
                 return n;
             }
             return o;
-        }, true);
+        });
     }
 
     public Predicate setBinding(Predicate declaration, Map<Variable, Object> vars) {
@@ -196,14 +191,12 @@ public class Predicate extends Node {
         if (equals(from)) {
             return to;
         } else {
-            Predicate decl = declaration();
             Object[] array = null;
             for (int i = 0; i < length(); i++) {
                 Object thisVal = get(i);
                 if (thisVal instanceof Predicate fromDecl) {
                     Predicate toDecl = fromDecl.replace(from, to);
                     if (toDecl != fromDecl) {
-                        decl = decl.setPredicates(i, toDecl.declaration());
                         if (array == null) {
                             array = toArray();
                         }
@@ -225,15 +218,9 @@ public class Predicate extends Node {
     }
 
     protected final Predicate setPredicates(int from, Predicate... a) {
-        Object[] declArray = declaration().toArray();
-        int i = from;
-        for (int x = 0; x < a.length; x++) {
-            declArray[i + x] = a[x].declaration();
-        }
-        Predicate newDeclaration = declaration().setArgs(declArray);
         Object[] predArray = toArray();
         System.arraycopy(a, 0, predArray, from, a.length);
-        return set(nodeInfo().setDeclaration(newDeclaration), predArray);
+        return set(nodeInfo(), predArray);
     }
 
     public final InferResult unknown() {
@@ -442,7 +429,7 @@ public class Predicate extends Node {
     public Predicate replaveVars(Map<String, Variable> map) {
         try {
             return (Predicate) replace(from -> (from instanceof Variable || from instanceof BooleanVariable)
-                    && map.get(from.toString()) instanceof Node to ? to : from, false);
+                    && map.get(from.toString()) instanceof Node to ? to : from);
         } catch (ParseException e) {
             return null;
         }

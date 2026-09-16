@@ -44,11 +44,6 @@ public final class Not extends CompoundPredicate {
         return (Not) super.set(i, a);
     }
 
-    @Override
-    public Not declaration() {
-        return (Not) super.declaration();
-    }
-
     public final Predicate predicate() {
         return predicate(0);
     }

@@ -465,7 +465,7 @@ public class U {
             switch (node) {
             case Token t -> DEBUG("    %-20s%sT:%-16s  '%s'", renderSpan(t), indent, t.type(), t.textTraced());
             case NList l -> {
-                Node declaration = l.declaration();
+                Node declaration = l;
                 String decl = declaration == null ? "<none>"
                         : declaration.firstToken() == null ? "" + declaration
                                 : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);
@@ -474,7 +474,7 @@ public class U {
                 l.astElements().forEach(e -> DEBUG_NODE(e, indent + "  "));
             }
             case Node n  -> {
-                Node declaration = n.declaration();
+                Node declaration = n;
                 String decl = declaration == null ? "<none>"
                         : declaration.firstToken() == null ? "" + declaration
                                 : declaration.firstToken().fileName() + " @ " + renderSpan(declaration);

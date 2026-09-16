@@ -71,7 +71,7 @@ public class Node extends StructImpl implements AstElement {
     @NelumboConstructor
     public Node(NodeInfo nodeInfo, Object... args) {
         super(removeOptionals(args));
-        this.nodeInfo = nodeInfo.declaration() == null ? nodeInfo.setDeclaration(this) : nodeInfo;
+        this.nodeInfo = nodeInfo;
     }
 
     public NodeInfo nodeInfo() {
@@ -84,10 +84,6 @@ public class Node extends StructImpl implements AstElement {
 
     public final List<AstElement> astElements() {
         return nodeInfo.elements();
-    }
-
-    public Node declaration() {
-        return nodeInfo.declaration();
     }
 
     public Node setFunctorOrType(FunctorOrType functorOrType) {
@@ -510,23 +506,14 @@ public class Node extends StructImpl implements AstElement {
                 return v.makeUnique(id);
             }
             return o;
-        }, true);
+        });
     }
 
-    public Node resetDeclaration() {
-        try {
-            return replace(o -> o, true);
-        } catch (ParseException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public final Node replace(ThrowingFunction<Object, Object> replacer, boolean resetDeclaration)
-            throws ParseException {
+    public final Node replace(ThrowingFunction<Object, Object> replacer) throws ParseException {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object fromVal = get(i);
-            Object toVal = replace(fromVal, replacer, resetDeclaration);
+            Object toVal = replace(fromVal, replacer);
             if (toVal != fromVal) {
                 if (array == null) {
                     array = toArray();
@@ -534,20 +521,18 @@ public class Node extends StructImpl implements AstElement {
                 array[i] = toVal;
             }
         }
-        Node n = (Node) replacer.apply(array != null ? set(nodeInfo, array) : this);
-        return resetDeclaration && n.declaration() != n ? n.set(n.nodeInfo.resetDeclaration(), n.toArray()) : n;
+        return (Node) replacer.apply(array != null ? set(nodeInfo, array) : this);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private Object replace(Object from, ThrowingFunction<Object, Object> replacer, boolean resetDeclaration)
-            throws ParseException {
+    private Object replace(Object from, ThrowingFunction<Object, Object> replacer) throws ParseException {
         if (from instanceof Node fromNode) {
-            return fromNode.replace(replacer, resetDeclaration);
+            return fromNode.replace(replacer);
         } else if (from instanceof ContainingCollection fromColl) {
             ContainingCollection toColl = null;
             for (int i = 0; i < fromColl.size(); i++) {
                 Object fromVal = fromColl.get(i);
-                Object toVal = replace(fromVal, replacer, resetDeclaration);
+                Object toVal = replace(fromVal, replacer);
                 if (toVal != fromVal || toColl != null) {
                     if (toColl == null) {
                         toColl = fromColl.clear();
@@ -675,10 +660,10 @@ public class Node extends StructImpl implements AstElement {
 
     private static Object castFrom(Object to, Object from) {
         if (from instanceof Node fromNode && to instanceof Node toNode) {
-            FunctorOrType fromFunctor = fromNode.functorOrType();
-            FunctorOrType toFunctor = toNode.functorOrType();
+            Functor fromFunctor = fromNode.functor();
+            Functor toFunctor = toNode.functor();
             if (fromFunctor != null && toFunctor != null && !fromFunctor.equals(toFunctor)
-                    && fromFunctor.declaration().equals(toFunctor.declaration())) {
+                    && fromFunctor.original().equals(toFunctor.original())) {
                 return toNode.castFrom(fromNode);
             }
         }

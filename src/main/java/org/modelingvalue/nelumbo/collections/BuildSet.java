@@ -82,7 +82,7 @@ public final class BuildSet extends Quantifier {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        return resetDeclaration();
+        return this;
     }
 
 }

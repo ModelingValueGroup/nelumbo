@@ -40,11 +40,6 @@ public final class Or extends BinaryPredicate {
     }
 
     @Override
-    public Or declaration() {
-        return (Or) super.declaration();
-    }
-
-    @Override
     public Or set(int i, Object... a) {
         return (Or) super.set(i, a);
     }

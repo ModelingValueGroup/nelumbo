@@ -112,7 +112,7 @@ public final class Transform extends Node {
                 return n;
             }
             return o;
-        }, false);
+        });
         knowledgeBase.addTransform(t);
         return t;
     }
@@ -156,7 +156,7 @@ public final class Transform extends Node {
                         return n;
                     }
                     return o;
-                }, false).setBinding(target, binding).setAstElements(node.astElements()).makeVariablesUnique(ctx);
+                }).setBinding(target, binding).setAstElements(node.astElements()).makeVariablesUnique(ctx);
                 rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
             }

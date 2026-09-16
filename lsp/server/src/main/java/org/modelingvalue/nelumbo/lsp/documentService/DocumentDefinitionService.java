@@ -39,13 +39,14 @@ public class DocumentDefinitionService extends DocumentServiceAdapter {
     }
 
     @Override
-    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params) {
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
+            DefinitionParams params) {
         NlDocument document = documentManager.getDocument(params.getTextDocument().getUri());
         if (document == null) {
             return CompletableFuture.completedFuture(null);
         }
-        Position pos   = params.getPosition();
-        Token    token = document.tokenAt(pos);
+        Position pos = params.getPosition();
+        Token token = document.tokenAt(pos);
         if (token == null) {
             return CompletableFuture.completedFuture(null);
         }
@@ -53,10 +54,7 @@ public class DocumentDefinitionService extends DocumentServiceAdapter {
         if (defToken == null) {
             Node node = token.getNode();
             if (node != null) {
-                Node decl = node.declaration();
-                if (decl != null) {
-                    defToken = decl.firstToken();
-                }
+                defToken = node.firstToken();
             }
         }
         if (Main.debugging()) {
@@ -65,12 +63,15 @@ public class DocumentDefinitionService extends DocumentServiceAdapter {
         if (defToken == null) {
             return CompletableFuture.completedFuture(null);
         }
-        // Token.fileName() carries whatever string the Tokenizer was constructed with: an LSP
-        // URI for documents the client opened, or a classpath path (e.g. "/org/.../lang.nl")
-        // for imported library files loaded from inside the server jar. URI-shaped names go
+        // Token.fileName() carries whatever string the Tokenizer was constructed with:
+        // an LSP
+        // URI for documents the client opened, or a classpath path (e.g.
+        // "/org/.../lang.nl")
+        // for imported library files loaded from inside the server jar. URI-shaped
+        // names go
         // back as-is; classpath paths get materialised to a temp file so the client can
         // actually navigate to them.
-        String name   = defToken.fileName();
+        String name = defToken.fileName();
         String defUri = (name != null && name.contains("://")) ? name : BundledFileCache.classpathToFileUri(name);
         if (defUri == null) {
             return CompletableFuture.completedFuture(null);

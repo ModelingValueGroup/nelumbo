@@ -54,11 +54,6 @@ public final class And extends BinaryPredicate {
     }
 
     @Override
-    public And declaration() {
-        return (And) super.declaration();
-    }
-
-    @Override
     protected boolean isTrue(InferResult predResult, int i) {
         return false;
     }
