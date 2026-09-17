@@ -101,15 +101,18 @@ public final class Transform extends Node {
                 }
             }
         }
-        t = (Transform) t.replace(n -> {
-            if (n.functorOrType() instanceof Functor f) {
-                int i = ftl.index(f);
-                if (i >= 0) {
-                    return n.setFunctorOrType((Functor) ttl.get(i));
+        t = (Transform) t.replace(o -> {
+            if (o instanceof Node n) {
+                if (n.functorOrType() instanceof Functor f) {
+                    int i = ftl.index(f);
+                    if (i >= 0) {
+                        return n.setFunctorOrType((Functor) ttl.get(i));
+                    }
                 }
+                return n;
             }
-            return n;
-        });
+            return o;
+        }, false);
         knowledgeBase.addTransform(t);
         return t;
     }
@@ -124,7 +127,7 @@ public final class Transform extends Node {
         for (Node target : targetsFlattened()) {
             if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())
                     && !functor.pattern().equals(start)) {
-                Functor rewrite = functor.setBinding(binding).resetDeclaration().makeVariablesUnique(ctx);
+                Functor rewrite = functor.setBinding(binding).makeVariablesUnique(ctx);
                 for (Entry<Functor, Functor> e : functors) {
                     if (functor.equals(knowledgeBase.literal(e.getKey()))) {
                         knowledgeBase.addLiteral(e.getValue(), rewrite);
@@ -142,15 +145,18 @@ public final class Transform extends Node {
         Map<Functor, Functor> fm = functors;
         for (Node target : targetsFlattened()) {
             if (!(target instanceof Functor)) {
-                Node rewrite = target.replace(n -> {
-                    if (n.functorOrType() instanceof Functor f) {
-                        Functor r = fm.get(f);
-                        if (r != null) {
-                            return n.setFunctorOrType(r);
+                Node rewrite = target.replace(o -> {
+                    if (o instanceof Node n) {
+                        if (n.functorOrType() instanceof Functor f) {
+                            Functor r = fm.get(f);
+                            if (r != null) {
+                                return n.setFunctorOrType(r);
+                            }
                         }
+                        return n;
                     }
-                    return n;
-                }).setBinding(binding).setAstElements(node.astElements()).makeVariablesUnique(ctx);
+                    return o;
+                }, false).setBinding(binding).setAstElements(node.astElements()).makeVariablesUnique(ctx);
                 rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
             }

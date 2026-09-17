@@ -26,6 +26,7 @@ import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.AbstractState;
+import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.TypeMatcherState;
 import org.modelingvalue.nelumbo.lang.Functor;
@@ -308,8 +309,12 @@ public class ParseState extends AbstractState<ParseState> {
                         && Pattern.isEndOfLine(token)) {
                     do {
                         token = token.next();
-                    } while (!Pattern.isEndOfLine(token));
+                    } while ((next != null && next.token.index() > token.index()) || !Pattern.isEndOfLine(token));
                     if (token.type() != TokenType.ENDOFFILE) {
+                        AstElement lst = result.elements().last();
+                        if (lst != null && !(lst instanceof Token t && t.type() == TokenType.NEWLINE)) {
+                            result.removeLast();
+                        }
                         result.startRepetition();
                         continue;
                     }

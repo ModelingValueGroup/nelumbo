@@ -14,6 +14,12 @@
 //
 // Correct: s = [1,2,3]. Actual: ClassCastException (Variable -> List).
 // Found 2026-09-11 while writing examples/sudoku-4x4-csp.nl (Norvig CSP solver).
+// INTRODUCED BY bba88fc8 (2026-09-09 "rename generic types...", touches
+// Node/Functor/Type/Variable) - bisected 2026-09-13: 9c61828c/cbc88890/
+// eeb06747 no crash, bba88fc8 crash; stable across 4 JDKs and local-vs-
+// Central immutable-collections. Crash site: NList.collection (NList.java:86).
+// In the Gradle test JVM the same bug shows as expectation MISMATCHES with
+// unreduced terms instead of the ClassCast - same family, different face.
 import nelumbo.collections
 
 Integer       n

@@ -9,8 +9,8 @@ import nelumbo.collections
 // blank. The "real" puzzle of sudoku-9x9.nl (2+ hours there) solves here as a
 // chain of 41 forced moves without any backtracking, in seconds.
 //
-// Engine notes (hard-won, each verified in bug-repros/*.nl - see the
-// 2026-09-10 section of bug-repros/README.md): no `where`-filters in the
+// Engine notes (hard-won, each verified in the known-bug suite - see
+// KnownBugsTest and the repro file headers under resources bugs/): no `where`-filters in the
 // recursion (setFilter over an ok-lambda NPEs in deep recursion), so "forced
 // cell" is a pure E/!E pair-check over ok; E takes at most 3 variables (a
 // 4th parses in rule bodies and then crashes the run - nest E's instead);
@@ -70,7 +70,7 @@ forced(g,r,c)    <=>  cell(g,r,c)=0 &
 // ---- vs forced move), solveBX guesses at the first blank when no blank is
 // ---- forced. scanB's guard pair-check is written verbatim like forced's
 // ---- inner E: during development, near-identical variants of the same
-// ---- check correlated with inconsistent results (see bug-repros) -------
+// ---- check correlated with inconsistent results (see known-bug suite) --
 List<List<Integer>> ::= scanF(<List<List<Integer>>>,<Integer>,<Integer>),
                         scanB(<List<List<Integer>>>,<Integer>,<Integer>),
                         solveBX(<List<List<Integer>>>,<Integer>,<Integer>),

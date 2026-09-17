@@ -14,14 +14,26 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo;
+package org.modelingvalue.nelumbo.test;
 
-@SuppressWarnings("unused")
-public interface NelumboConstants {
-    String NAME             = "nelumbo";
-    String EXTENSION        = "nl";
-    String NELUMBO_LIBRARY  = "/org/modelingvalue/nelumbo/";
-    String NELUMBO_EXAMPLES = NELUMBO_LIBRARY + "examples/";
-    String NELUMBO_TESTS    = NELUMBO_LIBRARY + "tests/";
-    String NELUMBO_BUGS     = NELUMBO_LIBRARY + "bugs/";
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.junit.jupiter.api.extension.ExtendWith;
+
+// Marks a test that reproduces a KNOWN, unfixed engine bug (xfail):
+// - test fails  -> ABORTED (grey): bug still present, build stays green
+// - test passes -> FAILED: the bug appears fixed - remove @KnownBug and
+//   promote the method to RegressionTest
+// - flaky=true  -> a pass also aborts (race-dependent repros never turn
+//   the build red on a lucky run)
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@ExtendWith(KnownBugExtension.class)
+public @interface KnownBug {
+    String value();
+
+    boolean flaky() default false;
 }

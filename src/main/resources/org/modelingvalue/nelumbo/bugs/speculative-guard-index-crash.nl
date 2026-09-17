@@ -11,6 +11,16 @@
 // clean failure.
 // Correct: s = the grid itself. Actual: IndexOutOfBoundsException.
 // Found 2026-09-10 while writing examples/sudoku-9x9-smart.nl.
+//
+// UPDATE 2026-09-13: the file currently crashes with ClassCastException
+// instead - the recursive-collection-accumulation regression (bba88fc8, see
+// recursive-list-concat-classcast.nl) hits its rowsBefore/put machinery first
+// and masks the guard defect. Shrink attempts (1D and 2D concat-free scan
+// shapes with accessor/E/equality guards, plus raw pos in a guard) could NOT
+// retrigger the original speculative-guard IndexOutOfBounds on current
+// develop - the defect may meanwhile be fixed. Kept UNSHRUNK deliberately:
+// re-evaluate once the bba88fc8 regression is fixed. The bare out-of-range
+// pos crash is covered separately by collections-index-out-of-range.nl.
 import nelumbo.collections
 
 // ---- types ----------------------------------------------------------

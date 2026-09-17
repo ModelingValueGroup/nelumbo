@@ -9,6 +9,10 @@
 //   pick(i)=l <=> mk(i) = l   -> l = [1,2]   (correct)
 //
 // Found 2026-09-11 while writing examples/sudoku-4x4-csp.nl (Norvig CSP solver).
+// Same reduction/typing family as recursive-list-concat-classcast.nl (see its
+// bba88fc8 attribution) - suspected same root cause, distinct construct. A
+// milder pre-bba88fc8 non-reduction symptom existed already (arithmetic in
+// list elements unevaluated: build(3) -> [3-1-1,3-1,3] on 9c61828c).
 //
 // Correct: l = [1,2]. Actual: l = mk(0).
 import nelumbo.collections

@@ -150,11 +150,6 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    public Functor resetDeclaration() {
-        return (Functor) super.resetDeclaration();
-    }
-
-    @Override
     public Functor set(int i, Object... a) {
         return (Functor) super.set(i, a);
     }

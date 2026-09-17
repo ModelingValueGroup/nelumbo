@@ -66,6 +66,14 @@ public class NelumboTestBase {
         resource(resource, NelumboConstants.NELUMBO_TESTS);
     }
 
+    // known-bug repros: preemptive timeout instead of @Timeout so a diverging
+    // repro aborts (KnownBugExtension turns the failure into ABORTED) instead
+    // of failing the build; the hung thread leaks until the test JVM exits
+    public void bugResource(String resource) {
+        org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(java.time.Duration.ofSeconds(60),
+                () -> resource(resource, NelumboConstants.NELUMBO_BUGS));
+    }
+
     public void resource(String resource, String base) {
         run(() -> {
             try {

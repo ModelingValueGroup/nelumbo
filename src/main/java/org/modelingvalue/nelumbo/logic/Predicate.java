@@ -119,33 +119,30 @@ public class Predicate extends Node {
     public Predicate setVariables(KnowledgeBase kb, Map<Variable, Object> vars, ParseContext ctx)
             throws ParseException {
         Predicate predicate = setBinding(vars);
-        predicate = (Predicate) predicate.replace(n -> {
-            Functor functor = n.functor();
-            if (functor != null) {
-                Functor lit = kb.literal(functor);
-                if (lit == null) {
-                    lit = kb.literal(functor.declaration());
-                }
-                if (lit != null) {
-                    List<Object> args = n.args();
-                    if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
-                        return lit.construct(n.astElements(), args.toArray(), kb, ctx);
+        return (Predicate) predicate.replace(o -> {
+            if (o instanceof Node n) {
+                Functor functor = n.functor();
+                if (functor != null) {
+                    Functor lit = kb.literal(functor);
+                    if (lit == null) {
+                        lit = kb.literal(functor.declaration());
+                    }
+                    if (lit != null) {
+                        List<Object> args = n.args();
+                        if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
+                            return lit.construct(n.astElements(), args.toArray(), kb, ctx);
+                        }
                     }
                 }
+                return n;
             }
-            return n;
-        });
-        return predicate.resetDeclaration();
+            return o;
+        }, true);
     }
 
     @Override
     public Predicate normalize() {
         return (Predicate) super.normalize();
-    }
-
-    @Override
-    public Predicate resetDeclaration() {
-        return (Predicate) super.resetDeclaration();
     }
 
     @Override
@@ -451,7 +448,7 @@ public class Predicate extends Node {
     public Predicate replaveVars(Map<String, Variable> map) {
         try {
             return (Predicate) replace(from -> (from instanceof Variable || from instanceof BooleanVariable)
-                    && map.get(from.toString()) instanceof Node to ? to : from);
+                    && map.get(from.toString()) instanceof Node to ? to : from, false);
         } catch (ParseException e) {
             return null;
         }
