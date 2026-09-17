@@ -614,10 +614,7 @@ public class Node extends StructImpl implements AstElement {
         if (reason == ConstructionReason.parsing && Type.ROOT.isAssignableFrom(type())) {
             MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
             for (Transform transform : knowledgeBase.getTransforms(this, typeArgs)) {
-                rewrite = transform.transform(transform.source(), this, rewrite, knowledgeBase, ctx);
-            }
-            if (!typeArgs.isEmpty()) {
-                rewrite = rewrite.setTypeArgs(typeArgs.get());
+                rewrite = transform.setTypeArgs(typeArgs.get()).transform(transform, this, rewrite, knowledgeBase, ctx);
             }
         }
         return rewrite;

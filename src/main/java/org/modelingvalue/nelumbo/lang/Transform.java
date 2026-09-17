@@ -117,33 +117,41 @@ public final class Transform extends Node {
         return t;
     }
 
-    public Node transform(Node start, Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx)
+    public Node transform(Transform original, Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx)
             throws ParseException {
-        Map<Variable, Object> binding = node.getBinding(start);
+        Node source = source();
+        Map<Variable, Object> binding = node.getBinding(source);
         if (binding == null) {
             return result;
         }
         Map<Functor, Functor> functors = Map.of();
-        for (Node target : targetsFlattened()) {
+        Map<Functor, Functor> origFunctors = Map.of();
+        List<Node> targets = targetsFlattened();
+        List<Node> origTargets = original.targetsFlattened();
+        for (int i = 0; i < targets.size(); i++) {
+            Node target = targets.get(i);
             if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())
-                    && !functor.pattern().equals(start)) {
+                    && !functor.pattern().equals(source)) {
+                Functor origFunctor = (Functor) origTargets.get(i);
                 Functor rewrite = functor.setBinding(functor, binding).makeVariablesUnique(ctx);
                 for (Entry<Functor, Functor> e : functors) {
-                    if (functor.equals(knowledgeBase.literal(e.getKey()))) {
+                    if (origFunctor.equals(knowledgeBase.literal(origFunctors.get(e.getKey())))) {
                         knowledgeBase.addLiteral(e.getValue(), rewrite);
                         break;
                     }
                 }
+                origFunctors = origFunctors.put(functor, origFunctor);
                 functors = functors.put(functor, rewrite);
                 rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
             }
         }
-        if (start instanceof Pattern) {
+        if (source instanceof Pattern) {
             return result;
         }
         Map<Functor, Functor> fm = functors;
-        for (Node target : targetsFlattened()) {
+        for (int i = 0; i < targets.size(); i++) {
+            Node target = targets.get(i);
             if (!(target instanceof Functor)) {
                 Node rewrite = target.replace(o -> {
                     if (o instanceof Node n) {
@@ -166,6 +174,11 @@ public final class Transform extends Node {
 
     private static Node add(Node result, Node rewrite) {
         return result != null ? result.add(rewrite) : null;
+    }
+
+    @Override
+    public Transform setTypeArgs(Map<Variable, Type> typeArgs) {
+        return (Transform) super.setTypeArgs(typeArgs);
     }
 
 }

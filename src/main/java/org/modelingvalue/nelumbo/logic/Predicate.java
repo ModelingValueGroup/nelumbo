@@ -410,16 +410,13 @@ public class Predicate extends Node {
         MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
         Set<Rule> rules = context.knowledgebase().getRules(this, typeArgs);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
+            rule = rule.setTypeArgs(typeArgs.get());
             result = rule.biimply(this, context, result);
             if (result.hasStackOverflow()) {
                 return result;
             }
         }
-        if (typeArgs.isEmpty()) {
-            return result;
-        } else {
-            return result.setTypeArgs(typeArgs.get());
-        }
+        return result;
     }
 
     public boolean isFact() {

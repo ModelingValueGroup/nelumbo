@@ -79,6 +79,11 @@ public final class Rule extends Node implements Evaluatable {
         return new Rule(nodeInfo, args);
     }
 
+    @Override
+    public Rule setTypeArgs(Map<Variable, Type> typeArgs) {
+        return (Rule) super.setTypeArgs(typeArgs);
+    }
+
     public final Functor consequenceFunctor() {
         return consequence().functor();
     }

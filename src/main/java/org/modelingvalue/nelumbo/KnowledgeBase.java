@@ -35,7 +35,6 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
-import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Import;
 import org.modelingvalue.nelumbo.lang.Namespace;
@@ -163,10 +162,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Functor addVariable(Variable var, ParseContext ctx) throws ParseException {
-        Type literal = var.type().toLiteral();
-        for (Pair<Functor, Transform> pair : literalTransforms.get().getOrDefault(literal, Set.of())) {
-            pair.b().transform(pair.a().pattern(), t(List.of(var), var), null, this, ctx);
-        }
         if (Type.TYPE.equals(var.type())) {
             return addType(new Type(var), ctx);
         } else {
@@ -287,12 +282,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         IMPORT_RESOLVERS.updateAndGet(l -> l.remove(resolver));
     }
 
-    private final AtomicReference<Set<Type>>                                types             = new AtomicReference<>();
-    private final AtomicReference<Set<Functor>>                             functors          = new AtomicReference<>();
-    private final AtomicReference<Map<Predicate, InferResult>>              facts             = new AtomicReference<>();
-    private final AtomicReference<Set<Rule>>                                rules             = new AtomicReference<>();
-    private final AtomicReference<Set<Transform>>                           transforms        = new AtomicReference<>();
-    private final AtomicReference<Map<Type, Set<Pair<Functor, Transform>>>> literalTransforms = new AtomicReference<>();
+    private final AtomicReference<Set<Type>>                   types      = new AtomicReference<>();
+    private final AtomicReference<Set<Functor>>                functors   = new AtomicReference<>();
+    private final AtomicReference<Map<Predicate, InferResult>> facts      = new AtomicReference<>();
+    private final AtomicReference<Set<Rule>>                   rules      = new AtomicReference<>();
+    private final AtomicReference<Set<Transform>>              transforms = new AtomicReference<>();
     //
     private final MutableMap<String, Map<Type, ParseState>> prePatterns     = MutableMap.concurrent(Map.of());
     private final MutableMap<String, Map<Type, ParseState>> postPatterns    = MutableMap.concurrent(Map.of());
@@ -355,7 +349,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         facts.set(init != null ? init.facts.get() : Map.of());
         rules.set(init != null ? init.rules.get() : Set.of());
         transforms.set(init != null ? init.transforms.get() : Set.of());
-        literalTransforms.set(init != null ? init.literalTransforms.get() : Map.of());
         prePatterns.set(m -> init != null ? init.prePatterns.get() : Map.of());
         postPatterns.set(m -> init != null ? init.postPatterns.get() : Map.of());
         hiddenVariables.set(m -> init != null ? init.hiddenVariables.get() : Map.of());
@@ -373,7 +366,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             facts.updateAndGet(s -> s.addAll(kb.facts.get()));
             rules.updateAndGet(s -> s.addAll(kb.rules.get()));
             transforms.updateAndGet(s -> s.addAll(kb.transforms.get()));
-            literalTransforms.updateAndGet(s -> s.addAll(kb.literalTransforms.get()));
             prePatterns.set(s -> s.addAll(kb.prePatterns.get()));
             postPatterns.set(s -> s.addAll(kb.postPatterns.get()));
             hiddenVariables.set(s -> s.addAll(kb.hiddenVariables.get()));
@@ -513,11 +505,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         assert Type.ROOT.isAssignableFrom(source.type());
         MatchState<Transform> state = source.state(new MatchState<>(transform));
         transformSignatures.updateAndGet(state::merge);
-        for (Functor functor : transform.literals()) {
-            Type literal = functor.resultType();
-            literalTransforms.updateAndGet(m -> m.put(literal, m.getOrDefault(literal, Set.of()).//
-                    add(Pair.of(functor, transform))));
-        }
         return transform;
     }
 
