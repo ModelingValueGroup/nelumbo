@@ -39,19 +39,6 @@ setup_colors() {
     fi
 }
 
-setup_colors() {
-    # only colorize when stdout is a terminal, so piping stays clean
-    if [ -t 1 ]; then
-        RED=$'\033[31m'
-        GREEN=$'\033[32m'
-        RESET=$'\033[0m'
-    else
-        RED=""
-        GREEN=""
-        RESET=""
-    fi
-}
-
 find_jar() {
     ls -t "$ROOT_DIR"/cli/build/libs/nelumbo-cli-*.jar 2>/dev/null | head -1
 }
