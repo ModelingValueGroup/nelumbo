@@ -18,7 +18,6 @@ package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
@@ -89,58 +88,33 @@ public final class Transform extends Node {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        Transform t = makeVariablesUnique(ctx);
-        List<Node> ftl = targetsFlattened();
-        List<Node> ttl = t.targetsFlattened();
-        for (int ni = 0; ni < ftl.size(); ni++) {
-            if (ftl.get(ni) instanceof Functor nf) {
-                Functor lf = knowledgeBase.literal(nf);
-                if (lf != null) {
-                    int li = ftl.index(lf);
-                    knowledgeBase.addLiteral((Functor) ttl.get(ni), (Functor) ttl.get(li));
-                }
-            }
-        }
-        t = (Transform) t.replace(o -> {
-            if (o instanceof Node n) {
-                if (n.functorOrType() instanceof Functor f) {
-                    int i = ftl.index(f);
-                    if (i >= 0) {
-                        return n.setFunctorOrType((Functor) ttl.get(i));
-                    }
-                }
-                return n;
-            }
-            return o;
-        });
-        knowledgeBase.addTransform(t);
-        return t;
+        Transform to = makeVariablesUnique(ctx);
+        to = rewireFunctors(to, knowledgeBase);
+        return knowledgeBase.addTransform(to);
     }
 
-    public Node transform(Transform original, Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx)
-            throws ParseException {
+    @Override
+    public Transform setTypeArgs(Map<Variable, Type> typeArgs) {
+        Transform to = (Transform) super.setTypeArgs(typeArgs);
+        try {
+            return rewireFunctors(to, KnowledgeBase.CURRENT.get());
+        } catch (ParseException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public Node transform(Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         Node source = source();
         Map<Variable, Object> binding = node.getBinding(source);
         if (binding == null) {
             return result;
         }
         Map<Functor, Functor> functors = Map.of();
-        Map<Functor, Functor> origFunctors = Map.of();
         List<Node> targets = targetsFlattened();
-        List<Node> origTargets = original.targetsFlattened();
-        for (int i = 0; i < targets.size(); i++) {
-            Node target = targets.get(i);
+        for (Node target : targets) {
             if (target instanceof Functor functor && !Type.VARIABLE.isAssignableFrom(functor.resultType())
                     && !functor.pattern().equals(source)) {
-                Functor origFunctor = (Functor) origTargets.get(i);
-                Functor rewrite = functor.setBinding(functor, binding).makeVariablesUnique(ctx);
-                for (Entry<Functor, Functor> e : functors) {
-                    if (origFunctor.equals(knowledgeBase.literal(origFunctors.get(e.getKey())))) {
-                        knowledgeBase.addLiteral(e.getValue(), rewrite);
-                        break;
-                    }
-                }
-                origFunctors = origFunctors.put(functor, origFunctor);
+                Functor rewrite = functor.setBinding(functor, binding).makeVariablesUnique(ctx).resetOriginal();
                 functors = functors.put(functor, rewrite);
                 rewrite.init(knowledgeBase, ctx, ConstructionReason.transforming);
                 result = add(result, rewrite);
@@ -150,8 +124,7 @@ public final class Transform extends Node {
             return result;
         }
         Map<Functor, Functor> fm = functors;
-        for (int i = 0; i < targets.size(); i++) {
-            Node target = targets.get(i);
+        for (Node target : targets) {
             if (!(target instanceof Functor)) {
                 Node rewrite = target.replace(o -> {
                     if (o instanceof Node n) {
@@ -176,9 +149,21 @@ public final class Transform extends Node {
         return result != null ? result.add(rewrite) : null;
     }
 
-    @Override
-    public Transform setTypeArgs(Map<Variable, Type> typeArgs) {
-        return (Transform) super.setTypeArgs(typeArgs);
+    private Transform rewireFunctors(Transform to, KnowledgeBase knowledgeBase) throws ParseException {
+        List<Node> ftl = targetsFlattened();
+        List<Node> ttl = to.targetsFlattened();
+        return (Transform) to.replace(o -> {
+            if (o instanceof Node n) {
+                if (n.functorOrType() instanceof Functor f) {
+                    int i = ftl.index(f);
+                    if (i >= 0) {
+                        return n.setFunctorOrType((Functor) ttl.get(i));
+                    }
+                }
+                return n;
+            }
+            return o;
+        });
     }
 
 }

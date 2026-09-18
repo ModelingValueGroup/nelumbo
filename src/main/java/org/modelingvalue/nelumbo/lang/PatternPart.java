@@ -53,7 +53,7 @@ public final class PatternPart extends Node {
             Pattern pattern = Pattern.pattern(pttrn);
             Node self = setArgs(name, pattern);
             Functor functor = Functor.of(List.of(self), t(name), Type.PATTERN_PART, Type.NAMESPACE, PatternPart.class,
-                    null);
+                    null, false);
             functor.init(knowledgeBase, ctx, transforming);
             return self;
         }

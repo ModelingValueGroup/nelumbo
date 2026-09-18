@@ -105,7 +105,7 @@ public final class Rule extends Node implements Evaluatable {
         }
         Predicate c = consequence();
         Functor consFunctor = c.functor();
-        Functor litFunctor = knowledgeBase.literal(consFunctor);
+        Functor litFunctor = consFunctor.toLiteral();
         if (Type.FACT_TYPE.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
             knowledgeBase.addException(
                     new ParseException("Rule consequence " + c + " must be a Predicate, not a FactType", c));
@@ -114,7 +114,7 @@ public final class Rule extends Node implements Evaluatable {
         Predicate cons = (Predicate) c.replace(e -> e != c && e instanceof BooleanVariable v ? v.variable() : e);
         Map<Variable, Object> consVars = cons.getBinding(cons);
         Functor nodeFunctor = left.functor();
-        Functor literalFunctor = nodeFunctor != null ? knowledgeBase.literal(nodeFunctor) : null;
+        Functor literalFunctor = nodeFunctor != null ? nodeFunctor.toLiteral() : null;
         List<AstElement> elements = astElements();
         NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
         int i = 0;

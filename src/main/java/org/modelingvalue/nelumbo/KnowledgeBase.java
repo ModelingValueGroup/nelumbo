@@ -156,7 +156,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, var != null ? Type.NAMESPACE : null, Type.class,
-                null);
+                null, false);
         functor.init(this, ctx, bootstrapping);
         return functor;
     }
@@ -167,7 +167,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else {
             Type type = var.type().toVariable();
             Functor functor = Functor.of(List.of(var), t(List.of(var), var), type,
-                    worldScopedVariables ? null : Type.NAMESPACE, Variable.class, null);
+                    worldScopedVariables ? null : Type.NAMESPACE, Variable.class, null, false);
             functor.init(this, ctx, bootstrapping);
             return functor;
         }
@@ -255,10 +255,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    public void addLiteral(Functor nodFunctor, Functor litFunctor) {
-        literalFunctors.updateAndGet(m -> m.put(nodFunctor.original(), litFunctor));
-    }
-
     private final static AtomicReference<Map<String, KnowledgeBase>> IMPORT_MAP       = new AtomicReference<>(Map.of());
     private final static AtomicReference<List<ImportResolver>>       IMPORT_RESOLVERS = new AtomicReference<>(
             List.of(new ResourceImportResolver()));
@@ -291,8 +287,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final MutableMap<String, Map<Type, ParseState>> prePatterns     = MutableMap.concurrent(Map.of());
     private final MutableMap<String, Map<Type, ParseState>> postPatterns    = MutableMap.concurrent(Map.of());
     private final MutableMap<String, Map<Type, Variable>>   hiddenVariables = MutableMap.concurrent(Map.of());
-    //
-    private final AtomicReference<Map<Functor, Functor>> literalFunctors = new AtomicReference<>();
     //
     private final AtomicReference<Set<String>> imported = new AtomicReference<>();
     //
@@ -352,7 +346,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         prePatterns.set(m -> init != null ? init.prePatterns.get() : Map.of());
         postPatterns.set(m -> init != null ? init.postPatterns.get() : Map.of());
         hiddenVariables.set(m -> init != null ? init.hiddenVariables.get() : Map.of());
-        literalFunctors.set(init != null ? init.literalFunctors.get() : Map.of());
         ruleSignatures.set(init != null ? init.ruleSignatures.get() : MatchState.EMPTY);
         transformSignatures.set(init != null ? init.transformSignatures.get() : MatchState.EMPTY);
         imported.set(init != null ? init.imported.get() : Set.of());
@@ -369,7 +362,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             prePatterns.set(s -> s.addAll(kb.prePatterns.get()));
             postPatterns.set(s -> s.addAll(kb.postPatterns.get()));
             hiddenVariables.set(s -> s.addAll(kb.hiddenVariables.get()));
-            literalFunctors.updateAndGet(s -> s.addAll(kb.literalFunctors.get()));
             ruleSignatures.updateAndGet(s -> kb.ruleSignatures.get().merge(s));
             transformSignatures.updateAndGet(s -> kb.transformSignatures.get().merge(s));
             imported.updateAndGet(s -> s.addAll(kb.imported.get()));
@@ -387,10 +379,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public void setExceptionHandler(ParseExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
-    }
-
-    public Functor literal(Functor functor) {
-        return literalFunctors.get().get(functor.original());
     }
 
     @Override
@@ -495,8 +483,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return rule;
     }
 
-    public Set<Rule> getRules(Predicate predicate, MutableMap<Variable, Type> typeArgs) {
-        return ruleSignatures.get().match(predicate, typeArgs);
+    public Set<Rule> getRules(Predicate predicate) {
+        return ruleSignatures.get().match(predicate);
     }
 
     public Transform addTransform(Transform transform) {
@@ -508,8 +496,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return transform;
     }
 
-    public Set<Transform> getTransforms(Node root, MutableMap<Variable, Type> typeArgs) {
-        return transformSignatures.get().match(root, typeArgs);
+    public Set<Transform> getTransforms(Node root) {
+        return transformSignatures.get().match(root);
     }
 
     public void addFact(Predicate fact) {

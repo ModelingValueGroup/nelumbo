@@ -30,7 +30,6 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.mutable.MutableSet;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.Context;
@@ -612,9 +611,8 @@ public class Node extends StructImpl implements AstElement {
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         Node rewrite = this;
         if (reason == ConstructionReason.parsing && Type.ROOT.isAssignableFrom(type())) {
-            MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
-            for (Transform transform : knowledgeBase.getTransforms(this, typeArgs)) {
-                rewrite = transform.setTypeArgs(typeArgs.get()).transform(transform, this, rewrite, knowledgeBase, ctx);
+            for (Transform transform : knowledgeBase.getTransforms(this)) {
+                rewrite = transform.transform(this, rewrite, knowledgeBase, ctx);
             }
         }
         return rewrite;

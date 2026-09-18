@@ -539,7 +539,7 @@ public final class Type extends Node implements FunctorOrType {
         } else if (type instanceof TokenType tt) {
             return tt.name();
         } else if (type instanceof Variable var) {
-            return var.baseName();
+            return var.name();
         } else if (type instanceof Class<?> cls) {
             return "$" + cls.getSimpleName();
         }

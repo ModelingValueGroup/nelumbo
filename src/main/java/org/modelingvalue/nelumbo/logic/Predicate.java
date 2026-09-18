@@ -25,7 +25,6 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
@@ -119,10 +118,7 @@ public class Predicate extends Node {
             if (o instanceof Node n) {
                 Functor functor = n.functor();
                 if (functor != null) {
-                    Functor lit = kb.literal(functor);
-                    if (lit == null) {
-                        lit = kb.literal(functor);
-                    }
+                    Functor lit = functor.toLiteral();
                     if (lit != null) {
                         List<Object> args = n.args();
                         if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
@@ -407,10 +403,8 @@ public class Predicate extends Node {
 
     private InferResult inferRules(InferContext context) {
         InferResult result = unknown();
-        MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
-        Set<Rule> rules = context.knowledgebase().getRules(this, typeArgs);
+        Set<Rule> rules = context.knowledgebase().getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
-            rule = rule.setTypeArgs(typeArgs.get());
             result = rule.biimply(this, context, result);
             if (result.hasStackOverflow()) {
                 return result;

@@ -26,7 +26,6 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
-import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -72,13 +71,6 @@ public final class Fact extends Node implements Evaluatable {
     @Override
     public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
         Predicate predicate = predicate();
-        if (!predicate.isFact()) {
-            Functor nodeFunctor = predicate.functor();
-            Functor literalFunctor = knowledgeBase.literal(nodeFunctor);
-            if (literalFunctor != null) {
-                predicate = predicate.setFunctorOrType(literalFunctor);
-            }
-        }
         if (!predicate.isFact()) {
             handler.addException(new ParseException("The type of " + predicate + " is not FactType.", predicate));
             return;

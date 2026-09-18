@@ -103,9 +103,14 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
         return new MatchState<>(typeMatcher, inherit(transitions), elements().addAll(merged.elements()));
     }
 
-    public Set<E> match(Object obj, MutableMap<Variable, Type> typeArgs) {
+    @SuppressWarnings("unchecked")
+    public Set<E> match(Object obj) {
+        MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
         MatchState<E> state = doMatch(obj, typeArgs);
-        return state != null ? state.elements() : Set.of();
+        Map<Variable, Type> tas = typeArgs.get();
+        return state != null
+                ? (tas.isEmpty() ? state.elements() : state.elements().replaceAll(e -> (E) e.setTypeArgs(tas)))
+                : Set.of();
     }
 
     private MatchState<E> doMatch(Object obj, MutableMap<Variable, Type> typeArgs) {
