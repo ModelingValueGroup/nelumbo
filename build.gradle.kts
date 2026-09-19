@@ -119,12 +119,15 @@ tasks.named<Delete>("clean") {
     delete(file("lsp/plugins/intellij/build"))
 }
 
+// no dependsOn between the test tasks: with --continue a failed module would otherwise
+// skip the tests depending on it ('./gradlew test' runs them all by name anyway)
 tasks.test {
-    dependsOn(":lsp:server:test")
-    dependsOn(":cli:test")
-    dependsOn(":website:test")
-    dependsOn(":mcp:test")
     finalizedBy("allTestsReport")
+}
+
+// never tag a build with failing tests (with --continue the tagger would still run)
+tasks.matching { it.name == "mvgtagger" }.configureEach {
+    allprojects.forEach { p -> dependsOn(p.tasks.withType<Test>()) }
 }
 
 // one aggregated HTML report over every test task in every project; runs
@@ -137,7 +140,10 @@ val allTestsReport = tasks.register<TestReport>("allTestsReport") {
     val sources = mutableListOf<Triple<String, Provider<Directory>, Provider<Directory>>>()
     allprojects.forEach { p ->
         p.tasks.withType<Test>().forEach { t ->
-            testResults.from(t)
+            // locationOnly + mustRunAfter i.s.o. a task dependency: the report must also run after a failed test task
+            // only the test tasks of THIS run: no stale results of modules that did not run
+            testResults.from(provider { if (gradle.taskGraph.hasTask(t.path)) listOf(t.binaryResultsDirectory.locationOnly) else listOf() })
+            mustRunAfter(t)
             sources.add(Triple(t.path, t.reports.junitXml.outputLocation, t.reports.html.outputLocation))
         }
     }
@@ -148,7 +154,7 @@ val allTestsReport = tasks.register<TestReport>("allTestsReport") {
         var totSkip  = 0
         var totTime  = 0.0
         val rows     = StringBuilder()
-        sources.forEach { (taskPath, xmlDir, htmlDir) ->
+        sources.filter { gradle.taskGraph.hasTask(it.first) }.forEach { (taskPath, xmlDir, htmlDir) ->
             var tests = 0
             var fail  = 0
             var skip  = 0

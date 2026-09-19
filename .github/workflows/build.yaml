@@ -59,8 +59,10 @@ jobs:
             
             ################################################################################
             -   name: "build"
+                # --continue: run ALL test tasks even when one fails (the build still ends red;
+                # mvgtagger depends on every test task, so a red build is never tagged)
                 run : |
-                    ./gradlew --info \
+                    ./gradlew --info --continue \
                         mvgCorrector \
                         build \
                         :cli:cliJar \
