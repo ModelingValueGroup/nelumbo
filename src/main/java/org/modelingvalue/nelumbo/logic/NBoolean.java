@@ -104,13 +104,11 @@ public final class NBoolean extends Predicate {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
-        String string = isUnknown() ? "unknown" : toString(0);
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
-            previous[0] = TokenType.NAME;
+    public String toString(RenderOptions options) {
+        String string = isUnknown() ? "unknown" : toString(0, options);
+        if (options.prefix(TokenType.NAME)) {
             return " " + string;
         }
-        previous[0] = TokenType.NAME;
         return string;
     }
 

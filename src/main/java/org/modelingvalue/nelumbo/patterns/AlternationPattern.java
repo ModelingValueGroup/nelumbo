@@ -35,7 +35,6 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class AlternationPattern extends Pattern {
     @Serial
@@ -70,7 +69,7 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return "<(>" + options().map(Object::toString).reduce("",
                 (a, b) -> a.isEmpty() || b.isEmpty() ? a + b : a + "<|>" + b) + "<)>";
     }
@@ -120,14 +119,14 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
         Object o = args.get(ai);
         StringBuffer inner = new StringBuffer();
         for (Pattern option : options()) {
-            int ii = option.string(List.of(o), 0, inner, previous, true);
+            int ii = option.string(List.of(o), 0, inner, options, true);
             if (ii < 0) {
                 inner = new StringBuffer();
             } else {

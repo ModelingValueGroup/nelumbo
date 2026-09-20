@@ -547,41 +547,44 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             result = predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(predicate, Set.of());
         }
         if (context.trace()) {
-            System.out.println(context.prefix() + "  " + predicate + " " + result);
+            InferResult r = result;
+            context.trace(() -> predicate + " " + r);
         }
         return result;
     }
 
     public void print(PrintStream stream, boolean withTokens) {
-        System.out.printf("    %s%-96s%s%n", U.colorCode(46), "functors", U.colorCode(0));
-        for (Functor e : functors()) {
-            stream.printf("        %-20s ::= %s%n", e.resultType(), e);
-            if (withTokens) {
-                for (Token token : e.tokens()) {
-                    stream.println("            " + token);
-                }
-            }
-        }
-        System.out.printf("    %s%-96s%s%n", U.colorCode(46), "rules", U.colorCode(0));
-        for (Rule r : rules()) {
-            stream.println("        " + r);
-            if (withTokens) {
-                for (Token token : r.tokens()) {
-                    stream.println("            " + token);
-                }
-            }
-        }
-        System.out.printf("    %s%-96s%s%n", U.colorCode(46), "facts", U.colorCode(0));
-        for (Entry<Predicate, InferResult> e : facts()) {
-            if (e.getValue().isTrueCC()) {
-                stream.println("        " + e.getKey());
+        Node.runBaseString(() -> {
+            System.out.printf("    %s%-96s%s%n", U.colorCode(46), "functors", U.colorCode(0));
+            for (Functor e : functors()) {
+                stream.printf("        %-20s ::= %s%n", e.resultType(), e);
                 if (withTokens) {
-                    for (Token token : e.getKey().tokens()) {
+                    for (Token token : e.tokens()) {
                         stream.println("            " + token);
                     }
                 }
             }
-        }
+            System.out.printf("    %s%-96s%s%n", U.colorCode(46), "rules", U.colorCode(0));
+            for (Rule r : rules()) {
+                stream.println("        " + r);
+                if (withTokens) {
+                    for (Token token : r.tokens()) {
+                        stream.println("            " + token);
+                    }
+                }
+            }
+            System.out.printf("    %s%-96s%s%n", U.colorCode(46), "facts", U.colorCode(0));
+            for (Entry<Predicate, InferResult> e : facts()) {
+                if (e.getValue().isTrueCC()) {
+                    stream.println("        " + e.getKey());
+                    if (withTokens) {
+                        for (Token token : e.getKey().tokens()) {
+                            stream.println("            " + token);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public InferContext context() {

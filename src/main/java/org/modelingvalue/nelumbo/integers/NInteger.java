@@ -55,16 +55,14 @@ public final class NInteger extends Node {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         BigInteger value = getVal(0);
         String string = value.compareTo(MAX) > 0 || value.compareTo(MIN) < 0
                 ? (Character.MAX_RADIX + "#" + value.toString(Character.MAX_RADIX))
                 : value.toString();
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
-            previous[0] = TokenType.NUMBER;
+        if (options.prefix(TokenType.NUMBER)) {
             return " " + string;
         }
-        previous[0] = TokenType.NUMBER;
         return string;
     }
 

@@ -35,7 +35,6 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class SequencePattern extends Pattern {
     @Serial
@@ -70,7 +69,7 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return elements().map(Object::toString).reduce("", (a, b) -> a + b);
     }
 
@@ -131,7 +130,7 @@ public class SequencePattern extends Pattern {
 
     @SuppressWarnings("unchecked")
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
@@ -142,7 +141,7 @@ public class SequencePattern extends Pattern {
             StringBuffer inner = new StringBuffer();
             int ii = 0;
             for (Pattern element : elements()) {
-                ii = element.string(list, ii, inner, previous, false);
+                ii = element.string(list, ii, inner, options, false);
                 if (ii < 0) {
                     return -1;
                 }

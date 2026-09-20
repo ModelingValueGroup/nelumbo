@@ -20,7 +20,6 @@ import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 import java.io.Serial;
 import java.time.DateTimeException;
@@ -51,7 +50,7 @@ public final class NPeriod extends Node {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         Object value = getVal(0);
         return String.valueOf(value);
     }

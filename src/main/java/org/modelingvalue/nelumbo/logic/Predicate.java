@@ -159,11 +159,11 @@ public class Predicate extends Node {
         KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
         InferContext context = knowledgeBase.context();
         if (context.trace()) {
-            System.out.println(context.prefix() + this);
+            context.trace(() -> toString());
         }
         InferResult result = resolve(context);
         if (context.trace()) {
-            System.out.println(context.prefix() + this + " " + result);
+            context.trace(() -> this + " " + result);
         }
         return result;
     }
@@ -282,7 +282,7 @@ public class Predicate extends Node {
         }
         InferResult result = doInfer(nrOfUnbound, context);
         if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
-            System.out.println(context.prefix() + "  " + this + " " + result.predicate(this));
+            context.trace(() -> "  " + this + " " + result.predicate(this));
         }
         return result;
     }

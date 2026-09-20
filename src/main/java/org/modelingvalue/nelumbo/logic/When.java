@@ -22,7 +22,6 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Type;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class When extends BinaryPredicate {
     @Serial
@@ -105,7 +104,7 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return predicate2() + " if " + predicate1();
     }
 

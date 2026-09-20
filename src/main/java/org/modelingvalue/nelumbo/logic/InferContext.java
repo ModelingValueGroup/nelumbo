@@ -17,10 +17,12 @@
 package org.modelingvalue.nelumbo.logic;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
 
 public interface InferContext {
     KnowledgeBase knowledgebase();
@@ -38,6 +40,10 @@ public interface InferContext {
     }
 
     boolean trace();
+
+    default void trace(Supplier<String> supplier) {
+        System.out.println(prefix() + Node.getBaseString(supplier));
+    }
 
     AtomicReference<InferResult> incompleteResult();
 

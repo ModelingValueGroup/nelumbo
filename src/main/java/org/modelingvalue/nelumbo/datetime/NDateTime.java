@@ -30,7 +30,6 @@ import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 // DateTime ::= <[> <Date> T <Time#50> <]>
 public final class NDateTime extends Node {
@@ -59,7 +58,7 @@ public final class NDateTime extends Node {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         Object value = getVal(0);
         return String.valueOf(value);
     }

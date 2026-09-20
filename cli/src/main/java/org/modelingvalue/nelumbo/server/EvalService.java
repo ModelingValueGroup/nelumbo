@@ -331,19 +331,21 @@ public final class EvalService implements AutoCloseable {
 
     public Map<String, Object> metadata() {
         Map<String, Object> json = new LinkedHashMap<>();
-        json.put("files", loadedFiles);
-        // Only declarations that originate from the loaded files (matched by source
-        // file name): this drops
-        // both the bootstrap/library vocabulary (sourced from /nelumbo/...) and
-        // synthetic compiled nodes.
-        json.put("types", declaredTypes());
-        // Functors render cleanly via deparse (the pattern, e.g. "fib(<Integer>)");
-        // rules/transforms via
-        // toString (deparse of the compiled clause loses the head and "if" keywords).
-        addFunctors(json);
-        json.put("rules", declaredSources(baseKb.rules(), n -> collapse(String.valueOf(n))));
-        json.put("transforms", declaredSources(baseKb.transforms(), n -> collapse(String.valueOf(n))));
-        json.put("facts", declaredFacts());
+        Node.runBaseString(() -> {
+            json.put("files", loadedFiles);
+            // Only declarations that originate from the loaded files (matched by source
+            // file name): this drops
+            // both the bootstrap/library vocabulary (sourced from /nelumbo/...) and
+            // synthetic compiled nodes.
+            json.put("types", declaredTypes());
+            // Functors render cleanly via deparse (the pattern, e.g. "fib(<Integer>)");
+            // rules/transforms via
+            // toString (deparse of the compiled clause loses the head and "if" keywords).
+            addFunctors(json);
+            json.put("rules", declaredSources(baseKb.rules(), n -> collapse(String.valueOf(n))));
+            json.put("transforms", declaredSources(baseKb.transforms(), n -> collapse(String.valueOf(n))));
+            json.put("facts", declaredFacts());
+        });
         return json;
     }
 

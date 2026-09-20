@@ -36,7 +36,6 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class RepetitionPattern extends Pattern {
     @Serial
@@ -70,7 +69,7 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         Pattern separator = separator();
         return "<(>" + repeated() + (separator != null ? "<,>" + separator : "") + (mandatory() ? "<)+>" : "<)*>");
     }
@@ -125,7 +124,7 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
@@ -135,11 +134,11 @@ public class RepetitionPattern extends Pattern {
             StringBuffer inner = new StringBuffer();
             for (Object o : list) {
                 if (separator != null && !inner.isEmpty()) {
-                    if (separator.string(List.of(o), 0, inner, previous, false) < 0) {
+                    if (separator.string(List.of(o), 0, inner, options, false) < 0) {
                         return -1;
                     }
                 }
-                if (repeated.string(List.of(o), 0, inner, previous, false) < 0) {
+                if (repeated.string(List.of(o), 0, inner, options, false) < 0) {
                     return -1;
                 }
             }

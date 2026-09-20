@@ -28,7 +28,6 @@ import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NSet extends NCollection {
     @Serial
@@ -60,7 +59,7 @@ public class NSet extends NCollection {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         String string = collection().toString();
         return "{" + string.substring(4, string.length() - 1) + "}";
     }

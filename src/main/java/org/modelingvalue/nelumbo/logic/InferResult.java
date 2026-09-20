@@ -605,7 +605,7 @@ public interface InferResult {
         }
 
         @Override
-        public String toString() {
+        public final String toString() {
             List<Predicate> overflow = stackOverflow();
             if (overflow != null) {
                 return overflow.toString().substring(4);

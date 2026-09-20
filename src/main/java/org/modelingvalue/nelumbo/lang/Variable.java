@@ -112,13 +112,12 @@ public final class Variable extends Node {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
-            previous[0] = TokenType.NAME;
-            return " " + name();
+    public String toString(RenderOptions options) {
+        String name = options.isBase() ? baseName() : name();
+        if (options.prefix(TokenType.NAME)) {
+            return " " + name;
         }
-        previous[0] = TokenType.NAME;
-        return name();
+        return name;
     }
 
     @Override

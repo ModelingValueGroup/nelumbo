@@ -119,7 +119,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return tokenText();
     }
 
@@ -129,18 +129,18 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
         if (alt) {
             if (ai < 0 || args.size() <= ai) {
                 return -1;
             }
             if (args.get(ai) instanceof String text && text.equals(tokenText())) {
-                addText(sb, previous, text);
+                addText(sb, options, text);
                 return ai + 1;
             }
             return -1;
         }
-        addText(sb, previous, tokenText());
+        addText(sb, options, tokenText());
         return ai;
     }
 

@@ -36,7 +36,6 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class OptionalPattern extends Pattern {
     @Serial
@@ -66,7 +65,7 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return "<(>" + optional() + "<)?>";
     }
 
@@ -91,14 +90,14 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
         if (args.get(ai) instanceof Optional<?> opt) {
             StringBuffer inner = new StringBuffer();
             if (opt.isPresent()) {
-                int ii = optional().string(List.of(opt.get()), 0, inner, previous, false);
+                int ii = optional().string(List.of(opt.get()), 0, inner, options, false);
                 if (ii < 0) {
                     return -1;
                 }

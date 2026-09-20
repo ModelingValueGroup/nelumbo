@@ -27,7 +27,6 @@ import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NString extends Node {
     @Serial
@@ -56,7 +55,7 @@ public final class NString extends Node {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return DELIM + getVal(0) + DELIM;
     }
 

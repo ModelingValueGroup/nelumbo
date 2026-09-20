@@ -94,7 +94,7 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return "<" + nodeType() + ">";
     }
 
@@ -122,7 +122,7 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
@@ -139,7 +139,7 @@ public class NodeTypePattern extends Pattern {
             if (parenthetical) {
                 sb.append('(');
             }
-            sb.append(node.toString(previous));
+            sb.append(node.toString(options));
             if (parenthetical) {
                 sb.append(')');
             }

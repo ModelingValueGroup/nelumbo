@@ -51,7 +51,6 @@ import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.ParseState;
 import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class Functor extends Node implements FunctorOrType {
     @Serial
@@ -208,7 +207,7 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return resultType() + "::=" + pattern();
     }
 
@@ -288,13 +287,13 @@ public class Functor extends Node implements FunctorOrType {
                 : args.toArray();
     }
 
-    public String string(List<Object> args, TokenType[] previous) {
+    public String string(List<Object> args, RenderOptions options) {
         Pattern pattern = pattern();
         if (pattern instanceof SequencePattern && argTypes().size() > 1) {
             args = List.of(args);
         }
         StringBuffer sb = new StringBuffer();
-        if (pattern.string(args, 0, sb, previous, false) < 0) {
+        if (pattern.string(args, 0, sb, options, false) < 0) {
             return null;
         }
         return sb.toString();

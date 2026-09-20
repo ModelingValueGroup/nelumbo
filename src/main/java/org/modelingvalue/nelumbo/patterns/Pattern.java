@@ -172,7 +172,7 @@ public abstract class Pattern extends Node {
 
     public abstract List<Type> argTypes(List<Type> types);
 
-    public abstract int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt);
+    public abstract int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt);
 
     public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
             MutableMap<Variable, Type> typeArgs);
@@ -182,15 +182,12 @@ public abstract class Pattern extends Node {
                 || (token.previous() != null && token.line() > token.previous().line());
     }
 
-    protected void addText(StringBuffer sb, TokenType[] previous, String text) {
+    protected void addText(StringBuffer sb, RenderOptions options, String text) {
         TokenType type = TokenType.of(text);
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
-            if (type == TokenType.NAME || type == TokenType.NUMBER) {
-                sb.append(" ");
-            }
+        if (options.prefix(type)) {
+            sb.append(" ");
         }
         sb.append(text);
-        previous[0] = type;
     }
 
     public abstract Pattern declaration(Token token);

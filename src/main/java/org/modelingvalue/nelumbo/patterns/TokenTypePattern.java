@@ -63,7 +63,7 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return "<" + tokenType() + ">";
     }
 
@@ -82,7 +82,7 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, TokenType[] previous, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
@@ -90,12 +90,12 @@ public class TokenTypePattern extends Pattern {
         if (!isEmpty(type)) {
             Object val = args.get(ai);
             if (val instanceof String text && type.matches(text)) {
-                addText(sb, previous, text);
+                addText(sb, options, text);
                 return ai + 1;
             } else {
                 String text = val != null ? val.toString() : null;
                 if (text != null && type.matches(text)) {
-                    addText(sb, previous, text);
+                    addText(sb, options, text);
                     return ai + 1;
                 } else {
                     return -1;

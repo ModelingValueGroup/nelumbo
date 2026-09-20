@@ -40,7 +40,6 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Rule extends Node implements Evaluatable {
     @Serial
@@ -176,7 +175,7 @@ public final class Rule extends Node implements Evaluatable {
         Predicate consequence = consDecl.setBinding(consDecl, binding);
         Predicate condition = condDecl.setBinding(condDecl, binding);
         if (context.trace() && !isSyntatic()) {
-            System.out.println(context.prefix() + consequence + " <=> " + condition);
+            context.trace(() -> consequence + " <=> " + condition);
         }
         InferResult condResult = condition.resolve(context);
         if (condResult.hasStackOverflow()) {
@@ -212,7 +211,7 @@ public final class Rule extends Node implements Evaluatable {
         InferResult ruleResult = InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
                 condResult.cycles());
         if (context.trace() && !isSyntatic()) {
-            System.out.println(context.prefix() + consequence + " " + ruleResult.predicate(consequence));
+            context.trace(() -> consequence + " " + ruleResult.predicate(consequence));
         }
         for (Predicate fact : result.facts()) {
             if (falsehoods.contains(fact) || (completeFacts && //
@@ -250,7 +249,7 @@ public final class Rule extends Node implements Evaluatable {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         return consequence() + " <=> " + condition();
     }
 

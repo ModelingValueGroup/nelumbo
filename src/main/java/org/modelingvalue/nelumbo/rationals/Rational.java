@@ -72,16 +72,14 @@ public final class Rational extends Node {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         BigInteger num = getVal(0);
         BigInteger den = getVal(1);
         BigDecimal dec = new BigDecimal(num).divide(new BigDecimal(den), MathContext.DECIMAL32);
         String string = dec.toString();
-        if (previous[0] == TokenType.NAME || previous[0] == TokenType.NUMBER) {
-            previous[0] = TokenType.NUMBER;
+        if (options.prefix(TokenType.NUMBER)) {
             return " " + string;
         }
-        previous[0] = TokenType.NUMBER;
         return string;
     }
 

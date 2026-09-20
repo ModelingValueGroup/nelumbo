@@ -29,7 +29,6 @@ import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 // Date 	::= <NUMBER> - <NUMBER> - <NUMBER>
 public final class NDate extends Node {
@@ -49,7 +48,7 @@ public final class NDate extends Node {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         Object value = getVal(0);
         return String.valueOf(value);
     }

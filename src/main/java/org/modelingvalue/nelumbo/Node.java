@@ -24,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 import org.modelingvalue.collections.ContainingCollection;
 import org.modelingvalue.collections.Entry;
@@ -218,19 +219,74 @@ public class Node extends StructImpl implements AstElement {
         return List.of();
     }
 
-    @Override
-    public final String toString() {
-        return toString(new TokenType[1]);
+    private static final Context<RenderOptions> CURRENT_OPTIONS = Context.of(null);
+
+    protected static final class RenderOptions {
+
+        private TokenType     previous;
+        private final boolean base;
+
+        private RenderOptions(boolean base) {
+            this.base = base;
+        }
+
+        public boolean isBase() {
+            return base;
+        }
+
+        public boolean prefix(TokenType type) {
+            boolean prefix = false;
+            if (previous == TokenType.NAME || previous == TokenType.NUMBER) {
+                if (type == TokenType.NAME || type == TokenType.NUMBER) {
+                    prefix = true;
+                }
+            }
+            previous = type;
+            return prefix;
+        }
+
     }
 
-    public String toString(TokenType[] previous) {
+    @Override
+    public final String toString() {
+        RenderOptions options = CURRENT_OPTIONS.get();
+        if (options != null) {
+            return toString(options);
+        }
+        return toFullString();
+    }
+
+    public final String toFullString() {
+        return getFullString(this::toString);
+    }
+
+    public final String toBaseString() {
+        return getBaseString(this::toString);
+    }
+
+    public static final String getFullString(Supplier<String> supplier) {
+        return CURRENT_OPTIONS.get(new RenderOptions(false), supplier);
+    }
+
+    public static final String getBaseString(Supplier<String> supplier) {
+        return CURRENT_OPTIONS.get(new RenderOptions(true), supplier);
+    }
+
+    public static final void runFullString(Runnable action) {
+        CURRENT_OPTIONS.run(new RenderOptions(false), action);
+    }
+
+    public static final void runBaseString(Runnable action) {
+        CURRENT_OPTIONS.run(new RenderOptions(true), action);
+    }
+
+    public String toString(RenderOptions options) {
         Functor functor = functor();
         if (functor != null) {
-            String string = functor.string(args(), previous);
+            String string = functor.string(args(), options);
             if (string != null) {
                 return string;
             }
-            functor.string(args(), previous);
         }
         StringBuilder sb = new StringBuilder();
         if (functor != null) {
@@ -241,15 +297,16 @@ public class Node extends StructImpl implements AstElement {
         sb.append('(');
         String sep = "";
         for (int i = 0; i < length(); i++) {
-            sb.append(sep).append(toString(i));
+            sb.append(sep).append(toString(i, options));
             sep = ",";
         }
         sb.append(')');
         return sb.toString();
     }
 
-    public final String toString(int i) {
-        return StringUtil.toString(get(i));
+    public final String toString(int i, RenderOptions options) {
+        Object e = get(i);
+        return e instanceof Node n ? n.toString(options) : StringUtil.toString(e);
     }
 
     @SuppressWarnings("unchecked")

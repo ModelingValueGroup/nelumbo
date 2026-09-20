@@ -29,7 +29,6 @@ import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class NList extends NCollection {
     @Serial
@@ -99,7 +98,7 @@ public final class NList extends NCollection {
     }
 
     @Override
-    public String toString(TokenType[] previous) {
+    public String toString(RenderOptions options) {
         String string = collection().toString();
         return "[" + string.substring(5, string.length() - 1) + "]";
     }
