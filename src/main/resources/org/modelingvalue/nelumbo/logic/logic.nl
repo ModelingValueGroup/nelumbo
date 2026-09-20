@@ -23,7 +23,7 @@ Boolean         ::= true                          @nelumbo.logic.NBoolean,
 
 pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
 
-Root            ::= "fact" <(> <Boolean#0> <,> , <)+>                                      @nelumbo.logic.Fact,
+Root            ::= "fact" <(> <FactType#0> <,> , <)+>                                     @nelumbo.logic.Fact,
                     <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+> @nelumbo.logic.Rule,
                     <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                             @nelumbo.logic.Query
 

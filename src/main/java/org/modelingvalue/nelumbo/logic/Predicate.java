@@ -163,7 +163,7 @@ public class Predicate extends Node {
         }
         InferResult result = resolve(context);
         if (context.trace()) {
-            context.trace(() -> this + " " + result);
+            context.trace(() -> toString() + " " + result);
         }
         return result;
     }

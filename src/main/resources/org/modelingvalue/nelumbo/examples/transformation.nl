@@ -9,16 +9,20 @@ NAME AN
 
 attr OT AN AT  ::> {
     AT               ::= <OT>.AN
-    Root             ::= <OT>.AN := <AT>
+    Root             ::= <{OT,Literal}>.AN := <{AT,Literal}>
     private FactType ::= AN(<OT>,<AT>)
+
     OT o
     AT a
     o.AN=a <=>  AN(o,a)
-    o.AN := a ::> {
-        fact AN(o,a)
+
+    {OT,Literal} ol
+    {AT,Literal} al
+    ol.AN := al ::> {
+        fact AN(ol,al)
     }
 }
- 
+
 // Model
 
 Person :: Object

@@ -12,16 +12,20 @@ Root     ::= "attr" <Type> <Lidwoord> <NAME> <Type> #100
     NAME     n
 
     attr OT lw n AT ::> {
-        Root             ::= <lw> n van <OT> is <AT> #0
+        Root             ::= <lw> n van <{OT,Literal}> is <{AT,Literal}> #0
         Root             ::= wat is <lw> n van <OT> ? #0
         private FactType ::= n(<OT>,<AT>)
+
         OT o
         AT a
-        lw n van o is a ::> {
-            fact n(o,a)
-        }
         wat is lw n van o ? ::> {
             n(o,a) ?
+        }
+
+        {OT,Literal} ol
+        {AT,Literal} al
+        lw n van ol is al ::> {
+            fact n(ol,al)
         }
     }
 }

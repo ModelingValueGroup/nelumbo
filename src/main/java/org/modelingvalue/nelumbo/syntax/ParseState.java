@@ -312,7 +312,7 @@ public class ParseState extends AbstractState<ParseState> {
                     } while ((next != null && next.token.index() > token.index()) || !Pattern.isEndOfLine(token));
                     if (token.type() != TokenType.ENDOFFILE) {
                         AstElement lst = result.elements().last();
-                        if (lst != null && !(lst instanceof Token t && t.type() == TokenType.NEWLINE)) {
+                        if (next != null && lst != null && !(lst instanceof Token t && t.type() == TokenType.NEWLINE)) {
                             result.removeLast();
                         }
                         result.startRepetition();
