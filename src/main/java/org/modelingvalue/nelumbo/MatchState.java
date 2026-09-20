@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Entry;
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
@@ -104,52 +105,71 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
     }
 
     @SuppressWarnings("unchecked")
-    public Set<E> match(Object obj) {
+    public Set<E> match(Object obj, KnowledgeBase knowledgeBase) {
         MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
-        MatchState<E> state = doMatch(obj, typeArgs);
+        List<MatchState<E>> list = doMatch(obj, typeArgs);
+        Set<E> elements = list.isEmpty() ? Set.of() : list.first().elements();
         Map<Variable, Type> tas = typeArgs.get();
-        return state != null
-                ? (tas.isEmpty() ? state.elements() : state.elements().replaceAll(e -> (E) e.setTypeArgs(tas)))
-                : Set.of();
+        return tas.isEmpty() ? elements
+                : elements.replaceAll(e -> knowledgeBase.actualize(e, tas, p -> (E) p.a().setTypeArgs(p.b())));
     }
 
-    private MatchState<E> doMatch(Object obj, MutableMap<Variable, Type> typeArgs) {
-        MatchState<E> state;
+    private List<MatchState<E>> doMatch(Object obj, MutableMap<Variable, Type> typeArgs) {
+        List<MatchState<E>> states = List.of();
         switch (obj) {
         case Type type    -> {
-            state = matchType(type, typeArgs);
+            MatchState<E> state = matchType(type, typeArgs);
+            if (state != null) {
+                states = states.add(state);
+            }
             break;
         }
         case Variable var -> {
-            state = matchType(var.type().toVariable(), typeArgs);
+            MatchState<E> state = matchType(var.type().toVariable(), typeArgs);
+            if (state != null) {
+                states = states.add(state);
+            }
             break;
         }
         case Node node    -> {
             Functor functor = node.functor();
-            state = functor != null ? transitions().get(functor.original()) : null;
+            MatchState<E> state = functor != null ? transitions().get(functor.original()) : null;
             if (state != null) {
+                List<MatchState<E>> inners = List.of(state);
                 for (Object arg : node.args()) {
-                    state = state.doMatch(arg, typeArgs);
-                    if (state == null) {
-                        break;
+                    for (MatchState<E> inner : inners) {
+                        inners = inner.doMatch(arg, typeArgs);
+                        if (!inners.isEmpty()) {
+                            break;
+                        }
                     }
                 }
+                if (!inners.isEmpty()) {
+                    states = states.addAll(inners);
+                }
             }
-            if (state == null) {
-                state = matchType(node.type(), typeArgs);
+            state = matchType(node.type(), typeArgs);
+            if (state != null) {
+                states = states.add(state);
             }
             break;
         }
         case String text  -> {
-            state = transitions().get(TokenType.of(text));
+            MatchState<E> state = transitions().get(TokenType.of(text));
+            if (state != null) {
+                states = states.add(state);
+            }
             break;
         }
         default           -> {
-            state = transitions().get(obj.getClass());
+            MatchState<E> state = transitions().get(obj.getClass());
+            if (state != null) {
+                states = states.add(state);
+            }
             break;
         }
         }
-        return state;
+        return states;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

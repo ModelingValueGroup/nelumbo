@@ -251,6 +251,7 @@ public class Node extends StructImpl implements AstElement {
     public final String toString() {
         RenderOptions options = CURRENT_OPTIONS.get();
         if (options != null) {
+            options.previous = null;
             return toString(options);
         }
         return toFullString();

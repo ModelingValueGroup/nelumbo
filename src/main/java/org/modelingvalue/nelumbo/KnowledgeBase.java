@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import java.io.Serial;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -35,6 +36,7 @@ import org.modelingvalue.collections.struct.impl.Struct2Impl;
 import org.modelingvalue.collections.util.Context;
 import org.modelingvalue.collections.util.ContextPool;
 import org.modelingvalue.collections.util.ContextThread;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Import;
 import org.modelingvalue.nelumbo.lang.Namespace;
@@ -293,6 +295,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final AtomicReference<MatchState<Rule>>      ruleSignatures      = new AtomicReference<>();
     private final AtomicReference<MatchState<Transform>> transformSignatures = new AtomicReference<>();
     //
+    private final MutableMap<Pair<Node, Map<Variable, Type>>, Node> actualized = MutableMap.concurrent(Map.of());
+    //
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization = new AtomicReference<>();
     private final InferContext                                          context;
     private final ParseContext                                          parseContext;
@@ -349,6 +353,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         ruleSignatures.set(init != null ? init.ruleSignatures.get() : MatchState.EMPTY);
         transformSignatures.set(init != null ? init.transformSignatures.get() : MatchState.EMPTY);
         imported.set(init != null ? init.imported.get() : Set.of());
+        actualized.set(m -> init != null ? init.actualized.get() : Map.of());
         resetMemoization();
     }
 
@@ -365,6 +370,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             ruleSignatures.updateAndGet(s -> kb.ruleSignatures.get().merge(s));
             transformSignatures.updateAndGet(s -> kb.transformSignatures.get().merge(s));
             imported.updateAndGet(s -> s.addAll(kb.imported.get()));
+            actualized.set(s -> s.addAll(kb.actualized.get()));
             resetMemoization();
         } catch (Exception exc) {
             addException(new ParseException(exc.getMessage(), element));
@@ -484,7 +490,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Set<Rule> getRules(Predicate predicate) {
-        return ruleSignatures.get().match(predicate);
+        return ruleSignatures.get().match(predicate, this);
     }
 
     public Transform addTransform(Transform transform) {
@@ -497,7 +503,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Set<Transform> getTransforms(Node root) {
-        return transformSignatures.get().match(root);
+        return transformSignatures.get().match(root, this);
     }
 
     public void addFact(Predicate fact) {
@@ -650,6 +656,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
         addException(new ParseException("Cannot resolve import: " + name, imp));
         return null;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public <E extends Node> E actualize(E in, Map<Variable, Type> typeArgs,
+            Function<Pair<E, Map<Variable, Type>>, E> function) {
+        return (E) actualized.computeIfAbsent(Pair.of(in, typeArgs), (Function) function);
     }
 
 }

@@ -32,10 +32,12 @@ Boolean p1, p2
 p1->p2  <=>  !p1|p2
 p1<->p2 <=>  (p1->p2)&(p2->p1)
 
-Literal  l1, l2
-Function f1, f2
-Object   n1, n2
+Type E
+E    n1, n2
+{E,Literal}  l1, l2
+{E,Function} f1, f2
 
 l1=l2  <=>  eq(l1, l2)
 l1=f1  <=>  f1=l1
 n1!=n2 <=>  !(n1=n2)
+f1=f2  <=>  E[l1](f1=l1 & f2=l1)
