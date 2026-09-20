@@ -107,8 +107,16 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
     @SuppressWarnings("unchecked")
     public Set<E> match(Object obj, KnowledgeBase knowledgeBase) {
         MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
-        List<MatchState<E>> list = doMatch(obj, typeArgs);
-        Set<E> elements = list.isEmpty() ? Set.of() : list.first().elements();
+        Set<E> elements = null;
+        for (MatchState<E> state : doMatch(obj, typeArgs)) {
+            if (!state.elements().isEmpty()) {
+                elements = state.elements();
+                break;
+            }
+        }
+        if (elements == null) {
+            return Set.of();
+        }
         Map<Variable, Type> tas = typeArgs.get();
         return tas.isEmpty() ? elements
                 : elements.replaceAll(e -> knowledgeBase.actualize(e, tas, p -> (E) p.a().setTypeArgs(p.b())));
@@ -137,16 +145,13 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
             if (state != null) {
                 List<MatchState<E>> inners = List.of(state);
                 for (Object arg : node.args()) {
+                    List<MatchState<E>> next = List.of();
                     for (MatchState<E> inner : inners) {
-                        inners = inner.doMatch(arg, typeArgs);
-                        if (!inners.isEmpty()) {
-                            break;
-                        }
+                        next = next.addAll(inner.doMatch(arg, typeArgs));
                     }
+                    inners = next;
                 }
-                if (!inners.isEmpty()) {
-                    states = states.addAll(inners);
-                }
+                states = states.addAll(inners);
             }
             state = matchType(node.type(), typeArgs);
             if (state != null) {
