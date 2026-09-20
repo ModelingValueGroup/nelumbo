@@ -33,7 +33,7 @@ Run a single test method:
 ./gradlew test --tests "org.modelingvalue.nelumbo.test.NelumboTest.initTest"
 ```
 
-The root `test` task depends on `:lsp:server:test`, so `./gradlew test` runs both.
+`./gradlew test` runs the `test` task of every (sub)project (Gradle name matching); `./gradlew :test` runs the core tests only. There is deliberately NO `dependsOn` between test tasks (2026-09-19): CI runs gradle with `--continue` so ALL test tasks run even when one fails (global picture; on 2026-09-18 a failing `:cli:test` hid the core tests incl. `KnownBugsTest`), and with `--continue` a task whose dependency failed is skipped. For the same reason `allTestsReport` (finalizer of root `test`) has no task dependency on the test tasks: it takes `binaryResultsDirectory.locationOnly` + `mustRunAfter`, and reports only the test tasks in the current task graph (no stale results of modules that did not run). Since `--continue` would let the tagger run on a red build (mvgplugin's tagger does not check for failures), the root build script makes `mvgtagger` (the real task name is lower-case) `dependsOn` every `Test` task - a failed test skips it. The CI upload/e2e steps have no `if: always()`, so a red build publishes nothing.
 
 Failing tests are made prominent in the log by an `allprojects` test listener in the root `build.gradle.kts`: a red (ANSI 91) `####` banner with the exception per failed test, a red per-task tail summary, and on GitHub Actions additionally a `::error` workflow annotation (shows up on the run's summary page). Covers every `Test` task in every (sub)project; do not use raw ESC bytes in the build script - the codes are backslash-u001B string escapes.
 
@@ -119,7 +119,7 @@ Building a DSL in Nelumbo means declaring `MyType :: Root` and giving it functor
 
 **Precedence gotcha — Root-extending functors need explicit `#N`.** When a functor is declared on a `Root` subtype, append an explicit precedence to each alternative (e.g. `MyStmt ::= keyword <(> <Arg> <,> , <)+> #0`). Without it, instances containing repetition / optional / alternation patterns fail with `Unexpected token '\n', expected ` and the error cascades. `Object`-based functors (`Color ::= mix(<Color>,<Color>)`) don't need this. See `logic.nl`, `examples/deHet.nl`, and the pattern-coverage section of `tests/langOnly.nl` for the convention.
 
-**Fast verify loop — use the CLI, not JUnit, while iterating.** `./gradlew cliJar` produces `cli/build/libs/nelumbo-cli-<version>.jar`; then `java -jar cli/build/libs/nelumbo-cli-*.jar path/to/file.nl` parses and evaluates the file (exit 0 on success; parse/eval errors print `file:line:col`). Add `-q` to silence query output. JUnit tests over `.nl` resources are Gradle-cached, so pass `--rerun-tasks` when only the resource changed; filter with `./gradlew :test --tests "..." --rerun-tasks` (the `:` targets root project, since the root `test` task chains `:lsp:server:test`).
+**Fast verify loop — use the CLI, not JUnit, while iterating.** `./gradlew cliJar` produces `cli/build/libs/nelumbo-cli-<version>.jar`; then `java -jar cli/build/libs/nelumbo-cli-*.jar path/to/file.nl` parses and evaluates the file (exit 0 on success; parse/eval errors print `file:line:col`). Add `-q` to silence query output. JUnit tests over `.nl` resources are Gradle-cached, so pass `--rerun-tasks` when only the resource changed; filter with `./gradlew :test --tests "..." --rerun-tasks` (the `:` targets the root project only; a plain `test` would run every module's tests).
 
 ## LSP Server - Injectable Base KB
 
