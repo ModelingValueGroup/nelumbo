@@ -45,7 +45,7 @@ dependencies {
     implementation("org.glassfish.tyrus:tyrus-container-grizzly-server:2.2.2")
     implementation(libs.jackson.databind)
     implementation(libs.jackson.dataformat.xml)
-    implementation("org.tomlj:tomlj:1.2.0")
+    implementation("org.tomlj:tomlj:1.3.0")
 
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
