@@ -47,7 +47,7 @@
   ],
   "license": "GNU Lesser General Public License",
   "devDependencies": {
-    "@types/node": "^25.9.6",
+    "@types/node": "^25.9.8",
     "@types/vscode": "^1.103.0",
     "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
