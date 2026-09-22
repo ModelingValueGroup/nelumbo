@@ -393,6 +393,7 @@ public class Functor extends Node implements FunctorOrType {
         ast = ast.prepend(pattern);
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
+        args = args.replaceAll(a -> a.nonRepetition());
         if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
                 && !Type.PATTERN.isAssignableFrom(type)
                 && (Type.LAMBDA.isAssignableFrom(type) || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t)))) {
@@ -464,31 +465,44 @@ public class Functor extends Node implements FunctorOrType {
 
     private NList node2literalRule(Type type, NList roots, KnowledgeBase knowledgeBase, ParseContext ctx,
             boolean function, Functor nodFunctor, Functor litFunctor) throws ParseException {
+        nodFunctor = nodFunctor.resetVariables(ctx);
+        litFunctor = litFunctor.resetVariables(ctx);
         List<Type> nodArgs = nodFunctor.argTypes();
         List<Type> litArgs = litFunctor.argTypes();
-        String uid = "$" + uniqueId();
-        Object[] nodVars = new Object[nodArgs.size()];
-        Object[] litVars = new Object[litArgs.size()];
+        Variable[] nodVars = new Variable[nodArgs.size()];
+        Variable[] litVars = new Variable[litArgs.size()];
         assert nodVars.length == litVars.length;
+        Object[] nodConsArgs = new Object[nodVars.length];
+        Object[] litConsArgs = new Object[litVars.length];
         for (int v = 0; v < nodVars.length; v++) {
-            nodVars[v] = new Variable(List.of(), false, nodArgs.get(v), "n" + (v + 1) + uid);
-            litVars[v] = new Variable(List.of(), false, litArgs.get(v), "l" + (v + 1) + uid);
+            Type nodType = nodArgs.get(v);
+            Type litType = litArgs.get(v);
+            boolean rep = Type.REPETITION.equals(nodType.original());
+            if (rep) {
+                nodType = nodType.arguments().first();
+                litType = litType.arguments().first();
+            }
+            nodVars[v] = new Variable(List.of(), false, nodType, "n" + (v + 1));
+            litVars[v] = new Variable(List.of(), false, litType, "l" + (v + 1));
+            nodConsArgs[v] = nodVars[v];
+            litConsArgs[v] = rep ? List.of(litVars[v]) : litVars[v];
         }
-        Node nodNode = nodFunctor.construct(List.of(), nodVars, knowledgeBase, ctx);
-        Node litNode = litFunctor.construct(List.of(), litVars, knowledgeBase, ctx);
-        Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r" + uid) : null;
+        Node nodNode = nodFunctor.construct(List.of(), nodConsArgs, knowledgeBase, ctx);
+        Node litNode = litFunctor.construct(List.of(), litConsArgs, knowledgeBase, ctx);
+        Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
         Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
         Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
         for (int c = nodVars.length - 1; c >= 0; c--) {
-            Predicate eq = new NIs(List.of(), (Variable) nodVars[c], (Variable) litVars[c]);
+            Predicate eq = new NIs(List.of(), nodVars[c], litVars[c]);
             litCond = And.of(eq, litCond);
         }
         List<Variable> localVars = List.of();
         for (int v = 0; v < nodVars.length; v++) {
-            localVars = localVars.add((Variable) litVars[v]);
+            localVars = localVars.add(litVars[v]);
         }
         ExistentialQuantifier exists = new ExistentialQuantifier(List.of(), localVars, litCond);
         Rule rule = new Rule(List.of(), nodCons, exists);
+        rule = rule.makeVariablesUnique(ctx);
         return new NList(List.of(), roots, rule);
     }
 
@@ -496,8 +510,8 @@ public class Functor extends Node implements FunctorOrType {
         List<Type> thisTypes = argTypes(), otherTypes = other.argTypes();
         boolean thisAllGeneric = true, otherAllGeneric = true;
         for (int i = 0; i < thisTypes.size() && i < otherTypes.size(); i++) {
-            Type thisType = thisTypes.get(i);
-            Type otherType = otherTypes.get(i);
+            Type thisType = thisTypes.get(i).nonRepetition();
+            Type otherType = otherTypes.get(i).nonRepetition();
             thisAllGeneric &= !thisType.isMany() && thisType.variable() != null;
             otherAllGeneric &= !otherType.isMany() && otherType.variable() != null;
             boolean thisIsLambda = Type.LAMBDA.isAssignableFrom(thisType);
@@ -543,5 +557,10 @@ public class Functor extends Node implements FunctorOrType {
     @Override
     public Functor makeVariablesUnique(ParseContext ctx, String id) throws ParseException {
         return (Functor) super.makeVariablesUnique(ctx, id);
+    }
+
+    @Override
+    public Functor resetVariables(ParseContext ctx) throws ParseException {
+        return (Functor) super.resetVariables(ctx);
     }
 }

@@ -122,7 +122,10 @@ public class Predicate extends Node {
                     if (lit != null) {
                         List<Object> args = n.args();
                         if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
-                            return lit.construct(n.astElements(), args.toArray(), kb, ctx);
+                            List<Type> argTypes = lit.argTypes();
+                            boolean rep = argTypes.size() == 1 && Type.REPETITION.equals(argTypes.first().original());
+                            Object[] array = rep ? new Object[] { args } : args.toArray();
+                            return lit.construct(n.astElements(), array, kb, ctx);
                         }
                     }
                 }

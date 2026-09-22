@@ -73,9 +73,11 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type  PATTERN         = new Type("Pattern", PATTERN_GROUP, OBJECT);
     public static final Type  STRUCT          = new Type("Struct", OBJECT);
     private static final Type ELEMENT_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
-    public static final Type  COLLECTION      = new Type("Collection", STRUCT, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
+    public static final Type  COLLECTION      = new Type("Collection", OBJECT, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  SET             = new Type("Set", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  LIST            = new Type("List", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
+    public static final Type  REPETITION      = new Type(" Repetition", OBJECT, List.of(ELEMENT_ARG_VAR),
+            DEFAULT_GROUP);
     public static final Type  LAMBDA          = new Type("Lambda", OBJECT);
 
     public static List<Type> predefined() {
@@ -506,11 +508,18 @@ public final class Type extends Node implements FunctorOrType {
 
     public Type toList() {
         return LIST.setArguments(List.of(this)).setGroup(group());
-
     }
 
     public Type toSet() {
         return SET.setArguments(List.of(this)).setGroup(group());
+    }
+
+    public Type toRepetition() {
+        return REPETITION.setArguments(List.of(this)).setGroup(group());
+    }
+
+    public Type nonRepetition() {
+        return REPETITION.equals(original()) ? arguments().first() : this;
     }
 
     public TokenType tokenType() {
@@ -592,7 +601,15 @@ public final class Type extends Node implements FunctorOrType {
         } else if (other.isAssignableFrom(this)) {
             return other;
         } else if (isMany() && other.isMany()) {
-            Set<Type> common = many().retainAll(other.many());
+            Set<Type> common = Set.of();
+            for (Type t : many()) {
+                for (Type o : other.many()) {
+                    Type c = t.common(o);
+                    if (c != null) {
+                        common = common.add(c);
+                    }
+                }
+            }
             if (common.size() == 1) {
                 return common.get(0);
             } else if (common.size() > 1) {

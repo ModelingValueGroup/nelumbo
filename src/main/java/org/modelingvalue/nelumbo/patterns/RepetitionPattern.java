@@ -119,8 +119,11 @@ public class RepetitionPattern extends Pattern {
 
     @Override
     public List<Type> argTypes(List<Type> types) {
-        return repeated().argTypes(types);
-        // return types.add(repeated().argTypes(List.of()).first().list());
+        List<Type> rep = repeated().argTypes(List.of());
+        if (rep.size() == 1 && Type.OBJECT.isAssignableFrom(rep.first())) {
+            return types.add(rep.first().toRepetition());
+        }
+        return types.addAll(rep);
     }
 
     @Override

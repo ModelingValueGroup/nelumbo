@@ -507,7 +507,7 @@ public class Node extends StructImpl implements AstElement {
             boolean setFunctorOrType) {
         if (declVal instanceof Variable declVar) {
             Object varVal = vars.get(declVar);
-            if (varVal != null && doSetBinding(varVal, i)) {
+            if (varVal != null && (setFunctorOrType || doSetBinding(varVal, i))) {
                 return varVal;
             }
             if (thisVal instanceof Variable thisVar) {
@@ -561,6 +561,15 @@ public class Node extends StructImpl implements AstElement {
             if (o instanceof Variable v
                     && (ctx.outer().type(v.name()) != null || ctx.outer().variable(v.name()) != null)) {
                 return v.makeUnique(id);
+            }
+            return o;
+        });
+    }
+
+    public Node resetVariables(ParseContext ctx) throws ParseException {
+        return replace(o -> {
+            if (o instanceof Variable v && v.name().contains("$")) {
+                return v.setName(v.baseName());
             }
             return o;
         });

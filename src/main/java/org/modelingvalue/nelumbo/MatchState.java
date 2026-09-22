@@ -117,7 +117,7 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
         if (elements == null) {
             return Set.of();
         }
-        Map<Variable, Type> tas = typeArgs.get();
+        Map<Variable, Type> tas = typeArgs.get().removeAll(e -> e.getValue().equals(Type.$NONE));
         return tas.isEmpty() ? elements
                 : elements.replaceAll(e -> knowledgeBase.actualize(e, tas, p -> (E) p.a().setTypeArgs(p.b())));
     }
