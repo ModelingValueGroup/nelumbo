@@ -512,8 +512,8 @@ public class Node extends StructImpl implements AstElement {
             }
             if (thisVal instanceof Variable thisVar) {
                 Type from = thisVar.type();
-                Variable var = from.variable();
-                if (var != null && vars.get(var) instanceof Type to) {
+                Type to = from.setBinding(from, vars, setFunctorOrType);
+                if (to != from) {
                     return thisVar.setType(from.rewrite(to));
                 }
             }
