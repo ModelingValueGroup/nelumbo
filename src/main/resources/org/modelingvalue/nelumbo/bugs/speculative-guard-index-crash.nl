@@ -14,7 +14,8 @@
 //
 // UPDATE 2026-09-13: the file currently crashes with ClassCastException
 // instead - the recursive-collection-accumulation regression (bba88fc8, see
-// recursive-list-concat-classcast.nl) hits its rowsBefore/put machinery first
+// tests/recursive-list-concat-classcast.nl, fixed 2026-09-24) hit its
+// rowsBefore/put machinery first
 // and masks the guard defect. Shrink attempts (1D and 2D concat-free scan
 // shapes with accessor/E/equality guards, plus raw pos in a guard) could NOT
 // retrigger the original speculative-guard IndexOutOfBounds on current

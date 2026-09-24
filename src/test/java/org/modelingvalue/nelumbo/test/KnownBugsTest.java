@@ -34,7 +34,8 @@ import org.junit.jupiter.api.Test;
 // collections-index-out-of-range (bare native pos crash) != speculative-guard
 // (guard evaluation semantics); datetime multiply-overflow != year-360;
 // rational sign != zero-factor; the three reduction repros share a suspected
-// root cause (bba88fc8) but are three distinct constructs.
+// root cause (bba88fc8) but are three distinct constructs (the third,
+// recursive-list-concat-classcast, was fixed and promoted 2026-09-24).
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -94,12 +95,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void setFunctorRhsEqualsNotReduced() {
         bugResource("set-functor-rhs-equals-not-reduced.nl");
-    }
-
-    @KnownBug("recursive collection accumulation crashes ClassCast Variable->List")
-    @Test
-    public void recursiveListConcatClassCast() {
-        bugResource("recursive-list-concat-classcast.nl");
     }
 
     // ==== state / race cluster ====

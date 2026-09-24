@@ -14,8 +14,9 @@
 //
 // Correct: x = 11 (element at index 1). Actual: argument type mismatch.
 // Found 2026-09-11 while writing examples/sudoku-4x4-csp.nl (Norvig CSP solver).
-// Same reduction/typing family as recursive-list-concat-classcast.nl (see its
-// bba88fc8 attribution) - suspected same root cause, distinct construct.
+// Same reduction/typing family as tests/recursive-list-concat-classcast.nl
+// (fixed and promoted to RegressionTest 2026-09-24; see its bba88fc8
+// attribution) - suspected same root cause, distinct construct.
 import nelumbo.collections
 
 Integer       x, i

@@ -15,7 +15,8 @@
 //
 // UPDATE 2026-09-13: the file currently crashes with ClassCastException
 // instead - the recursive-collection-accumulation regression (bba88fc8, see
-// recursive-list-concat-classcast.nl) hits its rowsBefore/put machinery first
+// tests/recursive-list-concat-classcast.nl, fixed 2026-09-24) hit its
+// rowsBefore/put machinery first
 // and masks the where-NPE. Shrink attempts (concat-free counter recursion
 // with a where-filter over a user Boolean rule, in the E-body and in the
 // guard, depth up to 12) could NOT retrigger the NPE on current develop -

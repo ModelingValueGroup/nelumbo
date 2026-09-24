@@ -43,4 +43,9 @@ public class RegressionTest extends NelumboTestBase {
         testResource("string-concat-prefix.nl");
     }
 
+    @RepeatedTest(10)
+    public void recursiveListConcatClassCast() {
+        testResource("recursive-list-concat-classcast.nl");
+    }
+
 }
