@@ -33,9 +33,8 @@ import org.junit.jupiter.api.Test;
 // Dedup review 2026-09-13 (criterion: truly identical construct): no merges.
 // collections-index-out-of-range (bare native pos crash) != speculative-guard
 // (guard evaluation semantics); datetime multiply-overflow != year-360;
-// rational sign != zero-factor; the three reduction repros share a suspected
-// root cause (bba88fc8) but are three distinct constructs (the third,
-// recursive-list-concat-classcast, was fixed and promoted 2026-09-24).
+// rational sign != zero-factor; the three reduction repros (bba88fc8 family)
+// were all fixed and promoted to RegressionTest on 2026-09-24.
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -81,20 +80,6 @@ public class KnownBugsTest extends NelumboTestBase {
         setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
-    }
-
-    // ==== reduction / typing cluster (introduced by bba88fc8 + 2bad3f27) ====
-
-    @KnownBug("collection-returning functor call nested as argument crashes (argument type mismatch)")
-    @Test
-    public void nestedListFunctorArgTypeMismatch() {
-        bugResource("nested-list-functor-arg-type-mismatch.nl");
-    }
-
-    @KnownBug("collection-valued expression on RHS of = is not reduced")
-    @Test
-    public void setFunctorRhsEqualsNotReduced() {
-        bugResource("set-functor-rhs-equals-not-reduced.nl");
     }
 
     // ==== state / race cluster ====

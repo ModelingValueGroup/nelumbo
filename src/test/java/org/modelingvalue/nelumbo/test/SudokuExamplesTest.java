@@ -19,17 +19,16 @@ package org.modelingvalue.nelumbo.test;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-// All four sudoku examples are @Disabled. Since bba88fc8 (2026-09-09, "rename
-// generic types...") they fail EVERYWHERE deterministically - CLI: ClassCast
-// "Variable cannot be cast to List" at NList.collection; test JVM: expectation
-// mismatches with unreduced terms (map/scanF left unevaluated). Minimal repro:
-// recursive-list-concat-classcast.nl (recursive collection accumulation) -
-// FIXED 2026-09-24 and promoted to RegressionTest; whether that fix also
-// repairs the sudoku examples has not been checked yet. The old note here ("crashes in the test JVM yet never in a
-// fresh CLI JVM, 20/20") was an artifact of a STALE cliJar built before
-// bba88fc8 - investigated and explained 2026-09-13, no environment factor.
-// When the engine bug is fixed, un-@Disable the 4x4 methods first (they solve
-// in <1s); the 9x9 methods stay gated for the extra reasons noted below.
+// The brute-force 4x4 runs (~2.5s); the singles-first 4x4 is gated as flaky
+// (see its method). From bba88fc8 (2026-09-09, "rename
+// generic types...") until the 2026-09-24 fix they failed EVERYWHERE
+// deterministically - CLI: ClassCast "Variable cannot be cast to List" at
+// NList.collection; test JVM: expectation mismatches with unreduced terms
+// (map/scanF left unevaluated); minimal repro recursive-list-concat-classcast.nl
+// (now in RegressionTest). The old note here ("crashes in the test JVM yet
+// never in a fresh CLI JVM, 20/20") was an artifact of a STALE cliJar built
+// before bba88fc8 - investigated and explained 2026-09-13, no environment
+// factor. The 9x9 methods stay gated for the reasons noted below.
 public class SudokuExamplesTest extends NelumboTestBase {
 
     static {
@@ -41,13 +40,15 @@ public class SudokuExamplesTest extends NelumboTestBase {
         setProp("VERBOSE_TESTS", "false");
     }
 
-    @Disabled("fails everywhere since bba88fc8 - see recursive-list-concat-classcast.nl (RegressionTest since 2026-09-24; retry)")
     @Test
     public void sudoku4x4() {
         exampleResource("sudoku-4x4.nl");
     }
 
-    @Disabled("fails everywhere since bba88fc8 - see recursive-list-concat-classcast.nl (RegressionTest since 2026-09-24; retry)")
+    // Solves (~2.5s) but 1 in ~10 runs returns undecided ([][..]) - the flaky
+    // run-to-run nondeterminism of nondeterministic-inference.nl (KnownBugsTest),
+    // so not fit for CI yet. Observed 2026-09-24, in a JVM shared with other test classes.
+    @Disabled("flaky: run-to-run nondeterminism (see nondeterministic-inference.nl); passes alone, ~1 in 10 undecided in a shared JVM")
     @Test
     public void sudoku4x4Smart() {
         exampleResource("sudoku-4x4-smart.nl");

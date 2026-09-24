@@ -48,4 +48,14 @@ public class RegressionTest extends NelumboTestBase {
         testResource("recursive-list-concat-classcast.nl");
     }
 
+    @RepeatedTest(10)
+    public void nestedListFunctorArgTypeMismatch() {
+        testResource("nested-list-functor-arg-type-mismatch.nl");
+    }
+
+    @RepeatedTest(10)
+    public void setFunctorRhsEqualsNotReduced() {
+        testResource("set-functor-rhs-equals-not-reduced.nl");
+    }
+
 }
