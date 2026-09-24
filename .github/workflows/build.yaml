@@ -28,6 +28,13 @@ jobs:
         env    :
             ALLREP_TOKEN: "${{secrets.ALLREP_TOKEN}}"
             TOKEN       : "${{secrets.ALLREP_TOKEN}}"
+            # credentials for mvgplugin's maven central publishing (org secrets, same as the other MVG
+            # repos): without them the 'publish' task below still publishes to the github package repo,
+            # but mvgplugin logs 'maven central publishing SKIPPED'
+            CENTRAL_USERNAME      : "${{secrets.CENTRAL_USERNAME}}"
+            CENTRAL_PASSWORD      : "${{secrets.CENTRAL_PASSWORD}}"
+            MVG_SIGNING_KEY       : "${{secrets.MVG_SIGNING_KEY}}"
+            MVG_SIGNING_PASSPHRASE: "${{secrets.MVG_SIGNING_PASSPHRASE}}"
             CI          : "true"
             # be kind to the npm registry: with the warm setup-node cache npm ci still does
             # audit/metadata round trips per install - skip those in CI (applies to every npm
@@ -71,6 +78,7 @@ jobs:
                         editorJar \
                         :lsp:plugins:eclipse:jar \
                         :lsp:plugins:intellij:buildPlugin \
+                        publish \
                         mvgTagger \
                         build-slides
 
