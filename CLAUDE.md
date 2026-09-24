@@ -183,6 +183,16 @@ unreduced-term mismatch in the test JVM), so both stay:
   2026-09-24). Note when rewriting a repro: a bare top-level equality `f(i)=[1,2]` is NOT a
   statement (the docs know only `fact`, `<=>`, `?`) and is rejected since 2026-09-24 with
   "unexpected type Boolean, expected Root or List<Root>" - write `f(i)=l <=> l=[1,2]`.
+  Added 2026-09-24 on resuming the CSP solver (`examples/sudoku-4x4-csp.nl`, plan Task 4
+  BLOCKED again): `rule-pos-on-mapped-collection-list-undecided.nl` (a user rule wrapping
+  `pos` is undecided over a `map`-produced list whose elements are collections; native
+  `pos`, Integer elements and literal/concat lists work) and
+  `set-literal-arithmetic-unevaluated.nl` (`s={j+1}` in a rule body undecided; in a map
+  lambda the element is a ListImpl carried as Set -> ClassCast in `NSet.collection` on
+  toString; `[j+1]` does not even parse). Lesson from isolating them: a rule head whose
+  result variable has the WRONG type (`sel(...)=si` with `si` a `Set<Integer>` for a
+  `Set<Digit>` functor) is accepted silently and makes UNRELATED queries in the file
+  undecided - when everything goes undecided at once, check the variable types first.
 - **CLI**: `./run-all-tests-with-CLI` (repo root, bash) runs every file against the CLI jar
   with `-ea` (needs `./gradlew cliJar` first); PASS green / FAIL red on a terminal.
 The 2026-09-07 findings WITHOUT an `.nl` repro (editor/LSP/interactive ones) are listed in

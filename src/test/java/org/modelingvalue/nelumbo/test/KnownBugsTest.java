@@ -82,6 +82,20 @@ public class KnownBugsTest extends NelumboTestBase {
         setProp("VERBOSE_TESTS", "false");
     }
 
+    // ==== map / lambda cluster ====
+
+    @KnownBug("user rule wrapping pos undecided on a map-produced list of collections (sudoku-csp Task 4 blocker)")
+    @Test
+    public void rulePosOnMappedCollectionListUndecided() {
+        bugResource("rule-pos-on-mapped-collection-list-undecided.nl");
+    }
+
+    @KnownBug("arithmetic inside a set literal not evaluated (undecided; ClassCast ListImpl->Set in a map lambda)")
+    @Test
+    public void setLiteralArithmeticUnevaluated() {
+        bugResource("set-literal-arithmetic-unevaluated.nl");
+    }
+
     // ==== state / race cluster ====
     // suspected shared root cause: predicate identity / interning state shared
     // across structurally-similar predicates and across queries (cf. the

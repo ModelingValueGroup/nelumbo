@@ -161,6 +161,13 @@ fullGrid(p)=g <=> g=[[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **BLOCKED (2026-09-24, second time)** on `bugs/rule-pos-on-mapped-collection-list-undecided.nl`:
+> the rules below are in the file and `put` itself decides, but every `cell(...)` read
+> on a `putRow`-built row is undecided - a user rule wrapping `pos` over a `map`-produced
+> list of collections. Side finding while isolating: `bugs/set-literal-arithmetic-unevaluated.nl`.
+> The first block (2026-09-11, the bba88fc8 reduction trio) was lifted on 2026-09-24.
+> The two probes are kept in the file, commented out.
+
 - [ ] **Step 1: Write the failing probe** (append): put `{D2}` at (0,0), read it back, and confirm a neighbour is untouched:
 
 ```
