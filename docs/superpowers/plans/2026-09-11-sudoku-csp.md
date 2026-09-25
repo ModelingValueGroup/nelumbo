@@ -167,6 +167,11 @@ fullGrid(p)=g <=> g=[[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
 > list of collections. Side finding while isolating: `bugs/set-literal-arithmetic-unevaluated.nl`.
 > The first block (2026-09-11, the bba88fc8 reduction trio) was lifted on 2026-09-24.
 > The two probes are kept in the file, commented out.
+>
+> **UNBLOCKED (2026-09-25)**: the engine fix landed, the repro moved to
+> `tests/rule-pos-on-mapped-collection-list-undecided.nl` (RegressionTest), and both
+> probes are live in the file again and pass on the CLI. `set-literal-arithmetic-unevaluated`
+> is still open. Continue with Task 5.
 
 - [ ] **Step 1: Write the failing probe** (append): put `{D2}` at (0,0), read it back, and confirm a neighbour is untouched:
 

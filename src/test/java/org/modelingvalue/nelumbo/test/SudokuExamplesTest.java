@@ -50,10 +50,14 @@ public class SudokuExamplesTest extends NelumboTestBase {
         exampleResource("sudoku-4x4.nl");
     }
 
-    // Solves (~2.5s) but 1 in ~10 runs returns undecided ([][..]) - the flaky
-    // run-to-run nondeterminism of nondeterministic-inference.nl (KnownBugsTest),
-    // so not fit for CI yet. Observed 2026-09-24, in a JVM shared with other test classes.
-    @Disabled("flaky: run-to-run nondeterminism (see nondeterministic-inference.nl); passes alone, ~1 in 10 undecided in a shared JVM")
+    // 2026-09-24: solved (~2.5s) but 1 in ~10 runs returned undecided ([][..]) -
+    // the run-to-run nondeterminism of nondeterministic-inference.nl (in a JVM
+    // shared with other test classes). 2026-09-25: that repro is fixed and
+    // promoted to RegressionTest, but this example now fails DETERMINISTICALLY
+    // on the CLI (0/10 green): the "real" puzzle query (line 87) is undecided,
+    // "[][..] does not biimplicate [(l1$1c=[[1,2,4,3],...]),..][..]" - a
+    // different, not yet isolated defect (the brute-force sudoku-4x4.nl passes).
+    @Disabled("the 'real' puzzle query is undecided since 2026-09-25 (0/10 on the CLI), not yet isolated into a repro")
     @Test
     public void sudoku4x4Smart() {
         exampleResource("sudoku-4x4-smart.nl");

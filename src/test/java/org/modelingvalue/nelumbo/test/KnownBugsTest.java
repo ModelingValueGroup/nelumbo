@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (see the two
-// already promoted there on 2026-09-11).
+// remove the @KnownBug and promote the method to RegressionTest (nine
+// promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -34,7 +34,10 @@ import org.junit.jupiter.api.Test;
 // collections-index-out-of-range (bare native pos crash) != speculative-guard
 // (guard evaluation semantics); datetime multiply-overflow != year-360;
 // rational sign != zero-factor; the three reduction repros (bba88fc8 family)
-// were all fixed and promoted to RegressionTest on 2026-09-24.
+// were all fixed and promoted to RegressionTest on 2026-09-24, and the whole
+// state/race cluster (empty-set-branch-in-map-lambda, neighbor-query-changes-
+// result, nondeterministic-inference) plus rule-pos-on-mapped-collection-list-
+// undecided on 2026-09-25.
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -84,12 +87,6 @@ public class KnownBugsTest extends NelumboTestBase {
 
     // ==== map / lambda cluster ====
 
-    @KnownBug("user rule wrapping pos undecided on a map-produced list of collections (sudoku-csp Task 4 blocker)")
-    @Test
-    public void rulePosOnMappedCollectionListUndecided() {
-        bugResource("rule-pos-on-mapped-collection-list-undecided.nl");
-    }
-
     @KnownBug("arithmetic inside a set literal not evaluated (undecided; ClassCast ListImpl->Set in a map lambda)")
     @Test
     public void setLiteralArithmeticUnevaluated() {
@@ -97,9 +94,9 @@ public class KnownBugsTest extends NelumboTestBase {
     }
 
     // ==== state / race cluster ====
-    // suspected shared root cause: predicate identity / interning state shared
-    // across structurally-similar predicates and across queries (cf. the
-    // immutable-collections interning race); larger-scale manifestations
+    // the rest of this cluster (empty-set-branch-in-map-lambda,
+    // neighbor-query-changes-result, nondeterministic-inference) was fixed and
+    // promoted on 2026-09-25; larger-scale manifestations seen mid-session
     // (near-identical rules corrupting each other, forwarding rules flipping
     // results, an unused rule being load-bearing) reproduced only against
     // intermediate sudoku-9x9-smart.nl versions - facets of the same defects
@@ -108,24 +105,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void whereFilterNpeInRecursion() {
         bugResource("where-filter-npe-in-recursion.nl");
-    }
-
-    @KnownBug("guarded Set-valued rule with empty-set branch undecided in map lambda")
-    @Test
-    public void emptySetBranchInMapLambda() {
-        bugResource("empty-set-branch-in-map-lambda.nl");
-    }
-
-    @KnownBug("query result depends on neighboring queries")
-    @Test
-    public void neighborQueryChangesResult() {
-        bugResource("neighbor-query-changes-result.nl");
-    }
-
-    @KnownBug(value = "inference results nondeterministic run-to-run (ContextPool race)")
-    @Test
-    public void nondeterministicInference() {
-        bugResource("nondeterministic-inference.nl");
     }
 
     // ==== speculative evaluation ====

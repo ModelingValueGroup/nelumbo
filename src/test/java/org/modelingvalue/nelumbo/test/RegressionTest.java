@@ -58,4 +58,25 @@ public class RegressionTest extends NelumboTestBase {
         testResource("set-functor-rhs-equals-not-reduced.nl");
     }
 
+    @RepeatedTest(10)
+    public void emptySetBranchInMapLambda() {
+        testResource("empty-set-branch-in-map-lambda.nl");
+    }
+
+    @RepeatedTest(10)
+    public void neighborQueryChangesResult() {
+        testResource("neighbor-query-changes-result.nl");
+    }
+
+    // 10 repetitions double as the run-to-run determinism check
+    @RepeatedTest(10)
+    public void nondeterministicInference() {
+        testResource("nondeterministic-inference.nl");
+    }
+
+    @RepeatedTest(10)
+    public void rulePosOnMappedCollectionListUndecided() {
+        testResource("rule-pos-on-mapped-collection-list-undecided.nl");
+    }
+
 }

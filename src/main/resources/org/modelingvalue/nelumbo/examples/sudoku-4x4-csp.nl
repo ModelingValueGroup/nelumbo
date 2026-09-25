@@ -1,16 +1,17 @@
 // Norvig candidate-set CSP sudoku solver (4x4), options as a Digit enum.
 // CLI-only. Run with: java -DPARALLEL_COLLECTIONS=false -jar nelumbo-cli-*.jar <this file>
 //
-// STATUS (2026-09-24): BLOCKED again at the functional grid update (plan Task 4).
+// STATUS (2026-09-25): UNBLOCKED at the functional grid update (plan Task 4);
+// the solver itself (Tasks 5+) is still to be written.
 // The first block (three reduction bugs found 2026-09-11: nested collection call
 // as argument, collection call on the RHS of `=`, recursive collection
 // accumulation) was fixed on 2026-09-24 - they live on as tests/*.nl in
-// RegressionTest and the workarounds were removed here. Resuming immediately hit
-// the next one: `put` decides, but a cell(g,r,c) read on a putRow-built row is
+// RegressionTest and the workarounds were removed here. The second block
+// (2026-09-24: `put` decided, but a cell(g,r,c) read on a putRow-built row was
 // undecided - a user rule wrapping `pos` over a `map`-produced list of
-// collections. Repro: bugs/rule-pos-on-mapped-collection-list-undecided.nl
-// (side finding: bugs/set-literal-arithmetic-unevaluated.nl). The put rules
-// are kept below; the two put probes are commented out at the end.
+// collections) was fixed on 2026-09-25: tests/rule-pos-on-mapped-collection-
+// list-undecided.nl in RegressionTest; the two put probes at the end are live
+// again. Side finding still open: bugs/set-literal-arithmetic-unevaluated.nl.
 // See docs/superpowers/plans/2026-09-11-sudoku-csp.md.
 
 import nelumbo.collections
@@ -87,6 +88,6 @@ E[g](fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])=g & cell(g,1,2)=sc) ? [
 peer(0,0,1,1) ? [()][]
 peer(0,0,2,2) ? [][()]
 peer(0,0,0,0) ? [][()]
-// BLOCKED (bugs/rule-pos-on-mapped-collection-list-undecided.nl): both undecided
-// cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0)=sc ? [(sc={D2})][..]
-// cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,1)=sc ? [(sc={D1,D2,D3,D4})][..]
+// were undecided until the 2026-09-25 fix of rule-pos-on-mapped-collection-list-undecided
+cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0)=sc ? [(sc={D2})][..]
+cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,1)=sc ? [(sc={D1,D2,D3,D4})][..]

@@ -27,13 +27,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 // - test fails  -> ABORTED (grey): bug still present, build stays green
 // - test passes -> FAILED: the bug appears fixed - remove @KnownBug and
 //   promote the method to RegressionTest
-// - flaky=true  -> a pass also aborts (race-dependent repros never turn
-//   the build red on a lucky run)
+// (the former flaky=true attribute - a pass also aborts - went with its only
+// user, nondeterministic-inference, promoted 2026-09-25)
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @ExtendWith(KnownBugExtension.class)
 public @interface KnownBug {
     String value();
-
-    boolean flaky() default false;
 }
