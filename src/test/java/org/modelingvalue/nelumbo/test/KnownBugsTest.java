@@ -122,7 +122,7 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("neighbor-query-changes-result.nl");
     }
 
-    @KnownBug(value = "inference results nondeterministic run-to-run (ContextPool race)", flaky = true)
+    @KnownBug(value = "inference results nondeterministic run-to-run (ContextPool race)")
     @Test
     public void nondeterministicInference() {
         bugResource("nondeterministic-inference.nl");
