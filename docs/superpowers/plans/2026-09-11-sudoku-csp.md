@@ -171,7 +171,13 @@ fullGrid(p)=g <=> g=[[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
 > **UNBLOCKED (2026-09-25)**: the engine fix landed, the repro moved to
 > `tests/rule-pos-on-mapped-collection-list-undecided.nl` (RegressionTest), and both
 > probes are live in the file again and pass on the CLI. `set-literal-arithmetic-unevaluated`
-> is still open. Continue with Task 5.
+> is still open. Task 5 was already done on 2026-09-24; continue with Task 6.
+>
+> **Finding (2026-09-25, not blocking):** the file takes ~80s on the CLI, all of it LOAD
+> time of the `put`/`rowsBefore`/`rowsFrom` declarations (recursive rules over the depth-3
+> generic `List<List<Set<Digit>>>`; time in `lang/Type.initSupers`); queries are instant.
+> Repro: `bugs/nested-generic-rule-load-time.nl` (CLI-only, no `@KnownBug` method - see its
+> header). Expect every recursive grid rule added in Tasks 6+ to add to the load time.
 
 - [ ] **Step 1: Write the failing probe** (append): put `{D2}` at (0,0), read it back, and confirm a neighbour is untouched:
 

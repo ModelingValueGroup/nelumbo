@@ -25,6 +25,7 @@ set -u
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPRO_DIR="$ROOT_DIR/src/main/resources/org/modelingvalue/nelumbo/bugs"
+SLOW_SECONDS=60
 
 setup_colors() {
     # only colorize when stdout is a terminal, so piping stays clean
@@ -50,11 +51,19 @@ run_repro() {
     # PARALLEL_COLLECTIONS=false is the documented workaround for the parallel
     # map corruption; inference itself still runs on a parallel pool (see
     # nondeterministic-inference.nl), so a lucky run can flip a result
+    local start
+    start=$(date +%s)
     out=$(java -ea -DPARALLEL_COLLECTIONS=false -jar "$jar" "$file" 2>&1)
     local code=$?
+    local elapsed=$(( $(date +%s) - start ))
     local name
     name=$(basename "$file")
-    if [ $code -eq 0 ] && ! echo "$out" | grep -q "Expected result"; then
+    if [ $elapsed -ge $SLOW_SECONDS ]; then
+        # load-time repros (nested-generic-rule-load-time.nl) give the correct
+        # result, the bug is the time it takes
+        echo "${RED}FAIL  $name (took ${elapsed}s, limit ${SLOW_SECONDS}s)${RESET}"
+        return 1
+    elif [ $code -eq 0 ] && ! echo "$out" | grep -q "Expected result"; then
         echo "${GREEN}PASS  $name (bug appears fixed)${RESET}"
         return 0
     else
