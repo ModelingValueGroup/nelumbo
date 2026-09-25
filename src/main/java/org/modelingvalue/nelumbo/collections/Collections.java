@@ -184,14 +184,14 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList filter = new NList(a.elementType(), a.collection().map(l::apply).asList());
+        NList map = new NList(l.expression().type(), a.collection().map(l::apply).asList());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
         if (b != null) {
-            return filter.equals(b) ? factCC() : falsehoodCC();
+            return map.equals(b) ? factCC() : falsehoodCC();
         }
-        return set(2, filter).factCI();
+        return set(2, map).factCI();
     }
 
     @NelumboMethod
@@ -199,14 +199,14 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList filter = new NList(a.elementType(),
+        NList sort = new NList(a.elementType(),
                 a.collection().sorted((x, y) -> l.test(x, y) ? -1 : l.test(y, x) ? 1 : 0).asList());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
         if (b != null) {
-            return filter.equals(b) ? factCC() : falsehoodCC();
+            return sort.equals(b) ? factCC() : falsehoodCC();
         }
-        return set(2, filter).factCI();
+        return set(2, sort).factCI();
     }
 }

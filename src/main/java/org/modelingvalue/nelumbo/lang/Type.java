@@ -209,7 +209,7 @@ public final class Type extends Node implements FunctorOrType {
 
     @SuppressWarnings("unchecked")
     public Set<Type> many() {
-        return (Set<Type>) get(0);
+        return get(0) instanceof Set set ? set : Set.of(this);
     }
 
     public boolean hasArguments() {
@@ -454,7 +454,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type toFunction() {
-        return equals(OBJECT) ? FUNCTION : isFunction() ? this : new Type(Set.of(nonLiteral(), FUNCTION), group());
+        return equals(OBJECT) ? FUNCTION : isFunction() ? this : new Type(nonLiteral().many().add(FUNCTION), group());
     }
 
     public Type nonFunction() {
@@ -473,7 +473,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type toLiteral() {
-        return equals(OBJECT) ? LITERAL : isLiteral() ? this : new Type(Set.of(nonFunction(), LITERAL), group());
+        return equals(OBJECT) ? LITERAL : isLiteral() ? this : new Type(nonFunction().many().add(LITERAL), group());
     }
 
     public Type nonLiteral() {
@@ -492,7 +492,7 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public Type toVariable() {
-        return equals(OBJECT) ? VARIABLE : isVariable() ? this : new Type(Set.of(this, VARIABLE), group());
+        return equals(OBJECT) ? VARIABLE : isVariable() ? this : new Type(many().add(VARIABLE), group());
     }
 
     public Type nonVariable() {
