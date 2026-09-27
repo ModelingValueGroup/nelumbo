@@ -555,8 +555,13 @@ public final class Type extends Node implements FunctorOrType {
             for (Type sup : subType.supers()) {
                 Type inner = getAssigned(sup);
                 if (inner != null) {
-                    inner = original().equals(sup.original()) ? sup : inner;
-                    assigned = assigned != null && inner.isAssignableFrom(assigned) ? assigned : inner;
+                    if (original().equals(subType.original())) {
+                        assigned = subType;
+                        break;
+                    } else {
+                        inner = original().equals(sup.original()) ? sup : inner;
+                        assigned = assigned != null && inner.isAssignableFrom(assigned) ? assigned : inner;
+                    }
                 }
             }
             knowledgeBase.register(superSub, assigned == null ? Type.$NONE : assigned);
