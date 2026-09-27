@@ -26,16 +26,13 @@ public interface IState<S extends IState> extends Mergeable<S> {
 
     @SuppressWarnings("unchecked")
     default <K> Map<K, S> inherit(Map<K, S> transitions) {
-        for (Object key : transitions.toKeys()) {
-            if (key instanceof Type subType) {
-                for (Entry<Type, Type> entry : subType.allSupersList()) {
-                    Type superType = entry.getKey();
-                    if (!superType.equals(subType)) {
-                        S superState = transitions.get((K) superType);
-                        if (superState != null) {
-                            S subState = transitions.get((K) subType);
-                            S mergedState = (S) subState.merge(superState);
-                            transitions = transitions.put((K) subType, mergedState);
+        for (Entry<K, S> sub : transitions) {
+            if (sub.getKey() instanceof Type subType) {
+                for (Entry<K, S> sup : transitions) {
+                    if (sup.getKey() instanceof Type superType) {
+                        if (!superType.equals(subType) && superType.isAssignableFrom(subType)) {
+                            S state = (S) transitions.get(sub.getKey()).merge(transitions.get(sup.getKey()));
+                            transitions = transitions.put((K) subType, state);
                         }
                     }
                 }

@@ -295,7 +295,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final AtomicReference<MatchState<Rule>>      ruleSignatures      = new AtomicReference<>();
     private final AtomicReference<MatchState<Transform>> transformSignatures = new AtomicReference<>();
     //
-    private final MutableMap<Pair<Node, Map<Variable, Type>>, Node> actualized = MutableMap.concurrent(Map.of());
+    private final MutableMap<Pair<Node, Map<Variable, Type>>, Node> actualized    = MutableMap.concurrent(Map.of());
+    private final MutableMap<Pair<Type, Type>, Type>                superSubTypes = MutableMap.concurrent(Map.of());
     //
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization = new AtomicReference<>();
     private final InferContext                                          context;
@@ -354,6 +355,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         transformSignatures.set(init != null ? init.transformSignatures.get() : MatchState.EMPTY);
         imported.set(init != null ? init.imported.get() : Set.of());
         actualized.set(m -> init != null ? init.actualized.get() : Map.of());
+        superSubTypes.set(m -> init != null ? init.superSubTypes.get() : Map.of());
         resetMemoization();
     }
 
@@ -371,6 +373,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             transformSignatures.updateAndGet(s -> kb.transformSignatures.get().merge(s));
             imported.updateAndGet(s -> s.addAll(kb.imported.get()));
             actualized.set(s -> s.addAll(kb.actualized.get()));
+            superSubTypes.set(s -> s.addAll(kb.superSubTypes.get()));
             resetMemoization();
         } catch (Exception exc) {
             addException(new ParseException(exc.getMessage(), element));
@@ -631,6 +634,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     public Type getType(Type type) {
         return types.get().get(type);
+    }
+
+    public Type isSuperSubType(Pair<Type, Type> superSubType) {
+        return superSubTypes.get().get(superSubType);
+    }
+
+    public void register(Pair<Type, Type> superSubType, Type is) {
+        superSubTypes.put(superSubType, is);
     }
 
     public KnowledgeBase knowledgeBase(String name, Import imp) throws ParseException {

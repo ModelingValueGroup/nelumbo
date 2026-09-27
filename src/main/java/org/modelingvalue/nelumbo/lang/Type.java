@@ -23,6 +23,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.Pair;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -321,30 +322,14 @@ public final class Type extends Node implements FunctorOrType {
     }
 
     public class TypeInfo {
-        private Set<Type>               supers;
-        private List<Entry<Type, Type>> allSupersList;
-        private Map<Type, Type>         allSupersMap;
-        private TypeMatcherState        typeMatcher;
+        private Set<Type>        supers;
+        private TypeMatcherState typeMatcher;
 
         public Set<Type> supers() {
             if (supers == null) {
                 supers = initSupers();
             }
             return supers;
-        }
-
-        public List<Entry<Type, Type>> allSupersList() {
-            if (allSupersList == null) {
-                allSupersList = initAllSupersList();
-            }
-            return allSupersList;
-        }
-
-        public Map<Type, Type> allSupersMap() {
-            if (allSupersMap == null) {
-                allSupersMap = allSupersList().asMap(e -> e);
-            }
-            return allSupersMap;
         }
 
         public TypeMatcherState typeMatcher() {
@@ -361,9 +346,9 @@ public final class Type extends Node implements FunctorOrType {
             Set<Type> many = many();
             for (Type sub : many) {
                 for (Type sup : sub.supers()) {
-                    if (many.remove(sub).anyMatch(m -> sup.isAssignableFrom(m))) {
-                        Set<Type> set = many.remove(sub);
-                        result = result.add(set.size() == 1 ? set.get(0) : new Type(set, group()));
+                    Set<Type> rem = many.remove(sub);
+                    if (rem.anyMatch(sup::isAssignableFrom)) {
+                        result = result.add(rem.size() == 1 ? rem.get(0) : new Type(rem, group()));
                     } else {
                         result = result.add(new Type(many.replace(sub, sup), group()));
                     }
@@ -371,47 +356,19 @@ public final class Type extends Node implements FunctorOrType {
             }
             return result;
         }
+        Set<Type> supers = supersDeclaration();
         if (hasArguments()) {
-            Set<Type> result = supersDeclaration();
             List<Type> args = arguments();
             int i = 0;
             for (Type arg : args) {
                 for (Type sup : arg.supers()) {
-                    result = result.add(setArguments(args.replace(i, sup)));
+                    supers = supers.add(setArguments(args.replace(i, sup)));
                 }
                 i++;
             }
-            return result;
+            return supers;
         }
-        Set<Type> supers = supersDeclaration();
         return supers.size() > 1 ? Set.of(new Type(supers, group())) : supers;
-    }
-
-    private List<Entry<Type, Type>> initAllSupersList() {
-        List<Entry<Type, Type>> all = List.of(Entry.of(this, this));
-        for (int i = 0; i < all.size();) {
-            List<Entry<Type, Type>> add = List.of();
-            for (; i < all.size(); i++) {
-                Entry<Type, Type> entry = all.get(i);
-                for (Type sup : entry.getKey().supers()) {
-                    Type sub = sup;
-                    if (sup.hasArguments()) {
-                        for (Entry<Type, Type> e : all.reverse()) {
-                            if (e.getKey().original().equals(sup.original())) {
-                                sub = e.getValue();
-                                break;
-                            }
-                        }
-                    }
-                    add = add.addUnique(Entry.of(sup, sub));
-                }
-            }
-            if (!add.isEmpty()) {
-                all = all.removeAll(add).addAll(add);
-                i = all.size() - add.size();
-            }
-        }
-        return all;
     }
 
     private TypeMatcherState initTypeMatcher() {
@@ -435,14 +392,6 @@ public final class Type extends Node implements FunctorOrType {
 
     public Set<Type> supers() {
         return typeInfo().supers();
-    }
-
-    public List<Entry<Type, Type>> allSupersList() {
-        return typeInfo().allSupersList();
-    }
-
-    public Map<Type, Type> allSupersMap() {
-        return typeInfo().allSupersMap();
     }
 
     public TypeMatcherState typeMatcher() {
@@ -591,8 +540,28 @@ public final class Type extends Node implements FunctorOrType {
         return (Type) super.set(i, a);
     }
 
-    public boolean isAssignableFrom(Type type) {
-        return type.allSupersMap().containsKey(this);
+    public boolean isAssignableFrom(Type subType) {
+        return getAssigned(subType) != null;
+    }
+
+    public Type getAssigned(Type subType) {
+        if (equals(subType)) {
+            return subType;
+        }
+        KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+        Pair<Type, Type> superSub = Pair.of(this, subType);
+        Type assigned = knowledgeBase.isSuperSubType(superSub);
+        if (assigned == null) {
+            for (Type sup : subType.supers()) {
+                Type inner = getAssigned(sup);
+                if (inner != null) {
+                    inner = original().equals(sup.original()) ? sup : inner;
+                    assigned = assigned != null && inner.isAssignableFrom(assigned) ? assigned : inner;
+                }
+            }
+            knowledgeBase.register(superSub, assigned == null ? Type.$NONE : assigned);
+        }
+        return assigned == Type.$NONE ? null : assigned;
     }
 
     public Type common(Type other) {

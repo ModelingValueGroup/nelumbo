@@ -31,8 +31,6 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
     private final Map<Type, TypeMatcherState> transitions;
     private final Type                        type;
 
-    private Map<Type, TypeMatcherState> typeArgs = null;
-
     public TypeMatcherState(Map<Type, TypeMatcherState> transitions, Type type) {
         this.transitions = transitions;
         this.type = type;
@@ -42,86 +40,62 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
         return type;
     }
 
-    private Map<Type, TypeMatcherState> typeArgs() {
-        if (typeArgs == null) {
-            Map<Type, TypeMatcherState> map = Map.of();
-            for (Entry<Type, TypeMatcherState> e : transitions) {
-                if (e.getKey() instanceof Type t) {
-                    if (t.variable() != null) {
-                        map = map.put(t, e.getValue());
-                    }
-                }
-            }
-            typeArgs = map;
-        }
-        return typeArgs;
-    }
-
     public final Set<Type> match(Type type, MutableMap<Variable, Type> typeArgs) {
         return doMatch(type, typeArgs).replaceAll(TypeMatcherState::type);
     }
 
     private Set<TypeMatcherState> doMatch(Type type, MutableMap<Variable, Type> typeArgs) {
         Set<TypeMatcherState> result = Set.of();
-        for (Entry<Type, Type> entry : type.allSupersList()) {
-            Type sup = entry.getKey();
-            if (sup.equals(Type.OBJECT)) {
-                result = generics(type, typeArgs, result);
-                if (!result.isEmpty()) {
-                    break;
-                }
-            }
-            TypeMatcherState state = transitions.get(sup);
-            if (state != null) {
-                if (sup.hasArguments()) {
-                    Set<TypeMatcherState> pre, post = Set.of(state);
-                    for (Type arg : entry.getValue().arguments()) {
-                        pre = post;
-                        post = Set.of();
-                        for (TypeMatcherState s : pre) {
-                            post = post.addAll(s.doMatch(arg, typeArgs));
-                        }
-                    }
-                    result = result.addAll(post);
-                } else {
-                    result = result.add(state);
-                }
-                if (!sup.equals(Type.OBJECT)) {
-                    result = generics(type, typeArgs, result);
-                }
-                break;
-            }
-        }
-        return result;
-    }
-
-    private Set<TypeMatcherState> generics(Type type, MutableMap<Variable, Type> typeArgs,
-            Set<TypeMatcherState> result) {
-        outer: for (Entry<Type, TypeMatcherState> e : typeArgs()) {
+        Entry<Type, TypeMatcherState> found = null;
+        Type assigned = null;
+        outer: for (Entry<Type, TypeMatcherState> e : transitions) {
             Variable var = e.getKey().variable();
-            if (e.getKey().isMany()) {
-                for (Type m : e.getKey().many()) {
-                    if (m.variable() == null && !m.isAssignableFrom(type)) {
-                        if (var.name().contains("$")) {
-                            typeArgs.put(var, Type.$NONE);
+            if (var != null) {
+                if (e.getKey().isMany()) {
+                    for (Type m : e.getKey().many()) {
+                        if (m.variable() == null && !m.isAssignableFrom(type)) {
+                            if (var.name().contains("$")) {
+                                typeArgs.put(var, Type.$NONE);
+                            }
+                            continue outer;
                         }
-                        continue outer;
                     }
                 }
-            }
-            Type nvt = type.nonVariable();
-            Type found = typeArgs.get(var);
-            if (found == null) {
-                typeArgs.put(var, nvt);
-                result = result.add(e.getValue());
-            } else {
-                found = common(nvt, found, typeArgs);
-                if (found != null) {
-                    typeArgs.put(var, found);
+                Type nvt = type.nonVariable();
+                Type match = typeArgs.get(var);
+                if (match == null) {
+                    typeArgs.put(var, nvt);
                     result = result.add(e.getValue());
                 } else {
-                    typeArgs.put(var, Type.$NONE);
+                    match = common(nvt, match, typeArgs);
+                    if (match != null) {
+                        typeArgs.put(var, match);
+                        result = result.add(e.getValue());
+                    } else {
+                        typeArgs.put(var, Type.$NONE);
+                    }
                 }
+            } else {
+                Type a = e.getKey().getAssigned(type);
+                if (a != null && (found == null || found.getKey().isAssignableFrom(e.getKey()))) {
+                    found = e;
+                    assigned = a;
+                }
+            }
+        }
+        if (found != null) {
+            if (found.getKey().hasArguments()) {
+                Set<TypeMatcherState> pre, post = Set.of(found.getValue());
+                for (Type arg : assigned.arguments()) {
+                    pre = post;
+                    post = Set.of();
+                    for (TypeMatcherState s : pre) {
+                        post = post.addAll(s.doMatch(arg, typeArgs));
+                    }
+                }
+                result = result.addAll(post);
+            } else {
+                result = result.add(found.getValue());
             }
         }
         return result;
