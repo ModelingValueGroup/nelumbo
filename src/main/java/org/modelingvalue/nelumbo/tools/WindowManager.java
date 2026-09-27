@@ -26,8 +26,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.prefs.Preferences;
 
 /**
- * Manages multiple editor windows, handling window lifecycle, persistence,
- * and restoration on application startup. Preserves window order.
+ * Manages multiple editor windows, handling window lifecycle, persistence, and
+ * restoration on application startup. Preserves window order.
  */
 public class WindowManager {
 
@@ -50,12 +50,13 @@ public class WindowManager {
 
     private final NelumboEditor             application;
     private final Preferences               preferences;
-    private final List<String>              windowOrder   = new CopyOnWriteArrayList<>();  // Preserves order
+    private final List<String>              windowOrder   = new CopyOnWriteArrayList<>(); // Preserves order
     private final Map<String, EditorWindow> windows       = new ConcurrentHashMap<>();
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final Map<String, Thread>       windowThreads = new ConcurrentHashMap<>();
     private final List<WindowListListener>  listeners     = new CopyOnWriteArrayList<>();
-    private final Map<String, Integer>      windowNumbers = new ConcurrentHashMap<>();  // Track window numbers for regular windows
+    private final Map<String, Integer>      windowNumbers = new ConcurrentHashMap<>();    // Track window numbers for
+                                                                                          // regular windows
 
     public WindowManager(NelumboEditor application) {
         this.application = application;
@@ -71,8 +72,8 @@ public class WindowManager {
     }
 
     /**
-     * Atomically assigns the next available window number to a window.
-     * Returns the assigned number.
+     * Atomically assigns the next available window number to a window. Returns the
+     * assigned number.
      */
     public synchronized int assignNextWindowNumber(String windowId) {
         int number = getNextWindowNumber();
@@ -123,9 +124,9 @@ public class WindowManager {
      * Creates a new regular editor window with a unique ID.
      */
     public synchronized void createNewWindow() {
-        String       windowId     = UUID.randomUUID().toString();
-        int          windowNumber = getNextWindowNumber();
-        EditorWindow window       = new EditorWindow(application, windowId, windowNumber);
+        String windowId = UUID.randomUUID().toString();
+        int windowNumber = getNextWindowNumber();
+        EditorWindow window = new EditorWindow(application, windowId, windowNumber);
         windowNumbers.put(windowId, windowNumber);
         windowOrder.add(windowId);
         windows.put(windowId, window);
@@ -138,8 +139,8 @@ public class WindowManager {
      * Creates a new window for an example file.
      */
     public synchronized void createExampleWindow(String resourcePath, String displayName) {
-        String       windowId = UUID.randomUUID().toString();
-        EditorWindow window   = new EditorWindow(application, windowId, true, resourcePath, displayName);
+        String windowId = UUID.randomUUID().toString();
+        EditorWindow window = new EditorWindow(application, windowId, true, resourcePath, displayName);
         windowOrder.add(windowId);
         windows.put(windowId, window);
         saveWindowList();
@@ -151,9 +152,9 @@ public class WindowManager {
      * Creates a new editable window backed by a filesystem file.
      */
     public synchronized void createFileWindow(File file) {
-        String       windowId     = UUID.randomUUID().toString();
-        int          windowNumber = getNextWindowNumber();
-        EditorWindow window       = new EditorWindow(application, windowId, windowNumber, file.getAbsolutePath());
+        String windowId = UUID.randomUUID().toString();
+        int windowNumber = getNextWindowNumber();
+        EditorWindow window = new EditorWindow(application, windowId, windowNumber, file.getAbsolutePath());
         windowNumbers.put(windowId, windowNumber);
         windowOrder.add(windowId);
         windows.put(windowId, window);
@@ -167,7 +168,7 @@ public class WindowManager {
      */
     private void startWindowInNewThread(EditorWindow window) {
         Thread thread = new Thread(() -> {
-            NelumboEditor.runOnEDT(window::init);
+            NelumboEditor.runOnEDT(null, window::init);
             window.startExecutionLoop();
         }, "EditorWindow-" + window.getWindowId());
         windowThreads.put(window.getWindowId(), thread);
@@ -240,11 +241,11 @@ public class WindowManager {
             }
 
             // Check if this was an example window
-            boolean isExample          = preferences.getBoolean("window." + windowId + ".isExample", false);
-            String  examplePath        = preferences.get("window." + windowId + ".examplePath", null);
-            String  exampleDisplayName = preferences.get("window." + windowId + ".exampleDisplayName", null);
-            int     savedWindowNumber  = preferences.getInt("window." + windowId + ".windowNumber", -1);
-            String  filePath           = preferences.get("window." + windowId + ".filePath", null);
+            boolean isExample = preferences.getBoolean("window." + windowId + ".isExample", false);
+            String examplePath = preferences.get("window." + windowId + ".examplePath", null);
+            String exampleDisplayName = preferences.get("window." + windowId + ".exampleDisplayName", null);
+            int savedWindowNumber = preferences.getInt("window." + windowId + ".windowNumber", -1);
+            String filePath = preferences.get("window." + windowId + ".filePath", null);
 
             EditorWindow window;
             if (isExample && examplePath != null) {
@@ -285,7 +286,7 @@ public class WindowManager {
         }
 
         // Migrate to new format
-        String newId  = UUID.randomUUID().toString();
+        String newId = UUID.randomUUID().toString();
         String prefix = "window." + newId + ".";
 
         try {
@@ -294,16 +295,16 @@ public class WindowManager {
             preferences.put(prefix + "title", "Nelumbo Editor");
 
             // Migrate caret and selection
-            int caretPosition  = preferences.getInt(OLD_PREF_CARET_POSITION, 0);
+            int caretPosition = preferences.getInt(OLD_PREF_CARET_POSITION, 0);
             int selectionStart = preferences.getInt(OLD_PREF_SELECTION_START, 0);
-            int selectionEnd   = preferences.getInt(OLD_PREF_SELECTION_END, 0);
+            int selectionEnd = preferences.getInt(OLD_PREF_SELECTION_END, 0);
             preferences.putInt(prefix + "caretPosition", caretPosition);
             preferences.putInt(prefix + "selectionStart", selectionStart);
             preferences.putInt(prefix + "selectionEnd", selectionEnd);
 
             // Migrate dialog visibility
             boolean treeViewerVisible = preferences.getBoolean(OLD_PREF_TREE_VIEWER_VISIBLE, false);
-            boolean kbViewerVisible   = preferences.getBoolean(OLD_PREF_KB_VIEWER_VISIBLE, false);
+            boolean kbViewerVisible = preferences.getBoolean(OLD_PREF_KB_VIEWER_VISIBLE, false);
             preferences.putBoolean(prefix + "treeViewerVisible", treeViewerVisible);
             preferences.putBoolean(prefix + "kbViewerVisible", kbViewerVisible);
 
@@ -337,9 +338,9 @@ public class WindowManager {
      */
     private void migrateEditorBounds(String windowId) {
         // Old bounds used "editor" as the key prefix
-        String[] boundsSuffixes = {".x", ".y", ".width", ".height"};
-        String   oldPrefix      = "editor";
-        String   newPrefix      = "window." + windowId;
+        String[] boundsSuffixes = { ".x", ".y", ".width", ".height" };
+        String oldPrefix = "editor";
+        String newPrefix = "window." + windowId;
 
         for (String suffix : boundsSuffixes) {
             int value = preferences.getInt(oldPrefix + suffix, Integer.MIN_VALUE);

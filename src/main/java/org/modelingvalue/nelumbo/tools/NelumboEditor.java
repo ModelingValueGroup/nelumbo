@@ -16,16 +16,17 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import com.formdev.flatlaf.FlatLightLaf;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboConstants;
-import org.modelingvalue.nelumbo.syntax.TokenType;
-
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
@@ -37,6 +38,38 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.prefs.Preferences;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
+import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Element;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.ViewFactory;
+
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstants;
+import org.modelingvalue.nelumbo.syntax.TokenType;
+
+import com.formdev.flatlaf.FlatLightLaf;
 
 /**
  * Main application controller for the Nelumbo Editor. Manages global settings
@@ -203,9 +236,9 @@ public class NelumboEditor {
     }
 
     /**
-     * On macOS the native screen menu bar handles Cmd-Q itself, bypassing the
-     * File &gt; Quit menu action. Route that native quit through {@link #quit()} so
-     * the per-window file flush still runs before the app exits.
+     * On macOS the native screen menu bar handles Cmd-Q itself, bypassing the File
+     * &gt; Quit menu action. Route that native quit through {@link #quit()} so the
+     * per-window file flush still runs before the app exits.
      */
     private void installQuitHandler() {
         if (!Desktop.isDesktopSupported()) {
@@ -245,7 +278,7 @@ public class NelumboEditor {
                 String category = entry[0];
                 String resourcePath = resourcePath(category, entry[1]);
 
-                return new String[]{importName, resourcePath};
+                return new String[] { importName, resourcePath };
             }
         }
         return null;
@@ -596,9 +629,9 @@ public class NelumboEditor {
 
     private static String resourcePath(String category, String fileName) {
         return switch (category) {
-            case "Library" -> NelumboConstants.NELUMBO_LIBRARY + fileName;
-            case "Tests" -> NelumboConstants.NELUMBO_TESTS + fileName;
-            default -> NelumboConstants.NELUMBO_EXAMPLES + fileName;
+        case "Library" -> NelumboConstants.NELUMBO_LIBRARY + fileName;
+        case "Tests"   -> NelumboConstants.NELUMBO_TESTS + fileName;
+        default        -> NelumboConstants.NELUMBO_EXAMPLES + fileName;
         };
     }
 
@@ -606,8 +639,8 @@ public class NelumboEditor {
      * Runs the given runnable on the EDT and waits for completion. Wraps checked
      * exceptions into RuntimeException.
      */
-    static void runOnEDT(Runnable runnable) {
-        callOnEDT(() -> {
+    static void runOnEDT(KnowledgeBase kb, Runnable runnable) {
+        callOnEDT(kb, () -> {
             runnable.run();
             return null;
         });
@@ -631,10 +664,12 @@ public class NelumboEditor {
      * exceptions into RuntimeException.
      */
     @SuppressWarnings("unchecked")
-    static <T> T callOnEDT(java.util.function.Supplier<T> supplier) {
+    static <T> T callOnEDT(KnowledgeBase kb, java.util.function.Supplier<T> supplier) {
         try {
             Object[] result = new Object[1];
-            javax.swing.SwingUtilities.invokeAndWait(() -> result[0] = supplier.get());
+            javax.swing.SwingUtilities.invokeAndWait(() -> {
+                result[0] = kb != null ? KnowledgeBase.CURRENT.get(kb, supplier) : supplier.get();
+            });
             return (T) result[0];
         } catch (InterruptedException | java.lang.reflect.InvocationTargetException e) {
             throw new EDTException(e);
@@ -695,11 +730,11 @@ public class NelumboEditor {
     }
 
     /**
-     * Row-header component that paints line numbers aligned with a text
-     * component. Each number's vertical position is taken from the text's own
-     * layout ({@code modelToView2D}) so it stays aligned through font changes,
-     * margins, and line spacing. Intended for use as a {@link JScrollPane} row
-     * header view of a {@link NonWrappingJTextPane} (one logical line per row).
+     * Row-header component that paints line numbers aligned with a text component.
+     * Each number's vertical position is taken from the text's own layout
+     * ({@code modelToView2D}) so it stays aligned through font changes, margins,
+     * and line spacing. Intended for use as a {@link JScrollPane} row header view
+     * of a {@link NonWrappingJTextPane} (one logical line per row).
      */
     public static class LineNumberView extends JComponent implements DocumentListener, PropertyChangeListener {
         @Serial
