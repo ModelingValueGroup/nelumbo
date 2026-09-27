@@ -16,26 +16,32 @@
 
 package org.modelingvalue.nelumbo.tools;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Evaluatable;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.lang.Import;
-import org.modelingvalue.nelumbo.logic.Query;
-import org.modelingvalue.nelumbo.syntax.*;
-import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
+import static org.modelingvalue.nelumbo.tools.NelumboEditor.callOnEDT;
+import static org.modelingvalue.nelumbo.tools.NelumboEditor.runOnEDT;
 
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
-import javax.swing.text.*;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.undo.CompoundEdit;
-import javax.swing.undo.UndoManager;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.Font;
+import java.awt.Taskbar;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Serial;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -46,8 +52,47 @@ import java.util.UUID;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
-import static org.modelingvalue.nelumbo.tools.NelumboEditor.callOnEDT;
-import static org.modelingvalue.nelumbo.tools.NelumboEditor.runOnEDT;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
+import javax.swing.Timer;
+import javax.swing.TransferHandler;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.TextAction;
+import javax.swing.undo.CompoundEdit;
+import javax.swing.undo.UndoManager;
+
+import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.Evaluatable;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.lang.Import;
+import org.modelingvalue.nelumbo.logic.Query;
+import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.Parser;
+import org.modelingvalue.nelumbo.syntax.ParserResult;
+import org.modelingvalue.nelumbo.syntax.Token;
+import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
 
 /**
  * Represents an individual editor window in the multi-window architecture. Each
@@ -1019,7 +1064,8 @@ public class EditorWindow extends WindowAdapter
      * the close-window and application-quit paths so neither loses unsaved edits.
      */
     void saveAndFlush() {
-        // Content is only persisted for non-example windows; file windows write to disk.
+        // Content is only persisted for non-example windows; file windows write to
+        // disk.
         saveTextContent(getDocumentText(textPane));
         flushFileSaveNow();
         saveDialogVisibility();
@@ -1041,8 +1087,8 @@ public class EditorWindow extends WindowAdapter
 
     /**
      * Whether closing this window would discard content the user might want to
-     * keep: an editable, non-file window. File-backed windows auto-save to disk
-     * and read-only windows have nothing to lose, so neither needs confirmation.
+     * keep: an editable, non-file window. File-backed windows auto-save to disk and
+     * read-only windows have nothing to lose, so neither needs confirmation.
      */
     boolean needsCloseConfirmation() {
         return filePath == null && textPane.isEditable();
@@ -1226,7 +1272,7 @@ public class EditorWindow extends WindowAdapter
     private void execute() {
         // Phase 1: Read document text on EDT
         try {
-            String text = callOnEDT(() -> getDocumentText(textPane));
+            String text = callOnEDT(null, () -> getDocumentText(textPane));
 
             // Phase 2: Compute on worker thread
             knowledgeBase.init();
@@ -1235,9 +1281,10 @@ public class EditorWindow extends WindowAdapter
             ParserResult result = new Parser(tokenizerResult).parseNonThrowing();
 
             // Phase 3: Apply all pre-compute UI updates on EDT
-            runOnEDT(() -> applyUIUpdates(tokenizerResult, result, text,
-                    emptyLines(result.getTokenizerResult().lastAll().lastLine()), new ArrayList<>(0),
-                    new ArrayList<>(0)));
+            runOnEDT(knowledgeBase,
+                    () -> applyUIUpdates(tokenizerResult, result, text,
+                            emptyLines(result.getTokenizerResult().lastAll().lastLine()), new ArrayList<>(0),
+                            new ArrayList<>(0)));
 
             // Phase 4: Compute results
             ArrayList<Highlight> textHighlights = new ArrayList<>();
@@ -1246,8 +1293,8 @@ public class EditorWindow extends WindowAdapter
 
             if (!refreshRequested) {
                 // Phase 5: Apply all post-compute UI updates on EDT
-                runOnEDT(() -> applyUIUpdates(tokenizerResult, result, text, messagesText, textHighlights,
-                        messageHighlights));
+                runOnEDT(knowledgeBase, () -> applyUIUpdates(tokenizerResult, result, text, messagesText,
+                        textHighlights, messageHighlights));
             }
 
             // Phase 6: Non-UI updates on worker thread
@@ -1300,7 +1347,7 @@ public class EditorWindow extends WindowAdapter
                         textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
                         if (eval instanceof Query query && query.inferResult() != null && line >= 0
                                 && line < totalLines) {
-                            pendingMessageHighlights.add(new int[]{line, mess.length()});
+                            pendingMessageHighlights.add(new int[] { line, mess.length() });
                             pendingMessageHighlightErrors.add(pe.getShortMessage());
                         }
                     }
@@ -1512,8 +1559,8 @@ public class EditorWindow extends WindowAdapter
                 EditorFileIO.write(Path.of(filePath), text);
             } catch (IOException ex) {
                 // Fail loud: a swallowed auto-save loses edits. Surface in the messages pane.
-                javax.swing.SwingUtilities.invokeLater(() -> setMessages(
-                        "Failed to save " + new File(filePath).getName() + ": " + ex.getMessage()));
+                javax.swing.SwingUtilities.invokeLater(
+                        () -> setMessages("Failed to save " + new File(filePath).getName() + ": " + ex.getMessage()));
             }
         }, "EditorFileSave-" + windowId).start();
     }
@@ -1604,8 +1651,8 @@ public class EditorWindow extends WindowAdapter
 
     private void loadFileContent() {
         try {
-            String         content = EditorFileIO.read(Path.of(filePath));
-            StyledDocument doc     = textPane.getStyledDocument();
+            String content = EditorFileIO.read(Path.of(filePath));
+            StyledDocument doc = textPane.getStyledDocument();
             doc.insertString(0, content, null);
 
             // Apply line spacing
