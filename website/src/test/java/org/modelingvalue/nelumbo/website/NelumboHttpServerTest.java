@@ -156,6 +156,15 @@ class NelumboHttpServerTest {
     }
 
     @Test
+    void llmsTxtIsServedAtTheSiteRoot() throws Exception {
+        HttpResponse<String> response = get("/llms.txt");
+        assertEquals(200, response.statusCode());
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/plain"), "llms.txt must not be served as HTML");
+        assertTrue(response.body().startsWith("# Nelumbo"), "the llms.txt format starts with the project H1");
+        assertTrue(response.body().contains("https://nelumbo.nl/docs/"), "it should link the served docs");
+    }
+
+    @Test
     void pagesLinkToTheDocs() throws Exception {
         for (String page : List.of("/", "/tour.html", "/playground.html")) {
             assertTrue(get(page).body().contains("href=\"/docs/\""), page + " should link to the docs");
