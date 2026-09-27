@@ -1,0 +1,87 @@
+# Nelumbo
+
+> Nelumbo is a declarative logic meta-language. One `.nl` file defines both the syntax and the semantics of a language, and the same file runs and tests it. Because Nelumbo treats facts and falsehoods as peers it has genuine three-valued logic instead of Prolog's negation-as-failure, and every query answers with a two-sided `[facts][falsehoods]` result.
+
+Nelumbo is written in Java (21+) by the Modeling Value Group. It is at an early stage of
+development, so incompatible changes are likely. It ships a core engine, a CLI with a REPL,
+an LSP server with plugins for VS Code / IntelliJ / Eclipse, an HTTP eval server, an MCP
+server for LLM authoring, and a browser playground.
+
+Reading `.nl` code - the whole notation in eight lines:
+
+- `Person :: Object` declares a type, `Male :: Person` a subtype.
+- `Integer ::= fib(<Integer>)` declares a functor: a pattern that produces an `Integer`.
+  The pattern is the syntax, so functors are how you extend the language.
+- `Integer n, f` declares variables (namespace-scoped, untyped use is not allowed).
+- `fib(n)=f <=> f=n if n<=1, f=fib(n-1)+fib(n-2) if n>1` is a rule: `<=>` with `if` guards,
+  alternatives separated by commas.
+- `fact pc(Hendrik, Juliana)` states a fact.
+- `!` `&` `|` `->` `<->` are the connectives, `E[x](...)` and `A[x](...)` the quantifiers,
+  `=` and `!=` equality.
+- `fib(5)=f ? [(f=5)][..]` is a query with its expected result: facts on the left,
+  falsehoods on the right, and `..` is the incompleteness marker ("this side may hold more
+  bindings than are listed") - it is not a wildcard and matches no value.
+- `@nelumbo.logic.And` after a functor binds it to a Java native.
+
+Read "Reading a query and test" first: without the `? [facts][falsehoods]` notation every
+example file in the project is unreadable.
+
+## Getting started
+
+- [Reading a query and test](https://nelumbo.nl/docs/getting-started/reading-a-test.html): the query/test notation and three-valued logic; the one page to read first
+- [Your first program](https://nelumbo.nl/docs/getting-started/first-program.html): line-by-line walkthrough of `fibonacci.nl` - imports, patterns, guarded rules, tests
+- [Documentation overview](https://nelumbo.nl/docs/): full table of contents plus reading paths per goal
+- [Playground](https://nelumbo.nl/playground.html): a live editor; results appear inline as you type, no run button
+- [Feature tour](https://nelumbo.nl/tour.html): eight guided sections with live demos and self-checking exercises
+
+## Language reference
+
+- [Grammar](https://nelumbo.nl/docs/reference/grammar.html): the core syntax of `.nl` files
+- [Operators](https://nelumbo.nl/docs/reference/operators.html): complete operator catalogue
+- [Built-in tokens and pattern holes](https://nelumbo.nl/docs/reference/built-in-tokens.html): `<NUMBER>`, `<STRING>`, `<Variable>` and friends
+- [Precedence and associativity](https://nelumbo.nl/docs/reference/precedence-and-associativity.html): the `#N` system
+- [Visibility](https://nelumbo.nl/docs/reference/visibility.html): `private`, `hidden`, `visible`, and scope blocks
+- [Three-valued logic](https://nelumbo.nl/docs/reference/three-valued-logic.html): the semantic foundation, with truth tables
+- [Test expression semantics](https://nelumbo.nl/docs/reference/test-expression-semantics.html): formal definition of when a test passes
+- [Writing rules](https://nelumbo.nl/docs/reference/writing-rules.html): `<=>`, guards, merging, contradictions
+- [Formatting](https://nelumbo.nl/docs/reference/formatting.html): the canonical layout the LSP formatter produces
+
+## Standard library
+
+- [nelumbo.lang](https://nelumbo.nl/docs/reference/stdlib/lang.html): the bootstrap layer - token types, object hierarchy, the pattern meta-grammar, top-level statements
+- [nelumbo.logic](https://nelumbo.nl/docs/reference/stdlib/logic.html): Boolean, connectives, quantifiers, equality, and the `fact` / `<=>` / `?` statements
+- [nelumbo.integers](https://nelumbo.nl/docs/reference/stdlib/integers.html): arbitrary-precision integer arithmetic
+- [nelumbo.rationals](https://nelumbo.nl/docs/reference/stdlib/rationals.html): exact rationals
+- [nelumbo.strings](https://nelumbo.nl/docs/reference/stdlib/strings.html): strings, concatenation, conversion
+- [nelumbo.collections](https://nelumbo.nl/docs/reference/stdlib/collections.html): generic `Set<E>` and `List<E>`, set-builder notation, operations
+- [nelumbo.datetime](https://nelumbo.nl/docs/reference/stdlib/datetime.html): ISO 8601 dates, times, date-times, durations
+- [Standard library tour](https://nelumbo.nl/docs/guides/stdlib-tour.html): all seven modules read in dependency order
+
+## Extending Nelumbo
+
+- [Architecture](https://nelumbo.nl/docs/explanation/architecture.html): the layering - Java core, `lang.nl`, `logic.nl`, numeric/data stdlib, user code
+- [Writing your own module](https://nelumbo.nl/docs/guides/writing-your-own-module.html): packaging a reusable library
+- [Language transformations](https://nelumbo.nl/docs/guides/language-transformations.html): the `::>` mechanism for new keywords (under construction)
+- [Native API](https://nelumbo.nl/docs/reference/native-api.html): the `Predicate`, `InferResult`, `infer()` surface for Java primitives
+- [Native classes catalogue](https://nelumbo.nl/docs/reference/native-classes.html): every shipped `@`-bound class
+- [Native cookbook](https://nelumbo.nl/docs/guides/native-cookbook.html): five recipes with complete skeletons
+
+## Tooling
+
+- [Repository](https://github.com/ModelingValueGroup/nelumbo): source, build instructions, issue tracker (LGPL 3.0)
+- [README](https://github.com/ModelingValueGroup/nelumbo/blob/master/README.md): build commands, IDE plugins, CLI, HTTP server, MCP server
+- [Releases](https://github.com/ModelingValueGroup/nelumbo/releases): runnable jars - CLI, web server, MCP server, IDE plugins
+- [Example .nl files](https://github.com/ModelingValueGroup/nelumbo/tree/master/src/main/resources/org/modelingvalue/nelumbo/examples): the canonical worked examples, each ending in tests
+- [Test .nl files](https://github.com/ModelingValueGroup/nelumbo/tree/master/src/main/resources/org/modelingvalue/nelumbo/tests): executable specifications, useful for corner cases
+
+The MCP server (`./gradlew :mcp:mcpJar`, then
+`claude mcp add nelumbo -- java -jar nelumbo-mcp-server-<version>.jar`) is the intended way
+for an LLM to author `.nl` files: it offers `eval_nl` (evaluate a model and get structured
+diagnostics plus per-query results), `search_docs`, `get_example`, and `new_model`.
+Without it, `java -jar nelumbo-cli-<version>.jar file.nl` gives the same verification from a
+shell, and `POST /eval` on https://nelumbo.nl does it over HTTP.
+
+## Optional
+
+- [Slide deck version of the docs](https://github.com/ModelingValueGroup/nelumbo/blob/master/docs/NELUMBO.md): the same material as a presentation
+- [Deep documentation index](https://nelumbo.nl/docs/): includes a map of every example and test file

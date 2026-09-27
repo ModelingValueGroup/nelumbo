@@ -121,11 +121,17 @@ val copyDocs = tasks.register<Sync>("copyDocs") {
     }
 }
 
+// The repo root holds the single copy of llms.txt (GitHub reads it there); the site serves the same file at /llms.txt
+val copyLlms = tasks.register<Copy>("copyLlms") {
+    from(rootProject.layout.projectDirectory.file("llms.txt"))
+    into(layout.buildDirectory.dir("generated-resources/public"))
+}
+
 // Register the copied bundle and docs as a source-set OUTPUT dir (not a resources source dir): this puts them on
 // the runtime/test classpath and into serverJar via sourceSets.main.output, carries the copyFrontend/copyDocs
 // dependencies, and - unlike resources.srcDir - keeps them out of the sourcesJar.
 sourceSets.main {
-    output.dir(mapOf("builtBy" to listOf(copyFrontend, copyDocs)), layout.buildDirectory.dir("generated-resources"))
+    output.dir(mapOf("builtBy" to listOf(copyFrontend, copyDocs, copyLlms)), layout.buildDirectory.dir("generated-resources"))
 }
 
 tasks.register<ShadowJar>("serverJar") {

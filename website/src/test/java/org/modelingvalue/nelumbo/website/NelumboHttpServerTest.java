@@ -26,6 +26,8 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -153,6 +155,31 @@ class NelumboHttpServerTest {
         HttpResponse<String> bare = get("/docs");
         assertEquals(302, bare.statusCode(), "/docs redirects to /docs/ so relative links on the index resolve");
         assertEquals("/docs/", bare.headers().firstValue("Location").orElse(""));
+    }
+
+    @Test
+    void llmsTxtIsServedAtTheSiteRoot() throws Exception {
+        HttpResponse<String> response = get("/llms.txt");
+        assertEquals(200, response.statusCode());
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/plain"), "llms.txt must not be served as HTML");
+        assertTrue(response.body().startsWith("# Nelumbo"), "the llms.txt format starts with the project H1");
+        assertTrue(response.body().contains("https://nelumbo.nl/docs/"), "it should link the served docs");
+    }
+
+    /**
+     * The llms.txt links are hand-written absolute URLs, so a renamed docs page would 404 silently; every
+     * nelumbo.nl link must resolve on this server (the github.com ones cannot be checked offline).
+     */
+    @Test
+    void everyLinkInLlmsTxtResolves() throws Exception {
+        Matcher matcher = Pattern.compile("https://nelumbo\\.nl(/\\S*?)\\)").matcher(get("/llms.txt").body());
+        int     checked = 0;
+        while (matcher.find()) {
+            String path = matcher.group(1);
+            assertEquals(200, get(path).statusCode(), "llms.txt links " + path + ", which the site does not serve");
+            checked++;
+        }
+        assertTrue(20 < checked, "expected the docs catalogue to be checked, but only found " + checked + " links");
     }
 
     @Test

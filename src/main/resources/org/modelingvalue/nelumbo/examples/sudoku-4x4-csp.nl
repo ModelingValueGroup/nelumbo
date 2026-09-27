@@ -2,7 +2,12 @@
 // CLI-only. Run with: java -DPARALLEL_COLLECTIONS=false -jar nelumbo-cli-*.jar <this file>
 //
 // STATUS (2026-09-25): UNBLOCKED at the functional grid update (plan Task 4);
-// the solver itself (Tasks 5+) is still to be written.
+// Task 5 (peer/samebox) is done, the solver itself (Tasks 6+) is still to be
+// written. NOTE: this file takes ~80s on the CLI, ALL of it load time of the
+// put/rowsBefore/rowsFrom rules (recursive rules over the depth-3 generic
+// List<List<Set<Digit>>>, time in lang/Type.initSupers) - the queries are
+// instant. Repro: bugs/nested-generic-rule-load-time.nl. Every rule of that
+// shape added in Tasks 6+ will make it worse.
 // The first block (three reduction bugs found 2026-09-11: nested collection call
 // as argument, collection call on the RHS of `=`, recursive collection
 // accumulation) was fixed on 2026-09-24 - they live on as tests/*.nl in
