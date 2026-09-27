@@ -455,6 +455,21 @@ public final class Type extends Node implements FunctorOrType {
         }
     }
 
+    public boolean isStruct() {
+        return STRUCT.isAssignableFrom(this);
+    }
+
+    public Type nonStruct() {
+        if (equals(STRUCT)) {
+            return OBJECT;
+        } else if (isStruct()) {
+            Set<Type> set = many().remove(STRUCT);
+            return set.size() == 1 ? set.get(0) : new Type(set, group());
+        } else {
+            return this;
+        }
+    }
+
     public Type toList() {
         return LIST.setArguments(List.of(this)).setGroup(group());
     }

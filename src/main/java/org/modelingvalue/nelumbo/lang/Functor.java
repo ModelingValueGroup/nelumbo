@@ -402,9 +402,6 @@ public class Functor extends Node implements FunctorOrType {
             if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
                     && !Type.ROOT.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
                     && !Type.NAMESPACE.isAssignableFrom(type)) {
-                if (!Type.STRUCT.isAssignableFrom(type)) {
-                    type = type.toFunction();
-                }
                 function = true;
             }
             if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
@@ -415,6 +412,9 @@ public class Functor extends Node implements FunctorOrType {
                             || Type.LITERAL.equals(t))) {
                 toLiteral = true;
             }
+        }
+        if (function && (toLiteral || !type.isStruct())) {
+            type = type.toFunction();
         }
         Functor nodFunctor = Functor.of(ast, pattern, type, local, clazz, prec, toLiteral).makeVariablesUnique(ctx)
                 .resetOriginal();
@@ -449,7 +449,7 @@ public class Functor extends Node implements FunctorOrType {
         if (literal == null) {
             Pattern litPattern = pattern().setTypes(Type::toLiteral);
             Type type = (Type) get(1);
-            Type litType = Type.STRUCT.isAssignableFrom(type) ? type.toLiteral() : type;
+            Type litType = type.isStruct() ? type.toLiteral() : type;
             Functor f = Functor.of(astElements(), litPattern, litType, local(), (Constructor<?>) get(3),
                     leftPrecedence(), (Method) get(5), false).incrementVariables("$");
             Functor original = original();
