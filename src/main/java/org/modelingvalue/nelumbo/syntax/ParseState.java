@@ -33,7 +33,6 @@ import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
-import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 import org.modelingvalue.nelumbo.syntax.Token.Completion;
 
 public class ParseState extends AbstractState<ParseState> {
@@ -51,8 +50,8 @@ public class ParseState extends AbstractState<ParseState> {
     private final Integer                    leftPrecedence;
     private final Integer                    innerPrecedence;
     private final String                     group;
-    private final Set<RepetitionPattern>     startRepetitions;
-    private final Set<RepetitionPattern>     endRepetitions;
+    private final Set<String>                startRepetitions;
+    private final Set<String>                endRepetitions;
     private final boolean                    isKeyword;
     private final Visibility                 visibility;
     private final boolean                    isConnected;
@@ -64,7 +63,7 @@ public class ParseState extends AbstractState<ParseState> {
                 Set.of(), false, Visibility.optional, false);
     }
 
-    public ParseState(Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions) {
+    public ParseState(Set<String> startRepetitions, Set<String> endRepetitions) {
         this(TypeMatcherState.EMPTY, Map.of(), Map.of(), Map.of(), Set.of(), null, null, null, startRepetitions,
                 endRepetitions, false, Visibility.optional, false);
     }
@@ -87,8 +86,8 @@ public class ParseState extends AbstractState<ParseState> {
     private ParseState(TypeMatcherState typeMatcher, Map<String, ParseState> tokenTexts,
             Map<TokenType, ParseState> tokenTypes, Map<Type, ParseState> nodeTypes, //
             Set<Functor> functors, Integer leftPrecedence, Integer innerPrecedence, String group, //
-            Set<RepetitionPattern> startRepetitions, Set<RepetitionPattern> endRepetitions, boolean isKeyword,
-            Visibility visibility, boolean isConnected) {
+            Set<String> startRepetitions, Set<String> endRepetitions, boolean isKeyword, Visibility visibility,
+            boolean isConnected) {
         super(typeMatcher);
         this.tokenTexts = tokenTexts;
         this.tokenTypes = tokenTypes;
@@ -153,11 +152,11 @@ public class ParseState extends AbstractState<ParseState> {
         return group;
     }
 
-    public Set<RepetitionPattern> startRepetitions() {
+    public Set<String> startRepetitions() {
         return startRepetitions;
     }
 
-    public Set<RepetitionPattern> endRepetitions() {
+    public Set<String> endRepetitions() {
         return endRepetitions;
     }
 
@@ -241,14 +240,14 @@ public class ParseState extends AbstractState<ParseState> {
                 innerPrecedence, group, startRepetitions, endRepetitions, isKeyword, visibility, true);
     }
 
-    public boolean parse(Token token, PatternResult result, Map<RepetitionPattern, ParseState> outerRepetitions,
-            boolean pre) throws ParseException {
+    public boolean parse(Token token, PatternResult result, Map<String, ParseState> outerRepetitions, boolean pre)
+            throws ParseException {
         ParseContext ctx = result.context();
         if (ctx.state() == this && ctx.token() == token) {
             return false;
         }
-        Map<RepetitionPattern, ParseState> innerRepetitions = outerRepetitions;
-        for (RepetitionPattern start : startRepetitions()) {
+        Map<String, ParseState> innerRepetitions = outerRepetitions;
+        for (String start : startRepetitions()) {
             innerRepetitions = innerRepetitions.put(start, this);
         }
         do {
@@ -338,7 +337,7 @@ public class ParseState extends AbstractState<ParseState> {
         return null;
     }
 
-    private String expectedTokens(Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx,
+    private String expectedTokens(Map<String, ParseState> outerRepetitions, ParseContext ctx,
             Map<Variable, Type> typeArgs) {
         return dirStates(outerRepetitions, ctx, typeArgs).flatMap(Entry::getValue) //
                 .flatMap(s -> Collection.concat(s.state.tokenTexts().toKeys(), s.state.tokenTypes().toKeys())) //
@@ -346,15 +345,15 @@ public class ParseState extends AbstractState<ParseState> {
                 .reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b);
     }
 
-    public List<Completion> completions(Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx,
-            Token token, int cursor) {
+    public List<Completion> completions(Map<String, ParseState> outerRepetitions, ParseContext ctx, Token token,
+            int cursor) {
         return dirStates(outerRepetitions, ctx, Map.of()).flatMap(Entry::getValue)
                 .flatMap(s -> s.state.tokenTexts().toKeys()).sorted()
                 .map(s -> new Completion(0, token.numChars(), s, TokenType.of(s), null)).asList();
     }
 
-    private DirectionContext lookahead(Token token, Map<RepetitionPattern, ParseState> outerRepetitions,
-            ParseContext ctx, Map<Variable, Type> typeArgs) {
+    private DirectionContext lookahead(Token token, Map<String, ParseState> outerRepetitions, ParseContext ctx,
+            Map<Variable, Type> typeArgs) {
         if (token == null) {
             return null;
         }
@@ -453,7 +452,7 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private Map<DirectionContext, Set<TokenStateContext>> dirTokenStates(Token token,
-            Map<RepetitionPattern, ParseState> outerRepetitions, ParseContext ctx, Map<Variable, Type> typeArgs,
+            Map<String, ParseState> outerRepetitions, ParseContext ctx, Map<Variable, Type> typeArgs,
             int nrOfTokenTypes) {
         Map<DirectionContext, Set<TokenStateContext>> dirTokenStates = Map.of();
         Map<DirectionContext, Set<StateContext>> dirStates = dirStates(outerRepetitions, ctx, typeArgs);
@@ -481,7 +480,7 @@ public class ParseState extends AbstractState<ParseState> {
         return dirTokenStates;
     }
 
-    private Map<DirectionContext, Set<StateContext>> dirStates(Map<RepetitionPattern, ParseState> outerRepetitions,
+    private Map<DirectionContext, Set<StateContext>> dirStates(Map<String, ParseState> outerRepetitions,
             ParseContext ctx, Map<Variable, Type> typeArgs) {
         MutableMap<DirectionContext, Set<StateContext>> dirStates = MutableMap.of(Map.of());
         repetitionStates(ctx, outerRepetitions, dirStates, typeArgs);
@@ -542,11 +541,11 @@ public class ParseState extends AbstractState<ParseState> {
         }
     }
 
-    private void repetitionStates(ParseContext ctx, Map<RepetitionPattern, ParseState> repetitions,
+    private void repetitionStates(ParseContext ctx, Map<String, ParseState> repetitions,
             MutableMap<DirectionContext, Set<StateContext>> dirStates, Map<Variable, Type> typeArgs) {
         if (!endRepetitions().isEmpty()) {
             Set<StateContext> states = Set.of();
-            for (Entry<RepetitionPattern, ParseState> r : repetitions) {
+            for (Entry<String, ParseState> r : repetitions) {
                 if (endRepetitions().contains(r.getKey())) {
                     states = states.add(new StateContext(r.getValue(), ctx));
                 }
@@ -591,7 +590,7 @@ public class ParseState extends AbstractState<ParseState> {
         return states;
     }
 
-    private TokenState tokenTextNext(Token token, Map<RepetitionPattern, ParseState> repetitions, ParseContext ctx,
+    private TokenState tokenTextNext(Token token, Map<String, ParseState> repetitions, ParseContext ctx,
             PatternResult result) {
         if (token == null || tokenTexts().isEmpty()) {
             return null;
@@ -657,7 +656,7 @@ public class ParseState extends AbstractState<ParseState> {
         return null;
     }
 
-    private TokenState tokenTypeNext(Token token, Map<RepetitionPattern, ParseState> repetitions, ParseContext ctx,
+    private TokenState tokenTypeNext(Token token, Map<String, ParseState> repetitions, ParseContext ctx,
             PatternResult result) {
         if (token == null || tokenTypes().isEmpty()) {
             return null;
@@ -802,7 +801,9 @@ public class ParseState extends AbstractState<ParseState> {
     public String toString() {
         return tokenTexts().toKeys().asSet().toString().substring(3) + //
                 tokenTypes().toKeys().asSet().toString().substring(3) + //
-                nodeTypes().toKeys().asSet().toString().substring(3);
+                nodeTypes().toKeys().asSet().toString().substring(3) + //
+                startRepetitions().toString().substring(3) + //
+                endRepetitions().toString().substring(3);
     }
 
     @Override

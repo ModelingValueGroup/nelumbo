@@ -29,7 +29,6 @@ import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.PatternPartPattern;
-import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 @SuppressWarnings({ "unused" })
 public final class Token implements AstElement {
@@ -343,7 +342,7 @@ public final class Token implements AstElement {
         return stateContext;
     }
 
-    public void setStateContext(ParseState state, Map<RepetitionPattern, ParseState> repetitions, ParseContext ctx) {
+    public void setStateContext(ParseState state, Map<String, ParseState> repetitions, ParseContext ctx) {
         this.stateContext = new StateRepetitionsContext(state, repetitions, ctx);
     }
 
@@ -452,7 +451,7 @@ public final class Token implements AstElement {
         return r;
     }
 
-    private static record StateRepetitionsContext(ParseState state, Map<RepetitionPattern, ParseState> repetitions,
+    private static record StateRepetitionsContext(ParseState state, Map<String, ParseState> repetitions,
             ParseContext ctx) {
     }
 

@@ -28,7 +28,6 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
-import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
 
 public final class PatternResult implements ParseExceptionHandler {
 
@@ -39,12 +38,12 @@ public final class PatternResult implements ParseExceptionHandler {
     private final MutableList<Pair<Token, Token>> merged;
     private final MutableMap<Variable, Type>      typeArgs;
 
-    private Functor                functor;
-    private ParseState             state;
-    private Integer                leftPrecedence;
-    private Set<RepetitionPattern> endRepetitions;
-    private Token                  nextToken;
-    private boolean                hasLeft;
+    private Functor     functor;
+    private ParseState  state;
+    private Integer     leftPrecedence;
+    private Set<String> endRepetitions;
+    private Token       nextToken;
+    private boolean     hasLeft;
 
     public PatternResult(Parser parser, ParseContext context) {
         this.parser = parser;
@@ -95,7 +94,7 @@ public final class PatternResult implements ParseExceptionHandler {
         return state;
     }
 
-    public Set<RepetitionPattern> endRepetitions() {
+    public Set<String> endRepetitions() {
         return endRepetitions;
     }
 
@@ -123,7 +122,7 @@ public final class PatternResult implements ParseExceptionHandler {
         assert (!hasLeft || leftPrecedence != null);
     }
 
-    public void endRepetition(Set<RepetitionPattern> endRepetitions, Token nextToken) {
+    public void endRepetition(Set<String> endRepetitions, Token nextToken) {
         this.endRepetitions = endRepetitions;
         this.nextToken = nextToken;
     }

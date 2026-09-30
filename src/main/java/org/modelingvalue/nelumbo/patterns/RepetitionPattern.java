@@ -99,8 +99,9 @@ public class RepetitionPattern extends Pattern {
         Pattern repeated = repeated();
         boolean mandatory = mandatory();
         Pattern separator = separator();
-        ParseState startOrNext = new ParseState(Set.of(this), Set.of()).merge(next);
-        ParseState repeatedEnd = repeated.state(new ParseState(Set.of(), Set.of(this)));
+        String id = uniqueId();
+        ParseState startOrNext = new ParseState(Set.of(id), Set.of()).merge(next);
+        ParseState repeatedEnd = repeated.state(new ParseState(Set.of(), Set.of(id)));
         ParseState state;
         if (separator == null) {
             state = repeatedEnd.merge(startOrNext);
