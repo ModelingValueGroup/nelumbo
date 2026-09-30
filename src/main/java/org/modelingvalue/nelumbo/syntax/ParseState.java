@@ -387,21 +387,24 @@ public class ParseState extends AbstractState<ParseState> {
             }
         }
         while (dirTokenStates.size() > 1) {
-            dirTokenStates = removeMaxTokenTypes(dirTokenStates);
+            int min = minTokenTypes(dirTokenStates);
+            int max = maxTokenTypes(dirTokenStates);
+            if (min == max) {
+                break;
+            }
+            dirTokenStates = removeMaxTokenTypes(dirTokenStates, max);
         }
-        DirectionContext result = dirTokenStates.isEmpty() ? null : dirTokenStates.get(0).getKey();
+        if (dirTokenStates.size() > 1) {
+            dirTokenStates = dirTokenStates.removeAll(
+                    e -> e.getKey().direction != Direction.tokenText && e.getKey().direction != Direction.tokenType);
+        }
+        DirectionContext result = dirTokenStates.size() == 1 ? dirTokenStates.get(0).getKey() : null;
         printLookahead(token, result);
         return result;
     }
 
     private static Map<DirectionContext, Set<TokenStateContext>> removeMaxTokenTypes(
-            Map<DirectionContext, Set<TokenStateContext>> dirTokenStates) {
-        int max = 0;
-        for (Entry<DirectionContext, Set<TokenStateContext>> e : dirTokenStates) {
-            for (TokenStateContext state : e.getValue()) {
-                max = state.nrOfTokenTypes > max ? state.nrOfTokenTypes : max;
-            }
-        }
+            Map<DirectionContext, Set<TokenStateContext>> dirTokenStates, int max) {
         for (Entry<DirectionContext, Set<TokenStateContext>> e : dirTokenStates) {
             Set<TokenStateContext> set = e.getValue();
             for (TokenStateContext state : set) {
@@ -412,6 +415,26 @@ public class ParseState extends AbstractState<ParseState> {
             dirTokenStates = set.isEmpty() ? dirTokenStates.removeKey(e.getKey()) : dirTokenStates.put(e.getKey(), set);
         }
         return dirTokenStates;
+    }
+
+    protected static int maxTokenTypes(Map<DirectionContext, Set<TokenStateContext>> dirTokenStates) {
+        int max = 0;
+        for (Entry<DirectionContext, Set<TokenStateContext>> e : dirTokenStates) {
+            for (TokenStateContext state : e.getValue()) {
+                max = state.nrOfTokenTypes > max ? state.nrOfTokenTypes : max;
+            }
+        }
+        return max;
+    }
+
+    protected static int minTokenTypes(Map<DirectionContext, Set<TokenStateContext>> dirTokenStates) {
+        int min = Integer.MAX_VALUE;
+        for (Entry<DirectionContext, Set<TokenStateContext>> e : dirTokenStates) {
+            for (TokenStateContext state : e.getValue()) {
+                min = state.nrOfTokenTypes < min ? state.nrOfTokenTypes : min;
+            }
+        }
+        return min;
     }
 
     private void printLookahead(Token token, DirectionContext dc) {
