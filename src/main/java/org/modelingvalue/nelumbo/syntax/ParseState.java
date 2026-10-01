@@ -339,7 +339,7 @@ public class ParseState extends AbstractState<ParseState> {
 
     private String expectedTokens(Map<String, ParseState> outerRepetitions, ParseContext ctx,
             Map<Variable, Type> typeArgs) {
-        return dirStates(outerRepetitions, ctx, typeArgs).flatMap(Entry::getValue) //
+        return dirStates(outerRepetitions, ctx, MutableMap.of(typeArgs)).flatMap(Entry::getValue) //
                 .flatMap(s -> Collection.concat(s.state.tokenTexts().toKeys(), s.state.tokenTypes().toKeys())) //
                 .map(o -> o instanceof String ? ("'" + o + "'") : o.toString()) //
                 .reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b);
@@ -347,16 +347,17 @@ public class ParseState extends AbstractState<ParseState> {
 
     public List<Completion> completions(Map<String, ParseState> outerRepetitions, ParseContext ctx, Token token,
             int cursor) {
-        return dirStates(outerRepetitions, ctx, Map.of()).flatMap(Entry::getValue)
+        return dirStates(outerRepetitions, ctx, MutableMap.of(Map.of())).flatMap(Entry::getValue)
                 .flatMap(s -> s.state.tokenTexts().toKeys()).sorted()
                 .map(s -> new Completion(0, token.numChars(), s, TokenType.of(s), null)).asList();
     }
 
     private DirectionContext lookahead(Token token, Map<String, ParseState> outerRepetitions, ParseContext ctx,
-            Map<Variable, Type> typeArgs) {
+            Map<Variable, Type> tas) {
         if (token == null) {
             return null;
         }
+        MutableMap<Variable, Type> typeArgs = MutableMap.of(tas);
         Map<DirectionContext, Set<TokenStateContext>> dirTokenStates = dirTokenStates(token, outerRepetitions, ctx,
                 typeArgs, 0);
         printLookahead(token, null, this, dirTokenStates);
@@ -475,7 +476,7 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private Map<DirectionContext, Set<TokenStateContext>> dirTokenStates(Token token,
-            Map<String, ParseState> outerRepetitions, ParseContext ctx, Map<Variable, Type> typeArgs,
+            Map<String, ParseState> outerRepetitions, ParseContext ctx, MutableMap<Variable, Type> typeArgs,
             int nrOfTokenTypes) {
         Map<DirectionContext, Set<TokenStateContext>> dirTokenStates = Map.of();
         Map<DirectionContext, Set<StateContext>> dirStates = dirStates(outerRepetitions, ctx, typeArgs);
@@ -504,7 +505,7 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private Map<DirectionContext, Set<StateContext>> dirStates(Map<String, ParseState> outerRepetitions,
-            ParseContext ctx, Map<Variable, Type> typeArgs) {
+            ParseContext ctx, MutableMap<Variable, Type> typeArgs) {
         MutableMap<DirectionContext, Set<StateContext>> dirStates = MutableMap.of(Map.of());
         repetitionStates(ctx, outerRepetitions, dirStates, typeArgs);
         outerStates(ctx, dirStates, typeArgs);
@@ -539,7 +540,7 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private void nodeStates(ParseContext ctx, MutableMap<DirectionContext, Set<StateContext>> dirStates,
-            Map<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs) {
         if (!isNodesEmpty()) {
             ParseContext inner = ParseContext.of(this, null, ctx);
             for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
@@ -565,7 +566,7 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private void repetitionStates(ParseContext ctx, Map<String, ParseState> repetitions,
-            MutableMap<DirectionContext, Set<StateContext>> dirStates, Map<Variable, Type> typeArgs) {
+            MutableMap<DirectionContext, Set<StateContext>> dirStates, MutableMap<Variable, Type> typeArgs) {
         if (!endRepetitions().isEmpty()) {
             Set<StateContext> states = Set.of();
             for (Entry<String, ParseState> r : repetitions) {
@@ -580,17 +581,16 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private void outerStates(ParseContext ctx, MutableMap<DirectionContext, Set<StateContext>> dirStates,
-            Map<Variable, Type> typeArgs) {
-        Functor functor = functor(typeArgs);
+            MutableMap<Variable, Type> typeArgs) {
+        Functor functor = functor(typeArgs.get());
         if (functor != null) {
             Set<StateContext> states = Set.of();
-            Type type = functor.resultType().setTypeArgs(typeArgs);
-            MutableMap<Variable, Type> outerTypeArgs = MutableMap.of(typeArgs);
-            ParseState state = ctx.state().matchType(type, outerTypeArgs);
+            Type type = functor.resultType().setTypeArgs(typeArgs.get());
+            ParseState state = ctx.state().matchType(type, typeArgs);
             if (state != null) {
                 states = states.add(new StateContext(state, ctx.outer()));
             }
-            states = postStates(ctx, type, states, ctx.group(), outerTypeArgs.get());
+            states = postStates(ctx, type, states, ctx.group(), typeArgs);
             if (!states.isEmpty()) {
                 dirStates.put(new DirectionContext(Direction.outer, null), states);
             }
@@ -598,12 +598,12 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private static Set<StateContext> postStates(ParseContext ctx, Type type, Set<StateContext> states, String group,
-            Map<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs) {
         for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
             Map<Type, ParseState> posts = pc.postStates(group);
             if (posts != null) {
                 for (ParseState post : posts.toValues()) {
-                    ParseState state = post.matchType(type, MutableMap.of(typeArgs));
+                    ParseState state = post.matchType(type, typeArgs);
                     if (state != null) {
                         states = states.add(new StateContext(state, ctx));
                     }
