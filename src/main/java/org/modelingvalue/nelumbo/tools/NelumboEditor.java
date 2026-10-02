@@ -157,12 +157,12 @@ public class NelumboEditor {
             { "Tests", "collectionsTest.nl", "Collections Test" }, { "Tests", "datetimeTest.nl", "Datetime Test" },
             // Examples
             { "Examples", "family.nl", "Family" }, { "Examples", "friends.nl", "Friends" },
-            { "Examples", "fibonacci.nl", "Fibonacci" }, { "Examples", "belasting.nl", "Belasting" },
-            { "Examples", "whoIs.nl", "Who Is" }, { "Examples", "transformation.nl", "Transformation" },
-            { "Examples", "queryOnly.nl", "Query Only" }, { "Examples", "hidden.nl", "Hidden" },
-            { "Examples", "max.nl", "Max" }, { "Examples", "deHet.nl", "De Het" },
-            { "Examples", "maxFib.nl", "Maximal Fibonacci" }, { "Examples", "scoping.nl", "Scoping" },
-            { "Examples", "koningsdag.nl", "Koningsdag" },
+            { "Examples", "fibonacci.nl", "Fibonacci" }, { "Examples", "fibonacci2.nl", "Fibonacci2" },
+            { "Examples", "belasting.nl", "Belasting" }, { "Examples", "whoIs.nl", "Who Is" },
+            { "Examples", "transformation.nl", "Transformation" }, { "Examples", "queryOnly.nl", "Query Only" },
+            { "Examples", "hidden.nl", "Hidden" }, { "Examples", "max.nl", "Max" },
+            { "Examples", "deHet.nl", "De Het" }, { "Examples", "maxFib.nl", "Maximal Fibonacci" },
+            { "Examples", "scoping.nl", "Scoping" }, { "Examples", "koningsdag.nl", "Koningsdag" },
             // Assignments
             { "Assignments", "powerAssignment.nl", "Power Assignment" },
             { "Assignments", "ternaryAssignment.nl", "Ternary Assignment" },

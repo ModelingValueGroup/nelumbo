@@ -60,6 +60,11 @@ public class ExamplesTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void fibonacci2() {
+        exampleResource("fibonacci2.nl");
+    }
+
+    @RepeatedTest(10)
     public void transformation() {
         exampleResource("transformation.nl");
     }
