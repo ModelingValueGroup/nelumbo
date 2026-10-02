@@ -86,6 +86,8 @@ Package: `org.modelingvalue.nelumbo.lsp`
 
 The server is **embeddable**: `NelumboLanguageServer(baseKb, evalDeadlineMs, exitHandler)` + `connect(client)` runs it with a per-instance `LanguageClient` (stored on `Workspace`, not the static `Main.client`), an injectable base KB, a query-eval deadline, and no `System.exit`. The website module embeds it behind `/lsp` (see below). Client folder resolution and filesystem scanning in `initialize` are skipped in embedded mode.
 
+Every LSP request handler in `NlTextDocumentService` runs inside `inKb(...)` = `workspace.getBaseKnowledgeBase().run(...)` (a fresh child KB per request, on the KB pool): since 9b239d83 (2026-09-27) `Type.getAssigned` reads `KnowledgeBase.CURRENT`, and lsp4j threads have none - semantic tokens (`Token.colorType`) and hover NPE'd without it, which only the website e2e suite caught (`LspRequestContextTest` pins it now). A child, not `CURRENT.run(base, ...)`, so document types never land in the shared base KB's super/sub cache.
+
 ### Key Entry Points
 
 - `org.modelingvalue.nelumbo.KnowledgeBase` — Core language execution
@@ -180,12 +182,12 @@ unreduced-term mismatch in the test JVM), so both stay:
   (The former `flaky=true` attribute, whose only user was nondeterministic-inference, was
   removed with its promotion on 2026-09-25.) `bugResource()` in
   `NelumboTestBase` runs each file with a preemptive 60s timeout. Fixed bugs get promoted to
-  `RegressionTest` (nine so far: string-concat-prefix and repetition-count-lost
+  `RegressionTest` (ten so far: string-concat-prefix and repetition-count-lost
   since 2026-09-11; the whole bba88fc8 reduction trio - recursive-list-concat-classcast,
   nested-list-functor-arg-type-mismatch, set-functor-rhs-equals-not-reduced -
   since 2026-09-24; the whole state/race cluster - empty-set-branch-in-map-lambda,
   neighbor-query-changes-result, nondeterministic-inference - plus
-  rule-pos-on-mapped-collection-list-undecided since 2026-09-25; the promoted `.nl` file gets
+  rule-pos-on-mapped-collection-list-undecided since 2026-09-25, nested-generic-rule-load-time since 2026-10-02; the promoted `.nl` file gets
   a "Regression test (fixed <date>; was bugs/<name>.nl)" header and a `@RepeatedTest(10)`
   method). Note when rewriting a repro: a bare top-level equality `f(i)=[1,2]` is NOT a
   statement (the docs know only `fact`, `<=>`, `?`) and is rejected since 2026-09-24 with
@@ -208,7 +210,7 @@ unreduced-term mismatch in the test JVM), so both stay:
   `isAssignableFrom`; depth 2 is fine, one such rule 12s, the trio 82s; identical on a jar
   built at f7638724, so not a regression of 8f116edd's `Type.java` change). It has NO
   `@KnownBug` method (slowness could only be asserted via the 60s preemptive timeout = a
-  minute per test run); the CLI runner catches it via its time limit (next bullet).
+  minute per test run); the CLI runner caught it via its time limit (next bullet). FIXED 2026-10-02 (1.4s on the CLI, also the CSP example; most likely by Wim's super/sub-type cache in `Type.getAssigned`, 9b239d83, not bisected) and promoted to `RegressionTest` with a `@Timeout(20)` as the load-time assertion.
 - **CLI**: `./run-all-tests-with-CLI` (repo root, bash) runs every file against the CLI jar
   with `-ea` (needs `./gradlew cliJar` first); PASS green / FAIL red on a terminal. A repro
   that takes `SLOW_SECONDS` (60) or more is a FAIL regardless of its result (load-time bugs).

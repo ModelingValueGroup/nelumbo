@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.test;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Timeout;
 
 // Regression tests promoted from the known-bug suite (KnownBugsTest) once the
 // engine fix landed. Each guards a previously-broken behavior; the .nl file's
@@ -77,6 +78,13 @@ public class RegressionTest extends NelumboTestBase {
     @RepeatedTest(10)
     public void rulePosOnMappedCollectionListUndecided() {
         testResource("rule-pos-on-mapped-collection-list-undecided.nl");
+    }
+
+    // was a load-time bug (~80s), so the timeout is the real assertion
+    @RepeatedTest(10)
+    @Timeout(20)
+    public void nestedGenericRuleLoadTime() {
+        testResource("nested-generic-rule-load-time.nl");
     }
 
 }

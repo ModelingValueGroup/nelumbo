@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.lsp;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -65,6 +66,7 @@ import org.modelingvalue.nelumbo.lsp.documentService.DocumentTypeDefinitionServi
 import org.modelingvalue.nelumbo.lsp.documentService.SelectionRangeService;
 
 public class NlTextDocumentService implements TextDocumentService {
+    private final Workspace                         workspace;
     private final DocumentSyncService               documentSyncService;
     private final DocumentSemanticTokensFullService documentSemanticTokensFullService;
     private final DocumentFoldingRangeService       documentFoldingRangeService;
@@ -80,6 +82,7 @@ public class NlTextDocumentService implements TextDocumentService {
 
     public NlTextDocumentService(Workspace workspace) {
         NlDocumentManager documentManager = workspace.getDocumentManager();
+        this.workspace                         = workspace;
         this.documentSyncService               = new DocumentSyncService(documentManager);
         this.documentSemanticTokensFullService = new DocumentSemanticTokensFullService(documentManager);
         this.documentFoldingRangeService       = new DocumentFoldingRangeService(documentManager);
@@ -121,72 +124,81 @@ public class NlTextDocumentService implements TextDocumentService {
     @Override
     public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
         System.err.println("~~~ semanticTokensFull: " + params.getTextDocument().getUri());
-        return documentSemanticTokensFullService.semanticTokensFull(params);
+        return inKb(() -> documentSemanticTokensFullService.semanticTokensFull(params));
     }
 
     @Override
     public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
         System.err.println("~~~ foldingRange      : " + params.getTextDocument().getUri());
-        return documentFoldingRangeService.foldingRange(params);
+        return inKb(() -> documentFoldingRangeService.foldingRange(params));
     }
 
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
         System.err.println("~~~ completion        : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getPosition()));
-        return documentCompletionService.completion(params);
+        return inKb(() -> documentCompletionService.completion(params));
     }
 
     @Override
     public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
         System.err.println("~~~ documentSymbol    : " + params.getTextDocument().getUri());
-        return documentSymbolService.documentSymbol(params);
+        return inKb(() -> documentSymbolService.documentSymbol(params));
     }
 
     @Override
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
         System.err.println("~~~ formatting        : " + params.getTextDocument().getUri() + "\n    " + params.getOptions());
-        return documentFormattingService.formatting(params);
+        return inKb(() -> documentFormattingService.formatting(params));
     }
 
     @Override
     public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
         System.err.println("~~~ rangeFormatting   : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getRange()));
-        return documentFormattingService.rangeFormatting(params);
+        return inKb(() -> documentFormattingService.rangeFormatting(params));
     }
 
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
         System.err.println("~~~ hover             : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getPosition()));
-        return documentHoverService.hover(params);
+        return inKb(() -> documentHoverService.hover(params));
     }
 
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params) {
         System.err.println("~~~ definition        : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getPosition()));
-        return documentDefinitionService.definition(params);
+        return inKb(() -> documentDefinitionService.definition(params));
     }
 
     @Override
     public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
         System.err.println("~~~ codeAction        : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getRange()));
-        return documentCodeActionService.codeAction(params);
+        return inKb(() -> documentCodeActionService.codeAction(params));
     }
 
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> typeDefinition(TypeDefinitionParams params) {
         System.err.println("~~~ typeDefinition    : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getPosition()));
-        return documentTypeDefinitionService.typeDefinition(params);
+        return inKb(() -> documentTypeDefinitionService.typeDefinition(params));
     }
 
     @Override
     public CompletableFuture<List<SelectionRange>> selectionRange(SelectionRangeParams params) {
         System.err.println("~~~ selectionRange    : " + params.getTextDocument().getUri() + "\n    " + params.getPositions().stream().map(U::render).toList());
-        return selectionRangeService.selectionRange(params);
+        return inKb(() -> selectionRangeService.selectionRange(params));
     }
 
     @Override
     public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
         System.err.println("~~~ inlayHint         : " + params.getTextDocument().getUri() + "\n    " + U.render(params.getRange()));
-        return documentInlayHintService.inlayHint(params);
+        return inKb(() -> documentInlayHintService.inlayHint(params));
+    }
+
+    // Requests arrive on lsp4j threads; type checks (Type.getAssigned) need a KnowledgeBase.CURRENT context.
+    // A child of the base KB per request keeps document types out of the shared base KB caches.
+    @SuppressWarnings("unchecked")
+    private <T> T inKb(Supplier<T> request) {
+        Object[] result = new Object[1];
+        workspace.getBaseKnowledgeBase().run(() -> result[0] = request.get());
+        return (T) result[0];
     }
 }

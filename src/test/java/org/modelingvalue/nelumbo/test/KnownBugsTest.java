@@ -37,14 +37,8 @@ import org.junit.jupiter.api.Test;
 // were all fixed and promoted to RegressionTest on 2026-09-24, and the whole
 // state/race cluster (empty-set-branch-in-map-lambda, neighbor-query-changes-
 // result, nondeterministic-inference) plus rule-pos-on-mapped-collection-list-
-// undecided on 2026-09-25.
-//
-// Repro WITHOUT a method here: bugs/nested-generic-rule-load-time.nl (2026-09-25)
-// gives the correct result but takes ~80s to LOAD (rules over a depth-3 generic
-// type, time in lang/Type.initSupers/initAllSupersList). A slowness can only be
-// asserted via bugResource()'s 60s preemptive timeout, which would add a minute
-// to every test run - so it is CLI-only: ./run-all-tests-with-CLI reports it as
-// FAIL while it takes >= 60s.
+// undecided on 2026-09-25, and the CLI-only load-time repro nested-generic-
+// rule-load-time on 2026-10-02.
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):

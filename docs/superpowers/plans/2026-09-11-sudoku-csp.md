@@ -178,6 +178,8 @@ fullGrid(p)=g <=> g=[[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
 > generic `List<List<Set<Digit>>>`; time in `lang/Type.initSupers`); queries are instant.
 > Repro: `bugs/nested-generic-rule-load-time.nl` (CLI-only, no `@KnownBug` method - see its
 > header). Expect every recursive grid rule added in Tasks 6+ to add to the load time.
+>
+> **Fixed 2026-10-02:** load time is 1.4s; the repro was promoted to `tests/nested-generic-rule-load-time.nl` (`RegressionTest`).
 
 - [ ] **Step 1: Write the failing probe** (append): put `{D2}` at (0,0), read it back, and confirm a neighbour is untouched:
 
