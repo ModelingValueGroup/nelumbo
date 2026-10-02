@@ -532,10 +532,13 @@ public class ParseState extends AbstractState<ParseState> {
         dirStates.clear();
         for (Entry<DirectionContext, Set<StateContext>> e1 : map) {
             for (StateContext state : e1.getValue()) {
-                for (Entry<DirectionContext, Set<StateContext>> e2 : state.state.dirStates(outerRepetitions, state.ctx,
-                        typeArgs)) {
-                    if (!e2.getValue().isEmpty()) {
-                        dirStates.compute(e1.getKey(), (d, s) -> s == null ? e2.getValue() : s.addAll(e2.getValue()));
+                if (state.state != this) {
+                    for (Entry<DirectionContext, Set<StateContext>> e2 : state.state.dirStates(outerRepetitions,
+                            state.ctx, typeArgs)) {
+                        if (!e2.getValue().isEmpty()) {
+                            dirStates.compute(e1.getKey(),
+                                    (d, s) -> s == null ? e2.getValue() : s.addAll(e2.getValue()));
+                        }
                     }
                 }
             }
@@ -649,22 +652,6 @@ public class ParseState extends AbstractState<ParseState> {
             }
             return new TokenState(token.next(), next);
         }
-        if (type == TokenType.OPERATOR) {
-            for (int i = text.length() - 1; i > 0; i--) {
-                String key = text.substring(0, i);
-                next = tokenTexts().get(key);
-                if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next, ctx)) {
-                    Token pre = token.split(i);
-                    if (result != null) {
-                        result.addSplit(token, pre);
-                        result.add(pre);
-                        pre.setTextMatch(next.isKeyword(), next.isConnected());
-                        pre.setStateContext(next, repetitions, ctx);
-                    }
-                    return new TokenState(pre.next(), next);
-                }
-            }
-        }
         if (type == TokenType.NAME && text.length() > 1) {
             for (String conn : connected()) {
                 if (conn.length() < text.length() && text.startsWith(conn)) {
@@ -692,6 +679,22 @@ public class ParseState extends AbstractState<ParseState> {
                         }
                         return new TokenState(pre.next(), next);
                     }
+                }
+            }
+        }
+        if (type == TokenType.OPERATOR || type == TokenType.NAME) {
+            for (int i = text.length() - 1; i > 0; i--) {
+                String key = text.substring(0, i);
+                next = tokenTexts().get(key);
+                if (next != null && next.visibility() != notVisibility && isConnectedOk(token, next, ctx)) {
+                    Token pre = token.split(i);
+                    if (result != null) {
+                        result.addSplit(token, pre);
+                        result.add(pre);
+                        pre.setTextMatch(next.isKeyword(), next.isConnected());
+                        pre.setStateContext(next, repetitions, ctx);
+                    }
+                    return new TokenState(pre.next(), next);
                 }
             }
         }
