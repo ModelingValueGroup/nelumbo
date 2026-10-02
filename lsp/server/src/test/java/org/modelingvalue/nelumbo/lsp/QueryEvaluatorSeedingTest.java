@@ -16,8 +16,8 @@
 
 package org.modelingvalue.nelumbo.lsp;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
@@ -52,8 +52,8 @@ public class QueryEvaluatorSeedingTest {
 
     @Test
     public void evaluateUsesTheGivenBaseKb() {
-        KnowledgeBase           kb      = seeded(FIB_SEED);
-        String                  doc     = "Integer r\nfib(5)=r ?\n";
+        KnowledgeBase kb = seeded(FIB_SEED);
+        String doc = "Integer r\nfib(5)=r ?\n";
         Map<Query, QueryResult> results = QueryEvaluator.evaluate(kb, 0, doc, "inmemory://field-1.nl");
         assertEquals(1, results.size());
         QueryResult result = results.values().iterator().next();
@@ -63,18 +63,21 @@ public class QueryEvaluatorSeedingTest {
 
     @Test
     public void withoutSeedingTheQueryDoesNotResolve() {
-        String                  doc     = "Integer r\nfib(5)=r ?\n";
+        String doc = "Integer r\nfib(5)=r ?\n";
         Map<Query, QueryResult> results = QueryEvaluator.evaluate(KnowledgeBase.BASE, 0, doc, "inmemory://field-1.nl");
-        boolean resolved = results.values().stream().anyMatch(r -> r.kind() == QueryResult.Kind.RESULT && r.inferred().contains("5"));
+        boolean resolved = results.values().stream()
+                .anyMatch(r -> r.kind() == QueryResult.Kind.RESULT && r.inferred().contains("5"));
         assertFalse(resolved, "fib must be unknown without the seeded KB");
     }
 
     @Test
     public void deadlineProducesTimeoutMarkerInsteadOfHanging() {
-        KnowledgeBase           kb      = seeded(FIB_SEED);
-        String                  doc     = "Integer r\nfib(50)=r ?\n";
+        KnowledgeBase kb = seeded(FIB_SEED);
+        String doc = "Integer r\nfib(50)=r ?\n";
         Map<Query, QueryResult> results = QueryEvaluator.evaluate(kb, 1, doc, "inmemory://slow.nl");
-        boolean timedOut = results.values().stream().anyMatch(r -> r.kind() == QueryResult.Kind.ERROR && r.inferred().toLowerCase().contains("deadline"));
-        assertTrue(timedOut || results.isEmpty(), "expected a deadline marker or no results, got: " + results);
+        boolean timedOut = results.values().stream()
+                .anyMatch(r -> r.kind() == QueryResult.Kind.ERROR && r.inferred().toLowerCase().contains("deadline"));
+        assertTrue(timedOut || results.isEmpty(), "expected a deadline marker or no results, got: "
+                + KnowledgeBase.CURRENT.get(kb, () -> results.toString()));
     }
 }

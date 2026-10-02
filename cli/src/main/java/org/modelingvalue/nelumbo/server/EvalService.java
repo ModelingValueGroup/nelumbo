@@ -331,7 +331,7 @@ public final class EvalService implements AutoCloseable {
 
     public Map<String, Object> metadata() {
         Map<String, Object> json = new LinkedHashMap<>();
-        Node.runBaseString(() -> {
+        KnowledgeBase.CURRENT.run(baseKb, () -> Node.runBaseString(() -> {
             json.put("files", loadedFiles);
             // Only declarations that originate from the loaded files (matched by source
             // file name): this drops
@@ -345,7 +345,7 @@ public final class EvalService implements AutoCloseable {
             json.put("rules", declaredSources(baseKb.rules(), n -> collapse(String.valueOf(n))));
             json.put("transforms", declaredSources(baseKb.transforms(), n -> collapse(String.valueOf(n))));
             json.put("facts", declaredFacts());
-        });
+        }));
         return json;
     }
 
