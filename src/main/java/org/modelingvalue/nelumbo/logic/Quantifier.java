@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.logic;
 import java.io.Serial;
 
 import org.modelingvalue.collections.List;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Variable;
 
@@ -51,6 +52,9 @@ public abstract class Quantifier extends CompoundPredicate {
         InferResult predResult = predicate.resolve(context);
         if (predResult.hasStackOverflow()) {
             return predResult;
+        }
+        if (predResult.isUnknownWithPossibleCycles()) {
+            return InferResult.of(this, Set.of(), false, Set.of(), false, predResult.cycles());
         }
         return resolve(context, predResult);
     }

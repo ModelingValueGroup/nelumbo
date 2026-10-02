@@ -65,9 +65,12 @@ public interface InferResult {
         return stackOverflow() != null;
     }
 
+    default boolean isUnknownWithPossibleCycles() {
+        return allFalsehoods().isEmpty() && allFacts().isEmpty() && !completeFalsehoods() && !completeFacts();
+    }
+
     default boolean isUnknown() {
-        return allFalsehoods().isEmpty() && allFacts().isEmpty() && !completeFalsehoods() && !completeFacts()
-                && cycles().isEmpty();
+        return isUnknownWithPossibleCycles() && cycles().isEmpty();
     }
 
     default boolean isTrueCC() {

@@ -77,6 +77,7 @@ unknown<->true  ? [..][..]
 
 Test :: Object
 Test ::= T1, T2
+Boolean ::= <Test> $ <Test>
 
 T1=T1  ? [()][]
 T1=T2  ? [][()]
@@ -101,6 +102,12 @@ a=T1&a=T2      ? [][(a=T1),(a=T2),..]
 !(a!=T1&a!=T2) ? [(a=T1),(a=T2)][..]
 !(a!=T1|a!=T2) ? [][(a=T1),(a=T2),..]
 
+a$b            ? [..][..] 
+
+true&true&unknown ? [..][..]
+a=T1&b=T2&unknown ? [..][..]
+a=T1&b=T2&a$b ?     [..][..]
+
 // Predicate Logic
 
 E[a](a=T1|a=T2)    ? [()][]
@@ -108,6 +115,11 @@ A[a](a=T1&a=T2)    ? [][()]
 
 !A[a](a!=T1&a!=T2) ? [()][]
 !E[a](a!=T1|a!=T2) ? [][()]
+
+E[a,b](a=T1&b=T2&a$b) ? [..][..]
+A[a,b](a=T1&b=T2&a$b) ? [..][..]
+
+// Structs
 
 Rep :: Struct
 Rep ::= rep <(> aa <)+>
