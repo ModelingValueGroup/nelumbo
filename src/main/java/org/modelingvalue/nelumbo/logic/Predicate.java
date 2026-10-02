@@ -284,7 +284,8 @@ public class Predicate extends Node {
             return unknown();
         }
         InferResult result = doInfer(nrOfUnbound, context);
-        if (context.trace() && context.deep() && getClass() != Predicate.class && !isSyntatic()) {
+        if (!result.hasStackOverflow() && context.trace() && context.deep() && getClass() != Predicate.class
+                && !isSyntatic()) {
             context.trace(() -> "  " + this + " " + result.predicate(this));
         }
         return result;
