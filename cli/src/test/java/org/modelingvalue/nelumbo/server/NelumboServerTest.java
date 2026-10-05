@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -93,6 +94,28 @@ class NelumboServerTest {
 
     private String envelope(Map<String, Object> fields) throws Exception {
         return mapper.writeValueAsString(fields);
+    }
+
+    @Test
+    void bindsToLoopbackByDefault() throws Exception {
+        // the server has no authentication: by default it must not be reachable from other machines (issue #109)
+        assertTrue(server.address().getAddress().isLoopbackAddress(), "bound to " + server.address());
+        // and the advertised URL names the address actually bound, not a hostname that may differ from it
+        assertEquals("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + port, server.url());
+    }
+
+    @Test
+    void bindsToExplicitHost() throws Exception {
+        KnowledgeBase base = KnowledgeBaseLoader.load(List.of(new NamedSource("fibonacci.nl", FIB_BASE)));
+        NelumboServer wide = new NelumboServer(base, List.of("fibonacci.nl"));
+        try {
+            int widePort = wide.start("0.0.0.0", 0);
+            assertTrue(wide.address().getAddress().isAnyLocalAddress(), "bound to " + wide.address());
+            assertEquals("http://0.0.0.0:" + widePort, wide.url());
+            assertEquals(200, postJson(widePort, envelope(Map.of("document", "Integer r\nfib(5)=r ?\n"))).statusCode());
+        } finally {
+            wide.stop();
+        }
     }
 
     @Test

@@ -19,6 +19,7 @@ package org.modelingvalue.nelumbo.server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -51,6 +52,7 @@ public final class NelumboServer {
 
     private HttpServer      server;
     private ExecutorService httpExecutor;
+    private String          boundHost;
 
     public NelumboServer(KnowledgeBase baseKb, List<String> loadedFiles) {
         this(baseKb, loadedFiles, DEFAULT_TIMEOUT_MS);
@@ -61,12 +63,31 @@ public final class NelumboServer {
         this.service = new EvalService(baseKb, loadedFiles, timeoutMs);
     }
 
-    /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
+    /**
+     * Starts the server on the loopback address only (the server has no authentication, so it must not be
+     * reachable from other machines unless asked for) and returns the actually bound port.
+     */
     public int start(int port) {
+        return start(null, port);
+    }
+
+    /**
+     * Starts the server on {@code host} ({@code null} for the loopback address, {@code 0.0.0.0} for all interfaces)
+     * and {@code port} (use 0 for an ephemeral port) and returns the actually bound port.
+     */
+    public int start(String host, int port) {
         try {
-            server = HttpServer.create(new InetSocketAddress(port), 0);
+            InetSocketAddress address = host == null ? new InetSocketAddress(InetAddress.getLoopbackAddress(), port)
+                    : new InetSocketAddress(host, port);
+            if (address.isUnresolved()) {
+                throw new IOException("unknown host: " + host);
+            }
+            server = HttpServer.create(address, 0);
+            // the loopback address as a literal ("localhost" may resolve to ::1 while 127.0.0.1 is bound); otherwise
+            // as requested, since the JDK reports a wildcard bind as the IPv6 "::", even for 0.0.0.0
+            boundHost = host == null ? address.getAddress().getHostAddress() : address.getHostString();
         } catch (IOException e) {
-            throw new UncheckedIOException("cannot bind to port " + port, e);
+            throw new UncheckedIOException("cannot bind to " + (host == null ? "loopback" : host) + " port " + port, e);
         }
         httpExecutor = Executors.newVirtualThreadPerTaskExecutor();
         server.setExecutor(httpExecutor);
@@ -76,6 +97,16 @@ public final class NelumboServer {
         server.start();
         startMillis = System.currentTimeMillis();
         return server.getAddress().getPort();
+    }
+
+    /** The socket address the server is bound to. */
+    public InetSocketAddress address() {
+        return server.getAddress();
+    }
+
+    /** The base URL of the server, naming the host it is bound to (not a hostname that may resolve elsewhere). */
+    public String url() {
+        return "http://" + (boundHost.contains(":") ? "[" + boundHost + "]" : boundHost) + ":" + address().getPort();
     }
 
     public void stop() {

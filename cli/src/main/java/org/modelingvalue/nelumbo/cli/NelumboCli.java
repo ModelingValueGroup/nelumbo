@@ -101,6 +101,7 @@ public final class NelumboCli {
         boolean interactive = false;
         JsonOutput json = null;
         Integer serverPort = null;
+        String serverHost = null;
         Long timeoutMs = null;
         java.util.List<String> prep = new ArrayList<>();
         java.util.List<Input> inputs = new ArrayList<>();
@@ -159,6 +160,15 @@ public final class NelumboCli {
                 }
                 serverPort = Integer.parseInt(args[++i]);
                 break;
+            case "--host":
+                if (i + 1 >= args.length) {
+                    System.err.println("nelumbo: missing value for " + a);
+                    printUsage(System.err);
+                    System.exit(2);
+                    return;
+                }
+                serverHost = args[++i];
+                break;
             case "-t":
             case "--timeout":
                 if (i + 1 >= args.length) {
@@ -195,6 +205,11 @@ public final class NelumboCli {
             }
         }
         String preamble = prepPreamble(prep);
+        if (serverHost != null && serverPort == null) {
+            System.err.println("nelumbo: --host requires --server");
+            System.exit(2);
+            return;
+        }
         if (interactive) {
             if (json != null || serverPort != null) {
                 System.err.println("nelumbo: --interactive cannot be combined with --json or --server");
@@ -210,7 +225,7 @@ public final class NelumboCli {
             return;
         }
         if (serverPort != null) {
-            runServer(serverPort, timeoutMs != null ? timeoutMs : NelumboServer.DEFAULT_TIMEOUT_MS, inputs, preamble);
+            runServer(serverHost, serverPort, timeoutMs != null ? timeoutMs : NelumboServer.DEFAULT_TIMEOUT_MS, inputs, preamble);
             return; // no exit: the server's dispatcher thread keeps the JVM alive
         }
         if (inputs.isEmpty()) {
@@ -242,7 +257,7 @@ public final class NelumboCli {
     }
 
     /** Loads the inputs into a base knowledge base and serves it over HTTP (the old nelumbo-cli-server). */
-    private static void runServer(int port, long timeoutMs, java.util.List<Input> inputs, String preamble) {
+    private static void runServer(String host, int port, long timeoutMs, java.util.List<Input> inputs, String preamble) {
         java.util.List<NamedSource> sources = new ArrayList<>();
         java.util.List<String>      files   = new ArrayList<>();
         int inlineCount = 0;
@@ -264,8 +279,8 @@ public final class NelumboCli {
         }
         KnowledgeBase base   = KnowledgeBaseLoader.load(sources);
         NelumboServer server = new NelumboServer(base, files, timeoutMs);
-        int bound = server.start(port);
-        System.out.println("Nelumbo server listening on http://localhost:" + bound
+        server.start(host, port);
+        System.out.println("Nelumbo server listening on " + server.url()
                 + " (" + files.size() + " source(s) loaded" + (preamble != null ? " + stdlib prep" : "")
                 + ", timeout " + timeoutMs + " ms)");
     }
@@ -538,7 +553,6 @@ public final class NelumboCli {
             openBrowser.setEnabled(false);
             JLabel serverStatus = new JLabel(" ");
             NelumboServer[] running = { null };
-            int[] boundPort = { 0 };
             JLabel statRequests = new JLabel("-");
             JLabel statTiming = new JLabel("-");
             JLabel statUptime = new JLabel("-");
@@ -573,7 +587,7 @@ public final class NelumboCli {
             openBrowser.addActionListener(e -> {
                 try {
                     if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
-                        java.awt.Desktop.getDesktop().browse(java.net.URI.create("http://localhost:" + boundPort[0] + "/"));
+                        java.awt.Desktop.getDesktop().browse(java.net.URI.create(running[0].url() + "/"));
                     }
                 } catch (Exception ex) {
                     System.err.println("cannot open browser: " + ex);
@@ -601,11 +615,10 @@ public final class NelumboCli {
                             kbSources.add(new NamedSource("<nelumbo-tab>", source));
                             KnowledgeBase kb = KnowledgeBaseLoader.load(kbSources);
                             NelumboServer server = new NelumboServer(kb, java.util.List.of("<nelumbo-tab>"), NelumboServer.DEFAULT_TIMEOUT_MS);
-                            int bound = server.start(port);
+                            server.start(port);
                             SwingUtilities.invokeLater(() -> {
                                 running[0] = server;
-                                boundPort[0] = bound;
-                                serverStatus.setText("running at http://localhost:" + bound + " (serving the nelumbo tab content)");
+                                serverStatus.setText("running at " + server.url() + " (serving the nelumbo tab content)");
                                 statRequests.setText("0");
                                 statTiming.setText("-");
                                 statUptime.setText("-");
@@ -778,6 +791,9 @@ public final class NelumboCli {
                   -i, --interactive read-eval-print loop; any given files and --prep
                                    modules are loaded into the session first
                   -s, --server P   serve the inputs over HTTP on port P (0 picks a free port)
+                  --host H         address to bind the server to (default: loopback only;
+                                   0.0.0.0 for all interfaces - the server has no
+                                   authentication, anyone who can reach it can use it)
                   -t, --timeout MS per-request/per-input inference budget in server and
                                    interactive mode (server default 30000; interactive
                                    default unlimited; 0 disables)
