@@ -103,8 +103,10 @@ The jar is also double-clickable: launched without a console and without argumen
 The same jar is a lean HTTP executor for `.nl` specifications: with `--server <port>` it loads the given files (directories are scanned for `*.nl`) and `-n` sources into a knowledge base and evaluates posted documents against it. It runs on the JDK's built-in HTTP server; the only third-party dependency in the jar is JLine (for the interactive REPL) — the shaded jar is about 4 MB.
 
 ```sh
-java -jar cli/build/libs/nelumbo-cli-<version>.jar --server 8080 [--timeout MS] [<file-or-dir>...]
+java -jar cli/build/libs/nelumbo-cli-<version>.jar --server 8080 [--host H] [--timeout MS] [<file-or-dir>...]
 ```
+
+The server has no authentication, so it binds to the loopback address only. Pass `--host 0.0.0.0` (or a specific interface address) to make it reachable from other machines.
 
 | Endpoint           | Purpose                                                                                              |
 |--------------------|------------------------------------------------------------------------------------------------------|
