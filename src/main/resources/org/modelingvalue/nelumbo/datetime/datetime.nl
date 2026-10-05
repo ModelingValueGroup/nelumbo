@@ -5,29 +5,29 @@ Date                :: Object
 Time                :: Object
 Period              :: Object
 
-DateTime            ::= <[> <Date> T <Time#50> <]> @nelumbo.datetime.NDateTime,
-                        <DateTime> + <Period> #40,
-                        <DateTime> - <Period> #40
+DateTime            ::= <[> <Date> T <Time> <]> #50 @nelumbo.datetime.NDateTime,
+                        <DateTime> + <Period>   #40,
+                        <DateTime> - <Period>   #40
 
-Date                ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> 						                                   @nelumbo.datetime.NDate,
-                        <Date> + <Period> #40,
-                        <Date> - <Period> #40
+Date                ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> #60				                    @nelumbo.datetime.NDate,
+                        <Date> + <Period>                      #40,
+                        <Date> - <Period>                      #40
 
-Time                ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]>		                       @nelumbo.datetime.NTime,
-                        <Time> + <Period> #40,
-                        <Time> - <Period> #40
+Time                ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]>	#60	    @nelumbo.datetime.NTime,
+                        <Time> + <Period>                                                   #40,
+                        <Time> - <Period>                                                   #40
 
 pattern YMWD_PERIOD ::= <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+>
 pattern TIME_PERIOD ::= T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>
 
-Period              ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]> @nelumbo.datetime.NPeriod,
-                        <DateTime> - <DateTime> #40,
-                        <Date> - <Date>         #40,
-                        <Time> - <Time>         #40,
-                        <Period> + <Period>     #40,
-                        <Period> - <Period>     #40,
-                        <Period> * <Integer>    #50,
-                        <Integer> * <Period>    #50
+Period              ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]> #60 @nelumbo.datetime.NPeriod,
+                        <DateTime> - <DateTime>                                                  #40,
+                        <Date> - <Date>                                                          #40,
+                        <Time> - <Time>                                                          #40,
+                        <Period> + <Period>                                                      #40,
+                        <Period> - <Period>                                                      #40,
+                        <Period> * <Integer>                                                     #50,
+                        <Integer> * <Period>                                                     #50
 
 private Boolean     ::= datetime_add(<DateTime>,<Period>,<DateTime>) @nelumbo.datetime.Add,
                         date_add(<Date>,<Period>,<Date>)             @nelumbo.datetime.Add,

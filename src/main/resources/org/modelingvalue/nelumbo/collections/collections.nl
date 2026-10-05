@@ -26,7 +26,7 @@ Boolean          ::= <Set<E>> "<"  <Set<E>>        #30,
                      <Set<E>> ">=" <Set<E>>        #30,
                      <E>      "in" <Collection<E>> #30
 
-{Struct,Set<E>}  ::= { <(> <E> <,> , <)*> }   @nelumbo.collections.NSet
+{Struct,Set<E>}  ::= { <(> <E> <,> , <)*> }  @nelumbo.collections.NSet
 Set<E>           ::= { <Lambda1<E,Boolean>> },
                      <Set<E>> where <Lambda1<E,Boolean>> #37,
                      <Set<E>> && <Set<E>>                #60,
@@ -36,7 +36,7 @@ Set<E>           ::= { <Lambda1<E,Boolean>> },
 Integer          ::= | <Collection<E>> | #35,
                      <E> "pos" <List<E>> #40
 
-{Struct,List<E>} ::= [ <(> <E> <,> , <)*> ]   @nelumbo.collections.NList
+{Struct,List<E>} ::= [ <(> <E> <,> , <)*> ]  @nelumbo.collections.NList
 List<E>          ::= <List<E>> + <List<E>>                       #50,
                      <List<E>> where <Lambda1<E,Boolean>>        #37,
                      <Collection<F>> map <Lambda1<F,E>>          #37,

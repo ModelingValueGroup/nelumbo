@@ -8,8 +8,8 @@ Type OT, AT
 NAME AN
 
 attr OT AN AT  ::> {
-    AT               ::= <OT>.AN
-    Root             ::= <{OT,Literal}>.AN := <{AT,Literal}>
+    AT               ::= <OT>.AN                             #30
+    Root             ::= <{OT,Literal}>.AN := <{AT,Literal}> #30
     private FactType ::= AN(<OT>,<AT>)
 
     OT o

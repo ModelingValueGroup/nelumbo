@@ -55,7 +55,7 @@ public class SyntaxTest extends NelumboTestBase {
                     Altern   ::  Object
                     Test     ::  Object                        #TEST
 
-                    Int      ::= <ESet>.size,
+                    Int      ::= <ESet#0>.size,
                                  <NUMBER>
 
                     ESet     ::= <ESet> + <Object>             #40,

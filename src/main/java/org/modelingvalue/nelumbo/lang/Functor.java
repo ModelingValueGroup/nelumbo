@@ -273,6 +273,10 @@ public class Functor extends Node implements FunctorOrType {
         return set(1, type);
     }
 
+    private Functor setPattern(Pattern pattern) {
+        return set(0, pattern);
+    }
+
     public Object[] args(List<AstElement> elements, MutableMap<Variable, Type> typeArgs) {
         Pattern pattern = pattern();
         MutableList<Object> args = MutableList.of(List.of());
@@ -325,9 +329,7 @@ public class Functor extends Node implements FunctorOrType {
                     Token t = (Token) e;
                     if (t == null || t.text().equals(",")) {
                         Pattern pattern = Pattern.pattern(pttrn);
-                        if (precedence != null) {
-                            pattern = pattern.setPresedence(precedence);
-                        }
+                        pattern = pattern.setPresedence(precedence != null ? precedence : Integer.MIN_VALUE);
                         roots = createFunctor(type, roots, ast, clazz, pattern, local, precedence, knowledgeBase, ctx);
                         if (t != null) {
                             roots = roots.setAstElements(roots.astElements().add(t));
@@ -363,6 +365,16 @@ public class Functor extends Node implements FunctorOrType {
             }
             return roots;
         }
+        Functor result = this;
+        if (reason == ConstructionReason.bootstrapping) {
+            Integer precedence = leftPrecedence();
+            result = setPattern(pattern().setPresedence(precedence != null ? precedence : Integer.MIN_VALUE));
+        }
+        result.activate(knowledgeBase, ctx);
+        return result;
+    }
+
+    private void activate(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         Constructor<? extends Node> constructor = constructor();
         List<AstElement> elements = astElements();
         if (constructor != null && !elements.isEmpty()) {
@@ -385,7 +397,6 @@ public class Functor extends Node implements FunctorOrType {
         } else {
             knowledgeBase.parseContext().register(knowledgeBase, group, Type.WORLD, this);
         }
-        return this;
     }
 
     private NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,

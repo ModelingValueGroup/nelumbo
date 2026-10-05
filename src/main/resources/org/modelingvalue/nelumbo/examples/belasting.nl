@@ -2,9 +2,9 @@ import      nelumbo.integers
 
 Person   :: Object
 
-FactType ::= het inkomen van <Person> is <Integer> euro
-FactType ::= <Person> mag <Integer> euro aftrekken
-Boolean  ::= <Person> moet <Integer> euro belasting betalen
+FactType ::= het inkomen van <Person> is <Integer> euro     #30
+FactType ::= <Person> mag <Integer> euro aftrekken          #30
+Boolean  ::= <Person> moet <Integer> euro belasting betalen #30
 
 Integer x,i,a
 Person  p

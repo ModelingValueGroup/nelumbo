@@ -45,7 +45,7 @@ Pattern          ::= <NAME>                                                     
                      "<" <(> <(> "visible" <|> "hidden" <)> <)?> <Type#100> <(> # <NUMBER> <)?> ">"                               @nelumbo.patterns.NodeTypePattern,
                      "<" <PatternPart#100> ">"                                                                                    @nelumbo.patterns.PatternPartPattern
 
-Type             ::= { <(> <Type> <,> , <)+> }  @nelumbo.lang.Type
+Type             ::= { <(> <Type> <,> , <)+> } @nelumbo.lang.Type
 
 Root             ::= "import" <(> <QNAME> <,> , <)+>                                                                          @nelumbo.lang.Import,
                      <Root#0> ::> <RootNamespace>                                                                             @nelumbo.lang.Transform,
