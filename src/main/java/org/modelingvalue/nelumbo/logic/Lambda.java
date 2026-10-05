@@ -14,25 +14,18 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.lang;
-
-import java.io.Serial;
+package org.modelingvalue.nelumbo.logic;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.ConstructionReason;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.logic.InferContext;
-import org.modelingvalue.nelumbo.logic.InferResult;
-import org.modelingvalue.nelumbo.logic.NIs;
-import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+
+import java.io.Serial;
 
 public final class Lambda extends Node {
     @Serial

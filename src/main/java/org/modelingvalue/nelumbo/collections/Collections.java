@@ -16,18 +16,18 @@
 
 package org.modelingvalue.nelumbo.collections;
 
-import java.io.Serial;
-import java.math.BigInteger;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.integers.NInteger;
-import org.modelingvalue.nelumbo.lang.Lambda;
 import org.modelingvalue.nelumbo.logic.InferResult;
+import org.modelingvalue.nelumbo.logic.Lambda;
 import org.modelingvalue.nelumbo.logic.Predicate;
+
+import java.io.Serial;
+import java.math.BigInteger;
 
 public class Collections extends Predicate {
     @Serial

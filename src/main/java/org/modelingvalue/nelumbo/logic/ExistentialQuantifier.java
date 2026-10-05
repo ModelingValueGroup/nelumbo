@@ -16,10 +16,6 @@
 
 package org.modelingvalue.nelumbo.logic;
 
-import static org.modelingvalue.nelumbo.patterns.Pattern.*;
-
-import java.io.Serial;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
@@ -27,10 +23,13 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.Lambda;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+
+import java.io.Serial;
+
+import static org.modelingvalue.nelumbo.patterns.Pattern.*;
 
 public final class ExistentialQuantifier extends Quantifier {
     @Serial

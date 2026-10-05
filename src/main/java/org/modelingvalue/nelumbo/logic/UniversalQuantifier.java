@@ -16,8 +16,6 @@
 
 package org.modelingvalue.nelumbo.logic;
 
-import java.io.Serial;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
@@ -25,8 +23,9 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.Lambda;
 import org.modelingvalue.nelumbo.lang.Variable;
+
+import java.io.Serial;
 
 public final class UniversalQuantifier extends Quantifier {
     @Serial
