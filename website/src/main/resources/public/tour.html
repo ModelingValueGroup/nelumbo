@@ -316,13 +316,15 @@ Type OT, AT
 NAME AN
 attr OT AN AT ::&gt; {
     AT   ::= &lt;OT&gt;.AN
-    Root ::= &lt;OT&gt;.AN := &lt;AT&gt;
+    Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt;
     private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
     OT o
     AT a
     o.AN=a &lt;=&gt; AN(o,a)
-    o.AN := a ::&gt; {
-        fact AN(o,a)
+    {OT,Literal} ol
+    {AT,Literal} al
+    ol.AN := al ::&gt; {
+        fact AN(ol,al)
     }
 }
 Person :: Object
@@ -342,13 +344,15 @@ Type OT, AT
 NAME AN
 attr OT AN AT ::&gt; {
     AT   ::= &lt;OT&gt;.AN
-    Root ::= &lt;OT&gt;.AN := &lt;AT&gt;
+    Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt;
     private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
     OT o
     AT a
     o.AN=a &lt;=&gt; AN(o,a)
-    o.AN := a ::&gt; {
-        fact AN(o,a)
+    {OT,Literal} ol
+    {AT,Literal} al
+    ol.AN := al ::&gt; {
+        fact AN(ol,al)
     }
 }
 Person :: Object
@@ -366,13 +370,15 @@ Type OT, AT
 NAME AN
 attr OT AN AT ::&gt; {
     AT   ::= &lt;OT&gt;.AN
-    Root ::= &lt;OT&gt;.AN := &lt;AT&gt;
+    Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt;
     private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
     OT o
     AT a
     o.AN=a &lt;=&gt; AN(o,a)
-    o.AN := a ::&gt; {
-        fact AN(o,a)
+    {OT,Literal} ol
+    {AT,Literal} al
+    ol.AN := al ::&gt; {
+        fact AN(ol,al)
     }
 }
 Person :: Object

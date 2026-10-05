@@ -182,6 +182,39 @@ class NelumboHttpServerTest {
         assertTrue(20 < checked, "expected the docs catalogue to be checked, but only found " + checked + " links");
     }
 
+    /**
+     * The tour's editors are hand-written Nelumbo that no other test evaluates, so a language change breaks them
+     * silently (78e006b5 did: {@code fact} takes a FactType since). Every editor must evaluate on a server like
+     * production's (empty base KB): an exercise field may only fail on its expectation, a solution not at all.
+     */
+    @Test
+    void everyTourEditorEvaluates() throws Exception {
+        NelumboHttpServer tour     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
+        int               tourPort = tour.start(0);
+        try {
+            Pattern editor  = Pattern.compile("<(div|pre) class=\"(nelumbo-field|nelumbo-solution)\"[^>]*>(.*?)</\\1>", Pattern.DOTALL);
+            Matcher matcher = editor.matcher(get("/tour.html").body());
+            int     checked = 0;
+            while (matcher.find()) {
+                String      kind     = matcher.group(2);
+                String      source   = matcher.group(3).replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&amp;", "&");
+                HttpRequest request  = HttpRequest.newBuilder(URI.create("http://localhost:" + tourPort + "/eval"))
+                        .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(source)).build();
+                JsonNode    result   = mapper.readTree(client.send(request, BodyHandlers.ofString()).body());
+                String      where    = "tour " + kind + " #" + checked + ":\n" + source;
+                assertTrue(0 < result.get("queries").size(), "no query evaluated in " + where);
+                for (JsonNode error : result.get("errors")) {
+                    String message = error.get("line") + ":" + error.get("column") + " " + error.get("message").asText();
+                    assertTrue(kind.equals("nelumbo-field") && error.get("message").asText().startsWith("Expected result "), message + "\nin " + where);
+                }
+                checked++;
+            }
+            assertTrue(20 < checked, "expected the tour's editors to be checked, but only found " + checked);
+        } finally {
+            tour.stop();
+        }
+    }
+
     @Test
     void pagesLinkToTheDocs() throws Exception {
         for (String page : List.of("/", "/tour.html", "/playground.html")) {
