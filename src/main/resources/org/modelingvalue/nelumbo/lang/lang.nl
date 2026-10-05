@@ -56,16 +56,3 @@ Root             ::= "import" <(> <QNAME> <,> , <)+>                            
 Type P
 
 P ::= (<P>) @nelumbo.lang.Parenthesized
-
-Type A1, A2, A3, R
-
-Lambda              :: Object
-Lambda<R>           :: Lambda
-
-Lambda1<A1,R>       :: Lambda<R>
-Lambda2<A1,A2,R>    :: Lambda<R>
-Lambda3<A1,A2,A3,R> :: Lambda<R>
-
-Lambda1<A1,R>       ::= [<{Variable,A1}#100>](<R#0>)                                         @nelumbo.lang.Lambda
-Lambda2<A1,A2,R>    ::= [<{Variable,A1}#100>,<{Variable,A2}#100>](<R#0>)                     @nelumbo.lang.Lambda
-Lambda3<A1,A2,A3,R> ::= [<{Variable,A1}#100>,<{Variable,A2}#100>,<{Variable,A3}#100>](<R#0>) @nelumbo.lang.Lambda
