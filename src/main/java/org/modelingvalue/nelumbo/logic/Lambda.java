@@ -16,16 +16,24 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import static org.modelingvalue.nelumbo.patterns.Pattern.*;
+
+import java.io.Serial;
+
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-
-import java.io.Serial;
 
 public final class Lambda extends Node {
     @Serial
@@ -33,6 +41,16 @@ public final class Lambda extends Node {
 
     @NelumboFunctorField
     private static Functor FUNCTOR;
+
+    static {
+        try {
+            FUNCTOR = Functor.of(
+                    s(t("["), r(n(Type.VARIABLE, 100), true, t(",")), t("]"), t("("), n(Type.OBJECT, 0), t(")")),
+                    Type.LAMBDA, null, Rule.class, null);
+        } catch (ParseException e) {
+            throw new IllegalStateException("Cannot create functor for NIs", e);
+        }
+    }
 
     private Variable var;
     private NIs      is;

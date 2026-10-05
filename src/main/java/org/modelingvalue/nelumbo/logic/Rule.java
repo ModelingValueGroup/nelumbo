@@ -53,7 +53,7 @@ public final class Rule extends Node implements Evaluatable {
             FUNCTOR = Functor.of(
                     s(n(Type.BOOLEAN, 0), t("<=>"),
                             r(s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0)))), true, t(","))),
-                    Type.BOOLEAN, null, Rule.class, null);
+                    Type.ROOT, null, Rule.class, null);
         } catch (ParseException e) {
             throw new IllegalStateException("Cannot create functor for NIs", e);
         }
