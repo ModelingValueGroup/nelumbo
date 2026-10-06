@@ -22,9 +22,9 @@ import org.junit.jupiter.api.Test;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (eleven
+// remove the @KnownBug and promote the method to RegressionTest (thirteen
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
-// one on 2026-10-02, one on 2026-10-06).
+// one on 2026-10-02, three on 2026-10-06).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -41,7 +41,12 @@ import org.junit.jupiter.api.Test;
 // undecided on 2026-09-25, the CLI-only load-time repro nested-generic-
 // rule-load-time on 2026-10-02, and the map/lambda repro set-literal-
 // arithmetic-unevaluated on 2026-10-06 (the list-literal twin `[j+1]`, which
-// did not parse before, is covered by the promoted file too).
+// did not parse before, is covered by the promoted file too). Also promoted on
+// 2026-10-06: the parser repro four-var-quantifier-crash (logic.nl now has
+// Lambda4..6, so E/A/lambdas take up to 6 variables in every position) and
+// the pattern repro repetition-separator-greedy (the separator backtracking
+// was in since eeb06747; the repro only stayed red because its `:: Object`
+// functor is Function-typed since bba88fc8 - it is declared `:: Struct` now).
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -113,12 +118,6 @@ public class KnownBugsTest extends NelumboTestBase {
 
     // ==== parser / diagnostics ====
 
-    @KnownBug("E/!E with 4 variables parses in rule bodies then crashes at runtime")
-    @Test
-    public void fourVarQuantifierCrash() {
-        bugResource("four-var-quantifier-crash.nl");
-    }
-
     @KnownBug("if-guard on its own continuation line silently dropped")
     @Test
     public void guardOnContinuationLineDropped() {
@@ -155,12 +154,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void optionalPresenceLost() {
         bugResource("optional-presence-lost.nl");
-    }
-
-    @KnownBug("greedy separator consumption without backtracking crashes on valid input")
-    @Test
-    public void repetitionSeparatorGreedy() {
-        bugResource("repetition-separator-greedy.nl");
     }
 
     // ==== logic / quantifiers / facts ====

@@ -56,7 +56,7 @@ public class Functor extends Node implements FunctorOrType {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
-    private static final int REPETITION_MAX = Integer.getInteger("REPETITION_MAX", 10);
+    private static final int REPETITION_MAX = Integer.getInteger("REPETITION_MAX", 6);
 
     public static Functor of(Pattern pattern, Type result, Type local, Class<?> clazz, Integer leftPrecedence)
             throws ParseException {
