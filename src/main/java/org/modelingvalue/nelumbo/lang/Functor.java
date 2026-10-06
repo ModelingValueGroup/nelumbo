@@ -56,6 +56,8 @@ public class Functor extends Node implements FunctorOrType {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
+    private static final int REPETITION_MAX = Integer.getInteger("REPETITION_MAX", 10);
+
     public static Functor of(Pattern pattern, Type result, Type local, Class<?> clazz, Integer leftPrecedence)
             throws ParseException {
         return of(List.of(), pattern, result, local, clazz, leftPrecedence, false);
@@ -487,6 +489,27 @@ public class Functor extends Node implements FunctorOrType {
         litFunctor = litFunctor.resetVariables(ctx);
         List<Type> nodArgs = nodFunctor.argTypes();
         List<Type> litArgs = litFunctor.argTypes();
+        boolean rep = nodArgs.size() == 1 && Type.REPETITION.equals(nodArgs.get(0).original());
+        if (rep) {
+            Type nodType = nodArgs.get(0).arguments().first();
+            Type litType = litArgs.get(0).arguments().first();
+            nodArgs = List.of();
+            litArgs = List.of();
+            while (nodArgs.size() < REPETITION_MAX) {
+                nodArgs = nodArgs.add(nodType);
+                litArgs = litArgs.add(litType);
+                roots = createRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor, nodArgs, litArgs,
+                        rep);
+            }
+            return roots;
+        } else {
+            return createRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor, nodArgs, litArgs, rep);
+        }
+    }
+
+    private static NList createRule(Type type, NList roots, KnowledgeBase knowledgeBase, ParseContext ctx,
+            boolean function, Functor nodFunctor, Functor litFunctor, List<Type> nodArgs, List<Type> litArgs,
+            boolean rep) throws ParseException {
         Variable[] nodVars = new Variable[nodArgs.size()];
         Variable[] litVars = new Variable[litArgs.size()];
         assert nodVars.length == litVars.length;
@@ -495,15 +518,13 @@ public class Functor extends Node implements FunctorOrType {
         for (int v = 0; v < nodVars.length; v++) {
             Type nodType = nodArgs.get(v);
             Type litType = litArgs.get(v);
-            boolean rep = Type.REPETITION.equals(nodType.original());
-            if (rep) {
-                nodType = nodType.arguments().first();
-                litType = litType.arguments().first();
-            }
             nodVars[v] = new Variable(List.of(), false, nodType, "n" + (v + 1));
             litVars[v] = new Variable(List.of(), false, litType, "l" + (v + 1));
             nodConsArgs[v] = nodVars[v];
-            litConsArgs[v] = rep ? List.of(litVars[v]) : litVars[v];
+            litConsArgs[v] = litVars[v];
+        }
+        if (rep) {
+            litConsArgs = new Object[] { List.of(litConsArgs) };
         }
         Node nodNode = nodFunctor.construct(List.of(), nodConsArgs, knowledgeBase, ctx);
         Node litNode = litFunctor.construct(List.of(), litConsArgs, knowledgeBase, ctx);
