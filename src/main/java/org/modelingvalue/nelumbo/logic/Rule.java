@@ -16,22 +16,10 @@
 
 package org.modelingvalue.nelumbo.logic;
 
-import static org.modelingvalue.nelumbo.patterns.Pattern.*;
-
-import java.io.Serial;
-import java.util.Optional;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.ConstructionReason;
-import org.modelingvalue.nelumbo.Evaluatable;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
@@ -40,6 +28,11 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.Token;
+
+import java.io.Serial;
+import java.util.Optional;
+
+import static org.modelingvalue.nelumbo.patterns.Pattern.*;
 
 public final class Rule extends Node implements Evaluatable {
     @Serial
@@ -55,7 +48,7 @@ public final class Rule extends Node implements Evaluatable {
                             r(s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0)))), true, t(","))),
                     Type.ROOT, null, Rule.class, null);
         } catch (ParseException e) {
-            throw new IllegalStateException("Cannot create functor for NIs", e);
+            throw new IllegalStateException("Cannot create functor for "+ Rule.class, e);
         }
     }
 
