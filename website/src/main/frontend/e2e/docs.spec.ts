@@ -30,8 +30,8 @@ test('links that leave the docs folder go to the GitHub repository', async ({ pa
     await expect(github).toBeVisible();
 });
 
-test('landing, tour and playground link to the docs', async ({ page }: { page: Page }): Promise<void> => {
-    for (const path of ['/', '/tour.html', '/playground.html']) {
+test('landing, tour and sandbox link to the docs', async ({ page }: { page: Page }): Promise<void> => {
+    for (const path of ['/', '/tour.html', '/sandbox.html']) {
         await page.goto(path);
         await expect(page.locator('a[href="/docs/"]').first()).toBeAttached();
     }

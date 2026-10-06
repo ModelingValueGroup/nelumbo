@@ -302,7 +302,7 @@ export function mountFields(container: ParentNode): void {
     }
 }
 
-// Playground entry point: mount every field on the page and connect once. Lifecycle is page-scoped
+// Sandbox entry point: mount every field on the page and connect once. Lifecycle is page-scoped
 // (no teardown); standalone monaco falls back to a synchronous main-thread worker (one console
 // warning) since the /lsp server supplies all language features.
 export async function initNelumboFields(): Promise<void> {

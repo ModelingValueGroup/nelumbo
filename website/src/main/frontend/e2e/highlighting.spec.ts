@@ -51,7 +51,7 @@ async function tokenStyle(page: Page, text: string): Promise<string> {
 for (const scheme of ['light', 'dark'] as const) {
     test('the ' + scheme + ' editor theme colors every token type like the NelumboEditor', async ({ page }: { page: Page }): Promise<void> => {
         await page.emulateMedia({ colorScheme: scheme });
-        await page.goto('/playground.html');
+        await page.goto('/sandbox.html');
         await page.waitForFunction((): boolean => ((window as any).NelumboFields?.__editors?.length ?? 0) > 0);
         await page.evaluate((doc: string): void => {
             (window as any).NelumboFields.__editors[0].model.setValue(doc);

@@ -5,7 +5,7 @@
 Nelumbo is written in Java (21+) by the Modeling Value Group. It is at an early stage of
 development, so incompatible changes are likely. It ships a core engine, a CLI with a REPL,
 an LSP server with plugins for VS Code / IntelliJ / Eclipse, an HTTP eval server, an MCP
-server for LLM authoring, and a browser playground.
+server for LLM authoring, and a browser sandbox.
 
 Reading `.nl` code - the whole notation in eight lines:
 
@@ -31,7 +31,7 @@ example file in the project is unreadable.
 - [Reading a query and test](https://nelumbo.nl/docs/getting-started/reading-a-test.html): the query/test notation and three-valued logic; the one page to read first
 - [Your first program](https://nelumbo.nl/docs/getting-started/first-program.html): line-by-line walkthrough of `fibonacci.nl` - imports, patterns, guarded rules, tests
 - [Documentation overview](https://nelumbo.nl/docs/): full table of contents plus reading paths per goal
-- [Playground](https://nelumbo.nl/playground.html): a live editor; results appear inline as you type, no run button
+- [Sandbox](https://nelumbo.nl/sandbox.html): a live editor; results appear inline as you type, no run button
 - [Feature tour](https://nelumbo.nl/tour.html): eight guided sections with live demos and self-checking exercises
 
 ## Language reference

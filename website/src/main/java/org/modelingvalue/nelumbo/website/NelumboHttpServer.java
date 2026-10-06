@@ -28,6 +28,7 @@ import org.modelingvalue.nelumbo.server.EvalService;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import io.javalin.http.staticfiles.Location;
 
 /**
@@ -72,7 +73,7 @@ public final class NelumboHttpServer {
     public int start(int port) {
         String landing    = loadResource("/public/landing.html");
         String tour       = loadResource("/public/tour.html");
-        String playground = loadResource("/public/playground.html");
+        String sandbox    = loadResource("/public/sandbox.html");
         String favicon    = loadResource("/public/favicon.svg");
         String theme      = loadResource("/public/theme.js");
         String llms       = loadResource("/public/llms.txt");
@@ -95,7 +96,9 @@ public final class NelumboHttpServer {
             config.routes.get("/theme.js", ctx -> ctx.contentType("text/javascript; charset=utf-8").result(theme));
             config.routes.get("/llms.txt", ctx -> ctx.contentType("text/plain; charset=utf-8").result(llms));
             config.routes.get("/tour.html", ctx -> ctx.html(tour));
-            config.routes.get("/playground.html", ctx -> ctx.html(playground));
+            config.routes.get("/sandbox.html", ctx -> ctx.html(sandbox));
+            // the sandbox was published as the playground; keep old links (llms.txt, bookmarks) working
+            config.routes.get("/playground.html", ctx -> ctx.redirect("/sandbox.html", HttpStatus.MOVED_PERMANENTLY));
             // the docs index is /docs/ (its relative image link needs the trailing slash); <page> also matches slashes
             config.routes.get("/docs", ctx -> handleDocs(ctx, docs, docsLogo));
             config.routes.get("/docs/<page>", ctx -> handleDocs(ctx, docs, docsLogo));

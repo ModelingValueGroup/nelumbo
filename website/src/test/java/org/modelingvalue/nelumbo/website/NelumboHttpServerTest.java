@@ -108,7 +108,7 @@ class NelumboHttpServerTest {
         String html = response.body();
         assertTrue(html.contains("Nelumbo"), "landing page should introduce Nelumbo");
         assertTrue(html.contains("href=\"/tour.html\""), "landing page should link to the tour");
-        assertTrue(html.contains("href=\"/playground.html\""), "landing page should link to the playground");
+        assertTrue(html.contains("href=\"/sandbox.html\""), "landing page should link to the sandbox");
     }
 
     @Test
@@ -124,12 +124,20 @@ class NelumboHttpServerTest {
     }
 
     @Test
-    void playgroundIsServedAtItsPath() throws Exception {
-        HttpResponse<String> response = get("/playground.html");
+    void sandboxIsServedAtItsPath() throws Exception {
+        HttpResponse<String> response = get("/sandbox.html");
         assertEquals(200, response.statusCode());
         String html = response.body();
-        assertTrue(html.contains("nelumbo-field"), "playground should mount a Nelumbo editor field");
-        assertTrue(html.contains("initNelumboFields"), "playground should initialize the editor fields");
+        assertTrue(html.contains("nelumbo-field"), "sandbox should mount a Nelumbo editor field");
+        assertTrue(html.contains("initNelumboFields"), "sandbox should initialize the editor fields");
+    }
+
+    /** The sandbox was published as /playground.html (e.g. in llms.txt); old links must keep working. */
+    @Test
+    void formerPlaygroundUrlRedirectsPermanentlyToTheSandbox() throws Exception {
+        HttpResponse<String> response = get("/playground.html");
+        assertEquals(301, response.statusCode());
+        assertEquals("/sandbox.html", response.headers().firstValue("Location").orElse(""));
     }
 
     @Test
@@ -164,7 +172,7 @@ class NelumboHttpServerTest {
         assertEquals(200, script.statusCode());
         assertTrue(script.headers().firstValue("Content-Type").orElse("").contains("javascript"), "theme.js must be served as JavaScript");
         assertTrue(script.body().contains("prefers-color-scheme"), "the theme script follows the OS preference");
-        for (String page : new String[]{"/", "/tour.html", "/playground.html", "/docs/"}) {
+        for (String page : new String[]{"/", "/tour.html", "/sandbox.html", "/docs/"}) {
             String html = get(page).body();
             assertTrue(html.contains("<script src=\"/theme.js\"></script>"), page + " must load the theme script");
             assertTrue(html.contains("class=\"theme-toggle\""), page + " must show the theme switch");
@@ -231,7 +239,7 @@ class NelumboHttpServerTest {
 
     @Test
     void pagesLinkToTheDocs() throws Exception {
-        for (String page : List.of("/", "/tour.html", "/playground.html")) {
+        for (String page : List.of("/", "/tour.html", "/sandbox.html")) {
             assertTrue(get(page).body().contains("href=\"/docs/\""), page + " should link to the docs");
         }
     }

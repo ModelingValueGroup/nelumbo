@@ -1,6 +1,6 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 
-const PAGES: string[] = ['/', '/tour.html', '/playground.html', '/docs/'];
+const PAGES: string[] = ['/', '/tour.html', '/sandbox.html', '/docs/'];
 
 function theme(page: Page): Promise<string | null> {
     return page.locator('html').getAttribute('data-theme');
@@ -45,13 +45,13 @@ test('the switch cycles auto -> light -> dark -> auto and the override survives 
 });
 
 test('the switch labels its current mode and the next one for screen readers', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/playground.html');
+    await page.goto('/sandbox.html');
     await expect(page.locator('.theme-toggle')).toHaveAttribute('aria-label', 'Theme: auto (switch to light)');
 });
 
 test('open Monaco editors switch theme along with the page', async ({ page }: { page: Page }): Promise<void> => {
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.goto('/playground.html');
+    await page.goto('/sandbox.html');
     const editor: Locator = page.locator('.monaco-editor').first();
     await expect(editor).toHaveClass(/\bvs-dark\b/);
     await page.locator('.theme-toggle').click();

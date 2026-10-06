@@ -23,7 +23,7 @@ dependencies, HTTP served by the JDK's built-in server).
 
 The full **nelumbo** website server, as it runs on [nelumbo.nl](https://nelumbo.nl): the same
 REST endpoints as the cli's `--server` mode, plus an LSP editor service over WebSocket at
-`/lsp` and the public pages (landing page, feature tour, and playground with browser-based editors).
+`/lsp` and the public pages (landing page, feature tour, and sandbox with browser-based editors).
 
 - run `java -jar nelumbo-web-server-${version-num}.jar [--port N] [<file-or-dir>...]`,
   or double-click the jar: a small status window shows the URL with Open in Browser / Stop buttons
