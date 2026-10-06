@@ -70,6 +70,9 @@ import org.junit.jupiter.api.Test;
 //   - half       patterns/AlternationPattern.java:129 failed alternation options pollute shared previous[] token spacing
 //   - half       syntax/ParseException.java:84 exception length garbage/negative when tokens span lines
 //   - unverified Node.java:68, lang/Functor.java:221 unsynchronized lazy-init caches shared across concurrent evaluations
+//   - confirmed  logic/Rule.java:84            (found 2026-10-06) the CLI crashes on tests/langOnly.nl with a ClassCastException
+//                                              (ListImpl -> Predicate) in Rule.consequence, reached from Rule.toString via
+//                                              NodeTypePattern.string; CLI-only: the JUnit NelumboTest.langOnly passes
 //   lsp/server:
 //   - confirmed  Main.java:118                 WebSocket mode: any client's normal exit notification System.exit()s the whole multi-session server
 //   - confirmed  documentService/DocumentSyncService.java:66 blank documents never registered; later edits silently ignored
