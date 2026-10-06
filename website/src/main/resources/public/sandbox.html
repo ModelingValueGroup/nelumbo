@@ -49,7 +49,28 @@
   .site-header nav a:hover { color: var(--text); }
   .site-header nav a[aria-current="page"] { color: var(--accent); }
 
+  .layout { flex: 1; display: flex; min-height: 0; }
+  aside { width: 210px; flex: 0 0 210px; border-right: 1px solid var(--border); padding: 16px 0; overflow: auto; }
+  aside nav a { display: block; padding: 5px 16px; color: var(--muted); text-decoration: none; font-size: 13px; }
+  aside nav a:hover { color: var(--text); }
+  aside nav a.active { color: var(--accent); border-left: 2px solid var(--accent); padding-left: 14px; }
+  aside nav .group { padding: 14px 16px 4px; color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  aside nav .group:first-child { padding-top: 0; }
+  /* an exercise row: the exercise itself, then a small link to its answer */
+  aside nav .exercise { display: flex; align-items: baseline; }
+  aside nav .exercise a:first-child { flex: 1; }
+  aside nav .exercise a.answer { padding-left: 0; font-size: 11px; color: var(--faint); }
+  aside nav .exercise a.answer:hover { color: var(--text); }
+  aside nav .exercise a.answer.active { color: var(--accent); border-left: 0; padding-left: 0; }
   main { flex: 1; display: block; min-height: 0; overflow: auto; padding: 16px; }
+  #nav-toggle, #nav-backdrop { display: none; }
+  @media (max-width: 760px) {
+    #nav-toggle { display: flex; flex: 0 0 auto; width: 36px; height: 36px; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; padding: 0; }
+    #nav-toggle span { display: block; width: 18px; height: 2px; background: var(--text); }
+    aside { position: fixed; top: 0; left: 0; bottom: 0; z-index: 20; background: var(--bg); transform: translateX(-100%); transition: transform .2s ease; }
+    body.nav-open aside { transform: translateX(0); box-shadow: 4px 0 24px var(--shadow); }
+    body.nav-open #nav-backdrop { display: block; position: fixed; inset: 0; z-index: 10; background: var(--backdrop); }
+  }
   main .intro { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
   @media (max-width: 520px) {
     .site-header { padding: 0 12px; }
@@ -68,6 +89,7 @@
 </head>
 <body>
 <header class="site-header">
+  <button id="nav-toggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
   <a class="wordmark" href="/">Nelumbo</a>
   <nav>
     <a href="/tour.html">Tour</a>
@@ -81,7 +103,12 @@
     </button>
   </nav>
 </header>
+<div id="nav-backdrop"></div>
 
+<div class="layout">
+<aside>
+  <nav id="examples" aria-label="Examples"></nav>
+</aside>
 <main>
   <p class="intro">Edit the document below; results appear inline as you type. The document is self-contained: it imports the stdlib it needs, so it evaluates even against an empty knowledge base.</p>
   <div class="nelumbo-field" data-height="55vh">import nelumbo.integers
@@ -92,11 +119,78 @@ Integer r
 fib(7)=r ?
 </div>
 </main>
+</div>
 
 <footer><a href="/metadata" target="_blank">metadata</a> · <a href="/health" target="_blank">health</a> · Nelumbo @VERSION@</footer>
 
 <link rel="stylesheet" href="/assets/nelumbo-fields.css">
 <script src="/assets/nelumbo-fields.js"></script>
-<script>NelumboFields.initNelumboFields();</script>
+<script>
+  (function () {
+    var field    = document.querySelector('.nelumbo-field');
+    var nav      = document.getElementById('examples');
+    var toggle   = document.getElementById('nav-toggle');
+    var backdrop = document.getElementById('nav-backdrop');
+    function closeNav() { document.body.classList.remove('nav-open'); }
+    toggle.addEventListener('click', function () { document.body.classList.toggle('nav-open'); });
+    backdrop.addEventListener('click', closeNav);
+
+    function link(name, label, className) {
+      var a = document.createElement('a');
+      a.href = '#' + name;
+      a.dataset.example = name;
+      a.textContent = label;
+      if (className) { a.className = className; }
+      return a;
+    }
+    function group(title) {
+      var div = document.createElement('div');
+      div.className = 'group';
+      div.textContent = title;
+      nav.appendChild(div);
+    }
+    // replaces the document (one undoable edit) and marks the example as current
+    function load(name) {
+      fetch('/examples/' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.text() : null; }).then(function (source) {
+        if (source === null || !NelumboFields.setFieldText(field, source)) { return; }
+        nav.querySelectorAll('a').forEach(function (a) { a.classList.toggle('active', a.dataset.example === name); });
+        if (location.hash !== '#' + name) { history.replaceState(null, '', '#' + name); }
+      });
+    }
+
+    NelumboFields.initNelumboFields();
+    fetch('/examples').then(function (r) { return r.json(); }).then(function (body) {
+      var names     = body.examples;
+      var exercises = names.filter(function (n) { return /Assignment$/.test(n); });
+      var answers   = exercises.map(function (n) { return n.replace(/Assignment$/, ''); })
+                               .filter(function (n) { return names.indexOf(n) >= 0; });
+      group('Examples');
+      names.filter(function (n) { return exercises.indexOf(n) < 0 && answers.indexOf(n) < 0; })
+           .forEach(function (n) { nav.appendChild(link(n, n)); });
+      group('Exercises');
+      exercises.forEach(function (n) {
+        var base = n.replace(/Assignment$/, '');
+        var row  = document.createElement('div');
+        row.className = 'exercise';
+        row.appendChild(link(n, base));
+        if (answers.indexOf(base) >= 0) { row.appendChild(link(base, 'answer', 'answer')); }
+        nav.appendChild(row);
+      });
+      nav.addEventListener('click', function (e) {
+        var a = e.target.closest('a[data-example]');
+        if (!a) { return; }
+        e.preventDefault();
+        load(a.dataset.example);
+        closeNav();
+      });
+      window.addEventListener('hashchange', function () {
+        var name = location.hash.slice(1);
+        if (names.indexOf(name) >= 0) { load(name); }
+      });
+      var initial = location.hash.slice(1);
+      if (names.indexOf(initial) >= 0) { load(initial); }
+    });
+  })();
+</script>
 </body>
 </html>

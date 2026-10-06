@@ -98,6 +98,8 @@ export const __monaco: typeof monaco = monaco;
 let servicesReady: boolean                                     = false;
 let clientPromise: Promise<MonacoLanguageClient | null> | null = null;
 let fieldIndex:    number                                      = 0;
+// the model behind each mounted .nelumbo-field (the wrap div), for setFieldText
+const fieldModels: WeakMap<HTMLElement, monaco.editor.ITextModel> = new WeakMap();
 
 // Syntax colors per LSP semantic token type (LspTokenMapping on the server), mirroring the standalone
 // NelumboEditor's DEFAULT_TOKEN_COLORS: light = its colors verbatim, dark = the same hues lightened.
@@ -270,6 +272,7 @@ function buildField(div: HTMLElement, index: number): void {
         multiCursorModifier:  'alt',
     });
     __editors.push({ editor: editor, model: model });
+    fieldModels.set(div, model);
 }
 
 // Establish the single page-shared /lsp language client. Idempotent: repeated calls return the
@@ -300,6 +303,18 @@ export function mountFields(container: ParentNode): void {
         buildField(div, fieldIndex);
         fieldIndex++;
     }
+}
+
+// Replace the text of a mounted .nelumbo-field (e.g. when the sandbox loads an example). One undoable
+// edit, so Ctrl/Cmd+Z brings back what was there; false when the field is not mounted (yet).
+export function setFieldText(field: HTMLElement, text: string): boolean {
+    const model: monaco.editor.ITextModel | undefined = fieldModels.get(field);
+    if (model === undefined) {
+        return false;
+    }
+    model.pushEditOperations([], [{ range: model.getFullModelRange(), text: text }], (): null => null);
+    model.pushStackElement();
+    return true;
 }
 
 // Sandbox entry point: mount every field on the page and connect once. Lifecycle is page-scoped

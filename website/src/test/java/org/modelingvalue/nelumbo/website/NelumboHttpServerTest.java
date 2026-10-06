@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.website;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -130,6 +131,31 @@ class NelumboHttpServerTest {
         String html = response.body();
         assertTrue(html.contains("nelumbo-field"), "sandbox should mount a Nelumbo editor field");
         assertTrue(html.contains("initNelumboFields"), "sandbox should initialize the editor fields");
+    }
+
+    /**
+     * The sandbox sidebar lists the bundled examples from /examples (same JSON shape as the cli eval server).
+     * The sudokus are left out: the 9x9 ones run far past the eval deadline and would only show timeouts.
+     */
+    @Test
+    void examplesAreListedForTheSandboxWithoutTheSudokus() throws Exception {
+        HttpResponse<String> list = get("/examples");
+        assertEquals(200, list.statusCode());
+        assertTrue(list.headers().firstValue("Content-Type").orElse("").contains("json"), "the list is JSON");
+        assertTrue(list.body().contains("\"examples\""), list.body());
+        assertTrue(list.body().contains("\"fibonacci\""), "a finished example is listed");
+        assertTrue(list.body().contains("\"familyAssignment\""), "an exercise is listed");
+        assertFalse(list.body().contains("sudoku"), "no sudoku is listed: " + list.body());
+    }
+
+    @Test
+    void anExampleIsServedAsPlainNelumboSource() throws Exception {
+        HttpResponse<String> example = get("/examples/fibonacci");
+        assertEquals(200, example.statusCode());
+        assertTrue(example.headers().firstValue("Content-Type").orElse("").contains("text/plain"), "served as text, not HTML");
+        assertTrue(example.body().contains("fib("), "the fibonacci example source");
+        assertEquals(404, get("/examples/sudoku-4x4").statusCode(), "unlisted examples are not served");
+        assertEquals(404, get("/examples/noSuchExample").statusCode());
     }
 
     /** The sandbox was published as /playground.html (e.g. in llms.txt); old links must keep working. */
