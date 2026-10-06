@@ -78,41 +78,41 @@ public class DocumentHoverService extends DocumentServiceAdapter {
         case TYPE     -> {
             Node node = token.getNode();
             if (node instanceof Type type) {
-                text.append("**type** `").append(U.escapeMarkdown(type.name())).append("`");
+                text.append("**type** ").append(U.codeSpan(type.name()));
                 StringBuilder supersStr = new StringBuilder();
                 for (Type sup : type.supersDeclaration()) {
                     if (!supersStr.isEmpty()) {
                         supersStr.append(", ");
                     }
-                    supersStr.append("`").append(U.escapeMarkdown(sup.name())).append("`");
+                    supersStr.append(U.codeSpan(sup.name()));
                 }
                 if (!supersStr.isEmpty()) {
                     text.append("\n\nSupertypes: ").append(supersStr);
                 }
             } else {
-                text.append("**type** `").append(U.escapeMarkdown(token.text())).append("`");
+                text.append("**type** ").append(U.codeSpan(token.text()));
             }
         }
         case VARIABLE -> {
             Variable var = token.variable();
             if (var != null) {
-                text.append("**variable** `").append(U.escapeMarkdown(var.baseName()));
-                text.append("` : `").append(U.escapeMarkdown(var.type().name())).append("`");
+                text.append("**variable** ").append(U.codeSpan(var.baseName()));
+                text.append(" : ").append(U.codeSpan(var.type().name()));
             } else {
-                text.append("`").append(U.escapeMarkdown(token.text())).append("`");
+                text.append(U.codeSpan(token.text()));
             }
         }
         case KEYWORD  -> {
-            text.append("**keyword** `").append(U.escapeMarkdown(token.text())).append("`");
+            text.append("**keyword** ").append(U.codeSpan(token.text()));
         }
         default       -> {
-            text.append("`").append(U.escapeMarkdown(token.text())).append("`");
+            text.append(U.codeSpan(token.text()));
             List<Node> nodes = document.nodesAt(pos);
             if (!nodes.isEmpty()) {
                 Node node = nodes.getFirst();
                 text.append(" \u2014 ").append(node.type().name());
                 if (node.functor() != null) {
-                    text.append(" `").append(U.escapeMarkdown(node.functor().name())).append("`");
+                    text.append(" ").append(U.codeSpan(node.functor().name()));
                 }
             }
         }

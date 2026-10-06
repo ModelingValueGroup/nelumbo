@@ -75,6 +75,23 @@ public class U {
         return out.toString();
     }
 
+    /**
+     * Wraps {@code s} in a Markdown code span. Code spans are rendered literally (no entity references,
+     * no backslash escapes), so the text goes in unescaped; the fence is one backtick longer than the
+     * longest backtick run inside, padded with spaces when the text starts or ends with a backtick.
+     */
+    public static String codeSpan(String s) {
+        int longest = 0;
+        int run     = 0;
+        for (int i = 0; i < s.length(); i++) {
+            run     = s.charAt(i) == '`' ? run + 1 : 0;
+            longest = Math.max(longest, run);
+        }
+        String fence = "`".repeat(longest + 1);
+        String pad   = s.startsWith("`") || s.endsWith("`") ? " " : "";
+        return fence + pad + s + pad + fence;
+    }
+
     private static final List<String> CLASSPATH_DIRS          = Arrays.asList(   //
             "out/server/classes/java/main",                                      //
             "out/server/classes/java/test"                                       //
