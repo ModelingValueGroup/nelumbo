@@ -498,18 +498,17 @@ public class Functor extends Node implements FunctorOrType {
             while (nodArgs.size() < REPETITION_MAX) {
                 nodArgs = nodArgs.add(nodType);
                 litArgs = litArgs.add(litType);
-                roots = createRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor, nodArgs, litArgs,
-                        rep);
+                roots = createRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor, nodArgs, litArgs);
             }
             return roots;
         } else {
-            return createRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor, nodArgs, litArgs, rep);
+            return createRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor, nodArgs, litArgs);
         }
     }
 
     private static NList createRule(Type type, NList roots, KnowledgeBase knowledgeBase, ParseContext ctx,
-            boolean function, Functor nodFunctor, Functor litFunctor, List<Type> nodArgs, List<Type> litArgs,
-            boolean rep) throws ParseException {
+            boolean function, Functor nodFunctor, Functor litFunctor, List<Type> nodArgs, List<Type> litArgs)
+            throws ParseException {
         Variable[] nodVars = new Variable[nodArgs.size()];
         Variable[] litVars = new Variable[litArgs.size()];
         assert nodVars.length == litVars.length;
@@ -522,9 +521,6 @@ public class Functor extends Node implements FunctorOrType {
             litVars[v] = new Variable(List.of(), false, litType, "l" + (v + 1));
             nodConsArgs[v] = nodVars[v];
             litConsArgs[v] = litVars[v];
-        }
-        if (rep) {
-            litConsArgs = new Object[] { List.of(litConsArgs) };
         }
         Node nodNode = nodFunctor.construct(List.of(), nodConsArgs, knowledgeBase, ctx);
         Node litNode = litFunctor.construct(List.of(), litConsArgs, knowledgeBase, ctx);

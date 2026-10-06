@@ -19,12 +19,12 @@ List<Set<Integer>> l
 
 Integer            ::= two(<Integer>)
 Set<Integer>       ::= mk(<Integer>)
-List<Set<Integer>> ::= mkAll(<Integer>)
+List<Set<Integer>> ::= mkAll
 
-two(j)=x   <=> x=j+1
-mk(j)=s    <=> s={j+1}
-mkAll(j)=l <=> l=[0,1] map [j]({j+1})
+two(j)=x           <=>  x=j+1
+mk(j)=s            <=>  s={j+1}
+mkAll=l            <=>  l=[0,1,2] map [j]({j+1})
 
-two(1)=x   ? [(x=2)][..]          // control: works
-mk(1)=s    ? [(s={2})][..]        // UNDECIDED
-mkAll(0)=l ? [(l=[{1},{2}])][..]  // ClassCastException ListImpl -> Set
+two(1)=x ? [(x=2)][..]              // control: works
+mk(1)=s  ? [(s={2})][..]            // UNDECIDED
+mkAll=l  ? [(l=[{1},{2},{3}])][..]  // ClassCastException ListImpl -> Set

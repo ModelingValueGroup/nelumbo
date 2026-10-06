@@ -36,7 +36,7 @@ public final class NList extends NCollection {
 
     @NelumboConstructor
     public NList(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args);
+        super(nodeInfo, args.length != 1 || !(args[0] instanceof List) ? new Object[] { List.of(args) } : args);
     }
 
     public NList(List<AstElement> elements, Type elementType) {
