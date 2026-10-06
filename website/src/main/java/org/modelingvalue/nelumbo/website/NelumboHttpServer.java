@@ -74,6 +74,7 @@ public final class NelumboHttpServer {
         String tour       = loadResource("/public/tour.html");
         String playground = loadResource("/public/playground.html");
         String favicon    = loadResource("/public/favicon.svg");
+        String theme      = loadResource("/public/theme.js");
         String llms       = loadResource("/public/llms.txt");
         String docsLogo   = loadResource(DocsSite.RESOURCE_ROOT + "nelumbo.svg");
         DocsSite docs     = DocsSite.load();
@@ -91,6 +92,7 @@ public final class NelumboHttpServer {
                     factory.setMaxTextMessageSize(LspWebSocket.MAX_MESSAGE_CHARS));
             config.routes.get("/", ctx -> ctx.html(landing));
             config.routes.get("/favicon.svg", ctx -> ctx.contentType("image/svg+xml").result(favicon));
+            config.routes.get("/theme.js", ctx -> ctx.contentType("text/javascript; charset=utf-8").result(theme));
             config.routes.get("/llms.txt", ctx -> ctx.contentType("text/plain; charset=utf-8").result(llms));
             config.routes.get("/tour.html", ctx -> ctx.html(tour));
             config.routes.get("/playground.html", ctx -> ctx.html(playground));

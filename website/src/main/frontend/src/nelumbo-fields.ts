@@ -99,6 +99,10 @@ let servicesReady: boolean                                     = false;
 let clientPromise: Promise<MonacoLanguageClient | null> | null = null;
 let fieldIndex:    number                                      = 0;
 
+function monacoTheme(): string {
+    return document.documentElement.dataset.theme === 'light' ? 'nelumbo-light' : 'nelumbo-dark';
+}
+
 function ensureServices(): void {
     if (servicesReady) {
         return;
@@ -121,6 +125,24 @@ function ensureServices(): void {
             'editorInlayHint.parameterBackground': '#f1707b2b',
         },
     });
+    // the same three buckets, darkened for contrast on a white editor
+    monaco.editor.defineTheme('nelumbo-light', {
+        base:    'vs',
+        inherit: true,
+        rules:   [],
+        colors:  {
+            'editorInlayHint.foreground':          '#1a8a55',
+            'editorInlayHint.background':          '#00000000',
+            'editorInlayHint.typeForeground':      '#6e2f88',
+            'editorInlayHint.typeBackground':      '#c184d833',
+            'editorInlayHint.parameterForeground': '#c42f3c',
+            'editorInlayHint.parameterBackground': '#f1707b26',
+        },
+    });
+    // theme.js flips data-theme on <html> (switch click or OS change); the Monaco theme is global
+    new MutationObserver((): void => {
+        monaco.editor.setTheme(monacoTheme());
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     // the webfont may finish loading after the first editor measured its glyphs
     void document.fonts.ready.then((): void => {
         monaco.editor.remeasureFonts();
@@ -172,7 +194,7 @@ function buildSolutionViewer(solution: HTMLElement, index: number): void {
 
     const viewer: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(solution, {
         model:                model,
-        theme:                'nelumbo-dark',
+        theme:                monacoTheme(),
         readOnly:             true,
         domReadOnly:          true,
         minimap:              { enabled: false },
@@ -215,7 +237,7 @@ function buildField(div: HTMLElement, index: number): void {
 
     const editor: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(host, {
         model:                model,
-        theme:                'nelumbo-dark',
+        theme:                monacoTheme(),
         minimap:              { enabled: false },
         automaticLayout:      true,
         fontSize:             13,

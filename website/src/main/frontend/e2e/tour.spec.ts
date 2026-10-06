@@ -63,7 +63,7 @@ test('Show solution toggles the solution block', async ({ page }: { page: Page }
 
 test('the Playground link navigates to /playground.html', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/tour.html');
-    await page.locator('aside nav a[href="/playground.html"]').click();
+    await page.locator('.site-header nav a[href="/playground.html"]').click();
     await expect(page).toHaveURL(/\/playground\.html$/);
     await expect(page.locator('.nelumbo-field-wrap').first()).toBeVisible();
 });

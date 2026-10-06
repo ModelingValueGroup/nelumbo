@@ -157,6 +157,20 @@ class NelumboHttpServerTest {
         assertEquals("/docs/", bare.headers().firstValue("Location").orElse(""));
     }
 
+    /** Every page loads /theme.js blocking in its head; a 404 there leaves every page without a theme switch. */
+    @Test
+    void themeScriptIsServedAndLoadedByEveryPage() throws Exception {
+        HttpResponse<String> script = get("/theme.js");
+        assertEquals(200, script.statusCode());
+        assertTrue(script.headers().firstValue("Content-Type").orElse("").contains("javascript"), "theme.js must be served as JavaScript");
+        assertTrue(script.body().contains("prefers-color-scheme"), "the theme script follows the OS preference");
+        for (String page : new String[]{"/", "/tour.html", "/playground.html", "/docs/"}) {
+            String html = get(page).body();
+            assertTrue(html.contains("<script src=\"/theme.js\"></script>"), page + " must load the theme script");
+            assertTrue(html.contains("class=\"theme-toggle\""), page + " must show the theme switch");
+        }
+    }
+
     @Test
     void llmsTxtIsServedAtTheSiteRoot() throws Exception {
         HttpResponse<String> response = get("/llms.txt");

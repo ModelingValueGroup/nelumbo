@@ -16,23 +16,17 @@
 
 package org.modelingvalue.nelumbo.logic;
 
-import static org.modelingvalue.nelumbo.patterns.Pattern.n;
-import static org.modelingvalue.nelumbo.patterns.Pattern.s;
-import static org.modelingvalue.nelumbo.patterns.Pattern.t;
-
-import java.io.Serial;
-
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+
+import java.io.Serial;
+
+import static org.modelingvalue.nelumbo.patterns.Pattern.*;
 
 public class NIs extends Predicate {
     @Serial
@@ -45,7 +39,7 @@ public class NIs extends Predicate {
         try {
             FUNCTOR = Functor.of(s(n(Type.OBJECT), t("="), n(Type.OBJECT)), Type.BOOLEAN, null, NIs.class, 30);
         } catch (ParseException e) {
-            throw new IllegalStateException("Cannot create functor for NIs", e);
+            throw new IllegalStateException("Cannot create functor for " + NIs.class, e);
         }
     }
 
