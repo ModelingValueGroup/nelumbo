@@ -184,16 +184,18 @@ unreduced-term mismatch in the test JVM), so both stay:
   (The former `flaky=true` attribute, whose only user was nondeterministic-inference, was
   removed with its promotion on 2026-09-25.) `bugResource()` in
   `NelumboTestBase` runs each file with a preemptive 60s timeout. Fixed bugs get promoted to
-  `RegressionTest` (thirteen so far: string-concat-prefix and repetition-count-lost
+  `RegressionTest` (fourteen so far: string-concat-prefix and repetition-count-lost
   since 2026-09-11; the whole bba88fc8 reduction trio - recursive-list-concat-classcast,
   nested-list-functor-arg-type-mismatch, set-functor-rhs-equals-not-reduced -
   since 2026-09-24; the whole state/race cluster - empty-set-branch-in-map-lambda,
   neighbor-query-changes-result, nondeterministic-inference - plus
   rule-pos-on-mapped-collection-list-undecided since 2026-09-25, nested-generic-rule-load-time since 2026-10-02,
-  set-literal-arithmetic-unevaluated, four-var-quantifier-crash and repetition-separator-greedy
-  since 2026-10-06 - the last one's separator backtracking was in since eeb06747, it only stayed red
-  because its `Seq<T> :: Object` functor is Function-typed since bba88fc8 (`=` undecided); declared
-  `:: Struct` it has structural equality and passes; the promoted `.nl` file gets
+  set-literal-arithmetic-unevaluated, four-var-quantifier-crash, repetition-separator-greedy and
+  optional-presence-lost since 2026-10-06 - the greedy one's separator backtracking was in since
+  eeb06747, it only stayed red because its `Seq<T> :: Object` functor is Function-typed since bba88fc8
+  (`=` undecided); declared `:: Struct` it has structural equality and passes; optional-presence-lost
+  was a real fix in `OptionalPattern.args` (a matched argument-less body is kept as present) and its
+  promoted file declares `C :: Struct` as well; the promoted `.nl` file gets
   a "Regression test (fixed <date>; was bugs/<name>.nl)" header and a `@RepeatedTest(10)`
   method). Note when rewriting a repro: a bare top-level equality `f(i)=[1,2]` is NOT a
   statement (the docs know only `fact`, `<=>`, `?`) and is rejected since 2026-09-24 with

@@ -22,9 +22,9 @@ import org.junit.jupiter.api.Test;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (thirteen
+// remove the @KnownBug and promote the method to RegressionTest (fourteen
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
-// one on 2026-10-02, three on 2026-10-06).
+// one on 2026-10-02, four on 2026-10-06).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -46,7 +46,10 @@ import org.junit.jupiter.api.Test;
 // Lambda4..6, so E/A/lambdas take up to 6 variables in every position) and
 // the pattern repro repetition-separator-greedy (the separator backtracking
 // was in since eeb06747; the repro only stayed red because its `:: Object`
-// functor is Function-typed since bba88fc8 - it is declared `:: Struct` now).
+// functor is Function-typed since bba88fc8 - it is declared `:: Struct` now),
+// and its sibling optional-presence-lost (OptionalPattern.args keeps a matched
+// argument-less body as present; also declared `:: Struct` in the promoted
+// file). alternation-option-identity is the one pattern repro left.
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -148,12 +151,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void alternationOptionIdentity() {
         bugResource("alternation-option-identity.nl");
-    }
-
-    @KnownBug("matched optional with multi-keyword body recorded as absent")
-    @Test
-    public void optionalPresenceLost() {
-        bugResource("optional-presence-lost.nl");
     }
 
     // ==== logic / quantifiers / facts ====

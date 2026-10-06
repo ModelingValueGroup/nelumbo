@@ -153,7 +153,7 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean keep, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         List<Object> result = List.of();
         for (Pattern element : elements()) {

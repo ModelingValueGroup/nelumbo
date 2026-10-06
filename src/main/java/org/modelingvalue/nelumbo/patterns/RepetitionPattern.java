@@ -153,7 +153,7 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean keep, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         Pattern repeated = repeated();
         Pattern separator = separator();

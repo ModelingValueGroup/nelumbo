@@ -98,6 +98,11 @@ public class RegressionTest extends NelumboTestBase {
         testResource("repetition-separator-greedy.nl");
     }
 
+    @RepeatedTest(10)
+    public void optionalPresenceLost() {
+        testResource("optional-presence-lost.nl");
+    }
+
     // was a load-time bug (~80s), so the timeout is the real assertion
     @RepeatedTest(10)
     @Timeout(20)

@@ -138,7 +138,7 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean keep, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         for (Pattern option : options()) {
             MutableList<Object> inner = MutableList.of(List.of());
