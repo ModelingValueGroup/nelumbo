@@ -558,8 +558,7 @@ public class Node extends StructImpl implements AstElement {
 
     public Node makeVariablesUnique(ParseContext ctx, String id) throws ParseException {
         return replace(o -> {
-            if (o instanceof Variable v
-                    && (ctx.outer().type(v.name()) != null || ctx.outer().variable(v.name()) != null)) {
+            if (o instanceof Variable v && ctx.outer().hasDefined(v)) {
                 return v.makeUnique(id);
             }
             return o;

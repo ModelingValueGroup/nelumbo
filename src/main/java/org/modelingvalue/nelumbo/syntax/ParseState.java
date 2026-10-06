@@ -256,29 +256,33 @@ public class ParseState extends AbstractState<ParseState> {
                 return true;
             }
             int nrOfExceptions = result.nrOfExceptions();
-            DirectionContext dc = lookahead(token, outerRepetitions, ctx, result.typeArgs().get());
             TokenState next = null;
-            if (dc != null) {
-                switch (dc.direction) {
-                case Direction.tokenText:
-                    next = tokenTextNext(token, innerRepetitions, ctx, result);
-                    break;
-                case Direction.tokenType:
-                    next = tokenTypeNext(token, innerRepetitions, ctx, result);
-                    break;
-                case Direction.node:
-                    next = nodeNext(token, result, dc.ctx);
-                    break;
-                case Direction.repeat:
-                    result.endRepetition(endRepetitions(), token);
-                    return true;
-                case Direction.outer:
-                    Functor functor = isPostComplete(result);
-                    if (functor != null) {
-                        result.endPostParse(functor, token, leftPrecedence());
+            try {
+                DirectionContext dc = lookahead(token, outerRepetitions, ctx, result.typeArgs().get());
+                if (dc != null) {
+                    switch (dc.direction) {
+                    case Direction.tokenText:
+                        next = tokenTextNext(token, innerRepetitions, ctx, result);
+                        break;
+                    case Direction.tokenType:
+                        next = tokenTypeNext(token, innerRepetitions, ctx, result);
+                        break;
+                    case Direction.node:
+                        next = nodeNext(token, result, dc.ctx);
+                        break;
+                    case Direction.repeat:
+                        result.endRepetition(endRepetitions(), token);
+                        return true;
+                    case Direction.outer:
+                        Functor functor = isPostComplete(result);
+                        if (functor != null) {
+                            result.endPostParse(functor, token, leftPrecedence());
+                        }
+                        return true;
                     }
-                    return true;
                 }
+            } catch (NotMergeableException exc) {
+                result.addException(new ParseException(exc.getMessage(), token));
             }
             if (next != null && next.state.parse(next.token, result, innerRepetitions, pre)) {
                 if (result.endRepetitions().isEmpty()) {

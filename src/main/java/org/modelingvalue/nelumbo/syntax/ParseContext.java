@@ -277,6 +277,11 @@ public interface ParseContext {
         return hiddenVariables().get(group);
     }
 
+    default boolean hasDefined(Variable var) {
+        String name = var.name();
+        return type(name) != null || variable(name) != null;
+    }
+
     default Variable variable(String name) {
         for (Entry<String, Map<Type, ParseState>> e1 : preStates().get()) {
             for (Entry<Type, ParseState> e2 : e1.getValue()) {
