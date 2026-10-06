@@ -80,6 +80,12 @@ public class RegressionTest extends NelumboTestBase {
         testResource("rule-pos-on-mapped-collection-list-undecided.nl");
     }
 
+    // also covers the list-literal twin [j+1], which did not parse before the fix
+    @RepeatedTest(10)
+    public void setLiteralArithmeticUnevaluated() {
+        testResource("set-literal-arithmetic-unevaluated.nl");
+    }
+
     // was a load-time bug (~80s), so the timeout is the real assertion
     @RepeatedTest(10)
     @Timeout(20)

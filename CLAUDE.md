@@ -184,12 +184,13 @@ unreduced-term mismatch in the test JVM), so both stay:
   (The former `flaky=true` attribute, whose only user was nondeterministic-inference, was
   removed with its promotion on 2026-09-25.) `bugResource()` in
   `NelumboTestBase` runs each file with a preemptive 60s timeout. Fixed bugs get promoted to
-  `RegressionTest` (ten so far: string-concat-prefix and repetition-count-lost
+  `RegressionTest` (eleven so far: string-concat-prefix and repetition-count-lost
   since 2026-09-11; the whole bba88fc8 reduction trio - recursive-list-concat-classcast,
   nested-list-functor-arg-type-mismatch, set-functor-rhs-equals-not-reduced -
   since 2026-09-24; the whole state/race cluster - empty-set-branch-in-map-lambda,
   neighbor-query-changes-result, nondeterministic-inference - plus
-  rule-pos-on-mapped-collection-list-undecided since 2026-09-25, nested-generic-rule-load-time since 2026-10-02; the promoted `.nl` file gets
+  rule-pos-on-mapped-collection-list-undecided since 2026-09-25, nested-generic-rule-load-time since 2026-10-02,
+  set-literal-arithmetic-unevaluated since 2026-10-06; the promoted `.nl` file gets
   a "Regression test (fixed <date>; was bugs/<name>.nl)" header and a `@RepeatedTest(10)`
   method). Note when rewriting a repro: a bare top-level equality `f(i)=[1,2]` is NOT a
   statement (the docs know only `fact`, `<=>`, `?`) and is rejected since 2026-09-24 with
@@ -201,7 +202,9 @@ unreduced-term mismatch in the test JVM), so both stay:
   two `put` probes are live again and Task 4 is unblocked) and
   `set-literal-arithmetic-unevaluated.nl` (`s={j+1}` in a rule body undecided; in a map
   lambda the element is a ListImpl carried as Set -> ClassCast in `NSet.collection` on
-  toString; `[j+1]` does not even parse). Lesson from isolating them: a rule head whose
+  toString; `[j+1]` did not even parse - FIXED 2026-10-06 by c0e42831 + 629285e2
+  "expressions/functions in singletons / as collection elements"; the promoted file also
+  covers the list-literal twin). Lesson from isolating them: a rule head whose
   result variable has the WRONG type (`sel(...)=si` with `si` a `Set<Integer>` for a
   `Set<Digit>` functor) is accepted silently and makes UNRELATED queries in the file
   undecided - when everything goes undecided at once, check the variable types first.

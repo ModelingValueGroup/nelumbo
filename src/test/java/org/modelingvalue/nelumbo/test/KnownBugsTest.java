@@ -22,8 +22,9 @@ import org.junit.jupiter.api.Test;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (nine
-// promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25).
+// remove the @KnownBug and promote the method to RegressionTest (eleven
+// promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
+// one on 2026-10-02, one on 2026-10-06).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -37,8 +38,10 @@ import org.junit.jupiter.api.Test;
 // were all fixed and promoted to RegressionTest on 2026-09-24, and the whole
 // state/race cluster (empty-set-branch-in-map-lambda, neighbor-query-changes-
 // result, nondeterministic-inference) plus rule-pos-on-mapped-collection-list-
-// undecided on 2026-09-25, and the CLI-only load-time repro nested-generic-
-// rule-load-time on 2026-10-02.
+// undecided on 2026-09-25, the CLI-only load-time repro nested-generic-
+// rule-load-time on 2026-10-02, and the map/lambda repro set-literal-
+// arithmetic-unevaluated on 2026-10-06 (the list-literal twin `[j+1]`, which
+// did not parse before, is covered by the promoted file too).
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -84,14 +87,6 @@ public class KnownBugsTest extends NelumboTestBase {
         setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
-    }
-
-    // ==== map / lambda cluster ====
-
-    @KnownBug("arithmetic inside a set literal not evaluated (undecided; ClassCast ListImpl->Set in a map lambda)")
-    @Test
-    public void setLiteralArithmeticUnevaluated() {
-        bugResource("set-literal-arithmetic-unevaluated.nl");
     }
 
     // ==== state / race cluster ====
