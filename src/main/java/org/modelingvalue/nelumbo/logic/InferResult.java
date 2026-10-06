@@ -607,20 +607,24 @@ public interface InferResult {
             return Set.of(this);
         }
 
+        // Results are shown to people (CLI, inlay hints, eval JSON, "Expected result" messages), so variables
+        // render by their base name: a variable redeclared in an inner scope is a$50 internally but a in the source.
         @Override
         public final String toString() {
-            List<Predicate> overflow = stackOverflow();
-            if (overflow != null) {
-                return overflow.toString().substring(4);
-            } else {
-                String cycleString = "";
-                if (!cycles().isEmpty()) {
-                    cycleString = cycles().toString().substring(3);
-                    cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
+            return Node.getBaseString(() -> {
+                List<Predicate> overflow = stackOverflow();
+                if (overflow != null) {
+                    return overflow.toString().substring(4);
+                } else {
+                    String cycleString = "";
+                    if (!cycles().isEmpty()) {
+                        cycleString = cycles().toString().substring(3);
+                        cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
+                    }
+                    return toString(trueBindings(), completeFacts()) + toString(falseBindings(), completeFalsehoods())
+                            + cycleString;
                 }
-                return toString(trueBindings(), completeFacts()) + toString(falseBindings(), completeFalsehoods())
-                        + cycleString;
-            }
+            });
         }
 
         private String toString(Set<Map<Variable, Object>> binding, boolean complete) {
