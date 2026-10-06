@@ -124,12 +124,12 @@ public final class Rule extends Node implements Evaluatable {
             Map<Variable, Object> whenVars = when != null ? when.getBinding(when) : null;
             Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars)
                     .removeAllKey(consVars);
+            nonConsVars = nonConsVars.removeAll(v -> !ctx.outer().hasDefined(v.getKey()));
             if (!nonConsVars.isEmpty()) {
                 Map<Variable, Object> localVars = nonConsVars.removeAllKey(cond.allLocalVars());
                 if (when != null) {
                     localVars = localVars.removeAllKey(when.allLocalVars());
                 }
-                localVars = localVars.removeAll(v -> !ctx.outer().hasDefined(v.getKey()));
                 if (!localVars.isEmpty()) {
                     String message = "Rule has local variables " + nonConsVars.map(e -> e.getKey().toString())
                             .reduce("", (a, b) -> a.isEmpty() ? b : a + "," + b) + " in condition";

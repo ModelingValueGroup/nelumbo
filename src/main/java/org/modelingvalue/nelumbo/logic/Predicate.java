@@ -104,8 +104,7 @@ public class Predicate extends Node {
     }
 
     public static Map<Variable, Object> literals(Map<Variable, Object> vars) {
-        return vars.replaceAll(
-                e -> Entry.of(e.getKey(), e.getKey().type().isFunction() ? e.getKey() : e.getKey().literal()));
+        return vars.replaceAll(e -> Entry.of(e.getKey(), e.getKey().literal()));
     }
 
     protected static Map<Variable, Object> literals(Map<Variable, Object> vars, Function<String, String> rename) {
