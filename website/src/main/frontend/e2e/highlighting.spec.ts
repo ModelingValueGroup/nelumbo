@@ -25,7 +25,7 @@ const TOKENS: Expectation[] = [
     { text: '"hi"',         light: '#006633', dark: '#5fc98f', bold: false }, // string   -> string
     { text: '2',            light: '#000077', dark: '#9aa5ff', bold: false }, // number   -> number
     { text: '+',            light: '#333333', dark: '#d4d7de', bold: true  }, // operator -> operator
-    { text: '<',            light: '#00cccc', dark: '#2fd3d3', bold: false }, // meta-op  -> decorator (the pattern hole brackets in fib(<Integer>))
+    { text: '<',            light: '#00cccc', dark: '#3f9494', bold: false }, // meta-op  -> decorator (the pattern hole brackets in fib(<Integer>))
     { text: '// a comment', light: '#a0a0a0', dark: '#6b7080', bold: false }, // comment  -> comment
 ];
 

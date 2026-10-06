@@ -110,7 +110,7 @@ const TOKEN_STYLES: Array<{ token: string; light: string; dark: string; fontStyl
     { token: 'string',    light: '006633', dark: '5fc98f' },                    // STRING
     { token: 'number',    light: '000077', dark: '9aa5ff' },                    // NUMBER
     { token: 'operator',  light: '333333', dark: 'd4d7de', fontStyle: 'bold' }, // OPERATOR
-    { token: 'decorator', light: '00cccc', dark: '2fd3d3' },                    // META_OPERATOR
+    { token: 'decorator', light: '00cccc', dark: '3f9494' },                    // META_OPERATOR
     { token: 'comment',   light: 'a0a0a0', dark: '6b7080' },                    // END_LINE_COMMENT, IN_LINE_COMMENT
 ];
 
