@@ -174,7 +174,7 @@ public abstract class Pattern extends Node {
 
     public abstract int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt);
 
-    public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean keep, Functor functor,
+    public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
             MutableMap<Variable, Type> typeArgs);
 
     public static boolean isEndOfLine(Token token) {

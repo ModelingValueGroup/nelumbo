@@ -106,7 +106,7 @@ public class TokenTypePattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean keep, Functor functor,
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
@@ -116,6 +116,8 @@ public class TokenTypePattern extends Pattern {
                     return -1;
                 } else if (t.type().equals(type)) {
                     if (!isEmpty(type)) {
+                        args.clear();
+                        keep[0] = false;
                         args.add(t.text());
                     }
                     return i + 1;
@@ -123,6 +125,8 @@ public class TokenTypePattern extends Pattern {
                     return i;
                 }
             } else if (e instanceof Variable v && type.equals(v.type().tokenType())) {
+                args.clear();
+                keep[0] = false;
                 args.add(v);
                 return i + 1;
             }

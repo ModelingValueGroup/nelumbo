@@ -289,9 +289,9 @@ public class Functor extends Node implements FunctorOrType {
     public Object[] args(List<AstElement> elements, MutableMap<Variable, Type> typeArgs) {
         Pattern pattern = pattern();
         MutableList<Object> args = MutableList.of(List.of());
-        int i = pattern.args(elements, 0, args, false, this, typeArgs);
+        int i = pattern.args(elements, 0, args, new boolean[1], this, typeArgs);
         if (i < 0) {
-            pattern.args(elements, 0, args, false, this, typeArgs);
+            pattern.args(elements, 0, args, new boolean[1], this, typeArgs);
             throw new IllegalArgumentException("Error during argument extraction for " + this + " with elements "
                     + elements + " and typeArgs " + typeArgs);
         }

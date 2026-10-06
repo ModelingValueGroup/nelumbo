@@ -109,10 +109,10 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean keep, Functor functor,
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         MutableList<Object> inner = MutableList.of(List.of());
-        int ii = optional().args(elements, i, inner, true, functor, typeArgs);
+        int ii = optional().args(elements, i, inner, new boolean[] { true }, functor, typeArgs);
         if (ii >= 0) {
             List<Object> immutable = inner.toImmutable();
             args.add(Optional.of(immutable.size() == 1 ? immutable.first() : immutable));

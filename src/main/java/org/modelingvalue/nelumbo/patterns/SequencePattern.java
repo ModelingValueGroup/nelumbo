@@ -153,13 +153,17 @@ public class SequencePattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean keep, Functor functor,
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         List<Object> result = List.of();
         for (Pattern element : elements()) {
             MutableList<Object> inner = MutableList.of(List.of());
-            int ii = element.args(elements, i, inner, false, functor, typeArgs);
+            boolean k = keep[0];
+            int ii = element.args(elements, i, inner, keep, functor, typeArgs);
             if (ii >= 0) {
+                if (k & !keep[0]) {
+                    result = List.of();
+                }
                 result = result.addAll(inner.toImmutable());
                 i = ii;
             } else {

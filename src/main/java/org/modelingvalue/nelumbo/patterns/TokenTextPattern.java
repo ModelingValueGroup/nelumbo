@@ -145,12 +145,12 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean keep, Functor functor,
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Token t && t.text().equals(tokenText())) {
-                if (keep) {
+                if (keep[0]) {
                     args.add(t.text());
                 }
                 return i + 1;

@@ -103,6 +103,11 @@ public class RegressionTest extends NelumboTestBase {
         testResource("optional-presence-lost.nl");
     }
 
+    @RepeatedTest(10)
+    public void alternationOptionIdentity() {
+        testResource("alternation-option-identity.nl");
+    }
+
     // was a load-time bug (~80s), so the timeout is the real assertion
     @RepeatedTest(10)
     @Timeout(20)
