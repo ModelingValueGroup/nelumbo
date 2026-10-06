@@ -126,7 +126,7 @@ public final class Type extends Node implements FunctorOrType {
         super(nodeInfo, args);
         if (args.length > 1 && get(1) instanceof Set) {
             this.original = original != null ? original : this;
-            KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+            KnowledgeBase knowledgeBase = KnowledgeBase.current();
             Type canonical = knowledgeBase.getType(this);
             if (canonical == null) {
                 this.typeInfo = new TypeInfo();
@@ -567,7 +567,7 @@ public final class Type extends Node implements FunctorOrType {
         if (equals(subType)) {
             return subType;
         }
-        KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+        KnowledgeBase knowledgeBase = KnowledgeBase.current();
         Pair<Type, Type> superSub = Pair.of(this, subType);
         Type assigned = knowledgeBase.isSuperSubType(superSub);
         if (assigned == null) {

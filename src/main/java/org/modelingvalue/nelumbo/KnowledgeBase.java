@@ -25,7 +25,9 @@ import java.io.Serial;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
+import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
@@ -68,7 +70,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private static final boolean TRACE_NELUMBO  = Boolean.getBoolean("TRACE_NELUMBO");
     public static final boolean  TRACE_SYNTATIC = Boolean.getBoolean("TRACE_SYNTATIC");
     //
-    public static final Context<KnowledgeBase> CURRENT = Context.of();
+    private static final Context<KnowledgeBase> CURRENT = Context.of();
     //
     private static final ContextPool                        POOL                = ContextThread.createPool()
             .setWorkerThreadName("nelumbo");
@@ -134,8 +136,20 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     }
 
-    public KnowledgeBase run(Runnable runnable) {
-        return POOL.invoke(new LogicTask(runnable, this));
+    public KnowledgeBase invoke(Runnable r) {
+        return POOL.invoke(new LogicTask(Collection.sequential(r), this));
+    }
+
+    public static KnowledgeBase current() {
+        return CURRENT.get();
+    }
+
+    public void run(Runnable r) {
+        CURRENT.run(this, Collection.sequential(r));
+    }
+
+    public <V> V get(Supplier<V> s) {
+        return CURRENT.get(this, () -> Collection.getSequential(s));
     }
 
     public Functor addType(Type type, ParseContext ctx) throws ParseException {
@@ -320,8 +334,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     /**
      * Sets an absolute {@link System#nanoTime()} deadline for inference run in this
      * knowledge base (and the child knowledge bases it spawns via
-     * {@link #run(Runnable)}). 0 disables the deadline. When set, inference checks
-     * the clock and throws {@link NelumboTimeoutException} once it is past.
+     * {@link #invoke(Runnable)}). 0 disables the deadline. When set, inference
+     * checks the clock and throws {@link NelumboTimeoutException} once it is past.
      */
     public void setDeadlineNanos(long deadlineNanos) {
         this.deadlineNanos = deadlineNanos;

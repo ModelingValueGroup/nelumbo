@@ -97,7 +97,7 @@ public final class Transform extends Node {
     public Transform setTypeArgs(Map<Variable, Type> typeArgs) {
         Transform to = (Transform) super.setTypeArgs(typeArgs);
         try {
-            return rewireFunctors(to, KnowledgeBase.CURRENT.get());
+            return rewireFunctors(to, KnowledgeBase.current());
         } catch (ParseException e) {
             throw new IllegalArgumentException(e);
         }

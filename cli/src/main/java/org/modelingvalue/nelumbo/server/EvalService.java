@@ -233,7 +233,7 @@ public final class EvalService implements AutoCloseable {
             }
         };
         if (timeoutMs <= 0) {
-            requestKb.run(work);
+            requestKb.invoke(work);
         } else {
             runWithTimeout(requestKb, work);
         }
@@ -246,7 +246,7 @@ public final class EvalService implements AutoCloseable {
         // future.get backstop guarantees the HTTP handler returns even if some step
         // never re-checks the clock.
         requestKb.setDeadlineNanos(System.nanoTime() + timeoutMs * 1_000_000L);
-        Future<?> future = evalExecutor.submit(() -> requestKb.run(work));
+        Future<?> future = evalExecutor.submit(() -> requestKb.invoke(work));
         try {
             future.get(timeoutMs + GRACE_MS, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
@@ -331,7 +331,7 @@ public final class EvalService implements AutoCloseable {
 
     public Map<String, Object> metadata() {
         Map<String, Object> json = new LinkedHashMap<>();
-        KnowledgeBase.CURRENT.run(baseKb, () -> Node.runBaseString(() -> {
+        baseKb.run(() -> Node.runBaseString(() -> {
             json.put("files", loadedFiles);
             // Only declarations that originate from the loaded files (matched by source
             // file name): this drops

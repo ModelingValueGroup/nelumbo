@@ -36,7 +36,7 @@ public final class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         scanner.useDelimiter("\r\n|[\n\r\u2028\u2029\u0085]");
-        KnowledgeBase.BASE.run(() -> {
+        KnowledgeBase.BASE.invoke(() -> {
             System.out.print(READ);
             String line = scanner.next();
             while (line != null) {

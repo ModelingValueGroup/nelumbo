@@ -52,7 +52,7 @@ class InferenceDeadlineTest {
         KnowledgeBase request = new KnowledgeBase(base);
         request.setDeadlineNanos(System.nanoTime() - 1); // already expired
 
-        assertThrows(NelumboTimeoutException.class, () -> request.run(() -> {
+        assertThrows(NelumboTimeoutException.class, () -> request.invoke(() -> {
             ParserResult result = new Parser(new Tokenizer("Integer r\nfib(8)=r ?\n", "<t>").tokenize())
                     .parseNonThrowing();
             try {

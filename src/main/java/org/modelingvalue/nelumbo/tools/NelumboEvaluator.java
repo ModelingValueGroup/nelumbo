@@ -81,12 +81,16 @@ public final class NelumboEvaluator {
         return evaluate(KnowledgeBase.BASE, source, name, deadlineMs, preamble).result();
     }
 
-    /** Like {@link #evaluate(String, String, long, String)} but evaluates against {@code base}. */
+    /**
+     * Like {@link #evaluate(String, String, long, String)} but evaluates against
+     * {@code base}.
+     */
     public static SessionResult evaluate(KnowledgeBase base, String source, String name, long deadlineMs) {
         return evaluate(base, source, name, deadlineMs, null);
     }
 
-    public static SessionResult evaluate(KnowledgeBase base, String source, String name, long deadlineMs, String preamble) {
+    public static SessionResult evaluate(KnowledgeBase base, String source, String name, long deadlineMs,
+            String preamble) {
         String src = source.endsWith("\n") ? source : source + "\n";
         List<Diagnostic> diagnostics = new ArrayList<>();
         List<QueryOutcome> queries = new ArrayList<>();
@@ -96,8 +100,8 @@ public final class NelumboEvaluator {
         evalKb.setDeadlineNanos(deadlineMs > 0 ? System.nanoTime() + deadlineMs * 1_000_000L : 0);
         KnowledgeBase resultKb = base;
         try {
-            resultKb = evalKb.run(() -> {
-                KnowledgeBase kb = KnowledgeBase.CURRENT.get();
+            resultKb = evalKb.invoke(() -> {
+                KnowledgeBase kb = KnowledgeBase.current();
                 if (preamble != null && !preamble.isBlank()) {
                     try {
                         new Parser(new Tokenizer(preamble, "<prep>").tokenize()).parseNonThrowing().evaluate();

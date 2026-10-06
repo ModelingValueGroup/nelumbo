@@ -156,7 +156,7 @@ public class Predicate extends Node {
     }
 
     public InferResult infer() {
-        KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+        KnowledgeBase knowledgeBase = KnowledgeBase.current();
         InferContext context = knowledgeBase.context();
         if (context.trace()) {
             context.trace(() -> toString());

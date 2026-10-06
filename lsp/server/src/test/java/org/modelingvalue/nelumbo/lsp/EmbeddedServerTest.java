@@ -31,7 +31,7 @@ public class EmbeddedServerTest {
 
     @Test
     public void embeddedConstructorSeedsWorkspace() {
-        KnowledgeBase         kb     = KnowledgeBase.BASE.run(() -> {
+        KnowledgeBase         kb     = KnowledgeBase.BASE.invoke(() -> {
         });
         NelumboLanguageServer server = new NelumboLanguageServer(kb, 1234, () -> {
         });

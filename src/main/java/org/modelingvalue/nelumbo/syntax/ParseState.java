@@ -624,8 +624,8 @@ public class ParseState extends AbstractState<ParseState> {
         for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
             Map<Type, ParseState> posts = pc.postStates(group);
             if (posts != null) {
-                for (ParseState post : posts.toValues()) {
-                    ParseState state = post.matchType(type, typeArgs);
+                for (Entry<Type, ParseState> e : posts) {
+                    ParseState state = e.getValue().matchType(type, typeArgs);
                     if (state != null) {
                         states = states.add(new StateContext(state, ctx));
                     }

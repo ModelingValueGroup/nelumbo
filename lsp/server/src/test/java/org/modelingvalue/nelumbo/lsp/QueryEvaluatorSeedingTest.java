@@ -40,7 +40,7 @@ public class QueryEvaluatorSeedingTest {
             """;
 
     private static KnowledgeBase seeded(String source) {
-        return KnowledgeBase.BASE.run(() -> {
+        return KnowledgeBase.BASE.invoke(() -> {
             ParserResult result = new Parser(new Tokenizer(source, "seed.nl").tokenize()).parseNonThrowing();
             try {
                 result.evaluate();
@@ -77,7 +77,7 @@ public class QueryEvaluatorSeedingTest {
         Map<Query, QueryResult> results = QueryEvaluator.evaluate(kb, 1, doc, "inmemory://slow.nl");
         boolean timedOut = results.values().stream()
                 .anyMatch(r -> r.kind() == QueryResult.Kind.ERROR && r.inferred().toLowerCase().contains("deadline"));
-        assertTrue(timedOut || results.isEmpty(), "expected a deadline marker or no results, got: "
-                + KnowledgeBase.CURRENT.get(kb, () -> results.toString()));
+        assertTrue(timedOut || results.isEmpty(),
+                "expected a deadline marker or no results, got: " + kb.get(() -> results.toString()));
     }
 }

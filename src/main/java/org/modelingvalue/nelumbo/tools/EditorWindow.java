@@ -240,7 +240,7 @@ public class EditorWindow extends WindowAdapter
      * is closed.
      */
     public void startExecutionLoop() {
-        KnowledgeBase.BASE.run(this);
+        KnowledgeBase.BASE.invoke(this);
     }
 
     private void initWindow() {
@@ -1154,7 +1154,7 @@ public class EditorWindow extends WindowAdapter
 
     @Override
     public void run() {
-        knowledgeBase = KnowledgeBase.CURRENT.get();
+        knowledgeBase = KnowledgeBase.current();
         while (!quit) {
             execute();
             waitForRefreshRequest();

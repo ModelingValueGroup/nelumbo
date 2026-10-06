@@ -211,9 +211,9 @@ public interface ParseContext {
             Map<Type, ParseState> states = postStates(group);
             if (states != null) {
                 Type type = left instanceof Variable ? left.type().toVariable() : left.type();
-                for (ParseState state : states.toValues()) {
+                for (Entry<Type, ParseState> e : states) {
                     result.clear();
-                    ParseState found = state.matchType(type, result.typeArgs());
+                    ParseState found = e.getValue().matchType(type, result.typeArgs());
                     if (found != null) {
                         result.left(left);
                         if (found.parse(token, result, Map.of(), true)) {
@@ -227,9 +227,9 @@ public interface ParseContext {
         }
         Map<Type, ParseState> states = preStates(group);
         if (states != null) {
-            for (ParseState state : states.toValues()) {
+            for (Entry<Type, ParseState> e : states) {
                 result.clear();
-                if (state.parse(token, result, Map.of(), true)) {
+                if (e.getValue().parse(token, result, Map.of(), true)) {
                     return true;
                 }
             }
@@ -278,9 +278,9 @@ public interface ParseContext {
     }
 
     default Variable variable(String name) {
-        for (Map<Type, ParseState> states : preStates().get().toValues()) {
-            for (ParseState state : states.toValues()) {
-                ParseState found = state.tokenTexts().get(name);
+        for (Entry<String, Map<Type, ParseState>> e1 : preStates().get()) {
+            for (Entry<Type, ParseState> e2 : e1.getValue()) {
+                ParseState found = e2.getValue().tokenTexts().get(name);
                 if (found != null) {
                     Functor functor = found.functor(Map.of());
                     if (functor != null) {
@@ -293,9 +293,9 @@ public interface ParseContext {
     }
 
     default Type type(String name) {
-        for (Map<Type, ParseState> states : preStates().get().toValues()) {
-            for (ParseState state : states.toValues()) {
-                ParseState found = state.tokenTexts().get(name);
+        for (Entry<String, Map<Type, ParseState>> e1 : preStates().get()) {
+            for (Entry<Type, ParseState> e2 : e1.getValue()) {
+                ParseState found = e2.getValue().tokenTexts().get(name);
                 if (found != null) {
                     Functor functor = found.functor(Map.of());
                     if (functor != null) {

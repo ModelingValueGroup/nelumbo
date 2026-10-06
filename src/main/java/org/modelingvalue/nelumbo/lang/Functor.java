@@ -66,9 +66,9 @@ public class Functor extends Node implements FunctorOrType {
     public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, Class<?> clazz,
             Integer leftPrecedence, boolean hasLiteral) throws ParseException {
         return of(elements, pattern, result, local,
-                clazz != null ? NelumboConstructor.Finder.find(clazz, KnowledgeBase.CURRENT.get(), List.of()) : null,
+                clazz != null ? NelumboConstructor.Finder.find(clazz, KnowledgeBase.current(), List.of()) : null,
                 leftPrecedence,
-                clazz != null ? NelumboMethod.Finder.find(clazz, pattern.name(), KnowledgeBase.CURRENT.get(), List.of())
+                clazz != null ? NelumboMethod.Finder.find(clazz, pattern.name(), KnowledgeBase.current(), List.of())
                         : null,
                 hasLiteral);
     }

@@ -668,7 +668,7 @@ public class NelumboEditor {
         try {
             Object[] result = new Object[1];
             javax.swing.SwingUtilities.invokeAndWait(() -> {
-                result[0] = kb != null ? KnowledgeBase.CURRENT.get(kb, supplier) : supplier.get();
+                result[0] = kb != null ? kb.get(supplier) : supplier.get();
             });
             return (T) result[0];
         } catch (InterruptedException | java.lang.reflect.InvocationTargetException e) {
