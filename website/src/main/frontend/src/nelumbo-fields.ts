@@ -99,6 +99,25 @@ let servicesReady: boolean                                     = false;
 let clientPromise: Promise<MonacoLanguageClient | null> | null = null;
 let fieldIndex:    number                                      = 0;
 
+// Syntax colors per LSP semantic token type (LspTokenMapping on the server), mirroring the standalone
+// NelumboEditor's DEFAULT_TOKEN_COLORS: light = its colors verbatim, dark = the same hues lightened.
+// Keep both sides in sync when a color changes.
+const TOKEN_STYLES: Array<{ token: string; light: string; dark: string; fontStyle?: string }> = [
+    { token: 'modifier',  light: '0000ff', dark: '6ea8ff', fontStyle: 'bold' }, // KEYWORD
+    { token: 'property',  light: '0000ff', dark: '6ea8ff' },                    // NAME
+    { token: 'type',      light: '880088', dark: 'd07ad6' },                    // TYPE
+    { token: 'variable',  light: '339900', dark: '8fd14f' },                    // VARIABLE
+    { token: 'string',    light: '006633', dark: '5fc98f' },                    // STRING
+    { token: 'number',    light: '000077', dark: '9aa5ff' },                    // NUMBER
+    { token: 'operator',  light: '333333', dark: 'd4d7de', fontStyle: 'bold' }, // OPERATOR
+    { token: 'decorator', light: '00cccc', dark: '2fd3d3' },                    // META_OPERATOR
+    { token: 'comment',   light: 'a0a0a0', dark: '6b7080' },                    // END_LINE_COMMENT, IN_LINE_COMMENT
+];
+
+function tokenRules(scheme: 'light' | 'dark'): monaco.editor.ITokenThemeRule[] {
+    return TOKEN_STYLES.map((s): monaco.editor.ITokenThemeRule => ({ token: s.token, foreground: s[scheme], fontStyle: s.fontStyle ?? '' }));
+}
+
 function monacoTheme(): string {
     return document.documentElement.dataset.theme === 'light' ? 'nelumbo-light' : 'nelumbo-dark';
 }
@@ -115,7 +134,7 @@ function ensureServices(): void {
     monaco.editor.defineTheme('nelumbo-dark', {
         base:    'vs-dark',
         inherit: true,
-        rules:   [],
+        rules:   tokenRules('dark'),
         colors:  {
             'editorInlayHint.foreground':          '#46c98b',
             'editorInlayHint.background':          '#00000000',
@@ -129,7 +148,7 @@ function ensureServices(): void {
     monaco.editor.defineTheme('nelumbo-light', {
         base:    'vs',
         inherit: true,
-        rules:   [],
+        rules:   tokenRules('light'),
         colors:  {
             'editorInlayHint.foreground':          '#1a8a55',
             'editorInlayHint.background':          '#00000000',
