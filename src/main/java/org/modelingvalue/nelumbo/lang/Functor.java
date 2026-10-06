@@ -120,7 +120,14 @@ public class Functor extends Node implements FunctorOrType {
     @Override
     public Type resultType() {
         Type type = (Type) get(1);
-        return hasLiteral() && Type.FACT_TYPE.isAssignableFrom(type) ? Type.BOOLEAN : type;
+        if (hasLiteral()) {
+            if (type.isFactType()) {
+                type = Type.BOOLEAN;
+            } else {
+                type = type.nonStruct();
+            }
+        }
+        return type;
     }
 
     public Type local() {
@@ -500,7 +507,7 @@ public class Functor extends Node implements FunctorOrType {
         }
         Node nodNode = nodFunctor.construct(List.of(), nodConsArgs, knowledgeBase, ctx);
         Node litNode = litFunctor.construct(List.of(), litConsArgs, knowledgeBase, ctx);
-        Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
+        Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction().nonStruct(), "r") : null;
         Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
         Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
         for (int c = nodVars.length - 1; c >= 0; c--) {

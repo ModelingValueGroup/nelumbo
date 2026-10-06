@@ -398,6 +398,10 @@ public final class Type extends Node implements FunctorOrType {
         return typeInfo().typeMatcher();
     }
 
+    public boolean isFactType() {
+        return FACT_TYPE.isAssignableFrom(this);
+    }
+
     public boolean isFunction() {
         return FUNCTION.isAssignableFrom(this);
     }
