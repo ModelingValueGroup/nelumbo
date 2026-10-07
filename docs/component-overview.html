@@ -36,6 +36,10 @@
     --root-line:   #a57fc0;
     --root-ink:    #f3e9f5;
     --glow:        rgba(237, 212, 232, .55);
+    --gold:        #f0c24a;
+    --gold-core:   #d9962a;
+    --gold-soft:   #fbe8a6;
+    --gold-ink:    #2b1d03;
     --dim:         saturate(.4) brightness(.78);
     --display:     "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
     --sans:        "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -53,6 +57,7 @@
       --water: rgba(111, 95, 196, .10); --water-line: rgba(154, 76, 184, .4); --mud: #e6d6ec;
       --root: #fbf3fc; --root-core: #edd9f3; --root-line: #b48ac6; --root-ink: #2a1033;
       --glow: rgba(154, 76, 184, .45); --dim: saturate(.35) brightness(1.08);
+      --gold: #f7d977; --gold-core: #e5a93a; --gold-soft: #fff0b8; --gold-ink: #3a2705;
       color-scheme: light;
     }
   }
@@ -66,6 +71,7 @@
     --water: rgba(111, 95, 196, .10); --water-line: rgba(154, 76, 184, .4); --mud: #e6d6ec;
     --root: #fbf3fc; --root-core: #edd9f3; --root-line: #b48ac6; --root-ink: #2a1033;
     --glow: rgba(154, 76, 184, .45); --dim: saturate(.35) brightness(1.08);
+    --gold: #f7d977; --gold-core: #e5a93a; --gold-soft: #fff0b8; --gold-ink: #3a2705;
     color-scheme: light;
   }
 
@@ -117,6 +123,8 @@
   .petal.heart path { fill: var(--heart); }
   .petal.inner path { fill: var(--inner); }
   .petal.outer path { fill: var(--outer); }
+  .petal.lib path { fill: var(--gold); }
+  .petal.libcore path { fill: var(--gold-core); }
 
   .draw { fill: none; stroke: var(--stalk); stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; transition: stroke-dashoffset .9s ease, opacity .2s; }
   .draw.on { stroke-dashoffset: 0; opacity: 1; }
@@ -132,8 +140,6 @@
   .leaf-body { fill: var(--leaf); stroke: var(--bg-0); stroke-width: 4; }
   .leaf-rim { fill: none; stroke: var(--leaf-rim); stroke-width: 1.5; opacity: .55; }
   .veins line { stroke: var(--leaf-rim); stroke-width: 1; opacity: .2; }
-  .bud-outer { fill: var(--outer); stroke: var(--bg-0); stroke-width: 12; stroke-linejoin: round; }
-  .bud-inner { fill: var(--inner); }
 
   .seg rect { fill: var(--root); stroke: var(--root-line); stroke-width: 2; }
   .seg.core rect { fill: var(--root-core); stroke: var(--lotus-soft); }
@@ -151,6 +157,12 @@
   .on-heart { fill: var(--heart-ink); }
   .on-inner { fill: var(--inner-ink); }
   .on-outer { fill: var(--outer-ink); }
+  .on-lib { fill: var(--gold-ink); }
+  .t-lib { font: 600 16px var(--mono); }
+  .t-core { font-size: 19px; font-weight: 700; font-family: var(--display); }
+  .old .t-name { font-size: 27px; }
+  .old .t-sub { font-size: 14px; }
+  .old .t-note { font-size: 16px; }
   .leaf text { fill: var(--leaf-ink); }
   .t-leaf { font: 700 22px var(--display); letter-spacing: -.01em; }
   .t-leaf-sub { font: 500 13.5px var(--sans); opacity: .9; }
@@ -170,7 +182,7 @@
   .intro .hint { margin: 1.6em 0 0; font-size: .95em; color: var(--ink-dim); }
   kbd { font: 500 .9em var(--mono); padding: .15em .5em; border: 1px solid var(--line); border-radius: 6px; background: var(--chip); color: var(--ink); }
 
-  .caption { position: absolute; left: 68.6%; width: 28.8%; top: 5%; font-size: 1.1cqw; }
+  .caption { position: absolute; left: 70.5%; width: 27.5%; top: 4%; font-size: 1.1cqw; }
   .caption h2 { margin: .12em 0 .32em; font: 800 2.25em/1.05 var(--display); letter-spacing: -.025em; text-wrap: balance; }
   .caption .lead { margin: 0 0 .75em; line-height: 1.5; color: var(--ink); }
   .caption ul { margin: 0 0 .9em; padding: 0; list-style: none; display: grid; gap: .32em; color: var(--ink-dim); line-height: 1.4; }
@@ -227,120 +239,124 @@
   <div class="cell">
     <div class="frame intro-step" id="frame">
       <div class="scroll">
-        <svg class="scene" id="scene" viewBox="0 0 1600 900" role="img" aria-label="A lotus plant built from the Nelumbo components: the knowledge base as the heart petal, the libraries as the rhizome, the CLI and the HTTP, LSP and MCP servers as petals, and the IDE plugins, the website and AI assistants as leaves.">
-          <!-- under water: mud, libraries (rhizome), stalks -->
+        <svg class="scene" id="scene" viewBox="0 0 1600 900" role="img" aria-label="Two lotus flowers growing from one root: the knowledge repository is the rhizome. The first flower has the Nelumbo IDE as its heart, the CLI and the HTTP, LSP and MCP servers as petals, and the IDE plugins, the website and AI assistants as leaves. The second flower has the libraries as golden petals.">
+          <!-- under water: the knowledge repository (the root), stalks -->
           <path class="mud" d="M0 748C200 738 400 756 620 746S1000 738 1200 750S1500 742 1600 748V900H0Z"/>
-          <ellipse class="seed" cx="800" cy="794" rx="12" ry="9"/>
 
-          <g class="c" data-step="libs">
+          <g class="c" data-step="kb">
             <g class="grow hairs" style="--d:4">
-              <path class="hair" d="M425 829q-7 12 1 24"/><path class="hair" d="M575 829q7 12-1 24"/>
-              <path class="hair" d="M1025 829q-7 12 1 24"/><path class="hair" d="M1175 829q7 12-1 24"/>
-              <path class="hair" d="M775 831C770 842 745 846 735 857"/><path class="hair" d="M825 831C830 842 850 848 856 857"/>
+              <path class="hair" d="M350 829q-7 12 1 24"/><path class="hair" d="M490 829q7 12-1 24"/>
+              <path class="hair" d="M650 829q-7 12 1 24"/><path class="hair" d="M910 829q7 12-1 24"/>
+              <path class="hair" d="M1130 829q-7 12 1 24"/><path class="hair" d="M1270 829q7 12-1 24"/>
             </g>
-            <g transform="translate(705 872)"><g class="grow pebble" style="--d:6"><rect x="-48" y="-14" width="96" height="28" rx="14"/><text class="t-pebble" y="4.5">Java 21</text></g></g>
-            <g transform="translate(862 872)"><g class="grow pebble" style="--d:6"><rect x="-95" y="-14" width="190" height="28" rx="14"/><text class="t-pebble" y="4.5">immutable-collections</text></g></g>
-            <g class="grow" style="--d:1">
-              <rect class="conn" x="416" y="796" width="18" height="18"/><rect class="conn" x="566" y="796" width="18" height="18"/>
-              <rect class="conn" x="716" y="796" width="18" height="18"/><rect class="conn" x="866" y="796" width="18" height="18"/>
-              <rect class="conn" x="1016" y="796" width="18" height="18"/><rect class="conn" x="1166" y="796" width="18" height="18"/>
-            </g>
-            <g transform="translate(350 805)"><g class="grow seg" style="--d:3"><rect x="-70" y="-26" width="140" height="52" rx="26"/><text class="t-seg" y="5">rationals</text></g></g>
-            <g transform="translate(500 805)"><g class="grow seg" style="--d:2"><rect x="-70" y="-26" width="140" height="52" rx="26"/><text class="t-seg" y="5">integers</text></g></g>
-            <g transform="translate(650 805)"><g class="grow seg core" style="--d:1"><rect x="-70" y="-26" width="140" height="52" rx="26"/><text class="t-seg" y="5">logic</text></g></g>
-            <g transform="translate(800 805)"><g class="grow seg core" style="--d:0"><rect x="-70" y="-26" width="140" height="52" rx="26"/><text class="t-seg" y="5">lang</text></g></g>
-            <g transform="translate(950 805)"><g class="grow seg" style="--d:1"><rect x="-70" y="-26" width="140" height="52" rx="26"/><text class="t-seg" y="5">strings</text></g></g>
-            <g transform="translate(1100 805)"><g class="grow seg" style="--d:2"><rect x="-70" y="-26" width="140" height="52" rx="26"/><text class="t-seg" y="5">collections</text></g></g>
-            <g transform="translate(1250 805)"><g class="grow seg" style="--d:3"><rect x="-70" y="-26" width="140" height="52" rx="26"/><text class="t-seg" y="5">datetime</text></g></g>
+            <g transform="translate(700 872)"><g class="grow pebble" style="--d:6"><rect x="-48" y="-14" width="96" height="28" rx="14"/><text class="t-pebble" y="4.5">Java 21</text></g></g>
+            <g transform="translate(860 872)"><g class="grow pebble" style="--d:6"><rect x="-95" y="-14" width="190" height="28" rx="14"/><text class="t-pebble" y="4.5">immutable-collections</text></g></g>
+            <g transform="translate(800 805)"><g class="grow seg core" style="--d:0">
+              <rect x="-580" y="-30" width="1160" height="60" rx="30"/>
+              <text class="t-seg t-core" x="-480" y="6">types</text><text class="t-seg t-core" x="-320" y="6">functors</text><text class="t-seg t-core" x="-160" y="6">transforms</text><text class="t-seg t-core" x="0" y="6">lambdas</text><text class="t-seg t-core" x="160" y="6">facts</text><text class="t-seg t-core" x="320" y="6">rules</text><text class="t-seg t-core" x="480" y="6">queries</text>
+            </g></g>
           </g>
 
-          <path class="draw stalk" data-step="web" pathLength="1" d="M330 782C270 760 215 710 222 650C230 585 200 520 205 425"/>
-          <path class="draw stalk" data-step="ide" pathLength="1" d="M385 782C330 765 265 705 260 650C257 620 252 590 250 560"/>
-          <path class="draw stalk" data-step="mcp" pathLength="1" d="M1245 782C1320 765 1392 705 1386 650C1380 610 1372 570 1370 520"/>
-          <path class="draw stalk" data-step="editor" pathLength="1" d="M1195 781C1190 740 1172 690 1175 640"/>
-          <path class="draw stem" data-step="kb" pathLength="1" d="M800 783C792 740 808 690 800 620"/>
+          <path class="draw stalk" data-step="web" pathLength="1" d="M350 781C270 760 140 700 145 620C150 520 185 420 190 330"/>
+          <path class="draw stalk" data-step="ide" pathLength="1" d="M410 781C340 755 240 690 205 630C193 600 187 575 185 545"/>
+          <path class="draw stalk" data-step="mcp" pathLength="1" d="M920 781C990 745 1012 650 1006 545C1000 450 992 360 985 270"/>
+          <path class="draw stem" data-step="editor" pathLength="1" d="M640 783C632 740 628 690 620 620"/>
+          <path class="draw stem" data-step="lang" pathLength="1" d="M1300 783C1294 740 1306 690 1300 625"/>
 
           <!-- water surface -->
           <rect class="water" x="0" y="650" width="1600" height="250"/>
           <path class="waterline" d="M0 650H1600"/>
-          <ellipse class="ripple" cx="800" cy="650" rx="190" ry="15"/>
-          <ellipse class="ripple r2" cx="800" cy="650" rx="190" ry="15"/>
-          <ellipse class="ripple r3" cx="800" cy="650" rx="190" ry="15"/>
+          <ellipse class="ripple" cx="620" cy="650" rx="170" ry="14"/>
+          <ellipse class="ripple r2" cx="620" cy="650" rx="170" ry="14"/>
+          <ellipse class="ripple r3" cx="620" cy="650" rx="170" ry="14"/>
+          <ellipse class="ripple r2" cx="1300" cy="650" rx="140" ry="12"/>
+          <ellipse class="ripple r3" cx="1300" cy="650" rx="140" ry="12"/>
 
-          <!-- leaves: who uses the servers -->
-          <g class="c leaf" data-step="web" transform="translate(205 420)">
+          <!-- leaves of the first flower: who uses the servers -->
+          <g class="c leaf" data-step="web" transform="translate(190 330)">
             <g class="grow">
-              <ellipse class="leaf-body" rx="165" ry="54"/><g class="veins" data-rx="165" data-ry="54"></g><ellipse class="leaf-rim" rx="154" ry="46"/>
+              <ellipse class="leaf-body" rx="150" ry="52"/><g class="veins" data-rx="150" data-ry="52"></g><ellipse class="leaf-rim" rx="139" ry="44"/>
               <text class="t-leaf" y="-3">Web</text>
-              <text class="t-leaf-sub" y="20">nelumbo.nl · tour · playground · docs</text>
+              <text class="t-leaf-sub" y="20">nelumbo.nl · tour · sandbox · docs</text>
             </g>
           </g>
-          <g class="c leaf" data-step="ide" transform="translate(250 560)">
+          <g class="c leaf" data-step="ide" transform="translate(185 545)">
             <g class="grow">
-              <ellipse class="leaf-body" rx="185" ry="56"/><g class="veins" data-rx="185" data-ry="56"></g><ellipse class="leaf-rim" rx="174" ry="48"/>
+              <ellipse class="leaf-body" rx="150" ry="54"/><g class="veins" data-rx="150" data-ry="54"></g><ellipse class="leaf-rim" rx="139" ry="46"/>
               <text class="t-leaf" y="-3">IDE plugins</text>
               <text class="t-leaf-sub" y="20">VS Code · IntelliJ · Eclipse · Neovim</text>
             </g>
           </g>
-          <g class="c leaf" data-step="mcp" transform="translate(1370 520)">
+          <g class="c leaf" data-step="mcp" transform="translate(985 270)">
             <g class="grow">
-              <ellipse class="leaf-body" rx="150" ry="50"/><g class="veins" data-rx="150" data-ry="50"></g><ellipse class="leaf-rim" rx="139" ry="42"/>
+              <ellipse class="leaf-body" rx="110" ry="46"/><g class="veins" data-rx="110" data-ry="46"></g><ellipse class="leaf-rim" rx="100" ry="38"/>
               <text class="t-leaf" y="-3">AI assistants</text>
               <text class="t-leaf-sub" y="20">Claude · any MCP client</text>
             </g>
           </g>
-          <g class="c" data-step="editor" transform="translate(1175 642)">
-            <g class="grow">
-              <path class="bud-outer" transform="scale(.3 .25)" d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/>
-              <path class="bud-inner" transform="scale(.15 .22)" d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/>
-              <text class="t-bud" x="40" y="-44">Nelumbo IDE</text>
-              <text class="t-bud-sub" x="40" y="-24">standalone editor</text>
+
+          <!-- first flower: the Nelumbo IDE at the heart, one petal per way in -->
+          <g class="old" transform="translate(620 620) scale(.78) translate(-800 -620)">
+            <g transform="translate(800 620)">
+              <g class="c petal outer" data-step="lsp" style="--a:-62deg;--s:.88"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+              <g class="c petal outer" data-step="mcp" style="--a:62deg;--s:.88"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+              <g class="c petal inner" data-step="http" style="--a:-31deg;--s:.96"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+              <g class="c petal inner" data-step="cli" style="--a:31deg;--s:.96"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+              <g class="c petal heart" data-step="editor" style="--a:0deg;--s:1"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+            </g>
+            <g class="lbl on-heart" data-step="editor">
+              <text class="t-name" x="800" y="322">Nelumbo</text>
+              <text class="t-name" x="800" y="352">IDE</text>
+              <text class="t-note" x="800" y="394">standalone editor</text>
+              <text class="t-note" x="800" y="416">syntax tree viewer</text>
+              <text class="t-note" x="800" y="438">knowledge viewer</text>
+            </g>
+            <g class="lbl on-inner" data-step="http">
+              <text class="t-name" x="630" y="324">HTTP</text>
+              <text class="t-name" x="630" y="352">server</text>
+              <text class="t-sub" x="632" y="376">REST</text>
+            </g>
+            <g class="lbl on-inner" data-step="cli">
+              <text class="t-name" x="970" y="336">CLI</text>
+              <text class="t-sub" x="968" y="360">files · REPL</text>
+            </g>
+            <g class="lbl on-outer" data-step="lsp">
+              <text class="t-name" x="536" y="500">LSP server</text>
+              <text class="t-sub" x="556" y="522">stdio · WebSocket</text>
+            </g>
+            <g class="lbl on-outer" data-step="mcp">
+              <text class="t-name" x="1066" y="500">MCP server</text>
+              <text class="t-sub" x="1046" y="522">stdio · 4 tools</text>
             </g>
           </g>
 
-          <!-- the flower: knowledge base at the heart, one petal per way in -->
-          <g transform="translate(800 620)">
-            <g class="c petal outer" data-step="lsp" style="--a:-62deg;--s:.88"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
-            <g class="c petal outer" data-step="mcp" style="--a:62deg;--s:.88"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
-            <g class="c petal inner" data-step="http" style="--a:-31deg;--s:.96"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
-            <g class="c petal inner" data-step="cli" style="--a:31deg;--s:.96"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
-            <g class="c petal heart" data-step="kb" style="--a:0deg;--s:1"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+          <!-- second, young flower: the libraries as golden petals -->
+          <g transform="translate(1300 625)">
+            <g class="c petal lib" data-step="rationals" style="--a:-78deg;--s:.506"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+            <g class="c petal lib" data-step="datetime" style="--a:78deg;--s:.506"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+            <g class="c petal lib" data-step="integers" style="--a:-52deg;--s:.54"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+            <g class="c petal lib" data-step="collections" style="--a:52deg;--s:.54"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+            <g class="c petal libcore" data-step="logic" style="--a:-26deg;--s:.575"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+            <g class="c petal lib" data-step="strings" style="--a:26deg;--s:.575"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
+            <g class="c petal libcore" data-step="lang" style="--a:0deg;--s:.61"><path d="M0 0C-12-15-96-115-96-234C-96-362 0-465 0-465C0-465 96-362 96-234C96-115 12-15 0 0Z"/></g>
           </g>
-
-          <g class="lbl on-heart" data-step="kb">
-            <text class="t-name" x="800" y="322">Knowledge</text>
-            <text class="t-name" x="800" y="350">base</text>
-            <text class="t-note" x="800" y="392">types · syntax</text>
-            <text class="t-note" x="800" y="414">facts · rules</text>
-            <text class="t-note" x="800" y="436">queries</text>
-          </g>
-          <g class="lbl on-inner" data-step="http">
-            <text class="t-name" x="630" y="324">HTTP</text>
-            <text class="t-name" x="630" y="350">server</text>
-            <text class="t-sub" x="632" y="372">REST</text>
-          </g>
-          <g class="lbl on-inner" data-step="cli">
-            <text class="t-name" x="970" y="336">CLI</text>
-            <text class="t-sub" x="968" y="358">files · REPL</text>
-          </g>
-          <g class="lbl on-outer" data-step="lsp">
-            <text class="t-name" x="536" y="500">LSP server</text>
-            <text class="t-sub" x="558" y="521">stdio · WebSocket</text>
-          </g>
-          <g class="lbl on-outer" data-step="mcp">
-            <text class="t-name" x="1066" y="500">MCP server</text>
-            <text class="t-sub" x="1046" y="521">stdio · 4 tools</text>
-          </g>
+          <g class="lbl on-lib" data-step="rationals"><text class="t-lib" transform="translate(1300 625) rotate(-78) translate(0 -117) rotate(90)" y="5">rationals</text></g>
+          <g class="lbl on-lib" data-step="datetime"><text class="t-lib" transform="translate(1300 625) rotate(78) translate(0 -117) rotate(-90)" y="5">datetime</text></g>
+          <g class="lbl on-lib" data-step="integers"><text class="t-lib" transform="translate(1300 625) rotate(-52) translate(0 -125) rotate(90)" y="5">integers</text></g>
+          <g class="lbl on-lib" data-step="collections"><text class="t-lib" transform="translate(1300 625) rotate(52) translate(0 -125) rotate(-90)" y="5">collections</text></g>
+          <g class="lbl on-lib" data-step="logic"><text class="t-lib" transform="translate(1300 625) rotate(-26) translate(0 -133) rotate(90)" y="5">logic</text></g>
+          <g class="lbl on-lib" data-step="strings"><text class="t-lib" transform="translate(1300 625) rotate(26) translate(0 -133) rotate(-90)" y="5">strings</text></g>
+          <g class="lbl on-lib" data-step="lang"><text class="t-lib" transform="translate(1300 625) rotate(0) translate(0 -141) rotate(-90)" y="5">lang</text></g>
 
           <!-- tendrils: which server a leaf talks to -->
-          <path class="draw tendril" data-step="ide" pathLength="1" d="M395 532C425 505 452 488 486 462"/>
-          <circle class="dot" data-step="ide" cx="486" cy="462" r="5"/>
-          <path class="draw tendril" data-step="web" pathLength="1" d="M362 426C395 440 425 446 458 439"/>
-          <circle class="dot" data-step="web" cx="458" cy="439" r="5"/>
-          <path class="draw tendril" data-step="web" pathLength="1" d="M320 383C380 300 490 250 588 272"/>
-          <circle class="dot" data-step="web" cx="588" cy="272" r="5"/>
-          <path class="draw tendril" data-step="mcp" pathLength="1" d="M1230 504C1200 472 1165 458 1128 449"/>
-          <circle class="dot" data-step="mcp" cx="1128" cy="449" r="5"/>
+          <path class="draw tendril" data-step="ide" pathLength="1" d="M320 515C345 505 362 500 378 497"/>
+          <circle class="dot" data-step="ide" cx="378" cy="497" r="5"/>
+          <path class="draw tendril" data-step="web" pathLength="1" d="M240 380C270 430 320 462 362 476"/>
+          <circle class="dot" data-step="web" cx="362" cy="476" r="5"/>
+          <path class="draw tendril" data-step="web" pathLength="1" d="M310 295C350 300 395 322 440 352"/>
+          <circle class="dot" data-step="web" cx="440" cy="352" r="5"/>
+          <path class="draw tendril" data-step="mcp" pathLength="1" d="M950 312C955 380 930 430 898 468"/>
+          <circle class="dot" data-step="mcp" cx="898" cy="468" r="5"/>
 
           <g class="brand" transform="translate(52 36)">
             <g transform="scale(.084)">
@@ -355,7 +371,7 @@
       <div class="intro" id="intro">
         <p class="eyebrow">Component overview</p>
         <h1>Nelumbo, piece by piece</h1>
-        <p class="sub">A knowledge base at the heart. Libraries at the root. Servers as petals. Editors as leaves.</p>
+        <p class="sub">A knowledge repository as the root. Tools as one flower, libraries as another, and the libraries as a second flower.</p>
         <p class="hint"><kbd>&rarr;</kbd> or <kbd>Space</kbd> adds the next piece</p>
       </div>
 
@@ -384,14 +400,14 @@
   // One entry per step, in presentation order. `id` matches the data-step attributes in the scene.
   var STEPS = [
     { id: 'pond', nav: 'Pond' },
-    { id: 'kb', nav: 'Knowledge base', kind: 'The heart', title: 'Knowledge base',
-      lead: 'Everything you write in Nelumbo ends up here: types, syntax patterns, facts and rules. A query is answered by reasoning over them.',
-      points: ['Tokenizer, parser and reasoner, written in Java', 'Three-valued answers: facts, falsehoods or unknown', 'A new construct is usable on the very next line'],
+    { id: 'kb', nav: 'Knowledge repository', kind: 'The root', title: 'Knowledge repository',
+      lead: 'The root everything grows from. It holds types, functors, transforms, lambdas, facts and rules, answers queries, and can grow on the fly to connect new parts.',
+      points: ['Tokenizer, parser and reasoner, written in Java', 'Three-valued answers: true, false or unknown', 'A new construct works on the very next line'],
       meta: 'org.modelingvalue.nelumbo.KnowledgeBase' },
-    { id: 'libs', nav: 'Libraries', kind: 'The roots', title: 'Libraries',
-      lead: 'The language itself is a library. Seven modules written in Nelumbo define its syntax, its logic and its data types.',
-      points: ['lang holds the grammar; logic adds facts, rules and queries', 'Only the irreducible primitives are native Java', 'Your own .nl modules are imported the same way'],
-      meta: 'Java 21 · immutable-collections' },
+    { id: 'editor', nav: 'Nelumbo IDE', kind: 'Heart of the first flower', title: 'Nelumbo IDE',
+      lead: 'A standalone editor that carries its own knowledge base. No server and no plugin, just one jar.',
+      points: ['Swing editor with viewers for the syntax tree and the knowledge base', 'Grows from the same core library as everything else'],
+      meta: 'nelumbo-ide-<version>.jar' },
     { id: 'cli', nav: 'CLI', kind: 'Petal', title: 'CLI',
       lead: 'Runs .nl files from a terminal, a script or a build, and checks every query against its expected result.',
       points: ['Exit code 0 on success; errors point to file:line:col', '--json for tools, -i for an interactive REPL', 'Double-click the jar for an evaluate window'],
@@ -410,23 +426,47 @@
       meta: 'lsp/plugins/{vscode,intellij,eclipse,neovim}' },
     { id: 'web', nav: 'Web', kind: 'Leaf', title: 'Web',
       lead: 'nelumbo.nl puts the same servers behind a browser. Nothing to install.',
-      points: ['Monaco editors talk to the LSP server over a WebSocket', 'A tour with self-checking exercises, a playground and the docs', 'REST endpoints come from the same eval service as the CLI'],
+      points: ['Monaco editors talk to the LSP server over a WebSocket', 'A tour with self-checking exercises, a sandbox and the docs', 'REST endpoints come from the same eval service as the CLI'],
       meta: 'nelumbo-web-server-<version>.jar' },
     { id: 'mcp', nav: 'MCP server', kind: 'Petal', title: 'MCP server',
       lead: 'Lets an AI assistant write Nelumbo models and check them against the real engine.',
       points: ['eval_nl runs a model and returns structured diagnostics', 'search_docs, get_example and new_model supply the know-how', 'Speaks the Model Context Protocol over stdio'],
       meta: 'nelumbo-mcp-server-<version>.jar' },
-    { id: 'editor', nav: 'Nelumbo IDE', kind: 'A bud of its own', title: 'Nelumbo IDE',
-      lead: 'A standalone editor that carries its own knowledge base. No server and no plugin, just one jar.',
-      points: ['Swing editor with viewers for the syntax tree and the knowledge base', 'Grows from the same core library as everything else'],
-      meta: 'nelumbo-ide-<version>.jar' },
-    { id: 'full', nav: 'Full bloom', kind: 'Full bloom', title: 'One knowledge base, many ways in',
-      lead: 'Every tool is a thin layer around the same core, so a rule behaves the same in the terminal, the editor, the browser and an AI assistant.',
-      points: ['Petals: CLI, HTTP, LSP and MCP', 'Leaves: IDE plugins, the web and AI assistants', 'Roots: seven libraries on Java 21'],
+    { id: 'lang', nav: 'lang', kind: 'Library petal', title: 'lang',
+      lead: 'The grammar of Nelumbo itself, written in Nelumbo: types, patterns and functors.',
+      points: ['Declares Pattern and all its subtypes', 'Every other library builds on it'],
+      meta: 'lang.nl' },
+    { id: 'logic', nav: 'logic', kind: 'Library petal', title: 'logic',
+      lead: 'Facts, rules and queries, with the logical operators and quantifiers.',
+      points: ['And, Or, Not, Equal, When', 'E[x] existential and A[y] universal quantifiers'],
+      meta: 'logic.nl' },
+    { id: 'integers', nav: 'integers', kind: 'Library petal', title: 'integers',
+      lead: 'Integer arithmetic and comparison.',
+      points: ['Only the irreducible primitives are native Java'],
+      meta: 'integers.nl' },
+    { id: 'rationals', nav: 'rationals', kind: 'Library petal', title: 'rationals',
+      lead: 'Rational numbers as a library.',
+      points: ['Builds on integers'],
+      meta: 'rationals.nl' },
+    { id: 'strings', nav: 'strings', kind: 'Library petal', title: 'strings',
+      lead: 'Strings and the operations on them, including pattern matching.',
+      points: ['Concatenation, comparison and matching'],
+      meta: 'strings.nl' },
+    { id: 'collections', nav: 'collections', kind: 'Library petal', title: 'collections',
+      lead: 'Lists, sets and the operations over them.',
+      points: ['Literals like [1,2] and {1}', 'map and where-style operations'],
+      meta: 'collections.nl' },
+    { id: 'datetime', nav: 'datetime', kind: 'Library petal', title: 'datetime',
+      lead: 'Dates and times as a library.',
+      points: ['Imported like any other module'],
+      meta: 'datetime.nl' },
+    { id: 'full', nav: 'Full bloom', kind: 'Full bloom', title: 'One root, two flowers',
+      lead: 'Every tool is a thin layer around the same core, so a rule behaves the same in the terminal, editor, browser and AI assistant.',
+      points: ['Root: the knowledge repository', 'First flower: IDE, CLI, HTTP, LSP and MCP, plus plugins, web and AI', 'Second flower: the seven libraries'],
       meta: '' }
   ];
   // Components that stay lit while another one is in focus.
-  var REL = { libs: ['kb'], http: ['cli'], ide: ['lsp'], web: ['lsp', 'http'], editor: ['kb', 'libs'] };
+  var REL = { editor: ['kb'], http: ['cli'], ide: ['lsp'], web: ['lsp', 'http'], mcp: ['lsp'], logic: ['lang'], integers: ['logic'], rationals: ['integers'], strings: ['lang'], collections: ['lang'], datetime: ['lang'] };
 
   var order = STEPS.map(function (s) { return s.id; });
   var last = STEPS.length - 1;
