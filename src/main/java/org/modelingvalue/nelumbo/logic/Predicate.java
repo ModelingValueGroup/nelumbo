@@ -41,6 +41,8 @@ public class Predicate extends Node {
     @Serial
     private static final long serialVersionUID = -1605559565948158856L;
 
+    protected static final boolean CHECK_SINGLE_FUNCTION_RESULT = Boolean.getBoolean("CHECK_SINGLE_FUNCTION_RESULT");
+
     protected static final boolean RANDOM_NELUMBO  = Boolean.getBoolean("RANDOM_NELUMBO");
     protected static final boolean REVERSE_NELUMBO = Boolean.getBoolean("REVERSE_NELUMBO");
     protected static final int     MAX_LOGIC_DEPTH = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
@@ -342,6 +344,14 @@ public class Predicate extends Node {
                     return result;
                 }
             }
+            checkSingleResult(result);
+            knowledgebase.memoization(this, result);
+            return result;
+        }
+    }
+
+    private void checkSingleResult(InferResult result) {
+        if (CHECK_SINGLE_FUNCTION_RESULT) {
             Variable unique = unique();
             if (unique != null) {
                 Map<Map<Variable, Object>, Predicate> map = Map.of();
@@ -354,8 +364,6 @@ public class Predicate extends Node {
                     }
                 }
             }
-            knowledgebase.memoization(this, result);
-            return result;
         }
     }
 
