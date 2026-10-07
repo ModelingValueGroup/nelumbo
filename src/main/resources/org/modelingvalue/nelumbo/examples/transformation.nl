@@ -2,29 +2,38 @@ import nelumbo.strings
 
 // Language
 
-Root ::= attr <Type> <NAME> <Type> #100
+Root ::= <(> in <|> out <)> <Type> <NAME> <Type> #100
 
 Type OT, AT
 NAME AN
 
-attr OT AN AT  ::> {
+in OT AN AT  ::> {
     AT               ::= <OT>.AN                                 #100
-    Root             ::= <{OT,Literal}>.AN  := <{AT,Literal}#0>  #100,
-                         <{OT,Variable}>.AN := <{AT,Function}#0> #100
-
+    Root             ::= <{OT,Literal}>.AN  := <{AT,Literal}#0>  #100
     private FactType ::= AN(<OT>,<AT>)
 
     OT o
     AT a
 
+    o.AN=a <=>  AN(o,a)
+
     {OT,Literal}  ol
     {AT,Literal}  al
-    {AT,Function} af
 
     (ol.AN := al) ::> {
         fact AN(ol,al)
-        o.AN=a <=>  AN(o,a)
     }
+}
+
+out OT AN AT  ::> {
+    AT   ::= <OT>.AN                                 #100
+    Root ::= <{OT,Variable}>.AN := <{AT,Function}#0> #100
+
+    OT o
+    AT a
+
+    {OT,Literal}  ol
+    {AT,Function} af
 
     (o.AN := af) ::> {
         o.AN=a <=>  af=a
@@ -35,11 +44,12 @@ attr OT AN AT  ::> {
 
 Person :: Object
 
-attr Person name String
-attr Person street String
-attr Person number Integer
-attr Person address String
-attr Person friend Person
+in Person name String
+in Person street String
+in Person number Integer
+in Person friend Person
+
+out Person address String
 
 // Rules
 
