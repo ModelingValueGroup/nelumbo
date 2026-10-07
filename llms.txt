@@ -36,6 +36,7 @@ example file in the project is unreadable.
 
 ## Language reference by level
 
+- [Bootstrap grammar](https://nelumbo.nl/docs/reference/core/bootstrap.html): the syntax hardcoded in Java so that `lang.nl` can be loaded
 - [nelumbo.lang](https://nelumbo.nl/docs/reference/lang/index.html): the bootstrap layer - token types, object hierarchy, the pattern meta-grammar, top-level statements
 - [Grammar](https://nelumbo.nl/docs/reference/lang/grammar.html): types, patterns, variables, scope blocks and `::>` - the syntax-shaping declarations from `nelumbo.lang`
 - [Built-in tokens and pattern holes](https://nelumbo.nl/docs/reference/lang/built-in-tokens.html): `<NUMBER>`, `<STRING>`, `<Variable>` and friends
