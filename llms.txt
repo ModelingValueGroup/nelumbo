@@ -37,12 +37,13 @@ example file in the project is unreadable.
 ## Language reference by level
 
 - [nelumbo.lang](https://nelumbo.nl/docs/reference/lang/index.html): the bootstrap layer - token types, object hierarchy, the pattern meta-grammar, top-level statements
-- [Grammar](https://nelumbo.nl/docs/reference/lang/grammar.html): the core syntax of `.nl` files
+- [Grammar](https://nelumbo.nl/docs/reference/lang/grammar.html): types, patterns, variables, scope blocks and `::>` - the syntax-shaping declarations from `nelumbo.lang`
 - [Built-in tokens and pattern holes](https://nelumbo.nl/docs/reference/lang/built-in-tokens.html): `<NUMBER>`, `<STRING>`, `<Variable>` and friends
 - [Precedence and associativity](https://nelumbo.nl/docs/reference/lang/precedence-and-associativity.html): the `#N` system
 - [Visibility](https://nelumbo.nl/docs/reference/lang/visibility.html): `private`, `hidden`, `visible`, and scope blocks
 - [nelumbo.logic](https://nelumbo.nl/docs/reference/logic/index.html): Boolean, connectives, quantifiers, equality, and the `fact` / `<=>` / `?` statements
-- [Operators](https://nelumbo.nl/docs/reference/logic/operators.html): complete operator catalogue
+- [Operators](https://nelumbo.nl/docs/reference/logic/operators.html): the logical operators and the `fact` / `<=>` / `?` forms from `nelumbo.logic`
+- [Statements](https://nelumbo.nl/docs/reference/logic/statements.html): fact types, facts, queries and tests
 - [Writing rules](https://nelumbo.nl/docs/reference/logic/writing-rules.html): `<=>`, guards, merging, contradictions
 - [Three-valued logic](https://nelumbo.nl/docs/reference/logic/three-valued-logic.html): the semantic foundation, with truth tables
 - [Test expression semantics](https://nelumbo.nl/docs/reference/logic/test-expression-semantics.html): formal definition of when a test passes

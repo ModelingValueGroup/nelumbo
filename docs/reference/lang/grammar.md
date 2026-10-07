@@ -7,7 +7,7 @@ Nelumbo is a **meta-language**, and the meta-ness goes all the way down. Even th
 - The pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>`, `<,>`, `<|>`, …), the top-level declaration forms (`import`, `T :: S`, `T ::= P`, `T v`, `::>`, scope blocks), and the underlying object hierarchy (`Object`, `Type`, `Variable`, `Root`, …) are all declared in [`lang.nl`](index.md). The Java core contains just enough hand-coded parsing to load `lang.nl`; from that point on, the user's own `::=` patterns are what parse every subsequent file.
 - The three execution-driving statement forms (`fact`, `<=>`, `?`), along with the `Boolean` type and every logical operator, are declared in [`logic.nl`](../logic/index.md).
 
-So "the grammar of Nelumbo" is really *the set of patterns that `lang.nl` and `logic.nl` install when they are loaded*. This page documents that surface; the per-module reference pages document where each piece is declared.
+So "the grammar of Nelumbo" is really *the set of patterns that `lang.nl` and `logic.nl` install when they are loaded*. This page documents the `nelumbo.lang` part: the declarations that shape syntax. The statement forms that `nelumbo.logic` adds are on [Statements](../logic/statements.md).
 
 ---
 
@@ -24,12 +24,10 @@ The top-level constructs are:
 | `T ::= P` | Declare pattern `P` producing a value of type `T` | [Patterns](#pattern-declarations) below |
 | `pattern N ::= P` | Declare a reusable **named pattern** `N` | [Named patterns](#named-patterns) below |
 | `T v` | Declare logical variable `v` of type `T` | [Variables](#variable-declarations) below |
-| `L <=> R` | Rule: `L` bi-implies `R` | [`writing-rules.md`](../logic/writing-rules.md) |
-| `fact E` | Assert ground-truth fact `E` | [Facts](#facts) below |
-| `E ?` | Query: run `E` and print the result | [`test-expression-semantics.md`](../logic/test-expression-semantics.md) |
-| `E ? [F][N]` | Test: query `E` and compare to expected facts `F` / falsehoods `N` | [`test-expression-semantics.md`](../logic/test-expression-semantics.md) |
 | `{ ... }` | Scope block — declarations inside are local | [`visibility.md`](visibility.md) |
 | `L ::> { ... }` | Pattern transformation | [`language-transformations.md`](../../guides/language-transformations.md) |
+
+Importing `nelumbo.logic` adds the statement forms that drive execution: rules (`L <=> R`, see [`writing-rules.md`](../logic/writing-rules.md)), facts (`fact E`), and queries and tests (`E ?`, `E ? [F][N]`). They are documented on [Statements](../logic/statements.md).
 
 Comments are `//` to end of line. Whitespace is not significant.
 
@@ -188,34 +186,6 @@ Even `lang.nl` and `logic.nl` define their own (`PATTERNS`, `QNAME`, `BINDING`) 
 
 ---
 
-## FactType declarations
-
-A `FactType` pattern declares a relation whose instances can be asserted as ground truth:
-
-```
-FactType ::= pc(<Person>,<Person>)                    // family.nl
-FactType ::= friends(<Person>,<Person>)               // friends.nl
-FactType ::= het inkomen van <Person> is <Integer> euro  // belasting.nl
-```
-
-A fact type looks like any other pattern, but values built with it are not computed by rules — they are either asserted directly (see below) or they are not. This separates **ground truth** from **derived relations**.
-
-### Facts
-
-Facts are asserted with the `fact` keyword:
-
-```
-fact pc(Hendrik, Juliana),
-     pc(Wilhelmina, Juliana),
-     pc(Juliana, Beatrix)
-
-fact het inkomen van Piet is 50000 euro
-```
-
-`fact` introduces one or more comma-separated ground-truth assertions. Once asserted, they are available to the query engine as proven facts.
-
----
-
 ## Variable declarations
 
 ```
@@ -243,7 +213,7 @@ An expression is anything built from:
 - **Literals** — `5`, `3.14`, `"hello"`, `true`, `Hendrik`
 - **Variables** — `n`, `a`, `p`
 - **Pattern applications** — anything built from a `::=` pattern, such as `fib(n)`, `a+b`, `|n|`, `{1,2,3}`, `het inkomen van Piet is 50000 euro`
-- **Logical operators from `nelumbo.logic`** — `&`, `|`, `!`, `->`, `<->`, `E[]`, `A[]`, `=`, `!=`
+- **[Logical operators from `nelumbo.logic`](../logic/operators.md)** — `&`, `|`, `!`, `->`, `<->`, `E[]`, `A[]`, `=`, `!=`
 
 Expressions have types (propagated through pattern declarations) and can appear anywhere the grammar expects an expression of the matching type.
 
@@ -283,23 +253,32 @@ This is Nelumbo's mechanism for building higher-level DSLs on top of the core. I
 
 ---
 
-## Queries, tests, and bare facts
+## Punctuation
 
-Three forms drive execution:
+| Symbol | Meaning |
+|---|---|
+| `,` in a supertype list | Separates supertypes |
+| `,` in a variable declaration | Separates variable names |
+| `{ }` | Scope block — see [`visibility.md`](visibility.md) |
+| `( )` | Grouping inside an expression |
+| `//` | Line comment |
 
-```
-E                  // bare expression — treated as a fact if E is a FactType instance
-E ?                // query — run the reasoner, print the result
-E ? [F][N]         // test — query and compare; pass iff result matches
-```
+---
 
-See [`test-expression-semantics.md`](../logic/test-expression-semantics.md) for the precise comparison rules.
+## Special identifiers
+
+| Name | Meaning |
+|---|---|
+| `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` | The core object hierarchy. `Root` is the entry-point production for top-level statements; `Type` is used as a generic parameter introducer (`Type T`). |
+
+The logic-layer identifiers (`Boolean`, `FactType`, `true`, ...) are listed in [`operators.md`](../logic/operators.md#special-identifiers).
 
 ---
 
 ## See also
 
-- [`operators.md`](../logic/operators.md) — the complete list of operators
+- [`operators.md`](../logic/operators.md) — the operators from `nelumbo.logic`
+- [`statements.md`](../logic/statements.md) — fact types, facts, queries and tests
 - [`built-in-tokens.md`](built-in-tokens.md) — `<NUMBER>`, `<STRING>`, `<NAME>`, `<Variable>`
 - [`precedence-and-associativity.md`](precedence-and-associativity.md) — how `#N` works
 - [`visibility.md`](visibility.md) — `private`, `hidden`, `visible`, and `{ }` scopes

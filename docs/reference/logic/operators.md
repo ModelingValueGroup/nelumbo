@@ -1,39 +1,8 @@
 # Operators
 
-This page is a complete catalogue of the operators contributed by `nelumbo.lang` (the syntactic bootstrap) and `nelumbo.logic` (the three-valued logic layer). Operators from `integers`, `rationals`, `strings`, and `collections` are documented on the per-module stdlib pages.
+This page is a catalogue of the operators and statement forms declared in `nelumbo.logic` (the three-valued logic layer). The declarative operators `::`, `::=` and `::>` come from `nelumbo.lang` and are on the [`nelumbo.lang` grammar](../lang/grammar.md) page. Operators from `integers`, `rationals`, `strings`, and `collections` are documented on the per-package pages.
 
-None of these operators are hardcoded in the Java core. Everything below is declared by a `::=` pattern in `lang.nl` or `logic.nl` and bound to a native class via `@`.
-
----
-
-## Declarative operators (from `nelumbo.lang`)
-
-These shape the program itself. They are not values; you do not compute with them. All are declared as `Root ::=` or `Pattern ::=` patterns in `lang.nl`.
-
-### `::` — type subtyping
-
-```
-T :: S
-T :: S1, S2
-```
-
-Declares `T` as a type whose direct supertypes are listed on the right. Everything ultimately derives from `Object`. See [`grammar.md`](../lang/grammar.md#type-declarations).
-
-### `::=` — pattern
-
-```
-T ::= pattern
-```
-
-Declares a new way to produce a value of type `T`. Extends the language's syntax. Multiple `::=` declarations for the same type are allowed and accumulate. See [`grammar.md`](../lang/grammar.md#pattern-declarations).
-
-### `::>` — pattern transformation
-
-```
-L ::> { ... declarations ... }
-```
-
-Expands an occurrence of pattern `L` into the declarations in the block. A macro-like mechanism for building DSLs on top of Nelumbo. See [`../guides/language-transformations.md`](../../guides/language-transformations.md).
+None of these operators are hardcoded in the Java core. Everything below is declared by a `::=` pattern in `logic.nl` and bound to a native class via `@`.
 
 ---
 
@@ -48,7 +17,7 @@ fact E
 fact E1, E2, E3
 ```
 
-Asserts one or more comma-separated ground-truth facts. See [`grammar.md`](../lang/grammar.md#facts).
+Asserts one or more comma-separated ground-truth facts. See [`statements.md`](statements.md#facts).
 
 ### `<=>` — rule (bi-implication)
 
@@ -175,24 +144,22 @@ Not an operator in the same sense, but syntactically significant. `if G` attache
 
 ## Punctuation
 
+Punctuation from `nelumbo.lang` (supertype and variable lists, `{ }`, `( )`, `//`) is in the [grammar](../lang/grammar.md#punctuation).
+
 | Symbol | Meaning |
 |---|---|
 | `,` in a rule RHS | Shorthand for repeating the LHS across multiple rule clauses (see [`writing-rules.md`](writing-rules.md)) |
 | `,` in a `fact` block | Separates asserted facts |
-| `,` in a supertype list | Separates supertypes |
-| `,` in a variable declaration | Separates variable names |
-| `{ }` | Scope block — see [`visibility.md`](../lang/visibility.md) |
-| `( )` | Grouping inside an expression |
-| `//` | Line comment |
 
 ---
 
 ## Special identifiers
 
+The `nelumbo.lang` object hierarchy (`Object`, `Type`, `Root`, ...) is in the [grammar](../lang/grammar.md#special-identifiers).
+
 | Name | Origin | Meaning |
 |---|---|---|
-| `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` | `nelumbo.lang` | The core object hierarchy. `Root` is the entry-point production for top-level statements; `Type` is used as a generic parameter introducer (`Type T`). |
-| `Boolean`, `FactType`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `FactType` is a `Boolean` subtype for ground-truth relations (see [`grammar.md`](../lang/grammar.md#facttype-declarations)). |
+| `Boolean`, `FactType`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `FactType` is a `Boolean` subtype for ground-truth relations (see [`statements.md`](statements.md#facttype-declarations)). |
 | `true`, `false`, `unknown` | `nelumbo.logic` | The three Boolean values. |
 
 ---
