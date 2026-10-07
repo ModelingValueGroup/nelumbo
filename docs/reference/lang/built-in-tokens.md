@@ -1,5 +1,7 @@
 # Built-in tokens and pattern holes
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 When you declare a pattern with `::=`, everything in angle brackets (`<...>`) is a **hole** — a placeholder that the parser fills in with a matching fragment of input. This page catalogues the kinds of hole that are built into Nelumbo and used throughout the standard library.
 
 ```

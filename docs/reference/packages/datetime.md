@@ -1,5 +1,7 @@
 # `nelumbo.datetime`
 
+> **Level:** optional package `nelumbo.datetime`. Write `import nelumbo.datetime`; it brings in `nelumbo.integers`, `nelumbo.logic` and `nelumbo.lang` transitively.
+
 ISO 8601 dates, times, date-times, and durations, with chronological comparison and reversible arithmetic.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 95 lines.

@@ -1,5 +1,7 @@
 # Precedence and associativity
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 When you declare a pattern with `::=`, you can attach a **precedence annotation** `#N`:
 
 ```

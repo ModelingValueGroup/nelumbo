@@ -1,5 +1,7 @@
 # Test expression semantics
 
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
+
 This page formally defines what a **query** produces, what a **test** compares, and under what conditions a test passes or fails. It is the reference counterpart to [`../getting-started/reading-a-test.md`](../../getting-started/reading-a-test.md), which introduces the same material gently.
 
 ---

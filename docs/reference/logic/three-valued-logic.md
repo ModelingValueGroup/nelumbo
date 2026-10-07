@@ -1,5 +1,7 @@
 # Three-valued logic
 
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
+
 Nelumbo is a three-valued logic language. This page describes the values, their behaviour under the logical operators, and why the design was made this way. It is the semantic foundation for [`test-expression-semantics.md`](test-expression-semantics.md) and for most of [`writing-rules.md`](writing-rules.md).
 
 If you have not yet read [`../getting-started/reading-a-test.md`](../../getting-started/reading-a-test.md), read it first. This page treats the same material at reference depth.

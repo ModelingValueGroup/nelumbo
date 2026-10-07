@@ -1,5 +1,7 @@
 # Native classes — the catalogue
 
+> **Level:** Java core. Always present, nothing to import.
+
 Every pattern in the standard library that needs Java backing is bound to a class under `src/main/java/org/modelingvalue/nelumbo/`. This page catalogues the shipped native classes, grouped by structural role, with a note on what each one does and how it returns its results.
 
 Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.

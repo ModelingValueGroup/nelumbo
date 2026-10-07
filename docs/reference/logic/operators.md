@@ -1,5 +1,7 @@
 # Operators
 
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
+
 This page is a catalogue of the operators and statement forms declared in `nelumbo.logic` (the three-valued logic layer). The declarative operators `::`, `::=` and `::>` come from `nelumbo.lang` and are on the [`nelumbo.lang` grammar](../lang/grammar.md) page. Operators from `integers`, `rationals`, `strings`, and `collections` are documented on the per-package pages.
 
 None of these operators are hardcoded in the Java core. Everything below is declared by a `::=` pattern in `logic.nl` and bound to a native class via `@`.

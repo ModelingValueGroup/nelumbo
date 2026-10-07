@@ -1,5 +1,7 @@
 # `nelumbo.integers`
 
+> **Level:** optional package `nelumbo.integers`. Write `import nelumbo.integers`; it brings in `nelumbo.logic` and `nelumbo.lang` transitively.
+
 Arbitrary-precision integer arithmetic and comparison.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl) — 38 lines.

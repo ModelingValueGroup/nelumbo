@@ -1,5 +1,7 @@
 # `nelumbo.strings`
 
+> **Level:** optional package `nelumbo.strings`. Write `import nelumbo.strings`; it brings in `nelumbo.integers`, `nelumbo.logic` and `nelumbo.lang` transitively.
+
 String values, concatenation, length, and integer-string conversion.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl) — 24 lines.

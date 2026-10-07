@@ -1,5 +1,7 @@
 # Grammar
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 This page describes the grammar of Nelumbo itself — the syntax you write in a `.nl` file. It is the foundation the rest of the reference refers back to.
 
 Nelumbo is a **meta-language**, and the meta-ness goes all the way down. Even the grammar described on this page is itself defined in `.nl` files:

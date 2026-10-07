@@ -1,5 +1,7 @@
 # Native API — implementing predicates in Java
 
+> **Level:** Java core. Always present, nothing to import.
+
 Some patterns in Nelumbo cannot be expressed purely in the language — the basic arithmetic primitives, string concatenation, rational construction. These are implemented in Java and bound to a pattern declaration using the `@` annotation:
 
 ```

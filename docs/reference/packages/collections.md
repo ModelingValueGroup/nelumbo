@@ -1,5 +1,7 @@
 # `nelumbo.collections`
 
+> **Level:** optional package `nelumbo.collections`. Write `import nelumbo.collections`; it brings in `nelumbo.integers`, `nelumbo.logic` and `nelumbo.lang` transitively.
+
 Generic sets and lists. The smallest stdlib module — and the only one that uses Nelumbo's generic-type parameter mechanism.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 60 lines.

@@ -1,6 +1,8 @@
 # `nelumbo.logic`
 
-The foundation module. Every other Nelumbo program imports this — either directly, or transitively through one of the other stdlib modules. It declares the `Boolean` type, the three Boolean values, the connectives, the quantifiers, equality, and the three top-level forms (`fact`, `<=>`, `?`).
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
+
+The logic module. A file gets it with `import nelumbo.logic`, or transitively by importing any package. It declares the `Boolean` type, the three Boolean values, the connectives, the quantifiers, equality, and the three top-level forms (`fact`, `<=>`, `?`).
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl) — 41 lines.
 

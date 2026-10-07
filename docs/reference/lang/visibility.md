@@ -1,5 +1,7 @@
 # Visibility — scopes, `private`, `hidden`
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 Nelumbo has two mechanisms for controlling what names are visible where: **scope blocks** using `{ }` and **visibility modifiers** (`private`, `hidden`, `visible`). This page describes both.
 
 ---

@@ -1,5 +1,7 @@
 # Writing rules
 
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
+
 This page is the reference for the `<=>` rule operator: how rules are written, how multiple rules for the same relation combine, how guards work, and what constitutes an inconsistency.
 
 For the semantic background, read [`three-valued-logic.md`](three-valued-logic.md) first.
