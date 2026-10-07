@@ -342,9 +342,25 @@ public class Predicate extends Node {
                     return result;
                 }
             }
+            Variable unique = unique();
+            if (unique != null) {
+                Map<Map<Variable, Object>, Predicate> map = Map.of();
+                for (Predicate fact : result.facts()) {
+                    Map<Variable, Object> rest = fact.getBinding(this).removeKey(unique);
+                    if (map.containsKey(rest)) {
+                        throw new InconsistencyException(result);
+                    } else {
+                        map = map.put(rest, fact);
+                    }
+                }
+            }
             knowledgebase.memoization(this, result);
             return result;
         }
+    }
+
+    protected Variable unique() {
+        return null;
     }
 
     protected boolean isShallow(int nrOfUnbound, Functor functor) {

@@ -16,17 +16,23 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import static org.modelingvalue.nelumbo.patterns.Pattern.n;
+import static org.modelingvalue.nelumbo.patterns.Pattern.s;
+import static org.modelingvalue.nelumbo.patterns.Pattern.t;
+
+import java.io.Serial;
+
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.nelumbo.*;
+import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboFunctorField;
+import org.modelingvalue.nelumbo.Node;
+import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-
-import java.io.Serial;
-
-import static org.modelingvalue.nelumbo.patterns.Pattern.*;
 
 public class NIs extends Predicate {
     @Serial
@@ -68,6 +74,14 @@ public class NIs extends Predicate {
     @Override
     public NIs setBinding(Node declaration, Map<Variable, Object> vars) {
         return (NIs) super.setBinding(declaration, vars);
+    }
+
+    @Override
+    protected Variable unique() {
+        if (get(1) instanceof Variable var && get(0) instanceof Node n && n.type().isFunction()) {
+            return var;
+        }
+        return null;
     }
 
     @Override
