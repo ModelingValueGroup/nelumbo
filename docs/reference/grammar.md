@@ -62,7 +62,7 @@ A bare type can also be introduced for use as a generic parameter:
 Type E
 ```
 
-See [`generics.md`](../guides/generics.md) for details.
+See [generic parenthesisation in `nelumbo.lang`](stdlib/lang.md#generic-parenthesisation) and the [`nelumbo.collections` types](stdlib/collections.md#types) for details.
 
 ---
 

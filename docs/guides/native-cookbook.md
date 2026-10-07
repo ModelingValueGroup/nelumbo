@@ -92,11 +92,11 @@ A Predicate native computes its result in one of two ways: a `@NelumboMethod`, o
 
 ## Table of recipes
 
-1. [Three-arg functional relation](#recipe-1-three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`, `datetime.Add` (`infer`)
-2. [Comparison predicate](#recipe-2-comparison-predicate) — `Integers#gt`, `Strings#string_length`, `datetime.GreaterThan` (`infer`)
-3. [Constant / literal type](#recipe-3-constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
-4. [Binary logical connective](#recipe-4-binary-logical-connective) — `And`, `Or`
-5. [Container / collection literal](#recipe-5-container--collection-literal) — `NSet`, `NList`
+1. [Three-arg functional relation](#recipe-1--three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`, `datetime.Add` (`infer`)
+2. [Comparison predicate](#recipe-2--comparison-predicate) — `Integers#gt`, `Strings#string_length`, `datetime.GreaterThan` (`infer`)
+3. [Constant / literal type](#recipe-3--constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
+4. [Binary logical connective](#recipe-4--binary-logical-connective) — `And`, `Or`
+5. [Container / collection literal](#recipe-5--container--collection-literal) — `NSet`, `NList`
 
 Each recipe includes: when to use it, the skeleton class, the key decisions you must make, and pointers to the shipped implementation to study.
 

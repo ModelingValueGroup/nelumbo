@@ -20,8 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -128,5 +137,40 @@ class DocsSiteTest {
         String grammar = site.page("/docs/reference/grammar.html").orElseThrow();
         assertTrue(grammar.contains("<title>Grammar - Nelumbo docs</title>"), grammar.substring(0, 300));
         assertTrue(grammar.contains("<h1"), grammar.substring(0, 300));
+    }
+
+    @Test
+    void everyInternalLinkAndAnchorInTheBundledDocsResolves() {
+        // a moved or split page must not leave a link behind that 404s or lands on a missing heading
+        DocsSite site = DocsSite.load();
+        Pattern href = Pattern.compile("href=\"(/docs/[^\"#]*)?(?:#([^\"]*))?\"");
+        Deque<String> todo = new ArrayDeque<>(List.of(DocsSite.URL_PREFIX));
+        Set<String> seen = new HashSet<>(todo);
+        List<String> broken = new ArrayList<>();
+        while (!todo.isEmpty()) {
+            String url = todo.pop();
+            Matcher m = href.matcher(site.page(url).orElseThrow());
+            while (m.find()) {
+                if (m.group(1) == null && m.group(2) == null) {
+                    continue;
+                }
+                String target = m.group(1) == null ? url : m.group(1);
+                String fragment = m.group(2);
+                Optional<String> page = site.page(target);
+                if (page.isEmpty()) {
+                    broken.add(url + " -> " + target);
+                    continue;
+                }
+                if (fragment != null && !fragment.isEmpty() && !page.get().contains("id=\"" + fragment + "\"")) {
+                    broken.add(url + " -> " + target + "#" + fragment);
+                }
+                if (seen.add(target)) {
+                    todo.push(target);
+                }
+            }
+        }
+        assertTrue(broken.isEmpty(), "broken docs links:\n" + String.join("\n", broken));
+        // NELUMBO.md is not in the sidebar but the overview links it, so every page is reachable
+        assertEquals(site.pageCount(), seen.size(), "every page should be reachable from the overview; reached " + seen);
     }
 }

@@ -169,5 +169,5 @@ The `a` (ancestor) rule is defined in terms of `d`: ancestor is just descendant 
 
 - [`three-valued-logic.md`](three-valued-logic.md) — the semantic model rules produce results within
 - [`test-expression-semantics.md`](test-expression-semantics.md) — how tests observe the results rules produce
-- [`../guides/writing-tests.md`](../guides/writing-tests.md) — pragmatic tips for test design (Phase 4)
+- [`../getting-started/reading-a-test.md`](../getting-started/reading-a-test.md) — how to read and write a test's expected result
 - [`../getting-started/first-program.md`](../getting-started/first-program.md) — `fib` explained line by line

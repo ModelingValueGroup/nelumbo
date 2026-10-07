@@ -11,7 +11,7 @@ The files:
 3. [`integers.nl`](#3-nelumbointegers-36-lines) — 36 lines — arithmetic and comparison
 4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
 5. [`strings.nl`](#5-nelumbostrings-24-lines) — 24 lines — string operations
-6. [`collections.nl`](#6-nelumbocollections-21-lines) — 21 lines — generic `Set<E>` and `List<E>`, plus set-builder notation
+6. [`collections.nl`](#6-nelumbocollections-60-lines) — 60 lines — generic `Set<E>` and `List<E>`, plus set-builder notation
 7. [`datetime.nl`](#7-nelumbodatetime-96-lines) — 96 lines — ISO 8601 dates, times, date-times, and durations
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
