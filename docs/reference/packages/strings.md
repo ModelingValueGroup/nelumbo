@@ -4,7 +4,7 @@
 
 String values, concatenation, length, and integer-string conversion.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl) — 24 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl) — 23 lines.
 
 **Import:**
 

@@ -102,14 +102,14 @@ From `hidden.nl`. These restrict the hole to hidden or visible variables respect
 
 ## Variable holes — `<Variable>`
 
-`<Variable>` matches a variable binding site, not a general expression. It is what quantifiers use to introduce a bound variable:
+`<Variable>` matches a variable binding site, not a general expression. It is what lambdas use to introduce a bound variable (and quantifiers, which are lambdas), typed with the lambda's argument type:
 
 ```
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
-            @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
+Lambda2<A1,A2,R> ::= [<{Variable,A1}>,<{Variable,A2}>](<R#0>)   @nelumbo.logic.Lambda
+Boolean          ::= E<Lambda<Boolean>>                         @nelumbo.logic.ExistentialQuantifier
 ```
 
-From `logic.nl`. The quantifier `E[x, y, z](body)` expects binding sites, not pre-existing expressions, in the bracketed position.
+From `logic.nl` (see [lambdas](../logic/lambdas.md)). The quantifier `E[x, y, z](body)` expects binding sites, not pre-existing expressions, in the bracketed position.
 
 Binding variables declared with `<Variable>` are scoped to the surrounding pattern — they do not leak outside.
 

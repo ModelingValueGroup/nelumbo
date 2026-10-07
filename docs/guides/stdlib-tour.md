@@ -1,24 +1,24 @@
 # Standard library tour
 
-The Nelumbo standard library is around 300 lines of Nelumbo across seven files. That is remarkably small — and because it is written in Nelumbo, reading it is one of the best ways to learn how the language is actually used.
+The Nelumbo standard library is around 400 lines of Nelumbo across seven files. That is remarkably small — and because it is written in Nelumbo, reading it is one of the best ways to learn how the language is actually used.
 
 This guide walks through all seven modules in dependency order. It starts with `nelumbo.lang` and `nelumbo.logic`, which define the syntax and the logic every package builds on. Then come the optional packages, starting with `nelumbo.integers`, which the other four import. Along the way it shows what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
 
 The files:
 
-1. [`lang.nl`](#1-nelumbolang-51-lines) — 51 lines — syntactic bootstrap: tokens, object hierarchy, the pattern meta-grammar, top-level forms
-2. [`logic.nl`](#2-nelumbologic-44-lines) — 44 lines — Boolean, connectives, quantifiers, equality, and the `fact`/`<=>`/`?` statement forms
-3. [`integers.nl`](#3-nelumbointegers-36-lines) — 36 lines — arithmetic and comparison
+1. [`lang.nl`](#1-nelumbolang-58-lines) — 58 lines — syntactic bootstrap: tokens, object hierarchy, the pattern meta-grammar, top-level forms
+2. [`logic.nl`](#2-nelumbologic-62-lines) — 62 lines — Boolean, connectives, lambdas, quantifiers, equality, and the `fact`/`<=>`/`?` statement forms
+3. [`integers.nl`](#3-nelumbointegers-39-lines) — 39 lines — arithmetic and comparison
 4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
-5. [`strings.nl`](#5-nelumbostrings-24-lines) — 24 lines — string operations
-6. [`collections.nl`](#6-nelumbocollections-60-lines) — 60 lines — generic `Set<E>` and `List<E>`, plus set-builder notation
-7. [`datetime.nl`](#7-nelumbodatetime-96-lines) — 96 lines — ISO 8601 dates, times, date-times, and durations
+5. [`strings.nl`](#5-nelumbostrings-23-lines) — 23 lines — string operations
+6. [`collections.nl`](#6-nelumbocollections-79-lines) — 79 lines — generic `Set<E>` and `List<E>`, set-builder notation, and the lambda-based `where`/`map`/`sort`
+7. [`datetime.nl`](#7-nelumbodatetime-97-lines) — 97 lines — ISO 8601 dates, times, date-times, and durations
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
 
 ---
 
-## 1. `nelumbo.lang` (51 lines)
+## 1. `nelumbo.lang` (58 lines)
 
 The syntactic bootstrap. Every other `.nl` file — including `logic.nl` — is parsed using the `::=` declarations in this file. The Java core knows just enough to load `lang.nl`; from there on, the same machinery the user writes parses everything.
 
@@ -80,17 +80,27 @@ See [`../reference/lang/index.md`](../reference/lang/index.md) for the full anno
 
 ---
 
-## 2. `nelumbo.logic` (44 lines)
+## 2. `nelumbo.logic` (62 lines)
 
 The three-valued logic layer. This is where Boolean, the connectives, and — crucially — the `fact`, `<=>`, and `?` statement forms are declared.
 
 ```
 import nelumbo.lang
 
-Boolean   :: Object
-FactType  :: Boolean
-Function  :: Object
-Literal   :: Object
+Boolean  :: Object
+FactType :: Boolean
+Function :: Object
+Literal  :: Object
+Struct   :: Object
+
+// Lambdas: [x,...](body), one type per arity (1..6)
+Type A1, A2, A3, A4, A5, A6, R
+Lambda                :: Object
+Lambda<R>             :: Lambda
+Lambda1<A1,R>         :: Lambda<R>                                   // ... up to Lambda6
+Lambda1<A1,R>         ::= [<{Variable,A1}>](<R#0>)                   @nelumbo.logic.Lambda
+Lambda2<A1,A2,R>      ::= [<{Variable,A1}>,<{Variable,A2}>](<R#0>)   @nelumbo.logic.Lambda
+                                                                     // ... up to Lambda6
 
 private Boolean ::= eq(<Literal>,<Literal>)                 @nelumbo.logic.Equal
 
@@ -100,8 +110,8 @@ Boolean ::= true                                            @nelumbo.logic.NBool
             ! <Boolean>                             #25     @nelumbo.logic.Not,
             <Boolean> & <Boolean>                   #22     @nelumbo.logic.And,
             <Boolean> | <Boolean>                   #20     @nelumbo.logic.Or,
-            E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
-            A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.UniversalQuantifier,
+            E<Lambda<Boolean>>                              @nelumbo.logic.ExistentialQuantifier,
+            A<Lambda<Boolean>>                              @nelumbo.logic.UniversalQuantifier,
             <Object> =  <Object>                    #30     @nelumbo.logic.NIs,
             <Object> != <Object>                    #30,
             <Boolean> -> <Boolean>                  #18,
@@ -110,7 +120,7 @@ Boolean ::= true                                            @nelumbo.logic.NBool
 pattern BINDING ::= [ ... ]
 
 // Top-level statement forms — declared here, not in the Java core
-Root ::= "fact" <Boolean#0>, ...                                       @nelumbo.logic.Fact,
+Root ::= "fact" <FactType#0>, ...                                      @nelumbo.logic.Fact,
          <Boolean#0> "<=>" (<Boolean#0> ("if" <Boolean#0>)?), ...      @nelumbo.logic.Rule,
          <Boolean#0> ? (<BINDING> <BINDING>)?                          @nelumbo.logic.Query
 
@@ -118,25 +128,27 @@ Boolean p1, p2
 p1 -> p2  <=> !p1 | p2
 p1 <-> p2 <=> (p1 -> p2) & (p2 -> p1)
 
-Literal  l1, l2
-Function f1, f2
-Object   n1, n2
+Type E
+E            n1, n2
+{E,Literal}  l1, l2
+{E,Function} f1, f2
 
 l1 = l2  <=> eq(l1, l2)
 l1 = f1  <=> f1 = l1
 n1 != n2 <=> !(n1 = n2)
+f1 = f2  <=> E[l1](f1 = l1 & f2 = l1)
 ```
 
 ### What is native here
 
-Nine native bindings: `Equal` (for the private literal-equality `eq`), `NBoolean`, `Not`, `And`, `Or`, `ExistentialQuantifier`, `UniversalQuantifier`, `NIs` (the public `<Object> = <Object>` operator), and three statement-form natives `Fact`, `Rule`, `Query`. Everything else is derived in Nelumbo.
+Ten native bindings: `Equal` (for the private literal-equality `eq`), `NBoolean`, `Not`, `And`, `Or`, `Lambda` (all six arities), `ExistentialQuantifier`, `UniversalQuantifier`, `NIs` (the public `<Object> = <Object>` operator), and three statement-form natives `Fact`, `Rule`, `Query`. Everything else is derived in Nelumbo.
 
 ### What is derived
 
 - **`->` (implication)** is defined as `!p | q`. No Java code involved.
 - **`<->` (bi-implication)** is defined as `(p -> q) & (q -> p)`.
 - **`!=` (inequality)** is defined as `!(n1 = n2)`.
-- **`=` for mixed literal/function** is defined as a rewrite: `l1 = f1 <=> f1 = l1`, swapping sides so the function is on the left. This is what makes `5 = fib(n)` work the same way as `fib(n) = 5`.
+- **`=` for mixed literal/function** is defined as a rewrite: `l1 = f1 <=> f1 = l1`, swapping sides so the function is on the left. This is what makes `5 = fib(n)` work the same way as `fib(n) = 5`. Two functions are equal when a common literal exists: `f1 = f2 <=> E[l1](f1 = l1 & f2 = l1)`.
 
 This is the module's first big lesson: **even at the deepest level of the language, most derivations happen in Nelumbo, not Java.** The Java surface is kept small.
 
@@ -148,12 +160,12 @@ This is the module's first big lesson: **even at the deepest level of the langua
 
 - The `::=` declaration for `Boolean` lists many alternatives separated by commas — all productions for `Boolean`. This is the conventional way to declare a type with many forms.
 - Precedence annotations follow a ladder: `<->` at 16, `->` at 18, `|` at 20, `&` at 22, `!` at 25, `=`/`!=` at 30. Tighter-binding operators get higher numbers.
-- `E[...]` and `A[...]` use `<Variable#100>` to require that the binding-site position contains a bare variable (precedence 100 is near the top — almost primary-expression tight). The body uses `<Boolean#0>` to accept any Boolean expression, even low-precedence ones.
-- Four internal types (`Boolean`, `Literal`, `Function`, `Object`) appear in the equality rules. The `Literal`/`Function`/`Object` split is what makes the three equality rules sufficient.
+- `E[...]` and `A[...]` are not special syntax: they are the keyword `E`/`A` followed by a **lambda** (`Lambda<Boolean>`). The lambda's `{Variable,A1}` holes require a bare declared variable at each binding site, and its body `<R#0>` accepts any expression, even low-precedence ones. This is why quantifiers take one to six variables, and why `where`, `map`, `sort` and set-builder in `collections` can reuse the same syntax. See [`reference/logic/lambdas.md`](../reference/logic/lambdas.md).
+- `{E,Literal}` is an *intersection type* ("an `E` that is also a `Literal`") over the generic parameter `E`, so the equality rules are written once for every type. The `Literal`/`Function`/`Object` split is what makes the equality rules sufficient.
 
 ---
 
-## 3. `nelumbo.integers` (36 lines)
+## 3. `nelumbo.integers` (39 lines)
 
 Builds arithmetic on top of logic.
 
@@ -332,7 +344,7 @@ This is a good template: **when adding a new numeric-like type, mirror the integ
 
 ---
 
-## 5. `nelumbo.strings` (24 lines)
+## 5. `nelumbo.strings` (23 lines)
 
 The smallest non-trivial module.
 
@@ -386,47 +398,51 @@ All three work from the same rule and the same native. The `Strings#string_conca
 
 ---
 
-## 6. `nelumbo.collections` (60 lines)
+## 6. `nelumbo.collections` (79 lines)
 
 The only module that uses generic-type parameters.
 
 ```
 import nelumbo.integers
 
-Type E
+Type E, F
 
 Collection<E> :: Object
 Set<E>        :: Collection<E>
 List<E>       :: Collection<E>
 
-private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)  @...BuildSet,
+private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)  @...BuildSet,
                     size(...), indexOf(...), elementOf(...), subset(...),
-                    intersection(...), union(...), diff(...), concat(...)  @...Collections
+                    intersection(...), union(...), diff(...), concat(...),
+                    setFilter(...), listFilter(...), map(...), sort(...)  @...Collections
 
-Set<E>  ::= { <(> <E> <,> , <)*> }       @...NSet,
-            { [ <E> ] ( <Boolean#0> ) }  @...SetBuilder,
-            <Set<E>> && <Set<E>>,        ▸ intersection
-            <Set<E>> || <Set<E>>,        ▸ union
-            <Set<E>> -  <Set<E>>         ▸ difference
-List<E> ::= [ <(> <E> <,> , <)*> ]       @...NList,
-            <List<E>> + <List<E>>        ▸ concatenation
-Integer ::= | <Collection<E>> |,         ▸ cardinality
-            <E> "pos" <List<E>>          ▸ 0-based index
-Boolean ::= <Set<E>> "<" <Set<E>>, ...,  ▸ subset / superset
-            <E> "in" <Collection<E>>     ▸ membership
+{Struct,Set<E>}  ::= { <(> <E> <,> , <)*> }  @...NSet
+Set<E>           ::= { <Lambda1<E,Boolean>> },             ▸ set-builder
+                     <Set<E>> where <Lambda1<E,Boolean>>,  ▸ filter
+                     <Set<E>> && <Set<E>>,                 ▸ intersection
+                     <Set<E>> || <Set<E>>,                 ▸ union
+                     <Set<E>> -  <Set<E>>                  ▸ difference
+{Struct,List<E>} ::= [ <(> <E> <,> , <)*> ]  @...NList
+List<E>          ::= <List<E>> + <List<E>>,                ▸ concatenation
+                     <List<E>> where <Lambda1<E,Boolean>>,
+                     <Collection<F>> map <Lambda1<F,E>>,
+                     <Collection<E>> sort <Lambda2<E,E,Boolean>>
+Integer          ::= | <Collection<E>> |,                  ▸ cardinality
+                     <E> "pos" <List<E>>                   ▸ 0-based index
+Boolean          ::= <Set<E>> "<" <Set<E>>, ...,           ▸ subset / superset
+                     <E> "in" <Collection<E>>              ▸ membership
 
-E e   Boolean c   Set<E> s
-
-{[e](c)} = s  <=>  build(e, c, s)
+{leb} = s  <=>  build(leb, s)
 ... operator rules wiring each operator to its predicate ...
 ```
 
 ### What it introduces
 
-- **`Type E`** — the declaration that introduces a generic type parameter. `lang.nl` uses the same mechanism for parenthesisation (`Type P; P ::= (<P>)`); this is its first use to define container types.
-- **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype.
-- **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`.
-- **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `< > <= >=`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing `e pos l`. Each is a relation backed by the `Collections` native class and runs in both directions. See [`reference/packages/collections.md`](../reference/packages/collections.md#operations) for the full table.
+- **`Type E, F`** — the declaration that introduces generic type parameters. `lang.nl` uses the same mechanism for parenthesisation (`Type P; P ::= (<P>)`); this is its first use to define container types. `F` is the input element type of `map`.
+- **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype. The literals are also `Struct`s, which gives them structural equality.
+- **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`; it is a `Lambda1<E,Boolean>` in braces.
+- **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `< > <= >=`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing `e pos l`. Each is a relation backed by the `Collections` native class and runs in both directions where meaningful.
+- **Higher-order operations** — `c where [x](p)` (filter), `c map [x](e)` (to a list), `c sort [a,b](p)` (to a list). They take [lambdas](../reference/logic/lambdas.md) declared in `logic.nl`. See [`reference/packages/collections.md`](../reference/packages/collections.md#operations) for the full table.
 
 ### How the literal syntax works
 
@@ -441,13 +457,13 @@ So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `Lis
 
 ### Set-builder notation
 
-`Set<E>` has a second form — the comprehension `{[e](c)}`, "the set of all `e` such that `c`". The `[e]` slot must be a bare variable, and `(c)` is any Boolean condition over it. It reduces to one native rule:
+`Set<E>` has a second form — the comprehension `{[e](c)}`, "the set of all `e` such that `c`". The `[e](c)` inside the braces is a lambda: `e` must be a declared variable, and `(c)` is any Boolean condition over it. It reduces to one native rule:
 
 ```
-{[e](c)} = s  <=>  build(e, c, s)
+{leb} = s  <=>  build(leb, s)
 ```
 
-`build` is backed by `BuildSet`, which — like `E[...]` and `A[...]` — is a **quantifier**: it evaluates the condition under each binding of the local element variable, strips that variable, and gathers the witnessing values into a set. So set construction reuses the same three-valued quantifier machinery as the logic layer:
+`build` is backed by `BuildSet`, which — like `E[...]` and `A[...]` — is a **quantifier**: it evaluates the lambda body under each binding of the bound variable, strips that variable, and gathers the witnessing values into a set. So set construction reuses the same three-valued quantifier machinery as the logic layer:
 
 ```
 Integer i
@@ -456,13 +472,23 @@ Integer i
 
 The two solutions of `|i| = 10` become the fact `s = {-10, 10}`; `i = 0` is a proven non-member, so `{0}` lands on the falsehoods side with `..` for the open remainder.
 
+### Filter, map and sort
+
+The other three lambda users are plain relations on the `Collections` native, which applies the lambda to each element (`Lambda.test` for predicates, `Lambda.apply` for functions):
+
+```
+{1,2,3}   where [i](i>1)          = s   ?  [(s={2,3})][..]
+[1,2,3]   map   [i](i*i)          = l   ?  [(l=[1,4,9])][..]
+[3,1,2]   sort  [ib,ia](ib<ia)    = l   ?  [(l=[1,2,3])][..]
+```
+
 ### What is still absent
 
-Algebraic operations — membership, union, intersection, length, map, fold — are not in the module as of this writing. The module provides value types, literal syntax, and the comprehension constructor; richer behaviour is either in natives not yet shipped, or left to the user's own modules. Check the latest source and tests when you go to use it.
+There is no fold/reduce, no `head`/`tail`, and no set-like operations on lists. The module provides value types, literal syntax, comprehension, the algebraic relations and `where`/`map`/`sort`; richer behaviour is left to the user's own modules. Check the latest source and tests when you go to use it.
 
 ---
 
-## 7. `nelumbo.datetime` (96 lines)
+## 7. `nelumbo.datetime` (97 lines)
 
 The largest stdlib module, and a good demonstration that the integer idioms scale to a much richer value domain. It imports `nelumbo.integers` (for the `Period * Integer` scaling operator) and adds four independent value types.
 
@@ -512,7 +538,7 @@ See [`../reference/packages/datetime.md`](../reference/packages/datetime.md) for
 
 Reading all seven stdlib modules in order, a few observations crystallise:
 
-- **The stdlib is small.** Around 300 lines of Nelumbo total. Not because the language is underpowered — because the language is expressive enough that a little code covers a lot.
+- **The stdlib is small.** Around 400 lines of Nelumbo total. Not because the language is underpowered — because the language is expressive enough that a little code covers a lot.
 - **The syntax itself is in `.nl` files.** `lang.nl` declares the pattern meta-grammar and the `::`, `::=`, `::>`, `import`, variable, type, and functor statement forms. `logic.nl` declares `fact`, `<=>`, and `?`. The Java core only knows enough to load `lang.nl`.
 - **Most of it is not native.** Perhaps a quarter of the pattern declarations have `@` annotations. The rest are defined in Nelumbo using rules.
 - **Layering is strict.** Each module imports the one below it; no module imports sideways. This is a good model for your own libraries.

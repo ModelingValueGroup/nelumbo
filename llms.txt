@@ -47,6 +47,7 @@ example file in the project is unreadable.
 - [Statements](https://nelumbo.nl/docs/reference/logic/statements.html): fact types, facts, queries and tests
 - [Writing rules](https://nelumbo.nl/docs/reference/logic/writing-rules.html): `<=>`, guards, merging, contradictions
 - [Three-valued logic](https://nelumbo.nl/docs/reference/logic/three-valued-logic.html): the semantic foundation, with truth tables
+- [Lambdas](https://nelumbo.nl/docs/reference/logic/lambdas.html): `[x](body)` values behind the quantifiers and the collection operations
 - [Test expression semantics](https://nelumbo.nl/docs/reference/logic/test-expression-semantics.html): formal definition of when a test passes
 - [Formatting](https://nelumbo.nl/docs/reference/formatting.html): the canonical layout the LSP formatter produces
 
@@ -55,7 +56,7 @@ example file in the project is unreadable.
 - [nelumbo.integers](https://nelumbo.nl/docs/reference/packages/integers.html): arbitrary-precision integer arithmetic
 - [nelumbo.rationals](https://nelumbo.nl/docs/reference/packages/rationals.html): exact rationals
 - [nelumbo.strings](https://nelumbo.nl/docs/reference/packages/strings.html): strings, concatenation, conversion
-- [nelumbo.collections](https://nelumbo.nl/docs/reference/packages/collections.html): generic `Set<E>` and `List<E>`, set-builder notation, operations
+- [nelumbo.collections](https://nelumbo.nl/docs/reference/packages/collections.html): generic `Set<E>` and `List<E>`, set-builder notation, operations, `where`/`map`/`sort`
 - [nelumbo.datetime](https://nelumbo.nl/docs/reference/packages/datetime.html): ISO 8601 dates, times, date-times, durations
 - [Standard library tour](https://nelumbo.nl/docs/guides/stdlib-tour.html): all seven modules read in dependency order
 

@@ -4,7 +4,7 @@
 
 Arbitrary-precision integer arithmetic and comparison.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl) — 38 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl) — 39 lines.
 
 **Import:**
 

@@ -4,7 +4,7 @@
 
 ISO 8601 dates, times, date-times, and durations, with chronological comparison and reversible arithmetic.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 95 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 97 lines.
 
 **Import:**
 
@@ -43,10 +43,10 @@ They are **not** in a subtype relationship with one another, and there is no imp
 All four literals are written inside a **connected-token group** (`<[> … <]>`), which forbids whitespace between the inner tokens — `2024-01-15` must be written tightly, not `2024 - 01 - 15`. See [`built-in-tokens.md`](../lang/built-in-tokens.md) for the connected-token mechanism.
 
 ```
-Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                              @nelumbo.datetime.NDate
-Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]> @nelumbo.datetime.NTime
-DateTime ::= <[> <Date> T <Time#50> <]>                                          @nelumbo.datetime.NDateTime
-Period   ::= <[> P … <]>                                                         @nelumbo.datetime.NPeriod
+Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> #60                           @nelumbo.datetime.NDate
+Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]> #60 @nelumbo.datetime.NTime
+DateTime ::= <[> <Date> T <Time> <]> #50                                         @nelumbo.datetime.NDateTime
+Period   ::= <[> P … <]> #60                                                     @nelumbo.datetime.NPeriod
 ```
 
 - **`Date`** — `YYYY-MM-DD`. Parsed into a `LocalDate`; out-of-range values (e.g. month 13) are rejected **at parse time** with a `file:line:col` error, not as a query falsehood.
