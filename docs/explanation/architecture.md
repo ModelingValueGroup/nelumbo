@@ -158,9 +158,9 @@ When you are looking for how to do something, ask: **which layer is the right on
 
 ## See also
 
-- [`../reference/grammar.md`](../reference/grammar.md) — what the core grammar is
-- [`../reference/stdlib/logic.md`](../reference/stdlib/logic.md) — the foundation stdlib module
+- [`../reference/lang/grammar.md`](../reference/lang/grammar.md) — what the core grammar is
+- [`../reference/logic/index.md`](../reference/logic/index.md) — the foundation stdlib module
 - [`../guides/stdlib-tour.md`](../guides/stdlib-tour.md) — guided read-through of all seven stdlib modules
 - [`../guides/writing-your-own-module.md`](../guides/writing-your-own-module.md) — the in-language extension path
 - [`../guides/native-cookbook.md`](../guides/native-cookbook.md) — the host-language extension path
-- [`../reference/native-classes.md`](../reference/native-classes.md) — catalogue of every shipped native
+- [`../reference/native-classes.md`](../reference/core/native-classes.md) — catalogue of every shipped native

@@ -63,7 +63,10 @@ public final class DocsSite {
     private static final List<String[]> GROUPS = List.of(
             new String[]{"getting-started", "Getting started"},
             new String[]{"reference", "Reference"},
-            new String[]{"reference/stdlib", "Standard library"},
+            new String[]{"reference/core", "Reference: Core"},
+            new String[]{"reference/lang", "Reference: Lang"},
+            new String[]{"reference/logic", "Reference: Logic"},
+            new String[]{"reference/packages", "Reference: Packages"},
             new String[]{"guides", "Guides"},
             new String[]{"explanation", "Explanation"});
 
@@ -87,7 +90,7 @@ public final class DocsSite {
         return new DocsSite(markdown, readResource(TEMPLATE));
     }
 
-    /** {@code markdownByPath}: docs-relative path ({@code reference/grammar.md}) to markdown source. */
+    /** {@code markdownByPath}: docs-relative path ({@code reference/lang/grammar.md}) to markdown source. */
     DocsSite(Map<String, String> markdownByPath, String template) {
         this.template = template;
         List<Page> pages = new ArrayList<>();
@@ -129,7 +132,9 @@ public final class DocsSite {
         for (String[] group : GROUPS) {
             List<Page> members = pages.stream()
                     .filter(p -> dirOf(p.path()).equals(group[0]))
-                    .sorted(Comparator.comparing(Page::title, String.CASE_INSENSITIVE_ORDER))
+                    // a level's index.md is its overview, so it heads the group
+                    .sorted(Comparator.comparing((Page p) -> !p.path().endsWith("/index.md"))
+                            .thenComparing(Page::title, String.CASE_INSENSITIVE_ORDER))
                     .toList();
             if (!members.isEmpty()) {
                 sb.append("<div class=\"group\">").append(escape(group[1])).append("</div>\n");

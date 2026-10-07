@@ -40,7 +40,7 @@ Boolean ::= true       @nelumbo.logic.NBoolean,
             unknown    @nelumbo.logic.NBoolean
 ```
 
-Three Boolean values, all bound to the native class `NBoolean`. `unknown` is a first-class value of type `Boolean`, not an absence of one. See [`three-valued-logic.md`](../three-valued-logic.md) for the truth tables.
+Three Boolean values, all bound to the native class `NBoolean`. `unknown` is a first-class value of type `Boolean`, not an absence of one. See [`three-valued-logic.md`](three-valued-logic.md) for the truth tables.
 
 ---
 
@@ -79,13 +79,13 @@ false -> unknown ? [()][]
 ## Quantifiers
 
 ```
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
-            A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.UniversalQuantifier
+Boolean ::= E[<(> <Variable#100> <,> , <)+>](../stdlib/<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
+            A[<(> <Variable#100> <,> , <)+>](../stdlib/<Boolean#0>)   @nelumbo.logic.UniversalQuantifier
 ```
 
-- `E[x](p)` — there exists `x` such that `p`.
-- `A[x](p)` — for all `x`, `p`.
-- Multiple bound variables are allowed: `E[x,y,z](p)`, `A[x,y,z](p)`.
+- `E[x](../stdlib/p)` — there exists `x` such that `p`.
+- `A[x](../stdlib/p)` — for all `x`, `p`.
+- Multiple bound variables are allowed: `E[x,y,z](../stdlib/p)`, `A[x,y,z](../stdlib/p)`.
 
 The pattern fragment `<(> <Variable#100> <,> , <)+>` is the one-or-more, comma-separated repetition that admits the variable list. The body `<Boolean#0>` is at the lowest precedence, so the entire expression inside the parentheses is consumed.
 
@@ -152,13 +152,13 @@ Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                      
 | Rule  | `<Boolean> <=> <Boolean> if <Boolean>`, `if` optional | `Rule`             |
 | Query | `<Boolean> ?`, optionally followed by `[..][..]`      | `Query`            |
 
-In test files the `fact` keyword is often elided — a bare predicate at top level (such as `pc(Hendrik, Juliana)` in `family.nl`) is sugar for `fact pc(Hendrik, Juliana)`. The `BINDING` fragment that follows `?` is a [named pattern](lang.md#named-patterns), declared here:
+In test files the `fact` keyword is often elided — a bare predicate at top level (such as `pc(Hendrik, Juliana)` in `family.nl`) is sugar for `fact pc(Hendrik, Juliana)`. The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
 
 ```
 pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
 ```
 
-That is the grammar of `[(a=T1), (a=T2)]`, `[..]`, `[]`, and combinations such as `[(a=0),..]`. (It was previously a stand-alone `Binding :: Object` type; it is now a named pattern, so it adds no type — it is pure syntax for the query suffix.) See [`test-expression-semantics.md`](../test-expression-semantics.md) for how a `?` test is judged to pass or fail.
+That is the grammar of `[(a=T1), (a=T2)]`, `[..]`, `[]`, and combinations such as `[(a=0),..]`. (It was previously a stand-alone `Binding :: Object` type; it is now a named pattern, so it adds no type — it is pure syntax for the query suffix.) See [`test-expression-semantics.md`](test-expression-semantics.md) for how a `?` test is judged to pass or fail.
 
 ---
 
@@ -181,7 +181,7 @@ After `import nelumbo.logic`, the following are visible to the importer:
 
 ## See also
 
-- [`three-valued-logic.md`](../three-valued-logic.md) — the semantic model these operators live in
-- [`operators.md`](../operators.md) — full operator catalogue
-- [`writing-rules.md`](../writing-rules.md) — `<=>` and `if` semantics
+- [`three-valued-logic.md`](three-valued-logic.md) — the semantic model these operators live in
+- [`operators.md`](operators.md) — full operator catalogue
+- [`writing-rules.md`](writing-rules.md) — `<=>` and `if` semantics
 - [`logicTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) — executable specification of every connective and quantifier

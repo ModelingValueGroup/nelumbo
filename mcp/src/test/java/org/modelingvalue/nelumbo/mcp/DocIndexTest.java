@@ -32,9 +32,19 @@ public class DocIndexTest {
         try (InputStream in = DocIndexTest.class.getResourceAsStream("/nelumbo-docs/index.txt")) {
             assertNotNull(in, "nelumbo-docs/index.txt missing from classpath");
             String index = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            assertTrue(index.contains("reference/grammar.md"), index);
+            assertTrue(index.contains("reference/lang/grammar.md"), index);
             assertTrue(index.lines().count() > 10, index);
         }
-        assertNotNull(DocIndexTest.class.getResourceAsStream("/nelumbo-docs/reference/grammar.md"));
+        assertNotNull(DocIndexTest.class.getResourceAsStream("/nelumbo-docs/reference/lang/grammar.md"));
+    }
+
+    @Test
+    public void everyHintPointsAtABundledDoc() {
+        // eval_nl hands these paths to the LLM; a doc that moved must not leave a dead reference behind
+        for (String message : new String[]{"Expected result x", "Unexpected token '\\n'", "Unexpected token 'x'"}) {
+            Hints.Hint hint = Hints.hintFor(message);
+            assertNotNull(hint, message);
+            assertNotNull(DocIndexTest.class.getResourceAsStream("/nelumbo-docs/" + hint.docRef()), hint.docRef());
+        }
     }
 }

@@ -65,7 +65,7 @@ Root ::= attr <Type> <NAME> <Type>  #100
 
 From `transformation.nl`. The `<NAME>` hole captures a raw identifier that the transformation can use as the name of a new attribute.
 
-`<NAME>` is primarily useful inside pattern transformations where you need the user's literal identifier to build new declarations on the fly. See [`../guides/language-transformations.md`](../guides/language-transformations.md).
+`<NAME>` is primarily useful inside pattern transformations where you need the user's literal identifier to build new declarations on the fly. See [`../guides/language-transformations.md`](../../guides/language-transformations.md).
 
 ---
 
@@ -103,11 +103,11 @@ From `hidden.nl`. These restrict the hole to hidden or visible variables respect
 `<Variable>` matches a variable binding site, not a general expression. It is what quantifiers use to introduce a bound variable:
 
 ```
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
+Boolean ::= E[<(> <Variable#100> <,> , <)+>](../<Boolean#0>)
             @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
 ```
 
-From `logic.nl`. The quantifier `E[x, y, z](body)` expects binding sites, not pre-existing expressions, in the bracketed position.
+From `logic.nl`. The quantifier `E[x, y, z](../body)` expects binding sites, not pre-existing expressions, in the bracketed position.
 
 Binding variables declared with `<Variable>` are scoped to the surrounding pattern — they do not leak outside.
 
@@ -167,7 +167,7 @@ Declares that this pattern has precedence 40. See [`precedence-and-associativity
 Integer ::= <NUMBER>  @org.modelingvalue.nelumbo.integers.NInteger
 ```
 
-Binds the pattern to a Java class that implements its semantics. See [`native-api.md`](native-api.md) (Phase 4).
+Binds the pattern to a Java class that implements its semantics. See [`native-api.md`](../core/native-api.md) (Phase 4).
 
 ---
 
@@ -176,4 +176,4 @@ Binds the pattern to a Java class that implements its semantics. See [`native-ap
 - [`grammar.md`](grammar.md) — where pattern declarations fit in the overall grammar
 - [`precedence-and-associativity.md`](precedence-and-associativity.md) — the `#N` system
 - [`visibility.md`](visibility.md) — the `hidden`/`visible` modifiers
-- [`../guides/language-transformations.md`](../guides/language-transformations.md) — how `<NAME>` and other holes are used in transformations
+- [`../guides/language-transformations.md`](../../guides/language-transformations.md) — how `<NAME>` and other holes are used in transformations

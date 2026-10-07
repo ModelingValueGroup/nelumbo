@@ -172,9 +172,9 @@ class NelumboHttpServerTest {
         assertEquals(200, index.statusCode());
         assertTrue(index.headers().firstValue("Content-Type").orElse("").contains("text/html"), "docs should be served as HTML");
         assertTrue(index.body().contains("Nelumbo documentation"), "the docs index is the documentation overview");
-        assertTrue(index.body().contains("href=\"/docs/reference/grammar.html\""), "the docs sidebar should link the reference pages");
+        assertTrue(index.body().contains("href=\"/docs/reference/lang/grammar.html\""), "the docs sidebar should link the reference pages");
 
-        HttpResponse<String> grammar = get("/docs/reference/grammar.html");
+        HttpResponse<String> grammar = get("/docs/reference/lang/grammar.html");
         assertEquals(200, grammar.statusCode(), "nested doc pages are served by the wildcard route");
         assertTrue(grammar.body().contains("<title>Grammar - Nelumbo docs</title>"), grammar.body().substring(0, 300));
 

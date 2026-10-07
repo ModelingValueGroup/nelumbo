@@ -2,7 +2,7 @@
 
 Every pattern in the standard library that needs Java backing is bound to a class under `src/main/java/org/modelingvalue/nelumbo/`. This page catalogues the shipped native classes, grouped by structural role, with a note on what each one does and how it returns its results.
 
-Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.
+Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.
 
 ---
 
@@ -106,7 +106,7 @@ Shipped natives fall into five structural roles. Reading this classification fir
 
 ### `ExistentialQuantifier`, `UniversalQuantifier`
 
-- Back: `E[...](<Boolean>)` and `A[...](<Boolean>)`
+- Back: `E[...](../<Boolean>)` and `A[...](../<Boolean>)`
 - Role: quantifier
 - Base: `Quantifier` extends `CompoundPredicate`
 - Strategy: evaluate the body under the current binding, then **strip the local variables** from each resulting binding and aggregate:
@@ -191,19 +191,19 @@ One class hosts all three string primitives as `@NelumboMethod`s: `string_concat
 
 - Backs: `Set<E> ::= { [ <E> ] ( <Boolean#0> ) }` — set-builder (comprehension) notation
 - Role: container constant (parse-time AST node)
-- Strategy: holds the bound element variable and the membership condition. At parse time it enforces that the `[ … ]` slot is a bare `Variable` (otherwise a `ParseException` "… must be a variable"), and declares that variable as a local via `localVars()`. The actual set construction is delegated to the `build` predicate (`BuildSet`) through the rule `{[e](c)} = s <=> build(e, c, s)`.
+- Strategy: holds the bound element variable and the membership condition. At parse time it enforces that the `[ … ]` slot is a bare `Variable` (otherwise a `ParseException` "… must be a variable"), and declares that variable as a local via `localVars()`. The actual set construction is delegated to the `build` predicate (`BuildSet`) through the rule `{[e](../c)} = s <=> build(e, c, s)`.
 
 ### `BuildSet`
 
 - Backs: `private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)`
 - Role: quantifier (extends `Quantifier`, like `ExistentialQuantifier`/`UniversalQuantifier`)
-- Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces a singleton `NSet` of its non-member value on the falsehoods side. Completeness flags are inherited from the condition's result, so `{[i](|i|=10)}` yields `[(s={-10,10})][(s={0}),..]` — the two solutions as a fact, `{0}` as a proven non-member, `..` for the open remainder.
+- Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces a singleton `NSet` of its non-member value on the falsehoods side. Completeness flags are inherited from the condition's result, so `{[i](../|i|=10)}` yields `[(s={-10,10})][(s={0}),..]` — the two solutions as a fact, `{0}` as a proven non-member, `..` for the open remainder.
 
 ### `Collections`
 
 - Backs: the algebraic operations — `size` (`|c|`), `indexOf` (`e pos l`), `elementOf` (`e in s`), `subset` (`< > <= >=`), `intersection` (`&&`), `union` (`||`), `diff` (`-`), and `concat` (`+`).
 - Role: predicate (one `@NelumboMethod` per operation)
-- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound — or a collection itself is unbound — the method returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). See [`reference/stdlib/collections.md`](stdlib/collections.md#operations).
+- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound — or a collection itself is unbound — the method returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). See [`packages/collections.md`](../packages/collections.md#operations).
 
 ---
 
@@ -266,8 +266,8 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `logic.nl` | `!<Boolean>` | `Not` |
 | `logic.nl` | `<Boolean> & <Boolean>` | `And` |
 | `logic.nl` | `<Boolean> \| <Boolean>` | `Or` |
-| `logic.nl` | `E[...](...)` | `ExistentialQuantifier` |
-| `logic.nl` | `A[...](...)` | `UniversalQuantifier` |
+| `logic.nl` | `E[...](../...)` | `ExistentialQuantifier` |
+| `logic.nl` | `A[...](../...)` | `UniversalQuantifier` |
 | `logic.nl` | `<Object> = <Object>` | `NIs` |
 | `logic.nl` | `eq(<Literal>,<Literal>)` *(private)* | `Equal` |
 | `logic.nl` | `Root ::= "fact" ...` | `nelumbo.logic.Fact` |
@@ -323,6 +323,6 @@ Looking at the stdlib with this lens — **what is native and what is not** — 
 ## See also
 
 - [`native-api.md`](native-api.md) — the API surface: `infer`, `InferResult`, the helper methods, the completeness-flag convention
-- [`../guides/native-cookbook.md`](../guides/native-cookbook.md) — hands-on recipes for writing new natives
-- [`../explanation/architecture.md`](../explanation/architecture.md) — why the Java/Nelumbo split is drawn where it is
-- [`stdlib/`](stdlib/) — per-module reference for what each stdlib module exports
+- [`../guides/native-cookbook.md`](../../guides/native-cookbook.md) — hands-on recipes for writing new natives
+- [`../explanation/architecture.md`](../../explanation/architecture.md) — why the Java/Nelumbo split is drawn where it is
+- [`stdlib/`](../stdlib/) — per-module reference for what each stdlib module exports

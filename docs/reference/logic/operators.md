@@ -17,7 +17,7 @@ T :: S
 T :: S1, S2
 ```
 
-Declares `T` as a type whose direct supertypes are listed on the right. Everything ultimately derives from `Object`. See [`grammar.md`](grammar.md#type-declarations).
+Declares `T` as a type whose direct supertypes are listed on the right. Everything ultimately derives from `Object`. See [`grammar.md`](../lang/grammar.md#type-declarations).
 
 ### `::=` — pattern
 
@@ -25,7 +25,7 @@ Declares `T` as a type whose direct supertypes are listed on the right. Everythi
 T ::= pattern
 ```
 
-Declares a new way to produce a value of type `T`. Extends the language's syntax. Multiple `::=` declarations for the same type are allowed and accumulate. See [`grammar.md`](grammar.md#pattern-declarations).
+Declares a new way to produce a value of type `T`. Extends the language's syntax. Multiple `::=` declarations for the same type are allowed and accumulate. See [`grammar.md`](../lang/grammar.md#pattern-declarations).
 
 ### `::>` — pattern transformation
 
@@ -33,7 +33,7 @@ Declares a new way to produce a value of type `T`. Extends the language's syntax
 L ::> { ... declarations ... }
 ```
 
-Expands an occurrence of pattern `L` into the declarations in the block. A macro-like mechanism for building DSLs on top of Nelumbo. See [`../guides/language-transformations.md`](../guides/language-transformations.md).
+Expands an occurrence of pattern `L` into the declarations in the block. A macro-like mechanism for building DSLs on top of Nelumbo. See [`../guides/language-transformations.md`](../../guides/language-transformations.md).
 
 ---
 
@@ -48,7 +48,7 @@ fact E
 fact E1, E2, E3
 ```
 
-Asserts one or more comma-separated ground-truth facts. See [`grammar.md`](grammar.md#facts).
+Asserts one or more comma-separated ground-truth facts. See [`grammar.md`](../lang/grammar.md#facts).
 
 ### `<=>` — rule (bi-implication)
 
@@ -87,7 +87,7 @@ Once you `import nelumbo.logic`, these become available as Boolean-valued operat
 p & q
 ```
 
-`p & q` is a fact when both `p` and `q` are facts. It is a falsehood when at least one of `p` or `q` is a falsehood — **even if the other is unknown**. Proving `q` as a falsehood is enough to conclude `p & q` is false, regardless of `p`. See [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) for the full truth table.
+`p & q` is a fact when both `p` and `q` are facts. It is a falsehood when at least one of `p` or `q` is a falsehood — **even if the other is unknown**. Proving `q` as a falsehood is enough to conclude `p & q` is false, regardless of `p`. See [`logicTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) for the full truth table.
 
 ### `|` — disjunction (`#20`)
 
@@ -129,14 +129,14 @@ a != b
 
 Defined in `logic.nl` as `!(a = b)`.
 
-### `E[...](...)` — existential quantifier
+### `E[...](../...)` — existential quantifier
 
 ```
-E[x](p)
-E[x, y](p)
+E[x](../p)
+E[x, y](../p)
 ```
 
-`E[x](p)` is a fact when there exists some binding of `x` for which `p` holds. The bound variables (`x`, `y`, ...) must be declared elsewhere; inside the body they take on the quantifier's role instead of their outer role. Bound variables are not visible outside the quantifier.
+`E[x](../p)` is a fact when there exists some binding of `x` for which `p` holds. The bound variables (`x`, `y`, ...) must be declared elsewhere; inside the body they take on the quantifier's role instead of their outer role. Bound variables are not visible outside the quantifier.
 
 Example from `belasting.nl`:
 
@@ -144,14 +144,14 @@ Example from `belasting.nl`:
 E[i, a]((het inkomen van p is i euro) & (p mag a euro aftrekken) & x=(i-a)/2)
 ```
 
-### `A[...](...)` — universal quantifier
+### `A[...](../...)` — universal quantifier
 
 ```
-A[x](p)
-A[x, y](p)
+A[x](../p)
+A[x, y](../p)
 ```
 
-`A[x](p)` is a fact when `p` holds for **every** binding of `x`. Dual to `E[]`.
+`A[x](../p)` is a fact when `p` holds for **every** binding of `x`. Dual to `E[]`.
 
 From `logicTest.nl`:
 
@@ -181,7 +181,7 @@ Not an operator in the same sense, but syntactically significant. `if G` attache
 | `,` in a `fact` block | Separates asserted facts |
 | `,` in a supertype list | Separates supertypes |
 | `,` in a variable declaration | Separates variable names |
-| `{ }` | Scope block — see [`visibility.md`](visibility.md) |
+| `{ }` | Scope block — see [`visibility.md`](../lang/visibility.md) |
 | `( )` | Grouping inside an expression |
 | `//` | Line comment |
 
@@ -192,14 +192,14 @@ Not an operator in the same sense, but syntactically significant. `if G` attache
 | Name | Origin | Meaning |
 |---|---|---|
 | `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` | `nelumbo.lang` | The core object hierarchy. `Root` is the entry-point production for top-level statements; `Type` is used as a generic parameter introducer (`Type T`). |
-| `Boolean`, `FactType`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `FactType` is a `Boolean` subtype for ground-truth relations (see [`grammar.md`](grammar.md#facttype-declarations)). |
+| `Boolean`, `FactType`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `FactType` is a `Boolean` subtype for ground-truth relations (see [`grammar.md`](../lang/grammar.md#facttype-declarations)). |
 | `true`, `false`, `unknown` | `nelumbo.logic` | The three Boolean values. |
 
 ---
 
 ## Precedence summary
 
-Full rules are on [`precedence-and-associativity.md`](precedence-and-associativity.md). The quick version:
+Full rules are on [`precedence-and-associativity.md`](../lang/precedence-and-associativity.md). The quick version:
 
 | Operator | Precedence | Notes |
 |---|---|---|

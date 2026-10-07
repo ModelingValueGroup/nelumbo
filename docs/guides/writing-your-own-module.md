@@ -65,7 +65,7 @@ private Boolean ::= helper(<T>, <T>, <T>)  @com.example.Helper
 
 `private` is most useful for native-backed primitives that you wrap with more ergonomic user-facing patterns — the same technique the stdlib uses for `add`, `mult`, `string_concat`, and so on.
 
-See [`../reference/visibility.md`](../reference/visibility.md) for the full visibility rules, including `hidden` and scope blocks.
+See [`../reference/visibility.md`](../reference/lang/visibility.md) for the full visibility rules, including `hidden` and scope blocks.
 
 ---
 
@@ -112,7 +112,7 @@ This order makes the module read top to bottom in a natural way: *here is what I
 
 ## What goes in a module
 
-A module can contain any top-level construct: types, patterns, variables, facts, rules, transformations, queries, and tests. See [`../reference/grammar.md`](../reference/grammar.md) for the full list.
+A module can contain any top-level construct: types, patterns, variables, facts, rules, transformations, queries, and tests. See [`../reference/lang/grammar.md`](../reference/lang/grammar.md) for the full list.
 
 A useful discipline: **a library module should be idempotent and side-effect-free at import time.** That means:
 
@@ -224,9 +224,9 @@ Follow those and your module will look and behave like the stdlib ones — which
 
 ## See also
 
-- [`../reference/grammar.md`](../reference/grammar.md) — the full set of things that can appear at the top level of a module
-- [`../reference/visibility.md`](../reference/visibility.md) — `private`, `hidden`, scopes
-- [`../reference/stdlib/`](../reference/stdlib/) — per-module reference for the stdlib modules to model yours on
+- [`../reference/lang/grammar.md`](../reference/lang/grammar.md) — the full set of things that can appear at the top level of a module
+- [`../reference/visibility.md`](../reference/lang/visibility.md) — `private`, `hidden`, scopes
+- [`nelumbo.lang`](../reference/lang/index.md), [`nelumbo.logic`](../reference/logic/index.md) and the [packages](../reference/packages/) — per-module reference for the shipped modules to model yours on
 - [`stdlib-tour.md`](stdlib-tour.md) — reading the stdlib modules end to end
 - [`language-transformations.md`](language-transformations.md) — when your module needs to introduce new syntax
 - [`native-cookbook.md`](native-cookbook.md) — when your module needs new primitives

@@ -4,8 +4,8 @@ This page describes the grammar of Nelumbo itself — the syntax you write in a 
 
 Nelumbo is a **meta-language**, and the meta-ness goes all the way down. Even the grammar described on this page is itself defined in `.nl` files:
 
-- The pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>`, `<,>`, `<|>`, …), the top-level declaration forms (`import`, `T :: S`, `T ::= P`, `T v`, `::>`, scope blocks), and the underlying object hierarchy (`Object`, `Type`, `Variable`, `Root`, …) are all declared in [`lang.nl`](../reference/stdlib/lang.md). The Java core contains just enough hand-coded parsing to load `lang.nl`; from that point on, the user's own `::=` patterns are what parse every subsequent file.
-- The three execution-driving statement forms (`fact`, `<=>`, `?`), along with the `Boolean` type and every logical operator, are declared in [`logic.nl`](../reference/stdlib/logic.md).
+- The pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>`, `<,>`, `<|>`, …), the top-level declaration forms (`import`, `T :: S`, `T ::= P`, `T v`, `::>`, scope blocks), and the underlying object hierarchy (`Object`, `Type`, `Variable`, `Root`, …) are all declared in [`lang.nl`](index.md). The Java core contains just enough hand-coded parsing to load `lang.nl`; from that point on, the user's own `::=` patterns are what parse every subsequent file.
+- The three execution-driving statement forms (`fact`, `<=>`, `?`), along with the `Boolean` type and every logical operator, are declared in [`logic.nl`](../logic/index.md).
 
 So "the grammar of Nelumbo" is really *the set of patterns that `lang.nl` and `logic.nl` install when they are loaded*. This page documents that surface; the per-module reference pages document where each piece is declared.
 
@@ -24,12 +24,12 @@ The top-level constructs are:
 | `T ::= P` | Declare pattern `P` producing a value of type `T` | [Patterns](#pattern-declarations) below |
 | `pattern N ::= P` | Declare a reusable **named pattern** `N` | [Named patterns](#named-patterns) below |
 | `T v` | Declare logical variable `v` of type `T` | [Variables](#variable-declarations) below |
-| `L <=> R` | Rule: `L` bi-implies `R` | [`writing-rules.md`](writing-rules.md) |
+| `L <=> R` | Rule: `L` bi-implies `R` | [`writing-rules.md`](../logic/writing-rules.md) |
 | `fact E` | Assert ground-truth fact `E` | [Facts](#facts) below |
-| `E ?` | Query: run `E` and print the result | [`test-expression-semantics.md`](test-expression-semantics.md) |
-| `E ? [F][N]` | Test: query `E` and compare to expected facts `F` / falsehoods `N` | [`test-expression-semantics.md`](test-expression-semantics.md) |
+| `E ?` | Query: run `E` and print the result | [`test-expression-semantics.md`](../logic/test-expression-semantics.md) |
+| `E ? [F][N]` | Test: query `E` and compare to expected facts `F` / falsehoods `N` | [`test-expression-semantics.md`](../logic/test-expression-semantics.md) |
 | `{ ... }` | Scope block — declarations inside are local | [`visibility.md`](visibility.md) |
-| `L ::> { ... }` | Pattern transformation | [`language-transformations.md`](../guides/language-transformations.md) |
+| `L ::> { ... }` | Pattern transformation | [`language-transformations.md`](../../guides/language-transformations.md) |
 
 Comments are `//` to end of line. Whitespace is not significant.
 
@@ -62,7 +62,7 @@ A bare type can also be introduced for use as a generic parameter:
 Type E
 ```
 
-See [generic parenthesisation in `nelumbo.lang`](stdlib/lang.md#generic-parenthesisation) and the [`nelumbo.collections` types](stdlib/collections.md#types) for details.
+See [generic parenthesisation in `nelumbo.lang`](index.md#generic-parenthesisation) and the [`nelumbo.collections` types](../packages/collections.md#types) for details.
 
 ---
 
@@ -83,7 +83,7 @@ A pattern is a mix of:
 - **Variable holes** `<Variable>` — used by binding forms like quantifiers
 - **Repetition and grouping markers** `<(>`, `<)>`, `<)*>`, `<)+>`, `<)?>`, `<,>`, `<|>` — see [below](#repetition-and-grouping)
 - An optional **precedence annotation** `#N` — see [`precedence-and-associativity.md`](precedence-and-associativity.md)
-- An optional **native binding** `@fully.qualified.JavaClass` — see [`native-api.md`](native-api.md)
+- An optional **native binding** `@fully.qualified.JavaClass` — see [`native-api.md`](../core/native-api.md)
 
 Examples from the standard library:
 
@@ -184,7 +184,7 @@ pattern TIME_PERIOD ::= T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>      //       
 Period  ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]>  @nelumbo.datetime.NPeriod
 ```
 
-Even `lang.nl` and `logic.nl` define their own (`PATTERNS`, `QNAME`, `BINDING`) — see [`lang.md`](stdlib/lang.md#named-patterns). A named pattern must be declared before it is referenced, like any other name.
+Even `lang.nl` and `logic.nl` define their own (`PATTERNS`, `QNAME`, `BINDING`) — see [`lang.md`](index.md#named-patterns). A named pattern must be declared before it is referenced, like any other name.
 
 ---
 
@@ -279,7 +279,7 @@ attr OT AN AT ::> {
 }
 ```
 
-This is Nelumbo's mechanism for building higher-level DSLs on top of the core. It is covered in [`language-transformations.md`](../guides/language-transformations.md) rather than here, because transformations are an advanced feature that deserves a full guide.
+This is Nelumbo's mechanism for building higher-level DSLs on top of the core. It is covered in [`language-transformations.md`](../../guides/language-transformations.md) rather than here, because transformations are an advanced feature that deserves a full guide.
 
 ---
 
@@ -293,13 +293,13 @@ E ?                // query — run the reasoner, print the result
 E ? [F][N]         // test — query and compare; pass iff result matches
 ```
 
-See [`test-expression-semantics.md`](test-expression-semantics.md) for the precise comparison rules.
+See [`test-expression-semantics.md`](../logic/test-expression-semantics.md) for the precise comparison rules.
 
 ---
 
 ## See also
 
-- [`operators.md`](operators.md) — the complete list of operators
+- [`operators.md`](../logic/operators.md) — the complete list of operators
 - [`built-in-tokens.md`](built-in-tokens.md) — `<NUMBER>`, `<STRING>`, `<NAME>`, `<Variable>`
 - [`precedence-and-associativity.md`](precedence-and-associativity.md) — how `#N` works
 - [`visibility.md`](visibility.md) — `private`, `hidden`, `visible`, and `{ }` scopes

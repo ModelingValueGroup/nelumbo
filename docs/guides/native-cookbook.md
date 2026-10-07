@@ -4,8 +4,8 @@ This guide is a hands-on reference for writing new Java natives bound to Nelumbo
 
 Before diving in, make sure you have read:
 
-- [`../reference/native-api.md`](../reference/native-api.md) — the API surface (`Predicate`, `infer`, `InferResult`, the helper family `factCC` / `factCI` / etc.)
-- [`../reference/native-classes.md`](../reference/native-classes.md) — the catalogue of what ships today
+- [`../reference/native-api.md`](../reference/core/native-api.md) — the API surface (`Predicate`, `infer`, `InferResult`, the helper family `factCC` / `factCI` / etc.)
+- [`../reference/native-classes.md`](../reference/core/native-classes.md) — the catalogue of what ships today
 
 And before reaching for a native at all, confirm you are not on the wrong extension path. **The in-language path (rules, transformations, modules) handles most cases.** See [`writing-your-own-module.md`](writing-your-own-module.md) and [`language-transformations.md`](language-transformations.md). Natives are for genuine primitives.
 
@@ -577,8 +577,8 @@ Before you consider a new native "done":
 
 ## See also
 
-- [`../reference/native-api.md`](../reference/native-api.md) — full API surface reference
-- [`../reference/native-classes.md`](../reference/native-classes.md) — catalogue of shipped natives
+- [`../reference/native-api.md`](../reference/core/native-api.md) — full API surface reference
+- [`../reference/native-classes.md`](../reference/core/native-classes.md) — catalogue of shipped natives
 - [`../explanation/architecture.md`](../explanation/architecture.md) — why Java/Nelumbo is split where it is
 - [`writing-your-own-module.md`](writing-your-own-module.md) — the in-language alternative
 - [`language-transformations.md`](language-transformations.md) — the meta-level alternative

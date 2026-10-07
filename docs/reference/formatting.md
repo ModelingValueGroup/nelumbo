@@ -106,6 +106,6 @@ unselected block-mates.
 
 ## See also
 
-- [`grammar.md`](grammar.md) — the syntax these statements follow
-- [`precedence-and-associativity.md`](precedence-and-associativity.md) — the `#N` system the precedence column aligns
-- [`writing-rules.md`](writing-rules.md) — `<=>` rules and `if` guards
+- [`grammar.md`](lang/grammar.md) — the syntax these statements follow
+- [`precedence-and-associativity.md`](lang/precedence-and-associativity.md) — the `#N` system the precedence column aligns
+- [`writing-rules.md`](logic/writing-rules.md) — `<=>` rules and `if` guards

@@ -31,7 +31,7 @@ even(x) <=> E[y](y = x/2)
 
 Read as: *"`even(x)` is true exactly when there exists a `y` such that `y = x/2`."*
 
-For any `x`, the engine treats `even(x)` and `E[y](y=x/2)` as interchangeable. Queries against `even(x)` are answered by reasoning about the RHS; queries against the RHS can be answered using the LHS. `<=>` is symmetric.
+For any `x`, the engine treats `even(x)` and `E[y](../y=x/2)` as interchangeable. Queries against `even(x)` are answered by reasoning about the RHS; queries against the RHS can be answered using the LHS. `<=>` is symmetric.
 
 ---
 
@@ -141,12 +141,12 @@ Notice also the absolute-value rule: two clauses, `if a >= 0` and `if a < 0`, co
 ```
 c(a) = b  <=>  pc(a, b)
 p(a) = b  <=>  pc(b, a)
-m(a) = b  <=>  E[x](c(x) = a & b = x)
-f(a) = b  <=>  E[y](c(y) = a & b = y)
+m(a) = b  <=>  E[x](../c(x) = a & b = x)
+f(a) = b  <=>  E[y](../c(y) = a & b = y)
 
 a(a) = b  <=>  d(b) = a
 d(a) = c  <=>  c(a) = c |
-               E[b](d(a) = b & c(b) = c)
+               E[b](../d(a) = b & c(b) = c)
 ```
 
 The `d` (descendant) rule uses `|` on the right to combine two cases into one clause — a direct child relationship, or an indirect descendance through an intermediate `b`. Either case can make the rule's RHS true.
@@ -169,5 +169,5 @@ The `a` (ancestor) rule is defined in terms of `d`: ancestor is just descendant 
 
 - [`three-valued-logic.md`](three-valued-logic.md) — the semantic model rules produce results within
 - [`test-expression-semantics.md`](test-expression-semantics.md) — how tests observe the results rules produce
-- [`../getting-started/reading-a-test.md`](../getting-started/reading-a-test.md) — how to read and write a test's expected result
-- [`../getting-started/first-program.md`](../getting-started/first-program.md) — `fib` explained line by line
+- [`../getting-started/reading-a-test.md`](../../getting-started/reading-a-test.md) — how to read and write a test's expected result
+- [`../getting-started/first-program.md`](../../getting-started/first-program.md) — `fib` explained line by line

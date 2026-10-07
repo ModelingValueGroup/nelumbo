@@ -54,10 +54,10 @@ class DocsSiteTest {
         md.put("getting-started/reading-a-test.md", """
                 # Reading a query and test
 
-                See [grammar](../reference/grammar.md#connected-token-groups---) and [fibonacci.nl](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl).
+                See [grammar](../reference/lang/grammar.md#connected-token-groups---) and [fibonacci.nl](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl).
                 Back to the [overview](../documentation.md) or [up](#reading-a-query-and-test); [GitHub](https://github.com/x) stays.
                 """);
-        md.put("reference/grammar.md", """
+        md.put("reference/lang/grammar.md", """
                 # Grammar
 
                 ## Connected-token groups: `<[> ... <]>`
@@ -72,7 +72,8 @@ class DocsSiteTest {
                 |---|---|
                 | 1 | 2 |
                 """);
-        md.put("reference/stdlib/logic.md", "# `nelumbo.logic`\n\ntext\n");
+        md.put("reference/logic/index.md", "# `nelumbo.logic`\n\ntext\n");
+        md.put("reference/logic/operators.md", "# Operators\n");
         md.put("NELUMBO.md", "# Slides\n");
         return new DocsSite(md, TEMPLATE);
     }
@@ -84,7 +85,7 @@ class DocsSiteTest {
         assertEquals("recipe-2--comparison-predicate", DocsSite.slug("Recipe 2 — comparison predicate"));
         assertEquals("nelumbologic", DocsSite.slug("nelumbo.logic"));
 
-        String grammar = site().page("/docs/reference/grammar.html").orElseThrow();
+        String grammar = site().page("/docs/reference/lang/grammar.html").orElseThrow();
         assertTrue(grammar.contains("<h2 id=\"connected-token-groups---\">"), grammar);
         assertTrue(grammar.contains("<h2 id=\"twice\">") && grammar.contains("<h2 id=\"twice-1\">"),
                 "duplicate headings get numbered like on GitHub: " + grammar);
@@ -93,7 +94,7 @@ class DocsSiteTest {
     @Test
     void relativeMarkdownLinksBecomeDocsUrlsAndLinksOutOfTheDocsFolderGoToGithub() {
         String page = site().page("/docs/getting-started/reading-a-test.html").orElseThrow();
-        assertTrue(page.contains("href=\"/docs/reference/grammar.html#connected-token-groups---\""), page);
+        assertTrue(page.contains("href=\"/docs/reference/lang/grammar.html#connected-token-groups---\""), page);
         assertTrue(page.contains("href=\"https://github.com/ModelingValueGroup/nelumbo/blob/master/src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl\""), page);
         assertTrue(page.contains("href=\"/docs/\""), "documentation.md is the docs index: " + page);
         assertTrue(page.contains("href=\"#reading-a-query-and-test\""), page);
@@ -107,14 +108,16 @@ class DocsSiteTest {
 
     @Test
     void sidebarListsEveryGroupedPageByTitleAndMarksTheCurrentOne() {
-        String grammar = site().page("/docs/reference/grammar.html").orElseThrow();
+        String grammar = site().page("/docs/reference/lang/grammar.html").orElseThrow();
         assertTrue(grammar.contains("<a href=\"/docs/\">Overview</a>"), grammar);
         assertTrue(grammar.contains("<a href=\"/docs/getting-started/reading-a-test.html\">Reading a query and test</a>"), grammar);
-        assertTrue(grammar.contains("<a href=\"/docs/reference/grammar.html\" class=\"active\">Grammar</a>"), grammar);
-        assertTrue(grammar.contains("<a href=\"/docs/reference/stdlib/logic.html\">nelumbo.logic</a>"), grammar);
-        assertTrue(grammar.indexOf("Getting started") < grammar.indexOf("Reference")
-                && grammar.indexOf("Reference") < grammar.indexOf("Standard library"),
+        assertTrue(grammar.contains("<a href=\"/docs/reference/lang/grammar.html\" class=\"active\">Grammar</a>"), grammar);
+        assertTrue(grammar.contains("<a href=\"/docs/reference/logic/index.html\">nelumbo.logic</a>"), grammar);
+        assertTrue(grammar.indexOf("Getting started") < grammar.indexOf("Reference: Lang")
+                && grammar.indexOf("Reference: Lang") < grammar.indexOf("Reference: Logic"),
                 "groups keep the documented reading order: " + grammar);
+        // a level's overview heads its group even though "nelumbo.logic" sorts after "Operators"
+        assertTrue(grammar.indexOf(">nelumbo.logic<") < grammar.indexOf(">Operators<"), grammar);
         assertFalse(grammar.contains("Slides"), "root-level pages other than the index are not in the sidebar: " + grammar);
         assertTrue(site().page("/docs/NELUMBO.html").isPresent(), "...but they are still served for the links that point at them");
     }
@@ -124,7 +127,7 @@ class DocsSiteTest {
         DocsSite site = site();
         assertTrue(site.page("/docs/").orElseThrow().contains("<title>Nelumbo documentation</title>"));
         assertTrue(site.page("/docs").isPresent());
-        assertTrue(site.page("/docs/reference/grammar.html").orElseThrow().contains("<table>"), "GFM tables must render");
+        assertTrue(site.page("/docs/reference/lang/grammar.html").orElseThrow().contains("<table>"), "GFM tables must render");
         assertTrue(site.page("/docs/reference/missing.html").isEmpty());
         assertTrue(site.page("/docs/documentation.html").isEmpty(), "the index has one URL: /docs/");
         assertTrue(site.notFoundPage().contains("<nav>"), "the 404 page keeps the sidebar so the reader is not stranded");
@@ -134,7 +137,7 @@ class DocsSiteTest {
     void theBundledDocsAllRender() {
         DocsSite site = DocsSite.load();
         assertTrue(site.pageCount() > 25, "expected the whole docs tree to be bundled, got " + site.pageCount());
-        String grammar = site.page("/docs/reference/grammar.html").orElseThrow();
+        String grammar = site.page("/docs/reference/lang/grammar.html").orElseThrow();
         assertTrue(grammar.contains("<title>Grammar - Nelumbo docs</title>"), grammar.substring(0, 300));
         assertTrue(grammar.contains("<h1"), grammar.substring(0, 300));
     }

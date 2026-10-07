@@ -288,7 +288,7 @@ Since `::>` is under active development, here are some specific points to be awa
 
 - **Error messages from transformations are still rough.** A mistake in a transformation body may surface as a confusing diagnostic about the expanded code rather than the source you wrote.
 - **Interaction with `private`/`hidden` inside transformations is evolving.** The worked examples use `private FactType ::= ...` inside transformations and it works, but finer-grained visibility controls may be added.
-- **Namespace handling.** Any type that specialises `Namespace` introduces its own scope; declaring a functor `private` inside such a type keeps it confined to that scope. See [`../reference/visibility.md`](../reference/visibility.md). This is the piece that keeps declarations from different transformation expansions from colliding.
+- **Namespace handling.** Any type that specialises `Namespace` introduces its own scope; declaring a functor `private` inside such a type keeps it confined to that scope. See [`../reference/visibility.md`](../reference/lang/visibility.md). This is the piece that keeps declarations from different transformation expansions from colliding.
 - **Syntax of the `::>` operator itself** may tighten over releases. The current form supports both the patterns shown here and the nested form; a consolidated spec is a work in progress.
 - **Performance** is not a concern. Transformations — including nested ones — are expanded at compile/load time only, so they contribute nothing to query execution. Heavy transformation use affects load time, not the reasoner's runtime.
 
@@ -298,10 +298,10 @@ Check the [latest examples](../../src/main/resources/org/modelingvalue/nelumbo/e
 
 ## See also
 
-- [`../reference/grammar.md`](../reference/grammar.md) — how `::>` fits in the overall grammar
-- [`../reference/built-in-tokens.md`](../reference/built-in-tokens.md) — the `<n>` identifier token and type holes used in transformation LHS
-- [`../reference/visibility.md`](../reference/visibility.md) — scopes, `private`, and how `Namespace`-derived types introduce their own scopes
-- [`../reference/writing-rules.md`](../reference/writing-rules.md) — the simpler alternative for value-level abstraction
+- [`../reference/lang/grammar.md`](../reference/lang/grammar.md) — how `::>` fits in the overall grammar
+- [`../reference/built-in-tokens.md`](../reference/lang/built-in-tokens.md) — the `<n>` identifier token and type holes used in transformation LHS
+- [`../reference/visibility.md`](../reference/lang/visibility.md) — scopes, `private`, and how `Namespace`-derived types introduce their own scopes
+- [`../reference/writing-rules.md`](../reference/logic/writing-rules.md) — the simpler alternative for value-level abstraction
 - [`transformation.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/transformation.nl) — the canonical worked example
 - [`deHet.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/deHet.nl) — natural-language DSL variant
 - [`transformationAssignment.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/transformationAssignment.nl) — the "rules-and-transformation-stubbed-out" exercise version of the same example

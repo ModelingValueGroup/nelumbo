@@ -27,29 +27,29 @@ Different readers want different things. Pick the path that matches your goal.
 
 - [Reading a query and test](getting-started/reading-a-test.md) — the language's headline feature, three-valued logic
 - [Architecture — how Nelumbo is layered](explanation/architecture.md) — Java core → `lang.nl` (syntactic bootstrap) → `logic.nl` (three-valued logic + `<=>`/`fact`/`?`) → numeric/data stdlib → user code
-- [Three-valued logic](reference/three-valued-logic.md) — the semantic foundation, with truth tables
-- [`nelumbo.lang`](reference/stdlib/lang.md) — the `.nl` file that declares the whole syntax, including `::`, `::=`, `::>`, and the pattern meta-grammar
-- [`nelumbo.logic`](reference/stdlib/logic.md) — the `.nl` file that declares `Boolean`, the connectives, equality, and the `fact` / `<=>` / `?` statement forms
+- [Three-valued logic](reference/logic/three-valued-logic.md) — the semantic foundation, with truth tables
+- [`nelumbo.lang`](reference/lang/index.md) — the `.nl` file that declares the whole syntax, including `::`, `::=`, `::>`, and the pattern meta-grammar
+- [`nelumbo.logic`](reference/logic/index.md) — the `.nl` file that declares `Boolean`, the connectives, equality, and the `fact` / `<=>` / `?` statement forms
 
 ### "I want to write my own DSL using Nelumbo."
 
 - The starting pair above, then
-- [Grammar](reference/grammar.md) and [Operators](reference/operators.md) — reference
-- [Writing rules](reference/writing-rules.md) — `<=>`, guards, merging, contradictions
+- [Grammar](reference/lang/grammar.md) and [Operators](reference/logic/operators.md) — reference
+- [Writing rules](reference/logic/writing-rules.md) — `<=>`, guards, merging, contradictions
 - [Language transformations](guides/language-transformations.md) — the `::>` mechanism for defining new keywords (status: under construction)
 - [Writing your own module](guides/writing-your-own-module.md) — packaging a reusable library
 
 ### "I want to extend Nelumbo with a new primitive in Java."
 
 - [Architecture](explanation/architecture.md) — understand the layering first
-- [Native API](reference/native-api.md) — the `Predicate`, `InferResult`, `infer()` surface
-- [Native classes catalogue](reference/native-classes.md) — what's already shipped
+- [Native API](reference/core/native-api.md) — the `Predicate`, `InferResult`, `infer()` surface
+- [Native classes catalogue](reference/core/native-classes.md) — what's already shipped
 - [Native cookbook](guides/native-cookbook.md) — five recipes with complete skeletons
 
 ### "I want to read the stdlib to learn idiom."
 
 - [Standard library tour](guides/stdlib-tour.md) — all seven modules in dependency order
-- [`stdlib/lang.md`](reference/stdlib/lang.md), [`logic.md`](reference/stdlib/logic.md), [`integers.md`](reference/stdlib/integers.md), [`rationals.md`](reference/stdlib/rationals.md), [`strings.md`](reference/stdlib/strings.md), [`collections.md`](reference/stdlib/collections.md), [`datetime.md`](reference/stdlib/datetime.md) — per-module reference
+- [`stdlib/lang.md`](reference/lang/index.md), [`logic.md`](reference/logic/index.md), [`integers.md`](reference/packages/integers.md), [`rationals.md`](reference/packages/rationals.md), [`strings.md`](reference/packages/strings.md), [`collections.md`](reference/packages/collections.md), [`datetime.md`](reference/packages/datetime.md) — per-module reference
 
 ### "I need to look something up."
 
@@ -68,27 +68,27 @@ Jump straight to the [reference](#reference) section below. Everything in `refer
 
 The irreducible facts about the language.
 
-- [Grammar](reference/grammar.md) — the core syntax of `.nl` files
-- [Operators](reference/operators.md) — complete operator catalogue
-- [Built-in tokens and pattern holes](reference/built-in-tokens.md) — `<NUMBER>`, `<STRING>`, `<Variable>`, etc.
-- [Precedence and associativity](reference/precedence-and-associativity.md) — the `#N` system
-- [Visibility](reference/visibility.md) — `private`, `hidden`, `visible`, and scope blocks
-- [Three-valued logic](reference/three-valued-logic.md) — truth tables and identities
-- [Test expression semantics](reference/test-expression-semantics.md) — formal definition of when a test passes
-- [Writing rules](reference/writing-rules.md) — `<=>`, guards, merging, contradictions
-- [Native API](reference/native-api.md) — implementing predicates in Java
-- [Native classes catalogue](reference/native-classes.md) — every shipped `@`-bound class
+- [Grammar](reference/lang/grammar.md) — the core syntax of `.nl` files
+- [Operators](reference/logic/operators.md) — complete operator catalogue
+- [Built-in tokens and pattern holes](reference/lang/built-in-tokens.md) — `<NUMBER>`, `<STRING>`, `<Variable>`, etc.
+- [Precedence and associativity](reference/lang/precedence-and-associativity.md) — the `#N` system
+- [Visibility](reference/lang/visibility.md) — `private`, `hidden`, `visible`, and scope blocks
+- [Three-valued logic](reference/logic/three-valued-logic.md) — truth tables and identities
+- [Test expression semantics](reference/logic/test-expression-semantics.md) — formal definition of when a test passes
+- [Writing rules](reference/logic/writing-rules.md) — `<=>`, guards, merging, contradictions
+- [Native API](reference/core/native-api.md) — implementing predicates in Java
+- [Native classes catalogue](reference/core/native-classes.md) — every shipped `@`-bound class
 - [Formatting](reference/formatting.md) — the canonical whitespace layout the LSP formatter produces
 
 ### Standard library reference
 
-- [`nelumbo.lang`](reference/stdlib/lang.md) — the bootstrap layer: token types, object hierarchy, pattern meta-grammar, top-level statements
-- [`nelumbo.logic`](reference/stdlib/logic.md) — Boolean, connectives, quantifiers, equality
-- [`nelumbo.integers`](reference/stdlib/integers.md) — arbitrary-precision integer arithmetic
-- [`nelumbo.rationals`](reference/stdlib/rationals.md) — exact rationals
-- [`nelumbo.strings`](reference/stdlib/strings.md) — strings, concatenation, conversion
-- [`nelumbo.collections`](reference/stdlib/collections.md) — generic `Set<E>` and `List<E>`, set-builder notation, and operations (cardinality, membership, subset, union/intersection/difference, concatenation, indexing)
-- [`nelumbo.datetime`](reference/stdlib/datetime.md) — ISO 8601 dates, times, date-times, and durations
+- [`nelumbo.lang`](reference/lang/index.md) — the bootstrap layer: token types, object hierarchy, pattern meta-grammar, top-level statements
+- [`nelumbo.logic`](reference/logic/index.md) — Boolean, connectives, quantifiers, equality
+- [`nelumbo.integers`](reference/packages/integers.md) — arbitrary-precision integer arithmetic
+- [`nelumbo.rationals`](reference/packages/rationals.md) — exact rationals
+- [`nelumbo.strings`](reference/packages/strings.md) — strings, concatenation, conversion
+- [`nelumbo.collections`](reference/packages/collections.md) — generic `Set<E>` and `List<E>`, set-builder notation, and operations (cardinality, membership, subset, union/intersection/difference, concatenation, indexing)
+- [`nelumbo.datetime`](reference/packages/datetime.md) — ISO 8601 dates, times, date-times, and durations
 
 ### Guides
 
