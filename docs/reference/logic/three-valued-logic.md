@@ -138,8 +138,8 @@ Both are verified in `logicTest.nl`:
 Similarly, quantifier duality holds:
 
 ```
-!A[x](../p)  ≡  E[x](../!p)
-!E[x](../p)  ≡  A[x](../!p)
+!A[x](p)  ≡  E[x](!p)
+!E[x](p)  ≡  A[x](!p)
 ```
 
 This is the tangible payoff of three-valued logic: the laws of classical logic remain usable as identities for program transformation and reasoning, without the caveats that Prolog-style systems require.

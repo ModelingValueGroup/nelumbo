@@ -81,13 +81,13 @@ false -> unknown ? [()][]
 ## Quantifiers
 
 ```
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](../stdlib/<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
-            A[<(> <Variable#100> <,> , <)+>](../stdlib/<Boolean#0>)   @nelumbo.logic.UniversalQuantifier
+Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
+            A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.UniversalQuantifier
 ```
 
-- `E[x](../stdlib/p)` — there exists `x` such that `p`.
-- `A[x](../stdlib/p)` — for all `x`, `p`.
-- Multiple bound variables are allowed: `E[x,y,z](../stdlib/p)`, `A[x,y,z](../stdlib/p)`.
+- `E[x](p)` — there exists `x` such that `p`.
+- `A[x](p)` — for all `x`, `p`.
+- Multiple bound variables are allowed: `E[x,y,z](p)`, `A[x,y,z](p)`.
 
 The pattern fragment `<(> <Variable#100> <,> , <)+>` is the one-or-more, comma-separated repetition that admits the variable list. The body `<Boolean#0>` is at the lowest precedence, so the entire expression inside the parentheses is consumed.
 

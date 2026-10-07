@@ -100,14 +100,14 @@ a != b
 
 Defined in `logic.nl` as `!(a = b)`.
 
-### `E[...](../...)` — existential quantifier
+### `E[...](...)` — existential quantifier
 
 ```
-E[x](../p)
-E[x, y](../p)
+E[x](p)
+E[x, y](p)
 ```
 
-`E[x](../p)` is a fact when there exists some binding of `x` for which `p` holds. The bound variables (`x`, `y`, ...) must be declared elsewhere; inside the body they take on the quantifier's role instead of their outer role. Bound variables are not visible outside the quantifier.
+`E[x](p)` is a fact when there exists some binding of `x` for which `p` holds. The bound variables (`x`, `y`, ...) must be declared elsewhere; inside the body they take on the quantifier's role instead of their outer role. Bound variables are not visible outside the quantifier.
 
 Example from `belasting.nl`:
 
@@ -115,14 +115,14 @@ Example from `belasting.nl`:
 E[i, a]((het inkomen van p is i euro) & (p mag a euro aftrekken) & x=(i-a)/2)
 ```
 
-### `A[...](../...)` — universal quantifier
+### `A[...](...)` — universal quantifier
 
 ```
-A[x](../p)
-A[x, y](../p)
+A[x](p)
+A[x, y](p)
 ```
 
-`A[x](../p)` is a fact when `p` holds for **every** binding of `x`. Dual to `E[]`.
+`A[x](p)` is a fact when `p` holds for **every** binding of `x`. Dual to `E[]`.
 
 From `logicTest.nl`:
 

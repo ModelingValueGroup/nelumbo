@@ -108,7 +108,7 @@ Shipped natives fall into five structural roles. Reading this classification fir
 
 ### `ExistentialQuantifier`, `UniversalQuantifier`
 
-- Back: `E[...](../<Boolean>)` and `A[...](../<Boolean>)`
+- Back: `E[...](<Boolean>)` and `A[...](<Boolean>)`
 - Role: quantifier
 - Base: `Quantifier` extends `CompoundPredicate`
 - Strategy: evaluate the body under the current binding, then **strip the local variables** from each resulting binding and aggregate:
@@ -193,13 +193,13 @@ One class hosts all three string primitives as `@NelumboMethod`s: `string_concat
 
 - Backs: `Set<E> ::= { [ <E> ] ( <Boolean#0> ) }` — set-builder (comprehension) notation
 - Role: container constant (parse-time AST node)
-- Strategy: holds the bound element variable and the membership condition. At parse time it enforces that the `[ … ]` slot is a bare `Variable` (otherwise a `ParseException` "… must be a variable"), and declares that variable as a local via `localVars()`. The actual set construction is delegated to the `build` predicate (`BuildSet`) through the rule `{[e](../c)} = s <=> build(e, c, s)`.
+- Strategy: holds the bound element variable and the membership condition. At parse time it enforces that the `[ … ]` slot is a bare `Variable` (otherwise a `ParseException` "… must be a variable"), and declares that variable as a local via `localVars()`. The actual set construction is delegated to the `build` predicate (`BuildSet`) through the rule `{[e](c)} = s <=> build(e, c, s)`.
 
 ### `BuildSet`
 
 - Backs: `private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)`
 - Role: quantifier (extends `Quantifier`, like `ExistentialQuantifier`/`UniversalQuantifier`)
-- Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces a singleton `NSet` of its non-member value on the falsehoods side. Completeness flags are inherited from the condition's result, so `{[i](../|i|=10)}` yields `[(s={-10,10})][(s={0}),..]` — the two solutions as a fact, `{0}` as a proven non-member, `..` for the open remainder.
+- Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces a singleton `NSet` of its non-member value on the falsehoods side. Completeness flags are inherited from the condition's result, so `{[i](|i|=10)}` yields `[(s={-10,10})][(s={0}),..]` — the two solutions as a fact, `{0}` as a proven non-member, `..` for the open remainder.
 
 ### `Collections`
 
@@ -268,8 +268,8 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `logic.nl` | `!<Boolean>` | `Not` |
 | `logic.nl` | `<Boolean> & <Boolean>` | `And` |
 | `logic.nl` | `<Boolean> \| <Boolean>` | `Or` |
-| `logic.nl` | `E[...](../...)` | `ExistentialQuantifier` |
-| `logic.nl` | `A[...](../...)` | `UniversalQuantifier` |
+| `logic.nl` | `E[...](...)` | `ExistentialQuantifier` |
+| `logic.nl` | `A[...](...)` | `UniversalQuantifier` |
 | `logic.nl` | `<Object> = <Object>` | `NIs` |
 | `logic.nl` | `eq(<Literal>,<Literal>)` *(private)* | `Equal` |
 | `logic.nl` | `Root ::= "fact" ...` | `nelumbo.logic.Fact` |

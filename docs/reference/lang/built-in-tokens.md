@@ -105,11 +105,11 @@ From `hidden.nl`. These restrict the hole to hidden or visible variables respect
 `<Variable>` matches a variable binding site, not a general expression. It is what quantifiers use to introduce a bound variable:
 
 ```
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](../<Boolean#0>)
+Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
             @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
 ```
 
-From `logic.nl`. The quantifier `E[x, y, z](../body)` expects binding sites, not pre-existing expressions, in the bracketed position.
+From `logic.nl`. The quantifier `E[x, y, z](body)` expects binding sites, not pre-existing expressions, in the bracketed position.
 
 Binding variables declared with `<Variable>` are scoped to the surrounding pattern — they do not leak outside.
 

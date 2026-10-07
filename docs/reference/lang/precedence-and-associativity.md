@@ -93,7 +93,7 @@ Binary subtraction binds looser (40) than unary negation (80), so `-a - b` parse
 Quantifiers `E[...]` and `A[...]` use hole precedence on their body rather than a single pattern precedence:
 
 ```
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](../<Boolean#0>)
+Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
             @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
 ```
 

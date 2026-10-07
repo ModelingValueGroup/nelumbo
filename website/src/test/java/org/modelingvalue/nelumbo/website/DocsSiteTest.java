@@ -176,4 +176,33 @@ class DocsSiteTest {
         // NELUMBO.md is not in the sidebar but the overview links it, so every page is reachable
         assertEquals(site.pageCount(), seen.size(), "every page should be reachable from the overview; reached " + seen);
     }
+
+    @Test
+    void codeInTheBundledDocsIsNotMistakenForLinks() {
+        // quantifier and set-builder syntax looks like a markdown link target (E[x](p), {[e](c)}); a path rewrite
+        // over the docs must leave it alone, or readers copy examples that no longer parse
+        DocsSite site = DocsSite.load();
+        Pattern code = Pattern.compile("<code[^>]*>([^<]*)</code>");
+        Deque<String> todo = new ArrayDeque<>(List.of(DocsSite.URL_PREFIX));
+        Set<String> seen = new HashSet<>(todo);
+        Pattern href = Pattern.compile("href=\"(/docs/[^\"#]*)");
+        List<String> rewritten = new ArrayList<>();
+        while (!todo.isEmpty()) {
+            String url = todo.pop();
+            String html = site.page(url).orElseThrow();
+            Matcher c = code.matcher(html);
+            while (c.find()) {
+                if (c.group(1).contains("](../")) {
+                    rewritten.add(url + ": " + c.group(1).strip().lines().filter(l -> l.contains("](../")).findFirst().orElse(""));
+                }
+            }
+            Matcher h = href.matcher(html);
+            while (h.find()) {
+                if (site.page(h.group(1)).isPresent() && seen.add(h.group(1))) {
+                    todo.push(h.group(1));
+                }
+            }
+        }
+        assertTrue(rewritten.isEmpty(), "code that a link rewrite mangled:\n" + String.join("\n", rewritten));
+    }
 }
