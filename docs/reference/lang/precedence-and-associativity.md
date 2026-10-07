@@ -1,5 +1,7 @@
 # Precedence and associativity
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 When you declare a pattern with `::=`, you can attach a **precedence annotation** `#N`:
 
 ```
@@ -122,6 +124,6 @@ The gaps in the ladder (16, 18, 20, 22, 25, 30, 35, 40, 50, 80) are intentional 
 
 ## See also
 
-- [`operators.md`](operators.md) — complete catalogue with precedences
+- [`operators.md`](../logic/operators.md) — complete catalogue with precedences
 - [`grammar.md`](grammar.md) — where `#N` fits syntactically
 - [`built-in-tokens.md`](built-in-tokens.md) — type holes and hole precedences

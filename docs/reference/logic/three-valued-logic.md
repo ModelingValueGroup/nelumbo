@@ -1,8 +1,10 @@
 # Three-valued logic
 
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
+
 Nelumbo is a three-valued logic language. This page describes the values, their behaviour under the logical operators, and why the design was made this way. It is the semantic foundation for [`test-expression-semantics.md`](test-expression-semantics.md) and for most of [`writing-rules.md`](writing-rules.md).
 
-If you have not yet read [`../getting-started/reading-a-test.md`](../getting-started/reading-a-test.md), read it first. This page treats the same material at reference depth.
+If you have not yet read [`../getting-started/reading-a-test.md`](../../getting-started/reading-a-test.md), read it first. This page treats the same material at reference depth.
 
 ---
 
@@ -39,7 +41,7 @@ The price is that every operator has to be defined on three inputs, not two. For
 
 ## The truth tables
 
-All tables below are the ones exercised in [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl). You can run that file to verify them.
+All tables below are the ones exercised in [`logicTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl). You can run that file to verify them.
 
 ### Negation — `!`
 
@@ -149,4 +151,4 @@ This is the tangible payoff of three-valued logic: the laws of classical logic r
 - [`operators.md`](operators.md) — catalogue of logical operators
 - [`test-expression-semantics.md`](test-expression-semantics.md) — formal rules for when a test passes
 - [`writing-rules.md`](writing-rules.md) — how rules interact with the three-valued model
-- [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) — the executable specification
+- [`logicTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) — the executable specification

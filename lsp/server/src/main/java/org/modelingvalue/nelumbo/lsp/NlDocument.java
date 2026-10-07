@@ -120,7 +120,7 @@ public record NlDocument(Workspace workspace,
                                           .map(t -> new Diagnostic(new Range(new Position(t.line(), t.position()), new Position(t.line(), t.position() + 1)), "illegal token: " + t.textTraced(), DiagnosticSeverity.Error, "nelumbo"))//
                                           .toList());
         diagnostics.addAll(parserResult.exceptions() //
-                                       .map(e -> new Diagnostic(new Range(new Position(e.line(), e.position()), new Position(e.line(), e.position())), e.getMessage(), DiagnosticSeverity.Error, "nelumbo"))//
+                                       .map(e -> new Diagnostic(new Range(new Position(e.line(), e.position()), new Position(e.line(), e.position())), e.getShortMessage(), DiagnosticSeverity.Error, "nelumbo"))//
                                        .toList());
         return diagnostics;
     }

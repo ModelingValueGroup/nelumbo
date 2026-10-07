@@ -1,5 +1,7 @@
 # `nelumbo.collections`
 
+> **Level:** optional package `nelumbo.collections`. Write `import nelumbo.collections`; it brings in `nelumbo.integers`, `nelumbo.logic` and `nelumbo.lang` transitively.
+
 Generic sets and lists. The smallest stdlib module — and the only one that uses Nelumbo's generic-type parameter mechanism.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 60 lines.
@@ -46,7 +48,7 @@ List<E> ::= [ <(> <E> <,> , <)*> ]       @nelumbo.collections.NList
 | `[]`          | `List<E>` | empty list                             |
 | `[x, y, z]`   | `List<E>` | ordered, duplicates preserved          |
 
-The `<(> ... <,> , <)*>` fragment is the zero-or-more comma-separated repetition (see [`built-in-tokens.md`](../built-in-tokens.md#structural-markers--repetition-and-grouping)). The element type `E` is inferred from the surrounding context — the declared type of the receiving variable or pattern hole.
+The `<(> ... <,> , <)*>` fragment is the zero-or-more comma-separated repetition (see [`built-in-tokens.md`](../lang/built-in-tokens.md#structural-markers--repetition-and-grouping)). The element type `E` is inferred from the surrounding context — the declared type of the receiving variable or pattern hole.
 
 ---
 
@@ -79,7 +81,7 @@ Integer i   Set<Integer> s
 
 The bound variable `i` ranges over the condition `|i| = 10`. Its two solutions, `-10` and `10`, are gathered into the fact `s = {-10, 10}`. The falsehoods side carries `(s={0})`: `i = 0` is a proven *non*-member (`|0| = 10` is false), so the singleton `{0}` is a proven falsehood of the builder, with `..` standing in for the rest of the open domain.
 
-Because it is built on the three-valued quantifier machinery, set-builder notation inherits the same completeness behaviour as `E[...]`/`A[...]` (see [`three-valued-logic.md`](../three-valued-logic.md) and the quantifier notes in [`native-classes.md`](../native-classes.md)).
+Because it is built on the three-valued quantifier machinery, set-builder notation inherits the same completeness behaviour as `E[...]`/`A[...]` (see [`three-valued-logic.md`](../logic/three-valued-logic.md) and the quantifier notes in [`native-classes.md`](../core/native-classes.md)).
 
 ---
 
@@ -234,7 +236,7 @@ Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 ## See also
 
 - [`integers.md`](integers.md) — the module `collections` imports
-- [`built-in-tokens.md`](../built-in-tokens.md#structural-markers--repetition-and-grouping) — the repetition markers `<(>`, `<)*>`, `<,>` used in the literal declarations
-- [`three-valued-logic.md`](../three-valued-logic.md) — the quantifier semantics set-builder notation is built on
-- [`logic.md`](logic.md) — the `E[...]`/`A[...]` quantifiers `{[e](c)}` is a cousin of
+- [`built-in-tokens.md`](../lang/built-in-tokens.md#structural-markers--repetition-and-grouping) — the repetition markers `<(>`, `<)*>`, `<,>` used in the literal declarations
+- [`three-valued-logic.md`](../logic/three-valued-logic.md) — the quantifier semantics set-builder notation is built on
+- [`logic.md`](../logic/index.md) — the `E[...]`/`A[...]` quantifiers `{[e](c)}` is a cousin of
 - [`collectionsTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/collectionsTest.nl) — executable specification

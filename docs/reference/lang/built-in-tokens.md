@@ -1,5 +1,7 @@
 # Built-in tokens and pattern holes
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 When you declare a pattern with `::=`, everything in angle brackets (`<...>`) is a **hole** — a placeholder that the parser fills in with a matching fragment of input. This page catalogues the kinds of hole that are built into Nelumbo and used throughout the standard library.
 
 ```
@@ -65,7 +67,7 @@ Root ::= attr <Type> <NAME> <Type>  #100
 
 From `transformation.nl`. The `<NAME>` hole captures a raw identifier that the transformation can use as the name of a new attribute.
 
-`<NAME>` is primarily useful inside pattern transformations where you need the user's literal identifier to build new declarations on the fly. See [`../guides/language-transformations.md`](../guides/language-transformations.md).
+`<NAME>` is primarily useful inside pattern transformations where you need the user's literal identifier to build new declarations on the fly. See [`../guides/language-transformations.md`](../../guides/language-transformations.md).
 
 ---
 
@@ -167,7 +169,7 @@ Declares that this pattern has precedence 40. See [`precedence-and-associativity
 Integer ::= <NUMBER>  @org.modelingvalue.nelumbo.integers.NInteger
 ```
 
-Binds the pattern to a Java class that implements its semantics. See [`native-api.md`](native-api.md) (Phase 4).
+Binds the pattern to a Java class that implements its semantics. See [`native-api.md`](../core/native-api.md) (Phase 4).
 
 ---
 
@@ -176,4 +178,4 @@ Binds the pattern to a Java class that implements its semantics. See [`native-ap
 - [`grammar.md`](grammar.md) — where pattern declarations fit in the overall grammar
 - [`precedence-and-associativity.md`](precedence-and-associativity.md) — the `#N` system
 - [`visibility.md`](visibility.md) — the `hidden`/`visible` modifiers
-- [`../guides/language-transformations.md`](../guides/language-transformations.md) — how `<NAME>` and other holes are used in transformations
+- [`../guides/language-transformations.md`](../../guides/language-transformations.md) — how `<NAME>` and other holes are used in transformations

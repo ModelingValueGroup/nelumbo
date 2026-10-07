@@ -14,37 +14,39 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-package org.modelingvalue.nelumbo.mcp;
+package org.modelingvalue.nelumbo.lsp;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 
-public class DocIndexTest {
-
+/**
+ * The IDE already shows a diagnostic at its line in its file, so the message must not repeat the
+ * location (ParseException.getMessage() appends ", line=.., position=.., file=..").
+ */
+public class DiagnosticMessageTest {
     @Test
-    public void docsAreBundledWithAnIndex() throws IOException {
-        try (InputStream in = DocIndexTest.class.getResourceAsStream("/nelumbo-docs/index.txt")) {
-            assertNotNull(in, "nelumbo-docs/index.txt missing from classpath");
-            String index = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            assertTrue(index.contains("reference/lang/grammar.md"), index);
-            assertTrue(index.lines().count() > 10, index);
-        }
-        assertNotNull(DocIndexTest.class.getResourceAsStream("/nelumbo-docs/reference/lang/grammar.md"));
-    }
-
-    @Test
-    public void everyHintPointsAtABundledDoc() {
-        // eval_nl hands these paths to the LLM; a doc that moved must not leave a dead reference behind
-        for (String message : new String[]{"Expected result x", "Unexpected token '\\n'", "Unexpected token 'x'"}) {
-            Hints.Hint hint = Hints.hintFor(message);
-            assertNotNull(hint, message);
-            assertNotNull(DocIndexTest.class.getResourceAsStream("/nelumbo-docs/" + hint.docRef()), hint.docRef());
+    public void parseErrorMessageDoesNotRepeatTheLocation() throws Exception {
+        NelumboLanguageServer server = new NelumboLanguageServer(KnowledgeBase.BASE, 0, () -> {
+        });
+        RecordingClient client = new RecordingClient();
+        server.connect(client);
+        try {
+            server.getWorkspace().getDocumentManager().addDocument("inmemory://bad.nl", "import nelumbo.logic\nflurb @@ blarg\n", 1);
+            assertTrue(client.awaitDiagnostics(10), "expected publishDiagnostics");
+            List<Diagnostic> all = client.diagnostics.stream().flatMap(p -> p.getDiagnostics().stream()).toList();
+            assertFalse(all.isEmpty(), "the parse error is reported");
+            for (Diagnostic d : all) {
+                String message = d.getMessage().isLeft() ? d.getMessage().getLeft() : d.getMessage().getRight().getValue();
+                assertFalse(message.contains("line=") || message.contains("file="), message);
+            }
+        } finally {
+            server.getWorkspace().dispose();
         }
     }
 }

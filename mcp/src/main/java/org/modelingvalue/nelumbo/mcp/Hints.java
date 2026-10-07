@@ -39,7 +39,7 @@ public final class Hints {
                     + "true, the second lists bindings proven false. A closed bracket (no '..') asserts exactly "
                     + "those bindings; a bracket containing '..' is open and asserts only a lower bound - those "
                     + "bindings must be present but more are permitted. Fix the rules/facts or correct the "
-                    + "expectation.", "reference/test-expression-semantics.md");
+                    + "expectation.", "reference/logic/test-expression-semantics.md");
         }
         // U.traceable() renders a literal newline as the two-char sequence \n in token text
         if (message.startsWith("Unexpected token '\\n'")) {
@@ -47,12 +47,12 @@ public final class Hints {
                     + "(X ::= ... where X extends Root), every alternative that contains repetition, optional or "
                     + "alternation patterns needs an explicit precedence suffix - append '#0' to each alternative "
                     + "of the ::= declaration. Later errors in the file usually cascade from this one.",
-                    "reference/precedence-and-associativity.md");
+                    "reference/lang/precedence-and-associativity.md");
         }
         if (message.startsWith("Unexpected token ")) {
             return new Hint("The parser expected one of the listed tokens at this position. Check the pattern "
                     + "(::=) declaration this statement should match, and compare with a working example via "
-                    + "get_example.", "reference/grammar.md");
+                    + "get_example.", "reference/lang/grammar.md");
         }
         return null;
     }

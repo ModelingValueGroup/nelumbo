@@ -1,5 +1,7 @@
 # `nelumbo.lang`
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 The bootstrap layer. Every other `.nl` file — including `logic.nl` itself — is written in the syntax that `lang.nl` declares. It is the meta-language for the meta-language.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 57 lines.
@@ -59,9 +61,9 @@ Each `:: NATIVE` declares a token type produced by the tokenizer. The comment th
 | `BEGINOFFILE` | synthetic token at the start of input                     |
 | `ENDOFFILE`   | synthetic token at the end of input                       |
 
-These names are visible to user code wherever a lexical-token hole is expected: `<NUMBER>`, `<STRING>`, `<NAME>`, `<OPERATOR>`, `<LEFT>`, `<RIGHT>`, `<COMMA>`, etc. See [`built-in-tokens.md`](../built-in-tokens.md) for how they are used in user-facing pattern declarations.
+These names are visible to user code wherever a lexical-token hole is expected: `<NUMBER>`, `<STRING>`, `<NAME>`, `<OPERATOR>`, `<LEFT>`, `<RIGHT>`, `<COMMA>`, etc. See [`built-in-tokens.md`](built-in-tokens.md) for how they are used in user-facing pattern declarations.
 
-There is **no `DECIMAL` token**. Both signed integers and the rational decimal-point form (`-1.5`) are assembled at the pattern level by composing an optional `-` and one or two `<NUMBER>` tokens — see [`integers.md`](integers.md) and [`rationals.md`](rationals.md).
+There is **no `DECIMAL` token**. Both signed integers and the rational decimal-point form (`-1.5`) are assembled at the pattern level by composing an optional `-` and one or two `<NUMBER>` tokens — see [`integers.md`](../packages/integers.md) and [`rationals.md`](../packages/rationals.md).
 
 ---
 
@@ -118,7 +120,7 @@ Pattern     ::= "<" <PatternPart#100> ">"         @nelumbo.patterns.PatternPartP
 
 `PatternPart` is declared as a subtype of `Root` (so the `pattern N ::= …` declaration is a legal top-level statement), and the `PatternPartPattern` alternative of `Pattern` is what lets a named pattern appear as `<NAME>` inside another pattern.
 
-Named patterns are used throughout the standard library to keep dense declarations readable — for example `RADIX_NUMBER` in [`integers.nl`](integers.md), `YMWD_PERIOD` / `TIME_PERIOD` in [`datetime.nl`](datetime.md), and `BINDING` in [`logic.nl`](logic.md).
+Named patterns are used throughout the standard library to keep dense declarations readable — for example `RADIX_NUMBER` in [`integers.nl`](../packages/integers.md), `YMWD_PERIOD` / `TIME_PERIOD` in [`datetime.nl`](../packages/datetime.md), and `BINDING` in [`logic.nl`](../logic/index.md).
 
 ---
 
@@ -175,13 +177,13 @@ Reading these alternatives in order:
 | `"<(" ... "<,>" ... ")>" + or *`                             | `RepetitionPattern`     | A repetition group, with optional separator: `<(> P <,> , <)+>` or `... <)*>`. |
 | `"<(" ... ")?>"`                                             | `OptionalPattern`       | An optional group: `<(> super <)?>`.            |
 | `<LEFT> ... <RIGHT>`                                         | `SequencePattern`       | A bracketed sequence — any of `(...)`, `[...]`, `{...}`. |
-| `"<[" ... "<]>"`                                             | `SequencePattern`       | A [connected-token group](../grammar.md#connected-token-groups---) — adjacent tokens, no whitespace between them. |
+| `"<[" ... "<]>"`                                             | `SequencePattern`       | A [connected-token group](grammar.md#connected-token-groups---) — adjacent tokens, no whitespace between them. |
 | `"<" (visible\|hidden)? <Type#100> (# <NUMBER>)? ">"`        | `NodeTypePattern`       | A type hole `<T>`, optionally with visibility (`<hidden T>`) and precedence (`<T#5>`). |
 | `"<" <PatternPart#100> ">"`                                  | `PatternPartPattern`    | A reference to a [named pattern](#named-patterns): `<PATTERNS>`, `<QNAME>`, `<RADIX_NUMBER>`, … |
 
 The escaping is delicate: `"<"`, `"("`, `"|"`, `","`, `")"`, `"?"`, `">"`, `"+"`, `"*"` all have meaning *inside* a pattern, so when this file wants to write them as literal text it quotes them. This is the meta-syntax describing itself.
 
-Note also the `#100` precedence on the inner `<Pattern#100>` and `<Variable#100>` holes. Precedence 100 is effectively "atomic" — it prevents an inner pattern from being mistaken for a continuing operator expression. See [`precedence-and-associativity.md`](../precedence-and-associativity.md).
+Note also the `#100` precedence on the inner `<Pattern#100>` and `<Variable#100>` holes. Precedence 100 is effectively "atomic" — it prevents an inner pattern from being mistaken for a continuing operator expression. See [`precedence-and-associativity.md`](precedence-and-associativity.md).
 
 ---
 
@@ -255,9 +257,9 @@ All bindings are native — there is no in-language rule (`<=>`) in this module.
 
 ## See also
 
-- [`grammar.md`](../grammar.md) — the user-facing view of the same grammar
-- [`built-in-tokens.md`](../built-in-tokens.md) — how the token types above appear inside `::=` patterns
-- [`precedence-and-associativity.md`](../precedence-and-associativity.md) — the `#N` annotation declared by the `Functor` Root form
-- [`visibility.md`](../visibility.md) — the `private` and `hidden` modifiers declared by the `Functor` and `Variable` Root forms
-- [`logic.md`](logic.md) — the next layer up, which adds `Boolean`, `fact`, `<=>`, and `?`
+- [`grammar.md`](grammar.md) — the user-facing view of the same grammar
+- [`built-in-tokens.md`](built-in-tokens.md) — how the token types above appear inside `::=` patterns
+- [`precedence-and-associativity.md`](precedence-and-associativity.md) — the `#N` annotation declared by the `Functor` Root form
+- [`visibility.md`](visibility.md) — the `private` and `hidden` modifiers declared by the `Functor` and `Variable` Root forms
+- [`logic.md`](../logic/index.md) — the next layer up, which adds `Boolean`, `fact`, `<=>`, and `?`
 - [`langTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/langTest.nl) — minimal smoke test that imports `nelumbo.lang` on its own

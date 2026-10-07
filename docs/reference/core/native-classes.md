@@ -1,8 +1,10 @@
 # Native classes — the catalogue
 
+> **Level:** Java core. Always present, nothing to import.
+
 Every pattern in the standard library that needs Java backing is bound to a class under `src/main/java/org/modelingvalue/nelumbo/`. This page catalogues the shipped native classes, grouped by structural role, with a note on what each one does and how it returns its results.
 
-Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.
+Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.
 
 ---
 
@@ -203,7 +205,7 @@ One class hosts all three string primitives as `@NelumboMethod`s: `string_concat
 
 - Backs: the algebraic operations — `size` (`|c|`), `indexOf` (`e pos l`), `elementOf` (`e in s`), `subset` (`< > <= >=`), `intersection` (`&&`), `union` (`||`), `diff` (`-`), and `concat` (`+`).
 - Role: predicate (one `@NelumboMethod` per operation)
-- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound — or a collection itself is unbound — the method returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). See [`reference/stdlib/collections.md`](stdlib/collections.md#operations).
+- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound — or a collection itself is unbound — the method returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). See [`packages/collections.md`](../packages/collections.md#operations).
 
 ---
 
@@ -323,6 +325,6 @@ Looking at the stdlib with this lens — **what is native and what is not** — 
 ## See also
 
 - [`native-api.md`](native-api.md) — the API surface: `infer`, `InferResult`, the helper methods, the completeness-flag convention
-- [`../guides/native-cookbook.md`](../guides/native-cookbook.md) — hands-on recipes for writing new natives
-- [`../explanation/architecture.md`](../explanation/architecture.md) — why the Java/Nelumbo split is drawn where it is
-- [`stdlib/`](stdlib/) — per-module reference for what each stdlib module exports
+- [`../guides/native-cookbook.md`](../../guides/native-cookbook.md) — hands-on recipes for writing new natives
+- [`../explanation/architecture.md`](../../explanation/architecture.md) — why the Java/Nelumbo split is drawn where it is
+- [`stdlib/`](../stdlib/) — per-module reference for what each stdlib module exports

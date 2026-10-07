@@ -2,7 +2,7 @@
 
 The Nelumbo standard library is around 300 lines of Nelumbo across seven files. That is remarkably small — and because it is written in Nelumbo, reading it is one of the best ways to learn how the language is actually used.
 
-This guide walks through all seven modules in dependency order, showing how each builds on the previous ones, what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
+This guide walks through all seven modules in dependency order. It starts with `nelumbo.lang` and `nelumbo.logic`, which define the syntax and the logic every package builds on. Then come the optional packages, starting with `nelumbo.integers`, which the other four import. Along the way it shows what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
 
 The files:
 
@@ -11,7 +11,7 @@ The files:
 3. [`integers.nl`](#3-nelumbointegers-36-lines) — 36 lines — arithmetic and comparison
 4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
 5. [`strings.nl`](#5-nelumbostrings-24-lines) — 24 lines — string operations
-6. [`collections.nl`](#6-nelumbocollections-21-lines) — 21 lines — generic `Set<E>` and `List<E>`, plus set-builder notation
+6. [`collections.nl`](#6-nelumbocollections-60-lines) — 60 lines — generic `Set<E>` and `List<E>`, plus set-builder notation
 7. [`datetime.nl`](#7-nelumbodatetime-96-lines) — 96 lines — ISO 8601 dates, times, date-times, and durations
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
@@ -76,7 +76,7 @@ P ::= (<P>)   @nelumbo.lang.Parenthesized
 - The `Pattern` block is the densest part of the file: it uses quoted operator characters (`"<"`, `"("`, `"|"`, `","`, `")"`, …) to talk about the very `<...>` syntax those characters have meaning in. This is the meta-syntax describing itself.
 - The `Type P` / `P ::= (<P>)` pair at the end is the canonical demonstration of generics. `collections.nl` uses the same mechanism for `Set<E>` and `List<E>`.
 
-See [`../reference/stdlib/lang.md`](../reference/stdlib/lang.md) for the full annotated walk-through.
+See [`../reference/lang/index.md`](../reference/lang/index.md) for the full annotated walk-through.
 
 ---
 
@@ -382,7 +382,7 @@ a + "bar"     = "foobar" ? [(a="foo")][..]     // solve for prefix
 "foo" + a     = "foobar" ? [(a="bar")][..]     // solve for suffix
 ```
 
-All three work from the same rule and the same native. The `Strings#string_concat` method handles the three combinations internally — see [`native-classes.md`](../reference/native-classes.md#strings) for how.
+All three work from the same rule and the same native. The `Strings#string_concat` method handles the three combinations internally — see [`native-classes.md`](../reference/core/native-classes.md#strings) for how.
 
 ---
 
@@ -426,7 +426,7 @@ E e   Boolean c   Set<E> s
 - **`Type E`** — the declaration that introduces a generic type parameter. `lang.nl` uses the same mechanism for parenthesisation (`Type P; P ::= (<P>)`); this is its first use to define container types.
 - **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype.
 - **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`.
-- **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `< > <= >=`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing `e pos l`. Each is a relation backed by the `Collections` native class and runs in both directions. See [`reference/stdlib/collections.md`](../reference/stdlib/collections.md#operations) for the full table.
+- **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `< > <= >=`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing `e pos l`. Each is a relation backed by the `Collections` native class and runs in both directions. See [`reference/packages/collections.md`](../reference/packages/collections.md#operations) for the full table.
 
 ### How the literal syntax works
 
@@ -504,7 +504,7 @@ The same rewrites as the numeric modules. Subtraction is `datetime_add` permuted
 - **Periods carry two semantics at once.** They use *field-based* equality (`P1M != P30D`) but a *nominal* magnitude for ordering (months = 30 days, years = 365). The module is a compact case study in modelling domain semantics through the native's `equals`/`compare`, not the grammar.
 - **Validation happens at parse time.** Invalid dates and malformed periods reject with `file:line:col` during parsing, so they never reach the query engine as falsehoods.
 
-See [`../reference/stdlib/datetime.md`](../reference/stdlib/datetime.md) for the full per-operator reference and [`datetimeTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/datetimeTest.nl) for the executable specification.
+See [`../reference/packages/datetime.md`](../reference/packages/datetime.md) for the full per-operator reference and [`datetimeTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/datetimeTest.nl) for the executable specification.
 
 ---
 
@@ -525,8 +525,8 @@ When you are writing your own module, you are writing in the same style the stdl
 
 ## See also
 
-- [`../reference/stdlib/`](../reference/stdlib/) — per-module reference with exports summary
-- [`../reference/native-classes.md`](../reference/native-classes.md) — catalogue of every shipped native
+- [`nelumbo.lang`](../reference/lang/index.md), [`nelumbo.logic`](../reference/logic/index.md) and the [packages](../reference/packages/) — per-module reference with exports summary
+- [`../reference/native-classes.md`](../reference/core/native-classes.md) — catalogue of every shipped native
 - [`writing-your-own-module.md`](writing-your-own-module.md) — build a library in the same style
 - [`native-cookbook.md`](native-cookbook.md) — write natives in the same style
 - [`../explanation/architecture.md`](../explanation/architecture.md) — why the stdlib is a library, not part of the language

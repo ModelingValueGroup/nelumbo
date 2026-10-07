@@ -34,36 +34,38 @@ example file in the project is unreadable.
 - [Sandbox](https://nelumbo.nl/sandbox.html): a live editor; results appear inline as you type, no run button
 - [Feature tour](https://nelumbo.nl/tour.html): eight guided sections with live demos and self-checking exercises
 
-## Language reference
+## Language reference by level
 
-- [Grammar](https://nelumbo.nl/docs/reference/grammar.html): the core syntax of `.nl` files
-- [Operators](https://nelumbo.nl/docs/reference/operators.html): complete operator catalogue
-- [Built-in tokens and pattern holes](https://nelumbo.nl/docs/reference/built-in-tokens.html): `<NUMBER>`, `<STRING>`, `<Variable>` and friends
-- [Precedence and associativity](https://nelumbo.nl/docs/reference/precedence-and-associativity.html): the `#N` system
-- [Visibility](https://nelumbo.nl/docs/reference/visibility.html): `private`, `hidden`, `visible`, and scope blocks
-- [Three-valued logic](https://nelumbo.nl/docs/reference/three-valued-logic.html): the semantic foundation, with truth tables
-- [Test expression semantics](https://nelumbo.nl/docs/reference/test-expression-semantics.html): formal definition of when a test passes
-- [Writing rules](https://nelumbo.nl/docs/reference/writing-rules.html): `<=>`, guards, merging, contradictions
+- [Bootstrap grammar](https://nelumbo.nl/docs/reference/core/bootstrap.html): the syntax hardcoded in Java so that `lang.nl` can be loaded
+- [nelumbo.lang](https://nelumbo.nl/docs/reference/lang/index.html): the bootstrap layer - token types, object hierarchy, the pattern meta-grammar, top-level statements
+- [Grammar](https://nelumbo.nl/docs/reference/lang/grammar.html): types, patterns, variables, scope blocks and `::>` - the syntax-shaping declarations from `nelumbo.lang`
+- [Built-in tokens and pattern holes](https://nelumbo.nl/docs/reference/lang/built-in-tokens.html): `<NUMBER>`, `<STRING>`, `<Variable>` and friends
+- [Precedence and associativity](https://nelumbo.nl/docs/reference/lang/precedence-and-associativity.html): the `#N` system
+- [Visibility](https://nelumbo.nl/docs/reference/lang/visibility.html): `private`, `hidden`, `visible`, and scope blocks
+- [nelumbo.logic](https://nelumbo.nl/docs/reference/logic/index.html): Boolean, connectives, quantifiers, equality, and the `fact` / `<=>` / `?` statements
+- [Operators](https://nelumbo.nl/docs/reference/logic/operators.html): the logical operators and the `fact` / `<=>` / `?` forms from `nelumbo.logic`
+- [Statements](https://nelumbo.nl/docs/reference/logic/statements.html): fact types, facts, queries and tests
+- [Writing rules](https://nelumbo.nl/docs/reference/logic/writing-rules.html): `<=>`, guards, merging, contradictions
+- [Three-valued logic](https://nelumbo.nl/docs/reference/logic/three-valued-logic.html): the semantic foundation, with truth tables
+- [Test expression semantics](https://nelumbo.nl/docs/reference/logic/test-expression-semantics.html): formal definition of when a test passes
 - [Formatting](https://nelumbo.nl/docs/reference/formatting.html): the canonical layout the LSP formatter produces
 
-## Standard library
+## Optional packages
 
-- [nelumbo.lang](https://nelumbo.nl/docs/reference/stdlib/lang.html): the bootstrap layer - token types, object hierarchy, the pattern meta-grammar, top-level statements
-- [nelumbo.logic](https://nelumbo.nl/docs/reference/stdlib/logic.html): Boolean, connectives, quantifiers, equality, and the `fact` / `<=>` / `?` statements
-- [nelumbo.integers](https://nelumbo.nl/docs/reference/stdlib/integers.html): arbitrary-precision integer arithmetic
-- [nelumbo.rationals](https://nelumbo.nl/docs/reference/stdlib/rationals.html): exact rationals
-- [nelumbo.strings](https://nelumbo.nl/docs/reference/stdlib/strings.html): strings, concatenation, conversion
-- [nelumbo.collections](https://nelumbo.nl/docs/reference/stdlib/collections.html): generic `Set<E>` and `List<E>`, set-builder notation, operations
-- [nelumbo.datetime](https://nelumbo.nl/docs/reference/stdlib/datetime.html): ISO 8601 dates, times, date-times, durations
+- [nelumbo.integers](https://nelumbo.nl/docs/reference/packages/integers.html): arbitrary-precision integer arithmetic
+- [nelumbo.rationals](https://nelumbo.nl/docs/reference/packages/rationals.html): exact rationals
+- [nelumbo.strings](https://nelumbo.nl/docs/reference/packages/strings.html): strings, concatenation, conversion
+- [nelumbo.collections](https://nelumbo.nl/docs/reference/packages/collections.html): generic `Set<E>` and `List<E>`, set-builder notation, operations
+- [nelumbo.datetime](https://nelumbo.nl/docs/reference/packages/datetime.html): ISO 8601 dates, times, date-times, durations
 - [Standard library tour](https://nelumbo.nl/docs/guides/stdlib-tour.html): all seven modules read in dependency order
 
 ## Extending Nelumbo
 
-- [Architecture](https://nelumbo.nl/docs/explanation/architecture.html): the layering - Java core, `lang.nl`, `logic.nl`, numeric/data stdlib, user code
+- [Architecture](https://nelumbo.nl/docs/explanation/architecture.html): the levels - Java core, `nelumbo.lang`, `nelumbo.logic`, optional packages, user code - and how imports bring them in
 - [Writing your own module](https://nelumbo.nl/docs/guides/writing-your-own-module.html): packaging a reusable library
 - [Language transformations](https://nelumbo.nl/docs/guides/language-transformations.html): the `::>` mechanism for new keywords (under construction)
-- [Native API](https://nelumbo.nl/docs/reference/native-api.html): the `Predicate`, `InferResult`, `infer()` surface for Java primitives
-- [Native classes catalogue](https://nelumbo.nl/docs/reference/native-classes.html): every shipped `@`-bound class
+- [Native API](https://nelumbo.nl/docs/reference/core/native-api.html): the `Predicate`, `InferResult`, `infer()` surface for Java primitives
+- [Native classes catalogue](https://nelumbo.nl/docs/reference/core/native-classes.html): every shipped `@`-bound class
 - [Native cookbook](https://nelumbo.nl/docs/guides/native-cookbook.html): five recipes with complete skeletons
 
 ## Tooling

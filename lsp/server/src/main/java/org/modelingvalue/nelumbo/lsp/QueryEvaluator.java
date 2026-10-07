@@ -118,7 +118,7 @@ public final class QueryEvaluator {
             String inferred = ir == null ? "" : ir.toString();
             return QueryResult.mismatch(inferred, shortMsg, expectedRange(query));
         }
-        return QueryResult.error("Problem executing " + query.getClass().getSimpleName() + ": " + exc.getMessage());
+        return QueryResult.error("Problem executing " + query.getClass().getSimpleName() + ": " + exc.getShortMessage());
     }
 
     /**

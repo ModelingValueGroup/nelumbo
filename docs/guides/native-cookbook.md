@@ -4,8 +4,8 @@ This guide is a hands-on reference for writing new Java natives bound to Nelumbo
 
 Before diving in, make sure you have read:
 
-- [`../reference/native-api.md`](../reference/native-api.md) — the API surface (`Predicate`, `infer`, `InferResult`, the helper family `factCC` / `factCI` / etc.)
-- [`../reference/native-classes.md`](../reference/native-classes.md) — the catalogue of what ships today
+- [`../reference/native-api.md`](../reference/core/native-api.md) — the API surface (`Predicate`, `infer`, `InferResult`, the helper family `factCC` / `factCI` / etc.)
+- [`../reference/native-classes.md`](../reference/core/native-classes.md) — the catalogue of what ships today
 
 And before reaching for a native at all, confirm you are not on the wrong extension path. **The in-language path (rules, transformations, modules) handles most cases.** See [`writing-your-own-module.md`](writing-your-own-module.md) and [`language-transformations.md`](language-transformations.md). Natives are for genuine primitives.
 
@@ -92,11 +92,11 @@ A Predicate native computes its result in one of two ways: a `@NelumboMethod`, o
 
 ## Table of recipes
 
-1. [Three-arg functional relation](#recipe-1-three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`, `datetime.Add` (`infer`)
-2. [Comparison predicate](#recipe-2-comparison-predicate) — `Integers#gt`, `Strings#string_length`, `datetime.GreaterThan` (`infer`)
-3. [Constant / literal type](#recipe-3-constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
-4. [Binary logical connective](#recipe-4-binary-logical-connective) — `And`, `Or`
-5. [Container / collection literal](#recipe-5-container--collection-literal) — `NSet`, `NList`
+1. [Three-arg functional relation](#recipe-1--three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`, `datetime.Add` (`infer`)
+2. [Comparison predicate](#recipe-2--comparison-predicate) — `Integers#gt`, `Strings#string_length`, `datetime.GreaterThan` (`infer`)
+3. [Constant / literal type](#recipe-3--constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
+4. [Binary logical connective](#recipe-4--binary-logical-connective) — `And`, `Or`
+5. [Container / collection literal](#recipe-5--container--collection-literal) — `NSet`, `NList`
 
 Each recipe includes: when to use it, the skeleton class, the key decisions you must make, and pointers to the shipped implementation to study.
 
@@ -577,8 +577,8 @@ Before you consider a new native "done":
 
 ## See also
 
-- [`../reference/native-api.md`](../reference/native-api.md) — full API surface reference
-- [`../reference/native-classes.md`](../reference/native-classes.md) — catalogue of shipped natives
+- [`../reference/native-api.md`](../reference/core/native-api.md) — full API surface reference
+- [`../reference/native-classes.md`](../reference/core/native-classes.md) — catalogue of shipped natives
 - [`../explanation/architecture.md`](../explanation/architecture.md) — why Java/Nelumbo is split where it is
 - [`writing-your-own-module.md`](writing-your-own-module.md) — the in-language alternative
 - [`language-transformations.md`](language-transformations.md) — the meta-level alternative

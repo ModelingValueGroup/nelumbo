@@ -1,5 +1,7 @@
 # `nelumbo.datetime`
 
+> **Level:** optional package `nelumbo.datetime`. Write `import nelumbo.datetime`; it brings in `nelumbo.integers`, `nelumbo.logic` and `nelumbo.lang` transitively.
+
 ISO 8601 dates, times, date-times, and durations, with chronological comparison and reversible arithmetic.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 95 lines.
@@ -38,7 +40,7 @@ They are **not** in a subtype relationship with one another, and there is no imp
 
 ## Literals
 
-All four literals are written inside a **connected-token group** (`<[> … <]>`), which forbids whitespace between the inner tokens — `2024-01-15` must be written tightly, not `2024 - 01 - 15`. See [`built-in-tokens.md`](../built-in-tokens.md) for the connected-token mechanism.
+All four literals are written inside a **connected-token group** (`<[> … <]>`), which forbids whitespace between the inner tokens — `2024-01-15` must be written tightly, not `2024 - 01 - 15`. See [`built-in-tokens.md`](../lang/built-in-tokens.md) for the connected-token mechanism.
 
 ```
 Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                              @nelumbo.datetime.NDate
@@ -50,7 +52,7 @@ Period   ::= <[> P … <]>                                                      
 - **`Date`** — `YYYY-MM-DD`. Parsed into a `LocalDate`; out-of-range values (e.g. month 13) are rejected **at parse time** with a `file:line:col` error, not as a query falsehood.
 - **`Time`** — `HH:MM`, optionally `:SS` and a `.fff` sub-second fraction. Backed by `LocalTime`. A `:00` seconds field — and a zero fraction — is dropped on display (`20:04:00.00` prints as `20:04`, `20:04:00.30` as `20:04:00.300`).
 - **`DateTime`** — a `Date`, a literal `T`, and a `Time`. Backed by a zone-less `LocalDateTime`; there is no timezone or offset component.
-- **`Period`** — an ISO 8601 duration: `P` followed by date units `Y`/`M`/`W`/`D` and/or a `T`-introduced time section with `H`/`M`/`S` (`M` is months before the `T`, minutes after it). The two halves are factored into the [named patterns](lang.md#named-patterns) `YMWD_PERIOD` and `TIME_PERIOD`, so the literal grammar reads `<[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]>`. Units must appear in canonical order without repeats — `P1D1Y` and `P1D1D` are parse errors. The value normalizes the time part on construction, so `P1YT90M` becomes `P1YT1H30M` (the calendar part is left as written).
+- **`Period`** — an ISO 8601 duration: `P` followed by date units `Y`/`M`/`W`/`D` and/or a `T`-introduced time section with `H`/`M`/`S` (`M` is months before the `T`, minutes after it). The two halves are factored into the [named patterns](../lang/index.md#named-patterns) `YMWD_PERIOD` and `TIME_PERIOD`, so the literal grammar reads `<[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]>`. Units must appear in canonical order without repeats — `P1D1Y` and `P1D1D` are parse errors. The value normalizes the time part on construction, so `P1YT90M` becomes `P1YT1H30M` (the calendar part is left as written).
 
 ```
 2024-01-15T10:30          = a    ? [(a=2024-01-15T10:30)][..]
@@ -169,7 +171,7 @@ One comparison convention is worth knowing:
 | `GreaterThan`     | `>` on all four types                         | comparison predicate          |
 | `IsoDuration`     | —                                             | the immutable value record behind `Period` (not `@`-bound) |
 
-`IsoDuration` is the value type, not a functor: it pairs a `java.time.Period` with a `java.time.Duration` and supplies the field-based equality, nominal-magnitude comparison, and `toString` normalization described above. See [`native-classes.md`](../native-classes.md) for the full catalogue.
+`IsoDuration` is the value type, not a functor: it pairs a `java.time.Period` with a `java.time.Duration` and supplies the field-based equality, nominal-magnitude comparison, and `toString` normalization described above. See [`native-classes.md`](../core/native-classes.md) for the full catalogue.
 
 ---
 
@@ -190,6 +192,6 @@ Added to what `nelumbo.integers` already exports:
 ## See also
 
 - [`integers.md`](integers.md) — the relational `add`/`>` idiom this module mirrors, lifted to dates and durations
-- [`built-in-tokens.md`](../built-in-tokens.md) — the `<[> … <]>` connected-token groups the literals are built from
-- [`native-classes.md`](../native-classes.md) — catalogue of the `@`-bound classes, including the datetime natives
+- [`built-in-tokens.md`](../lang/built-in-tokens.md) — the `<[> … <]>` connected-token groups the literals are built from
+- [`native-classes.md`](../core/native-classes.md) — catalogue of the `@`-bound classes, including the datetime natives
 - [`datetimeTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/datetimeTest.nl) — executable specification covering every operator and the parse-time edge cases
