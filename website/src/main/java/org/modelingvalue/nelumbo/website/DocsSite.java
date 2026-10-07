@@ -29,17 +29,22 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.commonmark.Extension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.AbstractVisitor;
 import org.commonmark.node.Code;
+import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.node.Heading;
 import org.commonmark.node.Link;
 import org.commonmark.node.Node;
 import org.commonmark.node.Text;
 import org.commonmark.parser.Parser;
+import org.commonmark.renderer.NodeRenderer;
 import org.commonmark.renderer.html.AttributeProvider;
+import org.commonmark.renderer.html.HtmlNodeRendererContext;
+import org.commonmark.renderer.html.HtmlWriter;
 import org.commonmark.renderer.html.HtmlRenderer;
 
 /**
@@ -100,7 +105,8 @@ public final class DocsSite {
         });
         for (Page page : pages) {
             HtmlRenderer renderer = HtmlRenderer.builder().extensions(EXTENSIONS)
-                    .attributeProviderFactory(context -> new DocsAttributes(page.path())).build();
+                    .attributeProviderFactory(context -> new DocsAttributes(page.path()))
+                    .nodeRendererFactory(NelumboCodeRenderer::new).build();
             String title = page.path().equals(INDEX_PAGE) ? page.title() : page.title() + " - Nelumbo docs";
             htmlByUrl.put(page.url(), fill(title, nav(pages, page.url()), renderer.render(page.document())));
         }
@@ -272,6 +278,45 @@ public final class DocsSite {
             } else if (node instanceof Link && attributes.containsKey("href")) {
                 attributes.put("href", rewriteLink(attributes.get("href"), pagePath));
             }
+        }
+    }
+
+    /** Renders {@code ```nelumbo} blocks with {@link NelumboHighlighter} spans; every other block as commonmark does. */
+    private static final class NelumboCodeRenderer implements NodeRenderer {
+        private final HtmlNodeRendererContext context;
+
+        NelumboCodeRenderer(HtmlNodeRendererContext context) {
+            this.context = context;
+        }
+
+        @Override
+        public Set<Class<? extends Node>> getNodeTypes() {
+            return Set.of(FencedCodeBlock.class);
+        }
+
+        @Override
+        public void render(Node node) {
+            FencedCodeBlock block = (FencedCodeBlock) node;
+            String info = block.getInfo() == null ? "" : block.getInfo().strip();
+            String language = info.isEmpty() ? null : info.split("\\s+")[0];
+            String html = "nelumbo".equals(language) ? NelumboHighlighter.shared().highlight(block.getLiteral()) : null;
+            // the same markup commonmark's own renderer produces, so unhighlighted blocks look as before
+            Map<String, String> attributes = new LinkedHashMap<>();
+            if (language != null) {
+                attributes.put("class", "language-" + language);
+            }
+            HtmlWriter writer = context.getWriter();
+            writer.line();
+            writer.tag("pre", context.extendAttributes(node, "pre", Map.of()));
+            writer.tag("code", context.extendAttributes(node, "code", attributes));
+            if (html != null) {
+                writer.raw(html);
+            } else {
+                writer.text(block.getLiteral());
+            }
+            writer.tag("/code");
+            writer.tag("/pre");
+            writer.line();
         }
     }
 }

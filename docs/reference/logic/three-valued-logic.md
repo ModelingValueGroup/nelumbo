@@ -123,21 +123,21 @@ The common cases are rows 1, 2, and 6 (the last of which is what `[..][..]` repr
 
 Because Nelumbo's `!` is genuine negation, De Morgan's laws hold:
 
-```
+```nelumbo
 !(a != T1 & a != T2)  ≡  (a = T1 | a = T2)
 !(a != T1 | a != T2)  ≡  (a = T1 & a = T2)
 ```
 
 Both are verified in `logicTest.nl`:
 
-```
+```nelumbo
 !(a!=T1 & a!=T2)  ? [(a=T1),(a=T2)][..]
 !(a!=T1 | a!=T2)  ? [][(a=T1),(a=T2),..]
 ```
 
 Similarly, quantifier duality holds:
 
-```
+```nelumbo
 !A[x](p)  ≡  E[x](!p)
 !E[x](p)  ≡  A[x](!p)
 ```

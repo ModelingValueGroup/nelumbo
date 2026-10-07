@@ -4,7 +4,7 @@
 
 When you declare a pattern with `::=`, everything in angle brackets (`<...>`) is a **hole** — a placeholder that the parser fills in with a matching fragment of input. This page catalogues the kinds of hole that are built into Nelumbo and used throughout the standard library.
 
-```
+```nelumbo
 Integer ::= <NUMBER>                  @org.modelingvalue.nelumbo.integers.NInteger
 Integer ::= <Integer> + <Integer>     #40
 Set<E>  ::= { <(> <E> <,> , <)*> }    @org.modelingvalue.nelumbo.collections.NSet
@@ -22,7 +22,7 @@ These holes match a single token produced by the lexer, not an expression built 
 
 Matches an unsigned integer token: one or more decimal digits.
 
-```
+```nelumbo
 Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <(> <(> <NUMBER> <|> <NAME> <)> <)+> <)?> <]>
             @org.modelingvalue.nelumbo.integers.NInteger
 ```
@@ -31,7 +31,7 @@ Examples that match `<NUMBER>` on its own: `0`, `1`, `42`, `1000000`. The leadin
 
 Nelumbo's integer literal therefore admits **base-N literals** of the form `N#digits`, where `N` is the base (up to 36) and `digits` are digits in that base. This is how arbitrary-precision integers are printed for readability once they get large:
 
-```
+```nelumbo
 36#22r8fozas3n8w3
 36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf
 ```
@@ -40,7 +40,7 @@ Both of the above are base-36 integer literals — the values of `fib(100)` and 
 
 Rational literals are likewise built by composing two `<NUMBER>` tokens around a `.`:
 
-```
+```nelumbo
 Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>
              @org.modelingvalue.nelumbo.rationals.Rational
 ```
@@ -51,7 +51,7 @@ Examples that match: `0.0`, `-1.5`, `3.14`. There is no separate `<DECIMAL>` tok
 
 Matches a double-quoted string literal:
 
-```
+```nelumbo
 String ::= <STRING>   @org.modelingvalue.nelumbo.strings.NString
 ```
 
@@ -61,7 +61,7 @@ Examples that match: `""`, `"foo"`, `"Hello, World!"`.
 
 Matches an identifier token — the kind of lexical fragment used for literal enumerations and parameters in pattern transformations:
 
-```
+```nelumbo
 Root ::= attr <Type> <NAME> <Type>  #100
 ```
 
@@ -75,7 +75,7 @@ From `transformation.nl`. The `<NAME>` hole captures a raw identifier that the t
 
 A type hole matches an expression of type `T`. The expression may itself be complex — it can be any pattern declared for type `T`, including the one currently being declared (allowing recursive patterns like `<Integer> + <Integer>`).
 
-```
+```nelumbo
 Integer ::= <Integer> + <Integer>    #40
 Integer ::= fib(<Integer>)
 Boolean ::= even(<Integer>)
@@ -83,7 +83,7 @@ Boolean ::= even(<Integer>)
 
 A type hole may carry a **precedence annotation**:
 
-```
+```nelumbo
 T ::= <Boolean#5> ? <T> : <T>
 ```
 
@@ -91,7 +91,7 @@ From `ternary.nl`. The `#5` restricts what can appear in the hole to expressions
 
 A type hole may also be marked with a visibility modifier:
 
-```
+```nelumbo
 Integer ::= <hidden Integer>  && <Integer>  #35
 Integer ::= <visible Integer> &  <Integer>  #35
 ```
@@ -104,7 +104,7 @@ From `hidden.nl`. These restrict the hole to hidden or visible variables respect
 
 `<Variable>` matches a variable binding site, not a general expression. It is what quantifiers use to introduce a bound variable:
 
-```
+```nelumbo
 Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
             @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
 ```
@@ -130,7 +130,7 @@ Inside a pattern, special angle-bracketed operators build repeating and optional
 
 ### Examples
 
-```
+```nelumbo
 Repetition  ::= { <(> <Integer> <,> , <)*> }     // {}, {5}, {3,5,7}
 Option      ::= <(> super <)?> fast              // "fast" or "super fast"
 Alternation ::= <(> A <|> B <|> C <)>            // "A", "B", or "C"
@@ -142,7 +142,7 @@ In a repetition, the literal that follows `<,>` is the actual separator token (`
 
 The collections module uses repetition to define `Set` and `List`:
 
-```
+```nelumbo
 Set<E>  ::= { <(> <E> <,> , <)*> }
 List<E> ::= [ <(> <E> <,> , <)*> ]
 ```
@@ -157,7 +157,7 @@ Two trailing annotations can attach to a pattern declaration (not to individual 
 
 ### `#N` — precedence
 
-```
+```nelumbo
 Integer ::= <Integer> + <Integer>  #40
 ```
 
@@ -165,7 +165,7 @@ Declares that this pattern has precedence 40. See [`precedence-and-associativity
 
 ### `@ClassName` — native binding
 
-```
+```nelumbo
 Integer ::= <NUMBER>  @org.modelingvalue.nelumbo.integers.NInteger
 ```
 

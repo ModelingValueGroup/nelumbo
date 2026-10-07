@@ -10,7 +10,7 @@ This guide shows how to structure a module, what to export and what to keep priv
 
 Any `.nl` file is a module. A trivial one:
 
-```
+```nelumbo
 // even.nl
 import nelumbo.integers
 
@@ -23,7 +23,7 @@ even(x) <=> E[y](y = x/2)
 
 Another file can use it:
 
-```
+```nelumbo
 // mycode.nl
 import org.modelingvalue.nelumbo.examples.even
 
@@ -59,7 +59,7 @@ By default, **every non-`private` declaration is exported** to any module that i
 
 To hide a declaration, mark it `private`:
 
-```
+```nelumbo
 private Boolean ::= helper(<T>, <T>, <T>)  @com.example.Helper
 ```
 
@@ -83,7 +83,7 @@ A well-structured module looks, in order:
 
 `integers.nl` is a clean example of this layout:
 
-```
+```nelumbo
 import nelumbo.logic                          // 1. imports
 
 Integer :: Object                             // 2. types
@@ -122,7 +122,7 @@ A useful discipline: **a library module should be idempotent and side-effect-fre
 
 Put tests for a library in a **separate** `.nl` file that imports the library and contains the tests:
 
-```
+```nelumbo
 // mymodule.nl          ← the library
 import nelumbo.integers
 ...rules...
@@ -142,7 +142,7 @@ If your project grows, structure it the same way the stdlib does: a small number
 
 A plausible project layout:
 
-```
+```text
 src/main/resources/com/example/
   core.nl              // fundamental types and rules
   pricing.nl           // imports core
@@ -164,7 +164,7 @@ A practical example: the `attr` transformation in `transformation.nl` is a DSL f
 
 Packaging a transformation as a module is a common structure for a reusable DSL:
 
-```
+```nelumbo
 // myattrs.nl
 import nelumbo.strings
 
@@ -188,7 +188,7 @@ See [`language-transformations.md`](language-transformations.md) for the full me
 
 If your module needs a Java-backed primitive, you write the Java class separately (following [`native-cookbook.md`](native-cookbook.md)) and reference it with `@`:
 
-```
+```nelumbo
 // mymodule.nl
 private Boolean ::= my_primitive(<T>, <T>)  @com.example.MyPrimitive
 

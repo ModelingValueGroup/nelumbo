@@ -6,7 +6,7 @@ Nelumbo is built in layers. Reading a single `.nl` file can make it feel like on
 
 ## The layers
 
-```
+```text
  ┌──────────────────────────────────────────────────┐
  │              User programs and tests             │    .nl files
  │  family.nl, fibonacci.nl, your DSL, your rules   │
@@ -37,7 +37,7 @@ Each layer is built out of the layer below, and each layer is accessible to laye
 
 A file reaches a level through `import`. The Java core is always there. Everything else comes in through an import chain:
 
-```
+```text
 nelumbo.lang  <-  nelumbo.logic  <-  nelumbo.integers  <-  strings / rationals / collections / datetime
 ```
 
@@ -84,7 +84,7 @@ Reference: [`reference/logic/`](../reference/logic/index.md).
 
 A file imports the packages it needs. They are ordinary Nelumbo. They use `import`, `::`, `::=`, `<=>`, `::>`, and `private` exactly the way your code does. What sets them apart is that they bind certain patterns to Java classes using `@`:
 
-```
+```nelumbo
 private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Integers
 ```
 
@@ -141,7 +141,7 @@ When in doubt, reach for the in-language path first. Drop to Java only when the 
 
 Consider the familiar Fibonacci test:
 
-```
+```nelumbo
 fib(5) = f  ?  [(f=5)][..]
 ```
 

@@ -8,7 +8,7 @@ ISO 8601 dates, times, date-times, and durations, with chronological comparison 
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.datetime
 ```
 
@@ -18,7 +18,7 @@ import nelumbo.datetime
 
 ## Types
 
-```
+```nelumbo
 DateTime :: Object
 Date     :: Object
 Time     :: Object
@@ -42,7 +42,7 @@ They are **not** in a subtype relationship with one another, and there is no imp
 
 All four literals are written inside a **connected-token group** (`<[> … <]>`), which forbids whitespace between the inner tokens — `2024-01-15` must be written tightly, not `2024 - 01 - 15`. See [`built-in-tokens.md`](../lang/built-in-tokens.md) for the connected-token mechanism.
 
-```
+```nelumbo
 Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                              @nelumbo.datetime.NDate
 Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]> @nelumbo.datetime.NTime
 DateTime ::= <[> <Date> T <Time#50> <]>                                          @nelumbo.datetime.NDateTime
@@ -54,7 +54,7 @@ Period   ::= <[> P … <]>                                                      
 - **`DateTime`** — a `Date`, a literal `T`, and a `Time`. Backed by a zone-less `LocalDateTime`; there is no timezone or offset component.
 - **`Period`** — an ISO 8601 duration: `P` followed by date units `Y`/`M`/`W`/`D` and/or a `T`-introduced time section with `H`/`M`/`S` (`M` is months before the `T`, minutes after it). The two halves are factored into the [named patterns](../lang/index.md#named-patterns) `YMWD_PERIOD` and `TIME_PERIOD`, so the literal grammar reads `<[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]>`. Units must appear in canonical order without repeats — `P1D1Y` and `P1D1D` are parse errors. The value normalizes the time part on construction, so `P1YT90M` becomes `P1YT1H30M` (the calendar part is left as written).
 
-```
+```nelumbo
 2024-01-15T10:30          = a    ? [(a=2024-01-15T10:30)][..]
 2024-01-15T10:30:00.30    = a    ? [(a=2024-01-15T10:30:00.300)][..]
 2024-01-15                = c    ? [(c=2024-01-15)][..]
@@ -68,7 +68,7 @@ P1YT90M                   = x    ? [(x=P1YT1H30M)][..]
 
 ## Arithmetic
 
-```
+```nelumbo
 DateTime ::= <DateTime> + <Period>   #40,   <DateTime> - <Period>   #40
 Date     ::= <Date>     + <Period>   #40,   <Date>     - <Period>   #40
 Time     ::= <Time>     + <Period>   #40,   <Time>     - <Period>   #40
@@ -88,7 +88,7 @@ Period   ::= <DateTime> - <DateTime> #40,   <Date> - <Date> #40,   <Time> - <Tim
 
 (where `<instant>` is `DateTime`, `Date`, or `Time`). Underneath, five `private` natives do the work:
 
-```
+```nelumbo
 private Boolean ::= datetime_add(<DateTime>,<Period>,<DateTime>)  @nelumbo.datetime.Add,
                     date_add(<Date>,<Period>,<Date>)              @nelumbo.datetime.Add,
                     time_add(<Time>,<Period>,<Time>)              @nelumbo.datetime.Add,
@@ -108,7 +108,7 @@ x*n=y  <=>  period_multiply(x,n,y)
 
 This is the same relational rewrite idiom as [`integers`](integers.md): subtraction is `datetime_add` read from a different angle, so all three of "instant + duration", "instant − duration", and "instant − instant" route through one native (`Add`). Because the relation has one unbound slot, **any** operand can be the unknown:
 
-```
+```nelumbo
 2024-01-15 + P1D = 2024-01-16                              ? [()][]          // verify
 2024-01-15 + P1D = c                                       ? [(c=2024-01-16)][..]   // compute result
 c + P1D = 2024-01-16                                       ? [(c=2024-01-15)][..]   // solve left instant
@@ -120,7 +120,7 @@ PT1H + PT30M = PT1H30M                                     ? [()][]
 
 **Type-matched durations.** `date_add` only accepts a `Period` whose *time* part is zero, and `time_add` only one whose *calendar* part is zero — adding `PT1H30M` to a bare `Date`, or `P1D` to a bare `Time`, has no result. `DateTime` accepts both parts:
 
-```
+```nelumbo
 2024-01-15T10:00:00 + PT1H30M = a   ? [(a=2024-01-15T11:30)][..]
 20:04 + PT1H = 21:04                 ? [()][]
 ```
@@ -129,7 +129,7 @@ PT1H + PT30M = PT1H30M                                     ? [()][]
 
 ## Comparison
 
-```
+```nelumbo
 Boolean ::= <DateTime> ">" <DateTime> #30 @nelumbo.datetime.GreaterThan, … "<", "<=", ">="
 Boolean ::= <Date>     ">" <Date>     #30 @nelumbo.datetime.GreaterThan, …
 Boolean ::= <Time>     ">" <Time>     #30 @nelumbo.datetime.GreaterThan, …
@@ -138,11 +138,11 @@ Boolean ::= <Period>   ">" <Period>   #30 @nelumbo.datetime.GreaterThan, …
 
 Each of the four types gets `>`, `<`, `<=`, `>=` at precedence 30. As in `integers`, only `>` is native; the other three are derived per type:
 
-```
+```nelumbo
 a<b   <=>  b>a              a<=b  <=>  a<b | a=b              a>=b  <=>  a>b | a=b
 ```
 
-```
+```nelumbo
 2024-01-16 > 2024-01-15                     ? [()][]
 20:04 > 20:05                               ? [][()]
 P2D > P1D                                   ? [()][]

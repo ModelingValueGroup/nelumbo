@@ -10,13 +10,13 @@ This page formally defines what a **query** produces, what a **test** compares, 
 
 A query is written as an expression followed by `?`:
 
-```
+```nelumbo
 E ?
 ```
 
 Running a query on expression `E` produces a **query result**: a pair
 
-```
+```text
 ( FactsSet , FactsIsClosed , FalsehoodsSet , FalsehoodsIsClosed )
 ```
 
@@ -37,7 +37,7 @@ A binding that is in neither set, on a side that is closed, has been **affirmati
 
 Query results are printed as:
 
-```
+```text
 [ facts-list ][ falsehoods-list ]
 ```
 
@@ -63,7 +63,7 @@ A binding is written as `(v1=value1, v2=value2, ...)` or as `()` for the empty b
 
 A test is written as:
 
-```
+```text
 E ? [ expected-facts ][ expected-falsehoods ]
 ```
 

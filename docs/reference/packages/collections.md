@@ -8,7 +8,7 @@ Generic sets and lists. The smallest stdlib module — and the only one that use
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.collections
 ```
 
@@ -18,7 +18,7 @@ import nelumbo.collections
 
 ## Types
 
-```
+```nelumbo
 Type E
 
 Collection<E>  :: Object
@@ -34,7 +34,7 @@ List<E>        :: Collection<E>
 
 ## Literals
 
-```
+```nelumbo
 Set<E>  ::= { <(> <E> <,> , <)*> }       @nelumbo.collections.NSet,
             { [ <E> ] ( <Boolean#0> ) }  @nelumbo.collections.SetBuilder
 List<E> ::= [ <(> <E> <,> , <)*> ]       @nelumbo.collections.NList
@@ -56,7 +56,7 @@ The `<(> ... <,> , <)*>` fragment is the zero-or-more comma-separated repetition
 
 `Set<E>` has a second literal form — set-builder notation, the logic-programming analogue of mathematical `{ e | c }`:
 
-```
+```nelumbo
 Set<E> ::= { [ <E> ] ( <Boolean#0> ) }   @nelumbo.collections.SetBuilder
 ```
 
@@ -65,7 +65,7 @@ Set<E> ::= { [ <E> ] ( <Boolean#0> ) }   @nelumbo.collections.SetBuilder
 
 `{[e](c)}` denotes *the set of all `e` for which `c` is a fact*. One native rule wires it up:
 
-```
+```nelumbo
 E e   Boolean c   Set<E> s
 
 {[e](c)} = s   <=>   build(e, c, s)
@@ -73,7 +73,7 @@ E e   Boolean c   Set<E> s
 
 `build` is a `private` predicate backed by `nelumbo.collections.BuildSet`. It is a **quantifier**: like `E[...]` and `A[...]`, it evaluates the condition under many bindings of the local element variable and strips that variable from the result, collecting the witnessing values into a set.
 
-```
+```nelumbo
 Integer i   Set<Integer> s
 
 {[i](|i|=10)} = s   ?   [(s={-10,10})][(s={0}),..]
@@ -91,26 +91,26 @@ The module exposes a set of operations as infix/prefix operators. Every one is a
 
 ### Cardinality — `|c|`
 
-```
+```nelumbo
 Integer ::= | <Collection<E>> | #35
 ```
 
 `|c| = n` is the number of elements in any `Collection<E>` (set *or* list). Computes the count from the collection, or checks a given count.
 
-```
+```nelumbo
 |{1,2,3}| = i   ?   [(i=3)][..]      ▸ i = 3
 |[1,2,3]| = 1   ?   [][()]           ▸ false: the list has 3 elements
 ```
 
 ### Membership — `e in c`
 
-```
+```nelumbo
 Boolean ::= <E> "in" <Collection<E>> #30
 ```
 
 `e in c` holds when `e` is an element of the collection (a member of a set, or an element at any index of a list). With an unbound element it **enumerates** the members:
 
-```
+```nelumbo
 1 in {1,2,3}    ?   [()][]                       ▸ true
 i in {1,2,3}    ?   [(i=1),(i=2),(i=3)][..]      ▸ enumerates members
 1 in [1,2,3]    ?   [()][]                       ▸ true for lists too
@@ -118,7 +118,7 @@ i in {1,2,3}    ?   [(i=1),(i=2),(i=3)][..]      ▸ enumerates members
 
 ### Subset / superset — `<` `>` `<=` `>=`
 
-```
+```nelumbo
 Boolean ::= <Set<E>> "<"  <Set<E>> #30,
             <Set<E>> ">"  <Set<E>> #30,
             <Set<E>> "<=" <Set<E>> #30,
@@ -127,7 +127,7 @@ Boolean ::= <Set<E>> "<"  <Set<E>> #30,
 
 `s1 < s2` holds when every element of `s1` is in `s2` — i.e. `s1 ⊆ s2`. Note this is the **non-strict** subset (it is backed by `containsAll`, so a set is a subset of itself); `s1 <= s2` is defined as `s1 < s2 | s1 = s2` and denotes the same relation, kept for symmetry with the integer comparison operators. `>`/`>=` are the mirror (superset).
 
-```
+```nelumbo
 {1,2}   < {1,2,3}   ?   [()][]      ▸ true
 {}      < {1,2,3}   ?   [()][]      ▸ the empty set is a subset of anything
 {1,2,3} < {}        ?   [][()]      ▸ false
@@ -135,13 +135,13 @@ Boolean ::= <Set<E>> "<"  <Set<E>> #30,
 
 ### Set algebra — `&&` `||` `-`
 
-```
+```nelumbo
 Set<E> ::= <Set<E>> && <Set<E>> #60,   ▸ intersection
            <Set<E>> || <Set<E>> #60,   ▸ union
            <Set<E>> -  <Set<E>> #50    ▸ difference
 ```
 
-```
+```nelumbo
 {3,4,5} && {1,2,3} = s   ?   [(s={3})][..]
 {3,4,5} || {1,2,3} = s   ?   [(s={1,2,3,4,5})][..]
 {3,4,5} -  {1,2,3} = s   ?   [(s={4,5})][..]
@@ -149,24 +149,24 @@ Set<E> ::= <Set<E>> && <Set<E>> #60,   ▸ intersection
 
 ### List concatenation — `+`
 
-```
+```nelumbo
 List<E> ::= <List<E>> + <List<E>> #50
 ```
 
-```
+```nelumbo
 [1,2,3] + [4,5] = l   ?   [(l=[1,2,3,4,5])][..]
 [1,2,3] + []    = l   ?   [(l=[1,2,3])][..]
 ```
 
 ### List index — `e pos l`
 
-```
+```nelumbo
 Integer ::= <E> "pos" <List<E>> #40
 ```
 
 `e pos l = i` relates an element `e` to its **0-based** index `i` in list `l`. It runs either way — find the index of an element, or find the element at an index — and a duplicated element yields one solution per occurrence:
 
-```
+```nelumbo
 2 pos [1,2,3] = i   ?   [(i=1)][..]      ▸ 2 sits at index 1
 i pos [1,2,3] = 2   ?   [(i=3)][..]      ▸ index 2 holds the element 3
 ```
@@ -177,7 +177,7 @@ i pos [1,2,3] = 2   ?   [(i=3)][..]      ▸ index 2 holds the element 3
 
 A representative slice of `collectionsTest.nl`:
 
-```
+```nelumbo
 import nelumbo.collections
 
 List<Integer>       l

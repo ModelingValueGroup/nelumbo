@@ -10,7 +10,7 @@ The file we are working with is [`src/main/resources/org/modelingvalue/nelumbo/e
 
 ## The whole program
 
-```
+```nelumbo
 import  nelumbo.integers
 
 Integer ::= fib(<Integer>)
@@ -36,7 +36,7 @@ That is the whole thing: a working, tested, arbitrary-precision Fibonacci implem
 
 ## Line 1 — `import nelumbo.integers`
 
-```
+```nelumbo
 import  nelumbo.integers
 ```
 
@@ -50,7 +50,7 @@ Internally, `nelumbo.integers` itself imports `nelumbo.logic`, which defines `Bo
 
 ## Line 3 — declare a new function `fib`
 
-```
+```nelumbo
 Integer ::= fib(<Integer>)
 ```
 
@@ -68,7 +68,7 @@ Key things to notice:
 
 ## Line 5 — declare variables
 
-```
+```nelumbo
 Integer n, f
 ```
 
@@ -82,7 +82,7 @@ Variables in Nelumbo are **logical variables**, not storage cells. They do not h
 
 ## Lines 7–8 — the rule
 
-```
+```nelumbo
 fib(n)=f <=> f=n                 if n>=0 & n<=1,
              f=fib(n-1)+fib(n-2) if n>1
 ```
@@ -93,7 +93,7 @@ This is the heart of the program. Line by line:
 - The left-hand side, `fib(n)=f`, reads *"`fib(n)` equals `f`"*. This is the shape of every query you will write against `fib`: you ask the engine to find the `f` such that `fib(n)=f`.
 - The right-hand side has **two alternatives separated by a comma**. The comma here is **purely shorthand** for repeating the left-hand side. What you see compressed onto two lines is really two separate rules:
 
-  ```
+  ```nelumbo
   fib(n)=f <=> f=n                 if n>=0 & n<=1
   fib(n)=f <=> f=fib(n-1)+fib(n-2) if n>1
   ```
@@ -115,7 +115,7 @@ This merging is sound as long as the rules **agree**. When they don't — specif
 
 ## Lines 10–18 — the tests
 
-```
+```nelumbo
 fib(0)=f  ? [(f=0)][..]
 fib(1)=f  ? [(f=1)][..]
 fib(5)=f  ? [(f=5)][..]
@@ -132,7 +132,7 @@ The test passes if the engine's actual result matches. If you change `[(f=5)]` t
 
 ### The big numbers
 
-```
+```nelumbo
 fib(100)=f ? [(f=36#22r8fozas3n8w3)][..]
 ```
 

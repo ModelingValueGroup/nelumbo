@@ -15,6 +15,9 @@
     --text: #e6e8ee; --prose: #c6cad4; --muted: #9aa0ac; --faint: #5c6270;
     --accent: #c184d8; --accent-soft: #edd4e8;
     --backdrop: rgba(0,0,0,.45); --shadow: rgba(0,0,0,.5);
+    /* Nelumbo syntax colors: the TOKEN_STYLES palette of nelumbo-fields.ts, keep them in sync */
+    --nl-keyword: #6ea8ff; --nl-name: #6ea8ff; --nl-type: #d07ad6; --nl-variable: #8fd14f; --nl-string: #5fc98f;
+    --nl-number: #9aa5ff; --nl-operator: #d4d7de; --nl-meta: #3f9494; --nl-comment: #6b7080;
     color-scheme: dark;
   }
   [data-theme="light"] {
@@ -22,6 +25,8 @@
     --text: #1f1b24; --prose: #3a3542; --muted: #6b6475; --faint: #958e9e;
     --accent: #9246b0; --accent-soft: #74358f;
     --backdrop: rgba(31,27,36,.3); --shadow: rgba(31,27,36,.18);
+    --nl-keyword: #0000ff; --nl-name: #0000ff; --nl-type: #880088; --nl-variable: #339900; --nl-string: #006633;
+    --nl-number: #000077; --nl-operator: #333333; --nl-meta: #00cccc; --nl-comment: #a0a0a0;
     color-scheme: light;
   }
   * { box-sizing: border-box; }
@@ -59,6 +64,10 @@
   article code { background: var(--panel); border-radius: 4px; padding: 1px 5px; font: 13px "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
   article pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; line-height: 1.5; }
   article pre code { background: none; padding: 0; }
+  .nl-keyword { color: var(--nl-keyword); font-weight: 700; } .nl-name { color: var(--nl-name); }
+  .nl-type { color: var(--nl-type); } .nl-variable { color: var(--nl-variable); } .nl-string { color: var(--nl-string); }
+  .nl-number { color: var(--nl-number); } .nl-operator { color: var(--nl-operator); font-weight: 700; }
+  .nl-meta { color: var(--nl-meta); } .nl-comment { color: var(--nl-comment); }
   article blockquote { margin: 16px 0; padding: 4px 16px; border-left: 3px solid var(--accent); color: var(--muted); }
   article blockquote p { margin: 8px 0; }
   article hr { border: 0; border-top: 1px solid var(--border); margin: 32px 0; }

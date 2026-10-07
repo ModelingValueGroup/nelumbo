@@ -4,7 +4,7 @@
 
 Some patterns in Nelumbo cannot be expressed purely in the language — the basic arithmetic primitives, string concatenation, rational construction. These are implemented in Java and bound to a pattern declaration using the `@` annotation:
 
-```
+```nelumbo
 private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Integers
 ```
 
@@ -18,7 +18,7 @@ For the in-language extension mechanism (`::>` pattern transformations), see [`.
 
 The form of a pattern with a native binding is:
 
-```
+```nelumbo
 <Type> ::= pattern   @fully.qualified.JavaClassName
 ```
 

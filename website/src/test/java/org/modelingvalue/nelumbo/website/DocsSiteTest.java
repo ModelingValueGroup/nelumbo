@@ -76,6 +76,7 @@ class DocsSiteTest {
         md.put("reference/logic/operators.md", "# Operators\n");
         md.put("reference/formatting.md", "# Formatting\n");
         md.put("reference/packages/integers.md", "# `nelumbo.integers`\n");
+        md.put("reference/lang/visibility.md", "# Visibility\n\n```nelumbo\nInteger n\n```\n\n```text\nInteger n\n```\n");
         md.put("NELUMBO.md", "# Slides\n");
         return new DocsSite(md, TEMPLATE);
     }
@@ -208,5 +209,38 @@ class DocsSiteTest {
             }
         }
         assertTrue(rewritten.isEmpty(), "code that a link rewrite mangled:\n" + String.join("\n", rewritten));
+    }
+
+    @Test
+    void nelumboCodeBlocksAreHighlightedAndOtherBlocksAreNot() {
+        String page = site().page("/docs/reference/lang/visibility.html").orElseThrow();
+        assertTrue(page.contains("<pre><code class=\"language-nelumbo\"><span class=\"nl-type\">Integer</span> <span class=\"nl-variable\">n</span>"), page);
+        assertTrue(page.contains("<pre><code class=\"language-text\">Integer n"), "a text block stays plain: " + page);
+    }
+
+    @Test
+    void everyCodeBlockInTheBundledDocsSaysWhatLanguageItIs() throws Exception {
+        // only blocks tagged nelumbo are highlighted, so an untagged block is a block nobody decided about
+        List<String> untagged = new ArrayList<>();
+        String index = new String(DocsSiteTest.class.getResourceAsStream(DocsSite.RESOURCE_ROOT + "index.txt").readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        for (String path : index.split("\n")) {
+            if (!path.endsWith(".md")) {
+                continue;
+            }
+            String md = new String(DocsSiteTest.class.getResourceAsStream(DocsSite.RESOURCE_ROOT + path.trim()).readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            boolean inFence = false;
+            int line = 0;
+            for (String l : md.split("\n", -1)) {
+                line++;
+                String fence = l.strip();
+                if (fence.startsWith("```")) {
+                    if (!inFence && fence.substring(3).isBlank()) {
+                        untagged.add(path.trim() + ":" + line);
+                    }
+                    inFence = !inFence;
+                }
+            }
+        }
+        assertTrue(untagged.isEmpty(), untagged.size() + " untagged code blocks, tag them ```nelumbo or ```text:\n" + String.join("\n", untagged));
     }
 }

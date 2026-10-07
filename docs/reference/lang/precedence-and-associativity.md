@@ -4,7 +4,7 @@
 
 When you declare a pattern with `::=`, you can attach a **precedence annotation** `#N`:
 
-```
+```nelumbo
 Integer ::= <Integer> + <Integer>  #40
 Integer ::= <Integer> * <Integer>  #50
 Integer ::=           - <Integer>  #80
@@ -45,7 +45,7 @@ For binary operators, Nelumbo parses left-associatively by default: `a - b - c` 
 
 A type hole can carry its own precedence annotation:
 
-```
+```nelumbo
 T ::= <Boolean#5> ? <T> : <T>
 ```
 
@@ -55,7 +55,7 @@ This is how you express "tighter-binding" requirements on specific hole position
 
 Hole precedence also controls associativity for repeated operators. For a standard left-associative binary operator like `+`:
 
-```
+```nelumbo
 Integer ::= <Integer> + <Integer>  #40
 ```
 
@@ -79,7 +79,7 @@ Operators at the same precedence combine under the ordinary left-to-right rule: 
 
 Unary operators typically carry a higher `#N` than their binary counterparts:
 
-```
+```nelumbo
 Integer ::= <Integer> - <Integer>  #40       // binary subtraction
 Integer ::=           - <Integer>  #80       // unary negation
 ```
@@ -92,7 +92,7 @@ Binary subtraction binds looser (40) than unary negation (80), so `-a - b` parse
 
 Quantifiers `E[...]` and `A[...]` use hole precedence on their body rather than a single pattern precedence:
 
-```
+```nelumbo
 Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
             @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
 ```

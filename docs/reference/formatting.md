@@ -13,7 +13,7 @@ by hand in the same style the tool produces.
 
 ## Worked example
 
-```
+```nelumbo
 Integer :: Object
 
 Boolean ::= <Integer> ">" <Integer> #30 @com.example.GreaterThan,
@@ -39,7 +39,7 @@ Everything below is a rule the formatter applies to reach a layout like this.
   item is the token after the declaration operator (`::`, `::=`, `<=>`) or, when there is
   no operator, after the leading keyword (e.g. `fact`).
 
-```
+```nelumbo
 Person ::= p(<Person>),
            c(<Person>),
            d(<Person>)
@@ -53,7 +53,7 @@ fact pc(Hendrik, Juliana),
 Exactly one space follows `::`, `::=`, and the query `?`. The rule operator `<=>` is
 followed by **two** spaces — the convention used throughout the standard library.
 
-```
+```nelumbo
 Person     :: Object
 fib(n)=f   <=>  f=n
 fib(5)=f    ? [(f=5)][..]
@@ -79,7 +79,7 @@ independently.
 | `if` guards | clauses of one `<=>` rule body | |
 | trailing `//` comments | one statement | two spaces past the longest line |
 
-```
+```nelumbo
 Person     :: Object        Literal  l1, l2        Person ::= p(<Person>),  // parent
 LongAnimal ::= legs(...)    Function f1, f2                   c(<Person>),  // child
 fib(n)=f   <=>  f=n         Object   n1, n2                   d(<Person>)   // descendant

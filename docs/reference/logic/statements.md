@@ -10,7 +10,7 @@ The top-level statements that drive execution: declaring fact types, asserting f
 
 A `FactType` pattern declares a relation whose instances can be asserted as ground truth:
 
-```
+```nelumbo
 FactType ::= pc(<Person>,<Person>)                    // family.nl
 FactType ::= friends(<Person>,<Person>)               // friends.nl
 FactType ::= het inkomen van <Person> is <Integer> euro  // belasting.nl
@@ -22,7 +22,7 @@ A fact type looks like any other pattern, but values built with it are not compu
 
 Facts are asserted with the `fact` keyword:
 
-```
+```nelumbo
 fact pc(Hendrik, Juliana),
      pc(Wilhelmina, Juliana),
      pc(Juliana, Beatrix)
@@ -38,7 +38,7 @@ fact het inkomen van Piet is 50000 euro
 
 Three forms drive execution:
 
-```
+```nelumbo
 E                  // bare expression — treated as a fact if E is a FactType instance
 E ?                // query — run the reasoner, print the result
 E ? [F][N]         // test — query and compare; pass iff result matches

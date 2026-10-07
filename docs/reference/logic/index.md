@@ -8,7 +8,7 @@ The logic module. A file gets it with `import nelumbo.logic`, or transitively by
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.logic
 ```
 
@@ -18,7 +18,7 @@ import nelumbo.logic
 
 ## Types
 
-```
+```nelumbo
 Boolean   :: Object
 FactType  :: Boolean
 Function  :: Object
@@ -36,7 +36,7 @@ The `Literal` / `Function` split is what makes the three rules in *Equality* (be
 
 ## Boolean values
 
-```
+```nelumbo
 Boolean ::= true       @nelumbo.logic.NBoolean,
             false      @nelumbo.logic.NBoolean,
             unknown    @nelumbo.logic.NBoolean
@@ -58,7 +58,7 @@ Three Boolean values, all bound to the native class `NBoolean`. `unknown` is a f
 
 `->` and `<->` are not native. They are defined in Nelumbo on top of `!` and `|`:
 
-```
+```nelumbo
 Boolean p1, p2
 
 p1 -> p2   <=>  !p1 | p2
@@ -69,7 +69,7 @@ This is the meta-language working on itself: `<->` is a user-level rule built fr
 
 `logicTest.nl` is the executable truth-table specification for all five connectives, including the `unknown` rows. For example:
 
-```
+```nelumbo
 unknown & true   ? [..][..]
 unknown & false  ? [][()]
 true -> unknown  ? [..][..]
@@ -80,7 +80,7 @@ false -> unknown ? [()][]
 
 ## Quantifiers
 
-```
+```nelumbo
 Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
             A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.UniversalQuantifier
 ```
@@ -93,7 +93,7 @@ The pattern fragment `<(> <Variable#100> <,> , <)+>` is the one-or-more, comma-s
 
 Test examples from `logicTest.nl`:
 
-```
+```nelumbo
 Test :: Object
 Test ::= T1, T2
 Test a
@@ -108,7 +108,7 @@ A[a](a=T1 & a=T2)      ? [][()]
 
 ## Equality
 
-```
+```nelumbo
 private Boolean ::= eq(<Literal>, <Literal>)   @nelumbo.logic.Equal
 
 Boolean ::= <Object> =  <Object>   #30   @nelumbo.logic.NIs,
@@ -122,7 +122,7 @@ Two related but distinct primitives:
 
 `!=` has no native binding of its own; it is the negation of `=`:
 
-```
+```nelumbo
 Literal  l1, l2
 Function f1
 Object   n1, n2
@@ -142,7 +142,7 @@ The middle rule (`l1 = f1 <=> f1 = l1`) swaps a literal-equals-function query in
 
 `nelumbo.logic` also declares the three statement forms that appear at the top level of a `.nl` file:
 
-```
+```nelumbo
 Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                        @nelumbo.logic.Fact,
          <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>   @nelumbo.logic.Rule,
          <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                               @nelumbo.logic.Query
@@ -156,7 +156,7 @@ Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                      
 
 In test files the `fact` keyword is often elided — a bare predicate at top level (such as `pc(Hendrik, Juliana)` in `family.nl`) is sugar for `fact pc(Hendrik, Juliana)`. The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
 
-```
+```nelumbo
 pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
 ```
 
