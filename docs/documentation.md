@@ -14,7 +14,7 @@ This folder contains the user documentation. For the project overview, build ins
 
 Nelumbo is built in levels, and each piece of syntax belongs to exactly one of them. The reference is organised the same way, so you can always tell where a construct comes from.
 
-```
+```text
 Java core               bootstrap grammar, reasoner, natives
  └─ nelumbo.lang        import nelumbo.lang
      └─ nelumbo.logic   import nelumbo.logic

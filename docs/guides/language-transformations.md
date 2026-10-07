@@ -10,7 +10,7 @@ If you have read the reference pages, you already know all the ingredients `::>`
 
 ## The essential shape
 
-```
+```nelumbo
 pattern-with-variables  ::>  {
     ...declarations that use those variables...
 }
@@ -20,7 +20,7 @@ Both sides of `::>` share the same variables, declared in the surrounding scope.
 
 A concrete example, from [`transformation.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/transformation.nl):
 
-```
+```nelumbo
 Root ::= attr <Type> <n> <Type>  #100
 
 Type OT, AT
@@ -47,13 +47,13 @@ Reading this top to bottom:
 
 The result: when the user writes
 
-```
+```nelumbo
 attr Person name String
 ```
 
 the effect is **exactly the same** as if they had written
 
-```
+```nelumbo
 String ::= <Person>.name
 Root   ::= <Person>.name := <String>
 private FactType ::= name(<Person>, <String>)
@@ -99,7 +99,7 @@ This is also why a transformation's variables can be wrapped in a `{ ... }` scop
 
 The `Root` type is Nelumbo's hook for **top-level statement syntax**. To introduce a new keyword, you declare a `Root` pattern:
 
-```
+```nelumbo
 Root ::= attr <Type> <n> <Type>  #100
 ```
 
@@ -107,7 +107,7 @@ Reading this: "at the top level, the user may write `attr` followed by a type, a
 
 Once declared, `attr ...` is a valid top-level construct. But it doesn't *do* anything yet — you still have to pair it with a `::>` transformation that gives it meaning:
 
-```
+```nelumbo
 attr OT AN AT  ::>  {
     ...
 }
@@ -123,7 +123,7 @@ The pattern on the left of `::>` mirrors the `Root` declaration, with metavariab
 
 A transformation block can itself contain a `::>`. Look again at the inner clause from `transformation.nl`:
 
-```
+```nelumbo
 attr OT AN AT  ::>  {
     ...
     Root     ::= <OT>.AN := <AT>
@@ -138,7 +138,7 @@ The outer transformation expands `attr Person name String` into many things, one
 
 So the chain is:
 
-```
+```text
 User writes:           Transformation expands to:        Further expands to:
 
 attr Person name String
@@ -162,7 +162,7 @@ A nested transformation has **the same semantics as the outer one**: it binds th
 
 The [`deHet.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/deHet.nl) example shows a transformation used to build a **Dutch-language DSL** for declaring and querying attributes. The user ends up writing:
 
-```
+```nelumbo
 attr Persoon de naam String
 attr Persoon het adres String
 
@@ -175,7 +175,7 @@ wat is het adres van Piet ?
 
 The transformation is structured the same way as the first example, but richer:
 
-```
+```nelumbo
 Lidwoord :: Object
 Lidwoord ::= de, het
 
@@ -238,7 +238,7 @@ It is the same vocabulary you would use at the top level of a `.nl` file. The tr
 
 Transformations interact with scope blocks. The `deHet.nl` example puts the whole metavariable list and transformation inside a `{ ... }` block:
 
-```
+```nelumbo
 {
   Type OT, AT
   Lidwoord lw

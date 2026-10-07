@@ -4,7 +4,7 @@
 
 When you declare a pattern with `::=`, you can attach a **precedence annotation** `#N`:
 
-```
+```nelumbo
 Integer ::= <Integer> + <Integer>  #40
 Integer ::= <Integer> * <Integer>  #50
 Integer ::=           - <Integer>  #80
@@ -45,7 +45,7 @@ For binary operators, Nelumbo parses left-associatively by default: `a - b - c` 
 
 A type hole can carry its own precedence annotation:
 
-```
+```nelumbo
 T ::= <Boolean#5> ? <T> : <T>
 ```
 
@@ -55,7 +55,7 @@ This is how you express "tighter-binding" requirements on specific hole position
 
 Hole precedence also controls associativity for repeated operators. For a standard left-associative binary operator like `+`:
 
-```
+```nelumbo
 Integer ::= <Integer> + <Integer>  #40
 ```
 
@@ -79,7 +79,7 @@ Operators at the same precedence combine under the ordinary left-to-right rule: 
 
 Unary operators typically carry a higher `#N` than their binary counterparts:
 
-```
+```nelumbo
 Integer ::= <Integer> - <Integer>  #40       // binary subtraction
 Integer ::=           - <Integer>  #80       // unary negation
 ```
@@ -92,9 +92,15 @@ Binary subtraction binds looser (40) than unary negation (80), so `-a - b` parse
 
 Quantifiers `E[...]` and `A[...]` are the keyword followed by a [lambda](../logic/lambdas.md), and the lambda uses hole precedence on its body rather than a single pattern precedence:
 
+<<<<<<< HEAD
 ```
 Lambda1<A1,R> ::= [<{Variable,A1}>](<R#0>)   @nelumbo.logic.Lambda
 Boolean       ::= E<Lambda<Boolean>>         @nelumbo.logic.ExistentialQuantifier
+=======
+```nelumbo
+Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
+            @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
+>>>>>>> refs/remotes/origin/develop
 ```
 
 The body `<R#0>` accepts an expression at the lowest precedence, so `E[x](a & b | c -> d)` parses with the full expression inside, as intended. The variable holes demand a bare, declared variable (`{Variable,A1}`) — no composite expressions.

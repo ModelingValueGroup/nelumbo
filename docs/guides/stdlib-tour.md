@@ -22,7 +22,7 @@ Each module is small enough to read in full, and the commentary around them illu
 
 The syntactic bootstrap. Every other `.nl` file — including `logic.nl` — is parsed using the `::=` declarations in this file. The Java core knows just enough to load `lang.nl`; from there on, the same machinery the user writes parses everything.
 
-```
+```nelumbo
 import nelumbo.lang   // not literally — this is itself nelumbo.lang
 
 // Token types — produced by the tokenizer
@@ -84,7 +84,7 @@ See [`../reference/lang/index.md`](../reference/lang/index.md) for the full anno
 
 The three-valued logic layer. This is where Boolean, the connectives, and — crucially — the `fact`, `<=>`, and `?` statement forms are declared.
 
-```
+```nelumbo
 import nelumbo.lang
 
 Boolean  :: Object
@@ -169,7 +169,7 @@ This is the module's first big lesson: **even at the deepest level of the langua
 
 Builds arithmetic on top of logic.
 
-```
+```nelumbo
 import nelumbo.logic
 
 Integer :: Object
@@ -217,7 +217,7 @@ Two classes: `Integers` (the `add`, `mult`, `gt` `@NelumboMethod`s) and the `NIn
 
 Everything else, using rule rewriting. The most characteristic pattern:
 
-```
+```nelumbo
 a + b = c  <=>  add(a, b, c)
 a - b = c  <=>  add(c, b, a)
 a * b = c  <=>  mult(a, b, c)
@@ -228,7 +228,7 @@ Subtraction is not a separate operation — it's addition with the arguments per
 
 Similarly, the comparison operators all derive from the single native helper `gt`:
 
-```
+```nelumbo
 a > b   <=>  gt(a, b)
 a < b   <=>  gt(b, a)
 a <= b  <=>  a < b | a = b
@@ -239,13 +239,13 @@ a >= b  <=>  a > b | a = b
 
 Unary minus is a one-liner:
 
-```
+```nelumbo
 -a = b  <=>  0 - a = b
 ```
 
 And absolute value uses the guard pattern with mutually exclusive conditions:
 
-```
+```nelumbo
 |a| = b  <=>  b = a   if a >= 0,
               b = -a  if a <  0
 ```
@@ -260,7 +260,7 @@ And absolute value uses the guard pattern with mutually exclusive conditions:
 
 The test file exercises every operator in multiple directions:
 
-```
+```nelumbo
 a+11=21  ? [(a=10)][..]     // solve for left operand
 10+a=21  ? [(a=11)][..]     // solve for right operand
 10+11=a  ? [(a=21)][..]     // compute the sum
@@ -276,7 +276,7 @@ Read it when you want to confirm how an operator behaves in a case you are unsur
 
 Builds exact rationals on top of integers. Structurally identical to `integers`.
 
-```
+```nelumbo
 import nelumbo.integers
 
 Rational :: Object
@@ -329,7 +329,7 @@ r(x/y)=a  <=> iir(x,y,a)
 
 **`iir`** — a three-argument relation (a `@NelumboMethod` on `Rationals`) that converts between `(Integer, Integer)` and `Rational`. Two Nelumbo rules wrap it:
 
-```
+```nelumbo
 r(x)   = a  <=>  iir(x, 1, a)
 r(x/y) = a  <=>  iir(x, y, a)
 ```
@@ -348,7 +348,7 @@ This is a good template: **when adding a new numeric-like type, mirror the integ
 
 The smallest non-trivial module.
 
-```
+```nelumbo
 import nelumbo.integers
 
 String :: Object
@@ -388,7 +388,7 @@ The nicest trick here is that `int(a) = x` and `str(x) = a` share the same nativ
 
 The surface operator `+` is also relational:
 
-```
+```nelumbo
 "foo" + "bar" = a       ? [(a="foobar")][..]   // forward
 a + "bar"     = "foobar" ? [(a="foo")][..]     // solve for prefix
 "foo" + a     = "foobar" ? [(a="bar")][..]     // solve for suffix
@@ -402,7 +402,7 @@ All three work from the same rule and the same native. The `Strings#string_conca
 
 The only module that uses generic-type parameters.
 
-```
+```nelumbo
 import nelumbo.integers
 
 Type E, F
@@ -459,13 +459,18 @@ So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `Lis
 
 `Set<E>` has a second form — the comprehension `{[e](c)}`, "the set of all `e` such that `c`". The `[e](c)` inside the braces is a lambda: `e` must be a declared variable, and `(c)` is any Boolean condition over it. It reduces to one native rule:
 
+<<<<<<< HEAD
 ```
 {leb} = s  <=>  build(leb, s)
+=======
+```nelumbo
+{[e](c)} = s  <=>  build(e, c, s)
+>>>>>>> refs/remotes/origin/develop
 ```
 
 `build` is backed by `BuildSet`, which — like `E[...]` and `A[...]` — is a **quantifier**: it evaluates the lambda body under each binding of the bound variable, strips that variable, and gathers the witnessing values into a set. So set construction reuses the same three-valued quantifier machinery as the logic layer:
 
-```
+```nelumbo
 Integer i
 {[i](|i|=10)} = s  ?  [(s={-10,10})][(s={0}),..]
 ```
@@ -492,7 +497,7 @@ There is no fold/reduce, no `head`/`tail`, and no set-like operations on lists. 
 
 The largest stdlib module, and a good demonstration that the integer idioms scale to a much richer value domain. It imports `nelumbo.integers` (for the `Period * Integer` scaling operator) and adds four independent value types.
 
-```
+```nelumbo
 import nelumbo.integers
 
 DateTime :: Object    Date :: Object    Time :: Object    Period :: Object

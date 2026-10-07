@@ -8,7 +8,7 @@ The bootstrap layer. Every other `.nl` file — including `logic.nl` itself — 
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.lang
 ```
 
@@ -29,7 +29,7 @@ Everything in this module is either a `NATIVE` declaration (the tokenizer / runt
 
 ## Token types
 
-```
+```nelumbo
 SINGLEQUOTE   :: NATIVE     // '
 SEMICOLON     :: NATIVE     // ;
 COMMA         :: NATIVE     // ,
@@ -69,7 +69,7 @@ There is **no `DECIMAL` token**. Both signed integers and the rational decimal-p
 
 ## Object types
 
-```
+```nelumbo
 Object        :: NATIVE
 Type          :: Object
 PatternPart   :: Root                // a reusable named pattern fragment (`pattern N ::= …`)
@@ -103,7 +103,7 @@ The hierarchy is what gives the rest of the language a place to hang. A user-dec
 
 A **named pattern** factors a recurring fragment of pattern syntax out into a reusable name, so it can be written once and referenced as `<NAME>` wherever it is needed. It is declared with the `pattern` keyword and used by `lang.nl` itself:
 
-```
+```nelumbo
 pattern PATTERNS ::= <(> <Pattern#100> <)+>
 pattern QNAME    ::= <[> <(> <NAME> <,> . <)+> <]>
 ```
@@ -113,7 +113,7 @@ pattern QNAME    ::= <[> <(> <NAME> <,> . <)+> <]>
 
 Unlike a `::=` declaration, a named pattern produces **no value** and adds **no new syntax** to the language. It is pure abbreviation: every `<PATTERNS>` reference expands to its body before parsing. The mechanism is itself bootstrapped by a `Root` form and a `Pattern` alternative:
 
-```
+```nelumbo
 PatternPart ::= "pattern" <NAME> ::= <PATTERNS>   @nelumbo.lang.PatternPart   // declares one
 Pattern     ::= "<" <PatternPart#100> ">"         @nelumbo.patterns.PatternPartPattern   // references one
 ```
@@ -126,7 +126,7 @@ Named patterns are used throughout the standard library to keep dense declaratio
 
 ## Namespace grammar — what a `.nl` file is
 
-```
+```nelumbo
 Namespace     ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>
                   @nelumbo.lang.Namespace
 
@@ -146,7 +146,7 @@ This is also the file that justifies the existence of `List<Root>` as a parseabl
 
 This is the part of `lang.nl` that describes the syntax of `::=` patterns themselves. Every angle-bracketed construct you write in a pattern declaration is parsed by one of these alternatives.
 
-```
+```nelumbo
 Pattern ::= <NAME>                                                          @nelumbo.patterns.TokenTextPattern,
             <STRING>                                                        @nelumbo.patterns.TokenTextPattern,
             <OPERATOR>                                                      @nelumbo.patterns.TokenTextPattern,
@@ -189,7 +189,7 @@ Note also the `#100` precedence on the inner `<Pattern#100>` and `<Variable#100>
 
 ## Root grammar — top-level statements
 
-```
+```nelumbo
 Root ::= "import" <(> <QNAME> <,> , <)+>                                                    @nelumbo.lang.Import,
          <Root#0> ::> <RootNamespace>                                                       @nelumbo.lang.Transform,
          <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                 @nelumbo.lang.Variable,
@@ -225,7 +225,7 @@ The `::>` transformation (Transform) takes any `<Root>` shape on the left and a 
 
 ## Generic parenthesisation
 
-```
+```nelumbo
 Type P
 
 P ::= (<P>)   @nelumbo.lang.Parenthesized

@@ -14,7 +14,7 @@ These are also `Root ::=` patterns, but they are declared in `logic.nl`, not `la
 
 ### `fact` — ground-truth assertion
 
-```
+```nelumbo
 fact E
 fact E1, E2, E3
 ```
@@ -23,7 +23,7 @@ Asserts one or more comma-separated ground-truth facts. See [`statements.md`](st
 
 ### `<=>` — rule (bi-implication)
 
-```
+```nelumbo
 L <=> R
 ```
 
@@ -31,7 +31,7 @@ Asserts that `L` holds exactly when `R` holds. Multiple rules may share the same
 
 ### `?` — query / test
 
-```
+```nelumbo
 E ?               // query: run and print
 E ? [F][N]        // test: run and compare to expected result
 ```
@@ -46,7 +46,7 @@ Once you `import nelumbo.logic`, these become available as Boolean-valued operat
 
 ### `!` — negation (`#25`)
 
-```
+```nelumbo
 !p
 ```
 
@@ -54,7 +54,7 @@ Once you `import nelumbo.logic`, these become available as Boolean-valued operat
 
 ### `&` — conjunction (`#22`)
 
-```
+```nelumbo
 p & q
 ```
 
@@ -62,7 +62,7 @@ p & q
 
 ### `|` — disjunction (`#20`)
 
-```
+```nelumbo
 p | q
 ```
 
@@ -70,7 +70,7 @@ p | q
 
 ### `->` — implication (`#18`)
 
-```
+```nelumbo
 p -> q
 ```
 
@@ -78,7 +78,7 @@ Defined in `logic.nl` as `!p | q`. Classical material implication.
 
 ### `<->` — bi-implication (`#16`)
 
-```
+```nelumbo
 p <-> q
 ```
 
@@ -86,7 +86,7 @@ Defined in `logic.nl` as `(p -> q) & (q -> p)`.
 
 ### `=` — equality (`#30`)
 
-```
+```nelumbo
 a = b
 ```
 
@@ -94,7 +94,7 @@ Identity comparison. Declared in `logic.nl` as `Boolean ::= <Object> = <Object> 
 
 ### `!=` — inequality (`#30`)
 
-```
+```nelumbo
 a != b
 ```
 
@@ -102,7 +102,7 @@ Defined in `logic.nl` as `!(a = b)`.
 
 ### `E[...](...)` — existential quantifier
 
-```
+```nelumbo
 E[x](p)
 E[x, y](p)
 ```
@@ -111,13 +111,13 @@ E[x, y](p)
 
 Example from `belasting.nl`:
 
-```
+```nelumbo
 E[i, a]((het inkomen van p is i euro) & (p mag a euro aftrekken) & x=(i-a)/2)
 ```
 
 ### `A[...](...)` — universal quantifier
 
-```
+```nelumbo
 A[x](p)
 A[x, y](p)
 ```
@@ -126,7 +126,7 @@ A[x, y](p)
 
 From `logicTest.nl`:
 
-```
+```nelumbo
 E[a](a=T1 | a=T2)   ? [()][]
 A[a](a=T1 & a=T2)   ? [][()]
 ```
@@ -135,7 +135,7 @@ A[a](a=T1 & a=T2)   ? [][()]
 
 ## Guards — `if`
 
-```
+```nelumbo
 L <=> R if G
 L <=> R1 if G1, R2 if G2
 ```

@@ -37,7 +37,7 @@ Comments are `//` to end of line. Whitespace is not significant.
 
 ## Type declarations
 
-```
+```nelumbo
 T :: S
 T :: S1, S2
 ```
@@ -46,7 +46,7 @@ Declares `T` as a type. Everything to the right of `::` is the list of **superty
 
 Examples from the codebase:
 
-```
+```nelumbo
 Person :: Object
 Male   :: Person
 Female :: Person
@@ -58,7 +58,7 @@ Multiple inheritance is supported: `Person :: Smart, Living` says a `Person` is 
 
 A bare type can also be introduced for use as a generic parameter:
 
-```
+```nelumbo
 Type E
 ```
 
@@ -68,7 +68,7 @@ See [generic parenthesisation in `nelumbo.lang`](index.md#generic-parenthesisati
 
 ## Pattern declarations
 
-```
+```nelumbo
 T ::= pattern
 T ::= pattern1, pattern2, pattern3
 ```
@@ -87,7 +87,7 @@ A pattern is a mix of:
 
 Examples from the standard library:
 
-```
+```nelumbo
 Integer ::= <NUMBER>                                    @org.modelingvalue.nelumbo.integers.NInteger
 Integer ::= <Integer> + <Integer>   #40
 Integer ::= <Integer> - <Integer>   #40
@@ -106,7 +106,7 @@ Note:
 
 A pattern may list several literals as alternatives:
 
-```
+```nelumbo
 Male   ::= Hendrik, Bernhard, Claus, Willem
 Female ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
 Lidwoord ::= de, het
@@ -130,7 +130,7 @@ Inside a pattern, angle-bracketed operators build repeating or optional sub-stru
 
 Examples:
 
-```
+```nelumbo
 Repetition  ::= { <(> <Integer> <,> , <)*> }       // {3,5,7}  or {}
 Option      ::= <(> super <)?> fast                // "fast" or "super fast"
 Alternation ::= <(> A <|> B <|> C <)>              // "A", "B", or "C"
@@ -138,7 +138,7 @@ Alternation ::= <(> A <|> B <|> C <)>              // "A", "B", or "C"
 
 `collections.nl` uses this for generic sets and lists:
 
-```
+```nelumbo
 Set<E>  ::= { <(> <E> <,> , <)*> }
 List<E> ::= [ <(> <E> <,> , <)*> ]
 ```
@@ -149,7 +149,7 @@ By default whitespace between tokens is insignificant, so a pattern like `<NUMBE
 
 The brackets themselves are pure meta-syntax: like the other `<(>`-style markers, they do not appear in the parsed source.
 
-```
+```nelumbo
 Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                     @nelumbo.datetime.NDate
 Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>                     @nelumbo.rationals.Rational
 Integer  ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>    @nelumbo.integers.NInteger
@@ -167,7 +167,7 @@ A practical rule of thumb: use `<[>` … `<]>` whenever the absence of whitespac
 
 A recurring fragment of pattern syntax can be given a name and reused, instead of being spelled out at every site. Declare one with the `pattern` keyword:
 
-```
+```nelumbo
 pattern N ::= P
 ```
 
@@ -175,7 +175,7 @@ The name `N` is then written `<N>` inside any later pattern, exactly where its b
 
 The standard library uses named patterns to keep dense declarations legible:
 
-```
+```nelumbo
 pattern RADIX_NUMBER ::= <(> <(> <NUMBER> <|> <NAME> <)> <)+>          // integers.nl — the base-N digit run
 Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>    @nelumbo.integers.NInteger
 
@@ -190,14 +190,14 @@ Even `lang.nl` and `logic.nl` define their own (`PATTERNS`, `QNAME`, `BINDING`) 
 
 ## Variable declarations
 
-```
+```nelumbo
 T v
 T v1, v2, v3
 ```
 
 Declares logical variables of type `T`. Variables declared at the top level are global to the file (or scope); variables declared inside `E[...]` or `A[...]` are local to the quantifier.
 
-```
+```nelumbo
 Integer n, f          // fibonacci.nl
 Person  a, b, c       // family.nl
 Male    y
@@ -225,7 +225,7 @@ Expressions have types (propagated through pattern declarations) and can appear 
 
 Curly braces `{ ... }` introduce a lexical scope:
 
-```
+```nelumbo
 {
    Aa :: Object
    Aa ::= XXX
@@ -242,7 +242,7 @@ Names declared inside a scope are not visible outside it. Imports, types, patter
 
 The `::>` operator defines a **language pattern transformation** — a macro-like expansion from one pattern into a block of declarations and rules.
 
-```
+```nelumbo
 attr OT AN AT ::> {
     AT       ::= <OT>.AN
     Root     ::= <OT>.AN := <AT>

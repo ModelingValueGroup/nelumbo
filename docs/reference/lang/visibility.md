@@ -10,7 +10,7 @@ Nelumbo has two mechanisms for controlling what names are visible where: **scope
 
 A block introduces a lexical scope. Any declaration inside the block — imports, types, patterns, variables, rules, facts, tests — is local to the block. Once the closing `}` is reached, those names are no longer in scope.
 
-```
+```nelumbo
 {
    Aa :: Object
    private Aa ::= XXX
@@ -38,7 +38,7 @@ The two blocks above (from [`scoping.nl`](../../../src/main/resources/org/modeli
 
 Any type that specialises `Namespace` introduces a scope of its own — no explicit `{Namespace}` prefix is needed (and none is accepted). Declaring a functor `private` within such a type confines it to that namespace, exactly as `private` does inside a `{ ... }` block.
 
-```
+```nelumbo
 {
    Aa :: Object
    private Aa ::= XXX
@@ -67,7 +67,7 @@ The `visible` keyword is the complement of `hidden`; see the section on hidden d
 
 A `private` declaration is not exported. It is a detail of the module's implementation.
 
-```
+```nelumbo
 private Boolean ::= eq(<Literal>, <Literal>)  @org.modelingvalue.nelumbo.logic.Equal
 ```
 
@@ -81,7 +81,7 @@ Other `private` patterns in the stdlib include `add`, `mult`, `string_concat`, `
 
 The [`hidden.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) example illustrates the mechanism:
 
-```
+```nelumbo
 {
   Integer ::= <hidden Integer> && <Integer> #35
   Integer ::= <visible Integer> & <Integer> #35

@@ -36,3 +36,14 @@ test('landing, tour and sandbox link to the docs', async ({ page }: { page: Page
         await expect(page.locator('a[href="/docs/"]').first()).toBeAttached();
     }
 });
+
+test('nelumbo code blocks are syntax highlighted', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/docs/getting-started/first-program.html');
+    const block = page.locator('article pre code.language-nelumbo').first();
+    await expect(block.locator('.nl-type').first()).toBeVisible();
+    await expect(block.locator('.nl-keyword').first()).toBeVisible();
+    // colored, not just wrapped: a type and a keyword do not share a color
+    const typeColor: string = await block.locator('.nl-type').first().evaluate((e: Element): string => getComputedStyle(e).color);
+    const keywordColor: string = await block.locator('.nl-keyword').first().evaluate((e: Element): string => getComputedStyle(e).color);
+    expect(typeColor).not.toBe(keywordColor);
+});

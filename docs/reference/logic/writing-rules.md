@@ -10,7 +10,7 @@ For the semantic background, read [`three-valued-logic.md`](three-valued-logic.m
 
 ## The rule form
 
-```
+```nelumbo
 L  <=>  R
 ```
 
@@ -27,7 +27,7 @@ The free variables on each side must have been declared with a variable declarat
 
 ## A single rule — the simple case
 
-```
+```nelumbo
 even(x) <=> E[y](y = x/2)
 ```
 
@@ -41,7 +41,7 @@ For any `x`, the engine treats `even(x)` and `E[y](y=x/2)` as interchangeable. Q
 
 A right-hand side may be qualified by an `if`-guard:
 
-```
+```nelumbo
 fib(n) = f  <=>  f = n                  if n >= 0 & n <= 1
 ```
 
@@ -59,14 +59,14 @@ Nelumbo lets you write many rules with the same left-hand side. They accumulate.
 
 A common idiom compresses several rules onto adjacent lines using a comma:
 
-```
+```nelumbo
 fib(n) = f  <=>  f = n                    if n >= 0 & n <= 1,
                  f = fib(n-1) + fib(n-2)  if n > 1
 ```
 
 The comma is **purely syntactic shorthand** for repeating the left-hand side. The above is exactly equivalent to:
 
-```
+```nelumbo
 fib(n) = f  <=>  f = n                    if n >= 0 & n <= 1
 fib(n) = f  <=>  f = fib(n-1) + fib(n-2)  if n > 1
 ```
@@ -118,7 +118,7 @@ Not all contradictions are bugs. Asserting that two rules *must* agree is a form
 
 ### From `integers.nl`
 
-```
+```nelumbo
 a < b  <=>  b > a
 a <= b <=>  a < b | a = b
 a >= b <=>  a > b | a = b
@@ -140,7 +140,7 @@ Notice also the absolute-value rule: two clauses, `if a >= 0` and `if a < 0`, co
 
 ### From `family.nl`
 
-```
+```nelumbo
 c(a) = b  <=>  pc(a, b)
 p(a) = b  <=>  pc(b, a)
 m(a) = b  <=>  E[x](c(x) = a & b = x)

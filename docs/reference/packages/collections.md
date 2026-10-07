@@ -8,7 +8,7 @@ Generic sets and lists, with membership, set algebra, list concatenation and ind
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.collections
 ```
 
@@ -18,8 +18,13 @@ import nelumbo.collections
 
 ## Types
 
+<<<<<<< HEAD
 ```
 Type E, F
+=======
+```nelumbo
+Type E
+>>>>>>> refs/remotes/origin/develop
 
 Collection<E>  :: Object
 Set<E>         :: Collection<E>
@@ -34,9 +39,16 @@ List<E>        :: Collection<E>
 
 ## Literals
 
+<<<<<<< HEAD
 ```
 {Struct,Set<E>}  ::= { <(> <E> <,> , <)*> }  @nelumbo.collections.NSet
 {Struct,List<E>} ::= [ <(> <E> <,> , <)*> ]  @nelumbo.collections.NList
+=======
+```nelumbo
+Set<E>  ::= { <(> <E> <,> , <)*> }       @nelumbo.collections.NSet,
+            { [ <E> ] ( <Boolean#0> ) }  @nelumbo.collections.SetBuilder
+List<E> ::= [ <(> <E> <,> , <)*> ]       @nelumbo.collections.NList
+>>>>>>> refs/remotes/origin/develop
 ```
 
 | Syntax        | Type      | Notes                                       |
@@ -73,22 +85,32 @@ The bound variables must be **declared variables** (`Integer i` …) — a lambd
 
 ### Set-builder — `{[e](c)}`
 
+<<<<<<< HEAD
 ```
 Set<E> ::= { <Lambda1<E,Boolean>> }
+=======
+```nelumbo
+Set<E> ::= { [ <E> ] ( <Boolean#0> ) }   @nelumbo.collections.SetBuilder
+>>>>>>> refs/remotes/origin/develop
 ```
 
 `{[e](c)}` denotes *the set of all `e` for which `c` is a fact*. It is a `Lambda1<E,Boolean>` wrapped in `{ }`, and one rule hands it to the native `build` predicate:
 
+<<<<<<< HEAD
 ```
 Lambda1<E,Boolean> leb
 Set<E> s
+=======
+```nelumbo
+E e   Boolean c   Set<E> s
+>>>>>>> refs/remotes/origin/develop
 
 {leb} = s   <=>   build(leb, s)
 ```
 
 `build` is `private`, backed by `nelumbo.collections.BuildSet`. It is a **quantifier**: like `E[...]` and `A[...]`, it evaluates the lambda body under many bindings of the bound variable and strips that variable from the result, collecting the witnessing values into a set.
 
-```
+```nelumbo
 Integer i   Set<Integer> s
 
 {[i](|i|=10)} = s   ?   [(s={-10,10})][(s={0}),..]
@@ -134,13 +156,13 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @ne
 
 ### Cardinality — `|c|`
 
-```
+```nelumbo
 Integer ::= | <Collection<E>> | #35
 ```
 
 `|c| = n` is the number of elements in any `Collection<E>` (set *or* list). Computes the count from the collection, or checks a given count. With the collection itself unknown the answer is unknown.
 
-```
+```nelumbo
 |{1,2,3}| = i   ?   [(i=3)][..]      ▸ i = 3
 |[1,2,3]| = 1   ?   [][()]           ▸ false: the list has 3 elements
 |{1,1,2}| = i   ?   [(i=2)][..]      ▸ duplicates in a set collapse
@@ -149,13 +171,13 @@ Integer ::= | <Collection<E>> | #35
 
 ### Membership — `e in c`
 
-```
+```nelumbo
 Boolean ::= <E> "in" <Collection<E>> #30
 ```
 
 `e in c` holds when `e` is an element of the collection (a member of a set, or an element at any index of a list). With an unbound element it **enumerates** the members of a set:
 
-```
+```nelumbo
 1 in {1,2,3}    ?   [()][]                       ▸ true
 4 in [1,2,3]    ?   [][()]                       ▸ false, for lists too
 i in {1,2,3}    ?   [(i=1),(i=2),(i=3)][..]      ▸ enumerates members
@@ -165,7 +187,7 @@ For a list, `in` is defined through the index relation (`e in l <=> E[i](e pos l
 
 ### Subset / superset — `<` `>` `<=` `>=`
 
-```
+```nelumbo
 Boolean ::= <Set<E>> "<"  <Set<E>> #30,
             <Set<E>> ">"  <Set<E>> #30,
             <Set<E>> "<=" <Set<E>> #30,
@@ -174,7 +196,7 @@ Boolean ::= <Set<E>> "<"  <Set<E>> #30,
 
 `s1 < s2` holds when every element of `s1` is in `s2` — i.e. `s1 ⊆ s2`. Note this is the **non-strict** subset (it is backed by `containsAll`, so a set is a subset of itself); `s1 <= s2` is defined as `s1 < s2 | s1 = s2` and denotes the same relation, kept for symmetry with the integer comparison operators. `>`/`>=` are the mirror (superset).
 
-```
+```nelumbo
 {1,2}   < {1,2,3}   ?   [()][]      ▸ true
 {}      < {1,2,3}   ?   [()][]      ▸ the empty set is a subset of anything
 {1,2,3} < {}        ?   [][()]      ▸ false
@@ -183,13 +205,13 @@ Boolean ::= <Set<E>> "<"  <Set<E>> #30,
 
 ### Set algebra — `&&` `||` `-`
 
-```
+```nelumbo
 Set<E> ::= <Set<E>> && <Set<E>> #60,   ▸ intersection
            <Set<E>> || <Set<E>> #60,   ▸ union
            <Set<E>> -  <Set<E>> #50    ▸ difference
 ```
 
-```
+```nelumbo
 {3,4,5} && {1,2,3} = s   ?   [(s={3})][..]
 {3,4,5} || {1,2,3} = s   ?   [(s={1,2,3,4,5})][..]
 {3,4,5} -  {1,2,3} = s   ?   [(s={4,5})][..]
@@ -199,11 +221,11 @@ Both operands must be known; the result may be given to check it (`{1,2} - {1,2,
 
 ### List concatenation — `+`
 
-```
+```nelumbo
 List<E> ::= <List<E>> + <List<E>> #50
 ```
 
-```
+```nelumbo
 [1,2,3] + [4,5] = l   ?   [(l=[1,2,3,4,5])][..]
 [1,2,3] + []    = l   ?   [(l=[1,2,3])][..]
 ```
@@ -212,17 +234,23 @@ Both operands must be known; `concat` does not split a known result.
 
 ### List index — `e pos l`
 
-```
+```nelumbo
 Integer ::= <E> "pos" <List<E>> #40
 ```
 
 `e pos l = i` relates an element `e` to its **0-based** index `i` in list `l`. It runs either way — find the index of an element, or find the element at an index — and a duplicated element yields one solution per occurrence:
 
+<<<<<<< HEAD
 ```
 2 pos [1,2,3] = i   ?   [(i=1)][..]          ▸ 2 sits at index 1
 i pos [1,2,3] = 2   ?   [(i=3)][..]          ▸ index 2 holds the element 3
 2 pos [1,2,2] = i   ?   [(i=1),(i=2)][..]    ▸ one solution per occurrence
 5 pos [1,2,3] = i   ?   [][..]               ▸ not present
+=======
+```nelumbo
+2 pos [1,2,3] = i   ?   [(i=1)][..]      ▸ 2 sits at index 1
+i pos [1,2,3] = 2   ?   [(i=3)][..]      ▸ index 2 holds the element 3
+>>>>>>> refs/remotes/origin/develop
 ```
 
 (An index outside the list is a known problem — see [`bugs/collections-index-out-of-range.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/bugs/collections-index-out-of-range.nl).)
@@ -279,7 +307,7 @@ The comparison can be any relation over the elements, e.g. sorting sets by size:
 
 A representative slice of `collectionsTest.nl`:
 
-```
+```nelumbo
 import nelumbo.collections
 
 List<Integer>       l

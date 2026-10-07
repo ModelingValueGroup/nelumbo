@@ -110,7 +110,7 @@ The stdlib uses this shape for `add`, `mult`, `iir`, and the string relations `s
 
 ### Nelumbo-side declaration
 
-```
+```nelumbo
 private Boolean ::= myop(<T1>, <T2>, <T3>)  @com.example.MyOp
 ```
 
@@ -118,7 +118,7 @@ Because the functor name `myop` is an identifier, implement the logic as a `@Nel
 
 Declaring `myop` as `private` is idiomatic — the native predicate is usually wrapped by user-facing operators in the same module:
 
-```
+```nelumbo
 T1 a
 T2 b
 T3 c
@@ -212,7 +212,7 @@ A comparison is almost always spelled as an **operator** (`>`), and an operator 
 
 **Path A — named helper functor + rule (preferred, all logic stays in a method).** This is what `integers` and `rationals` do today:
 
-```
+```nelumbo
 private Boolean ::= gt(<T>, <T>)  @com.example.MyMod    // a @NelumboMethod named `gt`
 
 Boolean ::= <T> ">" <T>  #30
@@ -222,7 +222,7 @@ a > b  <=>  gt(a, b)
 
 **Path B — bind the operator directly and override `infer`.** Use this when a named helper is awkward; it is what `datetime.GreaterThan` does:
 
-```
+```nelumbo
 Boolean ::= <T> ">" <T>  #30  @com.example.MyCompare
 ```
 
@@ -288,7 +288,7 @@ The stdlib uses this shape for `NInteger` (integers), `NString` (strings), `Rati
 
 ### Nelumbo-side declaration
 
-```
+```nelumbo
 MyValue :: Object
 
 MyValue ::= <NUMBER>   @com.example.NMyValue
@@ -364,7 +364,7 @@ The stdlib uses this shape for `And` and `Or`. Writing one from scratch is uncom
 
 ### Nelumbo-side declaration
 
-```
+```nelumbo
 Boolean ::= <Boolean> "nand" <Boolean>  #21  @com.example.Nand
 ```
 
@@ -458,7 +458,7 @@ The stdlib uses this shape for `NSet` (`{...}`) and `NList` (`[...]`).
 
 ### Nelumbo-side declaration
 
-```
+```nelumbo
 Type E
 
 MyContainer<E> ::= < <(> <E> <,> , <)*> >  @com.example.NMyContainer

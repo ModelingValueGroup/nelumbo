@@ -10,7 +10,7 @@ Read this alongside [`native-api.md`](native-api.md) (which describes the API su
 
 ## Package layout
 
-```
+```text
 org.modelingvalue.nelumbo.*           base classes and engine
     Node                              base class for AST nodes (values)
     Predicate           (in .logic)   base class for Boolean-producing natives
