@@ -81,15 +81,9 @@ false -> unknown ? [()][]
 
 ## Quantifiers
 
-<<<<<<< HEAD
-```
+```nelumbo
 Boolean ::= E<Lambda<Boolean>>   @nelumbo.logic.ExistentialQuantifier,
             A<Lambda<Boolean>>   @nelumbo.logic.UniversalQuantifier
-=======
-```nelumbo
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.ExistentialQuantifier,
-            A[<(> <Variable#100> <,> , <)+>](<Boolean#0>)   @nelumbo.logic.UniversalQuantifier
->>>>>>> refs/remotes/origin/develop
 ```
 
 - `E[x](p)` — there exists `x` such that `p`.
@@ -129,18 +123,11 @@ Two related but distinct primitives:
 
 `!=` has no native binding of its own; it is the negation of `=`. The remaining cases are rules, written with *intersection types* `{A,B}` ("both an `A` and a `B`") over a generic parameter `E`:
 
-<<<<<<< HEAD
-```
+```nelumbo
 Type E
 E            n1, n2
 {E,Literal}  l1, l2
 {E,Function} f1, f2
-=======
-```nelumbo
-Literal  l1, l2
-Function f1
-Object   n1, n2
->>>>>>> refs/remotes/origin/develop
 
 l1 = l2   <=>  eq(l1, l2)
 l1 = f1   <=>  f1 = l1
@@ -160,13 +147,8 @@ f1 = f2   <=>  E[l1](f1 = l1 & f2 = l1)
 
 `nelumbo.logic` also declares the three statement forms that appear at the top level of a `.nl` file:
 
-<<<<<<< HEAD
-```
-Root ::= "fact" <(> <FactType#0> <,> , <)+>                                       @nelumbo.logic.Fact,
-=======
 ```nelumbo
-Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                        @nelumbo.logic.Fact,
->>>>>>> refs/remotes/origin/develop
+Root ::= "fact" <(> <FactType#0> <,> , <)+>                                       @nelumbo.logic.Fact,
          <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>   @nelumbo.logic.Rule,
          <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                               @nelumbo.logic.Query
 ```
@@ -179,13 +161,8 @@ Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                      
 
 In test files the `fact` keyword is often elided — a bare predicate at top level (such as `pc(Hendrik, Juliana)` in `family.nl`) is sugar for `fact pc(Hendrik, Juliana)`. The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
 
-<<<<<<< HEAD
-```
-pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#0> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
-=======
 ```nelumbo
-pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#100> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
->>>>>>> refs/remotes/origin/develop
+pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#0> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
 ```
 
 That is the grammar of `[(a=T1), (a=T2)]`, `[..]`, `[]`, and combinations such as `[(a=0),..]`. (It was previously a stand-alone `Binding :: Object` type; it is now a named pattern, so it adds no type — it is pure syntax for the query suffix.) See [`test-expression-semantics.md`](test-expression-semantics.md) for how a `?` test is judged to pass or fail.

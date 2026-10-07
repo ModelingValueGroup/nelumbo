@@ -459,13 +459,8 @@ So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `Lis
 
 `Set<E>` has a second form — the comprehension `{[e](c)}`, "the set of all `e` such that `c`". The `[e](c)` inside the braces is a lambda: `e` must be a declared variable, and `(c)` is any Boolean condition over it. It reduces to one native rule:
 
-<<<<<<< HEAD
-```
-{leb} = s  <=>  build(leb, s)
-=======
 ```nelumbo
-{[e](c)} = s  <=>  build(e, c, s)
->>>>>>> refs/remotes/origin/develop
+{leb} = s  <=>  build(leb, s)
 ```
 
 `build` is backed by `BuildSet`, which — like `E[...]` and `A[...]` — is a **quantifier**: it evaluates the lambda body under each binding of the bound variable, strips that variable, and gathers the witnessing values into a set. So set construction reuses the same three-valued quantifier machinery as the logic layer:
@@ -481,7 +476,7 @@ The two solutions of `|i| = 10` become the fact `s = {-10, 10}`; `i = 0` is a pr
 
 The other three lambda users are plain relations on the `Collections` native, which applies the lambda to each element (`Lambda.test` for predicates, `Lambda.apply` for functions):
 
-```
+```nelumbo
 {1,2,3}   where [i](i>1)          = s   ?  [(s={2,3})][..]
 [1,2,3]   map   [i](i*i)          = l   ?  [(l=[1,4,9])][..]
 [3,1,2]   sort  [ib,ia](ib<ia)    = l   ?  [(l=[1,2,3])][..]

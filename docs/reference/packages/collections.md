@@ -18,13 +18,8 @@ import nelumbo.collections
 
 ## Types
 
-<<<<<<< HEAD
-```
-Type E, F
-=======
 ```nelumbo
-Type E
->>>>>>> refs/remotes/origin/develop
+Type E, F
 
 Collection<E>  :: Object
 Set<E>         :: Collection<E>
@@ -39,16 +34,9 @@ List<E>        :: Collection<E>
 
 ## Literals
 
-<<<<<<< HEAD
-```
+```nelumbo
 {Struct,Set<E>}  ::= { <(> <E> <,> , <)*> }  @nelumbo.collections.NSet
 {Struct,List<E>} ::= [ <(> <E> <,> , <)*> ]  @nelumbo.collections.NList
-=======
-```nelumbo
-Set<E>  ::= { <(> <E> <,> , <)*> }       @nelumbo.collections.NSet,
-            { [ <E> ] ( <Boolean#0> ) }  @nelumbo.collections.SetBuilder
-List<E> ::= [ <(> <E> <,> , <)*> ]       @nelumbo.collections.NList
->>>>>>> refs/remotes/origin/develop
 ```
 
 | Syntax        | Type      | Notes                                       |
@@ -65,7 +53,7 @@ The result type `{Struct,Set<E>}` is an intersection: a collection literal is a 
 
 Elements may be expressions; they are evaluated before the collection is formed:
 
-```
+```nelumbo
 [3+4,5+6]=l   ?   [(l=[7,11])][..]
 ```
 
@@ -85,25 +73,15 @@ The bound variables must be **declared variables** (`Integer i` …) — a lambd
 
 ### Set-builder — `{[e](c)}`
 
-<<<<<<< HEAD
-```
-Set<E> ::= { <Lambda1<E,Boolean>> }
-=======
 ```nelumbo
-Set<E> ::= { [ <E> ] ( <Boolean#0> ) }   @nelumbo.collections.SetBuilder
->>>>>>> refs/remotes/origin/develop
+Set<E> ::= { <Lambda1<E,Boolean>> }
 ```
 
 `{[e](c)}` denotes *the set of all `e` for which `c` is a fact*. It is a `Lambda1<E,Boolean>` wrapped in `{ }`, and one rule hands it to the native `build` predicate:
 
-<<<<<<< HEAD
-```
+```nelumbo
 Lambda1<E,Boolean> leb
 Set<E> s
-=======
-```nelumbo
-E e   Boolean c   Set<E> s
->>>>>>> refs/remotes/origin/develop
 
 {leb} = s   <=>   build(leb, s)
 ```
@@ -126,7 +104,7 @@ Set-builder takes **exactly one** bound variable (it is a `Lambda1`); `{[i,j](�
 
 Every operation is a relation, so it works in both directions where that is meaningful: supply the result and check it, or leave it a variable and have it computed. The native worker for all of them is the `Collections` class; the operator syntax is the public surface, wired to `private` predicates:
 
-```
+```nelumbo
 private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @nelumbo.collections.BuildSet,
                     size(<Collection<E>>, <Integer>)                         @nelumbo.collections.Collections,
                     indexOf(<List<E>>, <E>, <Integer>)                       @nelumbo.collections.Collections,
@@ -240,31 +218,25 @@ Integer ::= <E> "pos" <List<E>> #40
 
 `e pos l = i` relates an element `e` to its **0-based** index `i` in list `l`. It runs either way — find the index of an element, or find the element at an index — and a duplicated element yields one solution per occurrence:
 
-<<<<<<< HEAD
-```
+```nelumbo
 2 pos [1,2,3] = i   ?   [(i=1)][..]          ▸ 2 sits at index 1
 i pos [1,2,3] = 2   ?   [(i=3)][..]          ▸ index 2 holds the element 3
 2 pos [1,2,2] = i   ?   [(i=1),(i=2)][..]    ▸ one solution per occurrence
 5 pos [1,2,3] = i   ?   [][..]               ▸ not present
-=======
-```nelumbo
-2 pos [1,2,3] = i   ?   [(i=1)][..]      ▸ 2 sits at index 1
-i pos [1,2,3] = 2   ?   [(i=3)][..]      ▸ index 2 holds the element 3
->>>>>>> refs/remotes/origin/develop
 ```
 
 (An index outside the list is a known problem — see [`bugs/collections-index-out-of-range.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/bugs/collections-index-out-of-range.nl).)
 
 ### Filter — `where`
 
-```
+```nelumbo
 Set<E>  ::= <Set<E>>  where <Lambda1<E,Boolean>> #37
 List<E> ::= <List<E>> where <Lambda1<E,Boolean>> #37
 ```
 
 `c where [x](p)` keeps the elements for which the lambda body holds. The result has the type of the left operand — a set stays a set, a list stays a list (order and duplicates preserved):
 
-```
+```nelumbo
 {1,2,3}   where [i](i>1) = s   ?   [(s={2,3})][..]
 [1,2,2,3] where [i](i>1) = l   ?   [(l=[2,2,3])][..]
 [1,2,3]   where [i](i>5) = l   ?   [(l=[])][..]
@@ -272,26 +244,26 @@ List<E> ::= <List<E>> where <Lambda1<E,Boolean>> #37
 
 ### Map — `map`
 
-```
+```nelumbo
 List<E> ::= <Collection<F>> map <Lambda1<F,E>> #37
 ```
 
 `c map [x](expr)` applies the lambda to every element of any collection and yields a **list** (in the collection's iteration order) of the results. The element type may change — that is what the second type parameter `F` is for:
 
-```
+```nelumbo
 [1,2,3] map [i](i*i) = l   ?   [(l=[1,4,9])][..]
 {1,2,3} map [i](i*i) = l   ?   [(l=[1,4,9])][..]    ▸ a set maps to a list
 ```
 
 ### Sort — `sort`
 
-```
+```nelumbo
 List<E> ::= <Collection<E>> sort <Lambda2<E,E,Boolean>> #37
 ```
 
 `c sort [a,b](before)` orders any collection into a list. The two-variable lambda is the "comes before" test: `a` is placed ahead of `b` when the body holds.
 
-```
+```nelumbo
 [3,1,2] sort [ib,ia](ib<ia) = l   ?   [(l=[1,2,3])][..]    ▸ ascending
 [3,1,2] sort [ib,ia](ib>ia) = l   ?   [(l=[3,2,1])][..]    ▸ descending
 {3,1,2} sort [ib,ia](ib<ia) = l   ?   [(l=[1,2,3])][..]    ▸ a set sorts to a list

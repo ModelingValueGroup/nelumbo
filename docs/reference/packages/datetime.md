@@ -42,19 +42,11 @@ They are **not** in a subtype relationship with one another, and there is no imp
 
 All four literals are written inside a **connected-token group** (`<[> … <]>`), which forbids whitespace between the inner tokens — `2024-01-15` must be written tightly, not `2024 - 01 - 15`. See [`built-in-tokens.md`](../lang/built-in-tokens.md) for the connected-token mechanism.
 
-<<<<<<< HEAD
-```
+```nelumbo
 Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> #60                           @nelumbo.datetime.NDate
 Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]> #60 @nelumbo.datetime.NTime
 DateTime ::= <[> <Date> T <Time> <]> #50                                         @nelumbo.datetime.NDateTime
 Period   ::= <[> P … <]> #60                                                     @nelumbo.datetime.NPeriod
-=======
-```nelumbo
-Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                              @nelumbo.datetime.NDate
-Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]> @nelumbo.datetime.NTime
-DateTime ::= <[> <Date> T <Time#50> <]>                                          @nelumbo.datetime.NDateTime
-Period   ::= <[> P … <]>                                                         @nelumbo.datetime.NPeriod
->>>>>>> refs/remotes/origin/develop
 ```
 
 - **`Date`** — `YYYY-MM-DD`. Parsed into a `LocalDate`; out-of-range values (e.g. month 13) are rejected **at parse time** with a `file:line:col` error, not as a query falsehood.

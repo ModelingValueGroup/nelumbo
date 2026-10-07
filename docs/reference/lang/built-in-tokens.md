@@ -104,15 +104,9 @@ From `hidden.nl`. These restrict the hole to hidden or visible variables respect
 
 `<Variable>` matches a variable binding site, not a general expression. It is what lambdas use to introduce a bound variable (and quantifiers, which are lambdas), typed with the lambda's argument type:
 
-<<<<<<< HEAD
-```
+```nelumbo
 Lambda2<A1,A2,R> ::= [<{Variable,A1}>,<{Variable,A2}>](<R#0>)   @nelumbo.logic.Lambda
 Boolean          ::= E<Lambda<Boolean>>                         @nelumbo.logic.ExistentialQuantifier
-=======
-```nelumbo
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
-            @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
->>>>>>> refs/remotes/origin/develop
 ```
 
 From `logic.nl` (see [lambdas](../logic/lambdas.md)). The quantifier `E[x, y, z](body)` expects binding sites, not pre-existing expressions, in the bracketed position.

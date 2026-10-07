@@ -8,7 +8,7 @@ A lambda is an anonymous expression over bound variables: `[x](x>0)`. Lambdas ar
 
 ## Syntax
 
-```
+```nelumbo
 Lambda1<A1,R> ::= [ <{Variable,A1}> ] ( <R#0> )                          @nelumbo.logic.Lambda
 Lambda2<A1,A2,R> ::= [ <{Variable,A1}> , <{Variable,A2}> ] ( <R#0> )     @nelumbo.logic.Lambda
 …                                                                         (up to Lambda6)
@@ -20,7 +20,7 @@ Lambda2<A1,A2,R> ::= [ <{Variable,A1}> , <{Variable,A2}> ] ( <R#0> )     @nelumb
 - `( … )` is the **body**, an expression of result type `R` (precedence `#0`, so everything up to the closing parenthesis belongs to it).
 - `R` is the lambda's result type. A lambda whose body is `Boolean` is a *predicate*; one whose body is an `Integer` is a function to `Integer`.
 
-```
+```nelumbo
 Integer i, ib, ia
 
 [i](i>1)           ▸ Lambda1<Integer,Boolean>  — a predicate over one Integer
@@ -30,7 +30,7 @@ Integer i, ib, ia
 
 ## Types
 
-```
+```nelumbo
 Type A1, A2, A3, A4, A5, A6, R
 
 Lambda                       :: Object
@@ -43,7 +43,7 @@ Lambda6<A1,A2,A3,A4,A5,A6,R> :: Lambda<R>
 
 The arity-N type is `LambdaN<A1,…,AN,R>`, with N from 1 to 6 (a seventh variable is a parse error). All of them are subtypes of `Lambda<R>`, so a pattern that accepts *any* arity with a given result type can use `<Lambda<R>>` — the quantifiers do exactly that:
 
-```
+```nelumbo
 Boolean ::= E<Lambda<Boolean>>  @nelumbo.logic.ExistentialQuantifier,
             A<Lambda<Boolean>>  @nelumbo.logic.UniversalQuantifier
 ```
@@ -56,7 +56,7 @@ Boolean ::= E<Lambda<Boolean>>  @nelumbo.logic.ExistentialQuantifier,
 
 The variables in `[ … ]` are **local to the lambda**: inside the body they take on the lambda's role instead of their outer one, and they are not visible outside it. This is the same scoping the quantifiers always had. The variable's *declaration* is still the ordinary one (`Integer i`); a lambda does not declare variables, only binds them.
 
-```
+```nelumbo
 Integer i
 {[i](|i|=10)} = s     // i is bound by the lambda; an outer i is untouched
 ```
@@ -67,7 +67,7 @@ Integer i
 
 Lambdas are *values consumed by natives*. The language has no call syntax for a lambda: you cannot write `f(3)` for a lambda `f`. A lambda gets applied when it is an argument of a functor whose native implementation evaluates it — `Lambda.test(…)` for predicates (`where`, `sort`) and `Lambda.apply(…)` for functions (`map`). Declaring your own lambda-taking functor works the same as for any argument type:
 
-```
+```nelumbo
 Boolean ::= holds(<Lambda1<Integer,Boolean>>, <Integer>)
 ```
 

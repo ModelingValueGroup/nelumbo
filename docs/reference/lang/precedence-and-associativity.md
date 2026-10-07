@@ -92,15 +92,9 @@ Binary subtraction binds looser (40) than unary negation (80), so `-a - b` parse
 
 Quantifiers `E[...]` and `A[...]` are the keyword followed by a [lambda](../logic/lambdas.md), and the lambda uses hole precedence on its body rather than a single pattern precedence:
 
-<<<<<<< HEAD
-```
+```nelumbo
 Lambda1<A1,R> ::= [<{Variable,A1}>](<R#0>)   @nelumbo.logic.Lambda
 Boolean       ::= E<Lambda<Boolean>>         @nelumbo.logic.ExistentialQuantifier
-=======
-```nelumbo
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
-            @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
->>>>>>> refs/remotes/origin/develop
 ```
 
 The body `<R#0>` accepts an expression at the lowest precedence, so `E[x](a & b | c -> d)` parses with the full expression inside, as intended. The variable holes demand a bare, declared variable (`{Variable,A1}`) — no composite expressions.
