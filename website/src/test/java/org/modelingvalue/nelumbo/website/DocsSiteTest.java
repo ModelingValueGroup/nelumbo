@@ -74,6 +74,8 @@ class DocsSiteTest {
                 """);
         md.put("reference/logic/index.md", "# `nelumbo.logic`\n\ntext\n");
         md.put("reference/logic/operators.md", "# Operators\n");
+        md.put("reference/formatting.md", "# Formatting\n");
+        md.put("reference/packages/integers.md", "# `nelumbo.integers`\n");
         md.put("NELUMBO.md", "# Slides\n");
         return new DocsSite(md, TEMPLATE);
     }
@@ -118,6 +120,8 @@ class DocsSiteTest {
                 "groups keep the documented reading order: " + grammar);
         // a level's overview heads its group even though "nelumbo.logic" sorts after "Operators"
         assertTrue(grammar.indexOf(">nelumbo.logic<") < grammar.indexOf(">Operators<"), grammar);
+        // the level-less reference pages (formatting) close the reference, after the packages
+        assertTrue(grammar.indexOf(">nelumbo.integers<") < grammar.indexOf(">Formatting<"), grammar);
         assertFalse(grammar.contains("Slides"), "root-level pages other than the index are not in the sidebar: " + grammar);
         assertTrue(site().page("/docs/NELUMBO.html").isPresent(), "...but they are still served for the links that point at them");
     }

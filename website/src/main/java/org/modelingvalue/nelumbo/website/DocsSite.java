@@ -62,11 +62,11 @@ public final class DocsSite {
     /** Sidebar groups: the docs folder, in reading order; pages elsewhere (except the index) are served but not listed. */
     private static final List<String[]> GROUPS = List.of(
             new String[]{"getting-started", "Getting started"},
-            new String[]{"reference", "Reference"},
             new String[]{"reference/core", "Reference: Core"},
             new String[]{"reference/lang", "Reference: Lang"},
             new String[]{"reference/logic", "Reference: Logic"},
             new String[]{"reference/packages", "Reference: Packages"},
+            new String[]{"reference", "Reference"},
             new String[]{"guides", "Guides"},
             new String[]{"explanation", "Explanation"});
 
