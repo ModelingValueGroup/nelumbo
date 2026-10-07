@@ -648,19 +648,23 @@ public class Node extends StructImpl implements AstElement {
     public <E extends Node> MatchState<E> state(MatchState<E> next) {
         for (Object arg : args().reverse()) {
             switch (arg) {
-            case Type type    -> {
+            case Type type     -> {
                 next = matchType(next, type);
                 break;
             }
-            case Variable var -> {
+            case Variable var  -> {
                 next = matchType(next, var.type());
                 break;
             }
-            case Node node    -> {
+            case Node node     -> {
                 next = node.state(next);
                 break;
             }
-            default           -> {
+            case String string -> {
+                next = new MatchState<>(string, next);
+                break;
+            }
+            default            -> {
                 next = new MatchState<>(arg.getClass(), next);
             }
             }
