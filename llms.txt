@@ -61,7 +61,7 @@ example file in the project is unreadable.
 
 ## Extending Nelumbo
 
-- [Architecture](https://nelumbo.nl/docs/explanation/architecture.html): the layering - Java core, `lang.nl`, `logic.nl`, numeric/data stdlib, user code
+- [Architecture](https://nelumbo.nl/docs/explanation/architecture.html): the levels - Java core, `nelumbo.lang`, `nelumbo.logic`, optional packages, user code - and how imports bring them in
 - [Writing your own module](https://nelumbo.nl/docs/guides/writing-your-own-module.html): packaging a reusable library
 - [Language transformations](https://nelumbo.nl/docs/guides/language-transformations.html): the `::>` mechanism for new keywords (under construction)
 - [Native API](https://nelumbo.nl/docs/reference/core/native-api.html): the `Predicate`, `InferResult`, `infer()` surface for Java primitives

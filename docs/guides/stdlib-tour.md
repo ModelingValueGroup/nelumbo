@@ -2,7 +2,7 @@
 
 The Nelumbo standard library is around 300 lines of Nelumbo across seven files. That is remarkably small — and because it is written in Nelumbo, reading it is one of the best ways to learn how the language is actually used.
 
-This guide walks through all seven modules in dependency order, showing how each builds on the previous ones, what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
+This guide walks through all seven modules in dependency order. It starts with `nelumbo.lang` and `nelumbo.logic`, which define the syntax and the logic every package builds on. Then come the optional packages, starting with `nelumbo.integers`, which the other four import. Along the way it shows what is native and what is derived, and what idiomatic Nelumbo looks like in production use.
 
 The files:
 
