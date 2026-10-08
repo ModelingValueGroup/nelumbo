@@ -20,6 +20,8 @@
 //   data-theme-mode  the user's choice, 'auto', 'light' or 'dark' - picks the switch's icon
 // The choice lives in localStorage; no stored choice means 'auto' = follow the OS preference.
 // nelumbo-fields.ts watches data-theme to switch the Monaco editors along.
+// Also, being the one script on every page: shift+click on the status dot ([data-status-link]) opens the
+// internal /status.html page, which the site deliberately does not link visibly (a plain click does nothing).
 (function () {
     var KEY   = 'nelumbo-theme';
     var NEXT  = { auto: 'light', light: 'dark', dark: 'auto' };
@@ -61,5 +63,9 @@
     document.addEventListener('DOMContentLoaded', label);
     document.addEventListener('click', function (e) {
         if (e.target.closest && e.target.closest('.theme-toggle')) { cycle(); }
+        if (e.shiftKey && e.target.closest && e.target.closest('[data-status-link]')) {
+            e.preventDefault();
+            window.location.href = '/status.html';
+        }
     });
 })();

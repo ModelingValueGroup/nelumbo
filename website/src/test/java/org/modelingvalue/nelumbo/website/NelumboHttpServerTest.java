@@ -29,10 +29,12 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.server.KnowledgeBaseLoader;
 import org.modelingvalue.nelumbo.server.NamedSource;
@@ -302,18 +304,55 @@ class NelumboHttpServerTest {
     void statusPageAndDotScriptAreServed() throws Exception {
         HttpResponse<String> page = get("/status.html");
         assertEquals(200, page.statusCode());
-        assertTrue(page.body().contains("fetch('/stats')"), "the status page polls /stats");
+        assertTrue(page.body().contains("src=\"/assets/status-chart.js\""), "the status page loads its chart bundle");
         HttpResponse<String> dot = get("/status-dot.js");
         assertEquals(200, dot.statusCode());
         assertTrue(dot.headers().firstValue("Content-Type").orElse("").contains("javascript"), "the dot script is served as JavaScript");
+        assertEquals(200, get("/assets/status-chart.js").statusCode(), "the chart bundle is served");
     }
 
     @Test
-    void everyPageWithAVersionShowsTheStatusDot() throws Exception {
+    void everyPageWithAVersionShowsTheStatusDotButNoStatusLink() throws Exception {
         for (String page : List.of("/", "/tour.html", "/sandbox.html", "/docs/")) {
             String body = get(page).body();
-            assertTrue(body.contains("class=\"status-dot\" href=\"/status.html\""), page + " links the status page from its status dot");
+            assertTrue(body.contains("<span class=\"status-dot\""), page + " shows the status dot");
             assertTrue(body.contains("src=\"/status-dot.js\""), page + " loads the status dot script");
+            assertFalse(body.contains("href=\"/status.html\""), page + " has no visible link to the internal status page");
+            assertTrue(body.contains("<span class=\"status-dot\" data-status-link"), page + " makes its status dot the shift+click shortcut to the status page");
+        }
+    }
+
+    @Test
+    void statsCarryTheSampleTime() throws Exception {
+        JsonNode stats = mapper.readTree(get("/stats").body());
+        assertTrue(stats.get("time").asLong() > 1_700_000_000_000L, "time is the sample time in epoch ms");
+    }
+
+    @Test
+    void historyHasTheDocumentedShape() throws Exception {
+        for (String range : List.of("hour", "day", "week")) {
+            HttpResponse<String> response = get("/stats/history?range=" + range);
+            assertEquals(200, response.statusCode(), range);
+            JsonNode history = mapper.readTree(response.body());
+            assertEquals(range, history.get("range").asText());
+            assertEquals(range.equals("week") ? 600 : 60, history.get("resolutionSeconds").asInt());
+            assertTrue(history.get("points").isArray(), range + " points");
+        }
+        assertEquals(400, get("/stats/history?range=month").statusCode());
+    }
+
+    @Test
+    @Timeout(20)
+    void streamSendsAStatsEventRightAway() throws Exception {
+        HttpRequest                  request  = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/stats/stream")).header("Accept", "text/event-stream").GET().build();
+        HttpResponse<Stream<String>> response = client.send(request, BodyHandlers.ofLines());
+        assertEquals(200, response.statusCode());
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("text/event-stream"));
+        try (Stream<String> lines = response.body()) {
+            // up to two events; tolerates a leading comment or retry line before the first event
+            List<String> first = lines.filter(l -> !l.isBlank()).limit(4).toList();
+            assertTrue(first.contains("event: stats"), "got " + first);
+            assertTrue(first.stream().anyMatch(l -> l.startsWith("data: {") && l.contains("\"sessions\"")), "got " + first);
         }
     }
 }

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +29,9 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.lsp.EvalGate;
 import org.modelingvalue.nelumbo.server.EvalService;
 import org.modelingvalue.nelumbo.server.NelumboServer;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -52,8 +56,12 @@ public final class NelumboHttpServer {
     private final KnowledgeBase baseKb;
     private final long          timeoutMs;
     private final int           maxLspSessions;
+    private final Path          statsDir;
+    private final ObjectMapper  statsMapper = new ObjectMapper();
 
-    private Javalin app;
+    private Javalin       app;
+    private StatsRecorder recorder;
+    private StatsStream   stream;
 
     public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles) {
         this(baseKb, loadedFiles, DEFAULT_TIMEOUT_MS);
@@ -66,10 +74,16 @@ public final class NelumboHttpServer {
 
     /** {@code maxLspSessions} caps the number of concurrent LSP WebSocket sessions. */
     public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs, int maxLspSessions) {
+        this(baseKb, loadedFiles, timeoutMs, maxLspSessions, null);
+    }
+
+    /** {@code statsDir} keeps the per-minute stats history across restarts; null keeps it in memory only. */
+    public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs, int maxLspSessions, Path statsDir) {
         this.service        = new EvalService(baseKb, loadedFiles, timeoutMs);
         this.baseKb         = baseKb;
         this.timeoutMs      = timeoutMs;
         this.maxLspSessions = maxLspSessions;
+        this.statsDir       = statsDir;
     }
 
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
@@ -87,7 +101,10 @@ public final class NelumboHttpServer {
         // the sandbox's example list; the sudokus run far past the eval deadline, so they are left out
         List<String> examples = NelumboServer.exampleNames().stream().filter(n -> !n.startsWith("sudoku")).toList();
         LspWebSocket lsp  = new LspWebSocket(baseKb, timeoutMs, maxLspSessions);
-        ServerStats stats = new ServerStats();
+        StatsHistory history = new StatsHistory(statsDir, System::currentTimeMillis);
+        stream               = new StatsStream();
+        recorder             = new StatsRecorder(history, () -> ServerStats.read(lsp.sessionCount(), EvalGate.GLOBAL), sample -> stream.broadcast(statsJson(sample)));
+        recorder.start();
         app = Javalin.create(config -> {
             // serve the bundled frontend (Monaco js/css + codicon font) from the classpath under /assets
             config.staticFiles.add(staticFiles -> {
@@ -127,14 +144,50 @@ public final class NelumboHttpServer {
             config.routes.post("/eval", ctx -> handleEval(ctx, false));
             config.routes.post("/eval/trace", ctx -> handleEval(ctx, true));
             config.routes.get("/metadata", ctx -> ctx.json(service.metadata()));
-            config.routes.get("/stats", ctx -> ctx.json(stats.snapshot(lsp.sessionCount(), maxLspSessions, EvalGate.GLOBAL)));
+            config.routes.get("/stats", ctx -> ctx.json(ServerStats.json(latestSample(lsp), maxLspSessions, EvalGate.GLOBAL)));
+            config.routes.get("/stats/history", ctx -> {
+                StatsHistory.Range range;
+                try {
+                    range = StatsHistory.Range.parse(ctx.queryParam("range"));
+                } catch (IllegalArgumentException e) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("range must be hour, day or week");
+                    return;
+                }
+                ctx.json(Map.of("range", range.name().toLowerCase(java.util.Locale.ROOT), "resolutionSeconds", range.resolutionSeconds(),
+                        "points", history.rows(range)));
+            });
+            config.routes.sse("/stats/stream", client -> {
+                client.keepAlive();
+                StatsSample latest = recorder.latest();
+                stream.connect(StatsStream.Client.of(client), latest == null ? null : statsJson(latest));
+            });
             config.routes.ws("/lsp", lsp::configure);
         });
         app.start(port);
         return app.port();
     }
 
+    // before the first scheduled sample has landed, read one directly
+    private StatsSample latestSample(LspWebSocket lsp) {
+        StatsSample latest = recorder.latest();
+        return latest != null ? latest : ServerStats.read(lsp.sessionCount(), EvalGate.GLOBAL);
+    }
+
+    private String statsJson(StatsSample sample) {
+        try {
+            return statsMapper.writeValueAsString(ServerStats.json(sample, maxLspSessions, EvalGate.GLOBAL));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     public void stop() {
+        if (recorder != null) {
+            recorder.close();
+        }
+        if (stream != null) {
+            stream.close();
+        }
         if (app != null) {
             app.stop();
         }

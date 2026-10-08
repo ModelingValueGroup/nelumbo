@@ -16,31 +16,9 @@
 
 package org.modelingvalue.nelumbo.website;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.jupiter.api.Test;
-
-class ServerStatsTest {
-
-    @Test
-    void overloadedWhenAsManyEvaluationsRunAsTheThreshold() {
-        assertEquals("overloaded", ServerStats.status(16, 16, 0.1));
-    }
-
-    @Test
-    void busyFromHalfTheThresholdOrHighCpu() {
-        assertEquals("busy", ServerStats.status(8, 16, 0.1));
-        assertEquals("busy", ServerStats.status(0, 16, 0.7));
-    }
-
-    @Test
-    void okBelowBoth() {
-        assertEquals("ok", ServerStats.status(7, 16, 0.69));
-    }
-
-    @Test
-    void unknownCpuLoadCountsAsIdle() {
-        assertEquals(0.0, ServerStats.cpuLoad(-1.0));
-        assertEquals(0.5, ServerStats.cpuLoad(0.5));
-    }
+/**
+ * The samples of one UTC minute (or, aggregated, of a longer bucket): maxima, the average CPU load, and how much the
+ * evaluation and overload counters grew. {@code t} is the bucket start in epoch milliseconds.
+ */
+record MinuteStats(long t, int sessionsMax, int runningMax, double cpuAvg, double cpuMax, long heapMaxMb, long evaluations, long overloads) {
 }

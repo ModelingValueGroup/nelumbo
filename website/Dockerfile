@@ -22,4 +22,4 @@ COPY build/libs/nelumbo-web-server-*.jar /app/nelumbo-web-server.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/nelumbo-web-server.jar"]
-CMD ["--port", "8080", "--max-lsp-sessions", "200"]
+CMD ["--port", "8080", "--max-lsp-sessions", "200", "--stats-dir", "/data/stats"]

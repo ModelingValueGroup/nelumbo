@@ -24,6 +24,9 @@ services:
     cpus: "16"
     mem_limit: 16g
     memswap_limit: 16g
+    volumes:
+      # per-minute stats history (/stats/history); lives in /data/sites/nelumbo.nl/stats on the host
+      - ./stats:/data/stats
     networks:
       - web
     expose:

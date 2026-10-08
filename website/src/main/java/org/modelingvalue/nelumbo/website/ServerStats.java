@@ -24,36 +24,32 @@ import org.modelingvalue.nelumbo.lsp.EvalGate;
 
 import com.sun.management.OperatingSystemMXBean;
 
-/** The /stats snapshot: LSP sessions, evaluation load (the shared {@link EvalGate}) and JVM resources. */
+/** Reads the server's numbers and renders them as the /stats JSON object. */
 final class ServerStats {
     static final double BUSY_CPU_LOAD = 0.7;
-    static final long   CACHE_MS      = 2000;
 
-    private Map<String, Object> cached;
-    private long                cachedAtNanos;
-
-    // the process CPU load is measured since the previous call by anyone, so concurrent pollers share one sample
-    synchronized Map<String, Object> snapshot(int openSessions, int maxSessions, EvalGate gate) {
-        long now = System.nanoTime();
-        if (cached == null || now - cachedAtNanos >= CACHE_MS * 1_000_000L) {
-            cached        = sample(openSessions, maxSessions, gate);
-            cachedAtNanos = now;
-        }
-        return cached;
+    private ServerStats() {
     }
 
-    private static Map<String, Object> sample(int openSessions, int maxSessions, EvalGate gate) {
+    // the process CPU load covers the time since the previous read, so only the StatsRecorder reads it
+    static StatsSample read(int openSessions, EvalGate gate) {
         OperatingSystemMXBean os      = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
         Runtime               runtime = Runtime.getRuntime();
-        double                load    = cpuLoad(os.getProcessCpuLoad());
-        int                   running = gate.running();
-        Map<String, Object>   stats   = new LinkedHashMap<>();
-        stats.put("status", status(running, gate.threshold(), load));
-        stats.put("sessions", Map.of("open", openSessions, "max", maxSessions));
-        stats.put("evaluations", Map.of("running", running, "threshold", gate.threshold(), "total", gate.total(), "overloaded", gate.overloaded()));
-        stats.put("cpu", Map.of("load", load, "cpus", runtime.availableProcessors()));
-        stats.put("heap", Map.of("usedMb", (runtime.totalMemory() - runtime.freeMemory()) >> 20, "maxMb", runtime.maxMemory() >> 20));
-        stats.put("uptimeSeconds", ManagementFactory.getRuntimeMXBean().getUptime() / 1000);
+        return new StatsSample(System.currentTimeMillis(), openSessions, gate.running(), gate.total(), gate.overloaded(),
+                cpuLoad(os.getProcessCpuLoad()), (runtime.totalMemory() - runtime.freeMemory()) >> 20,
+                ManagementFactory.getRuntimeMXBean().getUptime() / 1000);
+    }
+
+    static Map<String, Object> json(StatsSample sample, int maxSessions, EvalGate gate) {
+        Runtime             runtime = Runtime.getRuntime();
+        Map<String, Object> stats   = new LinkedHashMap<>();
+        stats.put("status", status(sample.running(), gate.threshold(), sample.cpuLoad()));
+        stats.put("time", sample.time());
+        stats.put("sessions", Map.of("open", sample.sessions(), "max", maxSessions));
+        stats.put("evaluations", Map.of("running", sample.running(), "threshold", gate.threshold(), "total", sample.total(), "overloaded", sample.overloaded()));
+        stats.put("cpu", Map.of("load", sample.cpuLoad(), "cpus", runtime.availableProcessors()));
+        stats.put("heap", Map.of("usedMb", sample.heapUsedMb(), "maxMb", runtime.maxMemory() >> 20));
+        stats.put("uptimeSeconds", sample.uptimeSeconds());
         return stats;
     }
 
