@@ -58,9 +58,29 @@ function two(n: number): string {
     return n < 10 ? '0' + n : String(n);
 }
 
+// all times on the page use the 24-hour clock, whatever the browser locale
 function clock(time: number): string {
     const d: Date = new Date(time);
     return two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
+}
+
+function hourMinute(time: number): string {
+    const d: Date = new Date(time);
+    return two(d.getHours()) + ':' + two(d.getMinutes());
+}
+
+// axis tick: the date at midnight, else the time - short enough for every range's tick spacing
+function tick(time: number): string {
+    const d: Date = new Date(time);
+    if (d.getHours() === 0 && d.getMinutes() === 0) {
+        return two(d.getDate()) + '-' + two(d.getMonth() + 1);
+    }
+    return hourMinute(time);
+}
+
+function dateTime(time: number): string {
+    const d: Date = new Date(time);
+    return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' + hourMinute(time);
 }
 
 function showStats(s: Stats): void {
@@ -157,7 +177,8 @@ function axes(unit: (v: number) => string): uPlot.Axis[] {
     const ink:  string = css('--muted');
     const grid: string = css('--grid');
     return [
-        { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid, width: 1 } },
+        { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid, width: 1 },
+          values: (_u: uPlot, vals: number[]): string[] => vals.map((s: number): string => tick(s * 1000)) },
         { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid, width: 1 }, values: (_u: uPlot, vals: number[]): string[] => vals.map(unit) },
     ];
 }
@@ -211,7 +232,7 @@ function build(cpuData: uPlot.AlignedData, actData: uPlot.AlignedData): void {
         scales: { x: { time: true, range: xRange }, y: { range: [0, 100] } },
         axes:   axes((v: number): string => v + '%'),
         series: [
-            {},
+            { value: (_u: uPlot, v: number | null): string => v === null ? '--' : dateTime(v * 1000) },
             { label: 'CPU avg', stroke: cpu, width: 2 },
             { label: 'CPU max', stroke: cpu, width: 1, dash: [4, 4] },
         ],
@@ -222,7 +243,7 @@ function build(cpuData: uPlot.AlignedData, actData: uPlot.AlignedData): void {
         scales: { x: { time: true, range: xRange }, y: { range: (_u: uPlot, _min: number, max: number): [number, number] => [0, Math.max(4, max)] } },
         axes:   axes((v: number): string => String(v)),
         series: [
-            {},
+            { value: (_u: uPlot, v: number | null): string => v === null ? '--' : dateTime(v * 1000) },
             { label: 'Sessions', stroke: css('--series-1'), width: 2 },
             { label: 'Evaluations running', stroke: css('--series-2'), width: 2 },
             { label: 'Stopped (busy)', stroke: css('--series-3'), width: 2 },
@@ -233,7 +254,7 @@ function build(cpuData: uPlot.AlignedData, actData: uPlot.AlignedData): void {
 function fillTable(): void {
     const body: HTMLElement = el('history-table').querySelector('tbody') as HTMLElement;
     const rows: string[]    = history.slice().reverse().map((p: Point): string =>
-        '<tr><td>' + new Date(p.t).toLocaleString() + '</td><td>' + Math.round(p.cpuAvg * 100) + '%</td><td>' + Math.round(p.cpuMax * 100)
+        '<tr><td>' + dateTime(p.t) + '</td><td>' + Math.round(p.cpuAvg * 100) + '%</td><td>' + Math.round(p.cpuMax * 100)
         + '%</td><td>' + p.sessionsMax + '</td><td>' + p.runningMax + '</td><td>' + p.overloads + '</td><td>' + p.evaluations + '</td></tr>');
     body.innerHTML = rows.join('');
 }
