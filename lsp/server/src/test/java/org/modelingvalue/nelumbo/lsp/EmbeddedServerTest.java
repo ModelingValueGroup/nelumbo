@@ -101,6 +101,33 @@ public class EmbeddedServerTest {
     }
 
     @Test
+    public void hintsOfAnEditedLineAreNotServedAtTheirStalePosition() throws InterruptedException {
+        NelumboLanguageServer server = new NelumboLanguageServer(KnowledgeBase.BASE, 0, () -> {
+        });
+        RecordingClient       client = new RecordingClient();
+        String                uri    = "inmemory://t.nl";
+        server.connect(client);
+        try {
+            NlDocumentManager dm = server.getWorkspace().getDocumentManager();
+            dm.addDocument(uri, "import nelumbo.logic\ntrue ?\nfalse ?\n", 1);
+            assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
+            assertEquals(2, dm.queryResultCache().hints(uri).size(), "one hint per query");
+            // read before the debounced re-evaluation: the cached hints were placed on the previous text
+            dm.updateDocument(uri, "import nelumbo.logic\ntrue & true ?\nfalse ?\n");
+            List<InlayHint> hints = dm.queryResultCache().hints(uri);
+            assertEquals(1, hints.size(), "the hint of the edited line is withheld, got " + hints);
+            assertEquals(2, hints.get(0).getPosition().getLine(), "the hint of the unchanged line stays");
+            long end = System.currentTimeMillis() + 15_000;
+            while (dm.queryResultCache().hints(uri).size() != 2 && System.currentTimeMillis() < end) {
+                Thread.sleep(50);
+            }
+            assertEquals(2, dm.queryResultCache().hints(uri).size(), "the re-evaluation of the new text serves both hints again");
+        } finally {
+            server.getWorkspace().dispose();
+        }
+    }
+
+    @Test
     public void documentCacheIsCappedPerSession() {
         NelumboLanguageServer server = new NelumboLanguageServer(KnowledgeBase.BASE, 0, () -> {
         });

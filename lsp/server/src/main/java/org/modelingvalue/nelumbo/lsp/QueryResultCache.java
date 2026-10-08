@@ -63,16 +63,39 @@ public class QueryResultCache {
         t.setDaemon(true);
         return t;
     });
-    private final ConcurrentHashMap<String, List<InlayHint>>   hints     = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Evaluated>          hints     = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ScheduledFuture<?>> pending  = new ConcurrentHashMap<>();
+
+    /** Hints with the text they were computed for: their positions are only valid on that text. */
+    private record Evaluated(String content, List<InlayHint> hints) {
+    }
 
     public QueryResultCache(NlDocumentManager documentManager) {
         this.documentManager = documentManager;
     }
 
-    /** Latest computed hints for the document, or an empty list if not evaluated yet. */
+    /**
+     * Latest computed hints for the document, or an empty list if not evaluated yet. After an edit, until the
+     * re-evaluation finishes, only the hints on lines that are unchanged keep a valid position; the others are
+     * withheld instead of being drawn at their old column in the new text.
+     */
     public List<InlayHint> hints(String uri) {
-        return hints.getOrDefault(uri, List.of());
+        Evaluated  evaluated = hints.get(uri);
+        NlDocument document  = documentManager.getDocument(uri);
+        if (evaluated == null) {
+            return List.of();
+        }
+        if (document == null || document.content().equals(evaluated.content())) {
+            return evaluated.hints();
+        }
+        String[] before = evaluated.content().split("\n", -1);
+        String[] now    = document.content().split("\n", -1);
+        return evaluated.hints().stream()//
+                        .filter(h -> {
+                            int line = h.getPosition().getLine();
+                            return line < before.length && line < now.length && before[line].equals(now[line]);
+                        })//
+                        .toList();
     }
 
     /** Schedule a (debounced) re-evaluation of the document, cancelling any pending one. */
@@ -139,13 +162,13 @@ public class QueryResultCache {
         long             workspaceMs    = workspace.getEvalDeadlineMs();
         boolean          overloadBudget = busy && (workspaceMs <= 0 || gate.budgetMs() < workspaceMs);
         long             deadlineMs     = overloadBudget ? gate.budgetMs() : workspaceMs;
+        String           content        = document.content();
         List<Diagnostic> diagnostics    = NlDocument.baseDiagnostics(document.tokenizerResult(), document.parserResult());
         boolean          overloaded     = false;
         try {
             Map<Query, QueryResult> results = null;
             if (deadlineMs > 0) {
-                String                          content = document.content();
-                Future<Map<Query, QueryResult>> future  = backstop.submit(
+                Future<Map<Query, QueryResult>> future = backstop.submit(
                         () -> QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), deadlineMs, content, uri, overloadBudget));
                 try {
                     // horizon from the workspace deadline, also under the short budget: that one only starts on a pool worker
@@ -159,11 +182,11 @@ public class QueryResultCache {
                     }
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
-                    hints.put(uri, List.of());
+                    hints.put(uri, new Evaluated(content, List.of()));
                     return false;
                 }
             } else {
-                results = QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), 0, document.content(), uri);
+                results = QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), 0, content, uri);
             }
             if (results == null) {
                 // no query was reached in time
@@ -172,7 +195,7 @@ public class QueryResultCache {
                     gate.recordOverload();
                     overloaded = true;
                 }
-                hints.put(uri, List.of());
+                hints.put(uri, new Evaluated(content, List.of()));
             } else {
                 List<InlayHint> list = new ArrayList<>();
                 for (Map.Entry<Query, QueryResult> e : results.entrySet()) {
@@ -202,11 +225,11 @@ public class QueryResultCache {
                         overloaded = true;
                     }
                 }
-                hints.put(uri, list);
+                hints.put(uri, new Evaluated(content, list));
             }
         } catch (Exception ex) {
             System.err.println("query evaluation failed for " + uri + ": " + ex);
-            hints.put(uri, List.of());
+            hints.put(uri, new Evaluated(content, List.of()));
         }
         // republish parse diagnostics together with the query mismatches so neither clobbers the other.
         NlDocument.publishDiagnostics(workspace, uri, diagnostics);
