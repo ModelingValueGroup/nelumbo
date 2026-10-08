@@ -46,6 +46,10 @@ final class LspWebSocket {
         this.maxSessions    = maxSessions;
     }
 
+    int sessionCount() {
+        return sessionCount.get();
+    }
+
     void configure(WsConfig ws) {
         ws.onConnect(ctx -> {
             // atomically claim a slot: increment only if under the cap, otherwise reject

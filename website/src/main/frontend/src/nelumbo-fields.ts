@@ -98,6 +98,9 @@ export const __monaco: typeof monaco = monaco;
 let servicesReady: boolean                                     = false;
 let clientPromise: Promise<MonacoLanguageClient | null> | null = null;
 let fieldIndex:    number                                      = 0;
+
+const OVERLOAD_CODE:  string                = 'server-overloaded';
+let   overloadBanner: HTMLDivElement | null = null;
 // the model behind each mounted .nelumbo-field (the wrap div), for setFieldText
 const fieldModels: WeakMap<HTMLElement, monaco.editor.ITextModel> = new WeakMap();
 
@@ -168,6 +171,7 @@ function ensureServices(): void {
     void document.fonts.ready.then((): void => {
         monaco.editor.remeasureFonts();
     });
+    watchOverload();
     servicesReady = true;
 }
 
@@ -176,6 +180,24 @@ function showBanner(): void {
     banner.className   = 'nelumbo-lsp-banner visible';
     banner.textContent = 'Language features and evaluation are unavailable (LSP connection failed).';
     document.body.prepend(banner);
+}
+
+// The server marks evaluations it stopped to protect other users with this diagnostic code; show a
+// banner while any editor carries such a marker (it clears with the next evaluation of that document).
+function watchOverload(): void {
+    monaco.editor.onDidChangeMarkers((): void => {
+        const overloaded: boolean = monaco.editor.getModelMarkers({}).some((m: monaco.editor.IMarker): boolean =>
+            m.code === OVERLOAD_CODE || (typeof m.code === 'object' && m.code !== null && m.code.value === OVERLOAD_CODE));
+        if (overloaded && overloadBanner === null) {
+            overloadBanner             = document.createElement('div');
+            overloadBanner.className   = 'nelumbo-lsp-banner nelumbo-overload-banner';
+            overloadBanner.textContent = 'The server is busy - an evaluation was stopped. Try again in a moment.';
+            document.body.prepend(overloadBanner);
+        }
+        if (overloadBanner !== null) {
+            overloadBanner.classList.toggle('visible', overloaded);
+        }
+    });
 }
 
 function addSolutionToggle(field: HTMLElement, index: number): void {

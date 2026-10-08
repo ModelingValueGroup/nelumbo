@@ -14,64 +14,45 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+// Server status dot: every <a class="status-dot"> on the page shows the /stats status as a coloured dot
+// (ok / busy / overloaded, grey when /stats cannot be read) with a short tooltip, refreshed every 15 s while the
+// page is visible.
+(function () {
+    var POLL_MS = 15000;
+    var style   = document.createElement('style');
+    style.textContent = '.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;'
+                      + 'background:#5c6270;margin-left:6px;vertical-align:middle}'
+                      + '.status-dot.ok{background:#5fb87a}'
+                      + '.status-dot.busy{background:#e0a050}'
+                      + '.status-dot.overloaded{background:#f1707b}';
+    document.head.appendChild(style);
 
-plugins {
-    id("com.gradleup.shadow") version "9.6.1"
-    java
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+    // status null: unknown, the grey default
+    function show(status, title) {
+        var dots = document.querySelectorAll('.status-dot');
+        for (var i = 0; i < dots.length; i++) {
+            dots[i].classList.remove('ok', 'busy', 'overloaded');
+            if (status) {
+                dots[i].classList.add(status);
+            }
+            dots[i].title = title;
+        }
     }
-}
 
-val archiveName = "nelumbo-cli"
-
-repositories {
-    mavenCentral()
-    mavenLocal()
-}
-
-dependencies {
-    implementation(project(":"))
-    implementation(libs.mvg.json)
-    // line editing + history for the --interactive REPL (pure Java, no transitive deps)
-    implementation("org.jline:jline:4.4.6")
-
-    testImplementation(libs.junit.jupiter)
-    // the test client parses/builds JSON with Jackson; the server itself uses mvg-json
-    testImplementation(libs.jackson.databind)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-tasks.test {
-    useJUnitPlatform()
-    jvmArgs("-ea") // Enable assertions
-}
-
-tasks.register<ShadowJar>("cliJar") {
-    archiveBaseName.set(archiveName)
-    // Produce a single shaded jar without the default "-all" classifier
-    archiveClassifier.set("")
-    manifest {
-        attributes["Main-Class"] = "org.modelingvalue.nelumbo.cli.NelumboCli"
+    function update() {
+        if (document.hidden) {
+            return;
+        }
+        fetch('/stats').then(function (response) {
+            return response.json();
+        }).then(function (stats) {
+            show(stats.status, stats.sessions.open + ' sessions, CPU ' + Math.round(stats.cpu.load * 100) + '%');
+        }).catch(function () {
+            show(null, 'server unreachable');
+        });
     }
-    from(sourceSets.main.get().output)
-    configurations = listOf(project.configurations.runtimeClasspath.get())
 
-    // Exclude signature files from signed dependencies to avoid SecurityException
-    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-    mergeServiceFiles()
-}
-
-tasks.shadowJar {
-    // Disable default shadowJar task; use cliJar instead
-    enabled = false
-}
-
-tasks.jar {
-    // plain jar (classifier avoids clashing with the shaded cliJar); needed so other projects can depend on this one
-    archiveClassifier.set("plain")
-}
+    update();
+    setInterval(update, POLL_MS);
+    document.addEventListener('visibilitychange', update);
+})();

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nelumbo server status</title>
+<script src="/theme.js"></script>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #1b1d23; --panel: #23262e; --text: #e6e8ee; --muted: #9aa0ac; --accent: #c184d8; }
+  [data-theme="light"] { --bg: #fbfafc; --panel: #f2eff5; --text: #1f1b24; --muted: #6b6475; --accent: #9246b0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Instrument Sans", system-ui, sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: 40px 16px; }
+  h1 { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 28px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .sub a { color: var(--accent); }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 24px; margin: 0; padding: 18px 20px; background: var(--panel); border-radius: 10px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-family: "JetBrains Mono", monospace; }
+  #status.ok { color: #5fb87a; }
+  #status.busy { color: #e0a050; }
+  #status.overloaded { color: #f1707b; }
+  footer { color: var(--muted); font-size: 12px; text-align: center; padding: 24px 16px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Server status</h1>
+  <p class="sub">Live numbers of this Nelumbo server, refreshed every 5 seconds. <a href="/">Home</a></p>
+  <dl>
+    <dt>Status</dt>              <dd id="status">-</dd>
+    <dt>LSP sessions</dt>        <dd id="sessions">-</dd>
+    <dt>Evaluations running</dt> <dd id="running">-</dd>
+    <dt>Evaluations total</dt>   <dd id="total">-</dd>
+    <dt>Stopped (busy)</dt>      <dd id="overloaded">-</dd>
+    <dt>CPU</dt>                 <dd id="cpu">-</dd>
+    <dt>Heap</dt>                <dd id="heap">-</dd>
+    <dt>Uptime</dt>              <dd id="uptime">-</dd>
+  </dl>
+</main>
+<footer>Nelumbo @VERSION@</footer>
+<script>
+  (function () {
+    function set(id, text) {
+      document.getElementById(id).textContent = text;
+    }
+    function update() {
+      fetch('/stats').then(function (response) {
+        return response.json();
+      }).then(function (s) {
+        document.getElementById('status').className = s.status;
+        set('status', s.status);
+        set('sessions', s.sessions.open + ' / ' + s.sessions.max);
+        set('running', s.evaluations.running + ' (overloaded at ' + s.evaluations.threshold + ')');
+        set('total', String(s.evaluations.total));
+        set('overloaded', String(s.evaluations.overloaded));
+        set('cpu', Math.round(s.cpu.load * 100) + '% of ' + s.cpu.cpus + ' cores');
+        set('heap', s.heap.usedMb + ' / ' + s.heap.maxMb + ' MB');
+        set('uptime', Math.floor(s.uptimeSeconds / 3600) + 'h ' + Math.floor(s.uptimeSeconds % 3600 / 60) + 'm');
+      }).catch(function () {
+        document.getElementById('status').className = '';
+        set('status', 'unreachable');
+        ['sessions', 'running', 'total', 'overloaded', 'cpu', 'heap', 'uptime'].forEach(function (id) {
+          set(id, '-');
+        });
+      });
+    }
+    update();
+    setInterval(update, 5000);
+  })();
+</script>
+</body>
+</html>

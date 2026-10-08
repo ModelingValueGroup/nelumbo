@@ -102,7 +102,7 @@
     <a data-section="transform">Transformations</a>
     <a data-section="scoping">Scoping</a>
     <div class="sep"></div>
-    <span class="version">@VERSION@</span>
+    <span class="version">@VERSION@ <a class="status-dot" href="/status.html" aria-label="server status"></a></span>
   </nav>
 </aside>
 <main>
@@ -532,5 +532,6 @@ Piet.address=a ? [(a="Kalverstraat")][..]
     show(document.getElementById(initial) ? initial : sections[0].id);
   })();
 </script>
+<script src="/status-dot.js" defer></script>
 </body>
 </html>

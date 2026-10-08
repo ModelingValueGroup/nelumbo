@@ -3,6 +3,7 @@ import { readdirSync, statSync } from 'node:fs';
 import { resolve }               from 'node:path';
 
 const PORT:    number = 8899;
+const OVERLOAD_PORT: number = 8898;
 const LIBSDIR: string = resolve(__dirname, '../../../build/libs');
 
 function serverJar(): string {
@@ -30,10 +31,19 @@ export default defineConfig({
     projects: [
         { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     ],
-    webServer: {
-        command:             'java -jar "' + serverJar() + '" --port ' + PORT + ' --no-gui',
-        url:                 'http://localhost:' + PORT + '/health',
-        reuseExistingServer: !process.env.CI,
-        timeout:             60_000,
-    },
+    webServer: [
+        {
+            command:             'java -jar "' + serverJar() + '" --port ' + PORT + ' --no-gui',
+            url:                 'http://localhost:' + PORT + '/health',
+            reuseExistingServer: !process.env.CI,
+            timeout:             60_000,
+        },
+        {
+            // every evaluation counts as busy and gets a 300 ms budget (e2e/overload.spec.ts)
+            command:             'java -DNELUMBO_OVERLOAD_THRESHOLD=0 -DNELUMBO_OVERLOAD_BUDGET_MS=300 -jar "' + serverJar() + '" --port ' + OVERLOAD_PORT + ' --no-gui',
+            url:                 'http://localhost:' + OVERLOAD_PORT + '/health',
+            reuseExistingServer: !process.env.CI,
+            timeout:             60_000,
+        },
+    ],
 });

@@ -19,6 +19,11 @@ services:
     image: registry.openwalnoot.com/openwalnoot/services-docker-images/nelumbo-website:latest
     container_name: nelumbo
     restart: always
+    # hard caps so a few heavy queries cannot take over the shared host; the JVM sizes its
+    # inference pool to the cpus limit and its heap to 75% of mem_limit (Dockerfile)
+    cpus: "16"
+    mem_limit: 16g
+    memswap_limit: 16g
     networks:
       - web
     expose:

@@ -14,64 +14,46 @@
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+package org.modelingvalue.nelumbo.website;
 
-plugins {
-    id("com.gradleup.shadow") version "9.6.1"
-    java
-}
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.lsp.EvalGate;
+
+class ServerStatsTest {
+
+    @Test
+    void overloadedWhenAsManyEvaluationsRunAsTheThreshold() {
+        assertEquals("overloaded", ServerStats.status(16, 16, 0.1));
     }
-}
 
-val archiveName = "nelumbo-cli"
-
-repositories {
-    mavenCentral()
-    mavenLocal()
-}
-
-dependencies {
-    implementation(project(":"))
-    implementation(libs.mvg.json)
-    // line editing + history for the --interactive REPL (pure Java, no transitive deps)
-    implementation("org.jline:jline:4.4.6")
-
-    testImplementation(libs.junit.jupiter)
-    // the test client parses/builds JSON with Jackson; the server itself uses mvg-json
-    testImplementation(libs.jackson.databind)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-tasks.test {
-    useJUnitPlatform()
-    jvmArgs("-ea") // Enable assertions
-}
-
-tasks.register<ShadowJar>("cliJar") {
-    archiveBaseName.set(archiveName)
-    // Produce a single shaded jar without the default "-all" classifier
-    archiveClassifier.set("")
-    manifest {
-        attributes["Main-Class"] = "org.modelingvalue.nelumbo.cli.NelumboCli"
+    @Test
+    void busyFromHalfTheThresholdOrHighCpu() {
+        assertEquals("busy", ServerStats.status(8, 16, 0.1));
+        assertEquals("busy", ServerStats.status(0, 16, 0.7));
     }
-    from(sourceSets.main.get().output)
-    configurations = listOf(project.configurations.runtimeClasspath.get())
 
-    // Exclude signature files from signed dependencies to avoid SecurityException
-    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
-    mergeServiceFiles()
-}
+    @Test
+    void okBelowBoth() {
+        assertEquals("ok", ServerStats.status(7, 16, 0.69));
+    }
 
-tasks.shadowJar {
-    // Disable default shadowJar task; use cliJar instead
-    enabled = false
-}
+    @Test
+    void pollersWithinTheCacheTimeShareOneSnapshot() {
+        ServerStats         stats = new ServerStats();
+        EvalGate            gate  = new EvalGate(16, 2000);
+        Map<String, Object> first = stats.snapshot(0, 32, gate);
+        gate.enter();
+        assertSame(first, stats.snapshot(1, 32, gate));
+    }
 
-tasks.jar {
-    // plain jar (classifier avoids clashing with the shaded cliJar); needed so other projects can depend on this one
-    archiveClassifier.set("plain")
+    @Test
+    void unknownCpuLoadCountsAsIdle() {
+        assertEquals(0.0, ServerStats.cpuLoad(-1.0));
+        assertEquals(0.5, ServerStats.cpuLoad(0.5));
+    }
 }
