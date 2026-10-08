@@ -180,6 +180,11 @@ class NelumboHttpServerTest {
         assertEquals(200, grammar.statusCode(), "nested doc pages are served by the wildcard route");
         assertTrue(grammar.body().contains("<title>Grammar - Nelumbo docs</title>"), grammar.body().substring(0, 300));
 
+        HttpResponse<String> overview = get("/docs/component-overview.html");
+        assertEquals(200, overview.statusCode(), "the standalone component overview page is served under /docs/");
+        assertTrue(overview.body().contains("Nelumbo, piece by piece"), "it is Wim's page as it is");
+        assertTrue(index.body().contains("href=\"/docs/component-overview.html\""), "the docs sidebar links it");
+
         HttpResponse<String> logo = get("/docs/nelumbo.svg");
         assertEquals(200, logo.statusCode(), "the overview embeds the logo relative to /docs/");
         assertTrue(logo.headers().firstValue("Content-Type").orElse("").contains("image/svg+xml"));

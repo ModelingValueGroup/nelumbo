@@ -30,6 +30,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.commonmark.Extension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
@@ -82,22 +84,41 @@ public final class DocsSite {
     }
 
     private final String              template;
-    private final Map<String, String> htmlByUrl = new LinkedHashMap<>();
+    private final Map<String, String> htmlByUrl  = new LinkedHashMap<>();
+    // standalone HTML pages in the docs root, as {url, sidebar title}
+    private final List<String[]>      standalone = new ArrayList<>();
 
-    /** Loads the docs bundled on the classpath. */
+    /** Loads the docs bundled on the classpath: markdown pages, and standalone HTML pages served as they are. */
     public static DocsSite load() {
         Map<String, String> markdown = new LinkedHashMap<>();
+        Map<String, String> html     = new LinkedHashMap<>();
         for (String line : readResource(RESOURCE_ROOT + "index.txt").split("\n")) {
-            if (!line.isBlank()) {
-                markdown.put(line.trim(), readResource(RESOURCE_ROOT + line.trim()));
+            String path = line.trim();
+            if (path.endsWith(".html")) {
+                html.put(path, readResource(RESOURCE_ROOT + path));
+            } else if (!path.isEmpty()) {
+                markdown.put(path, readResource(RESOURCE_ROOT + path));
             }
         }
-        return new DocsSite(markdown, readResource(TEMPLATE));
+        return new DocsSite(markdown, html, readResource(TEMPLATE));
     }
 
     /** {@code markdownByPath}: docs-relative path ({@code reference/lang/grammar.md}) to markdown source. */
     DocsSite(Map<String, String> markdownByPath, String template) {
+        this(markdownByPath, Map.of(), template);
+    }
+
+    /**
+     * {@code htmlByPath}: standalone HTML pages in the docs root ({@code component-overview.html}), served as they are at
+     * {@code /docs/<file>} - plus the site's theme script, so they follow the reader's light/dark choice - and listed in
+     * the sidebar under the overview by their {@code <title>}.
+     */
+    DocsSite(Map<String, String> markdownByPath, Map<String, String> htmlByPath, String template) {
         this.template = template;
+        htmlByPath.forEach((path, html) -> {
+            standalone.add(new String[]{URL_PREFIX + path, sidebarTitle(html, path)});
+            htmlByUrl.put(URL_PREFIX + path, html.replaceFirst("(?i)<head[^>]*>", "$0\n<script src=\"/theme.js\"></script>"));
+        });
         List<Page> pages = new ArrayList<>();
         markdownByPath.forEach((path, md) -> {
             Node document = PARSER.parse(md);
@@ -135,6 +156,9 @@ public final class DocsSite {
     private String nav(List<Page> pages, String activeUrl) {
         StringBuilder sb = new StringBuilder();
         sb.append(navLink(URL_PREFIX, "Overview", activeUrl)).append('\n');
+        for (String[] page : standalone) {
+            sb.append(navLink(page[0], page[1], activeUrl)).append('\n');
+        }
         for (String[] group : GROUPS) {
             List<Page> members = pages.stream()
                     .filter(p -> dirOf(p.path()).equals(group[0]))
@@ -247,6 +271,12 @@ public final class DocsSite {
 
     private static String escape(String s) {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    // the page's <title> without the "Nelumbo " every page starts with; the file name when there is no title
+    private static String sidebarTitle(String html, String path) {
+        Matcher title = Pattern.compile("(?is)<title>(.*?)</title>").matcher(html);
+        return title.find() ? title.group(1).strip().replaceFirst("^Nelumbo ", "") : path;
     }
 
     private static String readResource(String path) {

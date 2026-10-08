@@ -105,6 +105,8 @@ val copyFrontend = tasks.register<Sync>("copyFrontend") {
 val copyDocs = tasks.register<Sync>("copyDocs") {
     from(rootProject.layout.projectDirectory.dir("docs")) {
         include("**/*.md")
+        // standalone HTML pages in the docs root (component-overview.html): DocsSite serves them as they are
+        include("*.html")
         include("nelumbo.svg")
         exclude("superpowers/**")
         exclude("site/**")
@@ -113,7 +115,7 @@ val copyDocs = tasks.register<Sync>("copyDocs") {
     doLast {
         val dir = destinationDir
         val index = dir.walkTopDown()
-                .filter { it.isFile && it.extension == "md" }
+                .filter { it.isFile && (it.extension == "md" || it.extension == "html") }
                 .map { it.relativeTo(dir).invariantSeparatorsPath }
                 .sorted()
                 .joinToString("\n")

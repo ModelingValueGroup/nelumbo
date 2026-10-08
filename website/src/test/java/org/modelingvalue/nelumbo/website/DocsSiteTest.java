@@ -128,6 +128,19 @@ class DocsSiteTest {
     }
 
     @Test
+    void standaloneHtmlPagesAreServedAsTheyAreAndListedUnderTheOverview() {
+        String     html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<title>Nelumbo Component Overview</title>\n</head>\n<body><h1>Piece by piece</h1></body>\n</html>\n";
+        DocsSite   site = new DocsSite(Map.of("reference/formatting.md", "# Formatting\n"), Map.of("component-overview.html", html), TEMPLATE);
+        String     page = site.page("/docs/component-overview.html").orElseThrow();
+        assertTrue(page.contains("<h1>Piece by piece</h1>") && !page.contains("<nav>"), "served as it is, not in the docs layout: " + page);
+        assertTrue(page.contains("<head>\n<script src=\"/theme.js\"></script>"), "it follows the site's light/dark choice: " + page);
+        String formatting = site.page("/docs/reference/formatting.html").orElseThrow();
+        assertTrue(formatting.contains("<a href=\"/docs/component-overview.html\">Component Overview</a>"), formatting);
+        assertTrue(formatting.indexOf(">Overview<") < formatting.indexOf(">Component Overview<")
+                && formatting.indexOf(">Component Overview<") < formatting.indexOf(">Formatting<"), "listed right under the overview: " + formatting);
+    }
+
+    @Test
     void indexIsServedAtDocsRootAndUnknownPagesAreNot() {
         DocsSite site = site();
         assertTrue(site.page("/docs/").orElseThrow().contains("<title>Nelumbo documentation</title>"));
