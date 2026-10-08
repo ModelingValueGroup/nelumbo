@@ -27,7 +27,7 @@ pattern PATTERNS ::= <(> <Pattern#100> <)+>
 pattern QNAME    ::= <[> <(> <NAME> <,> . <)+> <]>
 
 Namespace        ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE> @nelumbo.lang.Namespace
-RootNamespace    ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                       @nelumbo.lang.Namespace
+RootNamespace    ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)+> }                       @nelumbo.lang.Namespace
 PatternPart      ::= "pattern" <NAME> ::= <PATTERNS>                                              @nelumbo.lang.PatternPart
 
 Pattern          ::= <NAME>                                                                                                       @nelumbo.patterns.TokenTextPattern,
