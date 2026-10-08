@@ -1,3 +1,4 @@
+import nelumbo.collections
 import nelumbo.strings
 
 // Language
@@ -47,13 +48,13 @@ Person :: Object
 in Person name String
 in Person street String
 in Person number Integer
-in Person friend Person
+in Person friends Set<Person>
 
 out Person address String
 
 // Rules
 
-Person p
+Person p, f
 
 p.address := p.street + " " + str(p.number)
 
@@ -67,16 +68,16 @@ Piet.number  := 11
 Jan.name     := "Jan"
 Jan.street   := "Kalverstraat"
 Jan.number   := 22
-Jan.friend   := Piet
+Jan.friends  := {Piet}
 
 // Queries 
 
-String s
-Person p
+String       s
+Person       p
+List<String> l
 
-p.name="Piet"           ? [(p=Piet)][..]
-Piet.street=s           ? [(s="Kalverstraat")][..]
-p.street="Kalverstraat" ? [(p=Piet),(p=Jan)][..]
-Jan.friend.name=s       ? [(s="Piet")][..]
-
-Piet.address=s          ? [(s="Kalverstraat 11")][..]
+p.name="Piet"                 ? [(p=Piet)][..]
+Piet.street=s                 ? [(s="Kalverstraat")][..]
+p.street="Kalverstraat"       ? [(p=Piet),(p=Jan)][..]
+Piet.address=s                ? [(s="Kalverstraat 11")][..]
+Jan.friends map [f](f.name)=l ? [(l=["Piet"])][..]
