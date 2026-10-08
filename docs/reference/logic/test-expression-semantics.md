@@ -1,6 +1,8 @@
 # Test expression semantics
 
-This page formally defines what a **query** produces, what a **test** compares, and under what conditions a test passes or fails. It is the reference counterpart to [`../getting-started/reading-a-test.md`](../getting-started/reading-a-test.md), which introduces the same material gently.
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
+
+This page formally defines what a **query** produces, what a **test** compares, and under what conditions a test passes or fails. It is the reference counterpart to [`../getting-started/reading-a-test.md`](../../getting-started/reading-a-test.md), which introduces the same material gently.
 
 ---
 
@@ -8,13 +10,13 @@ This page formally defines what a **query** produces, what a **test** compares, 
 
 A query is written as an expression followed by `?`:
 
-```
+```nelumbo
 E ?
 ```
 
 Running a query on expression `E` produces a **query result**: a pair
 
-```
+```text
 ( FactsSet , FactsIsClosed , FalsehoodsSet , FalsehoodsIsClosed )
 ```
 
@@ -35,7 +37,7 @@ A binding that is in neither set, on a side that is closed, has been **affirmati
 
 Query results are printed as:
 
-```
+```text
 [ facts-list ][ falsehoods-list ]
 ```
 
@@ -61,7 +63,7 @@ A binding is written as `(v1=value1, v2=value2, ...)` or as `()` for the empty b
 
 A test is written as:
 
-```
+```text
 E ? [ expected-facts ][ expected-falsehoods ]
 ```
 
@@ -158,12 +160,12 @@ See [`three-valued-logic.md`](three-valued-logic.md) for the semantic model behi
 
 ## Bare queries
 
-A query without expected brackets (`E ?`) does not pass or fail; it just prints its result. Bare queries are useful during development. A file of bare queries (like [`queryOnly.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/queryOnly.nl)) runs and produces a transcript, which you can read, compare to your expectations, and then turn into tests by adding brackets.
+A query without expected brackets (`E ?`) does not pass or fail; it just prints its result. Bare queries are useful during development. A file of bare queries (like [`queryOnly.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/queryOnly.nl)) runs and produces a transcript, which you can read, compare to your expectations, and then turn into tests by adding brackets.
 
 ---
 
 ## See also
 
-- [`../getting-started/reading-a-test.md`](../getting-started/reading-a-test.md) — gentle introduction to the same material
+- [`../getting-started/reading-a-test.md`](../../getting-started/reading-a-test.md) — gentle introduction to the same material
 - [`three-valued-logic.md`](three-valued-logic.md) — what facts, falsehoods, and unknown mean
 - [`writing-rules.md`](writing-rules.md) — how rules produce the facts and falsehoods that tests observe

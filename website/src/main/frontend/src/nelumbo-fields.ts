@@ -98,6 +98,31 @@ export const __monaco: typeof monaco = monaco;
 let servicesReady: boolean                                     = false;
 let clientPromise: Promise<MonacoLanguageClient | null> | null = null;
 let fieldIndex:    number                                      = 0;
+// the model behind each mounted .nelumbo-field (the wrap div), for setFieldText
+const fieldModels: WeakMap<HTMLElement, monaco.editor.ITextModel> = new WeakMap();
+
+// Syntax colors per LSP semantic token type (LspTokenMapping on the server), mirroring the standalone
+// NelumboEditor's DEFAULT_TOKEN_COLORS: light = its colors verbatim, dark = the same hues lightened.
+// Keep both sides in sync when a color changes.
+const TOKEN_STYLES: Array<{ token: string; light: string; dark: string; fontStyle?: string }> = [
+    { token: 'modifier',  light: '0000ff', dark: '6ea8ff', fontStyle: 'bold' }, // KEYWORD
+    { token: 'property',  light: '0000ff', dark: '6ea8ff' },                    // NAME
+    { token: 'type',      light: '880088', dark: 'd07ad6' },                    // TYPE
+    { token: 'variable',  light: '339900', dark: '8fd14f' },                    // VARIABLE
+    { token: 'string',    light: '006633', dark: '5fc98f' },                    // STRING
+    { token: 'number',    light: '000077', dark: '9aa5ff' },                    // NUMBER
+    { token: 'operator',  light: '333333', dark: 'd4d7de', fontStyle: 'bold' }, // OPERATOR
+    { token: 'decorator', light: '00cccc', dark: '3f9494' },                    // META_OPERATOR
+    { token: 'comment',   light: 'a0a0a0', dark: '6b7080' },                    // END_LINE_COMMENT, IN_LINE_COMMENT
+];
+
+function tokenRules(scheme: 'light' | 'dark'): monaco.editor.ITokenThemeRule[] {
+    return TOKEN_STYLES.map((s): monaco.editor.ITokenThemeRule => ({ token: s.token, foreground: s[scheme], fontStyle: s.fontStyle ?? '' }));
+}
+
+function monacoTheme(): string {
+    return document.documentElement.dataset.theme === 'light' ? 'nelumbo-light' : 'nelumbo-dark';
+}
 
 function ensureServices(): void {
     if (servicesReady) {
@@ -111,7 +136,7 @@ function ensureServices(): void {
     monaco.editor.defineTheme('nelumbo-dark', {
         base:    'vs-dark',
         inherit: true,
-        rules:   [],
+        rules:   tokenRules('dark'),
         colors:  {
             'editorInlayHint.foreground':          '#46c98b',
             'editorInlayHint.background':          '#00000000',
@@ -121,6 +146,24 @@ function ensureServices(): void {
             'editorInlayHint.parameterBackground': '#f1707b2b',
         },
     });
+    // the same three buckets, darkened for contrast on a white editor
+    monaco.editor.defineTheme('nelumbo-light', {
+        base:    'vs',
+        inherit: true,
+        rules:   tokenRules('light'),
+        colors:  {
+            'editorInlayHint.foreground':          '#1a8a55',
+            'editorInlayHint.background':          '#00000000',
+            'editorInlayHint.typeForeground':      '#6e2f88',
+            'editorInlayHint.typeBackground':      '#c184d833',
+            'editorInlayHint.parameterForeground': '#c42f3c',
+            'editorInlayHint.parameterBackground': '#f1707b26',
+        },
+    });
+    // theme.js flips data-theme on <html> (switch click or OS change); the Monaco theme is global
+    new MutationObserver((): void => {
+        monaco.editor.setTheme(monacoTheme());
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     // the webfont may finish loading after the first editor measured its glyphs
     void document.fonts.ready.then((): void => {
         monaco.editor.remeasureFonts();
@@ -172,7 +215,7 @@ function buildSolutionViewer(solution: HTMLElement, index: number): void {
 
     const viewer: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(solution, {
         model:                model,
-        theme:                'nelumbo-dark',
+        theme:                monacoTheme(),
         readOnly:             true,
         domReadOnly:          true,
         minimap:              { enabled: false },
@@ -215,7 +258,7 @@ function buildField(div: HTMLElement, index: number): void {
 
     const editor: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(host, {
         model:                model,
-        theme:                'nelumbo-dark',
+        theme:                monacoTheme(),
         minimap:              { enabled: false },
         automaticLayout:      true,
         fontSize:             13,
@@ -229,6 +272,7 @@ function buildField(div: HTMLElement, index: number): void {
         multiCursorModifier:  'alt',
     });
     __editors.push({ editor: editor, model: model });
+    fieldModels.set(div, model);
 }
 
 // Establish the single page-shared /lsp language client. Idempotent: repeated calls return the
@@ -261,7 +305,19 @@ export function mountFields(container: ParentNode): void {
     }
 }
 
-// Playground entry point: mount every field on the page and connect once. Lifecycle is page-scoped
+// Replace the text of a mounted .nelumbo-field (e.g. when the sandbox loads an example). One undoable
+// edit, so Ctrl/Cmd+Z brings back what was there; false when the field is not mounted (yet).
+export function setFieldText(field: HTMLElement, text: string): boolean {
+    const model: monaco.editor.ITextModel | undefined = fieldModels.get(field);
+    if (model === undefined) {
+        return false;
+    }
+    model.pushEditOperations([], [{ range: model.getFullModelRange(), text: text }], (): null => null);
+    model.pushStackElement();
+    return true;
+}
+
+// Sandbox entry point: mount every field on the page and connect once. Lifecycle is page-scoped
 // (no teardown); standalone monaco falls back to a synchronous main-thread worker (one console
 // warning) since the /lsp server supplies all language features.
 export async function initNelumboFields(): Promise<void> {

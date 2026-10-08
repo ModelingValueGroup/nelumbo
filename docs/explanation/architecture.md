@@ -6,7 +6,7 @@ Nelumbo is built in layers. Reading a single `.nl` file can make it feel like on
 
 ## The layers
 
-```
+```text
  ┌──────────────────────────────────────────────────┐
  │              User programs and tests             │    .nl files
  │  family.nl, fibonacci.nl, your DSL, your rules   │
@@ -14,27 +14,34 @@ Nelumbo is built in layers. Reading a single `.nl` file can make it feel like on
  │              User-written libraries              │    .nl files
  │        your reusable modules and transformations │
  ├──────────────────────────────────────────────────┤
- │           Numeric / data stdlib modules          │    .nl files
- │     integers, rationals, strings, collections    │    in src/main/resources/
+ │                Optional packages                 │    .nl files
+ │  integers, rationals, strings, collections,      │    reference/packages/
+ │  datetime                                        │
  ├──────────────────────────────────────────────────┤
- │           nelumbo.logic — three-valued logic     │    .nl file
- │   Boolean, !, &, |, ->, <->, =, !=, E[], A[],    │
+ │                  nelumbo.logic                   │    .nl file
+ │   Boolean, !, &, |, ->, <->, =, !=, E[], A[],    │    reference/logic/
  │   plus the top-level forms `fact`, `<=>`, `?`    │
  ├──────────────────────────────────────────────────┤
- │           nelumbo.lang — syntactic bootstrap     │    .nl file
- │  token types, Object hierarchy, the pattern      │
+ │                  nelumbo.lang                    │    .nl file
+ │  token types, Object hierarchy, the pattern      │    reference/lang/
  │  meta-grammar, `import`, `::`, `::=`, `::>`,     │
  │  variable / type / functor declarations          │
  ├──────────────────────────────────────────────────┤
- │                Nelumbo Java core                 │    .java files
- │  tokenizer, hardcoded bootstrap parser for       │
+ │                    Java core                     │    .java files
+ │  tokenizer, hardcoded bootstrap parser for       │    reference/core/
  │  lang.nl, reasoner, binder, @-bound natives      │
  └──────────────────────────────────────────────────┘
 ```
 
-Each layer is built out of the layer below, and each layer is accessible to layers above. The diagram is not aspirational; it is literally how the shipped code is organised.
+Each layer is built out of the layer below, and each layer is accessible to layers above. The diagram is not aspirational; it is literally how the shipped code is organised. The reference docs follow the same split: every reference page lives in the folder of the level that defines its syntax, and says so in a banner at the top.
 
-The split between `nelumbo.lang` and `nelumbo.logic` is important. **The entire syntax of Nelumbo is defined in `.nl` files** — `lang.nl` declares the grammar of patterns, types, variables, and top-level statements; `logic.nl` declares the three-valued Boolean layer plus the `fact`, `<=>`, and `?` statements that drive execution. The Java core contains just enough hardcoded parsing to load `lang.nl`; from that point on, every file (including `lang.nl` itself, on a second pass) is parsed using the `::=` patterns the loaded files have installed.
+A file reaches a level through `import`. The Java core is always there. Everything else comes in through an import chain:
+
+```text
+nelumbo.lang  <-  nelumbo.logic  <-  nelumbo.integers  <-  strings / rationals / collections / datetime
+```
+
+`nelumbo.logic` imports `nelumbo.lang`, `nelumbo.integers` imports `nelumbo.logic`, and the other packages import `nelumbo.integers`. So `import nelumbo.strings` gives a file all four levels.
 
 ---
 
@@ -44,36 +51,46 @@ The split between `nelumbo.lang` and `nelumbo.logic` is important. **The entire 
 
 At the bottom is a Java codebase in `src/main/java/org/modelingvalue/nelumbo/`. It does four jobs:
 
-1. **Tokenize and bootstrap-parse `lang.nl`.** The tokenizer is in Java. The parser used to read `lang.nl` is a hand-coded bootstrap — it knows just enough about `::`, `::=`, `<NAME>`, and the token types to load `lang.nl`. Every subsequent file (including a re-read of `lang.nl` itself) is parsed using the `::=` declarations installed by the loaded files.
+1. **Tokenize and bootstrap-parse `lang.nl`.** The tokenizer is in Java. The [bootstrap grammar](../reference/core/bootstrap.md) knows just enough about `import`, `::`, `::=`, `pattern` and the pattern meta-grammar to load `lang.nl`. Every subsequent file is parsed using the `::=` declarations installed by the loaded files.
 2. **Resolve names**, apply visibility and scope rules, and load imported modules.
-3. **Run the reasoner** — the navigator that produces candidate bindings, together with the three-valued logic that classifies them as facts, falsehoods, or unknown.
-4. **Host native primitives** — Java classes referenced by `@...` annotations from `.nl` source, providing operations the language cannot derive from itself.
+3. **Run the reasoner**, the navigator that produces candidate bindings, together with the three-valued logic that classifies them as facts, falsehoods, or unknown.
+4. **Host native primitives**, Java classes referenced by `@...` annotations from `.nl` source, providing operations the language cannot derive from itself.
 
-The Java core is small and focused. It deliberately does **not** know about integers, rationals, strings, or collections, and not even about `Boolean`, `<=>`, `?`, or `fact`. Those are all introduced from `.nl` files.
+The core has no syntax for integers, strings, collections, `Boolean`, `<=>`, `?` or `fact`. That syntax comes from `.nl` files. What the core does have is the machinery that executes it: the three-valued reasoner that runs rules and queries is Java, and it knows a fixed set of types such as `Boolean`, `FactType` and `Set` by name.
 
-### The standard library (`nelumbo.*` modules)
+Reference: [`reference/core/`](../reference/core/bootstrap.md).
 
-Six `.nl` files under `src/main/resources/org/modelingvalue/nelumbo/` collectively form the stdlib:
+### `nelumbo.lang`
 
-- `lang/lang.nl` — the syntactic bootstrap: tokens, the `Object` / `Type` / `Variable` / `Root` / `Pattern` / `Namespace` / `Functor` hierarchy, the pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>` , …), and the top-level forms `import`, `::`, `::=`, `::>`.
-- `logic/logic.nl` — Boolean values, connectives (`!`, `&`, `|`, `->`, `<->`), quantifiers (`E[]`, `A[]`), equality (`=`, `!=`), and the three execution-driving statement forms `fact`, `<=>`, `?`.
-- `integers/integers.nl` — arbitrary-precision integers, arithmetic, comparison
-- `rationals/rationals.nl` — exact rationals built on integers
-- `strings/strings.nl` — strings and integer-string conversion
-- `collections/collections.nl` — generic `Set<E>` and `List<E>`
+`lang/lang.nl` declares the syntax for declaring syntax: token types, the `Object` / `Type` / `Variable` / `Root` / `Pattern` / `Namespace` / `Functor` hierarchy, the pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>`, ...), and the top-level forms `import`, `::`, `::=`, `::>`, variable declarations and `{ }` scope blocks. It re-declares everything the bootstrap grammar knew, as ordinary `::=` patterns.
 
-These files are ordinary Nelumbo. They use `import`, `::`, `::=`, `<=>`, `::>`, and `private` exactly the way your code does. What sets them apart is that they bind certain patterns to Java classes using `@`:
+With only `nelumbo.lang` imported, a file can declare types, patterns and variables. It cannot write rules, assert facts or run queries; those forms are declared one level up.
 
-```
+Reference: [`reference/lang/`](../reference/lang/index.md).
+
+### `nelumbo.logic`
+
+`logic/logic.nl` declares Boolean values, connectives (`!`, `&`, `|`, `->`, `<->`), quantifiers (`E[]`, `A[]`), equality (`=`, `!=`), and the three statement forms that drive execution: `fact`, `<=>` (with `if` guards) and `?`. Rules are a statement form declared here, not a Java keyword.
+
+Reference: [`reference/logic/`](../reference/logic/index.md).
+
+### Optional packages
+
+- `integers/integers.nl`: arbitrary-precision integers, arithmetic, comparison
+- `rationals/rationals.nl`: exact rationals built on integers
+- `strings/strings.nl`: strings and integer-string conversion
+- `collections/collections.nl`: generic `Set<E>` and `List<E>`
+- `datetime/datetime.nl`: ISO 8601 dates, times, date-times and durations
+
+A file imports the packages it needs. They are ordinary Nelumbo. They use `import`, `::`, `::=`, `<=>`, `::>`, and `private` exactly the way your code does. What sets them apart is that they bind certain patterns to Java classes using `@`:
+
+```nelumbo
 private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Integers
 ```
 
-What this means in practice:
+Most of what looks like built-in features (`->`, `<->`, unary `-`, `|x|`, `<=`, `int(s)`, `str(i)`) is **defined in Nelumbo**, not native. Only a handful of irreducible primitives (the tokenizer, `add`, `mult`, integer comparison `gt`, string concat, and so on) are implemented in Java. The seven shipped modules together are a good place to learn idiom; the [stdlib tour](../guides/stdlib-tour.md) reads them in order.
 
-- **The language's syntax lives in `lang.nl`.** The hand-coded Java bootstrap exists only to load that file — once `lang.nl` is in place, the same `::=` declarations the user writes are what parse the rest.
-- **The three-valued logic lives in `logic.nl`.** That includes `<=>` itself: rules are a statement form declared in `logic.nl`, not a Java keyword. Without `nelumbo.logic`, a `.nl` file can declare types and patterns but cannot write rules, assert facts, or run queries.
-- Most of what looks like language features — `->`, `<->`, `-` as unary, `|x|`, `<=`, `int(s)`, `str(i)` — is **defined in Nelumbo**, not native. Only a handful of genuinely irreducible primitives (the tokenizer, `add`, `mult`, integer comparison `gt`, string concat, and so on) are implemented in Java.
-- You can study the stdlib to learn idiom. It is around 300 lines of Nelumbo across seven files, and it demonstrates almost every feature of the language.
+Reference: [`reference/packages/`](../reference/packages/integers.md).
 
 ### User-written libraries
 
@@ -124,7 +141,7 @@ When in doubt, reach for the in-language path first. Drop to Java only when the 
 
 Consider the familiar Fibonacci test:
 
-```
+```nelumbo
 fib(5) = f  ?  [(f=5)][..]
 ```
 
@@ -147,8 +164,7 @@ Four layers touched: your file, stdlib integers, stdlib logic, Java native. Ever
 
 The layered architecture shapes the rest of the docs:
 
-- **Reference pages** document the Java-core concepts and the syntax of the language itself.
-- **Stdlib pages** document each module as a library: what it exports, how it is built, which pieces are native vs. Nelumbo-defined.
+- **Reference pages** are grouped by level: `reference/core/` (the Java core and natives), `reference/lang/`, `reference/logic/` and `reference/packages/`. Each level's module page documents what it exports, how it is built, and which pieces are native vs. Nelumbo-defined.
 - **Guides** cover the two extension paths as separate topics: in-language (rules, transformations, modules) and host-language (the native cookbook).
 - **Tutorials** teach reading a `.nl` file, working outward from the user-program layer.
 
@@ -158,9 +174,10 @@ When you are looking for how to do something, ask: **which layer is the right on
 
 ## See also
 
-- [`../reference/grammar.md`](../reference/grammar.md) — what the core grammar is
-- [`../reference/stdlib/logic.md`](../reference/stdlib/logic.md) — the foundation stdlib module
+- [`../reference/core/bootstrap.md`](../reference/core/bootstrap.md) — the grammar the Java core hardcodes
+- [`../reference/lang/grammar.md`](../reference/lang/grammar.md) — the syntax `nelumbo.lang` declares
+- [`../reference/logic/index.md`](../reference/logic/index.md) — the logic module
 - [`../guides/stdlib-tour.md`](../guides/stdlib-tour.md) — guided read-through of all seven stdlib modules
 - [`../guides/writing-your-own-module.md`](../guides/writing-your-own-module.md) — the in-language extension path
 - [`../guides/native-cookbook.md`](../guides/native-cookbook.md) — the host-language extension path
-- [`../reference/native-classes.md`](../reference/native-classes.md) — catalogue of every shipped native
+- [`../reference/core/native-classes.md`](../reference/core/native-classes.md) — catalogue of every shipped native

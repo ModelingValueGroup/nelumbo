@@ -55,7 +55,7 @@ public final class Rule extends Node implements Evaluatable {
                             r(s(n(Type.BOOLEAN, 0), o(s(k("if"), n(Type.BOOLEAN, 0)))), true, t(","))),
                     Type.ROOT, null, Rule.class, null);
         } catch (ParseException e) {
-            throw new IllegalStateException("Cannot create functor for NIs", e);
+            throw new IllegalStateException("Cannot create functor for " + Rule.class, e);
         }
     }
 
@@ -124,6 +124,7 @@ public final class Rule extends Node implements Evaluatable {
             Map<Variable, Object> whenVars = when != null ? when.getBinding(when) : null;
             Map<Variable, Object> nonConsVars = (when != null ? condVars.addAll(whenVars) : condVars)
                     .removeAllKey(consVars);
+            nonConsVars = nonConsVars.removeAll(v -> !ctx.outer().hasDefined(v.getKey()));
             if (!nonConsVars.isEmpty()) {
                 Map<Variable, Object> localVars = nonConsVars.removeAllKey(cond.allLocalVars());
                 if (when != null) {

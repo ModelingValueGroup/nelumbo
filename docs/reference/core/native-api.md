@@ -1,14 +1,16 @@
 # Native API — implementing predicates in Java
 
+> **Level:** Java core. Always present, nothing to import.
+
 Some patterns in Nelumbo cannot be expressed purely in the language — the basic arithmetic primitives, string concatenation, rational construction. These are implemented in Java and bound to a pattern declaration using the `@` annotation:
 
-```
+```nelumbo
 private Boolean ::= add(<Integer>, <Integer>, <Integer>)   @org.modelingvalue.nelumbo.integers.Integers
 ```
 
 This page describes how such bindings are written. It is the reference for anyone extending Nelumbo with new primitives — either to add capabilities to the standard library or to integrate Nelumbo with a Java application.
 
-For the in-language extension mechanism (`::>` pattern transformations), see [`../guides/language-transformations.md`](../guides/language-transformations.md) instead. That is usually the right tool; Java natives are only needed for primitives that fundamentally cannot be derived from existing rules.
+For the in-language extension mechanism (`::>` pattern transformations), see [`../guides/language-transformations.md`](../../guides/language-transformations.md) instead. That is usually the right tool; Java natives are only needed for primitives that fundamentally cannot be derived from existing rules.
 
 ---
 
@@ -16,7 +18,7 @@ For the in-language extension mechanism (`::>` pattern transformations), see [`.
 
 The form of a pattern with a native binding is:
 
-```
+```nelumbo
 <Type> ::= pattern   @fully.qualified.JavaClassName
 ```
 
@@ -24,7 +26,7 @@ The Java class named by `@` must:
 
 1. Extend an appropriate base class — typically `org.modelingvalue.nelumbo.logic.Predicate`.
 2. Provide a single public constructor annotated with `@NelumboConstructor`, with the signature `(NodeInfo, Object...)`. The engine instantiates the class through this constructor by reflection.
-3. Implement the native reasoning. **The preferred way is a `@NelumboMethod`** — a method whose name and parameter count match the functor; the engine binds it by reflection and one class can host a method per relation. Override `infer(int, InferContext)` instead when the functor is an operator (its name is not a Java identifier) or when the logic needs the `InferContext`. (Other base-class hooks exist too: `init(...)` for parsed literals, the `isTrue` / `isFalse` family for `BinaryPredicate` subclasses.) The trade-off is spelled out in [`../guides/native-cookbook.md`](../guides/native-cookbook.md#implementing-the-logic-prefer-nelumbomethod-over-overriding-infer); everything below about `InferResult` applies equally to both.
+3. Implement the native reasoning. **The preferred way is a `@NelumboMethod`** — a method whose name and parameter count match the functor; the engine binds it by reflection and one class can host a method per relation. Override `infer(int, InferContext)` instead when the functor is an operator (its name is not a Java identifier) or when the logic needs the `InferContext`. (Other base-class hooks exist too: `init(...)` for parsed literals, the `isTrue` / `isFalse` family for `BinaryPredicate` subclasses.) The trade-off is spelled out in [`../guides/native-cookbook.md`](../../guides/native-cookbook.md#implementing-the-logic-prefer-nelumbomethod-over-overriding-infer); everything below about `InferResult` applies equally to both.
 
 That is the entire required surface. There is no `struct(...)` override and no private re-structuring constructor; the base classes handle re-structuring automatically.
 
@@ -45,7 +47,7 @@ public static NMyValue of(MyJavaValue val) {
 
 ## Where the logic goes: `@NelumboMethod` and `infer`
 
-The reasoning of a native predicate returns an **`InferResult`** — the same fact/falsehood/completeness structure described in [`test-expression-semantics.md`](test-expression-semantics.md), but at the Java level. It lives in one of two places.
+The reasoning of a native predicate returns an **`InferResult`** — the same fact/falsehood/completeness structure described in [`test-expression-semantics.md`](../logic/test-expression-semantics.md), but at the Java level. It lives in one of two places.
 
 **A `@NelumboMethod` (preferred).** The method name equals the functor's name and the parameter count equals its argument count; the engine binds it by reflection. Each bound argument arrives as its typed node and each unbound argument as `null`:
 
@@ -197,7 +199,7 @@ Writing a native is a significant step. Before reaching for it, check whether th
 
 - A Nelumbo rule (`<=>`) — most derived behaviour belongs here
 - A combination of existing stdlib operators
-- A `::>` pattern transformation (see [`../guides/language-transformations.md`](../guides/language-transformations.md))
+- A `::>` pattern transformation (see [`../guides/language-transformations.md`](../../guides/language-transformations.md))
 
 Native code should be reserved for:
 
@@ -211,8 +213,8 @@ The stdlib itself follows this rule: `add`, `mult`, `string_concat`, and the com
 
 ## See also
 
-- [`grammar.md`](grammar.md) — where `@` fits syntactically
-- [`writing-rules.md`](writing-rules.md) — the in-language alternative
-- [`../guides/language-transformations.md`](../guides/language-transformations.md) — the meta-level alternative (Phase 3)
-- [`stdlib/integers.md`](stdlib/integers.md) — a concrete module with three native predicates and several Nelumbo-defined ones
-- [`stdlib/logic.md`](stdlib/logic.md) — see how `->`, `<->`, and `!=` are in-language, while `!`, `&`, `|`, `E[]`, `A[]`, `NIs` (for `=`), and `Equal` (for the private `eq`) are native
+- [`grammar.md`](../lang/grammar.md) — where `@` fits syntactically
+- [`writing-rules.md`](../logic/writing-rules.md) — the in-language alternative
+- [`../guides/language-transformations.md`](../../guides/language-transformations.md) — the meta-level alternative (Phase 3)
+- [`stdlib/integers.md`](../packages/integers.md) — a concrete module with three native predicates and several Nelumbo-defined ones
+- [`stdlib/logic.md`](../logic/index.md) — see how `->`, `<->`, and `!=` are in-language, while `!`, `&`, `|`, `E[]`, `A[]`, `NIs` (for `=`), and `Equal` (for the private `eq`) are native

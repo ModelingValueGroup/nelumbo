@@ -39,7 +39,7 @@ public class NelumboTestBase {
     // Utilities
 
     public KnowledgeBase run(Runnable test) {
-        return KnowledgeBase.BASE.run(test);
+        return KnowledgeBase.BASE.invoke(test);
     }
 
     public static InferResult getResult(Predicate pred) {

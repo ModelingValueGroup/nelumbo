@@ -48,7 +48,7 @@ public final class KnowledgeBaseLoader {
         List<String> problems = new ArrayList<>();
         // run(...) creates a fresh child of BASE, runs the body with that child as CURRENT (so all
         // declarations/imports register into it), and returns that populated child.
-        KnowledgeBase base = KnowledgeBase.BASE.run(() -> {
+        KnowledgeBase base = KnowledgeBase.BASE.invoke(() -> {
             for (NamedSource source : sources) {
                 String src = source.content().endsWith("\n") ? source.content() : source.content() + "\n";
                 ParserResult result = new Parser(new Tokenizer(src, source.name()).tokenize()).parseNonThrowing();

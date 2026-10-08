@@ -1,12 +1,14 @@
 # `nelumbo.lang`
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 The bootstrap layer. Every other `.nl` file — including `logic.nl` itself — is written in the syntax that `lang.nl` declares. It is the meta-language for the meta-language.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 57 lines.
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.lang
 ```
 
@@ -27,7 +29,7 @@ Everything in this module is either a `NATIVE` declaration (the tokenizer / runt
 
 ## Token types
 
-```
+```nelumbo
 SINGLEQUOTE   :: NATIVE     // '
 SEMICOLON     :: NATIVE     // ;
 COMMA         :: NATIVE     // ,
@@ -59,15 +61,15 @@ Each `:: NATIVE` declares a token type produced by the tokenizer. The comment th
 | `BEGINOFFILE` | synthetic token at the start of input                     |
 | `ENDOFFILE`   | synthetic token at the end of input                       |
 
-These names are visible to user code wherever a lexical-token hole is expected: `<NUMBER>`, `<STRING>`, `<NAME>`, `<OPERATOR>`, `<LEFT>`, `<RIGHT>`, `<COMMA>`, etc. See [`built-in-tokens.md`](../built-in-tokens.md) for how they are used in user-facing pattern declarations.
+These names are visible to user code wherever a lexical-token hole is expected: `<NUMBER>`, `<STRING>`, `<NAME>`, `<OPERATOR>`, `<LEFT>`, `<RIGHT>`, `<COMMA>`, etc. See [`built-in-tokens.md`](built-in-tokens.md) for how they are used in user-facing pattern declarations.
 
-There is **no `DECIMAL` token**. Both signed integers and the rational decimal-point form (`-1.5`) are assembled at the pattern level by composing an optional `-` and one or two `<NUMBER>` tokens — see [`integers.md`](integers.md) and [`rationals.md`](rationals.md).
+There is **no `DECIMAL` token**. Both signed integers and the rational decimal-point form (`-1.5`) are assembled at the pattern level by composing an optional `-` and one or two `<NUMBER>` tokens — see [`integers.md`](../packages/integers.md) and [`rationals.md`](../packages/rationals.md).
 
 ---
 
 ## Object types
 
-```
+```nelumbo
 Object        :: NATIVE
 Type          :: Object
 PatternPart   :: Root                // a reusable named pattern fragment (`pattern N ::= …`)
@@ -101,7 +103,7 @@ The hierarchy is what gives the rest of the language a place to hang. A user-dec
 
 A **named pattern** factors a recurring fragment of pattern syntax out into a reusable name, so it can be written once and referenced as `<NAME>` wherever it is needed. It is declared with the `pattern` keyword and used by `lang.nl` itself:
 
-```
+```nelumbo
 pattern PATTERNS ::= <(> <Pattern#100> <)+>
 pattern QNAME    ::= <[> <(> <NAME> <,> . <)+> <]>
 ```
@@ -111,20 +113,20 @@ pattern QNAME    ::= <[> <(> <NAME> <,> . <)+> <]>
 
 Unlike a `::=` declaration, a named pattern produces **no value** and adds **no new syntax** to the language. It is pure abbreviation: every `<PATTERNS>` reference expands to its body before parsing. The mechanism is itself bootstrapped by a `Root` form and a `Pattern` alternative:
 
-```
+```nelumbo
 PatternPart ::= "pattern" <NAME> ::= <PATTERNS>   @nelumbo.lang.PatternPart   // declares one
 Pattern     ::= "<" <PatternPart#100> ">"         @nelumbo.patterns.PatternPartPattern   // references one
 ```
 
 `PatternPart` is declared as a subtype of `Root` (so the `pattern N ::= …` declaration is a legal top-level statement), and the `PatternPartPattern` alternative of `Pattern` is what lets a named pattern appear as `<NAME>` inside another pattern.
 
-Named patterns are used throughout the standard library to keep dense declarations readable — for example `RADIX_NUMBER` in [`integers.nl`](integers.md), `YMWD_PERIOD` / `TIME_PERIOD` in [`datetime.nl`](datetime.md), and `BINDING` in [`logic.nl`](logic.md).
+Named patterns are used throughout the standard library to keep dense declarations readable — for example `RADIX_NUMBER` in [`integers.nl`](../packages/integers.md), `YMWD_PERIOD` / `TIME_PERIOD` in [`datetime.nl`](../packages/datetime.md), and `BINDING` in [`logic.nl`](../logic/index.md).
 
 ---
 
 ## Namespace grammar — what a `.nl` file is
 
-```
+```nelumbo
 Namespace     ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE>
                   @nelumbo.lang.Namespace
 
@@ -144,7 +146,7 @@ This is also the file that justifies the existence of `List<Root>` as a parseabl
 
 This is the part of `lang.nl` that describes the syntax of `::=` patterns themselves. Every angle-bracketed construct you write in a pattern declaration is parsed by one of these alternatives.
 
-```
+```nelumbo
 Pattern ::= <NAME>                                                          @nelumbo.patterns.TokenTextPattern,
             <STRING>                                                        @nelumbo.patterns.TokenTextPattern,
             <OPERATOR>                                                      @nelumbo.patterns.TokenTextPattern,
@@ -175,19 +177,19 @@ Reading these alternatives in order:
 | `"<(" ... "<,>" ... ")>" + or *`                             | `RepetitionPattern`     | A repetition group, with optional separator: `<(> P <,> , <)+>` or `... <)*>`. |
 | `"<(" ... ")?>"`                                             | `OptionalPattern`       | An optional group: `<(> super <)?>`.            |
 | `<LEFT> ... <RIGHT>`                                         | `SequencePattern`       | A bracketed sequence — any of `(...)`, `[...]`, `{...}`. |
-| `"<[" ... "<]>"`                                             | `SequencePattern`       | A [connected-token group](../grammar.md#connected-token-groups---) — adjacent tokens, no whitespace between them. |
+| `"<[" ... "<]>"`                                             | `SequencePattern`       | A [connected-token group](grammar.md#connected-token-groups---) — adjacent tokens, no whitespace between them. |
 | `"<" (visible\|hidden)? <Type#100> (# <NUMBER>)? ">"`        | `NodeTypePattern`       | A type hole `<T>`, optionally with visibility (`<hidden T>`) and precedence (`<T#5>`). |
 | `"<" <PatternPart#100> ">"`                                  | `PatternPartPattern`    | A reference to a [named pattern](#named-patterns): `<PATTERNS>`, `<QNAME>`, `<RADIX_NUMBER>`, … |
 
 The escaping is delicate: `"<"`, `"("`, `"|"`, `","`, `")"`, `"?"`, `">"`, `"+"`, `"*"` all have meaning *inside* a pattern, so when this file wants to write them as literal text it quotes them. This is the meta-syntax describing itself.
 
-Note also the `#100` precedence on the inner `<Pattern#100>` and `<Variable#100>` holes. Precedence 100 is effectively "atomic" — it prevents an inner pattern from being mistaken for a continuing operator expression. See [`precedence-and-associativity.md`](../precedence-and-associativity.md).
+Note also the `#100` precedence on the inner `<Pattern#100>` and `<Variable#100>` holes. Precedence 100 is effectively "atomic" — it prevents an inner pattern from being mistaken for a continuing operator expression. See [`precedence-and-associativity.md`](precedence-and-associativity.md).
 
 ---
 
 ## Root grammar — top-level statements
 
-```
+```nelumbo
 Root ::= "import" <(> <QNAME> <,> , <)+>                                                    @nelumbo.lang.Import,
          <Root#0> ::> <RootNamespace>                                                       @nelumbo.lang.Transform,
          <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                 @nelumbo.lang.Variable,
@@ -223,7 +225,7 @@ The `::>` transformation (Transform) takes any `<Root>` shape on the left and a 
 
 ## Generic parenthesisation
 
-```
+```nelumbo
 Type P
 
 P ::= (<P>)   @nelumbo.lang.Parenthesized
@@ -255,9 +257,9 @@ All bindings are native — there is no in-language rule (`<=>`) in this module.
 
 ## See also
 
-- [`grammar.md`](../grammar.md) — the user-facing view of the same grammar
-- [`built-in-tokens.md`](../built-in-tokens.md) — how the token types above appear inside `::=` patterns
-- [`precedence-and-associativity.md`](../precedence-and-associativity.md) — the `#N` annotation declared by the `Functor` Root form
-- [`visibility.md`](../visibility.md) — the `private` and `hidden` modifiers declared by the `Functor` and `Variable` Root forms
-- [`logic.md`](logic.md) — the next layer up, which adds `Boolean`, `fact`, `<=>`, and `?`
+- [`grammar.md`](grammar.md) — the user-facing view of the same grammar
+- [`built-in-tokens.md`](built-in-tokens.md) — how the token types above appear inside `::=` patterns
+- [`precedence-and-associativity.md`](precedence-and-associativity.md) — the `#N` annotation declared by the `Functor` Root form
+- [`visibility.md`](visibility.md) — the `private` and `hidden` modifiers declared by the `Functor` and `Variable` Root forms
+- [`logic.md`](../logic/index.md) — the next layer up, which adds `Boolean`, `fact`, `<=>`, and `?`
 - [`langTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/langTest.nl) — minimal smoke test that imports `nelumbo.lang` on its own

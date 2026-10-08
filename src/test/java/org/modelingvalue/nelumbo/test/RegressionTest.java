@@ -80,6 +80,34 @@ public class RegressionTest extends NelumboTestBase {
         testResource("rule-pos-on-mapped-collection-list-undecided.nl");
     }
 
+    // also covers the list-literal twin [j+1], which did not parse before the fix
+    @RepeatedTest(10)
+    public void setLiteralArithmeticUnevaluated() {
+        testResource("set-literal-arithmetic-unevaluated.nl");
+    }
+
+    // 4 and 6 quantifier variables, in rule bodies and in plain queries
+    @RepeatedTest(10)
+    public void fourVarQuantifierCrash() {
+        testResource("four-var-quantifier-crash.nl");
+    }
+
+    // Seq<T> must stay a Struct: as an Object its functor is Function-typed and `=` is undecided
+    @RepeatedTest(10)
+    public void repetitionSeparatorGreedy() {
+        testResource("repetition-separator-greedy.nl");
+    }
+
+    @RepeatedTest(10)
+    public void optionalPresenceLost() {
+        testResource("optional-presence-lost.nl");
+    }
+
+    @RepeatedTest(10)
+    public void alternationOptionIdentity() {
+        testResource("alternation-option-identity.nl");
+    }
+
     // was a load-time bug (~80s), so the timeout is the real assertion
     @RepeatedTest(10)
     @Timeout(20)

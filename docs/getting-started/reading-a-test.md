@@ -2,7 +2,7 @@
 
 If you open any `.nl` file in Nelumbo and scroll to the bottom, you will see lines that look like this:
 
-```
+```nelumbo
 fib(5)=f         ? [(f=5)][..]
 m(Amalia)=Willem ? [][()]
 unknown          ? [..][..]
@@ -20,7 +20,7 @@ Nelumbo is different. Nelumbo reasons about **facts and falsehoods as peers**. F
 
 Because Nelumbo computes two things, every query result has two parts:
 
-```
+```text
 ? [ facts ][ falsehoods ]
       ^         ^
       |         `-- bindings that make the expression false
@@ -35,13 +35,13 @@ This is not a stylistic choice. It is the syntactic expression of Nelumbo's thre
 
 The `?` character by itself turns any expression into a **query**. When a query appears on its own, the engine runs it and prints the result:
 
-```
+```nelumbo
 fib(5)=f ?
 ```
 
 When a query is followed by two bracketed lists, it becomes a **test**. The brackets are the *expected* result; the engine runs the query and compares:
 
-```
+```text
 fib(5)=f ? [(f=5)][..]
           \_________/
           expected result
@@ -69,7 +69,7 @@ Once you know the two sides and the incompleteness marker, almost every test in 
 
 ### 1. Proven true, nothing else
 
-```
+```nelumbo
 true         ? [()][]
 m(Amalia)=Maxima  ? [()][]
 ```
@@ -78,7 +78,7 @@ Reading: the facts side contains exactly one binding, `()`, which is the **empty
 
 ### 2. Proven false, nothing else
 
-```
+```nelumbo
 false            ? [][()]
 m(Amalia)=Willem ? [][()]
 ```
@@ -87,7 +87,7 @@ Reading: facts side is closed and empty, falsehoods side contains the empty bind
 
 ### 3. Genuinely unknown
 
-```
+```nelumbo
 unknown ? [..][..]
 ```
 
@@ -95,7 +95,7 @@ Reading: neither side makes any claim of completeness, and neither side lists an
 
 ### 4. A concrete binding with open tail
 
-```
+```nelumbo
 fib(5)=f    ? [(f=5)][..]
 m(Amalia)=a ? [(a=Maxima)][..]
 ```
@@ -108,7 +108,7 @@ Reading: the facts side asserts that `f=5` (resp. `a=Maxima`) is a proven fact. 
 
 ### From `logicTest.nl`
 
-```
+```nelumbo
 true              ? [()][]
 false             ? [][()]
 unknown           ? [..][..]
@@ -123,7 +123,7 @@ Notice the last line. `unknown & false` is **proven false**, not unknown — bec
 
 ### From `family.nl`
 
-```
+```nelumbo
 m(Amalia)=Maxima  ? [()][]
 m(Amalia)=Willem  ? [][()]
 m(Amalia)=a       ? [(a=Maxima)][..]
@@ -133,7 +133,7 @@ The first two are closed: the engine proves Maxima is Amalia's mother and proves
 
 ### From `fibonacci.nl`
 
-```
+```nelumbo
 fib(0)=f  ? [(f=0)][..]
 fib(1)=f  ? [(f=1)][..]
 fib(5)=f  ? [(f=5)][..]

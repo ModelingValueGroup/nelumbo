@@ -31,6 +31,12 @@ public class InconsistencyException extends RuntimeException {
         this.existingResult = existingResult;
     }
 
+    public InconsistencyException(InferResult ruleResult) {
+        super("Inconsistent results: " + ruleResult + " has non unique bindings for a function");
+        this.ruleResult = ruleResult;
+        this.existingResult = null;
+    }
+
     public InferResult ruleResult() {
         return ruleResult;
     }

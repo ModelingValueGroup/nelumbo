@@ -198,7 +198,7 @@ public class NlTextDocumentService implements TextDocumentService {
     @SuppressWarnings("unchecked")
     private <T> T inKb(Supplier<T> request) {
         Object[] result = new Object[1];
-        workspace.getBaseKnowledgeBase().run(() -> result[0] = request.get());
+        workspace.getBaseKnowledgeBase().invoke(() -> result[0] = request.get());
         return (T) result[0];
     }
 }

@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.website;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -108,7 +109,7 @@ class NelumboHttpServerTest {
         String html = response.body();
         assertTrue(html.contains("Nelumbo"), "landing page should introduce Nelumbo");
         assertTrue(html.contains("href=\"/tour.html\""), "landing page should link to the tour");
-        assertTrue(html.contains("href=\"/playground.html\""), "landing page should link to the playground");
+        assertTrue(html.contains("href=\"/sandbox.html\""), "landing page should link to the sandbox");
     }
 
     @Test
@@ -124,12 +125,45 @@ class NelumboHttpServerTest {
     }
 
     @Test
-    void playgroundIsServedAtItsPath() throws Exception {
-        HttpResponse<String> response = get("/playground.html");
+    void sandboxIsServedAtItsPath() throws Exception {
+        HttpResponse<String> response = get("/sandbox.html");
         assertEquals(200, response.statusCode());
         String html = response.body();
-        assertTrue(html.contains("nelumbo-field"), "playground should mount a Nelumbo editor field");
-        assertTrue(html.contains("initNelumboFields"), "playground should initialize the editor fields");
+        assertTrue(html.contains("nelumbo-field"), "sandbox should mount a Nelumbo editor field");
+        assertTrue(html.contains("initNelumboFields"), "sandbox should initialize the editor fields");
+    }
+
+    /**
+     * The sandbox sidebar lists the bundled examples from /examples (same JSON shape as the cli eval server).
+     * The sudokus are left out: the 9x9 ones run far past the eval deadline and would only show timeouts.
+     */
+    @Test
+    void examplesAreListedForTheSandboxWithoutTheSudokus() throws Exception {
+        HttpResponse<String> list = get("/examples");
+        assertEquals(200, list.statusCode());
+        assertTrue(list.headers().firstValue("Content-Type").orElse("").contains("json"), "the list is JSON");
+        assertTrue(list.body().contains("\"examples\""), list.body());
+        assertTrue(list.body().contains("\"fibonacci\""), "a finished example is listed");
+        assertTrue(list.body().contains("\"familyAssignment\""), "an exercise is listed");
+        assertFalse(list.body().contains("sudoku"), "no sudoku is listed: " + list.body());
+    }
+
+    @Test
+    void anExampleIsServedAsPlainNelumboSource() throws Exception {
+        HttpResponse<String> example = get("/examples/fibonacci");
+        assertEquals(200, example.statusCode());
+        assertTrue(example.headers().firstValue("Content-Type").orElse("").contains("text/plain"), "served as text, not HTML");
+        assertTrue(example.body().contains("fib("), "the fibonacci example source");
+        assertEquals(404, get("/examples/sudoku-4x4").statusCode(), "unlisted examples are not served");
+        assertEquals(404, get("/examples/noSuchExample").statusCode());
+    }
+
+    /** The sandbox was published as /playground.html (e.g. in llms.txt); old links must keep working. */
+    @Test
+    void formerPlaygroundUrlRedirectsPermanentlyToTheSandbox() throws Exception {
+        HttpResponse<String> response = get("/playground.html");
+        assertEquals(301, response.statusCode());
+        assertEquals("/sandbox.html", response.headers().firstValue("Location").orElse(""));
     }
 
     @Test
@@ -138,9 +172,9 @@ class NelumboHttpServerTest {
         assertEquals(200, index.statusCode());
         assertTrue(index.headers().firstValue("Content-Type").orElse("").contains("text/html"), "docs should be served as HTML");
         assertTrue(index.body().contains("Nelumbo documentation"), "the docs index is the documentation overview");
-        assertTrue(index.body().contains("href=\"/docs/reference/grammar.html\""), "the docs sidebar should link the reference pages");
+        assertTrue(index.body().contains("href=\"/docs/reference/lang/grammar.html\""), "the docs sidebar should link the reference pages");
 
-        HttpResponse<String> grammar = get("/docs/reference/grammar.html");
+        HttpResponse<String> grammar = get("/docs/reference/lang/grammar.html");
         assertEquals(200, grammar.statusCode(), "nested doc pages are served by the wildcard route");
         assertTrue(grammar.body().contains("<title>Grammar - Nelumbo docs</title>"), grammar.body().substring(0, 300));
 
@@ -155,6 +189,20 @@ class NelumboHttpServerTest {
         HttpResponse<String> bare = get("/docs");
         assertEquals(302, bare.statusCode(), "/docs redirects to /docs/ so relative links on the index resolve");
         assertEquals("/docs/", bare.headers().firstValue("Location").orElse(""));
+    }
+
+    /** Every page loads /theme.js blocking in its head; a 404 there leaves every page without a theme switch. */
+    @Test
+    void themeScriptIsServedAndLoadedByEveryPage() throws Exception {
+        HttpResponse<String> script = get("/theme.js");
+        assertEquals(200, script.statusCode());
+        assertTrue(script.headers().firstValue("Content-Type").orElse("").contains("javascript"), "theme.js must be served as JavaScript");
+        assertTrue(script.body().contains("prefers-color-scheme"), "the theme script follows the OS preference");
+        for (String page : new String[]{"/", "/tour.html", "/sandbox.html", "/docs/"}) {
+            String html = get(page).body();
+            assertTrue(html.contains("<script src=\"/theme.js\"></script>"), page + " must load the theme script");
+            assertTrue(html.contains("class=\"theme-toggle\""), page + " must show the theme switch");
+        }
     }
 
     @Test
@@ -217,7 +265,7 @@ class NelumboHttpServerTest {
 
     @Test
     void pagesLinkToTheDocs() throws Exception {
-        for (String page : List.of("/", "/tour.html", "/playground.html")) {
+        for (String page : List.of("/", "/tour.html", "/sandbox.html")) {
             assertTrue(get(page).body().contains("href=\"/docs/\""), page + " should link to the docs");
         }
     }

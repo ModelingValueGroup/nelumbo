@@ -1,12 +1,14 @@
 # `nelumbo.integers`
 
+> **Level:** optional package `nelumbo.integers`. Write `import nelumbo.integers`; it brings in `nelumbo.logic` and `nelumbo.lang` transitively.
+
 Arbitrary-precision integer arithmetic and comparison.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl) — 38 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl) — 39 lines.
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.integers
 ```
 
@@ -16,7 +18,7 @@ import nelumbo.integers
 
 ## Type
 
-```
+```nelumbo
 Integer :: Object
 ```
 
@@ -26,14 +28,14 @@ A value of type `Integer` is an arbitrary-precision signed integer. There is no 
 
 ## Literals
 
-```
+```nelumbo
 pattern RADIX_NUMBER ::= <(> <(> <NUMBER> <|> <NAME> <)> <)+>
 
 Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>
             @nelumbo.integers.NInteger
 ```
 
-`<NUMBER>` is the language-level token defined in [`lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) as the unsigned digit run `[0-9]+`. The sign and the optional base form are built around it **at the pattern level**, not by the lexer. `RADIX_NUMBER` is a [named pattern](lang.md#named-patterns) — a reusable abbreviation for the base-N digit run, kept separate so the `Integer` literal reads cleanly. The literal admits:
+`<NUMBER>` is the language-level token defined in [`lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) as the unsigned digit run `[0-9]+`. The sign and the optional base form are built around it **at the pattern level**, not by the lexer. `RADIX_NUMBER` is a [named pattern](../lang/index.md#named-patterns) — a reusable abbreviation for the base-N digit run, kept separate so the `Integer` literal reads cleanly. The literal admits:
 
 - ordinary signed decimals: `0`, `42`, `-1`
 - base-N literals: `<digits>#<digits-in-base>`, where the leading number is the base — e.g., `16#ff`, `36#abc`. The digits-in-base (`RADIX_NUMBER`) are themselves a repetition of `<NUMBER>` / `<NAME>` tokens, which is why letters like `ff`/`abc` (lexed as `<NAME>`) compose with the leading base.
@@ -44,7 +46,7 @@ The native class `NInteger` reassembles the matched parts, applies the leading s
 
 ## Arithmetic
 
-```
+```nelumbo
 Integer ::= <Integer> - <Integer>   #40,
             <Integer> + <Integer>   #40,
                       - <Integer>   #80,
@@ -64,7 +66,7 @@ Integer ::= <Integer> - <Integer>   #40,
 
 Six patterns, **two** native arithmetic primitives. The four binary operators reduce to `add` or `mult` — both `@NelumboMethod`s on the single `nelumbo.integers.Integers` class (which also carries the `gt` comparison primitive below):
 
-```
+```nelumbo
 private Boolean ::= add(<Integer>,<Integer>,<Integer>)   @nelumbo.integers.Integers,
                     mult(<Integer>,<Integer>,<Integer>)  @nelumbo.integers.Integers,
                     gt(<Integer>,<Integer>)              @nelumbo.integers.Integers
@@ -81,7 +83,7 @@ Subtraction is not a separate native. It is `add` viewed from a different angle:
 
 Unary negation and absolute value are defined on top of subtraction:
 
-```
+```nelumbo
 - a = b   <=>  0 - a = b
 
 |a| = b   <=>  b =  a   if a >= 0,
@@ -94,7 +96,7 @@ The two guarded clauses of `|a|` cover the integer domain without overlap.
 
 Because `add` and `mult` are relational, any one of the three operands can be the unknown. From `integersTest.nl`:
 
-```
+```nelumbo
 10 + 11 = a   ? [(a=21)][..]
 a  + 11 = 21  ? [(a=10)][..]
 10 + a  = 21  ? [(a=11)][..]
@@ -113,7 +115,7 @@ Absolute value with the result fixed returns both pre-images on the facts side a
 
 Integer division truncates toward zero. A query with a non-exact dividend gets an empty facts side — no integer makes the equation true:
 
-```
+```nelumbo
 20 / 10 = 2    ? [()][]
 20 / 10 = 3    ? [][()]
 21 / 10 = a    ? [][..]
@@ -124,7 +126,7 @@ Integer division truncates toward zero. A query with a non-exact dividend gets a
 
 ## Comparison
 
-```
+```nelumbo
 Boolean ::= <Integer> ">"  <Integer>   #30,
             <Integer> "<"  <Integer>   #30,
             <Integer> "<=" <Integer>   #30,
@@ -140,7 +142,7 @@ Boolean ::= <Integer> ">"  <Integer>   #30,
 
 The comparison operators themselves carry no `@` binding — the single native comparison is the private helper `gt`, and the operators reduce to it and to `=`:
 
-```
+```nelumbo
 a >  b  <=>  gt(a, b)
 a <  b  <=>  gt(b, a)
 a <= b  <=>  a < b | a = b
@@ -151,7 +153,7 @@ a >= b  <=>  a > b | a = b
 
 Comparisons participate in three-valued classification. Asking `a > 0` with `a` unbound does not enumerate the positive integers, but it does place `a = 0` on the correct side:
 
-```
+```nelumbo
 a >  0   ? [..][(a=0),..]    // (a=0) is a proven falsehood of a>0
 a >= 0   ? [(a=0),..][..]    // (a=0) is a proven fact of a>=0
 ```
@@ -176,8 +178,8 @@ Added to what `nelumbo.logic` already exports:
 
 ## See also
 
-- [`logic.md`](logic.md) — the module `integers` builds on
+- [`logic.md`](../logic/index.md) — the module `integers` builds on
 - [`rationals.md`](rationals.md) — the same shape, lifted to exact rationals
-- [`writing-rules.md`](../writing-rules.md) — how the `a-b=c <=> add(c,b,a)` idiom works
+- [`writing-rules.md`](../logic/writing-rules.md) — how the `a-b=c <=> add(c,b,a)` idiom works
 - [`integersTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/integersTest.nl) — executable specification
 - [`fibonacci.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl) — non-trivial use of `+`, `-`, and `<=`

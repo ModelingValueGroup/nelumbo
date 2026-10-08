@@ -41,6 +41,8 @@ public class Predicate extends Node {
     @Serial
     private static final long serialVersionUID = -1605559565948158856L;
 
+    protected static final boolean CHECK_SINGLE_FUNCTION_RESULT = Boolean.getBoolean("CHECK_SINGLE_FUNCTION_RESULT");
+
     protected static final boolean RANDOM_NELUMBO  = Boolean.getBoolean("RANDOM_NELUMBO");
     protected static final boolean REVERSE_NELUMBO = Boolean.getBoolean("REVERSE_NELUMBO");
     protected static final int     MAX_LOGIC_DEPTH = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
@@ -122,10 +124,7 @@ public class Predicate extends Node {
                     if (lit != null) {
                         List<Object> args = n.args();
                         if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
-                            List<Type> argTypes = lit.argTypes();
-                            boolean rep = argTypes.size() == 1 && Type.REPETITION.equals(argTypes.first().original());
-                            Object[] array = rep ? new Object[] { args } : args.toArray();
-                            return lit.construct(n.astElements(), array, kb, ctx);
+                            return lit.construct(n.astElements(), args.toArray(), kb, ctx);
                         }
                     }
                 }
@@ -159,7 +158,7 @@ public class Predicate extends Node {
     }
 
     public InferResult infer() {
-        KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+        KnowledgeBase knowledgeBase = KnowledgeBase.current();
         InferContext context = knowledgeBase.context();
         if (context.trace()) {
             context.trace(() -> toString());
@@ -345,9 +344,31 @@ public class Predicate extends Node {
                     return result;
                 }
             }
+            checkSingleResult(result);
             knowledgebase.memoization(this, result);
             return result;
         }
+    }
+
+    private void checkSingleResult(InferResult result) {
+        if (CHECK_SINGLE_FUNCTION_RESULT) {
+            Variable unique = unique();
+            if (unique != null) {
+                Map<Map<Variable, Object>, Predicate> map = Map.of();
+                for (Predicate fact : result.facts()) {
+                    Map<Variable, Object> rest = fact.getBinding(this).removeKey(unique);
+                    if (map.containsKey(rest)) {
+                        throw new InconsistencyException(result);
+                    } else {
+                        map = map.put(rest, fact);
+                    }
+                }
+            }
+        }
+    }
+
+    protected Variable unique() {
+        return null;
     }
 
     protected boolean isShallow(int nrOfUnbound, Functor functor) {

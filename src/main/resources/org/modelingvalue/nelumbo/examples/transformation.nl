@@ -1,25 +1,43 @@
+import nelumbo.collections
 import nelumbo.strings
 
 // Language
 
-Root ::= attr <Type> <NAME> <Type> #100
+Root ::= <(> in <|> out <)> <Type> <NAME> <Type> #100
 
 Type OT, AT
 NAME AN
 
-attr OT AN AT  ::> {
-    AT               ::= <OT>.AN                             #30
-    Root             ::= <{OT,Literal}>.AN := <{AT,Literal}> #30
+in OT AN AT  ::> {
+    AT               ::= <OT>.AN                                 #100
+    Root             ::= <{OT,Literal}>.AN  := <{AT,Literal}#0>  #100
     private FactType ::= AN(<OT>,<AT>)
 
     OT o
     AT a
+
     o.AN=a <=>  AN(o,a)
 
-    {OT,Literal} ol
-    {AT,Literal} al
-    ol.AN := al ::> {
+    {OT,Literal}  ol
+    {AT,Literal}  al
+
+    (ol.AN := al) ::> {
         fact AN(ol,al)
+    }
+}
+
+out OT AN AT  ::> {
+    AT   ::= <OT>.AN                                 #100
+    Root ::= <{OT,Variable}>.AN := <{AT,Function}#0> #100
+
+    OT o
+    AT a
+
+    {OT,Literal}  ol
+    {AT,Function} af
+
+    (o.AN := af) ::> {
+        o.AN=a <=>  af=a
     }
 }
 
@@ -27,26 +45,39 @@ attr OT AN AT  ::> {
 
 Person :: Object
 
-attr Person name String
-attr Person address String
-attr Person friend Person
+in Person name String
+in Person street String
+in Person number Integer
+in Person friends Set<Person>
 
-// Example
+out Person address String
+
+// Rules
+
+Person p, f
+
+p.address := p.street + " " + str(p.number)
+
+// Facts
 
 Person ::= Piet, Jan
 
 Piet.name    := "Piet"
-Piet.address := "Kalverstraat"
+Piet.street  := "Kalverstraat"
+Piet.number  := 11
 Jan.name     := "Jan"
-Jan.address  := "Kalverstraat"
-Jan.friend   := Piet
+Jan.street   := "Kalverstraat"
+Jan.number   := 22
+Jan.friends  := {Piet}
 
-// Queries
+// Queries 
 
-String s
-Person p
+String       s
+Person       p
+List<String> l
 
-p.name="Piet"            ? [(p=Piet)][..]
-Piet.address=s           ? [(s="Kalverstraat")][..]
-p.address="Kalverstraat" ? [(p=Piet),(p=Jan)][..]
-Jan.friend.name=s        ? [(s="Piet")][..]
+p.name="Piet"                 ? [(p=Piet)][..]
+Piet.street=s                 ? [(s="Kalverstraat")][..]
+p.street="Kalverstraat"       ? [(p=Piet),(p=Jan)][..]
+Piet.address=s                ? [(s="Kalverstraat 11")][..]
+Jan.friends map [f](f.name)=l ? [(l=["Piet"])][..]

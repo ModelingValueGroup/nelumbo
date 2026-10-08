@@ -12,9 +12,10 @@ import nelumbo.collections
 // Engine notes (hard-won, each verified in the known-bug suite - see
 // KnownBugsTest and the repro file headers under resources bugs/): no `where`-filters in the
 // recursion (setFilter over an ok-lambda NPEs in deep recursion), so "forced
-// cell" is a pure E/!E pair-check over ok; E takes at most 3 variables (a
-// 4th parses in rule bodies and then crashes the run - nest E's instead);
-// at/row are bounds-guarded because guards are probed speculatively and an
+// cell" is a pure E/!E pair-check over ok; the E's are nested because E took
+// at most 3 variables back then (a 4th parsed in rule bodies and then crashed
+// the run - fixed 2026-10-06, E takes up to 6 now, see
+// tests/four-var-quantifier-crash.nl); at/row are bounds-guarded because guards are probed speculatively and an
 // out-of-range pos crashes; an alternative's `if` guard must never sit
 // alone on a continuation line (it is silently dropped - break only inside
 // unbalanced parens); and results can depend on unrelated file content and

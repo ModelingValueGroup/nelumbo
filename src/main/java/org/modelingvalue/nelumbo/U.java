@@ -33,7 +33,7 @@ public class U {
         return ARE_ASSERTS_ENABLED;
     }
 
-    @SuppressWarnings({"AssertWithSideEffects", "ConstantValue"})
+    @SuppressWarnings({ "AssertWithSideEffects", "ConstantValue" })
     public static boolean calcAreAssertsEnabled() {
         boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!!!
@@ -90,7 +90,7 @@ public class U {
         if (Boolean.getBoolean("VERBOSE_TESTS")) {
             System.out.println();
             System.out.printf("%s %-99s%s%n", colorCode(42), msg + ":", colorCode(0));
-            KnowledgeBase.CURRENT.get().print(System.out, withTokens);
+            KnowledgeBase.current().print(System.out, withTokens);
         }
     }
 

@@ -64,6 +64,12 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
         this.elements = Set.of();
     }
 
+    public MatchState(String string, MatchState<E> to) {
+        super(TypeMatcherState.EMPTY);
+        this.transitions = Map.of(Entry.of(string, to));
+        this.elements = Set.of();
+    }
+
     public MatchState(Class<?> clss, MatchState<E> to) {
         super(TypeMatcherState.EMPTY);
         this.transitions = Map.of(Entry.of(clss, to));
@@ -160,7 +166,12 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
             break;
         }
         case String text  -> {
-            MatchState<E> state = transitions().get(TokenType.of(text));
+            MatchState<E> state = transitions().get(text);
+            if (state != null) {
+                states = states.add(state);
+                break;
+            }
+            state = transitions().get(TokenType.of(text));
             if (state != null) {
                 states = states.add(state);
             }

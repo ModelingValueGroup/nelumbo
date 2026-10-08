@@ -1,14 +1,16 @@
 # Native classes — the catalogue
 
+> **Level:** Java core. Always present, nothing to import.
+
 Every pattern in the standard library that needs Java backing is bound to a class under `src/main/java/org/modelingvalue/nelumbo/`. This page catalogues the shipped native classes, grouped by structural role, with a note on what each one does and how it returns its results.
 
-Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.
+Read this alongside [`native-api.md`](native-api.md) (which describes the API surface) and [`../guides/native-cookbook.md`](../../guides/native-cookbook.md) (which walks through implementing new ones). This page is the "what's already there" reference.
 
 ---
 
 ## Package layout
 
-```
+```text
 org.modelingvalue.nelumbo.*           base classes and engine
     Node                              base class for AST nodes (values)
     Predicate           (in .logic)   base class for Boolean-producing natives
@@ -26,7 +28,7 @@ org.modelingvalue.nelumbo.patterns    pattern meta-grammar declared by lang.nl
 
 org.modelingvalue.nelumbo.logic       Boolean, connectives, quantifiers, equality,
                                        plus the fact/<=>/? statement forms
-    NBoolean, Not, And, Or, NIs, Equal, ExistentialQuantifier,
+    NBoolean, Not, And, Or, NIs, Equal, Lambda, ExistentialQuantifier,
     UniversalQuantifier, Fact, Rule, Query
 
 org.modelingvalue.nelumbo.integers    integer arithmetic
@@ -39,7 +41,7 @@ org.modelingvalue.nelumbo.strings     string operations
     NString, Strings
 
 org.modelingvalue.nelumbo.collections container literals + set-builder + operations
-    NSet, NList, SetBuilder, BuildSet, Collections
+    NSet, NList, BuildSet, Collections
 
 org.modelingvalue.nelumbo.datetime    ISO 8601 dates, times, date-times, durations
     NDate, NTime, NDateTime, NPeriod, Add, Multiply,
@@ -60,7 +62,7 @@ Shipped natives fall into five structural roles. Reading this classification fir
 | **Three-arg functional relation** | `Predicate` | Relation with one output and one or more inputs; binds the missing one | `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`/`#integer_string` |
 | **Comparison predicate** | `Predicate` | Two-arg relation that decides true/false when both sides are known | `Integers#gt` / `Rationals#gt`, `datetime.GreaterThan`, `Equal`, `Strings#string_length` |
 | **Logical connective** | `BinaryPredicate` / `CompoundPredicate` | Combines sub-predicate results according to a truth table | `And`, `Or`, `Not` |
-| **Quantifier** | `Quantifier` (extends `CompoundPredicate`) | Evaluates a sub-predicate under many bindings and aggregates | `ExistentialQuantifier`, `UniversalQuantifier`, `BuildSet` |
+| **Quantifier** | `Quantifier` (extends `CompoundPredicate`) | Evaluates a lambda body under many bindings and aggregates | `ExistentialQuantifier`, `UniversalQuantifier`, `BuildSet` |
 | **Container** | `Node` | Literal collection of elements | `NSet`, `NList` |
 
 ---
@@ -104,9 +106,17 @@ Shipped natives fall into five structural roles. Reading this classification fir
 - Strategy: structural equality over literal `Node`s. Returns `factCC()` if both sides unify exactly, `falsehoodCC()` if they provably disagree.
 - The `eq` predicate is the leaf primitive for comparing two `Literal` values; `NIs` builds on it for the general `Object`-equality case.
 
+### `Lambda`
+
+- Backs: all six `LambdaN<A1,…,AN,R> ::= [<{Variable,A1}>,…](<R#0>)` functors (N = 1…6) in `logic.nl`
+- Role: container constant (an AST node that is data for other natives)
+- Value: the list of bound `Variable`s plus the body expression. The body is not evaluated when the lambda is constructed; natives evaluate it on demand.
+- API for natives: `localVars()` and `expression()` expose the parts; `test(Object… vals)` binds the variables to the given values and asks the reasoner whether the (Boolean) body is definitely true; `apply(Object… vals)` solves `body = r` for a fresh result variable and returns the value (or `null` when there is no definite single answer). Both record an *incomplete result* in the inference context when the reasoner could not decide, so the calling native can propagate it (`hasIncompleteResult()` / `incompleteResult()`). See [`lambdas.md`](../logic/lambdas.md).
+- Users: the quantifiers (via their constructors), `BuildSet`, and `Collections#setFilter`/`listFilter`/`map`/`sort`.
+
 ### `ExistentialQuantifier`, `UniversalQuantifier`
 
-- Back: `E[...](<Boolean>)` and `A[...](<Boolean>)`
+- Back: `E<Lambda<Boolean>>` and `A<Lambda<Boolean>>` — the keyword followed by a [`Lambda`](#lambda), so `E[x,y](p)` is `E` plus a two-variable lambda
 - Role: quantifier
 - Base: `Quantifier` extends `CompoundPredicate`
 - Strategy: evaluate the body under the current binding, then **strip the local variables** from each resulting binding and aggregate:
@@ -187,23 +197,17 @@ One class hosts all three string primitives as `@NelumboMethod`s: `string_concat
 - Value: backed by the internal immutable `List<T>` collection type.
 - Notes: `NList` supports an `elementsFlattened()` helper that recursively unwraps nested `NList` values. This is useful when a parse produces a tree of concatenated list fragments that you want to flatten.
 
-### `SetBuilder`
-
-- Backs: `Set<E> ::= { [ <E> ] ( <Boolean#0> ) }` — set-builder (comprehension) notation
-- Role: container constant (parse-time AST node)
-- Strategy: holds the bound element variable and the membership condition. At parse time it enforces that the `[ … ]` slot is a bare `Variable` (otherwise a `ParseException` "… must be a variable"), and declares that variable as a local via `localVars()`. The actual set construction is delegated to the `build` predicate (`BuildSet`) through the rule `{[e](c)} = s <=> build(e, c, s)`.
-
 ### `BuildSet`
 
-- Backs: `private Boolean ::= build(<E>, <Boolean#0>, <Set<E>>)`
+- Backs: `private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)`, reached from the set-builder literal `{[e](c)}` through the rule `{leb} = s <=> build(leb, s)` (the `{ <Lambda1<E,Boolean>> }` pattern itself has no native; the former `SetBuilder` class is gone)
 - Role: quantifier (extends `Quantifier`, like `ExistentialQuantifier`/`UniversalQuantifier`)
 - Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces a singleton `NSet` of its non-member value on the falsehoods side. Completeness flags are inherited from the condition's result, so `{[i](|i|=10)}` yields `[(s={-10,10})][(s={0}),..]` — the two solutions as a fact, `{0}` as a proven non-member, `..` for the open remainder.
 
 ### `Collections`
 
-- Backs: the algebraic operations — `size` (`|c|`), `indexOf` (`e pos l`), `elementOf` (`e in s`), `subset` (`< > <= >=`), `intersection` (`&&`), `union` (`||`), `diff` (`-`), and `concat` (`+`).
+- Backs: the algebraic operations — `size` (`|c|`), `indexOf` (`e pos l`), `elementOf` (`e in s`), `subset` (`< > <= >=`), `intersection` (`&&`), `union` (`||`), `diff` (`-`), and `concat` (`+`) — and the lambda-based higher-order operations `setFilter`/`listFilter` (`where`), `map` and `sort`.
 - Role: predicate (one `@NelumboMethod` per operation)
-- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound — or a collection itself is unbound — the method returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). See [`reference/stdlib/collections.md`](stdlib/collections.md#operations).
+- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound — or a collection itself is unbound — the method returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). The four lambda-based methods call `Lambda.test`/`Lambda.apply` once per element (`sort` uses `test` as the comparator, treating elements where neither precedes the other as equal) and return the lambda's incomplete result if any evaluation could not be decided. See [`packages/collections.md`](../packages/collections.md#operations).
 
 ---
 
@@ -266,8 +270,9 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `logic.nl` | `!<Boolean>` | `Not` |
 | `logic.nl` | `<Boolean> & <Boolean>` | `And` |
 | `logic.nl` | `<Boolean> \| <Boolean>` | `Or` |
-| `logic.nl` | `E[...](...)` | `ExistentialQuantifier` |
-| `logic.nl` | `A[...](...)` | `UniversalQuantifier` |
+| `logic.nl` | `LambdaN<…> ::= [<{Variable,A1}>,…](<R#0>)` (N = 1…6) | `Lambda` |
+| `logic.nl` | `E<Lambda<Boolean>>` | `ExistentialQuantifier` |
+| `logic.nl` | `A<Lambda<Boolean>>` | `UniversalQuantifier` |
 | `logic.nl` | `<Object> = <Object>` | `NIs` |
 | `logic.nl` | `eq(<Literal>,<Literal>)` *(private)* | `Equal` |
 | `logic.nl` | `Root ::= "fact" ...` | `nelumbo.logic.Fact` |
@@ -287,12 +292,12 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `strings.nl` | `string_length(<String>,<Integer>)` *(private)* | `strings.Strings` (`string_length`) |
 | `strings.nl` | `integer_string(<Integer>,<String>)` *(private)* | `strings.Strings` (`integer_string`) |
 | `collections.nl` | `Set<E> ::= { ... }` | `NSet` |
-| `collections.nl` | `Set<E> ::= { [ <E> ] ( <Boolean> ) }` | `SetBuilder` |
-| `collections.nl` | `build(<E>,<Boolean>,<Set<E>>)` *(private)* | `BuildSet` |
+| `collections.nl` | `build(<Lambda1<E,Boolean>>,<Set<E>>)` *(private)* | `BuildSet` |
+| `collections.nl` | `setFilter`, `listFilter`, `map`, `sort` *(private)* | `Collections` |
 | `collections.nl` | `List<E> ::= [ ... ]` | `NList` |
 | `datetime.nl` | `Date ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>` | `datetime.NDate` |
 | `datetime.nl` | `Time ::= <[> <NUMBER> : <NUMBER> ... <]>` | `datetime.NTime` |
-| `datetime.nl` | `DateTime ::= <[> <Date> T <Time#50> ... <]>` | `datetime.NDateTime` |
+| `datetime.nl` | `DateTime ::= <[> <Date> T <Time> <]>` | `datetime.NDateTime` |
 | `datetime.nl` | `Period ::= <[> P ... <]>` | `datetime.NPeriod` |
 | `datetime.nl` | `datetime_add/date_add/time_add(...)` *(private)* | `datetime.Add` (`infer`) |
 | `datetime.nl` | `period_add(<Period>,<Period>,<Period>)` *(private)* | `datetime.Add` (`period_add`) |
@@ -323,6 +328,6 @@ Looking at the stdlib with this lens — **what is native and what is not** — 
 ## See also
 
 - [`native-api.md`](native-api.md) — the API surface: `infer`, `InferResult`, the helper methods, the completeness-flag convention
-- [`../guides/native-cookbook.md`](../guides/native-cookbook.md) — hands-on recipes for writing new natives
-- [`../explanation/architecture.md`](../explanation/architecture.md) — why the Java/Nelumbo split is drawn where it is
-- [`stdlib/`](stdlib/) — per-module reference for what each stdlib module exports
+- [`../guides/native-cookbook.md`](../../guides/native-cookbook.md) — hands-on recipes for writing new natives
+- [`../explanation/architecture.md`](../../explanation/architecture.md) — why the Java/Nelumbo split is drawn where it is
+- [`stdlib/`](../stdlib/) — per-module reference for what each stdlib module exports

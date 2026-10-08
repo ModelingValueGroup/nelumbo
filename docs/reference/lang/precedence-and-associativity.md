@@ -1,8 +1,10 @@
 # Precedence and associativity
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 When you declare a pattern with `::=`, you can attach a **precedence annotation** `#N`:
 
-```
+```nelumbo
 Integer ::= <Integer> + <Integer>  #40
 Integer ::= <Integer> * <Integer>  #50
 Integer ::=           - <Integer>  #80
@@ -43,7 +45,7 @@ For binary operators, Nelumbo parses left-associatively by default: `a - b - c` 
 
 A type hole can carry its own precedence annotation:
 
-```
+```nelumbo
 T ::= <Boolean#5> ? <T> : <T>
 ```
 
@@ -53,7 +55,7 @@ This is how you express "tighter-binding" requirements on specific hole position
 
 Hole precedence also controls associativity for repeated operators. For a standard left-associative binary operator like `+`:
 
-```
+```nelumbo
 Integer ::= <Integer> + <Integer>  #40
 ```
 
@@ -77,7 +79,7 @@ Operators at the same precedence combine under the ordinary left-to-right rule: 
 
 Unary operators typically carry a higher `#N` than their binary counterparts:
 
-```
+```nelumbo
 Integer ::= <Integer> - <Integer>  #40       // binary subtraction
 Integer ::=           - <Integer>  #80       // unary negation
 ```
@@ -88,14 +90,14 @@ Binary subtraction binds looser (40) than unary negation (80), so `-a - b` parse
 
 ## Precedence of quantifiers
 
-Quantifiers `E[...]` and `A[...]` use hole precedence on their body rather than a single pattern precedence:
+Quantifiers `E[...]` and `A[...]` are the keyword followed by a [lambda](../logic/lambdas.md), and the lambda uses hole precedence on its body rather than a single pattern precedence:
 
-```
-Boolean ::= E[<(> <Variable#100> <,> , <)+>](<Boolean#0>)
-            @org.modelingvalue.nelumbo.logic.ExistentialQuantifier
+```nelumbo
+Lambda1<A1,R> ::= [<{Variable,A1}>](<R#0>)   @nelumbo.logic.Lambda
+Boolean       ::= E<Lambda<Boolean>>         @nelumbo.logic.ExistentialQuantifier
 ```
 
-The body `<Boolean#0>` accepts a Boolean expression at the lowest precedence, so `E[x](a & b | c -> d)` parses with the full expression inside, as intended. The variable list `<Variable#100>` demands precedence 100 — effectively "must be a bare variable," no composite expressions.
+The body `<R#0>` accepts an expression at the lowest precedence, so `E[x](a & b | c -> d)` parses with the full expression inside, as intended. The variable holes demand a bare, declared variable (`{Variable,A1}`) — no composite expressions.
 
 ---
 
@@ -122,6 +124,6 @@ The gaps in the ladder (16, 18, 20, 22, 25, 30, 35, 40, 50, 80) are intentional 
 
 ## See also
 
-- [`operators.md`](operators.md) — complete catalogue with precedences
+- [`operators.md`](../logic/operators.md) — complete catalogue with precedences
 - [`grammar.md`](grammar.md) — where `#N` fits syntactically
 - [`built-in-tokens.md`](built-in-tokens.md) — type holes and hole precedences

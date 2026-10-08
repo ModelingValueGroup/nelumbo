@@ -36,7 +36,7 @@ public class ResourceImportResolver implements ImportResolver {
             return null;  // Let another resolver try
         }
         ParseException[] exc = new ParseException[1];
-        KnowledgeBase kb = KnowledgeBase.BASE.run(() -> {
+        KnowledgeBase kb = KnowledgeBase.BASE.invoke(() -> {
             try {
                 Parser.parse(KnowledgeBase.class, path);
             } catch (ParseException e) {

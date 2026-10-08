@@ -35,7 +35,7 @@ public class NSet extends NCollection {
 
     @NelumboConstructor
     public NSet(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args);
+        super(nodeInfo, args.length != 1 || !(args[0] instanceof Set) ? new Object[] { Set.of(args) } : args);
     }
 
     public NSet(Type elementType, Set<?> set) {

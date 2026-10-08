@@ -4,8 +4,8 @@ This guide is a hands-on reference for writing new Java natives bound to Nelumbo
 
 Before diving in, make sure you have read:
 
-- [`../reference/native-api.md`](../reference/native-api.md) — the API surface (`Predicate`, `infer`, `InferResult`, the helper family `factCC` / `factCI` / etc.)
-- [`../reference/native-classes.md`](../reference/native-classes.md) — the catalogue of what ships today
+- [`../reference/native-api.md`](../reference/core/native-api.md) — the API surface (`Predicate`, `infer`, `InferResult`, the helper family `factCC` / `factCI` / etc.)
+- [`../reference/native-classes.md`](../reference/core/native-classes.md) — the catalogue of what ships today
 
 And before reaching for a native at all, confirm you are not on the wrong extension path. **The in-language path (rules, transformations, modules) handles most cases.** See [`writing-your-own-module.md`](writing-your-own-module.md) and [`language-transformations.md`](language-transformations.md). Natives are for genuine primitives.
 
@@ -92,11 +92,11 @@ A Predicate native computes its result in one of two ways: a `@NelumboMethod`, o
 
 ## Table of recipes
 
-1. [Three-arg functional relation](#recipe-1-three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`, `datetime.Add` (`infer`)
-2. [Comparison predicate](#recipe-2-comparison-predicate) — `Integers#gt`, `Strings#string_length`, `datetime.GreaterThan` (`infer`)
-3. [Constant / literal type](#recipe-3-constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
-4. [Binary logical connective](#recipe-4-binary-logical-connective) — `And`, `Or`
-5. [Container / collection literal](#recipe-5-container--collection-literal) — `NSet`, `NList`
+1. [Three-arg functional relation](#recipe-1--three-arg-functional-relation) — `Integers#add`/`#mult`, `Rationals#iir`, `Strings#string_concat`, `datetime.Add` (`infer`)
+2. [Comparison predicate](#recipe-2--comparison-predicate) — `Integers#gt`, `Strings#string_length`, `datetime.GreaterThan` (`infer`)
+3. [Constant / literal type](#recipe-3--constant--literal-type) — `NInteger`, `NString`, `Rational`, `NBoolean`
+4. [Binary logical connective](#recipe-4--binary-logical-connective) — `And`, `Or`
+5. [Container / collection literal](#recipe-5--container--collection-literal) — `NSet`, `NList`
 
 Each recipe includes: when to use it, the skeleton class, the key decisions you must make, and pointers to the shipped implementation to study.
 
@@ -110,7 +110,7 @@ The stdlib uses this shape for `add`, `mult`, `iir`, and the string relations `s
 
 ### Nelumbo-side declaration
 
-```
+```nelumbo
 private Boolean ::= myop(<T1>, <T2>, <T3>)  @com.example.MyOp
 ```
 
@@ -118,7 +118,7 @@ Because the functor name `myop` is an identifier, implement the logic as a `@Nel
 
 Declaring `myop` as `private` is idiomatic — the native predicate is usually wrapped by user-facing operators in the same module:
 
-```
+```nelumbo
 T1 a
 T2 b
 T3 c
@@ -212,7 +212,7 @@ A comparison is almost always spelled as an **operator** (`>`), and an operator 
 
 **Path A — named helper functor + rule (preferred, all logic stays in a method).** This is what `integers` and `rationals` do today:
 
-```
+```nelumbo
 private Boolean ::= gt(<T>, <T>)  @com.example.MyMod    // a @NelumboMethod named `gt`
 
 Boolean ::= <T> ">" <T>  #30
@@ -222,7 +222,7 @@ a > b  <=>  gt(a, b)
 
 **Path B — bind the operator directly and override `infer`.** Use this when a named helper is awkward; it is what `datetime.GreaterThan` does:
 
-```
+```nelumbo
 Boolean ::= <T> ">" <T>  #30  @com.example.MyCompare
 ```
 
@@ -288,7 +288,7 @@ The stdlib uses this shape for `NInteger` (integers), `NString` (strings), `Rati
 
 ### Nelumbo-side declaration
 
-```
+```nelumbo
 MyValue :: Object
 
 MyValue ::= <NUMBER>   @com.example.NMyValue
@@ -364,7 +364,7 @@ The stdlib uses this shape for `And` and `Or`. Writing one from scratch is uncom
 
 ### Nelumbo-side declaration
 
-```
+```nelumbo
 Boolean ::= <Boolean> "nand" <Boolean>  #21  @com.example.Nand
 ```
 
@@ -458,7 +458,7 @@ The stdlib uses this shape for `NSet` (`{...}`) and `NList` (`[...]`).
 
 ### Nelumbo-side declaration
 
-```
+```nelumbo
 Type E
 
 MyContainer<E> ::= < <(> <E> <,> , <)*> >  @com.example.NMyContainer
@@ -577,8 +577,8 @@ Before you consider a new native "done":
 
 ## See also
 
-- [`../reference/native-api.md`](../reference/native-api.md) — full API surface reference
-- [`../reference/native-classes.md`](../reference/native-classes.md) — catalogue of shipped natives
+- [`../reference/native-api.md`](../reference/core/native-api.md) — full API surface reference
+- [`../reference/native-classes.md`](../reference/core/native-classes.md) — catalogue of shipped natives
 - [`../explanation/architecture.md`](../explanation/architecture.md) — why Java/Nelumbo is split where it is
 - [`writing-your-own-module.md`](writing-your-own-module.md) — the in-language alternative
 - [`language-transformations.md`](language-transformations.md) — the meta-level alternative

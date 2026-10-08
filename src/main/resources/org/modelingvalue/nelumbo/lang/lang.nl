@@ -27,7 +27,7 @@ pattern PATTERNS ::= <(> <Pattern#100> <)+>
 pattern QNAME    ::= <[> <(> <NAME> <,> . <)+> <]>
 
 Namespace        ::= <BEGINOFFILE> <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> <ENDOFFILE> @nelumbo.lang.Namespace
-RootNamespace    ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)*> }                       @nelumbo.lang.Namespace
+RootNamespace    ::= { <(> <(> <List<Root>> <|> <Root> <)> <NEWLINE> <)+> }                       @nelumbo.lang.Namespace
 PatternPart      ::= "pattern" <NAME> ::= <PATTERNS>                                              @nelumbo.lang.PatternPart
 
 Pattern          ::= <NAME>                                                                                                       @nelumbo.patterns.TokenTextPattern,
@@ -48,7 +48,7 @@ Pattern          ::= <NAME>                                                     
 Type             ::= { <(> <Type> <,> , <)+> } @nelumbo.lang.Type
 
 Root             ::= "import" <(> <QNAME> <,> , <)+>                                                                          @nelumbo.lang.Import,
-                     <Root#0> ::> <RootNamespace>                                                                             @nelumbo.lang.Transform,
+                     <Root#0> ::> <RootNamespace#100>                                                                         @nelumbo.lang.Transform,
                      <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                                       @nelumbo.lang.Variable,
                      <[> <NAME> <(> "<" <(> <Type#100> <,> , <)+> ">" <)?> <]> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?> @nelumbo.lang.Type,
                      <(> "private" <)?> <Type#100> ::= <(> <PATTERNS> <(> "#" <NUMBER> <)?> <(> "@" <QNAME> <)?> <,> , <)+>   @nelumbo.lang.Functor

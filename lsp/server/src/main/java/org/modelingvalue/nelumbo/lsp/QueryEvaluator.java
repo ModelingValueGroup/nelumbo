@@ -35,37 +35,43 @@ import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 /**
- * Evaluates every {@code Query} in a document against a given {@code KnowledgeBase}, so the
- * user-declared types, patterns, facts and rules are all registered in the same inference KB
- * (see {@code QueryExecutionFlowTest}). Shared by the inline inlay hints and the "Query" code lens
- * popup so both render identical results.
+ * Evaluates every {@code Query} in a document against a given
+ * {@code KnowledgeBase}, so the user-declared types, patterns, facts and rules
+ * are all registered in the same inference KB (see
+ * {@code QueryExecutionFlowTest}). Shared by the inline inlay hints and the
+ * "Query" code lens popup so both render identical results.
  */
 public final class QueryEvaluator {
 
     private QueryEvaluator() {
     }
 
-    /** @return result per query, in document order. Queries that could not be reached are absent. */
+    /**
+     * @return result per query, in document order. Queries that could not be
+     *         reached are absent.
+     */
     public static Map<Query, QueryResult> evaluate(String content, String uri) {
         return evaluate(KnowledgeBase.BASE, 0, content, uri);
     }
 
     /**
-     * Same, but declarations are resolved against {@code base} (a loaded KB for embedded servers) and, when
-     * {@code deadlineMs > 0}, inference self-aborts past the deadline. On timeout, queries already evaluated keep
-     * their results; the first unreached query gets an ERROR result; remaining queries are absent from the map.
+     * Same, but declarations are resolved against {@code base} (a loaded KB for
+     * embedded servers) and, when {@code deadlineMs > 0}, inference self-aborts
+     * past the deadline. On timeout, queries already evaluated keep their results;
+     * the first unreached query gets an ERROR result; remaining queries are absent
+     * from the map.
      */
     public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri) {
         Map<Query, QueryResult> results = new LinkedHashMap<>();
-        KnowledgeBase           evalKb  = new KnowledgeBase(base);
+        KnowledgeBase evalKb = new KnowledgeBase(base);
         if (deadlineMs > 0) {
             evalKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
         }
         try {
-            evalKb.run(() -> {
-                KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
-                ParserResult  parsed        = new Parser(new Tokenizer(content, uri).tokenize()).parseNonThrowing();
-                ParserResult  throwing      = new ParserResult(null, true);
+            evalKb.invoke(() -> {
+                KnowledgeBase knowledgeBase = KnowledgeBase.current();
+                ParserResult parsed = new Parser(new Tokenizer(content, uri).tokenize()).parseNonThrowing();
+                ParserResult throwing = new ParserResult(null, true);
                 for (Node root : parsed.roots()) {
                     if (!(root instanceof Evaluatable eval)) {
                         continue;
@@ -92,7 +98,8 @@ public final class QueryEvaluator {
                             results.put(query, toResult(query, exc));
                         } else {
                             // a fact/rule failed to evaluate: later queries can't be trusted, stop here.
-                            System.err.println("query evaluation aborted at " + eval.getClass().getSimpleName() + ": " + exc.getMessage());
+                            System.err.println("query evaluation aborted at " + eval.getClass().getSimpleName() + ": "
+                                    + exc.getMessage());
                             break;
                         }
                     }
@@ -107,21 +114,24 @@ public final class QueryEvaluator {
     private static QueryResult toResult(Query query, ParseException exc) {
         String shortMsg = exc.getShortMessage();
         if (shortMsg != null && shortMsg.startsWith("Expected result ")) {
-            InferResult ir       = query.inferResult(); // the calculated result; set before the mismatch is raised
-            String      inferred = ir == null ? "" : ir.toString();
+            InferResult ir = query.inferResult(); // the calculated result; set before the mismatch is raised
+            String inferred = ir == null ? "" : ir.toString();
             return QueryResult.mismatch(inferred, shortMsg, expectedRange(query));
         }
-        return QueryResult.error("Problem executing " + query.getClass().getSimpleName() + ": " + exc.getMessage());
+        return QueryResult.error("Problem executing " + query.getClass().getSimpleName() + ": " + exc.getShortMessage());
     }
 
-    /** Source span of the query's expected clause (everything after the {@code ?}), to be underlined on a mismatch. */
+    /**
+     * Source span of the query's expected clause (everything after the {@code ?}),
+     * to be underlined on a mismatch.
+     */
     private static Range expectedRange(Query query) {
         org.modelingvalue.collections.List<AstElement> els = query.astElements();
         if (els.size() <= 2) {
             return null;
         }
         Token from = els.get(2).firstToken();
-        Token to   = query.lastToken();
+        Token to = query.lastToken();
         if (from == null || to == null) {
             return null;
         }

@@ -14,7 +14,8 @@
 // undecided - a user rule wrapping `pos` over a `map`-produced list of
 // collections) was fixed on 2026-09-25: tests/rule-pos-on-mapped-collection-
 // list-undecided.nl in RegressionTest; the two put probes at the end are live
-// again. Side finding still open: bugs/set-literal-arithmetic-unevaluated.nl.
+// again. The side finding (arithmetic inside a set literal unevaluated) was
+// fixed on 2026-10-06: tests/set-literal-arithmetic-unevaluated.nl in RegressionTest.
 // See docs/superpowers/plans/2026-09-11-sudoku-csp.md.
 
 import nelumbo.collections

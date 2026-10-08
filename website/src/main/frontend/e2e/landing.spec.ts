@@ -1,11 +1,11 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 
-test('landing page introduces Nelumbo and links to tour and playground', async ({ page }: { page: Page }): Promise<void> => {
+test('landing page introduces Nelumbo and links to tour and sandbox', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/');
     await expect(page).toHaveTitle(/Nelumbo/);
     await expect(page.locator('h1')).toContainText('language');
     await expect(page.locator('a[href="/tour.html"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/playground.html"]').first()).toBeVisible();
+    await expect(page.locator('a[href="/sandbox.html"]').first()).toBeVisible();
 });
 
 test('landing page tour button navigates to the tour', async ({ page }: { page: Page }): Promise<void> => {

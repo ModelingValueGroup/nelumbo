@@ -1,12 +1,14 @@
 # `nelumbo.strings`
 
+> **Level:** optional package `nelumbo.strings`. Write `import nelumbo.strings`; it brings in `nelumbo.integers`, `nelumbo.logic` and `nelumbo.lang` transitively.
+
 String values, concatenation, length, and integer-string conversion.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl) — 24 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/strings/strings.nl) — 23 lines.
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.strings
 ```
 
@@ -16,7 +18,7 @@ import nelumbo.strings
 
 ## Type
 
-```
+```nelumbo
 String :: Object
 ```
 
@@ -24,7 +26,7 @@ String :: Object
 
 ## Literals
 
-```
+```nelumbo
 String ::= <STRING>   @nelumbo.strings.NString
 ```
 
@@ -34,7 +36,7 @@ String ::= <STRING>   @nelumbo.strings.NString
 
 ## Operations
 
-```
+```nelumbo
 String  ::=  <String> + <String>   #40,
              str(<Integer>)
 
@@ -51,7 +53,7 @@ Integer ::=  len(<String>),
 
 All four reduce to three private native predicates:
 
-```
+```nelumbo
 private Boolean ::= string_concat(<String>,<String>,<String>)  @nelumbo.strings.Strings,
                     string_length(<String>,<Integer>)          @nelumbo.strings.Strings,
                     integer_string(<Integer>,<String>)         @nelumbo.strings.Strings
@@ -73,7 +75,7 @@ Note that `int` and `str` share a single native predicate — `integer_string(x,
 
 From `stringsTest.nl`:
 
-```
+```nelumbo
 "foo" + "bar" = "foobar"   ? [()][]
  a    + "bar" = "foobar"   ? [(a="foo")][..]
 "foo" +  a   = "foobar"    ? [(a="bar")][..]
@@ -84,7 +86,7 @@ Any one of the three operands can be the unknown — `string_concat` splits as w
 
 ## Length
 
-```
+```nelumbo
 len("foo") = 3   ? [()][]
 len("foo") = d   ? [(d=3)][..]      // d=3 inferred
 len(a)     = 3   ? [..][..]         // unknown — infinitely many strings of length 3
@@ -96,7 +98,7 @@ Forward direction is supported. The fully-reverse direction is unknown: there is
 
 `int` expects a digit-only body; any other character — including whitespace and sign — fails:
 
-```
+```nelumbo
 int("123456")        = 123456   ? [()][]
 int("0000123456")    = d        ? [(d=123456)][..]
 
@@ -112,7 +114,7 @@ A failed parse gives an empty facts side with `..` on the falsehoods.
 
 `str` produces the canonical decimal form — no leading zeros:
 
-```
+```nelumbo
 str(123456)     = "123456"      ? [()][]
 str(0000123456) = a             ? [(a="123456")][..]
 ```

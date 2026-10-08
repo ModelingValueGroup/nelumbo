@@ -1,7 +1,29 @@
+/* the page's theme.js sets data-theme on <html>; dark is the default */
+:root {
+    --nf-panel:       #23262e;
+    --nf-border:      #343843;
+    --nf-text:        #e6e8ee;
+    --nf-muted:       #9aa0ac;
+    --nf-prose:       #c6cad4;
+    --nf-accent:      #c184d8;
+    --nf-solution-bg: #1c261e;
+    --nf-banner-bg:   #2c2c3b;
+    --nf-banner-fg:   #a99ae8;
+}
+
+[data-theme="light"] {
+    --nf-panel:       #f2eff5;
+    --nf-border:      #e0dbe6;
+    --nf-text:        #1f1b24;
+    --nf-muted:       #6b6475;
+    --nf-prose:       #3a3542;
+    --nf-accent:      #9246b0;
+    --nf-solution-bg: #eef7f0;
+    --nf-banner-bg:   #efeafb;
+    --nf-banner-fg:   #5a48b0;
+}
+
 .nelumbo-field-wrap {
-    --nf-panel:   #23262e;
-    --nf-border:  #343843;
-    --nf-text:    #e6e8ee;
     --nf-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
     border:        1px solid var(--nf-border);
@@ -23,8 +45,8 @@
 
 .nelumbo-field-toolbar button {
     background:    transparent;
-    color:         #9aa0ac;
-    border:        1px solid #343843;
+    color:         var(--nf-muted);
+    border:        1px solid var(--nf-border);
     border-radius: 6px;
     padding:       6px 14px;
     font-weight:   600;
@@ -33,7 +55,7 @@
 }
 
 .nelumbo-field-toolbar button:hover {
-    color: #e6e8ee;
+    color: var(--nf-text);
 }
 
 .nelumbo-field-toolbar button:active {
@@ -52,8 +74,8 @@
     right:      0;
     bottom:     0;
     z-index:    40;
-    background: #2c2c3b;
-    color:      #a99ae8;
+    background: var(--nf-banner-bg);
+    color:      var(--nf-banner-fg);
     border-top: 1px solid rgba(169, 154, 232, .4);
     padding:    8px 14px;
     font:       13px/1.5 "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -64,8 +86,8 @@
     display: block;
 }
 
-.nelumbo-exercise { border-left: 3px solid #c184d8; padding-left: 12px; margin: 16px 0; }
-.nelumbo-exercise .challenge { color: #c6cad4; margin: 0 0 6px; }
+.nelumbo-exercise { border-left: 3px solid var(--nf-accent); padding-left: 12px; margin: 16px 0; }
+.nelumbo-exercise .challenge { color: var(--nf-prose); margin: 0 0 6px; }
 /* lives inside .nelumbo-field-wrap (moved there by addSolutionToggle), below the toggle toolbar;
    hosts a read-only Monaco viewer, which brings its own font, colors and padding */
 .nelumbo-solution { display: none; margin: 0; border-top: 1px solid var(--nf-border); }
@@ -74,6 +96,6 @@
 .nelumbo-solution .monaco-editor,
 .nelumbo-solution .monaco-editor .monaco-editor-background,
 .nelumbo-solution .monaco-editor .margin {
-    background-color: #1c261e;
+    background-color: var(--nf-solution-bg);
 }
 .nelumbo-solution.visible { display: block; }

@@ -153,7 +153,7 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean alt, Functor functor,
+    public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
             MutableMap<Variable, Type> typeArgs) {
         Pattern repeated = repeated();
         Pattern separator = separator();
@@ -164,14 +164,14 @@ public class RepetitionPattern extends Pattern {
             int beforeSeparator = i;
             if (!first && separator != null) {
                 MutableList<Object> sepInner = MutableList.of(List.of());
-                int si = separator.args(elements, i, sepInner, false, functor, typeArgs);
+                int si = separator.args(elements, i, sepInner, new boolean[1], functor, typeArgs);
                 if (si < 0) {
                     break;
                 }
                 i = si;
             }
             MutableList<Object> inner = MutableList.of(List.of());
-            int ii = repeated.args(elements, i, inner, true, functor, typeArgs);
+            int ii = repeated.args(elements, i, inner, new boolean[] { true }, functor, typeArgs);
             if (ii >= 0) {
                 result = result.addAll(inner.toImmutable());
                 i = ii;
@@ -185,6 +185,10 @@ public class RepetitionPattern extends Pattern {
                 i = beforeSeparator;
                 break;
             }
+        }
+        if (keep[0]) {
+            args.clear();
+            keep[0] = false;
         }
         args.add(result);
         return i;

@@ -50,6 +50,22 @@ public class NelumboEvaluatorTest {
         assertEquals(Boolean.TRUE, r.queries().get(0).expectationMatched());
     }
 
+    /**
+     * A variable declared again in an inner scope gets a unique "$id" suffix internally (a$50); query
+     * results are shown to people (CLI, inlay hints, eval JSON), so they render variables by base name.
+     */
+    @Test
+    public void queryResultsShowVariablesByTheirSourceName() throws Exception {
+        String src;
+        try (var in = NelumboEvaluatorTest.class.getResourceAsStream("/org/modelingvalue/nelumbo/examples/deHet.nl")) {
+            src = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+        EvalResult r = NelumboEvaluator.evaluate(src, "deHet.nl", 0);
+        assertTrue(r.ok(), () -> "diagnostics: " + r.diagnostics());
+        assertTrue(r.queries().stream().noneMatch(q -> q.result().contains("$")), () -> "results: " + r.queries());
+        assertTrue(r.queries().stream().anyMatch(q -> q.result().contains("(a=\"Jan\")")), () -> "results: " + r.queries());
+    }
+
     @Test
     public void parseError() {
         EvalResult r = NelumboEvaluator.evaluate("flurb @@ blarg\n", "bad.nl", 0);

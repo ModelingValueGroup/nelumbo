@@ -1,5 +1,7 @@
 # Visibility — scopes, `private`, `hidden`
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 Nelumbo has two mechanisms for controlling what names are visible where: **scope blocks** using `{ }` and **visibility modifiers** (`private`, `hidden`, `visible`). This page describes both.
 
 ---
@@ -8,7 +10,7 @@ Nelumbo has two mechanisms for controlling what names are visible where: **scope
 
 A block introduces a lexical scope. Any declaration inside the block — imports, types, patterns, variables, rules, facts, tests — is local to the block. Once the closing `}` is reached, those names are no longer in scope.
 
-```
+```nelumbo
 {
    Aa :: Object
    private Aa ::= XXX
@@ -24,19 +26,19 @@ A block introduces a lexical scope. Any declaration inside the block — imports
 }
 ```
 
-The two blocks above (from [`scoping.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl)) each define a type, a literal, a variable, and a test. None of them collide, even though both use the name `XXX` and both use `x`. The scopes are independent; the `private` modifier on each `::=` keeps the `XXX` literal local to its block.
+The two blocks above (from [`scoping.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl)) each define a type, a literal, a variable, and a test. None of them collide, even though both use the name `XXX` and both use `x`. The scopes are independent; the `private` modifier on each `::=` keeps the `XXX` literal local to its block.
 
 ### What scopes are good for
 
 - **Isolating a DSL example** in a file that already imports common modules
-- **Wrapping a pattern transformation expansion** (see [`../guides/language-transformations.md`](../guides/language-transformations.md) — the `::> { ... }` block is a scope)
+- **Wrapping a pattern transformation expansion** (see [`../guides/language-transformations.md`](../../guides/language-transformations.md) — the `::> { ... }` block is a scope)
 - **Making two versions of the same construct coexist** in a single file for comparison
 
 ### Custom scope types
 
 Any type that specialises `Namespace` introduces a scope of its own — no explicit `{Namespace}` prefix is needed (and none is accepted). Declaring a functor `private` within such a type confines it to that namespace, exactly as `private` does inside a `{ ... }` block.
 
-```
+```nelumbo
 {
    Aa :: Object
    private Aa ::= XXX
@@ -45,7 +47,7 @@ Any type that specialises `Namespace` introduces a scope of its own — no expli
 }
 ```
 
-From [`scoping.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl). The `private` keeps `XXX` local to the block; outside the block the literal does not exist.
+From [`scoping.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl). The `private` keeps `XXX` local to the block; outside the block the literal does not exist.
 
 ---
 
@@ -65,7 +67,7 @@ The `visible` keyword is the complement of `hidden`; see the section on hidden d
 
 A `private` declaration is not exported. It is a detail of the module's implementation.
 
-```
+```nelumbo
 private Boolean ::= eq(<Literal>, <Literal>)  @org.modelingvalue.nelumbo.logic.Equal
 ```
 
@@ -77,9 +79,9 @@ Other `private` patterns in the stdlib include `add`, `mult`, `string_concat`, `
 
 `hidden` restricts visibility in a more nuanced way: a hidden hole is present for parsing but cannot be supplied at the call site; it has to come from another rule or declaration.
 
-The [`hidden.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) example illustrates the mechanism:
+The [`hidden.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) example illustrates the mechanism:
 
-```
+```nelumbo
 {
   Integer ::= <hidden Integer> && <Integer> #35
   Integer ::= <visible Integer> & <Integer> #35
@@ -127,5 +129,5 @@ Visibility modifiers apply relative to the declaration's scope. A `private` patt
 ## See also
 
 - [`grammar.md`](grammar.md) — where these declarations fit syntactically
-- [`hidden.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) — working hidden-operator example
-- [`scoping.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl) — working scope example
+- [`hidden.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) — working hidden-operator example
+- [`scoping.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl) — working scope example

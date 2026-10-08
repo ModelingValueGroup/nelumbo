@@ -1,39 +1,10 @@
 # Operators
 
-This page is a complete catalogue of the operators contributed by `nelumbo.lang` (the syntactic bootstrap) and `nelumbo.logic` (the three-valued logic layer). Operators from `integers`, `rationals`, `strings`, and `collections` are documented on the per-module stdlib pages.
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
 
-None of these operators are hardcoded in the Java core. Everything below is declared by a `::=` pattern in `lang.nl` or `logic.nl` and bound to a native class via `@`.
+This page is a catalogue of the operators and statement forms declared in `nelumbo.logic` (the three-valued logic layer). The declarative operators `::`, `::=` and `::>` come from `nelumbo.lang` and are on the [`nelumbo.lang` grammar](../lang/grammar.md) page. Operators from `integers`, `rationals`, `strings`, and `collections` are documented on the per-package pages.
 
----
-
-## Declarative operators (from `nelumbo.lang`)
-
-These shape the program itself. They are not values; you do not compute with them. All are declared as `Root ::=` or `Pattern ::=` patterns in `lang.nl`.
-
-### `::` — type subtyping
-
-```
-T :: S
-T :: S1, S2
-```
-
-Declares `T` as a type whose direct supertypes are listed on the right. Everything ultimately derives from `Object`. See [`grammar.md`](grammar.md#type-declarations).
-
-### `::=` — pattern
-
-```
-T ::= pattern
-```
-
-Declares a new way to produce a value of type `T`. Extends the language's syntax. Multiple `::=` declarations for the same type are allowed and accumulate. See [`grammar.md`](grammar.md#pattern-declarations).
-
-### `::>` — pattern transformation
-
-```
-L ::> { ... declarations ... }
-```
-
-Expands an occurrence of pattern `L` into the declarations in the block. A macro-like mechanism for building DSLs on top of Nelumbo. See [`../guides/language-transformations.md`](../guides/language-transformations.md).
+None of these operators are hardcoded in the Java core. Everything below is declared by a `::=` pattern in `logic.nl` and bound to a native class via `@`.
 
 ---
 
@@ -43,16 +14,16 @@ These are also `Root ::=` patterns, but they are declared in `logic.nl`, not `la
 
 ### `fact` — ground-truth assertion
 
-```
+```nelumbo
 fact E
 fact E1, E2, E3
 ```
 
-Asserts one or more comma-separated ground-truth facts. See [`grammar.md`](grammar.md#facts).
+Asserts one or more comma-separated ground-truth facts. See [`statements.md`](statements.md#facts).
 
 ### `<=>` — rule (bi-implication)
 
-```
+```nelumbo
 L <=> R
 ```
 
@@ -60,7 +31,7 @@ Asserts that `L` holds exactly when `R` holds. Multiple rules may share the same
 
 ### `?` — query / test
 
-```
+```nelumbo
 E ?               // query: run and print
 E ? [F][N]        // test: run and compare to expected result
 ```
@@ -75,7 +46,7 @@ Once you `import nelumbo.logic`, these become available as Boolean-valued operat
 
 ### `!` — negation (`#25`)
 
-```
+```nelumbo
 !p
 ```
 
@@ -83,15 +54,15 @@ Once you `import nelumbo.logic`, these become available as Boolean-valued operat
 
 ### `&` — conjunction (`#22`)
 
-```
+```nelumbo
 p & q
 ```
 
-`p & q` is a fact when both `p` and `q` are facts. It is a falsehood when at least one of `p` or `q` is a falsehood — **even if the other is unknown**. Proving `q` as a falsehood is enough to conclude `p & q` is false, regardless of `p`. See [`logicTest.nl`](../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) for the full truth table.
+`p & q` is a fact when both `p` and `q` are facts. It is a falsehood when at least one of `p` or `q` is a falsehood — **even if the other is unknown**. Proving `q` as a falsehood is enough to conclude `p & q` is false, regardless of `p`. See [`logicTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl) for the full truth table.
 
 ### `|` — disjunction (`#20`)
 
-```
+```nelumbo
 p | q
 ```
 
@@ -99,7 +70,7 @@ p | q
 
 ### `->` — implication (`#18`)
 
-```
+```nelumbo
 p -> q
 ```
 
@@ -107,7 +78,7 @@ Defined in `logic.nl` as `!p | q`. Classical material implication.
 
 ### `<->` — bi-implication (`#16`)
 
-```
+```nelumbo
 p <-> q
 ```
 
@@ -115,7 +86,7 @@ Defined in `logic.nl` as `(p -> q) & (q -> p)`.
 
 ### `=` — equality (`#30`)
 
-```
+```nelumbo
 a = b
 ```
 
@@ -123,7 +94,7 @@ Identity comparison. Declared in `logic.nl` as `Boolean ::= <Object> = <Object> 
 
 ### `!=` — inequality (`#30`)
 
-```
+```nelumbo
 a != b
 ```
 
@@ -131,7 +102,7 @@ Defined in `logic.nl` as `!(a = b)`.
 
 ### `E[...](...)` — existential quantifier
 
-```
+```nelumbo
 E[x](p)
 E[x, y](p)
 ```
@@ -140,13 +111,13 @@ E[x, y](p)
 
 Example from `belasting.nl`:
 
-```
+```nelumbo
 E[i, a]((het inkomen van p is i euro) & (p mag a euro aftrekken) & x=(i-a)/2)
 ```
 
 ### `A[...](...)` — universal quantifier
 
-```
+```nelumbo
 A[x](p)
 A[x, y](p)
 ```
@@ -155,7 +126,7 @@ A[x, y](p)
 
 From `logicTest.nl`:
 
-```
+```nelumbo
 E[a](a=T1 | a=T2)   ? [()][]
 A[a](a=T1 & a=T2)   ? [][()]
 ```
@@ -164,7 +135,7 @@ A[a](a=T1 & a=T2)   ? [][()]
 
 ## Guards — `if`
 
-```
+```nelumbo
 L <=> R if G
 L <=> R1 if G1, R2 if G2
 ```
@@ -175,31 +146,29 @@ Not an operator in the same sense, but syntactically significant. `if G` attache
 
 ## Punctuation
 
+Punctuation from `nelumbo.lang` (supertype and variable lists, `{ }`, `( )`, `//`) is in the [grammar](../lang/grammar.md#punctuation).
+
 | Symbol | Meaning |
 |---|---|
 | `,` in a rule RHS | Shorthand for repeating the LHS across multiple rule clauses (see [`writing-rules.md`](writing-rules.md)) |
 | `,` in a `fact` block | Separates asserted facts |
-| `,` in a supertype list | Separates supertypes |
-| `,` in a variable declaration | Separates variable names |
-| `{ }` | Scope block — see [`visibility.md`](visibility.md) |
-| `( )` | Grouping inside an expression |
-| `//` | Line comment |
 
 ---
 
 ## Special identifiers
 
+The `nelumbo.lang` object hierarchy (`Object`, `Type`, `Root`, ...) is in the [grammar](../lang/grammar.md#special-identifiers).
+
 | Name | Origin | Meaning |
 |---|---|---|
-| `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` | `nelumbo.lang` | The core object hierarchy. `Root` is the entry-point production for top-level statements; `Type` is used as a generic parameter introducer (`Type T`). |
-| `Boolean`, `FactType`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `FactType` is a `Boolean` subtype for ground-truth relations (see [`grammar.md`](grammar.md#facttype-declarations)). |
+| `Boolean`, `FactType`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `FactType` is a `Boolean` subtype for ground-truth relations (see [`statements.md`](statements.md#facttype-declarations)). |
 | `true`, `false`, `unknown` | `nelumbo.logic` | The three Boolean values. |
 
 ---
 
 ## Precedence summary
 
-Full rules are on [`precedence-and-associativity.md`](precedence-and-associativity.md). The quick version:
+Full rules are on [`precedence-and-associativity.md`](../lang/precedence-and-associativity.md). The quick version:
 
 | Operator | Precedence | Notes |
 |---|---|---|

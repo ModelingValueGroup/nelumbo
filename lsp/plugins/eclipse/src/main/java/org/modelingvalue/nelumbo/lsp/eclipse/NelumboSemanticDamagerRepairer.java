@@ -48,7 +48,7 @@ import org.eclipse.swt.widgets.Display;
 
 public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPresentationRepairer {
     // Colors matching NelumboEditor's DEFAULT_TOKEN_COLORS
-    private static final Map<String, int[]> TOKEN_COLORS = Map.ofEntries(Map.entry("comment", new int[]{0xCC, 0xCC, 0xCC}),  // END_LINE_COMMENT / IN_LINE_COMMENT
+    private static final Map<String, int[]> TOKEN_COLORS = Map.ofEntries(Map.entry("comment", new int[]{0xA0, 0xA0, 0xA0}),  // END_LINE_COMMENT / IN_LINE_COMMENT
                                                                          Map.entry("string", new int[]{0x00, 0x66, 0x33}),  // STRING
                                                                          Map.entry("number", new int[]{0x00, 0x00, 0x77}),  // NUMBER / DECIMAL
                                                                          Map.entry("keyword", new int[]{0x00, 0x00, 0xFF}),  // KEYWORD

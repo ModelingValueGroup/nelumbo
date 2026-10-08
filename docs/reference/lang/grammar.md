@@ -1,13 +1,15 @@
 # Grammar
 
+> **Level:** `nelumbo.lang`. Available after `import nelumbo.lang`, or transitively through `nelumbo.logic` or any package.
+
 This page describes the grammar of Nelumbo itself — the syntax you write in a `.nl` file. It is the foundation the rest of the reference refers back to.
 
 Nelumbo is a **meta-language**, and the meta-ness goes all the way down. Even the grammar described on this page is itself defined in `.nl` files:
 
-- The pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>`, `<,>`, `<|>`, …), the top-level declaration forms (`import`, `T :: S`, `T ::= P`, `T v`, `::>`, scope blocks), and the underlying object hierarchy (`Object`, `Type`, `Variable`, `Root`, …) are all declared in [`lang.nl`](../reference/stdlib/lang.md). The Java core contains just enough hand-coded parsing to load `lang.nl`; from that point on, the user's own `::=` patterns are what parse every subsequent file.
-- The three execution-driving statement forms (`fact`, `<=>`, `?`), along with the `Boolean` type and every logical operator, are declared in [`logic.nl`](../reference/stdlib/logic.md).
+- The pattern meta-grammar (`<T>`, `<(>...<)+>`, `<(>...<)?>`, `<,>`, `<|>`, …), the top-level declaration forms (`import`, `T :: S`, `T ::= P`, `T v`, `::>`, scope blocks), and the underlying object hierarchy (`Object`, `Type`, `Variable`, `Root`, …) are all declared in [`lang.nl`](index.md). The Java core contains just enough hand-coded parsing to load `lang.nl`; from that point on, the user's own `::=` patterns are what parse every subsequent file.
+- The three execution-driving statement forms (`fact`, `<=>`, `?`), along with the `Boolean` type and every logical operator, are declared in [`logic.nl`](../logic/index.md).
 
-So "the grammar of Nelumbo" is really *the set of patterns that `lang.nl` and `logic.nl` install when they are loaded*. This page documents that surface; the per-module reference pages document where each piece is declared.
+So "the grammar of Nelumbo" is really *the set of patterns that `lang.nl` and `logic.nl` install when they are loaded*. This page documents the `nelumbo.lang` part: the declarations that shape syntax. The statement forms that `nelumbo.logic` adds are on [Statements](../logic/statements.md).
 
 ---
 
@@ -24,12 +26,10 @@ The top-level constructs are:
 | `T ::= P` | Declare pattern `P` producing a value of type `T` | [Patterns](#pattern-declarations) below |
 | `pattern N ::= P` | Declare a reusable **named pattern** `N` | [Named patterns](#named-patterns) below |
 | `T v` | Declare logical variable `v` of type `T` | [Variables](#variable-declarations) below |
-| `L <=> R` | Rule: `L` bi-implies `R` | [`writing-rules.md`](writing-rules.md) |
-| `fact E` | Assert ground-truth fact `E` | [Facts](#facts) below |
-| `E ?` | Query: run `E` and print the result | [`test-expression-semantics.md`](test-expression-semantics.md) |
-| `E ? [F][N]` | Test: query `E` and compare to expected facts `F` / falsehoods `N` | [`test-expression-semantics.md`](test-expression-semantics.md) |
 | `{ ... }` | Scope block — declarations inside are local | [`visibility.md`](visibility.md) |
-| `L ::> { ... }` | Pattern transformation | [`language-transformations.md`](../guides/language-transformations.md) |
+| `L ::> { ... }` | Pattern transformation | [`language-transformations.md`](../../guides/language-transformations.md) |
+
+Importing `nelumbo.logic` adds the statement forms that drive execution: rules (`L <=> R`, see [`writing-rules.md`](../logic/writing-rules.md)), facts (`fact E`), and queries and tests (`E ?`, `E ? [F][N]`). They are documented on [Statements](../logic/statements.md).
 
 Comments are `//` to end of line. Whitespace is not significant.
 
@@ -37,7 +37,7 @@ Comments are `//` to end of line. Whitespace is not significant.
 
 ## Type declarations
 
-```
+```nelumbo
 T :: S
 T :: S1, S2
 ```
@@ -46,7 +46,7 @@ Declares `T` as a type. Everything to the right of `::` is the list of **superty
 
 Examples from the codebase:
 
-```
+```nelumbo
 Person :: Object
 Male   :: Person
 Female :: Person
@@ -58,17 +58,17 @@ Multiple inheritance is supported: `Person :: Smart, Living` says a `Person` is 
 
 A bare type can also be introduced for use as a generic parameter:
 
-```
+```nelumbo
 Type E
 ```
 
-See [`generics.md`](../guides/generics.md) for details.
+See [generic parenthesisation in `nelumbo.lang`](index.md#generic-parenthesisation) and the [`nelumbo.collections` types](../packages/collections.md#types) for details.
 
 ---
 
 ## Pattern declarations
 
-```
+```nelumbo
 T ::= pattern
 T ::= pattern1, pattern2, pattern3
 ```
@@ -83,11 +83,11 @@ A pattern is a mix of:
 - **Variable holes** `<Variable>` — used by binding forms like quantifiers
 - **Repetition and grouping markers** `<(>`, `<)>`, `<)*>`, `<)+>`, `<)?>`, `<,>`, `<|>` — see [below](#repetition-and-grouping)
 - An optional **precedence annotation** `#N` — see [`precedence-and-associativity.md`](precedence-and-associativity.md)
-- An optional **native binding** `@fully.qualified.JavaClass` — see [`native-api.md`](native-api.md)
+- An optional **native binding** `@fully.qualified.JavaClass` — see [`native-api.md`](../core/native-api.md)
 
 Examples from the standard library:
 
-```
+```nelumbo
 Integer ::= <NUMBER>                                    @org.modelingvalue.nelumbo.integers.NInteger
 Integer ::= <Integer> + <Integer>   #40
 Integer ::= <Integer> - <Integer>   #40
@@ -106,7 +106,7 @@ Note:
 
 A pattern may list several literals as alternatives:
 
-```
+```nelumbo
 Male   ::= Hendrik, Bernhard, Claus, Willem
 Female ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
 Lidwoord ::= de, het
@@ -130,7 +130,7 @@ Inside a pattern, angle-bracketed operators build repeating or optional sub-stru
 
 Examples:
 
-```
+```nelumbo
 Repetition  ::= { <(> <Integer> <,> , <)*> }       // {3,5,7}  or {}
 Option      ::= <(> super <)?> fast                // "fast" or "super fast"
 Alternation ::= <(> A <|> B <|> C <)>              // "A", "B", or "C"
@@ -138,7 +138,7 @@ Alternation ::= <(> A <|> B <|> C <)>              // "A", "B", or "C"
 
 `collections.nl` uses this for generic sets and lists:
 
-```
+```nelumbo
 Set<E>  ::= { <(> <E> <,> , <)*> }
 List<E> ::= [ <(> <E> <,> , <)*> ]
 ```
@@ -149,7 +149,7 @@ By default whitespace between tokens is insignificant, so a pattern like `<NUMBE
 
 The brackets themselves are pure meta-syntax: like the other `<(>`-style markers, they do not appear in the parsed source.
 
-```
+```nelumbo
 Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                     @nelumbo.datetime.NDate
 Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>                     @nelumbo.rationals.Rational
 Integer  ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>    @nelumbo.integers.NInteger
@@ -167,7 +167,7 @@ A practical rule of thumb: use `<[>` … `<]>` whenever the absence of whitespac
 
 A recurring fragment of pattern syntax can be given a name and reused, instead of being spelled out at every site. Declare one with the `pattern` keyword:
 
-```
+```nelumbo
 pattern N ::= P
 ```
 
@@ -175,7 +175,7 @@ The name `N` is then written `<N>` inside any later pattern, exactly where its b
 
 The standard library uses named patterns to keep dense declarations legible:
 
-```
+```nelumbo
 pattern RADIX_NUMBER ::= <(> <(> <NUMBER> <|> <NAME> <)> <)+>          // integers.nl — the base-N digit run
 Integer ::= <(> - <)?> <[> <NUMBER> <(> "#" <RADIX_NUMBER> <)?> <]>    @nelumbo.integers.NInteger
 
@@ -184,48 +184,20 @@ pattern TIME_PERIOD ::= T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>      //       
 Period  ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]>  @nelumbo.datetime.NPeriod
 ```
 
-Even `lang.nl` and `logic.nl` define their own (`PATTERNS`, `QNAME`, `BINDING`) — see [`lang.md`](stdlib/lang.md#named-patterns). A named pattern must be declared before it is referenced, like any other name.
-
----
-
-## FactType declarations
-
-A `FactType` pattern declares a relation whose instances can be asserted as ground truth:
-
-```
-FactType ::= pc(<Person>,<Person>)                    // family.nl
-FactType ::= friends(<Person>,<Person>)               // friends.nl
-FactType ::= het inkomen van <Person> is <Integer> euro  // belasting.nl
-```
-
-A fact type looks like any other pattern, but values built with it are not computed by rules — they are either asserted directly (see below) or they are not. This separates **ground truth** from **derived relations**.
-
-### Facts
-
-Facts are asserted with the `fact` keyword:
-
-```
-fact pc(Hendrik, Juliana),
-     pc(Wilhelmina, Juliana),
-     pc(Juliana, Beatrix)
-
-fact het inkomen van Piet is 50000 euro
-```
-
-`fact` introduces one or more comma-separated ground-truth assertions. Once asserted, they are available to the query engine as proven facts.
+Even `lang.nl` and `logic.nl` define their own (`PATTERNS`, `QNAME`, `BINDING`) — see [`lang.md`](index.md#named-patterns). A named pattern must be declared before it is referenced, like any other name.
 
 ---
 
 ## Variable declarations
 
-```
+```nelumbo
 T v
 T v1, v2, v3
 ```
 
 Declares logical variables of type `T`. Variables declared at the top level are global to the file (or scope); variables declared inside `E[...]` or `A[...]` are local to the quantifier.
 
-```
+```nelumbo
 Integer n, f          // fibonacci.nl
 Person  a, b, c       // family.nl
 Male    y
@@ -243,7 +215,7 @@ An expression is anything built from:
 - **Literals** — `5`, `3.14`, `"hello"`, `true`, `Hendrik`
 - **Variables** — `n`, `a`, `p`
 - **Pattern applications** — anything built from a `::=` pattern, such as `fib(n)`, `a+b`, `|n|`, `{1,2,3}`, `het inkomen van Piet is 50000 euro`
-- **Logical operators from `nelumbo.logic`** — `&`, `|`, `!`, `->`, `<->`, `E[]`, `A[]`, `=`, `!=`
+- **[Logical operators from `nelumbo.logic`](../logic/operators.md)** — `&`, `|`, `!`, `->`, `<->`, `E[]`, `A[]`, `=`, `!=`
 
 Expressions have types (propagated through pattern declarations) and can appear anywhere the grammar expects an expression of the matching type.
 
@@ -253,7 +225,7 @@ Expressions have types (propagated through pattern declarations) and can appear 
 
 Curly braces `{ ... }` introduce a lexical scope:
 
-```
+```nelumbo
 {
    Aa :: Object
    Aa ::= XXX
@@ -270,7 +242,7 @@ Names declared inside a scope are not visible outside it. Imports, types, patter
 
 The `::>` operator defines a **language pattern transformation** — a macro-like expansion from one pattern into a block of declarations and rules.
 
-```
+```nelumbo
 attr OT AN AT ::> {
     AT       ::= <OT>.AN
     Root     ::= <OT>.AN := <AT>
@@ -279,27 +251,36 @@ attr OT AN AT ::> {
 }
 ```
 
-This is Nelumbo's mechanism for building higher-level DSLs on top of the core. It is covered in [`language-transformations.md`](../guides/language-transformations.md) rather than here, because transformations are an advanced feature that deserves a full guide.
+This is Nelumbo's mechanism for building higher-level DSLs on top of the core. It is covered in [`language-transformations.md`](../../guides/language-transformations.md) rather than here, because transformations are an advanced feature that deserves a full guide.
 
 ---
 
-## Queries, tests, and bare facts
+## Punctuation
 
-Three forms drive execution:
+| Symbol | Meaning |
+|---|---|
+| `,` in a supertype list | Separates supertypes |
+| `,` in a variable declaration | Separates variable names |
+| `{ }` | Scope block — see [`visibility.md`](visibility.md) |
+| `( )` | Grouping inside an expression |
+| `//` | Line comment |
 
-```
-E                  // bare expression — treated as a fact if E is a FactType instance
-E ?                // query — run the reasoner, print the result
-E ? [F][N]         // test — query and compare; pass iff result matches
-```
+---
 
-See [`test-expression-semantics.md`](test-expression-semantics.md) for the precise comparison rules.
+## Special identifiers
+
+| Name | Meaning |
+|---|---|
+| `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` | The core object hierarchy. `Root` is the entry-point production for top-level statements; `Type` is used as a generic parameter introducer (`Type T`). |
+
+The logic-layer identifiers (`Boolean`, `FactType`, `true`, ...) are listed in [`operators.md`](../logic/operators.md#special-identifiers).
 
 ---
 
 ## See also
 
-- [`operators.md`](operators.md) — the complete list of operators
+- [`operators.md`](../logic/operators.md) — the operators from `nelumbo.logic`
+- [`statements.md`](../logic/statements.md) — fact types, facts, queries and tests
 - [`built-in-tokens.md`](built-in-tokens.md) — `<NUMBER>`, `<STRING>`, `<NAME>`, `<Variable>`
 - [`precedence-and-associativity.md`](precedence-and-associativity.md) — how `#N` works
 - [`visibility.md`](visibility.md) — `private`, `hidden`, `visible`, and `{ }` scopes

@@ -59,17 +59,18 @@ public class QueryExecutionFlowTest {
             """;
 
     /**
-     * Mirrors the LSP "Query button" code path: parses and evaluates inside one BASE.run,
-     * skipping every Query except the targeted one. The targeted query is a falsifying
-     * query whose inference result must be `[][()]` (definitely false, no variables).
+     * Mirrors the LSP "Query button" code path: parses and evaluates inside one
+     * BASE.run, skipping every Query except the targeted one. The targeted query is
+     * a falsifying query whose inference result must be `[][()]` (definitely false,
+     * no variables).
      *
-     * Regression guard for the bug where the LSP previously parsed in one BASE.run and
-     * evaluated in another, leaving user-declared types/patterns unregistered in the
-     * inference KB and returning the incomplete `[..][..]` instead.
+     * Regression guard for the bug where the LSP previously parsed in one BASE.run
+     * and evaluated in another, leaving user-declared types/patterns unregistered
+     * in the inference KB and returning the incomplete `[..][..]` instead.
      */
     @Test
     void targetedFalsifyingQueryProducesDefiniteResult() {
-        int[] targetLineIdx = {-1};
+        int[] targetLineIdx = { -1 };
         String[] lines = KONINGSDAG.split("\n");
         for (int i = 0; i < lines.length; i++) {
             if (lines[i].contains("Koningsdag 2025 is op 27 april")) {
@@ -80,8 +81,8 @@ public class QueryExecutionFlowTest {
             fail("test fixture corrupt: target query line not found");
         }
 
-        String[] resultHolder = {null};
-        KnowledgeBase.BASE.run(() -> {
+        String[] resultHolder = { null };
+        KnowledgeBase.BASE.invoke(() -> {
             ParserResult parsed = new Parser(new Tokenizer(KONINGSDAG, "test").tokenize()).parseNonThrowing();
 
             Query target = null;
@@ -101,7 +102,7 @@ public class QueryExecutionFlowTest {
             try {
                 for (Node root : parsed.roots()) {
                     if (root instanceof Evaluatable eval && (!(eval instanceof Query) || eval == queryRef)) {
-                        eval.evaluate(KnowledgeBase.CURRENT.get(), throwing);
+                        eval.evaluate(KnowledgeBase.current(), throwing);
                     }
                 }
             } catch (ParseException e) {
@@ -118,13 +119,15 @@ public class QueryExecutionFlowTest {
             """;
 
     /**
-     * The inline inlay hints and mismatch underlines are driven by {@link QueryEvaluator#evaluate},
-     * which must evaluate *every* query in one inference KB (not just one) and report each query's
-     * outcome. Both queries here are the same predicate that infers to "definitely false": the first
-     * asserts exactly that ("[][()]", so it MATCHES and is rendered as a checkmark), the second claims
-     * it is true ("[()][]", so it MISMATCHES — its inline label must show the calculated result and it
-     * must carry a source range to underline). If the evaluator only ran one query, or reported the
-     * wrong outcome, the inline text and underline users see would be wrong.
+     * The inline inlay hints and mismatch underlines are driven by
+     * {@link QueryEvaluator#evaluate}, which must evaluate *every* query in one
+     * inference KB (not just one) and report each query's outcome. Both queries
+     * here are the same predicate that infers to "definitely false": the first
+     * asserts exactly that ("[][()]", so it MATCHES and is rendered as a
+     * checkmark), the second claims it is true ("[()][]", so it MISMATCHES — its
+     * inline label must show the calculated result and it must carry a source range
+     * to underline). If the evaluator only ran one query, or reported the wrong
+     * outcome, the inline text and underline users see would be wrong.
      */
     @Test
     void evaluatesEveryQueryAndReportsOutcomePerQuery() {
@@ -132,13 +135,13 @@ public class QueryExecutionFlowTest {
 
         assertEquals(2, results.size(), "both queries must be evaluated in one pass");
 
-        QueryResult match    = null;
+        QueryResult match = null;
         QueryResult mismatch = null;
         for (QueryResult r : results.values()) {
             switch (r.kind()) {
-                case MATCH -> match = r;
-                case MISMATCH -> mismatch = r;
-                case RESULT, ERROR -> fail("unexpected result kind " + r.kind() + ": " + r.inferred());
+            case MATCH         -> match = r;
+            case MISMATCH      -> mismatch = r;
+            case RESULT, ERROR -> fail("unexpected result kind " + r.kind() + ": " + r.inferred());
             }
         }
 
@@ -147,7 +150,9 @@ public class QueryExecutionFlowTest {
 
         assertNotNull(mismatch, "the query with the wrong expected clause must be a mismatch");
         assertEquals("[][()]", mismatch.inferred(), "mismatch must carry the calculated result");
-        assertEquals("❌ [][()]", mismatch.inlineLabel(), "inline label shows a cross plus the calculated result at the end of the line");
-        assertNotNull(mismatch.expectedRange(), "mismatch must carry the source range of the expected clause to underline");
+        assertEquals("❌ [][()]", mismatch.inlineLabel(),
+                "inline label shows a cross plus the calculated result at the end of the line");
+        assertNotNull(mismatch.expectedRange(),
+                "mismatch must carry the source range of the expected clause to underline");
     }
 }

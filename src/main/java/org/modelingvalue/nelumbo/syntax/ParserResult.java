@@ -76,7 +76,7 @@ public class ParserResult implements ParseExceptionHandler {
 
     public void evaluate() throws ParseException {
         if (exceptions.isEmpty()) {
-            KnowledgeBase knowledgeBase = KnowledgeBase.CURRENT.get();
+            KnowledgeBase knowledgeBase = KnowledgeBase.current();
             for (Node root : roots()) {
                 if (root instanceof Evaluatable eval) {
                     eval.evaluate(knowledgeBase, this);

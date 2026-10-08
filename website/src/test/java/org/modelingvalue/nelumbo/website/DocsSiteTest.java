@@ -20,8 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -45,10 +54,10 @@ class DocsSiteTest {
         md.put("getting-started/reading-a-test.md", """
                 # Reading a query and test
 
-                See [grammar](../reference/grammar.md#connected-token-groups---) and [fibonacci.nl](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl).
+                See [grammar](../reference/lang/grammar.md#connected-token-groups---) and [fibonacci.nl](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl).
                 Back to the [overview](../documentation.md) or [up](#reading-a-query-and-test); [GitHub](https://github.com/x) stays.
                 """);
-        md.put("reference/grammar.md", """
+        md.put("reference/lang/grammar.md", """
                 # Grammar
 
                 ## Connected-token groups: `<[> ... <]>`
@@ -63,7 +72,11 @@ class DocsSiteTest {
                 |---|---|
                 | 1 | 2 |
                 """);
-        md.put("reference/stdlib/logic.md", "# `nelumbo.logic`\n\ntext\n");
+        md.put("reference/logic/index.md", "# `nelumbo.logic`\n\ntext\n");
+        md.put("reference/logic/operators.md", "# Operators\n");
+        md.put("reference/formatting.md", "# Formatting\n");
+        md.put("reference/packages/integers.md", "# `nelumbo.integers`\n");
+        md.put("reference/lang/visibility.md", "# Visibility\n\n```nelumbo\nInteger n\n```\n\n```text\nInteger n\n```\n");
         md.put("NELUMBO.md", "# Slides\n");
         return new DocsSite(md, TEMPLATE);
     }
@@ -75,7 +88,7 @@ class DocsSiteTest {
         assertEquals("recipe-2--comparison-predicate", DocsSite.slug("Recipe 2 — comparison predicate"));
         assertEquals("nelumbologic", DocsSite.slug("nelumbo.logic"));
 
-        String grammar = site().page("/docs/reference/grammar.html").orElseThrow();
+        String grammar = site().page("/docs/reference/lang/grammar.html").orElseThrow();
         assertTrue(grammar.contains("<h2 id=\"connected-token-groups---\">"), grammar);
         assertTrue(grammar.contains("<h2 id=\"twice\">") && grammar.contains("<h2 id=\"twice-1\">"),
                 "duplicate headings get numbered like on GitHub: " + grammar);
@@ -84,7 +97,7 @@ class DocsSiteTest {
     @Test
     void relativeMarkdownLinksBecomeDocsUrlsAndLinksOutOfTheDocsFolderGoToGithub() {
         String page = site().page("/docs/getting-started/reading-a-test.html").orElseThrow();
-        assertTrue(page.contains("href=\"/docs/reference/grammar.html#connected-token-groups---\""), page);
+        assertTrue(page.contains("href=\"/docs/reference/lang/grammar.html#connected-token-groups---\""), page);
         assertTrue(page.contains("href=\"https://github.com/ModelingValueGroup/nelumbo/blob/master/src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl\""), page);
         assertTrue(page.contains("href=\"/docs/\""), "documentation.md is the docs index: " + page);
         assertTrue(page.contains("href=\"#reading-a-query-and-test\""), page);
@@ -98,14 +111,18 @@ class DocsSiteTest {
 
     @Test
     void sidebarListsEveryGroupedPageByTitleAndMarksTheCurrentOne() {
-        String grammar = site().page("/docs/reference/grammar.html").orElseThrow();
+        String grammar = site().page("/docs/reference/lang/grammar.html").orElseThrow();
         assertTrue(grammar.contains("<a href=\"/docs/\">Overview</a>"), grammar);
         assertTrue(grammar.contains("<a href=\"/docs/getting-started/reading-a-test.html\">Reading a query and test</a>"), grammar);
-        assertTrue(grammar.contains("<a href=\"/docs/reference/grammar.html\" class=\"active\">Grammar</a>"), grammar);
-        assertTrue(grammar.contains("<a href=\"/docs/reference/stdlib/logic.html\">nelumbo.logic</a>"), grammar);
-        assertTrue(grammar.indexOf("Getting started") < grammar.indexOf("Reference")
-                && grammar.indexOf("Reference") < grammar.indexOf("Standard library"),
+        assertTrue(grammar.contains("<a href=\"/docs/reference/lang/grammar.html\" class=\"active\">Grammar</a>"), grammar);
+        assertTrue(grammar.contains("<a href=\"/docs/reference/logic/index.html\">nelumbo.logic</a>"), grammar);
+        assertTrue(grammar.indexOf("Getting started") < grammar.indexOf("Reference: Lang")
+                && grammar.indexOf("Reference: Lang") < grammar.indexOf("Reference: Logic"),
                 "groups keep the documented reading order: " + grammar);
+        // a level's overview heads its group even though "nelumbo.logic" sorts after "Operators"
+        assertTrue(grammar.indexOf(">nelumbo.logic<") < grammar.indexOf(">Operators<"), grammar);
+        // the level-less reference pages (formatting) close the reference, after the packages
+        assertTrue(grammar.indexOf(">nelumbo.integers<") < grammar.indexOf(">Formatting<"), grammar);
         assertFalse(grammar.contains("Slides"), "root-level pages other than the index are not in the sidebar: " + grammar);
         assertTrue(site().page("/docs/NELUMBO.html").isPresent(), "...but they are still served for the links that point at them");
     }
@@ -115,7 +132,7 @@ class DocsSiteTest {
         DocsSite site = site();
         assertTrue(site.page("/docs/").orElseThrow().contains("<title>Nelumbo documentation</title>"));
         assertTrue(site.page("/docs").isPresent());
-        assertTrue(site.page("/docs/reference/grammar.html").orElseThrow().contains("<table>"), "GFM tables must render");
+        assertTrue(site.page("/docs/reference/lang/grammar.html").orElseThrow().contains("<table>"), "GFM tables must render");
         assertTrue(site.page("/docs/reference/missing.html").isEmpty());
         assertTrue(site.page("/docs/documentation.html").isEmpty(), "the index has one URL: /docs/");
         assertTrue(site.notFoundPage().contains("<nav>"), "the 404 page keeps the sidebar so the reader is not stranded");
@@ -125,8 +142,105 @@ class DocsSiteTest {
     void theBundledDocsAllRender() {
         DocsSite site = DocsSite.load();
         assertTrue(site.pageCount() > 25, "expected the whole docs tree to be bundled, got " + site.pageCount());
-        String grammar = site.page("/docs/reference/grammar.html").orElseThrow();
+        String grammar = site.page("/docs/reference/lang/grammar.html").orElseThrow();
         assertTrue(grammar.contains("<title>Grammar - Nelumbo docs</title>"), grammar.substring(0, 300));
         assertTrue(grammar.contains("<h1"), grammar.substring(0, 300));
+    }
+
+    @Test
+    void everyInternalLinkAndAnchorInTheBundledDocsResolves() {
+        // a moved or split page must not leave a link behind that 404s or lands on a missing heading
+        DocsSite site = DocsSite.load();
+        Pattern href = Pattern.compile("href=\"(/docs/[^\"#]*)?(?:#([^\"]*))?\"");
+        Deque<String> todo = new ArrayDeque<>(List.of(DocsSite.URL_PREFIX));
+        Set<String> seen = new HashSet<>(todo);
+        List<String> broken = new ArrayList<>();
+        while (!todo.isEmpty()) {
+            String url = todo.pop();
+            Matcher m = href.matcher(site.page(url).orElseThrow());
+            while (m.find()) {
+                if (m.group(1) == null && m.group(2) == null) {
+                    continue;
+                }
+                String target = m.group(1) == null ? url : m.group(1);
+                String fragment = m.group(2);
+                Optional<String> page = site.page(target);
+                if (page.isEmpty()) {
+                    broken.add(url + " -> " + target);
+                    continue;
+                }
+                if (fragment != null && !fragment.isEmpty() && !page.get().contains("id=\"" + fragment + "\"")) {
+                    broken.add(url + " -> " + target + "#" + fragment);
+                }
+                if (seen.add(target)) {
+                    todo.push(target);
+                }
+            }
+        }
+        assertTrue(broken.isEmpty(), "broken docs links:\n" + String.join("\n", broken));
+        // NELUMBO.md is not in the sidebar but the overview links it, so every page is reachable
+        assertEquals(site.pageCount(), seen.size(), "every page should be reachable from the overview; reached " + seen);
+    }
+
+    @Test
+    void codeInTheBundledDocsIsNotMistakenForLinks() {
+        // quantifier and set-builder syntax looks like a markdown link target (E[x](p), {[e](c)}); a path rewrite
+        // over the docs must leave it alone, or readers copy examples that no longer parse
+        DocsSite site = DocsSite.load();
+        Pattern code = Pattern.compile("<code[^>]*>([^<]*)</code>");
+        Deque<String> todo = new ArrayDeque<>(List.of(DocsSite.URL_PREFIX));
+        Set<String> seen = new HashSet<>(todo);
+        Pattern href = Pattern.compile("href=\"(/docs/[^\"#]*)");
+        List<String> rewritten = new ArrayList<>();
+        while (!todo.isEmpty()) {
+            String url = todo.pop();
+            String html = site.page(url).orElseThrow();
+            Matcher c = code.matcher(html);
+            while (c.find()) {
+                if (c.group(1).contains("](../")) {
+                    rewritten.add(url + ": " + c.group(1).strip().lines().filter(l -> l.contains("](../")).findFirst().orElse(""));
+                }
+            }
+            Matcher h = href.matcher(html);
+            while (h.find()) {
+                if (site.page(h.group(1)).isPresent() && seen.add(h.group(1))) {
+                    todo.push(h.group(1));
+                }
+            }
+        }
+        assertTrue(rewritten.isEmpty(), "code that a link rewrite mangled:\n" + String.join("\n", rewritten));
+    }
+
+    @Test
+    void nelumboCodeBlocksAreHighlightedAndOtherBlocksAreNot() {
+        String page = site().page("/docs/reference/lang/visibility.html").orElseThrow();
+        assertTrue(page.contains("<pre><code class=\"language-nelumbo\"><span class=\"nl-type\">Integer</span> <span class=\"nl-variable\">n</span>"), page);
+        assertTrue(page.contains("<pre><code class=\"language-text\">Integer n"), "a text block stays plain: " + page);
+    }
+
+    @Test
+    void everyCodeBlockInTheBundledDocsSaysWhatLanguageItIs() throws Exception {
+        // only blocks tagged nelumbo are highlighted, so an untagged block is a block nobody decided about
+        List<String> untagged = new ArrayList<>();
+        String index = new String(DocsSiteTest.class.getResourceAsStream(DocsSite.RESOURCE_ROOT + "index.txt").readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        for (String path : index.split("\n")) {
+            if (!path.endsWith(".md")) {
+                continue;
+            }
+            String md = new String(DocsSiteTest.class.getResourceAsStream(DocsSite.RESOURCE_ROOT + path.trim()).readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            boolean inFence = false;
+            int line = 0;
+            for (String l : md.split("\n", -1)) {
+                line++;
+                String fence = l.strip();
+                if (fence.startsWith("```")) {
+                    if (!inFence && fence.substring(3).isBlank()) {
+                        untagged.add(path.trim() + ":" + line);
+                    }
+                    inFence = !inFence;
+                }
+            }
+        }
+        assertTrue(untagged.isEmpty(), untagged.size() + " untagged code blocks, tag them ```nelumbo or ```text:\n" + String.join("\n", untagged));
     }
 }

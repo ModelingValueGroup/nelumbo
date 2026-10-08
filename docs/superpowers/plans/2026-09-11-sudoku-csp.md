@@ -164,7 +164,8 @@ fullGrid(p)=g <=> g=[[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
 > **BLOCKED (2026-09-24, second time)** on `bugs/rule-pos-on-mapped-collection-list-undecided.nl`:
 > the rules below are in the file and `put` itself decides, but every `cell(...)` read
 > on a `putRow`-built row is undecided - a user rule wrapping `pos` over a `map`-produced
-> list of collections. Side finding while isolating: `bugs/set-literal-arithmetic-unevaluated.nl`.
+> list of collections. Side finding while isolating: `bugs/set-literal-arithmetic-unevaluated.nl`
+> (fixed 2026-10-06, now `tests/set-literal-arithmetic-unevaluated.nl` in RegressionTest).
 > The first block (2026-09-11, the bba88fc8 reduction trio) was lifted on 2026-09-24.
 > The two probes are kept in the file, commented out.
 >

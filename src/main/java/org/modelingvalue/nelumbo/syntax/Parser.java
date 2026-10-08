@@ -56,7 +56,7 @@ public final class Parser implements ParseExceptionHandler {
 
     public static ParserResult parse(KnowledgeBase knowledgeBase, TokenizerResult tokenizerResult) {
         ParserResult[] pra = new ParserResult[1];
-        knowledgeBase.run(() -> pra[0] = new Parser(tokenizerResult).parseNonThrowing());
+        knowledgeBase.invoke(() -> pra[0] = new Parser(tokenizerResult).parseNonThrowing());
         return pra[0];
     }
 
@@ -68,7 +68,7 @@ public final class Parser implements ParseExceptionHandler {
     private ParserResult result;
 
     public Parser(TokenizerResult tokenizerResult) {
-        this.knowledgeBase = KnowledgeBase.CURRENT.get();
+        this.knowledgeBase = KnowledgeBase.current();
         this.tokenizerResult = tokenizerResult;
     }
 

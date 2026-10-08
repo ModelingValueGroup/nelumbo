@@ -159,34 +159,41 @@ public final class PatternResult implements ParseExceptionHandler {
             next.parse(nextToken, this, Map.of(), false);
         }
         if (functor != null) {
-            for (Pair<Token, Token> split : splitted) {
-                split.a().connect(split.b());
-            }
-            for (Pair<Token, Token> merge : merged) {
-                merge.a().merge(merge.b());
-            }
             List<AstElement> elements = elements();
-            Object[] args = functor.args(elements, typeArgs);
-            Node node = functor.construct(elements, args, this, context);
-            Set<Variable> tv = functor.typeVariables();
-            Map<Variable, Type> tas = typeArgs.get().retainAll(e -> tv.contains(e.getKey()));
-            if (!tas.isEmpty()) {
-                node = node.setTypeArgs(tas);
-            }
-            if (hasLeft && args.length == 1 && args[0] instanceof Node arg) {
-                if (node.functor().equals(arg.functor())) {
-                    addException(new ParseException("Circular object construction, caused by " + functor, elements));
-                    return null;
+            try {
+                for (Pair<Token, Token> split : splitted) {
+                    split.a().connect(split.b());
                 }
-            }
-            setNodes(elements, node);
-            Type type = node.type();
-            node = node.init(parser.knowledgeBase(), context, ConstructionReason.parsing);
-            if (node.type().equals(type)) {
+                for (Pair<Token, Token> merge : merged) {
+                    merge.a().merge(merge.b());
+                }
+                Object[] args = functor.args(elements, typeArgs);
+                Node node = functor.construct(elements, args, this, context);
+                Set<Variable> tv = functor.typeVariables();
+                Map<Variable, Type> tas = typeArgs.get().retainAll(e -> tv.contains(e.getKey()));
+                if (!tas.isEmpty()) {
+                    node = node.setTypeArgs(tas);
+                }
+                if (hasLeft && args.length == 1 && args[0] instanceof Node arg) {
+                    if (node.functor().equals(arg.functor())) {
+                        addException(
+                                new ParseException("Circular object construction, caused by " + functor, elements));
+                        return null;
+                    }
+                }
                 setNodes(elements, node);
+                Type type = node.type();
+                node = node.init(parser.knowledgeBase(), context, ConstructionReason.parsing);
+                if (node.type().equals(type)) {
+                    setNodes(elements, node);
+                }
+                context.finish(type);
+                return node;
+            } catch (ParseException pe) {
+                throw pe;
+            } catch (Exception e) {
+                addException(new ParseException(e, "Exception during construction", elements));
             }
-            context.finish(type);
-            return node;
         }
         return null;
     }

@@ -1,5 +1,7 @@
 # Writing rules
 
+> **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
+
 This page is the reference for the `<=>` rule operator: how rules are written, how multiple rules for the same relation combine, how guards work, and what constitutes an inconsistency.
 
 For the semantic background, read [`three-valued-logic.md`](three-valued-logic.md) first.
@@ -8,7 +10,7 @@ For the semantic background, read [`three-valued-logic.md`](three-valued-logic.m
 
 ## The rule form
 
-```
+```nelumbo
 L  <=>  R
 ```
 
@@ -25,7 +27,7 @@ The free variables on each side must have been declared with a variable declarat
 
 ## A single rule — the simple case
 
-```
+```nelumbo
 even(x) <=> E[y](y = x/2)
 ```
 
@@ -39,7 +41,7 @@ For any `x`, the engine treats `even(x)` and `E[y](y=x/2)` as interchangeable. Q
 
 A right-hand side may be qualified by an `if`-guard:
 
-```
+```nelumbo
 fib(n) = f  <=>  f = n                  if n >= 0 & n <= 1
 ```
 
@@ -57,14 +59,14 @@ Nelumbo lets you write many rules with the same left-hand side. They accumulate.
 
 A common idiom compresses several rules onto adjacent lines using a comma:
 
-```
+```nelumbo
 fib(n) = f  <=>  f = n                    if n >= 0 & n <= 1,
                  f = fib(n-1) + fib(n-2)  if n > 1
 ```
 
 The comma is **purely syntactic shorthand** for repeating the left-hand side. The above is exactly equivalent to:
 
-```
+```nelumbo
 fib(n) = f  <=>  f = n                    if n >= 0 & n <= 1
 fib(n) = f  <=>  f = fib(n-1) + fib(n-2)  if n > 1
 ```
@@ -116,7 +118,7 @@ Not all contradictions are bugs. Asserting that two rules *must* agree is a form
 
 ### From `integers.nl`
 
-```
+```nelumbo
 a < b  <=>  b > a
 a <= b <=>  a < b | a = b
 a >= b <=>  a > b | a = b
@@ -138,7 +140,7 @@ Notice also the absolute-value rule: two clauses, `if a >= 0` and `if a < 0`, co
 
 ### From `family.nl`
 
-```
+```nelumbo
 c(a) = b  <=>  pc(a, b)
 p(a) = b  <=>  pc(b, a)
 m(a) = b  <=>  E[x](c(x) = a & b = x)
@@ -169,5 +171,5 @@ The `a` (ancestor) rule is defined in terms of `d`: ancestor is just descendant 
 
 - [`three-valued-logic.md`](three-valued-logic.md) — the semantic model rules produce results within
 - [`test-expression-semantics.md`](test-expression-semantics.md) — how tests observe the results rules produce
-- [`../guides/writing-tests.md`](../guides/writing-tests.md) — pragmatic tips for test design (Phase 4)
-- [`../getting-started/first-program.md`](../getting-started/first-program.md) — `fib` explained line by line
+- [`../getting-started/reading-a-test.md`](../../getting-started/reading-a-test.md) — how to read and write a test's expected result
+- [`../getting-started/first-program.md`](../../getting-started/first-program.md) — `fib` explained line by line

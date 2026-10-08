@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.lang;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
@@ -97,7 +98,7 @@ public final class Transform extends Node {
     public Transform setTypeArgs(Map<Variable, Type> typeArgs) {
         Transform to = (Transform) super.setTypeArgs(typeArgs);
         try {
-            return rewireFunctors(to, KnowledgeBase.CURRENT.get());
+            return rewireFunctors(to, KnowledgeBase.current());
         } catch (ParseException e) {
             throw new IllegalArgumentException(e);
         }
@@ -105,7 +106,10 @@ public final class Transform extends Node {
 
     public Node transform(Node node, Node result, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
         Node source = source();
-        Map<Variable, Object> binding = node.getBinding(source);
+        Map<Variable, Object> binding = node.getAllBinding(source);
+        for (Entry<Variable, Object> e : binding) {
+            binding = binding.put(e.getKey().literal(), e.getValue());
+        }
         if (binding == null) {
             return result;
         }

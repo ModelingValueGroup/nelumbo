@@ -1,12 +1,14 @@
 # `nelumbo.rationals`
 
+> **Level:** optional package `nelumbo.rationals`. Write `import nelumbo.rationals`; it brings in `nelumbo.integers`, `nelumbo.logic` and `nelumbo.lang` transitively.
+
 Exact rational arithmetic — no floating-point rounding. Mirrors the shape of `nelumbo.integers` over a separate `Rational` type, plus integer-to-rational conversion.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl) — 46 lines.
 
 **Import:**
 
-```
+```nelumbo
 import nelumbo.rationals
 ```
 
@@ -16,7 +18,7 @@ import nelumbo.rationals
 
 ## Type
 
-```
+```nelumbo
 Rational :: Object
 ```
 
@@ -28,7 +30,7 @@ A `Rational` is an exact rational — integer numerator over integer denominator
 
 ## Literals
 
-```
+```nelumbo
 Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>  @nelumbo.rationals.Rational,
              r(<Integer>),
              r(<Integer>/<Integer>)
@@ -40,7 +42,7 @@ Rational ::= <(> - <)?> <[> <NUMBER> . <NUMBER> <]>  @nelumbo.rationals.Rational
 
 The two `r(...)` forms reduce to a private native predicate `iir` — a `@NelumboMethod` on `nelumbo.rationals.Rationals` (the same class that carries `add`, `mult`, and `gt`):
 
-```
+```nelumbo
 private Boolean ::= ...,
                     iir(<Integer>,<Integer>,<Rational>)  @nelumbo.rationals.Rationals
 
@@ -57,7 +59,7 @@ r(x/y) = a   <=>  iir(x, y, a)
 
 ## Arithmetic
 
-```
+```nelumbo
 Rational ::= <Rational> - <Rational>   #40,
              <Rational> + <Rational>   #40,
                         - <Rational>   #80,
@@ -77,7 +79,7 @@ Rational ::= <Rational> - <Rational>   #40,
 
 Defined exactly like the integer counterparts, in terms of two private natives:
 
-```
+```nelumbo
 private Boolean ::= add(<Rational>,<Rational>,<Rational>)   @nelumbo.rationals.Rationals,
                     mult(<Rational>,<Rational>,<Rational>)  @nelumbo.rationals.Rationals
 
@@ -100,7 +102,7 @@ The literal `0.0` (not `0`) in the negation rule keeps the operands in `Rational
 
 Where integer division truncates, rational division does not:
 
-```
+```nelumbo
 20.0 / 10.0 = 2.0   ? [()][]
 21.0 / 10.0 = a     ? [(a=2.1)][..]
 21.0 / 10.0 = 2.0   ? [][()]
@@ -112,7 +114,7 @@ The middle query returns the exact result `2.1`. The third asserts the wrong ans
 
 ## Comparison
 
-```
+```nelumbo
 Boolean ::= <Rational> ">"  <Rational>   #30,
             <Rational> "<"  <Rational>   #30,
             <Rational> "<=" <Rational>   #30,
@@ -121,7 +123,7 @@ Boolean ::= <Rational> ">"  <Rational>   #30,
 
 Same arrangement as `integers`: the operators carry no `@` binding — the single native comparison is the private `gt` helper, and the rest are defined in Nelumbo.
 
-```
+```nelumbo
 a >  b  <=>  gt(a, b)
 a <  b  <=>  gt(b, a)
 a <= b  <=>  a < b | a = b

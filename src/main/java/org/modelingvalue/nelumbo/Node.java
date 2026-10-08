@@ -420,18 +420,23 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public final Map<Variable, Object> getBinding(Node declaration) {
-        return getBinding(declaration, Map.of());
+        return getBinding(declaration, Map.of(), false);
     }
 
-    private Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars) {
+    public final Map<Variable, Object> getAllBinding(Node declaration) {
+        return getBinding(declaration, Map.of(), true);
+    }
+
+    private Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars, boolean all) {
         for (int i = 0; vars != null && i < length(); i++) {
-            vars = getBinding(declaration.get(i), get(i), vars, i);
+            vars = getBinding(declaration.get(i), get(i), vars, i, all);
         }
         return vars;
     }
 
-    private Map<Variable, Object> getBinding(Object declVal, Object thisIn, Map<Variable, Object> vars, int i) {
-        Object thisVal = thisIn instanceof Variable ? null : thisIn;
+    private Map<Variable, Object> getBinding(Object declVal, Object thisIn, Map<Variable, Object> vars, int i,
+            boolean all) {
+        Object thisVal = !all && thisIn instanceof Variable ? null : thisIn;
         if (declVal instanceof Type declType) {
             declVal = declType.variable();
         }
@@ -453,12 +458,12 @@ public class Node extends StructImpl implements AstElement {
         } else if (declVal instanceof Node declNode && thisVal instanceof Node thisNode) {
             // noinspection ConstantValue
             assert !(declVal instanceof Type || declVal instanceof Variable);
-            vars = thisNode.getBinding(declNode, vars);
+            vars = thisNode.getBinding(declNode, vars, all);
         } else if (declVal instanceof ContainingCollection<?> declList
                 && thisVal instanceof ContainingCollection<?> thisList && //
                 declList.size() == thisList.size()) {
             for (int ii = 0; ii < declList.size(); ii++) {
-                vars = getBinding(declList.get(ii), thisList.get(ii), vars, i);
+                vars = getBinding(declList.get(ii), thisList.get(ii), vars, i, all);
             }
         }
         return vars;
@@ -558,8 +563,7 @@ public class Node extends StructImpl implements AstElement {
 
     public Node makeVariablesUnique(ParseContext ctx, String id) throws ParseException {
         return replace(o -> {
-            if (o instanceof Variable v
-                    && (ctx.outer().type(v.name()) != null || ctx.outer().variable(v.name()) != null)) {
+            if (o instanceof Variable v && ctx.outer().hasDefined(v)) {
                 return v.makeUnique(id);
             }
             return o;
@@ -644,19 +648,23 @@ public class Node extends StructImpl implements AstElement {
     public <E extends Node> MatchState<E> state(MatchState<E> next) {
         for (Object arg : args().reverse()) {
             switch (arg) {
-            case Type type    -> {
+            case Type type     -> {
                 next = matchType(next, type);
                 break;
             }
-            case Variable var -> {
+            case Variable var  -> {
                 next = matchType(next, var.type());
                 break;
             }
-            case Node node    -> {
+            case Node node     -> {
                 next = node.state(next);
                 break;
             }
-            default           -> {
+            case String string -> {
+                next = new MatchState<>(string, next);
+                break;
+            }
+            default            -> {
                 next = new MatchState<>(arg.getClass(), next);
             }
             }
