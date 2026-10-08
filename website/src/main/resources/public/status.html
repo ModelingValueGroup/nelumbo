@@ -35,6 +35,10 @@
   .chart { min-width: 0; margin: 0 0 16px; }
   .chart h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 4px; }
   .uplot, .u-legend { color: var(--text); font-family: "Instrument Sans", system-ui, sans-serif; }
+  /* uPlot's legend markers are hollow squares that read as checkboxes; draw a line in the series' stroke
+     instead (uPlot sets the border inline, so only its bottom edge is kept). A click still hides a series,
+     shown by greying the whole entry. */
+  .u-legend .u-marker { width: 18px; height: 0; border-top-width: 0 !important; border-left-width: 0 !important; border-right-width: 0 !important; margin-right: 6px; }
   details { margin-top: 8px; }
   summary { color: var(--muted); cursor: pointer; }
   .table-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }

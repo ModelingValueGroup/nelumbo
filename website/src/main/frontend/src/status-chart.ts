@@ -173,6 +173,9 @@ function series(): (Point | null)[] {
     return points;
 }
 
+// legend swatches follow the series line style, so the dashed CPU max is dashed there too
+const LEGEND: uPlot.Legend = { markers: { dash: (u: uPlot, i: number): string => u.series[i].dash ? 'dashed' : 'solid' } };
+
 function axes(unit: (v: number) => string): uPlot.Axis[] {
     const ink:  string = css('--muted');
     const grid: string = css('--grid');
@@ -230,6 +233,7 @@ function build(cpuData: uPlot.AlignedData, actData: uPlot.AlignedData): void {
         width:  width('chart-cpu'),
         height: CHART_HEIGHT,
         scales: { x: { time: true, range: xRange }, y: { range: [0, 100] } },
+        legend: LEGEND,
         axes:   axes((v: number): string => v + '%'),
         series: [
             { value: (_u: uPlot, v: number | null): string => v === null ? '--' : dateTime(v * 1000) },
@@ -241,6 +245,7 @@ function build(cpuData: uPlot.AlignedData, actData: uPlot.AlignedData): void {
         width:  width('chart-activity'),
         height: CHART_HEIGHT,
         scales: { x: { time: true, range: xRange }, y: { range: (_u: uPlot, _min: number, max: number): [number, number] => [0, Math.max(4, max)] } },
+        legend: LEGEND,
         axes:   axes((v: number): string => String(v)),
         series: [
             { value: (_u: uPlot, v: number | null): string => v === null ? '--' : dateTime(v * 1000) },
