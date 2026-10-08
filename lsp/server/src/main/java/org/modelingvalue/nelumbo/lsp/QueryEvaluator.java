@@ -62,14 +62,29 @@ public final class QueryEvaluator {
      * from the map.
      */
     public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri) {
+        return evaluate(base, deadlineMs, content, uri, false);
+    }
+
+    /**
+     * Same, where {@code overloadBudget} means {@code deadlineMs} is the short budget of a busy server: the first
+     * unreached query gets an OVERLOADED result instead of an ERROR, and a timeout before any query was reached
+     * (while parsing) is rethrown instead of returning empty results, so the caller can still report the overload.
+     * The budget counts from when the evaluation gets an inference pool worker, not from when it is queued: a busy
+     * server is one whose pool is full, and the wait for a worker is not the evaluation's own cost.
+     */
+    public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri, boolean overloadBudget) {
         Map<Query, QueryResult> results = new LinkedHashMap<>();
         KnowledgeBase evalKb = new KnowledgeBase(base);
-        if (deadlineMs > 0) {
+        if (deadlineMs > 0 && !overloadBudget) {
             evalKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
         }
         try {
             evalKb.invoke(() -> {
                 KnowledgeBase knowledgeBase = KnowledgeBase.current();
+                // invoke runs this in a child of evalKb (it copied evalKb's deadline when queued); inference checks this one
+                if (deadlineMs > 0 && overloadBudget) {
+                    knowledgeBase.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
+                }
                 ParserResult parsed = new Parser(new Tokenizer(content, uri).tokenize()).parseNonThrowing();
                 ParserResult throwing = new ParserResult(null, true);
                 for (Node root : parsed.roots()) {
@@ -90,7 +105,7 @@ public final class QueryEvaluator {
                         }
                     } catch (NelumboTimeoutException tex) {
                         if (eval instanceof Query query) {
-                            results.put(query, QueryResult.error("evaluation exceeded the deadline"));
+                            results.put(query, overloadBudget ? QueryResult.overloaded(deadlineMs) : QueryResult.error("evaluation exceeded the deadline"));
                         }
                         break;
                     } catch (ParseException exc) {
@@ -105,7 +120,10 @@ public final class QueryEvaluator {
                     }
                 }
             });
-        } catch (NelumboTimeoutException ignored) {
+        } catch (NelumboTimeoutException tex) {
+            if (overloadBudget && results.isEmpty()) {
+                throw tex;
+            }
             // partial results already in the map; return them as-is
         }
         return results;

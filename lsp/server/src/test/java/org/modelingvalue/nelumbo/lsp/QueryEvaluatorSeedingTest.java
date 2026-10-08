@@ -39,7 +39,7 @@ public class QueryEvaluatorSeedingTest {
             fib(n)=f <=> f=n if n<=1, f=fib(n-1)+fib(n-2) if n>1
             """;
 
-    private static KnowledgeBase seeded(String source) {
+    static KnowledgeBase seeded(String source) {
         return KnowledgeBase.BASE.invoke(() -> {
             ParserResult result = new Parser(new Tokenizer(source, "seed.nl").tokenize()).parseNonThrowing();
             try {
@@ -79,5 +79,32 @@ public class QueryEvaluatorSeedingTest {
                 .anyMatch(r -> r.kind() == QueryResult.Kind.ERROR && r.inferred().toLowerCase().contains("deadline"));
         assertTrue(timedOut || results.isEmpty(),
                 "expected a deadline marker or no results, got: " + kb.get(() -> results.toString()));
+    }
+
+    static final String FACTORIAL_SEED = """
+            import nelumbo.integers
+            Integer ::= factorial(<Integer>)
+            Integer n, r
+            factorial(n)=r <=> r=1 if n<=0, r=n*factorial(n-1) if n>0
+            """;
+
+    static final String HEAVY_QUERY = "Integer x\nfactorial(5000)=x ?\n";
+
+    @Test
+    public void timeoutUnderTheOverloadBudgetIsAnOverload() {
+        KnowledgeBase           kb      = seeded(FACTORIAL_SEED);
+        Map<Query, QueryResult> results = QueryEvaluator.evaluate(kb, 300, HEAVY_QUERY, "inmemory://heavy.nl", true);
+        assertEquals(1, results.size(), "the heavy query gets a result: " + kb.get(() -> results.toString()));
+        QueryResult result = results.values().iterator().next();
+        assertEquals(QueryResult.Kind.OVERLOADED, result.kind());
+        assertTrue(result.message().contains("300 ms"), result.message());
+    }
+
+    @Test
+    public void timeoutUnderTheNormalDeadlineStaysAnError() {
+        KnowledgeBase           kb      = seeded(FACTORIAL_SEED);
+        Map<Query, QueryResult> results = QueryEvaluator.evaluate(kb, 300, HEAVY_QUERY, "inmemory://heavy.nl", false);
+        assertEquals(1, results.size(), "the heavy query gets a result: " + kb.get(() -> results.toString()));
+        assertEquals(QueryResult.Kind.ERROR, results.values().iterator().next().kind());
     }
 }

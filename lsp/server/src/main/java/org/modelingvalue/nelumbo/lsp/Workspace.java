@@ -51,6 +51,7 @@ public class Workspace {
     private volatile LanguageClient    client;
     private          KnowledgeBase     baseKnowledgeBase = KnowledgeBase.BASE;
     private          long              evalDeadlineMs;
+    private          EvalGate          evalGate          = EvalGate.GLOBAL;
     // embedded (public /lsp) mode never resolves client-supplied workspace folders (no filesystem walk)
     private          boolean           embedded;
 
@@ -96,6 +97,14 @@ public class Workspace {
 
     public void setEvalDeadlineMs(long evalDeadlineMs) {
         this.evalDeadlineMs = evalDeadlineMs;
+    }
+
+    public EvalGate getEvalGate() {
+        return evalGate;
+    }
+
+    public void setEvalGate(EvalGate evalGate) {
+        this.evalGate = evalGate;
     }
 
     public boolean isEmbedded() {

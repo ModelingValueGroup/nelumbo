@@ -4,12 +4,14 @@
 // tokens while typing, all inlay hints re-pulled on every workspace/inlayHint/refresh).
 // Clients stay connected, so every step adds load on top of the previous one. Per step it
 // reports page-load time, LSP round-trip time, and edit-to-result time (last keystroke until
-// the edited document's inlay hints have changed). Stops after the first step outside the limits.
+// the edited document's inlay hints have changed). Stops after the first step outside the limits:
+// --limit-ms for page and LSP p95, twice the 1-client value for the edit-to-result p95.
 //
 //   node load/loadtest.mts [--url URL] [--max-clients N] [--step-seconds S] [--limit-ms MS]
-//                          [--ssh USER@HOST] [--container NAME]
+//                          [--ssh USER@HOST] [--container NAME] [--factorial N]
 //
 // --ssh samples `docker stats` and the load average on the server during the run.
+// --factorial makes every edit compute factorial(N) instead of a tour query (CPU-heavy).
 
 import { spawn } from 'node:child_process';
 
@@ -28,6 +30,7 @@ interface Options {
     limitMs:     number;
     ssh:         string | null;
     container:   string;
+    factorial:   number | null;
 }
 
 interface Doc {
@@ -80,7 +83,7 @@ function percentile(values: number[], p: number): number {
 }
 
 function parseArgs(args: string[]): Options {
-    const options: Options = { url: 'http://localhost:8899', maxClients: 64, stepSeconds: 60, limitMs: 1000, ssh: null, container: 'nelumbo' };
+    const options: Options = { url: 'http://localhost:8899', maxClients: 64, stepSeconds: 60, limitMs: 1000, ssh: null, container: 'nelumbo', factorial: null };
     for (let i: number = 0; i < args.length; i++) {
         const value: string = args[++i];
         switch (args[i - 1]) {
@@ -101,6 +104,9 @@ function parseArgs(args: string[]): Options {
                 break;
             case '--container':
                 options.container = value;
+                break;
+            case '--factorial':
+                options.factorial = Number(value);
                 break;
             default:
                 console.error('unknown argument: ' + args[i - 1]);
@@ -458,7 +464,7 @@ function max(values: number[]): number {
 }
 
 // Prints the step's row; returns whether the step stayed within the limits.
-function report(clients: number, s: Stats, options: Options): boolean {
+function report(clients: number, s: Stats, options: Options, resultLimit: number): boolean {
     const problems: string[] = [];
     const page:     number   = percentile(s.page, 0.95);
     const lspP95:   number   = percentile(s.lsp, 0.95);
@@ -475,8 +481,8 @@ function report(clients: number, s: Stats, options: Options): boolean {
     if (lspP95 > options.limitMs) {
         problems.push('lsp p95 > ' + options.limitMs);
     }
-    if (result > options.limitMs) {
-        problems.push('result p95 > ' + options.limitMs);
+    if (result > resultLimit) {
+        problems.push('result p95 > ' + ms(resultLimit));
     }
     if (s.result.length === 0) {
         problems.push('no edit results');
@@ -494,13 +500,28 @@ function report(clients: number, s: Stats, options: Options): boolean {
     return problems.length === 0;
 }
 
+// With --factorial the tour documents stay open but are no longer edited: every edit goes to an
+// extra document whose query computes factorial(N), so each edit costs real inference CPU.
+function factorialDoc(n: number): Doc {
+    const text: string = 'import nelumbo.integers\n'
+                       + 'Integer ::= factorial(<Integer>)\n'
+                       + 'Integer n, r\n'
+                       + 'factorial(n)=r <=> r=1 if n<=0, r=n*factorial(n-1) if n>0\n'
+                       + 'factorial(' + n + ')=r ?\n';
+    return { uri: 'inmemory://factorial.nl', text: text, version: 1, query: 4, hints: '[]' };
+}
+
 async function main(): Promise<void> {
-    const options: Options  = parseArgs(process.argv.slice(2));
-    const docs:    Doc[]    = await loadDocs(options.url);
-    const monitor: ReturnType<typeof spawn> | null = options.ssh === null ? null : startMonitor(options);
-    const clients: Client[] = [];
-    let   best:    number   = 0;
-    console.log('target ' + options.url + ': ' + docs.length + ' tour documents, ' + options.stepSeconds + 's per step, limit ' + options.limitMs + ' ms (times in ms)');
+    const options:  Options  = parseArgs(process.argv.slice(2));
+    const tour:     Doc[]    = await loadDocs(options.url);
+    const docs:     Doc[]    = options.factorial === null ? tour : [...tour.map((d: Doc) => ({ ...d, query: null })), factorialDoc(options.factorial)];
+    const monitor:  ReturnType<typeof spawn> | null = options.ssh === null ? null : startMonitor(options);
+    const clients:  Client[] = [];
+    let   best:     number   = 0;
+    let   baseline: number   = NaN;
+    console.log('target ' + options.url + ': ' + tour.length + ' tour documents, '
+                + (options.factorial === null ? 'editing tour queries' : 'editing factorial(' + options.factorial + ')') + ', '
+                + options.stepSeconds + 's per step, limit ' + options.limitMs + ' ms, result limit 2x the 1-client result p95 (times in ms)');
     console.log(row(COLUMNS));
     for (const n of steps(options.maxClients)) {
         stats = new Stats();
@@ -511,8 +532,12 @@ async function main(): Promise<void> {
             await sleep(JOIN_MS);
         }
         await sleep(options.stepSeconds * 1000);
-        if (!report(n, stats, options)) {
+        // step 1: baseline is NaN, Math.max(limit, NaN) is NaN and x > NaN is false, so it never fails on the result limit
+        if (!report(n, stats, options, Math.max(options.limitMs, 2 * baseline))) {
             break;
+        }
+        if (isNaN(baseline)) {
+            baseline = percentile(stats.result, 0.95);
         }
         best = n;
     }

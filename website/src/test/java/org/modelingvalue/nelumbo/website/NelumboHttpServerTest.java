@@ -280,4 +280,40 @@ class NelumboHttpServerTest {
         HttpResponse<String> css = get("/assets/nelumbo-fields.css");
         assertEquals(200, css.statusCode(), "the frontend stylesheet must actually be served");
     }
+
+    @Test
+    void statsHaveTheDocumentedShape() throws Exception {
+        HttpResponse<String> response = get("/stats");
+        assertEquals(200, response.statusCode());
+        JsonNode stats = mapper.readTree(response.body());
+        assertTrue(List.of("ok", "busy", "overloaded").contains(stats.get("status").asText()), "status is ok, busy or overloaded");
+        assertEquals(0, stats.get("sessions").get("open").asInt(), "no LSP session is open in this test");
+        assertEquals(NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS, stats.get("sessions").get("max").asInt());
+        for (String field : List.of("running", "threshold", "total", "overloaded")) {
+            assertTrue(stats.get("evaluations").has(field), "evaluations." + field);
+        }
+        assertTrue(stats.get("cpu").has("load"), "cpu.load");
+        assertTrue(0 < stats.get("cpu").get("cpus").asInt(), "cpu.cpus");
+        assertTrue(0 < stats.get("heap").get("maxMb").asLong(), "heap.maxMb");
+        assertTrue(stats.has("uptimeSeconds"), "uptimeSeconds");
+    }
+
+    @Test
+    void statusPageAndDotScriptAreServed() throws Exception {
+        HttpResponse<String> page = get("/status.html");
+        assertEquals(200, page.statusCode());
+        assertTrue(page.body().contains("fetch('/stats')"), "the status page polls /stats");
+        HttpResponse<String> dot = get("/status-dot.js");
+        assertEquals(200, dot.statusCode());
+        assertTrue(dot.headers().firstValue("Content-Type").orElse("").contains("javascript"), "the dot script is served as JavaScript");
+    }
+
+    @Test
+    void everyPageWithAVersionShowsTheStatusDot() throws Exception {
+        for (String page : List.of("/", "/tour.html", "/sandbox.html", "/docs/")) {
+            String body = get(page).body();
+            assertTrue(body.contains("class=\"status-dot\" href=\"/status.html\""), page + " links the status page from its status dot");
+            assertTrue(body.contains("src=\"/status-dot.js\""), page + " loads the status dot script");
+        }
+    }
 }

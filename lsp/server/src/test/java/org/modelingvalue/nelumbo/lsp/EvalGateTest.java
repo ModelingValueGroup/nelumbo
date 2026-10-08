@@ -13,54 +13,55 @@
 // Contributors:                                                                                                       ~
 //     Victor Lap                                                                                                      ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 package org.modelingvalue.nelumbo.lsp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.collections.Collection;
 
-public class QueryResultTest {
+public class EvalGateTest {
 
     @Test
-    public void shortLabelIsNotCapped() {
-        QueryResult r = QueryResult.result("[()][]");
-        assertEquals("[()][]", r.inlineLabel());
-        assertEquals("[()][]", r.tooltip());
+    public void busyOnceThresholdEvaluationsRun() {
+        EvalGate gate = new EvalGate(2, 2000);
+        assertFalse(gate.enter(), "first of two runs freely");
+        assertFalse(gate.enter(), "second of two runs freely");
+        assertTrue(gate.enter(), "a third one starts while two run: busy");
+        assertEquals(3, gate.running());
+        gate.exit();
+        gate.exit();
+        gate.exit();
+        assertEquals(0, gate.running());
+        assertEquals(3, gate.total());
     }
 
     @Test
-    public void longLabelIsCappedButTooltipIsFull() {
-        String      full = "[(f=0),(f=1),(f=2),(f=3),(f=4),(f=5),(f=6),(f=7),(f=8),(f=9)][..]";
-        QueryResult r    = QueryResult.result(full);
-        assertEquals(60, r.inlineLabel().length(), "inline label is capped at 60 chars");
-        assertTrue(r.inlineLabel().endsWith("..."), "capped label ends in an ellipsis");
-        assertTrue(full.startsWith(r.inlineLabel().substring(0, 57)), "capped label is a prefix of the full result");
-        assertEquals(full, r.tooltip(), "tooltip always carries the full result");
+    public void thresholdZeroIsAlwaysBusy() {
+        assertTrue(new EvalGate(0, 2000).enter());
     }
 
     @Test
-    public void matchShowsCheckmarkWithResultTooltip() {
-        QueryResult r = QueryResult.match("[()][]");
-        assertEquals("✅", r.inlineLabel());
-        assertEquals("[()][]", r.tooltip(), "the tooltip reveals the result behind the checkmark");
+    public void overloadsAreCounted() {
+        EvalGate gate = new EvalGate(4, 2000);
+        gate.recordOverload();
+        gate.recordOverload();
+        assertEquals(2, gate.overloaded());
+        assertEquals(2000, gate.budgetMs());
+        assertEquals(4, gate.threshold());
     }
 
     @Test
-    public void errorTooltipCarriesFullMessage() {
-        QueryResult r = QueryResult.error("evaluation exceeded the deadline");
-        assertEquals("⚠ evaluation exceeded the deadline", r.inlineLabel());
-        assertEquals("⚠ evaluation exceeded the deadline", r.tooltip());
+    public void budgetIsAtLeastOneMillisecond() {
+        assertEquals(1, new EvalGate(4, 0).budgetMs(), "0 must not mean unlimited");
+        assertEquals(1, new EvalGate(4, -5).budgetMs());
+        assertTrue(new EvalGate(0, 0).enter(), "threshold 0 stays valid: always busy");
     }
 
     @Test
-    public void overloadedNamesTheBudgetAndCarriesTheCode() {
-        QueryResult r = QueryResult.overloaded(2000);
-        assertEquals(QueryResult.Kind.OVERLOADED, r.kind());
-        assertEquals("⚠ server busy", r.inlineLabel());
-        assertEquals("⚠ Server busy: evaluation stopped after 2000 ms to protect other users - try again in a moment", r.tooltip());
-        assertEquals("Server busy: evaluation stopped after 2000 ms to protect other users - try again in a moment", r.message());
-        assertEquals("server-overloaded", QueryResult.OVERLOAD_CODE);
+    public void globalThresholdDefaultsToThePoolWidth() {
+        assertEquals(Integer.getInteger("NELUMBO_OVERLOAD_THRESHOLD", Collection.PARALLELISM), EvalGate.GLOBAL.threshold());
     }
 }

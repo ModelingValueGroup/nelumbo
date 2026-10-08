@@ -46,8 +46,13 @@ tour documents, and keeps editing queries like the Monaco client does. Per step 
 - `cpu max` / `mem max` / `load max` (only with `--ssh`): `docker stats` of the container
   (100% = one core) and the host's 1-minute load average
 
-A step fails on any rejection or error, or a p95 above `--limit-ms` (default 1000); the
-run stops there and exits 1. Default target is `http://localhost:8899` (the e2e port).
+A step fails on any rejection or error, a page or LSP p95 above `--limit-ms` (default 1000),
+or a result p95 above twice the 1-client one (but at least `--limit-ms`); the run stops
+there and exits 1. Default target is `http://localhost:8899` (the e2e port).
+
+`--factorial N` makes the load CPU-heavy: every edit then goes to an extra document whose
+query computes `factorial(N)` (the tour documents stay open but are not edited). Locally
+`factorial(3000)` takes ~1 s and ~2.4 cores (the inference runs on a parallel pool).
 
 ## Dependency stack (accepted technical debt)
 

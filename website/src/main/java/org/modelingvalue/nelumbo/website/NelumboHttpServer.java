@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.lsp.EvalGate;
 import org.modelingvalue.nelumbo.server.EvalService;
 import org.modelingvalue.nelumbo.server.NelumboServer;
 
@@ -78,11 +79,15 @@ public final class NelumboHttpServer {
         String sandbox    = loadResource("/public/sandbox.html");
         String favicon    = loadResource("/public/favicon.svg");
         String theme      = loadResource("/public/theme.js");
+        String status     = loadResource("/public/status.html");
+        String statusDot  = loadResource("/public/status-dot.js");
         String llms       = loadResource("/public/llms.txt");
         String docsLogo   = loadResource(DocsSite.RESOURCE_ROOT + "nelumbo.svg");
         DocsSite docs     = DocsSite.load();
         // the sandbox's example list; the sudokus run far past the eval deadline, so they are left out
         List<String> examples = NelumboServer.exampleNames().stream().filter(n -> !n.startsWith("sudoku")).toList();
+        LspWebSocket lsp  = new LspWebSocket(baseKb, timeoutMs, maxLspSessions);
+        ServerStats stats = new ServerStats();
         app = Javalin.create(config -> {
             // serve the bundled frontend (Monaco js/css + codicon font) from the classpath under /assets
             config.staticFiles.add(staticFiles -> {
@@ -98,6 +103,8 @@ public final class NelumboHttpServer {
             config.routes.get("/", ctx -> ctx.html(landing));
             config.routes.get("/favicon.svg", ctx -> ctx.contentType("image/svg+xml").result(favicon));
             config.routes.get("/theme.js", ctx -> ctx.contentType("text/javascript; charset=utf-8").result(theme));
+            config.routes.get("/status.html", ctx -> ctx.html(status));
+            config.routes.get("/status-dot.js", ctx -> ctx.contentType("text/javascript; charset=utf-8").result(statusDot));
             config.routes.get("/llms.txt", ctx -> ctx.contentType("text/plain; charset=utf-8").result(llms));
             config.routes.get("/tour.html", ctx -> ctx.html(tour));
             config.routes.get("/sandbox.html", ctx -> ctx.html(sandbox));
@@ -120,7 +127,8 @@ public final class NelumboHttpServer {
             config.routes.post("/eval", ctx -> handleEval(ctx, false));
             config.routes.post("/eval/trace", ctx -> handleEval(ctx, true));
             config.routes.get("/metadata", ctx -> ctx.json(service.metadata()));
-            config.routes.ws("/lsp", new LspWebSocket(baseKb, timeoutMs, maxLspSessions)::configure);
+            config.routes.get("/stats", ctx -> ctx.json(stats.snapshot(lsp.sessionCount(), maxLspSessions, EvalGate.GLOBAL)));
+            config.routes.ws("/lsp", lsp::configure);
         });
         app.start(port);
         return app.port();

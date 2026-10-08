@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.Range;
  *       (shown inline), {@code message} describes the difference, {@code expectedRange} is the source span of
  *       the expected clause to underline.</li>
  *   <li>{@code ERROR}    — evaluation failed; {@code inferred} holds the error message.</li>
+ *   <li>{@code OVERLOADED} - stopped by the short budget of a busy server ({@code EvalGate}); {@code inferred} holds the message.</li>
  * </ul>
  */
 public record QueryResult(Kind kind, String inferred, String message, Range expectedRange) {
@@ -36,6 +37,7 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
         MATCH,
         MISMATCH,
         ERROR,
+        OVERLOADED,
     }
 
     public static QueryResult result(String inferred) {
@@ -54,6 +56,14 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
         return new QueryResult(Kind.ERROR, message, message, null);
     }
 
+    /** Diagnostic code of an evaluation stopped because the server was busy; the contract for clients. */
+    public static final String OVERLOAD_CODE = "server-overloaded";
+
+    public static QueryResult overloaded(long budgetMs) {
+        String message = "Server busy: evaluation stopped after " + budgetMs + " ms to protect other users - try again in a moment";
+        return new QueryResult(Kind.OVERLOADED, message, message, null);
+    }
+
     private static final int MAX_LABEL_LENGTH = 60;
 
     /** Short label used for the end-of-line inlay hint; capped so long results don't blow out the line. */
@@ -63,6 +73,7 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
             case MATCH -> "✅";
             case MISMATCH -> cap("❌ " + inferred);
             case ERROR -> cap("⚠ " + inferred);
+            case OVERLOADED -> "⚠ server busy";
         };
     }
 
@@ -70,7 +81,7 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
     public String tooltip() {
         return switch (kind) {
             case RESULT, MISMATCH, MATCH -> inferred;
-            case ERROR -> "⚠ " + inferred;
+            case ERROR, OVERLOADED -> "⚠ " + inferred;
         };
     }
 
