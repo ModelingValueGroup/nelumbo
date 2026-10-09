@@ -41,6 +41,11 @@
     margin:        12px 0;
 }
 
+/* followVisualViewport() in nelumbo-fields.ts: WebKit places the fixed overflow widgets off by the visual viewport offset */
+.monaco-editor .overflowingContentWidgets > * {
+    translate: var(--nf-viewport-x, 0) var(--nf-viewport-y, 0);
+}
+
 .nelumbo-field-toolbar {
     display:     flex;
     align-items: center;

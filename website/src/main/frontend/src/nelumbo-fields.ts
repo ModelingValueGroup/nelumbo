@@ -172,7 +172,32 @@ function ensureServices(): void {
         monaco.editor.remeasureFonts();
     });
     watchOverload();
+    followVisualViewport();
     servicesReady = true;
+}
+
+// WebKit (Safari, and every browser on iOS) reports client rects relative to the visual viewport,
+// but position:fixed resolves against the layout viewport. Monaco places the fixedOverflowWidgets
+// (suggest, hover) from client rects, so once the visual viewport is panned - iOS zooms in on focus
+// and pans for the keyboard - they land off by its offset (floating-ui applies the same correction).
+// fields.css shifts them back by the offset; re-place them whenever it changes.
+function followVisualViewport(): void {
+    const viewport: VisualViewport | null = window.visualViewport;
+    if (viewport === null || !CSS.supports('-webkit-backdrop-filter', 'none')) {
+        return;
+    }
+    const update: () => void = (): void => {
+        document.documentElement.style.setProperty('--nf-viewport-x', viewport.offsetLeft + 'px');
+        document.documentElement.style.setProperty('--nf-viewport-y', viewport.offsetTop + 'px');
+        for (const editor of monaco.editor.getEditors()) {
+            if (editor.hasTextFocus()) {
+                editor.render(true);
+            }
+        }
+    };
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    update();
 }
 
 function showBanner(): void {
