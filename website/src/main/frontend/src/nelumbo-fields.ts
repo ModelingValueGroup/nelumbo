@@ -50,7 +50,18 @@ function connectLanguageClient(): Promise<MonacoLanguageClient | null> {
             if (settled) {
                 return;
             }
-            settled = true;
+            settled       = true;
+            connected     = true;
+            currentSocket = ws;
+            // toSocket takes over ws.onclose, so listen next to it
+            ws.addEventListener('close', (event: CloseEvent): void => {
+                connected = false;
+                // closed by the server on purpose (session cap, error): a failed attempt, so that not every
+                // mouse move reconnects
+                if (!LOST_CODES.includes(event.code)) {
+                    connectionFailed();
+                }
+            });
             const socket: IWebSocket = toSocket(ws);
             const reader: WebSocketMessageReader = new WebSocketMessageReader(socket);
             const writer: WebSocketMessageWriter = new WebSocketMessageWriter(socket);
@@ -95,14 +106,42 @@ function connectLanguageClient(): Promise<MonacoLanguageClient | null> {
 export const __editors: Array<{ editor: monaco.editor.IStandaloneCodeEditor; model: monaco.editor.ITextModel }> = [];
 export const __monaco: typeof monaco = monaco;
 
+// Close test hook: drops the LSP connection the way an idle timeout or a sleeping phone does.
+export function __closeConnection(): void {
+    currentSocket?.close(1000);
+}
+
 let servicesReady: boolean                                     = false;
 let clientPromise: Promise<MonacoLanguageClient | null> | null = null;
 let fieldIndex:    number                                      = 0;
 
+// normal close, going away (server idle timeout, shutdown), abnormal (network, sleeping phone)
+const LOST_CODES:    number[]              = [1000, 1001, 1006];
+const RETRY_MS:      number                = 30_000;
+let   connected:     boolean               = false;
+let   connecting:    boolean               = false;
+let   lastFailure:   number                = 0;
+let   currentSocket: WebSocket | null      = null;
+let   lspBanner:     HTMLDivElement | null = null;
+
 const OVERLOAD_CODE:  string                = 'server-overloaded';
 let   overloadBanner: HTMLDivElement | null = null;
-// the model behind each mounted .nelumbo-field (the wrap div), for setFieldText
-const fieldModels: WeakMap<HTMLElement, monaco.editor.ITextModel> = new WeakMap();
+
+const STORAGE_PREFIX: string = 'nelumbo-field:';
+
+// A mounted .nelumbo-field. Edits are kept in localStorage under `key` as {original, text}, and only
+// restored while the field's original text is still `original` (an exercise changed by a deploy
+// starts fresh). In the sandbox each example has its own key and original (setFieldText).
+interface Field {
+    model:    monaco.editor.ITextModel;
+    baseKey:  string;
+    key:      string;
+    original: string;
+    reset:    HTMLButtonElement;
+}
+
+// the Field behind each mounted .nelumbo-field (the wrap div)
+const fields: WeakMap<HTMLElement, Field> = new WeakMap();
 
 // Syntax colors per LSP semantic token type (LspTokenMapping on the server), mirroring the standalone
 // NelumboEditor's DEFAULT_TOKEN_COLORS: light = its colors verbatim, dark = the same hues lightened.
@@ -200,11 +239,53 @@ function followVisualViewport(): void {
     update();
 }
 
-function showBanner(): void {
-    const banner: HTMLDivElement = document.createElement('div');
-    banner.className   = 'nelumbo-lsp-banner visible';
-    banner.textContent = 'Language features and evaluation are unavailable (LSP connection failed).';
-    document.body.prepend(banner);
+function showLspBanner(visible: boolean): void {
+    if (visible && lspBanner === null) {
+        lspBanner             = document.createElement('div');
+        lspBanner.className   = 'nelumbo-lsp-banner';
+        lspBanner.textContent = 'Language features and evaluation are unavailable (LSP connection failed).';
+        document.body.prepend(lspBanner);
+    }
+    if (lspBanner !== null) {
+        lspBanner.classList.toggle('visible', visible);
+    }
+}
+
+function connectionFailed(): void {
+    lastFailure = Date.now();
+    showLspBanner(true);
+}
+
+// Every connection gets a new client: a stopped client cannot be restarted reliably (vscode-languageclient
+// 8 keeps a failed start for good), and a new one opens all models again.
+function openConnection(): Promise<MonacoLanguageClient | null> {
+    connecting = true;
+    return connectLanguageClient().then((client: MonacoLanguageClient | null): MonacoLanguageClient | null => {
+        connecting = false;
+        if (client === null) {
+            connectionFailed();
+        } else {
+            showLspBanner(false);
+        }
+        return client;
+    });
+}
+
+// The server closes a session after 10 idle minutes and a sleeping phone loses it, which leaves the
+// editors without colors and results. Reconnect at the next sign of the user, not right away (an idle
+// open tab would hold a session for good), and after a failed attempt at most once per RETRY_MS.
+function reconnect(): void {
+    if (connected || connecting || document.visibilityState !== 'visible' || Date.now() - lastFailure < RETRY_MS) {
+        return;
+    }
+    void openConnection();
+}
+
+function watchActivity(): void {
+    for (const type of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'focus']) {
+        window.addEventListener(type, reconnect, { capture: true, passive: true });
+    }
+    document.addEventListener('visibilitychange', reconnect);
 }
 
 // The server marks evaluations it stopped to protect other users with this diagnostic code; show a
@@ -225,14 +306,12 @@ function watchOverload(): void {
     });
 }
 
-function addSolutionToggle(field: HTMLElement, index: number): void {
+function addSolutionToggle(field: HTMLElement, toolbar: HTMLDivElement, index: number): void {
     const next: Element | null = field.nextElementSibling;
     if (next === null || !next.classList.contains('nelumbo-solution')) {
         return;
     }
     const solution: HTMLElement       = next as HTMLElement;
-    const toolbar:  HTMLDivElement    = document.createElement('div');
-    toolbar.className                 = 'nelumbo-field-toolbar';
     const button:   HTMLButtonElement = document.createElement('button');
     button.type                       = 'button';
     button.textContent                = 'Show solution';
@@ -240,11 +319,43 @@ function addSolutionToggle(field: HTMLElement, index: number): void {
         const visible: boolean = solution.classList.toggle('visible');
         button.textContent = visible ? 'Hide solution' : 'Show solution';
     });
-    toolbar.appendChild(button);
-    field.appendChild(toolbar);
+    toolbar.prepend(button);
     // pull the solution inside the field so it shares the editor's border, right below the toggle
     field.appendChild(solution);
     buildSolutionViewer(solution, index);
+}
+
+function savedText(key: string, original: string): string {
+    try {
+        const saved: { original?: unknown; text?: unknown } | null = JSON.parse(localStorage.getItem(key) ?? 'null');
+        if (saved !== null && saved.original === original && typeof saved.text === 'string') {
+            return saved.text;
+        }
+    } catch {
+        // no storage (private mode, blocked) or a broken entry: the original
+    }
+    return original;
+}
+
+function saveText(field: Field): void {
+    const text: string = field.model.getValue();
+    try {
+        if (text === field.original) {
+            localStorage.removeItem(field.key);
+        } else {
+            localStorage.setItem(field.key, JSON.stringify({ original: field.original, text: text }));
+        }
+    } catch {
+        // no storage (private mode, blocked, full): the edit is just not kept
+    }
+    field.reset.hidden = text === field.original;
+}
+
+// one undoable edit of its own (not merged with the typing before it), so Ctrl/Cmd+Z brings back what was there
+function replaceText(model: monaco.editor.ITextModel, text: string): void {
+    model.pushStackElement();
+    model.pushEditOperations([], [{ range: model.getFullModelRange(), text: text }], (): null => null);
+    model.pushStackElement();
 }
 
 // Nelumbo has no client-side tokenizer (coloring comes from LSP semantic tokens), so a plain
@@ -284,10 +395,12 @@ function buildSolutionViewer(solution: HTMLElement, index: number): void {
 }
 
 function buildField(div: HTMLElement, index: number): void {
-    let initial: string = div.textContent || '';
-    if (initial.startsWith('\n')) {
-        initial = initial.slice(1);
+    let original: string = div.textContent || '';
+    if (original.startsWith('\n')) {
+        original = original.slice(1);
     }
+    // the position on the page, not the mount index: the tour mounts its sections in any order
+    const baseKey: string = STORAGE_PREFIX + location.pathname + ':' + Array.from(document.querySelectorAll('.nelumbo-field')).indexOf(div);
     div.textContent = '';
     div.classList.add('nelumbo-field-wrap');
 
@@ -298,10 +411,27 @@ function buildField(div: HTMLElement, index: number): void {
     }
     div.appendChild(host);
 
-    addSolutionToggle(div, index);
+    const toolbar: HTMLDivElement    = document.createElement('div');
+    toolbar.className                = 'nelumbo-field-toolbar';
+    const reset:   HTMLButtonElement = document.createElement('button');
+    reset.type                       = 'button';
+    reset.className                  = 'nelumbo-reset';
+    reset.textContent                = 'Reset';
+    toolbar.appendChild(reset);
+    div.appendChild(toolbar);
+
+    addSolutionToggle(div, toolbar, index);
 
     const uri:   monaco.Uri               = monaco.Uri.parse('inmemory://field-' + index + '.nl');
-    const model: monaco.editor.ITextModel = monaco.editor.createModel(initial, LANGUAGE_ID, uri);
+    const model: monaco.editor.ITextModel = monaco.editor.createModel(savedText(baseKey, original), LANGUAGE_ID, uri);
+    const field: Field                    = { model: model, baseKey: baseKey, key: baseKey, original: original, reset: reset };
+    reset.addEventListener('click', (): void => {
+        replaceText(model, field.original);
+    });
+    model.onDidChangeContent((): void => {
+        saveText(field);
+    });
+    reset.hidden = model.getValue() === original;
 
     const editor: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(host, {
         model:                model,
@@ -319,20 +449,17 @@ function buildField(div: HTMLElement, index: number): void {
         multiCursorModifier:  'alt',
     });
     __editors.push({ editor: editor, model: model });
-    fieldModels.set(div, model);
+    fields.set(div, field);
 }
 
 // Establish the single page-shared /lsp language client. Idempotent: repeated calls return the
-// same promise. On failure resolves null and shows the banner (editing still works).
+// same promise. On failure resolves null and shows the banner (editing still works); a failed or lost
+// connection is retried at the next user activity (reconnect).
 export function connect(): Promise<MonacoLanguageClient | null> {
     ensureServices();
     if (clientPromise === null) {
-        clientPromise = connectLanguageClient().then((client: MonacoLanguageClient | null): MonacoLanguageClient | null => {
-            if (client === null) {
-                showBanner();
-            }
-            return client;
-        });
+        clientPromise = openConnection();
+        watchActivity();
     }
     return clientPromise;
 }
@@ -352,15 +479,19 @@ export function mountFields(container: ParentNode): void {
     }
 }
 
-// Replace the text of a mounted .nelumbo-field (e.g. when the sandbox loads an example). One undoable
-// edit, so Ctrl/Cmd+Z brings back what was there; false when the field is not mounted (yet).
-export function setFieldText(field: HTMLElement, text: string): boolean {
-    const model: monaco.editor.ITextModel | undefined = fieldModels.get(field);
-    if (model === undefined) {
+// Load document `name` with original text `text` into a mounted .nelumbo-field (the sandbox loading an
+// example): the saved edits of that document when there are any, else `text`. One undoable edit, so
+// Ctrl/Cmd+Z brings back what was there; false when the field is not mounted (yet).
+export function setFieldText(div: HTMLElement, text: string, name: string): boolean {
+    const field: Field | undefined = fields.get(div);
+    if (field === undefined) {
         return false;
     }
-    model.pushEditOperations([], [{ range: model.getFullModelRange(), text: text }], (): null => null);
-    model.pushStackElement();
+    field.key      = field.baseKey + '#' + name;
+    field.original = text;
+    replaceText(field.model, savedText(field.key, text));
+    // the edit does not fire a change when the text stays the same, but the key and original did change
+    saveText(field);
     return true;
 }
 

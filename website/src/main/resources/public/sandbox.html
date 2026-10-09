@@ -152,7 +152,7 @@ fib(7)=r ?
     // replaces the document (one undoable edit) and marks the example as current
     function load(name) {
       fetch('/examples/' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.text() : null; }).then(function (source) {
-        if (source === null || !NelumboFields.setFieldText(field, source)) { return; }
+        if (source === null || !NelumboFields.setFieldText(field, source, name)) { return; }
         nav.querySelectorAll('a').forEach(function (a) { a.classList.toggle('active', a.dataset.example === name); });
         if (location.hash !== '#' + name) { history.replaceState(null, '', '#' + name); }
       });

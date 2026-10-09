@@ -73,6 +73,15 @@
     transform: translateY(1px);
 }
 
+/* Reset shows only for an edited field; a toolbar without a visible button takes no space */
+.nelumbo-field-toolbar:not(:has(button:not([hidden]))) {
+    display: none;
+}
+
+.nelumbo-field-toolbar .nelumbo-reset {
+    margin-left: auto;
+}
+
 .nelumbo-field-editor {
     height: 220px;
     width:  100%;
