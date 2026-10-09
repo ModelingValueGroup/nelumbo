@@ -252,6 +252,13 @@ peer(r,c,r2,c2)    <=> !(r=r2 & c=c2) & (r=r2 | c=c2 | samebox(r,c,r2,c2))
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **BLOCKED (2026-10-09)** on `bugs/in-on-function-call-undecided.nl` (`@KnownBug` in
+> `KnownBugsTest`): `e in f(...)` is undecided when the collection is a user function call,
+> so both guards of `elim` (`d in cell(g,r,c)`, `!(d in cell(g,r,c))`) and with them all
+> three probes are `[..][..]`. The rules below are in the file as written; the three probes
+> are kept, commented out. Not reshaped to `E[sc](cell(g,r,c)=sc & d in sc)` (which decides) -
+> this is a bug-finding exercise.
+
 This is the core mechanic in isolation: remove `d`; if the cell empties, fail. Naked/hidden propagation is added in Tasks 7-8. **Expect the mutual-recursion / nested-generic machinery to strain here - a prime bug site.**
 
 - [ ] **Step 1: Write the failing probe** (append): eliminating `D1` from a full cell leaves the other three; eliminating a value not present is a no-op; eliminating the last value fails (empty facts side):

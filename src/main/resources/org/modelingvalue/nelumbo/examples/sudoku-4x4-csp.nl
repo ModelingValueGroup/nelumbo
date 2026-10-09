@@ -1,9 +1,12 @@
 // Norvig candidate-set CSP sudoku solver (4x4), options as a Digit enum.
 // CLI-only. Run with: java -DPARALLEL_COLLECTIONS=false -jar nelumbo-cli-*.jar <this file>
 //
-// STATUS (2026-09-25): UNBLOCKED at the functional grid update (plan Task 4);
-// Task 5 (peer/samebox) is done, the solver itself (Tasks 6+) is still to be
-// written. The ~80s load time of the put/rowsBefore/rowsFrom rules (recursive
+// STATUS (2026-10-09): BLOCKED at the bare eliminate (plan Task 6) on
+// bugs/in-on-function-call-undecided.nl: elim's guards `d in cell(g,r,c)` and
+// `!(d in cell(g,r,c))` are undecided (`e in f(...)` with a user function call
+// as the collection), so elim never decides. The elim/afterElim rules are in
+// the file, the three Task 6 probes at the end are commented out.
+// Tasks 1-5 are done. The ~80s load time of the put/rowsBefore/rowsFrom rules (recursive
 // rules over the depth-3 generic List<List<Set<Digit>>>) is fixed: 1.4s since
 // 2026-10-02 (tests/nested-generic-rule-load-time.nl in RegressionTest).
 // The first block (three reduction bugs found 2026-09-11: nested collection call
@@ -40,6 +43,9 @@ List<Set<Digit>>       ::= putRow(<List<Set<Digit>>>,<Integer>,<Set<Digit>>)
 List<List<Set<Digit>>> ::= rowsBefore(<List<List<Set<Digit>>>>,<Integer>),
                            rowsFrom(<List<List<Set<Digit>>>>,<Integer>),
                            put(<List<List<Set<Digit>>>>,<Integer>,<Integer>,<Set<Digit>>)
+
+List<List<Set<Digit>>> ::= elim(<List<List<Set<Digit>>>>,<Integer>,<Integer>,<Digit>),
+                           afterElim(<List<List<Set<Digit>>>>,<Integer>,<Integer>,<Digit>,<Set<Digit>>)
 
 Integer ::= bb(<Integer>)
 Boolean ::= samebox(<Integer>,<Integer>,<Integer>,<Integer>),
@@ -84,6 +90,15 @@ bb(r)=k <=> k=0 if r<2, k=2 if r>=2
 samebox(r,c,r2,c2) <=> E[i,j](bb(r)=i & bb(c)=j & bb(r2)=i & bb(c2)=j)
 peer(r,c,r2,c2)    <=> !(r=r2 & c=c2) & (r=r2 | c=c2 | samebox(r,c,r2,c2))
 
+// eliminate d at (r,c); an emptied cell has no rule branch -> relational
+// failure = Norvig's `return False`
+elim(g,r,c,d)=s <=> s=g                                              if !(d in cell(g,r,c)),
+                    E[ns,g2](cell(g,r,c)-{d}=ns & put(g,r,c,ns)=g2 &
+                             afterElim(g2,r,c,d,ns)=s)               if d in cell(g,r,c)
+
+// TEMP (replaced in Tasks 7-8): identity except the empty-set contradiction
+afterElim(g,r,c,d,ns)=s <=> s=g if |ns|>=1
+
 dig(2)=d    ? [(d=D2)][..]
 undig(D3)=v ? [(v=3)][..]
 icell([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]],2,1)=v ? [(v=3)][..]
@@ -95,3 +110,7 @@ peer(0,0,0,0) ? [][()]
 // were undecided until the 2026-09-25 fix of rule-pos-on-mapped-collection-list-undecided
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0)=sc ? [(sc={D2})][..]
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,1)=sc ? [(sc={D1,D2,D3,D4})][..]
+// Task 6: bare eliminate (remove + contradiction) - BLOCKED, see STATUS
+//cell(elim(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),0,0)=sc ? [(sc={D2,D3,D4})][..]
+//cell(elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D1),0,0)=sc ? [(sc={D2})][..]
+//elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D2)=g ? [][..]

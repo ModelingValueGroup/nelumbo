@@ -16,7 +16,15 @@
 
 package org.modelingvalue.nelumbo.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.IOException;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.NelumboConstants;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 
 // The known-bug (xfail) suite. Every method runs a red-by-design .nl repro
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
@@ -163,6 +171,20 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("diagonal-fact-lookup.nl");
     }
 
+    // the correct behavior is an error per query, which bugResource (pass = no
+    // error) cannot express: count the inconsistency diagnostics instead
+    @KnownBug("inconsistency between two rules detected in one rule order only")
+    @Test
+    public void inconsistencyMissedByRuleOrder() throws IOException {
+        String       name         = "inconsistency-missed-by-rule-order.nl";
+        String       source       = new String(KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
+        EvalResult   result       = NelumboEvaluator.evaluate(source, name, 60_000);
+        long         inconsistent = result.diagnostics().stream().filter(d -> d.message().startsWith("Inconsistent results")).count();
+        List<String> silent       = result.queries().stream().filter(q -> q.result() != null).map(q -> q.query() + " ? " + q.result()).toList();
+        assertEquals(List.of(), silent, "queries answered without reporting the inconsistency");
+        assertEquals(result.queries().size(), inconsistent, "diagnostics: " + result.diagnostics());
+    }
+
     // ==== stdlib: numbers / strings / collections / datetime ====
 
     @KnownBug("normalize() keeps negative denominators: -2 > 0 inferred")
@@ -193,6 +215,12 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void collectionsIndexOutOfRange() {
         bugResource("collections-index-out-of-range.nl");
+    }
+
+    @KnownBug("e in f(...) undecided when the collection is a user function call")
+    @Test
+    public void inOnFunctionCallUndecided() {
+        bugResource("in-on-function-call-undecided.nl");
     }
 
     @KnownBug("period_multiply crashes on multipliers outside int range")

@@ -44,6 +44,27 @@ find_jar() {
     ls -t "$ROOT_DIR"/cli/build/libs/nelumbo-cli-*.jar 2>/dev/null | head -1
 }
 
+# a repro whose correct behavior is an error on every query (no .nl
+# expectation can state that) names the error on its first line:
+#   // expect-error-per-query: <text>
+expected_error() {
+    sed -n '1s|^// expect-error-per-query: ||p' "$1"
+}
+
+is_fixed() {
+    local file=$1
+    local code=$2
+    local out=$3
+    local expect
+    expect=$(expected_error "$file")
+    if [ -n "$expect" ]; then
+        # the CLI prints one line per query: every one must be that error
+        [ -n "$out" ] && ! echo "$out" | grep -qvF "$expect"
+    else
+        [ $code -eq 0 ] && ! echo "$out" | grep -q "Expected result"
+    fi
+}
+
 run_repro() {
     local file=$1
     local jar=$2
@@ -63,7 +84,7 @@ run_repro() {
         # result, the bug is the time it takes
         echo "${RED}FAIL  $name (took ${elapsed}s, limit ${SLOW_SECONDS}s)${RESET}"
         return 1
-    elif [ $code -eq 0 ] && ! echo "$out" | grep -q "Expected result"; then
+    elif is_fixed "$file" $code "$out"; then
         echo "${GREEN}PASS  $name (bug appears fixed)${RESET}"
         return 0
     else
