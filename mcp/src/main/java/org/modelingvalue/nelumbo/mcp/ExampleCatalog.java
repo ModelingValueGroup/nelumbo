@@ -77,6 +77,8 @@ public final class ExampleCatalog {
                 "query-only file: exercises integer arithmetic, abs, E[], A[], negation without any custom types"));
         ENTRIES.put("transformation", new Entry(BASE + "examples/transformation.nl",
                 "transform statement (::>): Root functor generates sub-functors, facts, and rules at load time"));
+        ENTRIES.put("transitive", new Entry(BASE + "examples/transitive.nl",
+                "transitive-closure DSL: a transform generates a fact type and a recursive reachability rule per declaration"));
         ENTRIES.put("familyAssignment", new Entry(BASE + "examples/familyAssignment.nl",
                 "exercise template for family.nl: type/fact scaffolding present, rules left for the student"));
         ENTRIES.put("ternaryAssignment", new Entry(BASE + "examples/ternaryAssignment.nl",

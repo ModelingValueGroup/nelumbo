@@ -114,4 +114,9 @@ public class ExamplesTest extends NelumboTestBase {
         exampleResource("clubFees.nl");
     }
 
+    @RepeatedTest(10)
+    public void transitive() {
+        exampleResource("transitive.nl");
+    }
+
 }
