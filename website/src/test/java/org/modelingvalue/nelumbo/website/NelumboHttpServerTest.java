@@ -270,6 +270,34 @@ class NelumboHttpServerTest {
         }
     }
 
+    /**
+     * Every example the sandbox lists is evaluated on an empty base KB like production's: an exercise
+     * (*Assignment) may only fail on its expectations, every other example not at all.
+     */
+    @Test
+    void everySandboxExampleEvaluates() throws Exception {
+        NelumboHttpServer sandbox     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
+        int               sandboxPort = sandbox.start(0);
+        try {
+            int checked = 0;
+            for (JsonNode name : mapper.readTree(get("/examples").body()).get("examples")) {
+                String      source   = get("/examples/" + name.asText()).body();
+                HttpRequest request  = HttpRequest.newBuilder(URI.create("http://localhost:" + sandboxPort + "/eval"))
+                        .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(source)).build();
+                JsonNode    result   = mapper.readTree(client.send(request, BodyHandlers.ofString()).body());
+                boolean     exercise = name.asText().endsWith("Assignment");
+                for (JsonNode error : result.get("errors")) {
+                    String message = error.get("line") + ":" + error.get("column") + " " + error.get("message").asText();
+                    assertTrue(exercise && error.get("message").asText().startsWith("Expected result "), message + "\nin example " + name.asText());
+                }
+                checked++;
+            }
+            assertTrue(10 < checked, "expected the sandbox examples to be checked, but only found " + checked);
+        } finally {
+            sandbox.stop();
+        }
+    }
+
     @Test
     void pagesLinkToTheDocs() throws Exception {
         for (String page : List.of("/", "/tour.html", "/sandbox.html")) {
