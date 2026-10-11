@@ -201,14 +201,14 @@ unreduced-term mismatch in the test JVM), so both stay:
   (The former `flaky=true` attribute, whose only user was nondeterministic-inference, was
   removed with its promotion on 2026-09-25.) `bugResource()` in
   `NelumboTestBase` runs each file with a preemptive 60s timeout. Fixed bugs get promoted to
-  `RegressionTest` (fifteen so far: string-concat-prefix and repetition-count-lost
+  `RegressionTest` (seventeen so far: string-concat-prefix and repetition-count-lost
   since 2026-09-11; the whole bba88fc8 reduction trio - recursive-list-concat-classcast,
   nested-list-functor-arg-type-mismatch, set-functor-rhs-equals-not-reduced -
   since 2026-09-24; the whole state/race cluster - empty-set-branch-in-map-lambda,
   neighbor-query-changes-result, nondeterministic-inference - plus
   rule-pos-on-mapped-collection-list-undecided since 2026-09-25, nested-generic-rule-load-time since 2026-10-02,
   set-literal-arithmetic-unevaluated, four-var-quantifier-crash, repetition-separator-greedy,
-  optional-presence-lost and alternation-option-identity since 2026-10-06 - the greedy one's separator backtracking was in since
+  optional-presence-lost and alternation-option-identity since 2026-10-06, multi-unbound-fact-lookup and diagonal-fact-lookup since 2026-10-11 (addFact also files every fact under a per-functor key with all arguments generalized; getFacts filters that set for lookups with two or more open positions; a variable nested in an argument stays unknown) - the greedy one's separator backtracking was in since
   eeb06747, it only stayed red because its `Seq<T> :: Object` functor is Function-typed since bba88fc8
   (`=` undecided); declared `:: Struct` it has structural equality and passes; optional-presence-lost
   was a real fix in `OptionalPattern.args` (a matched argument-less body is kept as present) and its

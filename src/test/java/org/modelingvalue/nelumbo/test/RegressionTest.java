@@ -115,4 +115,14 @@ public class RegressionTest extends NelumboTestBase {
         testResource("nested-generic-rule-load-time.nl");
     }
 
+    @RepeatedTest(10)
+    public void multiUnboundFactLookup() {
+        testResource("multi-unbound-fact-lookup.nl");
+    }
+
+    @RepeatedTest(10)
+    public void diagonalFactLookup() {
+        testResource("diagonal-fact-lookup.nl");
+    }
+
 }

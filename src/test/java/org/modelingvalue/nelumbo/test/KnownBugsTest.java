@@ -157,12 +157,6 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("quantifier-definitive-from-unknown.nl");
     }
 
-    @KnownBug("getFacts claims complete-no-facts for un-indexed shapes like r(a,a)")
-    @Test
-    public void diagonalFactLookup() {
-        bugResource("diagonal-fact-lookup.nl");
-    }
-
     // ==== stdlib: numbers / strings / collections / datetime ====
 
     @KnownBug("normalize() keeps negative denominators: -2 > 0 inferred")
