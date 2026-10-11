@@ -16,26 +16,22 @@
 
 package org.modelingvalue.nelumbo.logic;
 
-import java.io.Serial;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.function.Function;
-
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.nelumbo.KnowledgeBase;
-import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboTimeoutException;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.*;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+
+import java.io.Serial;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.function.Function;
 
 public class Predicate extends Node {
     @Serial
@@ -312,42 +308,44 @@ public class Predicate extends Node {
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
+        KnowledgeBase knowledgebase = context.knowledgebase();
+        if (isFact()) {
+            return knowledgebase.getFacts(this, context);
+        }
+
         Functor functor = functor();
         if (nrOfUnbound > 1 || //
                 (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
                 (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
             return unknown();
         }
-        KnowledgeBase knowledgebase = context.knowledgebase();
-        if (isFact()) {
-            return knowledgebase.getFacts(this, context);
-        } else {
-            InferResult result = knowledgebase.getMemoiz(this);
-            if (result != null) {
-                return result;
-            }
-            result = context.getCycleResult(this);
-            if (result != null) {
-                return result;
-            }
-            List<Predicate> stack = context.stack();
-            if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return InferResult.overflow(stack.append(this));
-            }
-            result = fixpoint(context.pushOnStack(this));
-            if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
-                List<Predicate> overflow = result.stackOverflow();
-                if (overflow != null) {
-                    if (stack.size() == MAX_LOGIC_DEPTH_D2) {
-                        result = flatten(result, overflow, context);
-                    }
-                    return result;
-                }
-            }
-            checkSingleResult(result);
-            knowledgebase.memoization(this, result);
+
+        InferResult result = knowledgebase.getMemoiz(this);
+        if (result != null) {
             return result;
         }
+        result = context.getCycleResult(this);
+        if (result != null) {
+            return result;
+        }
+        List<Predicate> stack = context.stack();
+        if (stack.size() >= MAX_LOGIC_DEPTH) {
+            return InferResult.overflow(stack.append(this));
+        }
+        result = fixpoint(context.pushOnStack(this));
+        if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
+            List<Predicate> overflow = result.stackOverflow();
+            if (overflow != null) {
+                if (stack.size() == MAX_LOGIC_DEPTH_D2) {
+                    result = flatten(result, overflow, context);
+                }
+                return result;
+            }
+        }
+        checkSingleResult(result);
+        knowledgebase.memoization(this, result);
+
+        return result;
     }
 
     private void checkSingleResult(InferResult result) {

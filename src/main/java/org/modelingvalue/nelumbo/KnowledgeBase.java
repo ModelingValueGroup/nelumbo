@@ -16,9 +16,20 @@
 
 package org.modelingvalue.nelumbo;
 
-import static org.modelingvalue.nelumbo.ConstructionReason.bootstrapping;
-import static org.modelingvalue.nelumbo.patterns.Pattern.*;
-import static org.modelingvalue.nelumbo.syntax.TokenType.*;
+import org.modelingvalue.collections.*;
+import org.modelingvalue.collections.mutable.MutableMap;
+import org.modelingvalue.collections.struct.impl.Struct2Impl;
+import org.modelingvalue.collections.util.Context;
+import org.modelingvalue.collections.util.ContextPool;
+import org.modelingvalue.collections.util.ContextThread;
+import org.modelingvalue.collections.util.Pair;
+import org.modelingvalue.nelumbo.lang.*;
+import org.modelingvalue.nelumbo.logic.InferContext;
+import org.modelingvalue.nelumbo.logic.InferResult;
+import org.modelingvalue.nelumbo.logic.Predicate;
+import org.modelingvalue.nelumbo.logic.Rule;
+import org.modelingvalue.nelumbo.patterns.*;
+import org.modelingvalue.nelumbo.syntax.*;
 
 import java.io.PrintStream;
 import java.io.Serial;
@@ -27,43 +38,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.modelingvalue.collections.Collection;
-import org.modelingvalue.collections.Entry;
-import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.QualifiedSet;
-import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.mutable.MutableMap;
-import org.modelingvalue.collections.struct.impl.Struct2Impl;
-import org.modelingvalue.collections.util.Context;
-import org.modelingvalue.collections.util.ContextPool;
-import org.modelingvalue.collections.util.ContextThread;
-import org.modelingvalue.collections.util.Pair;
-import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.Import;
-import org.modelingvalue.nelumbo.lang.Namespace;
-import org.modelingvalue.nelumbo.lang.PatternPart;
-import org.modelingvalue.nelumbo.lang.Transform;
-import org.modelingvalue.nelumbo.lang.Type;
-import org.modelingvalue.nelumbo.lang.Variable;
-import org.modelingvalue.nelumbo.logic.InferContext;
-import org.modelingvalue.nelumbo.logic.InferResult;
-import org.modelingvalue.nelumbo.logic.Predicate;
-import org.modelingvalue.nelumbo.logic.Rule;
-import org.modelingvalue.nelumbo.patterns.AlternationPattern;
-import org.modelingvalue.nelumbo.patterns.NodeTypePattern;
-import org.modelingvalue.nelumbo.patterns.OptionalPattern;
-import org.modelingvalue.nelumbo.patterns.Pattern;
-import org.modelingvalue.nelumbo.patterns.PatternPartPattern;
-import org.modelingvalue.nelumbo.patterns.RepetitionPattern;
-import org.modelingvalue.nelumbo.patterns.SequencePattern;
-import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
-import org.modelingvalue.nelumbo.syntax.ParseContext;
-import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
-import org.modelingvalue.nelumbo.syntax.ParseState;
-import org.modelingvalue.nelumbo.syntax.Token;
-import org.modelingvalue.nelumbo.syntax.TokenType;
+import static org.modelingvalue.nelumbo.ConstructionReason.bootstrapping;
+import static org.modelingvalue.nelumbo.patterns.Pattern.*;
+import static org.modelingvalue.nelumbo.syntax.TokenType.*;
 
 public final class KnowledgeBase implements ParseExceptionHandler {
 
@@ -531,6 +508,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             for (int i = 0; i < fact.length(); i++) {
                 map = addFact(map, fact, fact.setType(i, fact.getType(i)), i, args.get(i));
             }
+            if (fact.length() > 1) {
+                Predicate all = allFactsKey(fact);
+                InferResult pre = map.get(all);
+                map = map.put(all, InferResult.factsCI(all, pre != null ? pre.facts().add(fact) : fact.singleton()));
+            }
             return map;
         });
         resetMemoization();
@@ -552,6 +534,14 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return map;
     }
 
+    private static Predicate allFactsKey(Predicate predicate) {
+        List<Type> args = predicate.functor().argTypes();
+        for (int i = 0; i < predicate.length(); i++) {
+            predicate = predicate.setType(i, args.get(i));
+        }
+        return predicate;
+    }
+
     private static Set<Type> generalizations(Type type, Type top) {
         Set<Type> result = Set.of();
         for (Type g : type.supers()) {
@@ -563,8 +553,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public InferResult getFacts(Predicate predicate, InferContext context) {
-        InferResult result = facts.get().get(predicate.varsToTypes());
-        if (result != null) {
+        Predicate key = predicate.varsToTypes();
+        InferResult result;
+        if (hasNestedVariable(predicate)) {
+            result = predicate.unknown();
+        } else if ((result = openArgs(key) > 1 ? filterFacts(predicate) : facts.get().get(key)) != null) {
             result = result.cast(predicate);
         } else {
             result = predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(predicate, Set.of());
@@ -574,6 +567,59 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             context.trace(() -> predicate + " " + r);
         }
         return result;
+    }
+
+    private static int openArgs(Predicate key) {
+        int n = 0;
+        for (int i = 0; i < key.length(); i++) {
+            if (key.get(i) instanceof Type) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    private static boolean hasNestedVariable(Predicate predicate) {
+        for (int i = 0; i < predicate.length(); i++) {
+            if (predicate.get(i) instanceof Node n && !(n instanceof Variable) && !n.allVars().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private InferResult filterFacts(Predicate predicate) {
+        Predicate key = allFactsKey(predicate);
+        InferResult all = facts.get().get(key);
+        if (all == null) {
+            return null;
+        }
+        Set<Predicate> matched = Set.of();
+        for (Predicate fact : all.facts()) {
+            if (matches(predicate, fact)) {
+                matched = matched.add(fact);
+            }
+        }
+        return InferResult.factsCI(key, matched);
+    }
+
+    private static boolean matches(Predicate predicate, Predicate fact) {
+        for (int i = 0; i < predicate.length(); i++) {
+            Object arg = predicate.get(i);
+            if (arg instanceof Variable var) {
+                if (!var.type().isAssignableFrom(fact.getType(i))) {
+                    return false;
+                }
+                for (int j = 0; j < i; j++) {
+                    if (var.equals(predicate.get(j)) && !fact.get(i).equals(fact.get(j))) {
+                        return false;
+                    }
+                }
+            } else if (!arg.equals(fact.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void print(PrintStream stream, boolean withTokens) {
