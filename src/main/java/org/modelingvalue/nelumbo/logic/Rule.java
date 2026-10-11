@@ -186,6 +186,9 @@ public final class Rule extends Node implements Evaluatable {
         boolean completeFacts = true, completeFalsehoods = true;
         for (Predicate condFact : condResult.facts()) {
             Predicate fact = predicate.castFrom(consequence.setBinding(consequence, condFact.getBinding(condition)));
+            if (fact.getBinding(predicate) == null) {
+                continue; // the head binds no variable to a variable, so the condition can be more general than the query
+            }
             if (fact.isFullyBound()) {
                 facts = facts.add(fact);
             } else {
@@ -195,6 +198,9 @@ public final class Rule extends Node implements Evaluatable {
         for (Predicate condFalsehood : condResult.falsehoods()) {
             Predicate falsehood = predicate
                     .castFrom(consequence.setBinding(consequence, condFalsehood.getBinding(condition)));
+            if (falsehood.getBinding(predicate) == null) {
+                continue;
+            }
             if (falsehood.isFullyBound()) {
                 falsehoods = falsehoods.add(falsehood);
             } else {

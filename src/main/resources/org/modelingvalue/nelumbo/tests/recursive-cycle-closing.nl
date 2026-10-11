@@ -8,6 +8,7 @@
 // read as false. A cyclic graph showed it on develop; enumerating facts with two open
 // arguments made acyclic graphs hit it as well, see multi-unbound-fact-lookup.nl.)
 // Two graphs with their own functors, so the queries do not share memoized results.
+// x reaches x / x loops x repeat a variable through the recursive rule (see rule-repeated-variable.nl).
 import nelumbo.logic
 
 City     :: Object
@@ -29,6 +30,7 @@ fact track(A1,U), track(U,M)
 A1 reaches M ? [()][]
 M reaches A1 ? [][()]
 U reaches A1 ? [][()]
+x reaches x  ? [][..]
 
 // cyclic: A1 -> U -> A1
 x loops y <=> loop(x,y) | E[z](loop(x,z) & z loops y)
@@ -39,3 +41,4 @@ A1 loops U ? [()][]
 A1 loops A1 ? [()][]
 A1 loops M ? [][()]
 U loops M  ? [][()]
+x loops x   ? [(x=A1),(x=U)][..]

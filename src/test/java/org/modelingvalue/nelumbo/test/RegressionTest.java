@@ -140,4 +140,9 @@ public class RegressionTest extends NelumboTestBase {
         testResource("quantifier-definitive-from-unknown.nl");
     }
 
+    @RepeatedTest(10)
+    public void ruleRepeatedVariable() {
+        testResource("rule-repeated-variable.nl");
+    }
+
 }
