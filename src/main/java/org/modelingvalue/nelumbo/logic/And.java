@@ -16,6 +16,7 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
@@ -49,6 +50,13 @@ public final class And extends BinaryPredicate {
 
     public static And of(Predicate predicate1, Predicate predicate2) {
         return new And(NodeInfo.of(FUNCTOR), predicate1, predicate2);
+    }
+
+    // every fact of a conjunction is a fact of each conjunct, so one conjunct with all its facts
+    // yields all candidates (each is then resolved on its own)
+    @Override
+    protected boolean completeFacts(Set<InferResult> results) {
+        return results.anyMatch(InferResult::completeFacts);
     }
 
     @Override

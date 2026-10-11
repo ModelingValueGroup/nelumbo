@@ -130,4 +130,14 @@ public class RegressionTest extends NelumboTestBase {
         testResource("recursive-cycle-closing.nl");
     }
 
+    @RepeatedTest(10)
+    public void existsFalseFromOneFalseWitness() {
+        testResource("exists-false-from-one-false-witness.nl");
+    }
+
+    @RepeatedTest(10)
+    public void quantifierDefinitiveFromUnknown() {
+        testResource("quantifier-definitive-from-unknown.nl");
+    }
+
 }

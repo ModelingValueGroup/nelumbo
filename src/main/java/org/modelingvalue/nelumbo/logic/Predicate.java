@@ -369,6 +369,15 @@ public class Predicate extends Node {
         return null;
     }
 
+    // completeness of the results of this predicate's parts (CompoundPredicate.resolve): every part must be complete
+    protected boolean completeFacts(Set<InferResult> results) {
+        return results.allMatch(InferResult::completeFacts);
+    }
+
+    protected boolean completeFalsehoods(Set<InferResult> results) {
+        return results.allMatch(InferResult::completeFalsehoods);
+    }
+
     protected boolean isShallow(int nrOfUnbound, Functor functor) {
         return false;
     }

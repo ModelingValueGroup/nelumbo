@@ -63,7 +63,8 @@ public abstract class CompoundPredicate extends Predicate {
                 if (result.hasStackOverflow()) {
                     return result;
                 } else if (!result.isUnknown()) {
-                    for (InferResult ir : result.resultSet()) {
+                    Set<InferResult> results = result.resultSet();
+                    for (InferResult ir : results) {
                         for (Predicate pred : ir.allFacts()) {
                             Map<Variable, Object> b = pred.getBinding(ir.predicate());
                             if (!b.isEmpty()) {
@@ -80,10 +81,10 @@ public abstract class CompoundPredicate extends Predicate {
                                 next = next.put(b, pred);
                             }
                         }
-                        completeFacts &= ir.completeFacts();
-                        completeFalsehoods &= ir.completeFalsehoods();
                         cycles = cycles.addAll(ir.cycles());
                     }
+                    completeFacts &= predicate.completeFacts(results);
+                    completeFalsehoods &= predicate.completeFalsehoods(results);
                 } else if (resolve == deep) {
                     completeFacts = false;
                     completeFalsehoods = false;

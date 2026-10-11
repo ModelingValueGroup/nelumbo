@@ -149,14 +149,6 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("multiline-string-assert.nl");
     }
 
-    // ==== logic / quantifiers / facts ====
-
-    @KnownBug("fully-bound quantifiers turn unknown body result into definitive answer")
-    @Test
-    public void quantifierDefinitiveFromUnknown() {
-        bugResource("quantifier-definitive-from-unknown.nl");
-    }
-
     // ==== stdlib: numbers / strings / collections / datetime ====
 
     @KnownBug("normalize() keeps negative denominators: -2 > 0 inferred")
