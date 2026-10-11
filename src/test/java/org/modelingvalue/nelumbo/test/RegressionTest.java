@@ -145,4 +145,9 @@ public class RegressionTest extends NelumboTestBase {
         testResource("rule-repeated-variable.nl");
     }
 
+    @RepeatedTest(10)
+    public void importMergeFacts() {
+        testResource("import-merge-facts.nl");
+    }
+
 }
