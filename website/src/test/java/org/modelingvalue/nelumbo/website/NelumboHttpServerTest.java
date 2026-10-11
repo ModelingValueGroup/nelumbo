@@ -27,6 +27,7 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -240,34 +241,62 @@ class NelumboHttpServerTest {
     /**
      * The tour's editors are hand-written Nelumbo that no other test evaluates, so a language change breaks them
      * silently (78e006b5 did: {@code fact} takes a FactType since). Every editor must evaluate on a server like
-     * production's (empty base KB): an exercise field may only fail on its expectation, a solution not at all.
+     * production's (empty base KB): an exercise field (one followed by its solution) may only fail on its
+     * expectation, a demo field or a solution not at all.
      */
     @Test
     void everyTourEditorEvaluates() throws Exception {
         NelumboHttpServer tour     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
         int               tourPort = tour.start(0);
         try {
-            Pattern editor  = Pattern.compile("<(div|pre) class=\"(nelumbo-field|nelumbo-solution)\"[^>]*>(.*?)</\\1>", Pattern.DOTALL);
-            Matcher matcher = editor.matcher(get("/tour.html").body());
-            int     checked = 0;
-            while (matcher.find()) {
-                String      kind     = matcher.group(2);
-                String      source   = matcher.group(3).replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&amp;", "&");
-                HttpRequest request  = HttpRequest.newBuilder(URI.create("http://localhost:" + tourPort + "/eval"))
-                        .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(source)).build();
-                JsonNode    result   = mapper.readTree(client.send(request, BodyHandlers.ofString()).body());
-                String      where    = "tour " + kind + " #" + checked + ":\n" + source;
+            Pattern               editor  = Pattern.compile("<(div|pre) class=\"(nelumbo-field|nelumbo-solution)\"[^>]*>(.*?)</\\1>", Pattern.DOTALL);
+            List<MatchResult>     editors = editor.matcher(get("/tour.html").body()).results().toList();
+            for (int i = 0; i < editors.size(); i++) {
+                String   kind     = editors.get(i).group(2);
+                boolean  exercise = kind.equals("nelumbo-field") && i + 1 < editors.size() && editors.get(i + 1).group(2).equals("nelumbo-solution");
+                String   source   = unescapeHtml(editors.get(i).group(3));
+                JsonNode result   = eval(tourPort, source);
+                String   where    = "tour " + (exercise ? "exercise" : kind) + " #" + i + ":\n" + source;
                 assertTrue(0 < result.get("queries").size(), "no query evaluated in " + where);
                 for (JsonNode error : result.get("errors")) {
                     String message = error.get("line") + ":" + error.get("column") + " " + error.get("message").asText();
-                    assertTrue(kind.equals("nelumbo-field") && error.get("message").asText().startsWith("Expected result "), message + "\nin " + where);
+                    assertTrue(exercise && error.get("message").asText().startsWith("Expected result "), message + "\nin " + where);
                 }
-                checked++;
             }
-            assertTrue(20 < checked, "expected the tour's editors to be checked, but only found " + checked);
+            assertTrue(20 < editors.size(), "expected the tour's editors to be checked, but only found " + editors.size());
         } finally {
             tour.stop();
         }
+    }
+
+    /**
+     * The landing page's showcase is a live editor: its query must get the green checkmark, so it may not fail at
+     * all - not even on its expectation (a more complete engine result made it red on 2026-10-11).
+     */
+    @Test
+    void landingShowcaseEvaluates() throws Exception {
+        NelumboHttpServer landing     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
+        int               landingPort = landing.start(0);
+        try {
+            Matcher field = Pattern.compile("<div class=\"nelumbo-field\"[^>]*>(.*?)</div>", Pattern.DOTALL).matcher(get("/").body());
+            assertTrue(field.find(), "the landing page should have its showcase editor");
+            String   source = unescapeHtml(field.group(1));
+            JsonNode result = eval(landingPort, source);
+            assertTrue(0 < result.get("queries").size(), "no query evaluated in the landing showcase:\n" + source);
+            assertEquals(0, result.get("errors").size(), result.get("errors") + "\nin the landing showcase:\n" + source);
+        } finally {
+            landing.stop();
+        }
+    }
+
+    private JsonNode eval(int port, String source) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/eval"))
+                .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(source)).build();
+        return mapper.readTree(client.send(request, BodyHandlers.ofString()).body());
+    }
+
+    private static String unescapeHtml(String html) {
+        return html.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&amp;", "&");
     }
 
     /**
@@ -281,11 +310,8 @@ class NelumboHttpServerTest {
         try {
             int checked = 0;
             for (JsonNode name : mapper.readTree(get("/examples").body()).get("examples")) {
-                String      source   = get("/examples/" + name.asText()).body();
-                HttpRequest request  = HttpRequest.newBuilder(URI.create("http://localhost:" + sandboxPort + "/eval"))
-                        .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(source)).build();
-                JsonNode    result   = mapper.readTree(client.send(request, BodyHandlers.ofString()).body());
-                boolean     exercise = name.asText().endsWith("Assignment");
+                JsonNode result   = eval(sandboxPort, get("/examples/" + name.asText()).body());
+                boolean  exercise = name.asText().endsWith("Assignment");
                 for (JsonNode error : result.get("errors")) {
                     String message = error.get("line") + ":" + error.get("column") + " " + error.get("message").asText();
                     assertTrue(exercise && error.get("message").asText().startsWith("Expected result "), message + "\nin example " + name.asText());

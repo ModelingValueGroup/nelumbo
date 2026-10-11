@@ -382,15 +382,15 @@
 Person   :: Object
 FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
 
-Boolean  ::= &lt;Person&gt; is a grandparent of &lt;Person&gt;  #30   // new syntax...
+Boolean  ::= &lt;Person&gt; is a grandparent of &lt;Person&gt;  #30         // new syntax...
 
 Person g, p, c
-g is a grandparent of c &lt;=&gt; E[p](pc(g,p) &amp; pc(p,c))       // ...meaning, in logic...
+g is a grandparent of c &lt;=&gt; E[p](pc(g,p) &amp; pc(p,c))             // ...meaning, in logic...
 
 Person ::= Hendrik, Juliana, Beatrix
 fact pc(Hendrik, Juliana), pc(Juliana, Beatrix)
 
-g is a grandparent of Beatrix ?  [(g=Hendrik)][..]        // ...used immediately</div>
+g is a grandparent of Beatrix ?  [(g=Hendrik)][(g=Juliana),..]  // ...used immediately</div>
     </div>
   </div>
 </section>
