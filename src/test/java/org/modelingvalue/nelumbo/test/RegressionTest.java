@@ -125,4 +125,9 @@ public class RegressionTest extends NelumboTestBase {
         testResource("diagonal-fact-lookup.nl");
     }
 
+    @RepeatedTest(10)
+    public void recursiveCycleClosing() {
+        testResource("recursive-cycle-closing.nl");
+    }
+
 }

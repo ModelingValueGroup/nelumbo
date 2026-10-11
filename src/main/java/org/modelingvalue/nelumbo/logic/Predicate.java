@@ -408,7 +408,11 @@ public class Predicate extends Node {
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
-                    cycleResult = InferResult.of(this, nextResult.facts(), true, nextResult.falsehoods(), true,
+                    Set<Predicate> falsehoods = nextResult.falsehoods();
+                    if (isFullyBound() && nextResult.facts().isEmpty()) {
+                        falsehoods = falsehoods.add(this);
+                    }
+                    cycleResult = InferResult.of(this, nextResult.facts(), true, falsehoods, true,
                             nextResult.cycles().remove(this));
                     context.knowledgebase().memoization(this, cycleResult);
                     nextResult = inferRules(context.putCycleResult(this, cycleResult));
