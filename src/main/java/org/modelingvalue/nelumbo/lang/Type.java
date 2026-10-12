@@ -324,6 +324,7 @@ public final class Type extends Node implements FunctorOrType {
     public class TypeInfo {
         private Set<Type>        supers;
         private TypeMatcherState typeMatcher;
+        private Type             objectArgsOnly;
 
         public Set<Type> supers() {
             if (supers == null) {
@@ -338,6 +339,19 @@ public final class Type extends Node implements FunctorOrType {
             }
             return typeMatcher;
         }
+
+        public Type objectArgsOnly() {
+            if (objectArgsOnly == null) {
+                objectArgsOnly = initObjectArgsOnly();
+            }
+            return objectArgsOnly;
+        }
+
+    }
+
+    private Type initObjectArgsOnly() {
+        return hasArguments() ? setArguments(arguments().replaceAll(a -> OBJECT.isAssignableFrom(a) ? OBJECT : a))
+                : this;
     }
 
     private Set<Type> initSupers() {
@@ -377,13 +391,11 @@ public final class Type extends Node implements FunctorOrType {
 
     private TypeMatcherState typeMatcher(Type type, TypeMatcherState next) {
         if (type.hasArguments()) {
-            List<Type> args = type.arguments();
-            for (Type arg : args.reverse()) {
+            for (Type arg : type.arguments().reverse()) {
                 next = typeMatcher(arg, next);
             }
-            type = type.setArguments(args.replaceAll(a -> OBJECT.isAssignableFrom(a) ? OBJECT : a));
         }
-        return new TypeMatcherState(Map.of(Entry.of(type, next)), null);
+        return new TypeMatcherState(Map.of(Entry.of(type.objectArgsOnly(), next)), null);
     }
 
     public TypeInfo typeInfo() {
@@ -396,6 +408,10 @@ public final class Type extends Node implements FunctorOrType {
 
     public TypeMatcherState typeMatcher() {
         return typeInfo().typeMatcher();
+    }
+
+    public Type objectArgsOnly() {
+        return typeInfo().objectArgsOnly();
     }
 
     public boolean isFactType() {
