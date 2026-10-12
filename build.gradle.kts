@@ -107,7 +107,7 @@ tasks.register<Exec>("build-slides") {
         ln -s /project/src ../src 2>/dev/null || true; \
         pip install -q --disable-pip-version-check --root-user-action=ignore mkslides 2>&1 | grep -v 'Created wheel' || true; \
         mkslides build NELUMBO.md
-        cp nelumbo.svg site/assets
+        cp nelumbo.svg nelumbo.css site/
         """
     )
 }

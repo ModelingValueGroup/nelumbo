@@ -1,6 +1,83 @@
+/* Light theme of nelumbo.nl (see [data-theme="light"] in website/.../public/docs.html), on top of reveal's "white" theme. */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+html:root {
+  --nl-bg: #fbfafc;
+  --nl-panel: #f2eff5;
+  --nl-border: #e0dbe6;
+  --nl-text: #1f1b24;
+  --nl-prose: #3a3542;
+  --nl-muted: #6b6475;
+  --nl-faint: #958e9e;
+  --nl-accent: #9246b0;
+  --nl-accent-soft: #74358f;
+
+  --r-background-color: var(--nl-bg);
+  --r-main-font: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r-main-color: var(--nl-prose);
+  --r-heading-font: "Bricolage Grotesque", "Instrument Sans", sans-serif;
+  --r-heading-color: var(--nl-text);
+  --r-heading-font-weight: 700;
+  --r-heading-text-transform: none;
+  --r-heading-letter-spacing: -0.01em;
+  --r-heading1-size: 2.6em;
+  --r-heading2-size: 1.7em;
+  --r-heading3-size: 1.15em;
+  --r-code-font: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r-link-color: var(--nl-accent);
+  --r-link-color-dark: var(--nl-accent-soft);
+  --r-link-color-hover: var(--nl-accent-soft);
+  --r-selection-background-color: #edd4e8;
+  --r-selection-color: var(--nl-text);
+}
+
+.reveal-viewport {
+  background: var(--nl-bg);
+}
+
+.reveal h3 {
+  color: var(--nl-accent-soft);
+}
+
+.reveal strong {
+  color: var(--nl-text);
+}
+
+.reveal ul li::marker {
+  color: var(--nl-accent);
+}
+
+.reveal :not(pre) > code {
+  background: var(--nl-panel);
+  border-radius: 6px;
+  padding: 0.05em 0.3em;
+}
+
+.reveal pre {
+  width: auto;
+  background: var(--nl-panel);
+  border: 1px solid var(--nl-border);
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 0.4em 0.6em;
+}
+
+.reveal .progress {
+  color: var(--nl-accent);
+}
+
+.reveal .controls {
+  color: var(--nl-accent);
+}
+
+.reveal .slide-number {
+  background: transparent;
+  color: var(--nl-faint);
+}
+
 .hljs {
-  background: white;
-  color: black;
+  background: transparent;
+  color: var(--nl-text);
   font-size: 30px;
   line-height: 35px;
 }
@@ -14,14 +91,14 @@
 .hljs-addition,
 .hljs-attribute,
 .hljs-link {
-  color: #888;
+  color: var(--nl-muted);
 }
 
 .hljs-comment,
 .hljs-quote,
 .hljs-meta,
 .hljs-deletion {
-  color: #ccc;
+  color: var(--nl-faint);
 }
 
 .hljs-keyword,
@@ -37,29 +114,26 @@
   font-style: italic;
 }
 
-/*!* Background image for the deck *!*/
+/* Background image for the deck, via a pseudo-element so its opacity is independent */
 .reveal {
-    background-color: #fdf6e3;
-    position: relative; /* create stacking context for pseudo-element */
+  position: relative;
+  font-variant-ligatures: none;
 }
 
-/* Render background image via pseudo-element so we can control its opacity independently */
 .reveal::before {
-    content: "";
-    position: fixed; /* stay put during scroll for subtle parallax */
-    inset: 0; /* top:0; right:0; bottom:0; left:0 */
-    pointer-events: none; /* don't block interactions */
-
-    background-image: url("nelumbo.svg");
-    background-size: 50%; /* a bit smaller than full cover */
-    background-position: center; /* center the image */
-    background-repeat: no-repeat; /* no tiling */
-
-    opacity: 0.1; /* 20% opacity for the image */
-    z-index: 0; /* behind slide content */
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("nelumbo.svg");
+  background-size: 50%;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.07;
+  z-index: 0;
 }
 
 /* Ensure slide content is above the pseudo-element */
 .reveal .slides {
-    z-index: 1;
+  z-index: 1;
 }
