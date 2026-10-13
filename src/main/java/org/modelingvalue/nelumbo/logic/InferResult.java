@@ -532,6 +532,16 @@ public interface InferResult {
             }
 
             @Override
+            public InferResult factsComplete() {
+                return InferResult.resultSet(resultSet.replaceAll(InferResult::factsComplete));
+            }
+
+            @Override
+            public InferResult falsehoodsComplete() {
+                return InferResult.resultSet(resultSet.replaceAll(InferResult::falsehoodsComplete));
+            }
+
+            @Override
             public boolean isResolved(InferContext context) {
                 return resultSet.anyMatch(ir -> ir.isResolved(context));
             }
@@ -543,12 +553,12 @@ public interface InferResult {
 
             @Override
             public boolean completeFacts() {
-                throw new UnsupportedOperationException();
+                return resultSet.allMatch(InferResult::completeFacts);
             }
 
             @Override
             public boolean completeFalsehoods() {
-                throw new UnsupportedOperationException();
+                return resultSet.allMatch(InferResult::completeFalsehoods);
             }
 
             @Override
@@ -559,6 +569,16 @@ public interface InferResult {
             @Override
             public Set<Predicate> facts() {
                 throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Set<Predicate> cycles() {
+                return resultSet.flatMap(r -> r.cycles()).asSet();
+            }
+
+            @Override
+            public String toString() {
+                return resultSet().toString().substring(3);
             }
         };
     }
@@ -588,6 +608,14 @@ public interface InferResult {
         return of(predicate(), allFacts(), true, allFalsehoods(), true, cycles());
     }
 
+    default InferResult factsComplete() {
+        return of(predicate(), allFacts(), true, allFalsehoods(), completeFalsehoods(), cycles());
+    }
+
+    default InferResult falsehoodsComplete() {
+        return of(predicate(), allFacts(), completeFacts(), allFalsehoods(), true, cycles());
+    }
+
     default InferResult cast(Predicate to) {
         return of(to, cast(facts(), to), completeFacts(), cast(falsehoods(), to), completeFalsehoods(), cycles());
     }
@@ -607,10 +635,12 @@ public interface InferResult {
             return Set.of(this);
         }
 
-        // Results are shown to people (CLI, inlay hints, eval JSON, "Expected result" messages), so variables
-        // render by their base name: a variable redeclared in an inner scope is a$50 internally but a in the source.
+        // Results are shown to people (CLI, inlay hints, eval JSON, "Expected result"
+        // messages), so variables
+        // render by their base name: a variable redeclared in an inner scope is a$50
+        // internally but a in the source.
         @Override
-        public final String toString() {
+        public String toString() {
             return Node.getBaseString(() -> {
                 List<Predicate> overflow = stackOverflow();
                 if (overflow != null) {

@@ -295,42 +295,44 @@ public class Predicate extends Node {
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
+        KnowledgeBase knowledgebase = context.knowledgebase();
+        if (isFact()) {
+            return knowledgebase.getFacts(this, context);
+        }
+
         Functor functor = functor();
         if (nrOfUnbound > 1 || //
                 (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
                 (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
             return unknown();
         }
-        KnowledgeBase knowledgebase = context.knowledgebase();
-        if (isFact()) {
-            return knowledgebase.getFacts(this, context);
-        } else {
-            InferResult result = knowledgebase.getMemoiz(this);
-            if (result != null) {
-                return result;
-            }
-            result = context.getCycleResult(this);
-            if (result != null) {
-                return result;
-            }
-            List<Predicate> stack = context.stack();
-            if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return InferResult.overflow(stack.append(this));
-            }
-            result = fixpoint(context.pushOnStack(this));
-            if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
-                List<Predicate> overflow = result.stackOverflow();
-                if (overflow != null) {
-                    if (stack.size() == MAX_LOGIC_DEPTH_D2) {
-                        result = flatten(result, overflow, context);
-                    }
-                    return result;
-                }
-            }
-            checkSingleResult(result);
-            knowledgebase.memoization(this, result);
+
+        InferResult result = knowledgebase.getMemoiz(this);
+        if (result != null) {
             return result;
         }
+        result = context.getCycleResult(this);
+        if (result != null) {
+            return result;
+        }
+        List<Predicate> stack = context.stack();
+        if (stack.size() >= MAX_LOGIC_DEPTH) {
+            return InferResult.overflow(stack.append(this));
+        }
+        result = fixpoint(context.pushOnStack(this));
+        if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
+            List<Predicate> overflow = result.stackOverflow();
+            if (overflow != null) {
+                if (stack.size() == MAX_LOGIC_DEPTH_D2) {
+                    result = flatten(result, overflow, context);
+                }
+                return result;
+            }
+        }
+        checkSingleResult(result);
+        knowledgebase.memoization(this, result);
+
+        return result;
     }
 
     private void checkSingleResult(InferResult result) {
@@ -393,7 +395,7 @@ public class Predicate extends Node {
                     context.knowledgebase().memoization(this, cycleResult);
                     continue;
                 } else {
-                    cycleResult = InferResult.of(this, nextResult.facts(), true, nextResult.falsehoods(), true,
+                    cycleResult = InferResult.of(this, nextResult.facts(), true, nextResult.falsehoods(), false,
                             nextResult.cycles().remove(this));
                     context.knowledgebase().memoization(this, cycleResult);
                     nextResult = inferRules(context.putCycleResult(this, cycleResult));

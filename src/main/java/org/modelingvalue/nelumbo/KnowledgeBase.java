@@ -377,7 +377,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         try {
             types.updateAndGet(s -> s.addAll(kb.types.get()));
             functors.updateAndGet(s -> s.addAll(kb.functors.get()));
-            facts.updateAndGet(s -> s.addAll(kb.facts.get()));
+            facts.updateAndGet(s -> s.addAll(kb.facts.get(), KnowledgeBase::mergeFacts));
             rules.updateAndGet(s -> s.addAll(kb.rules.get()));
             transforms.updateAndGet(s -> s.addAll(kb.transforms.get()));
             prePatterns.set(s -> s.addAll(kb.prePatterns.get()));
@@ -392,6 +392,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } catch (Exception exc) {
             addException(new ParseException(exc.getMessage(), element));
         }
+    }
+
+    // facts of two knowledge bases under the same index key (e.g. two modules
+    // adding facts to one fact type)
+    private static InferResult mergeFacts(InferResult a, InferResult b) {
+        return a.facts().equals(b.facts()) ? a : InferResult.factsCI(a.predicate(), a.facts().addAll(b.facts()));
     }
 
     @SuppressWarnings("unchecked")
@@ -529,7 +535,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         facts.updateAndGet(map -> {
             map = map.put(fact, fact.factCC());
             for (int i = 0; i < fact.length(); i++) {
-                map = addFact(map, fact, fact.setType(i, args.get(i)));
+                map = addFact(map, fact, fact.setType(i, args.get(i)), args, Set.of(i), i);
             }
             return map;
         });
@@ -537,10 +543,18 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact,
-            Predicate predicate) {
-        InferResult pre = map.get(predicate);
-        return map.put(predicate,
-                InferResult.factsCI(predicate, pre != null ? pre.facts().add(fact) : fact.singleton()));
+            Predicate predicate, List<Type> args, Set<Integer> done, int outer) {
+        if (args.size() > done.size()) {
+            InferResult pre = map.get(predicate);
+            map = map.put(predicate,
+                    InferResult.factsCI(predicate, pre != null ? pre.facts().add(fact) : fact.singleton()));
+            for (int i = outer + 1; i < fact.length(); i++) {
+                if (!done.contains(i)) {
+                    map = addFact(map, fact, fact.setType(i, args.get(i)), args, done.add(i), i);
+                }
+            }
+        }
+        return map;
     }
 
     public InferResult getFacts(Predicate predicate, InferContext context) {
