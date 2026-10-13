@@ -14,7 +14,7 @@ literature**.
 deliberately stayed inside the one proven-safe rule shape to dodge crashes. Here
 we do the opposite: write the algorithm the natural, faithful way. When the
 engine crashes, goes undecided, or is nondeterministic, STOP, minimise a
-red-by-design repro into `bug-repros/`, and report it. Do not reshape the code to
+red-by-design repro into `bugs/` (with a `@KnownBug` method in `KnownBugsTest`), and report it. Do not reshape the code to
 avoid it. (Functional threading instead of Norvig's dict mutation is the
 language paradigm, not a workaround.)
 
@@ -143,8 +143,8 @@ java -DPARALLEL_COLLECTIONS=false -jar cli/build/libs/nelumbo-cli-*.jar examples
 ## Bug handling
 
 For every engine issue hit: capture a minimal red-by-design `.nl` in
-`bug-repros/` (expectation states the CORRECT behaviour), add a line under a
-2026-09-11 section of `bug-repros/README.md`, and report it for Wim. Never
+`bugs/` (expectation states the CORRECT behaviour), add a `@KnownBug` method
+to `KnownBugsTest` (see CLAUDE.md "Known-Bug Repros"), and report it for Wim. Never
 refactor the solver to avoid the defect.
 
 ## Non-goals

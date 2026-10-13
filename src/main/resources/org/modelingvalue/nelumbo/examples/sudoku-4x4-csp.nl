@@ -1,26 +1,12 @@
 // Norvig candidate-set CSP sudoku solver (4x4), options as a Digit enum.
 // CLI-only. Run with: java -DPARALLEL_COLLECTIONS=false -jar nelumbo-cli-*.jar <this file>
 //
-// STATUS (2026-10-13): at the bare eliminate (plan Task 6). It was blocked
-// (2026-10-09) on elim's guards `d in cell(g,r,c)` / `!(d in cell(g,r,c))` being
-// undecided (`e in f(...)` with a user function call as the collection); fixed
-// on 2026-10-13: tests/in-on-function-call-undecided.nl in RegressionTest. The
-// elim/afterElim rules are in the file, the three Task 6 probes at the end are
-// still commented out.
-// Tasks 1-5 are done. The ~80s load time of the put/rowsBefore/rowsFrom rules (recursive
-// rules over the depth-3 generic List<List<Set<Digit>>>) is fixed: 1.4s since
-// 2026-10-02 (tests/nested-generic-rule-load-time.nl in RegressionTest).
-// The first block (three reduction bugs found 2026-09-11: nested collection call
-// as argument, collection call on the RHS of `=`, recursive collection
-// accumulation) was fixed on 2026-09-24 - they live on as tests/*.nl in
-// RegressionTest and the workarounds were removed here. The second block
-// (2026-09-24: `put` decided, but a cell(g,r,c) read on a putRow-built row was
-// undecided - a user rule wrapping `pos` over a `map`-produced list of
-// collections) was fixed on 2026-09-25: tests/rule-pos-on-mapped-collection-
-// list-undecided.nl in RegressionTest; the two put probes at the end are live
-// again. The side finding (arithmetic inside a set literal unevaluated) was
-// fixed on 2026-10-06: tests/set-literal-arithmetic-unevaluated.nl in RegressionTest.
-// See docs/superpowers/plans/2026-09-11-sudoku-csp.md.
+// STATUS (2026-10-13): Tasks 1-5 done. Task 6 (bare eliminate) BLOCKED on
+// bugs/in-on-nested-function-call-undecided.nl: `e in f(a)` is undecided when a is a call.
+// The elim/afterElim rules are in the file, the three Task 6 probes at the end stay commented out.
+// Task 17 (grid DSL) BLOCKED on bugs/single-hole-functor-parser-npe.nl: `Cell ::= ".", <Integer>`
+// crashes the parser; its section at the end is commented out.
+// History of fixed blocks and the plan: docs/superpowers/plans/2026-09-11-sudoku-csp.md.
 
 import nelumbo.collections
 
@@ -111,7 +97,25 @@ peer(0,0,0,0) ? [][()]
 // were undecided until the 2026-09-25 fix of rule-pos-on-mapped-collection-list-undecided
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0)=sc ? [(sc={D2})][..]
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,1)=sc ? [(sc={D1,D2,D3,D4})][..]
-// Task 6: bare eliminate (remove + contradiction) - unblocked, not yet enabled, see STATUS
+// Task 6: bare eliminate probes, BLOCKED on bugs/in-on-nested-function-call-undecided.nl
 //cell(elim(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),0,0)=sc ? [(sc={D2,D3,D4})][..]
 //cell(elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D1),0,0)=sc ? [(sc={D2})][..]
 //elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D2)=g ? [][..]
+
+// ---- Grid DSL (plan Task 17): row notation -> List<Integer>, `.` = blank = 0 ----
+// BLOCKED on bugs/single-hole-functor-parser-npe.nl: the cell's lone-hole
+// alternative `<Integer>` makes the parser NPE on every later Integer
+// expression, so the whole section (declarations included) stays commented out.
+//
+//Cell          :: Object
+//Cell          ::= ".", <Integer>
+//Integer       ::= cellNum(<Cell>)
+//List<Integer> ::= sudokuRow <(> <Cell#100> <)+> #0
+//
+//Cell          x0, x1, x2, x3
+//
+//cellNum(.)=v <=> v=0
+//cellNum(k)=v <=> v=k
+//sudokuRow x0 x1 x2 x3 = il <=> il=[cellNum(x0),cellNum(x1),cellNum(x2),cellNum(x3)]
+//
+//sudokuRow . 2 3 4 = il ? [(il=[0,2,3,4])][..]
