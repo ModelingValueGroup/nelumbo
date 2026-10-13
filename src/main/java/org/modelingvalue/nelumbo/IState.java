@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo;
 
+import java.io.PrintStream;
+
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.util.Mergeable;
@@ -42,4 +44,17 @@ public interface IState<S extends IState> extends Mergeable<S> {
     }
 
     public abstract S merge(S merged);
+
+    Map<Object, S> allTransitions();
+
+    default void print(PrintStream s) {
+        print("", s);
+    }
+
+    default void print(String prefix, PrintStream stream) {
+        for (Entry<?, S> e : allTransitions()) {
+            stream.println(prefix + e.getKey() + " -> ");
+            e.getValue().print(prefix + "  ", stream);
+        }
+    }
 }

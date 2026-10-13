@@ -507,7 +507,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Set<Rule> getRules(Predicate predicate) {
-        return ruleSignatures.get().match(predicate, this);
+        return ruleSignatures.get().match(predicate, true, this);
     }
 
     public Transform addTransform(Transform transform) {
@@ -520,7 +520,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Set<Transform> getTransforms(Node root) {
-        return transformSignatures.get().match(root, this);
+        return transformSignatures.get().match(root, false, this);
     }
 
     public void addFact(Predicate fact) {
@@ -529,7 +529,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         facts.updateAndGet(map -> {
             map = map.put(fact, fact.factCC());
             for (int i = 0; i < fact.length(); i++) {
-                map = addFact(map, fact, fact.setType(i, fact.getType(i)), i, args.get(i));
+                map = addFact(map, fact, fact.setType(i, args.get(i)));
             }
             return map;
         });
@@ -537,35 +537,37 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact,
-            Predicate predicate, int i, Type cls) {
-        Type type = predicate.getType(i);
-        if (cls.isAssignableFrom(type)) {
-            InferResult pre = map.get(predicate);
-            map = map.put(predicate,
-                    InferResult.factsCI(predicate, pre != null ? pre.facts().add(fact) : fact.singleton()));
-            if (!cls.equals(type)) {
-                for (Type gen : generalizations(type, cls)) {
-                    map = addFact(map, fact, predicate.setType(i, gen), i, cls);
-                }
-            }
-        }
-        return map;
-    }
-
-    private static Set<Type> generalizations(Type type, Type top) {
-        Set<Type> result = Set.of();
-        for (Type g : type.supers()) {
-            if (top.isAssignableFrom(g)) {
-                result = result.add(g);
-            }
-        }
-        return result;
+            Predicate predicate) {
+        InferResult pre = map.get(predicate);
+        return map.put(predicate,
+                InferResult.factsCI(predicate, pre != null ? pre.facts().add(fact) : fact.singleton()));
     }
 
     public InferResult getFacts(Predicate predicate, InferContext context) {
-        InferResult result = facts.get().get(predicate.varsToTypes());
+        List<Type> args = predicate.functor().argTypes();
+        Predicate varsToTypes = predicate;
+        for (int i = 0; i < predicate.length(); i++) {
+            if (predicate.get(i) instanceof Variable) {
+                varsToTypes = varsToTypes.setType(i, args.get(i));
+            }
+        }
+        InferResult result = facts.get().get(varsToTypes);
         if (result != null) {
             result = result.cast(predicate);
+            Set<Predicate> facts = result.facts();
+            Set<Predicate> falsehoods = result.falsehoods();
+            for (Predicate fact : facts) {
+                for (int i = 0; i < predicate.length(); i++) {
+                    if (predicate.get(i) instanceof Variable var && fact.get(i) instanceof Node node
+                            && !var.type().isAssignableFrom(node.type())) {
+                        falsehoods = falsehoods.add(fact);
+                        facts = facts.remove(fact);
+                        continue;
+                    }
+                }
+            }
+            return InferResult.of(predicate, facts, result.completeFacts(), falsehoods, result.completeFalsehoods(),
+                    Set.of());
         } else {
             result = predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(predicate, Set.of());
         }

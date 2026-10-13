@@ -252,6 +252,9 @@ peer(r,c,r2,c2)    <=> !(r=r2 & c=c2) & (r=r2 | c=c2 | samebox(r,c,r2,c2))
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **UNBLOCKED (2026-10-13):** the blocker below is fixed, now `tests/in-on-function-call-undecided.nl`
+> in `RegressionTest`; the three probes are still commented out in the file.
+>
 > **BLOCKED (2026-10-09)** on `bugs/in-on-function-call-undecided.nl` (`@KnownBug` in
 > `KnownBugsTest`): `e in f(...)` is undecided when the collection is a user function call,
 > so both guards of `elim` (`d in cell(g,r,c)`, `!(d in cell(g,r,c))`) and with them all

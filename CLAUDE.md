@@ -92,7 +92,7 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - Brute-force files report the result set open (`[(s=...),..][..]`), singles-first files closed; the smart files keep only the "real" puzzle active (neighbor-query effects).
 - `SudokuExamplesTest`: all `@Disabled` (4x4: timing-dependent `speculative-guard-index-crash.nl` without the flag; 9x9: too slow).
 - `sudoku-4x4-smart.nl` fails with `Inconsistent results`: `scanB`'s forced branch lacks an `if` (program defect), which the engine reports in one rule order only (`bugs/inconsistency-missed-by-rule-order.nl`; `-DREVERSE_NELUMBO=true` flips it). `sudoku-9x9-smart.nl` has the same `scanB` shape.
-- `sudoku-4x4-csp.nl`: CSP solver, Task 6 (`elim`) blocked on `bugs/in-on-function-call-undecided.nl`.
+- `sudoku-4x4-csp.nl`: CSP solver at Task 6 (`elim`); its blocker (`tests/in-on-function-call-undecided.nl`) is fixed, the Task 6 probes are still commented out.
 
 ## Nelumbo Language Syntax (.nl files)
 

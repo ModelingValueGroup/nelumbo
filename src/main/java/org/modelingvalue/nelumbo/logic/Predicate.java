@@ -55,7 +55,6 @@ public class Predicate extends Node {
     private int           nrOfUnbound    = -1;
     private Set<Variable> localVariables = null;
     private Set<Variable> variables      = null;
-    private Predicate     varsToTypes    = null;
 
     @NelumboConstructor
     public Predicate(NodeInfo nodeInfo, Object... args) {
@@ -83,22 +82,6 @@ public class Predicate extends Node {
             localVariables = super.allLocalVars();
         }
         return localVariables;
-    }
-
-    public Predicate varsToTypes() {
-        if (varsToTypes == null) {
-            try {
-                varsToTypes = (Predicate) replace(o -> {
-                    if (o instanceof Variable var) {
-                        return var.type();
-                    }
-                    return o;
-                });
-            } catch (ParseException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        return varsToTypes;
     }
 
     public final boolean isFullyBound() {

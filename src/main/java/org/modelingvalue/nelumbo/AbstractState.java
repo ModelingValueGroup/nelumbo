@@ -36,9 +36,9 @@ public abstract class AbstractState<S extends AbstractState> implements IState<S
     }
 
     @SuppressWarnings("unchecked")
-    public S matchType(Type type, MutableMap<Variable, Type> typeArgs) {
+    public S matchType(Type type, boolean inverse, MutableMap<Variable, Type> typeArgs) {
         S s = null;
-        Set<Type> types = typeMatcher().match(type, typeArgs);
+        Set<Type> types = typeMatcher().match(type, inverse, typeArgs);
         for (Type m : types) {
             if (s == null) {
                 s = typeTransitions().get(m);

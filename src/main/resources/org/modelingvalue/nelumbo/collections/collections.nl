@@ -33,30 +33,28 @@ Set<E>           ::= { <Lambda1<E,Boolean>> },
                      <Set<E>> || <Set<E>>                #60,
                      <Set<E>> - <Set<E>>                 #50
 
-Integer          ::= | <Set<E>> |        #35,
-                     | <List<E>> |       #35,
+Integer          ::= | <Collection<E>> | #35,
                      <E> "pos" <List<E>> #40
 
 {Struct,List<E>} ::= [ <(> <E> <,> , <)*> ]  @nelumbo.collections.NList
-List<E>          ::= <List<E>> + <List<E>>                 #50,
-                     <List<E>> where <Lambda1<E,Boolean>>  #37,
-                     <Set<F>> map <Lambda1<F,E>>           #37,
-                     <Set<E>> sort <Lambda2<E,E,Boolean>>  #37,
-                     <List<F>> map <Lambda1<F,E>>          #37,
-                     <List<E>> sort <Lambda2<E,E,Boolean>> #37
+List<E>          ::= <List<E>> + <List<E>>                       #50,
+                     <List<E>> where <Lambda1<E,Boolean>>        #37,
+                     <Collection<F>> map <Lambda1<F,E>>          #37,
+                     <Collection<E>> sort <Lambda2<E,E,Boolean>> #37
 
 Integer              i
 E                    e
 F                    f
+Collection<E>        c
 Set<E>               s, s1, s2, s3
 List<E>              l, l1, l2, l3
 List<F>              lf
+Collection<F>        cf
 Lambda1<E,Boolean>   leb
 Lambda2<E,E,Boolean> leeb
-Lambda1<E,F>         lef
+Lambda1<F,E>         lfe
 
-|s|=i             <=>  size(s,i)
-|l|=i             <=>  size(l,i)
+|c|=i             <=>  size(c,i)
 
 {leb}=s           <=>  build(leb, s)
 e in s            <=>  elementOf(s, e)
@@ -76,8 +74,5 @@ e in l            <=>  E[i](e pos l = i)
 s1 where leb = s2 <=>  setFilter(s1, leb, s2)
 l1 where leb = l2 <=>  listFilter(l1, leb, l2)
 
-s sort leeb = l   <=>  sort(s, leeb, l)
-s map lef = lf    <=>  map(s, lef, lf)
-
-l sort leeb = l1  <=>  sort(l, leeb, l1)
-l map lef = lf    <=>  map(l, lef, lf)
+cf map lfe = l    <=>  map(cf, lfe, l)
+c sort leeb = l   <=>  sort(c, leeb, l)

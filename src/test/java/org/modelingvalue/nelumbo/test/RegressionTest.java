@@ -80,6 +80,11 @@ public class RegressionTest extends NelumboTestBase {
         testResource("rule-pos-on-mapped-collection-list-undecided.nl");
     }
 
+    @RepeatedTest(10)
+    public void inOnFunctionCallUndecided() {
+        testResource("in-on-function-call-undecided.nl");
+    }
+
     // also covers the list-literal twin [j+1], which did not parse before the fix
     @RepeatedTest(10)
     public void setLiteralArithmeticUnevaluated() {

@@ -1,11 +1,12 @@
 // Norvig candidate-set CSP sudoku solver (4x4), options as a Digit enum.
 // CLI-only. Run with: java -DPARALLEL_COLLECTIONS=false -jar nelumbo-cli-*.jar <this file>
 //
-// STATUS (2026-10-09): BLOCKED at the bare eliminate (plan Task 6) on
-// bugs/in-on-function-call-undecided.nl: elim's guards `d in cell(g,r,c)` and
-// `!(d in cell(g,r,c))` are undecided (`e in f(...)` with a user function call
-// as the collection), so elim never decides. The elim/afterElim rules are in
-// the file, the three Task 6 probes at the end are commented out.
+// STATUS (2026-10-13): at the bare eliminate (plan Task 6). It was blocked
+// (2026-10-09) on elim's guards `d in cell(g,r,c)` / `!(d in cell(g,r,c))` being
+// undecided (`e in f(...)` with a user function call as the collection); fixed
+// on 2026-10-13: tests/in-on-function-call-undecided.nl in RegressionTest. The
+// elim/afterElim rules are in the file, the three Task 6 probes at the end are
+// still commented out.
 // Tasks 1-5 are done. The ~80s load time of the put/rowsBefore/rowsFrom rules (recursive
 // rules over the depth-3 generic List<List<Set<Digit>>>) is fixed: 1.4s since
 // 2026-10-02 (tests/nested-generic-rule-load-time.nl in RegressionTest).
@@ -110,7 +111,7 @@ peer(0,0,0,0) ? [][()]
 // were undecided until the 2026-09-25 fix of rule-pos-on-mapped-collection-list-undecided
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0)=sc ? [(sc={D2})][..]
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,1)=sc ? [(sc={D1,D2,D3,D4})][..]
-// Task 6: bare eliminate (remove + contradiction) - BLOCKED, see STATUS
+// Task 6: bare eliminate (remove + contradiction) - unblocked, not yet enabled, see STATUS
 //cell(elim(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),0,0)=sc ? [(sc={D2,D3,D4})][..]
 //cell(elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D1),0,0)=sc ? [(sc={D2})][..]
 //elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D2)=g ? [][..]

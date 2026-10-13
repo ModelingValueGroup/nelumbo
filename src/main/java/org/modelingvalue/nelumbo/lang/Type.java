@@ -325,6 +325,7 @@ public final class Type extends Node implements FunctorOrType {
         private Set<Type>        supers;
         private TypeMatcherState typeMatcher;
         private Type             objectArgsOnly;
+        private Type             numberArgs;
 
         public Set<Type> supers() {
             if (supers == null) {
@@ -347,6 +348,19 @@ public final class Type extends Node implements FunctorOrType {
             return objectArgsOnly;
         }
 
+        public Type numberArgs() {
+            if (numberArgs == null) {
+                numberArgs = initNumberArgs();
+            }
+            return numberArgs;
+        }
+    }
+
+    private Type initNumberArgs() {
+        int[] i = new int[1];
+        return hasArguments() ? setArguments(arguments().replaceAll(
+                a -> OBJECT.isAssignableFrom(a) ? new Type(new Variable(List.of(), false, TYPE, "" + i[0]++)) : a))
+                : this;
     }
 
     private Type initObjectArgsOnly() {
@@ -412,6 +426,10 @@ public final class Type extends Node implements FunctorOrType {
 
     public Type objectArgsOnly() {
         return typeInfo().objectArgsOnly();
+    }
+
+    public Type numberArgs() {
+        return typeInfo().numberArgs();
     }
 
     public boolean isFactType() {
