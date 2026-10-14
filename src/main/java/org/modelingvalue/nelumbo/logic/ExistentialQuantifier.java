@@ -72,7 +72,8 @@ public final class ExistentialQuantifier extends Quantifier {
         for (Predicate predFalsehood : predResult.falsehoods()) {
             Predicate falsehood = setBinding(this, predFalsehood.getBinding(predicate).removeAllKey(localVars));
             if (!facts.contains(falsehood)) {
-                if (falsehood.isFullyBound()) {
+                // E is false only when every candidate is false: that needs all facts of the body
+                if (falsehood.isFullyBound() && predResult.completeFacts()) {
                     falsehoods = falsehoods.add(falsehood);
                 } else {
                     completeFalsehoods = false;
@@ -87,7 +88,12 @@ public final class ExistentialQuantifier extends Quantifier {
                 completeFalsehoods = false;
             }
         } else if (falsehoods.isEmpty() && facts.isEmpty()) {
-            falsehoods = falsehoods.add(this);
+            if (predResult.completeFacts()) {
+                falsehoods = falsehoods.add(this);
+            } else {
+                completeFacts = false;
+                completeFalsehoods = false;
+            }
         }
         return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }

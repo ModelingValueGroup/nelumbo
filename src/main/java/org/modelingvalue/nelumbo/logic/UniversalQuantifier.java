@@ -60,7 +60,8 @@ public final class UniversalQuantifier extends Quantifier {
         for (Predicate predFact : predResult.facts()) {
             Predicate fact = setBinding(this, predFact.getBinding(predicate).removeAllKey(localVars));
             if (!falsehoods.contains(fact)) {
-                if (fact.isFullyBound()) {
+                // A is true only when no candidate is false: that needs all falsehoods of the body
+                if (fact.isFullyBound() && predResult.completeFalsehoods()) {
                     facts = facts.add(fact);
                 } else {
                     completeFacts = false;
@@ -75,7 +76,12 @@ public final class UniversalQuantifier extends Quantifier {
                 completeFalsehoods = false;
             }
         } else if (falsehoods.isEmpty() && facts.isEmpty()) {
-            facts = facts.add(this);
+            if (predResult.completeFalsehoods()) {
+                facts = facts.add(this);
+            } else {
+                completeFacts = false;
+                completeFalsehoods = false;
+            }
         }
         return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
     }
