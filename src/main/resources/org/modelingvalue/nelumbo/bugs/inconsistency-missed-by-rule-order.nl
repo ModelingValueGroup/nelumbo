@@ -1,26 +1,9 @@
 // expect-error-per-query: Inconsistent results
-// Bug: an inconsistency between two rules of the same relation is detected
-// in only ONE of the two rule orders. Rule B below claims f(1)=r has NO facts
-// (complete: its body is false for n=1), rule A claims f(1)=1. The docs
-// (reference/logic/writing-rules.md) call that an inconsistent program that
-// raises an InconsistencyException. Rule.biimply (logic/Rule.java:217-230)
-// only checks the facts/falsehoods of the rules tried EARLIER against the
-// completeness of the CURRENT rule, not the other way round. Rules are tried
-// in Set<Rule> hash order, so A-then-B throws and B-then-A silently answers
-// [(r=1)][(r=2),..]. The 32 copies are identical apart from the functor
-// name; which of them hit which order depends on hashes, and those depend on
-// what the JVM parsed before (at a3014b5b 22 of 32 answered silently on the
-// CLI, 20 in KnownBugsTest alone, 26 in the full core suite; the
-// REVERSE_NELUMBO flag flips them). With 32 copies a run in which all are
-// detected by chance is very unlikely.
-// Correct: every query reports "Inconsistent results". Actual: most answer.
-// No .nl expectation can state an error, so both harnesses special-case this
-// file: KnownBugsTest checks the diagnostics, ./run-all-tests-with-CLI the
-// expect-error-per-query line at the top.
-// Found 2026-10-09: examples/sudoku-4x4-smart.nl has this defect in scanB
-// (its forced branch has no guard). It went red when Wim's parser-lookahead
-// commits 17744db9..19aea5fb (2026-09-30..10-02) shifted the variable suffixes
-// and with them the rule order - the parse trees did not change.
+// Bug: an inconsistency between two rules of one relation is detected in only one of
+// the two rule orders. For f(1), rule A gives r=1 and rule B gives no facts (its body
+// is false); in the order B-then-A the query silently answers [(r=1)][(r=2),..].
+// The rule order is hash-dependent, hence 32 copies that differ only in the functor name.
+// Correct: every query reports "Inconsistent results".
 import nelumbo.integers
 
 Integer ::= f1(<Integer>),

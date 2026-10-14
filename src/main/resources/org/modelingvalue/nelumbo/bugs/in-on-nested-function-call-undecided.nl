@@ -1,13 +1,5 @@
-// Bug: `e in f(a)` is undecided when the argument a is itself a call, user
-// (`g(0)`) or built-in (`0+1`). Membership in a call with a plain argument, and
-// the same call compared with `=`, decide. Follow-up of
-// tests/in-on-function-call-undecided.nl (plain-argument case, fixed).
-// Correct: 1 in f(g(0)) is true, 3 in f(g(0)) is false, 1 in f(0+1) is true,
-// and the same inside a rule body (o2).
-// Actual: all UNDECIDED [..][..] (f(g(0))=s itself decides, s={1,2}).
-// Code location: not investigated.
-// Found 2026-10-13 in examples/sudoku-4x4-csp.nl (plan Task 6): `d in cell(g,r,c)`
-// with `cell(g,r,c)=sc <=> sc = catRow(crow(g,r),c)` keeps all three elim probes undecided.
+// Bug: `e in f(a)` is undecided when the argument a is itself a call, user (`g(0)`)
+// or built-in (`0+1`), also inside a rule body (o2); `1 in f(0)` and `f(g(0))=s` decide.
 import nelumbo.collections
 
 Set<Integer>  ::= f(<Integer>), inner(<List<Integer>>), o2(<Integer>), o3(<Integer>)

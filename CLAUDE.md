@@ -217,7 +217,7 @@ Deployment (`.github/workflows/deploy.yml`, on push to `master` or manual):
 
 ## Known-Bug Repros (xfail suite)
 
-- Red-by-design repros in `src/main/resources/org/modelingvalue/nelumbo/bugs/`; every expectation states the CORRECT behavior; headers carry status, code location and attribution.
+- Red-by-design repros in `src/main/resources/org/modelingvalue/nelumbo/bugs/`; every expectation states the CORRECT behavior; the header only describes the reproduced problem, as briefly as possible (no history, dates, commits, code locations).
 - Two harnesses, both needed (one bug can show as a crash in one and a wrong result in the other):
   - JUnit `KnownBugsTest`: one `@KnownBug` method per repro (`KnownBugExtension`: a failure shows ABORTED, build green; a pass FAILS with "KNOWN BUG APPEARS FIXED"). `bugResource()` has a preemptive 60 s timeout.
   - CLI `./run-all-tests-with-CLI` (needs `cliJar`, runs with `-ea`): a file taking >= `SLOW_SECONDS` (60) fails.

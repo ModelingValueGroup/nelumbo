@@ -1,13 +1,7 @@
-// Bug: using an UNDECLARED variable in a rule produces a parse error that
-// points at a nearby token with a completely unrelated message ("Unexpected
-// token '\n', expected '<','::'" here; "Unexpected token '+'" when the
-// unknown name is mid-expression), never mentioning the unknown identifier.
-// The broken rule is then silently dropped and evaluation continues, so the
-// query below reports undecided instead of failing fast.
-// Correct: an error naming the undeclared variable (q), and ideally a hard
-// stop. Actual: misleading error + rule silently missing.
-// (This misdirection cost an hour in the 2026-09-10 sudoku2 session: the
-// error was read as an arithmetic-argument limitation.)
+// Bug: an undeclared variable in a rule gives a misleading parse error at a nearby token
+// ("Unexpected token '\n', expected '<','::'") that never names the variable, and the
+// rule is silently dropped, so the query is undecided.
+// Correct: an error naming the undeclared variable (q).
 import nelumbo.integers
 
 R :: Object
