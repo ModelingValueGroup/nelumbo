@@ -20,13 +20,11 @@ import nelumbo.logic
 
 ```nelumbo
 Boolean   :: Object
-Boolean  :: Boolean
 Function  :: Object
 Literal   :: Object
 Struct    :: Object
 ```
 - `Boolean` — the type of truth-valued expressions.
-- `Boolean` — marker subtype of `Boolean` used by the language transformation machinery (see [`belasting.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/belasting.nl) for usage in a DSL).
 - `Literal` — values that are their own canonical form: named constants such as `T1`, `Hendrik`, `true`, integers, strings, …
 - `Function` — values produced by functional patterns (e.g., `a+b`, `fib(n)`, `r(x/y)`) that reduce by rules.
 - `Struct` — values that are constructors with **structural equality**: two `Struct` values are equal when their parts are (collection literals such as `{1,2}` and `[1,2]` are `Struct`s; a user type declared `:: Struct` gets the same). They take the `eq` route like a `Literal`.
@@ -159,7 +157,7 @@ Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                      
 | Rule  | `<Boolean> <=> <Boolean> if <Boolean>`, `if` optional | `Rule`             |
 | Query | `<Boolean> ?`, optionally followed by `[..][..]`      | `Query`            |
 
-In test files the `fact` keyword is often elided — a bare predicate at top level (such as `pc(Hendrik, Juliana)` in `family.nl`) is sugar for `fact pc(Hendrik, Juliana)`. The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
+The `fact` keyword is required: a bare `Boolean` at top level is rejected. The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
 
 ```nelumbo
 pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#0> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
@@ -175,7 +173,7 @@ After `import nelumbo.logic`, the following are visible to the importer:
 
 | Kind           | Names                                              |
 |---|---|
-| Types          | `Boolean`, `Boolean`, `Literal`, `Function`, `Struct`, `Lambda`, `Lambda1`…`Lambda6` |
+| Types          | `Boolean`, `Literal`, `Function`, `Struct`, `Lambda`, `Lambda1`…`Lambda6` |
 | Boolean values | `true`, `false`, `unknown`                          |
 | Connectives    | `!`, `&`, `\|`, `->`, `<->`                         |
 | Lambdas        | `[x,…](body)` (1–6 variables)                      |

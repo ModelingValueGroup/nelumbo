@@ -109,7 +109,7 @@ The Java level. Always present.
 `nelumbo.logic`, three-valued logic and the statements that drive execution.
 
 - [`nelumbo.logic`](reference/logic/index.md) — the module: Boolean, connectives, quantifiers, equality
-- [Statements](reference/logic/statements.md) — fact types, facts, queries and tests
+- [Statements](reference/logic/statements.md) — facts, queries and tests
 - [Operators](reference/logic/operators.md) — the logical operators and `fact` / `<=>` / `?`
 - [Writing rules](reference/logic/writing-rules.md) — `<=>`, guards, merging, contradictions
 - [Three-valued logic](reference/logic/three-valued-logic.md) — truth tables and identities

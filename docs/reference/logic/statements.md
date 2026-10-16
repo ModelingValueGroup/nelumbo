@@ -2,47 +2,52 @@
 
 > **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
 
-The top-level statements that drive execution: declaring fact types, asserting facts, and asking queries. Rules (`<=>`) have their own page, [Writing rules](writing-rules.md). All of these are declared in `logic.nl`. The declarations that shape syntax (types, patterns, variables) are in the [`nelumbo.lang` grammar](../lang/grammar.md).
+The top-level statements that drive execution: asserting facts and asking queries. Rules (`<=>`) have their own page, [Writing rules](writing-rules.md). All of these are declared in `logic.nl`. The declarations that shape syntax (types, patterns, variables) are in the [`nelumbo.lang` grammar](../lang/grammar.md).
 
 ---
 
-## Boolean declarations
+## Facts
 
-A `Boolean` pattern declares a relation whose instances can be asserted as ground truth:
-
-```nelumbo
-Boolean ::= pc(<Person>,<Person>)                    // family.nl
-Boolean ::= friends(<Person>,<Person>)               // friends.nl
-Boolean ::= het inkomen van <Person> is <Integer> euro  // belasting.nl
-```
-
-A fact type looks like any other pattern, but values built with it are not computed by rules — they are either asserted directly (see below) or they are not. This separates **ground truth** from **derived relations**.
-
-### Facts
-
-Facts are asserted with the `fact` keyword:
+Any `Boolean` expression can be asserted with the `fact` keyword: a relation declared as a `Boolean` pattern, or the value of a function (`f(x)=v`):
 
 ```nelumbo
-fact pc(Hendrik, Juliana),
-     pc(Wilhelmina, Juliana),
-     pc(Juliana, Beatrix)
+Boolean ::= friends(<Person>,<Person>)                     // friends.nl
+Boolean ::= het inkomen van <Person> is <one Integer> euro  // belasting.nl
+Female  ::= m(<Person>)                                    // family.nl
+
+fact friends(Piet, Jan),
+     friends(Jan, Klaas)
 
 fact het inkomen van Piet is 50000 euro
+
+fact m(Beatrix)=Juliana
 ```
 
-`fact` introduces one or more comma-separated ground-truth assertions. Once asserted, they are available to the query engine as proven facts.
+`fact` introduces one or more comma-separated assertions. Once asserted, they are available to the query engine as proven facts. Facts and rules are aligned: the same relation can have both facts and a defining rule (see [`friends.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/friends.nl)).
+
+### Open facts and `one`
+
+Facts are open: what is not asserted is not false, it is unknown. A query over facts therefore ends its answers in `..`:
+
+```nelumbo
+friends(Piet, x) ? [(x=Jan),..][..]
+```
+
+A hole marked `<one T>` is unique: for each combination of the other arguments there is at most one value. Asserting `het inkomen van Piet is 50000 euro` then also decides that every other amount is false, so `het inkomen van Piet is i euro` gives `[(i=50000)][..]`. Functions work the same way: a function has a single result, so `fact m(Beatrix)=Juliana` makes `m(Beatrix)=Beatrix` false.
 
 ---
 
-## Queries, tests, and bare facts
+## Queries and tests
 
 Three forms drive execution:
 
 ```nelumbo
-E                  // bare expression — treated as a fact if E is a Boolean instance
+fact E             // assertion — see Facts above
 E ?                // query — run the reasoner, print the result
 E ? [F][N]         // test — query and compare; pass iff result matches
 ```
+
+A bare expression without `fact` is rejected (`unexpected type Boolean, expected Root or List<Root>`).
 
 See [`test-expression-semantics.md`](test-expression-semantics.md) for the precise comparison rules.
 

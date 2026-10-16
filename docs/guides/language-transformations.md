@@ -210,7 +210,7 @@ Two things to notice:
 When the user writes `attr Persoon de naam String`, all of the following happen:
 
 - The `Root` grammar gains two new patterns: `de naam van Persoon is String` and `wat is de naam van Persoon ?`
-- A private fact type `naam(Persoon, String)` is declared
+- A private relation `naam(Persoon, String)` is declared
 - Two transformations are registered that turn user uses of those new Root patterns into facts and queries respectively
 
 The user then gets to write natural Dutch and have it work.
@@ -262,9 +262,9 @@ Transformations are powerful, which means they are also easy to overuse. A good 
 
 - **Use a rule (`<=>`)** when the same abstraction can be expressed as an equivalence over values.
 - **Use multiple `::=` patterns** when you want several surface syntaxes for the same underlying relation.
-- **Use a transformation (`::>`)** only when the abstraction you want introduces *structural* declarations — new types, new fact types, new patterns — that depend on the arguments.
+- **Use a transformation (`::>`)** only when the abstraction you want introduces *structural* declarations — new types, new relations, new patterns — that depend on the arguments.
 
-The `attr` example is a good test case: `attr Person name String` introduces a new fact type `name(Person, String)` whose *name* depends on the argument. No rule can do that, because rules cannot declare fact types. Transformation is the right tool.
+The `attr` example is a good test case: `attr Person name String` introduces a new relation `name(Person, String)` whose *name* depends on the argument. No rule can do that, because rules cannot declare relations. Transformation is the right tool.
 
 If you find yourself writing a transformation whose body is one rule with substitutions, consider whether the same effect can be achieved with generic types (`Type E`) instead. Transformations are a last resort when declarative mechanisms cannot express the shape you need.
 

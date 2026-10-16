@@ -88,7 +88,6 @@ The three-valued logic layer. This is where Boolean, the connectives, and — cr
 import nelumbo.lang
 
 Boolean  :: Object
-Boolean :: Boolean
 Function :: Object
 Literal  :: Object
 Struct   :: Object
