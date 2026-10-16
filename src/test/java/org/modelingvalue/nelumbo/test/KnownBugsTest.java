@@ -223,12 +223,6 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("collections-index-out-of-range.nl");
     }
 
-    @KnownBug("e in f(a) undecided when the argument a is itself a call")
-    @Test
-    public void inOnNestedFunctionCallUndecided() {
-        bugResource("in-on-nested-function-call-undecided.nl");
-    }
-
     @KnownBug("period_multiply crashes on multipliers outside int range")
     @Test
     public void datetimeMultiplyOverflow() {

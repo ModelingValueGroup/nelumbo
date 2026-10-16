@@ -1,9 +1,10 @@
 // Norvig candidate-set CSP sudoku solver (4x4), options as a Digit enum.
 // CLI-only. Run with: java -DPARALLEL_COLLECTIONS=false -jar nelumbo-cli-*.jar <this file>
 //
-// STATUS (2026-10-13): Tasks 1-5 done. Task 6 (bare eliminate) BLOCKED on
-// bugs/in-on-nested-function-call-undecided.nl: `e in f(a)` is undecided when a is a call.
-// The elim/afterElim rules are in the file, the three Task 6 probes at the end stay commented out.
+// STATUS (2026-10-16): Tasks 1-5 done. Task 6 (bare eliminate): its blocker
+// tests/in-on-nested-function-call-undecided.nl is fixed; the first two probes now decide,
+// the third (contradiction, expected [][..]) is still [..][..]. The elim/afterElim rules are
+// in the file, the three Task 6 probes at the end stay commented out.
 // Task 17 (grid DSL) BLOCKED on bugs/single-hole-functor-parser-npe.nl: `Cell ::= ".", <Integer>`
 // crashes the parser; its section at the end is commented out.
 // History of fixed blocks and the plan: docs/superpowers/plans/2026-09-11-sudoku-csp.md.
@@ -97,7 +98,7 @@ peer(0,0,0,0) ? [][()]
 // were undecided until the 2026-09-25 fix of rule-pos-on-mapped-collection-list-undecided
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0)=sc ? [(sc={D2})][..]
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,1)=sc ? [(sc={D1,D2,D3,D4})][..]
-// Task 6: bare eliminate probes, BLOCKED on bugs/in-on-nested-function-call-undecided.nl
+// Task 6: bare eliminate probes; 1 and 2 decide, 3 is still [..][..] (should be [][..])
 //cell(elim(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),0,0)=sc ? [(sc={D2,D3,D4})][..]
 //cell(elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D1),0,0)=sc ? [(sc={D2})][..]
 //elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D2)=g ? [][..]

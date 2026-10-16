@@ -1,5 +1,7 @@
-// Bug: `e in f(a)` is undecided when the argument a is itself a call, user (`g(0)`)
-// or built-in (`0+1`), also inside a rule body (o2); `1 in f(0)` and `f(g(0))=s` decide.
+// Regression test (fixed 2026-10-16; was bugs/in-on-nested-function-call-undecided.nl).
+// `e in f(a)` must decide when the argument a is itself a call, user (`g(0)`) or
+// built-in (`0+1`), also inside a rule body (o2). (Was: UNDECIDED [..][..], while
+// `1 in f(0)` and `f(g(0))=s` decided.)
 import nelumbo.collections
 
 Set<Integer>  ::= f(<Integer>), inner(<List<Integer>>), o2(<Integer>), o3(<Integer>)

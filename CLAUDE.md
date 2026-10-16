@@ -92,7 +92,7 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - Brute-force files report the result set open (`[(s=...),..][..]`), singles-first files closed; the smart files keep only the "real" puzzle active (neighbor-query effects).
 - `SudokuExamplesTest`: all `@Disabled` (4x4: timing-dependent `speculative-guard-index-crash.nl` without the flag; 9x9: too slow).
 - `sudoku-4x4-smart.nl` fails with `Inconsistent results`: `scanB`'s forced branch lacks an `if` (program defect), which the engine reports in one rule order only (`bugs/inconsistency-missed-by-rule-order.nl`; `-DREVERSE_NELUMBO=true` flips it). `sudoku-9x9-smart.nl` has the same `scanB` shape.
-- `sudoku-4x4-csp.nl`: CSP solver at Task 6 (`elim`), BLOCKED on `bugs/in-on-nested-function-call-undecided.nl` (`e in f(a)` undecided when the argument a is itself a call, as in `cell`); the Task 6 probes are commented out. Grid DSL (Task 17) BLOCKED on `bugs/single-hole-functor-parser-npe.nl` (`Cell ::= ".", <Integer>` NPEs the parser); its section is commented out.
+- `sudoku-4x4-csp.nl`: CSP solver at Task 6 (`elim`); its Task 6 probes are commented out: the first two decide, the third (contradiction, expected `[][..]`) is still `[..][..]`. Grid DSL (Task 17) BLOCKED on `bugs/single-hole-functor-parser-npe.nl` (`Cell ::= ".", <Integer>` NPEs the parser); its section is commented out.
 
 ## Nelumbo Language Syntax (.nl files)
 
