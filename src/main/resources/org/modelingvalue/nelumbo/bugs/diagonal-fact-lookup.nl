@@ -1,9 +1,6 @@
-// Bug: KnowledgeBase.addFact only indexes generalizations one argument at a time, so
-// the diagonal shape r(a,a) has no index entry and getFacts (KnowledgeBase.java:560)
-// answers "complete, no facts" for it.
-// Correct: r(X,X) is a fact, so X witnesses E[a](r(a,a)) - it must be true.
-// Actual: definitively false. The last two queries have no expectation on purpose
-// (they illustrate; their exact correct completeness is debatable).
+// Bug: the lookup of the diagonal shape r(a,a) answers "complete, no facts" although
+// r(X,X) is a fact, so E[a](r(a,a)) is definitively false instead of true.
+// The last query has no expectation (it illustrates).
 import nelumbo.logic
 
 Person   :: Object
@@ -17,5 +14,5 @@ Person a, b
 fact r(X,X)
 
 r(X,X)             ? [()][]
-E[a](r(a,a))       ? [()][..]
+E[a](r(a,a))       ? [()][]
 E[a](E[b](r(a,b))) ?

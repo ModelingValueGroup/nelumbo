@@ -1,6 +1,5 @@
-// Bug: integer_string (Strings.java:82) parses with Integer.parseInt, so int(...) is
-// silently limited to 32-bit although all other integer ops are BigInteger-based.
-// Correct: the round trip below succeeds. Actual: int("12345678901") yields falsehood.
+// Bug: int(...) is limited to 32 bits (all other integer operations are unbounded), so
+// int("12345678901") yields no result.
 import nelumbo.strings
 
 String a

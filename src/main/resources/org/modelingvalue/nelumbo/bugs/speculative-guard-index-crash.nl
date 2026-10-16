@@ -1,27 +1,7 @@
-// Bug: guard conjuncts of rule alternatives are evaluated speculatively -
-// a conjunct like cell(g,r,c)=0 or an E-guard over fits(g,r,c) is probed
-// even at scan positions where a preceding conjunct (r<9 & c<9) is already
-// false. With plain accessors (at/row directly on pos) that dereferences
-// index 9 of a 9-element list and kills the whole run:
-//   IndexOutOfBoundsException at collections.Collections.indexOf
-//   (Collections.java:63, get-mode) via Predicate.callMethod.
-// The query below just scans an ALREADY SOLVED grid. The shipped
-// examples/sudoku-9x9-smart.nl works around it by bounds-guarding at/row
-// (`x pos l = i if i>=0 & i<9`), turning the out-of-range probe into a
-// clean failure.
-// Correct: s = the grid itself. Actual: IndexOutOfBoundsException.
-// Found 2026-09-10 while writing examples/sudoku-9x9-smart.nl.
-//
-// UPDATE 2026-09-13: the file currently crashes with ClassCastException
-// instead - the recursive-collection-accumulation regression (bba88fc8, see
-// tests/recursive-list-concat-classcast.nl, fixed 2026-09-24) hit its
-// rowsBefore/put machinery first
-// and masks the guard defect. Shrink attempts (1D and 2D concat-free scan
-// shapes with accessor/E/equality guards, plus raw pos in a guard) could NOT
-// retrigger the original speculative-guard IndexOutOfBounds on current
-// develop - the defect may meanwhile be fixed. Kept UNSHRUNK deliberately:
-// re-evaluate once the bba88fc8 regression is fixed. The bare out-of-range
-// pos crash is covered separately by collections-index-out-of-range.nl.
+// Bug: guard conjuncts of rule alternatives are evaluated speculatively: an accessor in a
+// guard is probed at scan positions where the preceding bound check (r<9 & c<9) is
+// already false and reads index 9 of a 9-element list (IndexOutOfBoundsException).
+// The query scans an already solved grid. Correct: s = the grid itself.
 import nelumbo.collections
 
 // ---- types ----------------------------------------------------------

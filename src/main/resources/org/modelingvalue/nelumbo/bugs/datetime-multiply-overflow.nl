@@ -1,5 +1,5 @@
-// Bug: period_multiply (datetime/Multiply.java:49) uses intValueExact() on the unbounded
-// Integer multiplier. Correct: a result or falsehood. Actual: uncaught ArithmeticException.
+// Bug: multiplying a Period by an integer outside the int range crashes the whole
+// evaluation (ArithmeticException) instead of yielding a result or a falsehood.
 import nelumbo.datetime
 
 Period y

@@ -117,7 +117,7 @@ public class KnownBugsTest extends NelumboTestBase {
     // results, an unused rule being load-bearing) reproduced only against
     // intermediate sudoku-9x9-smart.nl versions - facets of the same defects
 
-    @KnownBug("where-filter over user Boolean rule NPEs inside deep recursion (currently masked by bba88fc8)")
+    @KnownBug("where-filter over user Boolean rule NPEs inside deep recursion")
     @Test
     public void whereFilterNpeInRecursion() {
         bugResource("where-filter-npe-in-recursion.nl");
@@ -125,7 +125,7 @@ public class KnownBugsTest extends NelumboTestBase {
 
     // ==== speculative evaluation ====
 
-    @KnownBug("rule guards evaluated speculatively: unguarded pos crashes out-of-range (currently masked by bba88fc8)")
+    @KnownBug("rule guards evaluated speculatively: unguarded pos crashes out-of-range")
     @Test
     public void speculativeGuardIndexCrash() {
         bugResource("speculative-guard-index-crash.nl");
@@ -165,16 +165,16 @@ public class KnownBugsTest extends NelumboTestBase {
 
     // ==== logic / quantifiers / facts ====
 
-    @KnownBug("fully-bound quantifiers turn unknown body result into definitive answer")
-    @Test
-    public void quantifierDefinitiveFromUnknown() {
-        bugResource("quantifier-definitive-from-unknown.nl");
-    }
-
     @KnownBug("getFacts claims complete-no-facts for un-indexed shapes like r(a,a)")
     @Test
     public void diagonalFactLookup() {
         bugResource("diagonal-fact-lookup.nl");
+    }
+
+    @KnownBug("fact predicate with all arguments unbound answers complete-no-facts: E over it definitively false")
+    @Test
+    public void unboundFactLookupCompleteEmpty() {
+        bugResource("unbound-fact-lookup-complete-empty.nl");
     }
 
     // the correct behavior is an error per query, which bugResource (pass = no

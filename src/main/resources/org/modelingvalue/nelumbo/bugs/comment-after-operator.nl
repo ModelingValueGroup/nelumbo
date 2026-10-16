@@ -1,7 +1,5 @@
-// Bug: TokenType.OPERATOR (TokenType.java:37) only guards '//' at the FIRST character,
-// so a comment directly after an operator char is swallowed into the operator token.
-// Correct: both lines below are the same query plus a comment.
-// Actual: the first line tokenizes '?//' as one operator and fails to parse.
+// Bug: a `//` comment directly after an operator character is lexed as part of the
+// operator (`?//`), so the first query fails to parse; with a space it works.
 import nelumbo.integers
 
 1 + 1 = 2 ?// no space before this comment: parse error while the bug exists

@@ -1,27 +1,6 @@
-// Bug: a `where` set-filter whose lambda calls a user Boolean rule (ok) NPEs
-// the whole evaluation once it runs inside deep recursion:
-//   NullPointerException: ... InferResult.allFalsehoods() is null
-//   at InferResult.isTrueCC (InferResult.java:72)
-//   at lang.Lambda.isComplete/resolve/test (Lambda.java:142/127/110)
-//   at collections.Collections.setFilter (Collections.java:157)
-// The same fits() evaluates correctly standalone (see the fits-style queries
-// in examples/sudoku-9x9-smart.nl's history); only the recursive context crashes it.
-// This file is a singles-first sudoku solver whose scan guard uses
-// fits(g,r,c) = {1..9} where [d](ok(g,r,c,d)); solving the 64-clue puzzle
-// below crashes. The shipped examples/sudoku-9x9-smart.nl avoids `where` entirely
-// (pair-check over ok) for this reason.
-// Correct: the solved grid. Actual: NullPointerException.
-// Found 2026-09-10 while writing examples/sudoku-9x9-smart.nl.
-//
-// UPDATE 2026-09-13: the file currently crashes with ClassCastException
-// instead - the recursive-collection-accumulation regression (bba88fc8, see
-// tests/recursive-list-concat-classcast.nl, fixed 2026-09-24) hit its
-// rowsBefore/put machinery first
-// and masks the where-NPE. Shrink attempts (concat-free counter recursion
-// with a where-filter over a user Boolean rule, in the E-body and in the
-// guard, depth up to 12) could NOT retrigger the NPE on current develop -
-// the defect may meanwhile be fixed. Kept UNSHRUNK deliberately: re-evaluate
-// once the bba88fc8 regression is fixed.
+// Bug: solving this singles-first sudoku, whose scan guard filters with `where` over a
+// user Boolean rule (fits(g,r,c) = {1..9} where [d](ok(g,r,c,d))), crashes deep in the
+// recursion with a NullPointerException instead of returning the solved grid.
 import nelumbo.collections
 
 // ---- types ----------------------------------------------------------

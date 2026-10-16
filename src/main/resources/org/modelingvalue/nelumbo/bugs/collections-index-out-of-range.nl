@@ -1,6 +1,5 @@
-// Bug: Collections.indexOf (Collections.java:63) calls coll.get(index) without a
-// bounds check. Correct: falsehood (no position 7 in a 3-element list).
-// Actual: IndexOutOfBoundsException kills the whole evaluation.
+// Bug: `pos` with an index past the end of the list (7 in a 3-element list) crashes
+// the whole evaluation (IndexOutOfBoundsException) instead of yielding a falsehood.
 import nelumbo.collections
 
 Integer i
