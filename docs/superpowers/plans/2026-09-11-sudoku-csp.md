@@ -252,6 +252,10 @@ peer(r,c,r2,c2)    <=> !(r=r2 & c=c2) & (r=r2 | c=c2 | samebox(r,c,r2,c2))
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **UNBLOCKED (2026-10-16):** `in-on-nested-function-call-undecided.nl` is fixed, now in
+> `tests/` and `RegressionTest`. The first two probes decide; the third (contradiction,
+> `elim(...)=g ? [][..]`) is still `[..][..]`. Probes still commented out in the file.
+>
 > **BLOCKED (2026-10-13)** on `bugs/in-on-nested-function-call-undecided.nl` (`@KnownBug` in
 > `KnownBugsTest`): the first blocker is fixed, but `e in f(a)` is still undecided when the
 > argument a is itself a call (`1 in f(g(0))`, `1 in f(0+1)`), as in `cell`

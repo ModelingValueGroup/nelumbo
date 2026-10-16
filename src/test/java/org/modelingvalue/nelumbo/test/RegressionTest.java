@@ -85,6 +85,12 @@ public class RegressionTest extends NelumboTestBase {
         testResource("in-on-function-call-undecided.nl");
     }
 
+    // the argument of the function is itself a call (user or built-in), also in a rule body
+    @RepeatedTest(10)
+    public void inOnNestedFunctionCallUndecided() {
+        testResource("in-on-nested-function-call-undecided.nl");
+    }
+
     // also covers the list-literal twin [j+1], which did not parse before the fix
     @RepeatedTest(10)
     public void setLiteralArithmeticUnevaluated() {
