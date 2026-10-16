@@ -117,7 +117,7 @@ html:root {
 /* Background image for the deck, via a pseudo-element so its opacity is independent */
 .reveal {
   position: relative;
-  font-variant-ligatures: none;
+  font-variant-ligatures: none;quit
 }
 
 .reveal::before {

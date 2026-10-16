@@ -239,7 +239,7 @@ class NelumboHttpServerTest {
 
     /**
      * The tour's editors are hand-written Nelumbo that no other test evaluates, so a language change breaks them
-     * silently (78e006b5 did: {@code fact} takes a FactType since). Every editor must evaluate on a server like
+     * silently (78e006b5 did: {@code fact} takes a Boolean since). Every editor must evaluate on a server like
      * production's (empty base KB): an exercise field may only fail on its expectation, a solution not at all.
      */
     @Test

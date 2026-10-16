@@ -46,6 +46,7 @@ import org.modelingvalue.nelumbo.lang.PatternPart;
 import org.modelingvalue.nelumbo.lang.Transform;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
+import org.modelingvalue.nelumbo.logic.InconsistencyException;
 import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -248,9 +249,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Functor.of(s(c(t("<"), t("["), t(">")), PATTERNS, c(t("<"), t("]"), t(">"))), Type.PATTERN, null,
                         SequencePattern.class, null).init(this, parseContext, bootstrapping);
 
-                Functor.of(
-                        s(t("<"), o(a(k("visible"), k("hidden"))), n(Type.TYPE, 100), o(s(t("#"), t(NUMBER))), t(">")),
-                        Type.PATTERN, null, NodeTypePattern.class, null).init(this, parseContext, bootstrapping);
+                Functor.of(s(t("<"), o(a(k("visible"), k("hidden"))), o(k("one")), n(Type.TYPE, 100),
+                        o(s(t("#"), t(NUMBER))), t(">")), Type.PATTERN, null, NodeTypePattern.class, null)
+                        .init(this, parseContext, bootstrapping);
 
                 Functor.of(s(t("<"), n(Type.PATTERN_PART, 100), t(">")), Type.PATTERN, null, PatternPartPattern.class,
                         null).init(this, parseContext, bootstrapping);
@@ -326,7 +327,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         this.init = init;
         this.deadlineNanos = init != null ? init.deadlineNanos : 0;
         this.worldScopedVariables = init != null && init.worldScopedVariables;
-        context = InferContext.of(KnowledgeBase.this, List.of(), Map.of(), false, false, TRACE_NELUMBO, null);
+        context = InferContext.of(KnowledgeBase.this, List.of(), false, false, TRACE_NELUMBO, null);
         parseContext = ParseContext.of(Type.DEFAULT_GROUP, prePatterns, postPatterns, hiddenVariables);
         init();
     }
@@ -460,12 +461,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public void memoization(Predicate predicate, InferResult result) {
-        boolean known = result.cycles().isEmpty(); // && result.isComplete();
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();
-            if (known) {
-                array[0] = array[0].put(new Inference(predicate, result));
-            }
+            array[0] = array[0].put(new Inference(predicate, result));
             for (Predicate fact : result.facts()) {
                 array[0] = array[0].put(new Inference(fact, fact.factCC()));
             }
@@ -530,61 +528,73 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public void addFact(Predicate fact) {
-        Functor functor = fact.functor();
-        List<Type> args = functor.argTypes();
+        List<int[]> args = fact.paths(n -> n.type().isLiteral());
         facts.updateAndGet(map -> {
             map = map.put(fact, fact.factCC());
-            for (int i = 0; i < fact.length(); i++) {
-                map = addFact(map, fact, fact.setType(i, args.get(i)), args, Set.of(i), i);
+            for (int i = 0; i < args.size(); i++) {
+                map = addFact(map, fact, fact, args, 1, i);
             }
             return map;
         });
         resetMemoization();
     }
 
-    private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact,
-            Predicate predicate, List<Type> args, Set<Integer> done, int outer) {
-        if (args.size() > done.size()) {
-            InferResult pre = map.get(predicate);
-            map = map.put(predicate,
-                    InferResult.factsCI(predicate, pre != null ? pre.facts().add(fact) : fact.singleton()));
-            for (int i = outer + 1; i < fact.length(); i++) {
-                if (!done.contains(i)) {
-                    map = addFact(map, fact, fact.setType(i, args.get(i)), args, done.add(i), i);
+    private static Map<Predicate, InferResult> addFact(Map<Predicate, InferResult> map, Predicate fact, Predicate pred,
+            List<int[]> args, int count, int outer) {
+        if (args.size() > count) {
+            int[] idx = args.get(outer);
+            pred = pred.set(idx, Variable.DUMMY);
+            InferResult result = map.get(pred);
+            Set<Predicate> facts = result != null ? result.facts().add(fact) : fact.singleton();
+            if (count == 1 && pred.unique() != null) {
+                result = InferResult.factsCI(pred, facts);
+                if (facts.size() > 1) {
+                    throw new InconsistencyException(result);
                 }
+            } else {
+                result = InferResult.factsII(pred, facts);
+            }
+            map = map.put(pred, result);
+            for (int i = outer + 1; i < args.size(); i++) {
+                map = addFact(map, fact, pred, args, count + 1, i);
             }
         }
         return map;
     }
 
     public InferResult getFacts(Predicate predicate, InferContext context) {
-        List<Type> args = predicate.functor().argTypes();
-        Predicate varsToTypes = predicate;
-        for (int i = 0; i < predicate.length(); i++) {
-            if (predicate.get(i) instanceof Variable) {
-                varsToTypes = varsToTypes.setType(i, args.get(i));
-            }
+        List<int[]> vars = predicate.paths(n -> n instanceof Variable);
+        Predicate pred = predicate;
+        for (int[] i : vars) {
+            pred = pred.set(i, Variable.DUMMY);
         }
-        InferResult result = facts.get().get(varsToTypes);
+        InferResult result = facts.get().get(pred);
         if (result != null) {
             result = result.cast(predicate);
             Set<Predicate> facts = result.facts();
             Set<Predicate> falsehoods = result.falsehoods();
             for (Predicate fact : facts) {
-                for (int i = 0; i < predicate.length(); i++) {
-                    if (predicate.get(i) instanceof Variable var && fact.get(i) instanceof Node node
-                            && !var.type().isAssignableFrom(node.type())) {
-                        falsehoods = falsehoods.add(fact);
+                for (int[] i : vars) {
+                    Variable var = (Variable) predicate.getIdx(i);
+                    if (fact.getIdx(i) instanceof Node node && !var.type().isAssignableFrom(node.type())) {
                         facts = facts.remove(fact);
-                        continue;
+                        break;
                     }
                 }
             }
             return InferResult.of(predicate, facts, result.completeFacts(), falsehoods, result.completeFalsehoods(),
                     Set.of());
-        } else {
-            result = predicate.isFullyBound() ? predicate.falsehoodCC() : InferResult.factsCI(predicate, Set.of());
         }
+        if (vars.isEmpty()) {
+            for (int i : predicate.functor().unique()) {
+                pred = predicate.set(i, Variable.DUMMY);
+                result = facts.get().get(pred);
+                if (result != null) {
+                    return predicate.falsehoodCC();
+                }
+            }
+        }
+        result = predicate.unknown();
         if (context.trace()) {
             InferResult r = result;
             context.trace(() -> predicate + " " + r);

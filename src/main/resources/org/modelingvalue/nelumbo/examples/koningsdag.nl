@@ -3,7 +3,7 @@ import      nelumbo.integers
 DayOfWeek :: Object
 DayOfWeek ::= Mon, Tue, Wed, Thu, Fri, Sat, Sun
 
-FactType  ::= weekdag van <Integer> april <Integer> is <DayOfWeek>
+Boolean  ::= weekdag van <Integer> april <Integer> is <DayOfWeek>
 Boolean   ::= Koningsdag <Integer> is op <Integer> april
 
 Integer   y, d

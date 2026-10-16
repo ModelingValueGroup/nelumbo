@@ -4,7 +4,7 @@ Person   :: Object
 Male     :: Person
 Female   :: Person
 
-FactType ::= pc(<Person>,<Person>)   // parent-child
+Boolean ::= pc(<Person>,<Person>)   // parent-child
 
 Person   ::= p(<Person>),  // parent
              c(<Person>),  // child

@@ -10,7 +10,7 @@ NAME AN
 attr OT AN AT  ::> {
     AT               ::= <OT>.AN
     Root             ::= <OT>.AN := <AT>
-    private FactType ::= AN(<OT>,<AT>)
+    private Boolean ::= AN(<OT>,<AT>)
     // Rule here
     // Transformation here
 }

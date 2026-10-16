@@ -22,27 +22,14 @@ public class InconsistencyException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = -30585101694801066L;
 
-    private final InferResult ruleResult;
-    private final InferResult existingResult;
-
     public InconsistencyException(InferResult ruleResult, InferResult existingResult) {
-        super("Inconsistent results: " + ruleResult + " does not biimplicate " + existingResult);
-        this.ruleResult = ruleResult;
-        this.existingResult = existingResult;
+        super("Inconsistent results: " + ruleResult + " does not biimplicate " + existingResult + ", for "
+                + ruleResult.predicate());
     }
 
-    public InconsistencyException(InferResult ruleResult) {
-        super("Inconsistent results: " + ruleResult + " has non unique bindings for a function");
-        this.ruleResult = ruleResult;
-        this.existingResult = null;
-    }
-
-    public InferResult ruleResult() {
-        return ruleResult;
-    }
-
-    public InferResult existingResult() {
-        return existingResult;
+    public InconsistencyException(InferResult result) {
+        super("Inconsistent result: " + result + " has non unique bindings for function "
+                + result.predicate().toBaseString());
     }
 
 }

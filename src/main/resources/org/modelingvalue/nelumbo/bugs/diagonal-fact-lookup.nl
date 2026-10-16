@@ -8,7 +8,7 @@ import nelumbo.logic
 
 Person   :: Object
 
-FactType ::= r(<Person>,<Person>)
+Boolean ::= r(<Person>,<Person>)
 
 Person   ::= X, Y
 

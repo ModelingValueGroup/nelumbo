@@ -1,11 +1,10 @@
 import    org.modelingvalue.nelumbo.examples.friends
 
-Boolean ::= <Person> is <Person>   #30
-Person  ::= a friend of <Person>   #35
+Boolean ::= <Person> is a friend of <Person>  #35
 
-Person X, Y, Who
+Person x, y, Who
 
-X is Y            <=>  X=Y
-a friend of X = Y <=>  friend(X)=Y
+x is a friend of y <=>  friends(x, y)
 
-Who is a friend of Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet)][..]
+Who is a friend of Piet  ? [(Who=Jan),(Who=Kees),(Who=Klaas),(Who=Piet),..][..]
+Kees is a friend of Piet ? [()][]

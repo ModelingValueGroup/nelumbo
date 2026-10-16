@@ -16,7 +16,10 @@
 
 package org.modelingvalue.nelumbo.mcp;
 
-/** Skeleton for a new self-contained decision model; must always evaluate cleanly (see test). */
+/**
+ * Skeleton for a new self-contained decision model; must always evaluate
+ * cleanly (see test).
+ */
 public final class ModelSkeleton {
 
     private ModelSkeleton() {
@@ -35,7 +38,7 @@ public final class ModelSkeleton {
                 Person   :: Object
 
                 // -- Fact types: the case data asserted as facts below ----------------
-                FactType ::= age(<Person>,<Integer>)
+                Boolean ::= age(<Person>,<Integer>)
 
                 // -- Decisions: Boolean functors derived by rules ---------------------
                 Boolean  ::= eligible(<Person>)

@@ -153,7 +153,7 @@ The `.nl` files under [`src/main/resources/org/modelingvalue/nelumbo/examples/`]
 | File | What it demonstrates |
 |---|---|
 | `fibonacci.nl` | Integer arithmetic, recursive rule with guards, basic tests |
-| `family.nl` | Types, subtypes, `FactType`, literal enumerations, ancestor/descendant recursion |
+| `family.nl` | Types, subtypes, `Boolean`, literal enumerations, ancestor/descendant recursion |
 | `friends.nl` | Mutually-recursive relations, symmetric + transitive closure |
 | `even.nl` | Simplest useful predicate using an existential quantifier |
 | `max.nl`, `ternary.nl` | Generic types (`Type T`), conditional expressions, user-defined operators |

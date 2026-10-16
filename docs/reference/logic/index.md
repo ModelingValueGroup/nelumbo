@@ -20,13 +20,13 @@ import nelumbo.logic
 
 ```nelumbo
 Boolean   :: Object
-FactType  :: Boolean
+Boolean  :: Boolean
 Function  :: Object
 Literal   :: Object
 Struct    :: Object
 ```
 - `Boolean` — the type of truth-valued expressions.
-- `FactType` — marker subtype of `Boolean` used by the language transformation machinery (see [`belasting.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/belasting.nl) for usage in a DSL).
+- `Boolean` — marker subtype of `Boolean` used by the language transformation machinery (see [`belasting.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/belasting.nl) for usage in a DSL).
 - `Literal` — values that are their own canonical form: named constants such as `T1`, `Hendrik`, `true`, integers, strings, …
 - `Function` — values produced by functional patterns (e.g., `a+b`, `fib(n)`, `r(x/y)`) that reduce by rules.
 - `Struct` — values that are constructors with **structural equality**: two `Struct` values are equal when their parts are (collection literals such as `{1,2}` and `[1,2]` are `Struct`s; a user type declared `:: Struct` gets the same). They take the `eq` route like a `Literal`.
@@ -148,14 +148,14 @@ f1 = f2   <=>  E[l1](f1 = l1 & f2 = l1)
 `nelumbo.logic` also declares the three statement forms that appear at the top level of a `.nl` file:
 
 ```nelumbo
-Root ::= "fact" <(> <FactType#0> <,> , <)+>                                       @nelumbo.logic.Fact,
+Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                       @nelumbo.logic.Fact,
          <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>   @nelumbo.logic.Rule,
          <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                               @nelumbo.logic.Query
 ```
 
 | Form  | Shape                                                | Native             |
 |---|---|---|
-| Fact  | `fact <FactType>`, comma-separated lists allowed      | `Fact`             |
+| Fact  | `fact <Boolean>`, comma-separated lists allowed      | `Fact`             |
 | Rule  | `<Boolean> <=> <Boolean> if <Boolean>`, `if` optional | `Rule`             |
 | Query | `<Boolean> ?`, optionally followed by `[..][..]`      | `Query`            |
 
@@ -175,7 +175,7 @@ After `import nelumbo.logic`, the following are visible to the importer:
 
 | Kind           | Names                                              |
 |---|---|
-| Types          | `Boolean`, `FactType`, `Literal`, `Function`, `Struct`, `Lambda`, `Lambda1`…`Lambda6` |
+| Types          | `Boolean`, `Boolean`, `Literal`, `Function`, `Struct`, `Lambda`, `Lambda1`…`Lambda6` |
 | Boolean values | `true`, `false`, `unknown`                          |
 | Connectives    | `!`, `&`, `\|`, `->`, `<->`                         |
 | Lambdas        | `[x,…](body)` (1–6 variables)                      |

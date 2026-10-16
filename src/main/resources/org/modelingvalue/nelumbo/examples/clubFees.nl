@@ -18,7 +18,7 @@ import  nelumbo.integers
 
 Person   :: Object
 
-FactType ::= age(<Person>,<Integer>)
+Boolean ::= age(<Person>,<Integer>)
 
 Integer  ::= fee(<Person>)
 

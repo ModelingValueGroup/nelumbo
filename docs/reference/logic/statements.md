@@ -6,14 +6,14 @@ The top-level statements that drive execution: declaring fact types, asserting f
 
 ---
 
-## FactType declarations
+## Boolean declarations
 
-A `FactType` pattern declares a relation whose instances can be asserted as ground truth:
+A `Boolean` pattern declares a relation whose instances can be asserted as ground truth:
 
 ```nelumbo
-FactType ::= pc(<Person>,<Person>)                    // family.nl
-FactType ::= friends(<Person>,<Person>)               // friends.nl
-FactType ::= het inkomen van <Person> is <Integer> euro  // belasting.nl
+Boolean ::= pc(<Person>,<Person>)                    // family.nl
+Boolean ::= friends(<Person>,<Person>)               // friends.nl
+Boolean ::= het inkomen van <Person> is <Integer> euro  // belasting.nl
 ```
 
 A fact type looks like any other pattern, but values built with it are not computed by rules — they are either asserted directly (see below) or they are not. This separates **ground truth** from **derived relations**.
@@ -39,7 +39,7 @@ fact het inkomen van Piet is 50000 euro
 Three forms drive execution:
 
 ```nelumbo
-E                  // bare expression — treated as a fact if E is a FactType instance
+E                  // bare expression — treated as a fact if E is a Boolean instance
 E ?                // query — run the reasoner, print the result
 E ? [F][N]         // test — query and compare; pass iff result matches
 ```

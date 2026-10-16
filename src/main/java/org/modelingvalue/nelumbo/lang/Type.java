@@ -67,7 +67,6 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type  LITERAL         = new Type("Literal", OBJECT);
     public static final Type  ROOT            = new Type("Root", OBJECT);
     public static final Type  BOOLEAN         = new Type("Boolean", OBJECT);
-    public static final Type  FACT_TYPE       = new Type("FactType", BOOLEAN);
     public static final Type  VARIABLE        = new Type("Variable", OBJECT);
     public static final Type  FUNCTOR         = new Type("Functor", ROOT);
     public static final Type  PATTERN_PART    = new Type("PatternPart", ROOT);
@@ -92,7 +91,6 @@ public final class Type extends Node implements FunctorOrType {
                 LITERAL, //
                 ROOT, //
                 BOOLEAN, //
-                FACT_TYPE, //
                 VARIABLE, //
                 FUNCTOR, //
                 PATTERN_PART, //
@@ -430,10 +428,6 @@ public final class Type extends Node implements FunctorOrType {
 
     public Type numberArgs() {
         return typeInfo().numberArgs();
-    }
-
-    public boolean isFactType() {
-        return FACT_TYPE.isAssignableFrom(this);
     }
 
     public boolean isFunction() {

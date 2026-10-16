@@ -161,7 +161,7 @@ The `nelumbo.lang` object hierarchy (`Object`, `Type`, `Root`, ...) is in the [g
 
 | Name | Origin | Meaning |
 |---|---|---|
-| `Boolean`, `FactType`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `FactType` is a `Boolean` subtype for ground-truth relations (see [`statements.md`](statements.md#facttype-declarations)). |
+| `Boolean`, `Boolean`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; `Boolean` is a `Boolean` subtype for ground-truth relations (see [`statements.md`](statements.md#facttype-declarations)). |
 | `true`, `false`, `unknown` | `nelumbo.logic` | The three Boolean values. |
 
 ---

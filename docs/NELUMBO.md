@@ -190,7 +190,7 @@ The logic is a `@NelumboMethod` whose name and parameter count match the functor
 ### FactTypes and Facts
 
 ```text
-  FactType  ::= pc(<Person>,<Person>)   // parent-child
+  Boolean  ::= pc(<Person>,<Person>)   // parent-child
 
   // Facts
   pc(Beatrix, Willem)

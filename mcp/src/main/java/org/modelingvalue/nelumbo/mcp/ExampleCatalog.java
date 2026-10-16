@@ -48,13 +48,13 @@ public final class ExampleCatalog {
         ENTRIES.put("fibonacci2", new Entry(BASE + "examples/fibonacci2.nl",
                 "fibonacci, but then with an operator notation instead of a function notation"));
         ENTRIES.put("belasting", new Entry(BASE + "examples/belasting.nl",
-                "tax decision model: natural-language FactType patterns and a Boolean decision rule (Dutch)"));
+                "tax decision model: natural-language Fact patterns and a Boolean decision rule (Dutch)"));
         ENTRIES.put("deHet", new Entry(BASE + "examples/deHet.nl",
                 "DSL macro: Root-extending transform that generates functor, fact, and query patterns from a declaration (Dutch)"));
         ENTRIES.put("whoIs", new Entry(BASE + "examples/whoIs.nl",
                 "natural-language Boolean and functor syntax layered on top of the friends KB via import"));
         ENTRIES.put("friends", new Entry(BASE + "examples/friends.nl",
-                "transitive friend relation: FactType facts, recursive functor rule, queries with expected results"));
+                "transitive friend relation: Facts, recursive functor rule, queries with expected results"));
         ENTRIES.put("even", new Entry(BASE + "examples/even.nl",
                 "Boolean predicate using E[] and integer division to test evenness"));
         ENTRIES.put("max", new Entry(BASE + "examples/max.nl",
@@ -100,7 +100,7 @@ public final class ExampleCatalog {
         ENTRIES.put("lang", new Entry(BASE + "lang/lang.nl",
                 "stdlib bootstrap: NATIVE token types, Object/Root/Type hierarchy, Pattern subtypes, import/functor/variable syntax"));
         ENTRIES.put("logic", new Entry(BASE + "logic/logic.nl",
-                "stdlib logic layer: Boolean, FactType, true/false/unknown, &/|/!/->/<->, E[]/A[], fact/rule/query syntax"));
+                "stdlib logic layer: Boolean, fact, true/false/unknown, &/|/!/->/<->, E[]/A[], fact/rule/query syntax"));
         ENTRIES.put("integers", new Entry(BASE + "integers/integers.nl",
                 "stdlib integers: Integer type, arithmetic (+/-/*//) and comparison operators, abs via conditional rules"));
         ENTRIES.put("strings", new Entry(BASE + "strings/strings.nl",

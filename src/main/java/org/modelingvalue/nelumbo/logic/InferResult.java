@@ -57,10 +57,6 @@ public interface InferResult {
         return null;
     }
 
-    default boolean hasCycleWith(Predicate predicate) {
-        return cycles().contains(predicate);
-    }
-
     default boolean hasStackOverflow() {
         return stackOverflow() != null;
     }
@@ -287,6 +283,37 @@ public interface InferResult {
         };
     }
 
+    static InferResult factsII(Predicate predicate, Set<Predicate> facts) {
+        return new InferResultImpl() {
+
+            @Override
+            public Predicate predicate() {
+                return predicate;
+            }
+
+            @Override
+            public Set<Predicate> facts() {
+                return facts;
+            }
+
+            @Override
+            public Set<Predicate> falsehoods() {
+                return Set.of();
+            }
+
+            @Override
+            public boolean completeFacts() {
+                return false;
+            }
+
+            @Override
+            public boolean completeFalsehoods() {
+                return false;
+            }
+
+        };
+    }
+
     static InferResult factsCC(Predicate predicate, Set<Predicate> facts) {
         return new InferResultImpl() {
 
@@ -438,7 +465,8 @@ public interface InferResult {
         };
     }
 
-    static InferResult cycle(Set<Predicate> facts, Set<Predicate> falsehoods, Predicate predicate) {
+    static InferResult cycle(Set<Predicate> facts, Set<Predicate> falsehoods, Predicate predicate,
+            Set<Predicate> cycles) {
         return new InferResultImpl() {
 
             @Override
@@ -468,7 +496,7 @@ public interface InferResult {
 
             @Override
             public Set<Predicate> cycles() {
-                return predicate.singleton();
+                return cycles;
             }
         };
     }

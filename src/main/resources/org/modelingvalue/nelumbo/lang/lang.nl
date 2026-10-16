@@ -42,7 +42,7 @@ Pattern          ::= <NAME>                                                     
                      <[> "<" "(" ">" <]> <PATTERNS> <[> "<" ")" "?" ">" <]>                                                       @nelumbo.patterns.OptionalPattern,
                      <LEFT> <PATTERNS> <RIGHT>                                                                                    @nelumbo.patterns.SequencePattern,
                      <[> "<" "[" ">" <]> <PATTERNS> <[> "<" "]" ">" <]>                                                           @nelumbo.patterns.SequencePattern,
-                     "<" <(> <(> "visible" <|> "hidden" <)> <)?> <Type#100> <(> # <NUMBER> <)?> ">"                               @nelumbo.patterns.NodeTypePattern,
+                     "<" <(> <(> "visible" <|> "hidden" <)> <)?> <(> "one" <)?> <Type#100> <(> # <NUMBER> <)?> ">"                @nelumbo.patterns.NodeTypePattern,
                      "<" <PatternPart#100> ">"                                                                                    @nelumbo.patterns.PatternPartPattern
 
 Type             ::= { <(> <Type> <,> , <)+> } @nelumbo.lang.Type

@@ -159,7 +159,7 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
                 }
                 states = states.addAll(inners);
             }
-            state = matchType(node.type(), false, typeArgs);
+            state = matchType(node.type(), inverse, typeArgs);
             if (state != null) {
                 states = states.add(state);
             }

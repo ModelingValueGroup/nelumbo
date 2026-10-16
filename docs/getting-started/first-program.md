@@ -165,7 +165,7 @@ You have now seen all four of Nelumbo's core building blocks:
 
 Good next files to open, in order:
 
-- **`family.nl`** — introduces types (`Male :: Person`), fact types (`FactType ::= pc(...)`), literal enumerations (`Male ::= Hendrik, Bernhard, ...`), and the `fact` block for ground truth.
+- **`family.nl`** — introduces types (`Male :: Person`), fact types (`Boolean ::= pc(...)`), literal enumerations (`Male ::= Hendrik, Bernhard, ...`), and the `fact` block for ground truth.
 - **`friends.nl`** — a shorter recursive example with a different flavour (symmetric + transitive closure).
 - **`logicTest.nl`** — a complete specification of three-valued logic in test form. Useful to skim whenever you are unsure how `&`, `|`, `!`, `->`, `<->`, `E[]`, or `A[]` behave in edge cases.
 - **`belasting.nl`** — the same mechanisms used to write Dutch tax rules in near-natural-language syntax. A good preview of what Nelumbo is actually for.

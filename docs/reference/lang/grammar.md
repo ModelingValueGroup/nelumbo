@@ -246,7 +246,7 @@ The `::>` operator defines a **language pattern transformation** — a macro-lik
 attr OT AN AT ::> {
     AT       ::= <OT>.AN
     Root     ::= <OT>.AN := <AT>
-    private FactType ::= AN(<OT>,<AT>)
+    private Boolean ::= AN(<OT>,<AT>)
     ...
 }
 ```
@@ -273,7 +273,7 @@ This is Nelumbo's mechanism for building higher-level DSLs on top of the core. I
 |---|---|
 | `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` | The core object hierarchy. `Root` is the entry-point production for top-level statements; `Type` is used as a generic parameter introducer (`Type T`). |
 
-The logic-layer identifiers (`Boolean`, `FactType`, `true`, ...) are listed in [`operators.md`](../logic/operators.md#special-identifiers).
+The logic-layer identifiers (`Boolean`, `Boolean`, `true`, ...) are listed in [`operators.md`](../logic/operators.md#special-identifiers).
 
 ---
 

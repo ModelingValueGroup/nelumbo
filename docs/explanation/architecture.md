@@ -56,7 +56,7 @@ At the bottom is a Java codebase in `src/main/java/org/modelingvalue/nelumbo/`. 
 3. **Run the reasoner**, the navigator that produces candidate bindings, together with the three-valued logic that classifies them as facts, falsehoods, or unknown.
 4. **Host native primitives**, Java classes referenced by `@...` annotations from `.nl` source, providing operations the language cannot derive from itself.
 
-The core has no syntax for integers, strings, collections, `Boolean`, `<=>`, `?` or `fact`. That syntax comes from `.nl` files. What the core does have is the machinery that executes it: the three-valued reasoner that runs rules and queries is Java, and it knows a fixed set of types such as `Boolean`, `FactType` and `Set` by name.
+The core has no syntax for integers, strings, collections, `Boolean`, `<=>`, `?` or `fact`. That syntax comes from `.nl` files. What the core does have is the machinery that executes it: the three-valued reasoner that runs rules and queries is Java, and it knows a fixed set of types such as `Boolean`, `Boolean` and `Set` by name.
 
 Reference: [`reference/core/`](../reference/core/bootstrap.md).
 

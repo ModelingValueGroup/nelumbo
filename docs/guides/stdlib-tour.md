@@ -88,7 +88,7 @@ The three-valued logic layer. This is where Boolean, the connectives, and — cr
 import nelumbo.lang
 
 Boolean  :: Object
-FactType :: Boolean
+Boolean :: Boolean
 Function :: Object
 Literal  :: Object
 Struct   :: Object
@@ -120,7 +120,7 @@ Boolean ::= true                                            @nelumbo.logic.NBool
 pattern BINDING ::= [ ... ]
 
 // Top-level statement forms — declared here, not in the Java core
-Root ::= "fact" <FactType#0>, ...                                      @nelumbo.logic.Fact,
+Root ::= "fact" <Boolean#0>, ...                                      @nelumbo.logic.Fact,
          <Boolean#0> "<=>" (<Boolean#0> ("if" <Boolean#0>)?), ...      @nelumbo.logic.Rule,
          <Boolean#0> ? (<BINDING> <BINDING>)?                          @nelumbo.logic.Query
 

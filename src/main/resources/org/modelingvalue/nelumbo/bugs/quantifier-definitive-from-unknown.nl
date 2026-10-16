@@ -11,7 +11,7 @@ import nelumbo.logic
 Person :: Object
 Male   :: Person
 
-FactType ::= q(<Person>)
+Boolean ::= q(<Person>)
 
 Male ::= X, Y
 

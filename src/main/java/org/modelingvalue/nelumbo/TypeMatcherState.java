@@ -79,7 +79,8 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
             } else {
                 Type a = e.getKey().getAssigned(type);
                 if (a == null && inverse) {
-                    a = type.nonVariable().objectArgsOnly().getAssigned(e.getKey().numberArgs());
+                    a = type.nonVariable().nonLiteral().nonFunction().objectArgsOnly()
+                            .getAssigned(e.getKey().numberArgs());
                     if (a != null) {
                         if (e.getKey().hasArguments()) {
                             List<Type> from = type.arguments();
