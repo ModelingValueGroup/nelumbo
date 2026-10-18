@@ -27,7 +27,7 @@ fact m(Beatrix)=Juliana
 
 ### Open facts and `one`
 
-Facts are open: what is not asserted is not false, it is unknown (no closed-world assumption, no negation as failure). A query over facts therefore ends its answers in `..`:
+Facts are open: what is not asserted is not false, it is unknown (no closed-world assumption, no negation as failure; see [The open world](three-valued-logic.md#the-open-world)). A fact lookup also needs at least one bound argument: `friends(x, y)` with both unbound is unknown, because a variable is never bound by enumerating a type. A query over facts therefore ends its answers in `..`:
 
 ```nelumbo
 friends(Piet, x) ? [(x=Jan),..][..]

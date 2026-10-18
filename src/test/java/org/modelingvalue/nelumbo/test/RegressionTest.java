@@ -126,4 +126,9 @@ public class RegressionTest extends NelumboTestBase {
         testResource("nested-generic-rule-load-time.nl");
     }
 
+    @RepeatedTest(10)
+    public void unboundPredicateNotResolved() {
+        testResource("unbound-predicate-not-resolved.nl");
+    }
+
 }

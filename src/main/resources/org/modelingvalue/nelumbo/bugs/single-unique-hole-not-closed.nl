@@ -1,6 +1,6 @@
 // Bug: a pattern whose only argument is a unique hole (winner(<one Person>)) is never
-// closed: after fact winner(Piet), winner(Jan) is unknown instead of false and
-// winner(p) is unknown instead of the single, closed answer p=Piet.
+// closed: after fact winner(Piet), winner(Jan) is unknown instead of false.
+// winner(p) is unknown by design (all arguments unbound: not resolved).
 import nelumbo.logic
 
 Person  :: Object
@@ -15,4 +15,4 @@ fact winner(Piet)
 
 winner(Piet) ? [()][]
 winner(Jan)  ? [][()]
-winner(p)    ? [(p=Piet)][..]
+winner(p)    ? [..][..]

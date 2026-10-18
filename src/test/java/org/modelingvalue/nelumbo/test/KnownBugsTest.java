@@ -30,9 +30,11 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (fifteen
+// remove the @KnownBug and promote the method to RegressionTest (sixteen
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
-// one on 2026-10-02, five on 2026-10-06).
+// one on 2026-10-02, five on 2026-10-06, and on 2026-10-18 one merged from
+// three unbound-lookup repros whose remaining expectations were wrong: a
+// variable is never bound by enumerating a type).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -164,18 +166,6 @@ public class KnownBugsTest extends NelumboTestBase {
     }
 
     // ==== logic / quantifiers / facts ====
-
-    @KnownBug("getFacts claims complete-no-facts for un-indexed shapes like r(a,a)")
-    @Test
-    public void diagonalFactLookup() {
-        bugResource("diagonal-fact-lookup.nl");
-    }
-
-    @KnownBug("fact predicate with all arguments unbound answers complete-no-facts: E over it definitively false")
-    @Test
-    public void unboundFactLookupCompleteEmpty() {
-        bugResource("unbound-fact-lookup-complete-empty.nl");
-    }
 
     @KnownBug("pattern whose only argument is a unique hole (winner(<one Person>)) is never closed")
     @Test

@@ -87,6 +87,7 @@ Boolean ::= E<Lambda<Boolean>>   @nelumbo.logic.ExistentialQuantifier,
 - `E[x](p)` — there exists `x` such that `p`.
 - `A[x](p)` — for all `x`, `p`.
 - Up to six bound variables are allowed: `E[x,y,z](p)`, `A[x,y,z](p)`; a seventh is a parse error.
+- The quantified variables range over a type whose extent is unknown: Nelumbo never tries every member of the type. `E[x](p)` and `A[x](p)` are decided only by what `p` derives for `x` (through `=`, a lookup from a bound argument, or `x in` a known collection), so `E[x](q(x))` over a fact `q(Piet)` is unknown. See [The open world](three-valued-logic.md#the-open-world).
 
 The quantifier is the keyword `E` / `A` followed by a [**lambda**](lambdas.md) whose body is a `Boolean`: `[x,y](p)` is a `Lambda2<…,Boolean>`. The bracketed variables must be declared variables, they are local to the body, and the body is at the lowest precedence (`#0`) so the entire expression inside the parentheses is consumed. (The quantifiers used to carry their own `<(> <Variable#100> <,> , <)+>` variable-list pattern; they now share the lambda syntax.)
 

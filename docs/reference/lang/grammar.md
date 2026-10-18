@@ -113,7 +113,7 @@ Female ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
 Lidwoord ::= de, het
 ```
 
-Each listed name becomes a constant of the declared type. They are literals, not variables.
+Each listed name becomes a constant of the declared type. They are literals, not variables. The list does not close the type: other declarations may add constants, and Nelumbo never enumerates a type's members to bind a variable (see [The open world](../logic/three-valued-logic.md#the-open-world)).
 
 ### Repetition and grouping
 
